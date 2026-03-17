@@ -1,4 +1,11 @@
+---
+doc_status: canonical
+doc_scope: current
+---
+
 # Maestro Status Model
+
+Status: Canonical current-state state model.
 
 ## Goal
 
@@ -107,7 +114,7 @@ Current first-loop example:
 
 - stage: `research`
 - native role/profile: `research_codebase`
-- contract files: `.codex/config.toml`, `.codex/agents/research/research_codebase.toml`
+- contract files: `.codex/config.toml`, `.codex/agents/research_codebase.toml`
 
 Inline fallback is allowed only when native downstream dispatch is unavailable.
 If fallback is used, the downstream stage must record it honestly in its own `runtime.execution_mode` and `runtime.agent_profile` fields.
@@ -183,7 +190,7 @@ Only after that review may the next stage be considered.
 After any change to module-root or feature-root Maestro artifacts:
 
 ```bash
-node .agent-cli/bin/codex-agent.mjs validate-maestro-module --module "<module>" --write-status
+node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "<module>" --write-status
 ```
 
 If that command fails, the state model must be repaired before continuing.

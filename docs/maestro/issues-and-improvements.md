@@ -1,4 +1,11 @@
+---
+doc_status: notes
+doc_scope: backlog
+---
+
 # Maestro Issues And Improvements
+
+Status: Notes/backlog document. It captures open issues and ideas; it is not a binding contract.
 
 Use this file to capture candidate improvements, design questions, and known orchestration problems before they are promoted into implementation work.
 

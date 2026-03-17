@@ -1,15 +1,22 @@
+---
+doc_status: canonical
+doc_scope: current
+---
+
 # Canonical Dual Agent Stack v3 — что это, зачем и как с ним работать
 
-Этот документ описывает последнюю сборку `canonical-dual-agent-stack-v3` как эталонную основу для развития общего агентного стека под **Cursor** и **Codex**.
+Status: Canonical current-state architecture document.
 
-Документ опирается на фактическое содержимое архива `canonical-dual-agent-stack-v3.zip` и на проверку команд:
+Этот документ описывает текущую сборку `canonical-dual-agent-stack-v3` как эталонную основу для развития общего агентного стека под **Cursor** и **Codex**.
+
+Проверочный baseline для этой репозиторной копии:
 
 ```bash
 npm --prefix .agent-cli test
 npm --prefix .agent-cli run check:runtimes
 ```
 
-На проверенной копии архива оба запуска завершились успешно: тесты `.agent-cli` прошли, а runtime-адаптеры оказались `drift_free`.
+`docs/README.md` is the entrypoint for classifying repository docs into canonical documents, proposals, and notes.
 
 ---
 

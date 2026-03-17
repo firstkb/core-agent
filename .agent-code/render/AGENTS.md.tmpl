@@ -4,7 +4,7 @@
 
 ## Source of truth
 
-Read and treat these paths as authoritative before doing agent work:
+Read and treat these as authoritative before doing agent work:
 
 - `.agent-code/config.json`
 - `.agent-code/registry/agents.json`
@@ -15,7 +15,7 @@ Read and treat these paths as authoritative before doing agent work:
 - `.agent-code/standards/`
 - `.agent-cli/`
 
-Generated runtime files are adapters, not the source of truth:
+Generated adapters are not the source of truth:
 
 - `AGENTS.md`
 - `.agents/skills/*`
@@ -24,17 +24,41 @@ Generated runtime files are adapters, not the source of truth:
 - `.codex/agents/*`
 - `.codex/config.toml`
 
-## Naming split
+Platform folders are adapters. Shared logic lives in `.agent-code/`.
 
-### Skill nicknames
+## Runtime roles
 
-{{skills_section}}
+### Maestro
 
-### System agent names
+Use Maestro for module-level orchestration when the goal is to:
 
-{{agents_section}}
+- clarify a large request
+- establish module scope and decomposition
+- seed feature-root artifacts after explicit approval
+- launch the first downstream research loop
+- review downstream output before the next stage
 
-Use skill nicknames for human-facing workflows and system names for native agent adapters, validation targets, and machine-readable handoffs.
+Maestro runs inline in the main thread. Do not spawn a subagent version of Maestro.
+
+### Charlie
+
+Use Charlie for read-heavy codebase research when the goal is to:
+
+- find the real code path
+- trace behavior and dependencies
+- map architecture and change points
+- separate observed facts from inference
+- produce a reusable research artifact pair
+
+Charlie writes only:
+
+- `artifacts/<module>/<feature>/research/README.md`
+- `artifacts/<module>/<feature>/research/status.json`
+
+## Naming
+
+- `maestro` -> `module_orchestrator`
+- `charlie` -> `research_codebase`
 
 ## Artifact model
 
@@ -43,7 +67,7 @@ Use skill nicknames for human-facing workflows and system names for native agent
 - stage root: `artifacts/<module>/<feature>/<stage>/...`
 - persisted artifacts stay in English
 
-## Validation and rendering
+## Validation
 
 ```bash
 node .agent-cli/bin/agent-stack.mjs validate-input research_codebase --module "<module>" --feature "<feature>" --task "<task>"
@@ -53,14 +77,6 @@ node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module
 node .agent-cli/bin/agent-stack.mjs render-runtimes
 node .agent-cli/bin/agent-stack.mjs render-runtimes --check
 ```
-
-## Runtime policy
-
-- prefer the `maestro` skill for inline orchestration
-- use `module_orchestrator` only as the canonical system agent name
-- prefer the `research_codebase` system agent for delegated research
-- use `charlie` as the human-facing research workflow nickname
-- this stack intentionally ships no `.cursor/commands/` layer
 
 ## Standards
 

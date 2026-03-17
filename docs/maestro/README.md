@@ -1,4 +1,11 @@
+---
+doc_status: canonical
+doc_scope: current
+---
+
 # Maestro Usage Guide
+
+Status: Canonical current-state usage guide.
 
 ## Purpose
 
@@ -13,13 +20,17 @@
 Source of truth, in order:
 
 - `.agents/skills/maestro/SKILL.md`
-- `.agents/orchestrator/AGENTS.md`
-- `.agents/orchestrator/contracts/*`
+- `.agent-code/prompts/skills/maestro.md`
+- `.agent-code/prompts/agents/module_orchestrator.md`
+- `.agent-code/contracts/module_orchestrator/*`
+- `.agent-code/templates/module_orchestrator/*`
+- `.agent-cli/`
 
 Supporting docs:
 
-- [`status-model.md`](./status-model.md)
-- [`adding-stage-agents.md`](./adding-stage-agents.md)
+- [`status-model.md`](./status-model.md) - canonical
+- [`adding-stage-agents.md`](./adding-stage-agents.md) - proposal
+- [`issues-and-improvements.md`](./issues-and-improvements.md) - notes
 
 ## Core Rules
 
@@ -36,7 +47,7 @@ Supporting docs:
 - After any change to module-root or feature-root Maestro artifacts, run:
 
 ```bash
-node .agent-cli/bin/codex-agent.mjs validate-maestro-module --module "<module>" --write-status
+node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "<module>" --write-status
 ```
 
 - Do not report completion unless that command succeeds.
@@ -66,9 +77,9 @@ For the current first loop, `Maestro` should dispatch Research through the nativ
 Use these files as the dispatch contract:
 
 - `.codex/config.toml`
-- `.codex/agents/research/research_codebase.toml`
+- `.codex/agents/research_codebase.toml`
 
-Normal dispatch should not reread `.agents/skills/charlie/` or `.agents/research/` just to restate Charlie's job.
+Normal dispatch should not reread `.agents/skills/charlie/SKILL.md` or `.agent-code/prompts/agents/research_codebase.md` just to restate Charlie's job.
 Those files remain the source of truth for Charlie itself, but the orchestration handoff should stay minimal:
 
 - module
@@ -85,13 +96,13 @@ When that happens, the downstream artifact pair must record `execution_mode = in
 Dedicated Maestro validation command:
 
 ```bash
-node .agent-cli/bin/codex-agent.mjs validate-maestro-module --module "<module>"
+node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "<module>"
 ```
 
 Optional write-back:
 
 ```bash
-node .agent-cli/bin/codex-agent.mjs validate-maestro-module --module "<module>" --write-status
+node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "<module>" --write-status
 ```
 
 What it validates:

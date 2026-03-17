@@ -1,4 +1,11 @@
+---
+doc_status: proposal
+doc_scope: future
+---
+
 # Unified Review Contract — что это и как внедрить в canonical-dual-agent-stack-v3
+
+Status: Proposal document. It describes a future-state contract and is not yet part of the current binding architecture.
 
 Этот документ описывает, что такое **единый review contract** между `module_orchestrator` и downstream stages, зачем он нужен и как его внедрить в текущую сборку.
 

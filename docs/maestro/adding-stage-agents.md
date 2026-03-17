@@ -1,4 +1,11 @@
+---
+doc_status: proposal
+doc_scope: future
+---
+
 # Adding Stage Agents To Maestro
+
+Status: Proposal document. It describes a future-state extension pattern and is not yet part of the current binding architecture.
 
 ## Goal
 
@@ -26,12 +33,19 @@ That same shape should be reused for `design`, `planning`, `implementation`, and
 
 ### 1. Stage Agent Package
 
-Add the stage package in the same style as `research`:
+Add the stage package in the shared layer first:
 
-- `.agents/<stage>/AGENTS.md`
-- `.agents/<stage>/contracts/*`
-- `.agents/<stage>/templates/*`
-- `.codex/agents/<stage>/...`
+- `.agent-code/contracts/<stage>/`
+- `.agent-code/templates/<stage>/`
+- `.agent-code/prompts/agents/<stage>.md`
+- `.agent-code/registry/agents.json`
+- `.agent-code/render/`
+
+Then generate the runtime adapters that the stage needs:
+
+- `.cursor/agents/<stage>.md`
+- `.codex/agents/<stage>.toml`
+- `.agents/skills/<nickname>/SKILL.md` when the stage also has a human-facing skill
 
 If the stage needs machine validation like `research`, give it a dedicated CLI target or validator path.
 
@@ -70,7 +84,7 @@ For example:
 
 Extend:
 
-- `.agent-cli/src/maestro-validation.mjs`
+- `.agent-cli/src/module-validation.mjs`
 
 Specifically, update `STAGE_VALIDATORS` so the module validator knows how to validate the current stage artifacts.
 
@@ -78,7 +92,7 @@ Current example:
 
 ```js
 const STAGE_VALIDATORS = {
-  research: { target: "research" }
+  research: { target: "research_codebase" }
 };
 ```
 
@@ -88,10 +102,11 @@ When `design` gets a validator, add it there.
 
 Keep these files aligned:
 
-- `.agents/orchestrator/AGENTS.md`
 - `.agents/skills/maestro/SKILL.md`
-- `.codex/agents/orchestrator/module_orchestrator.toml`
-- `.codex/agents/research/research_codebase.toml`
+- `.agent-code/prompts/skills/maestro.md`
+- `.agent-code/prompts/agents/module_orchestrator.md`
+- `.codex/agents/module_orchestrator.toml`
+- `.codex/agents/research_codebase.toml`
 - `docs/maestro/README.md`
 - `docs/maestro/status-model.md`
 

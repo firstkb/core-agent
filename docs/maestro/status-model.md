@@ -15,6 +15,27 @@ This document defines the current state model for:
 - feature-root lifecycle status
 - the first real downstream loop: `seed_features -> research -> Maestro review gate`
 
+## Workflow Architecture
+
+```mermaid
+stateDiagram-v2
+    [*] --> Briefing
+    Briefing: module status = briefing/decomposing
+    Briefing --> AwaitingFeatureApproval: feature model confirmed
+    AwaitingFeatureApproval: module status = awaiting_feature_approval
+    AwaitingFeatureApproval --> SeedingFeatures: approve feature seeding
+    SeedingFeatures: module status = seeding_features
+    SeedingFeatures --> AwaitingLaunch: feature pack written
+    AwaitingLaunch: module status = awaiting_orchestration_approval
+    AwaitingLaunch --> ResearchRunning: approve launch
+    ResearchRunning: module = orchestrating\nfeature = active/research
+    ResearchRunning --> AwaitingReview: research complete
+    AwaitingReview: module = awaiting_stage_review\nfeature = awaiting_review/research
+    AwaitingReview --> ResearchRunning: changes requested
+    AwaitingReview --> Complete: review accepted and no live features remain
+    Complete: module status = complete
+```
+
 ## Module-Root Status
 
 File:

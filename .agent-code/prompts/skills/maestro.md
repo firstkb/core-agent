@@ -37,21 +37,42 @@ Read and follow:
 - `.agent-code/contracts/module_orchestrator/input.schema.json`
 - `.agent-code/contracts/module_orchestrator/output.schema.json`
 - `.agent-code/contracts/module_orchestrator/status.schema.json`
-- `.agent-code/contracts/module_orchestrator/feature-status.schema.json`
 - `.agent-code/templates/module_orchestrator/README.md.tmpl`
 - `.agent-code/templates/module_orchestrator/status.template.json`
 - `.agent-code/templates/module_orchestrator/request.md.tmpl`
 - `.agent-code/templates/module_orchestrator/maestro-brief.md.tmpl`
 - `.agent-code/templates/module_orchestrator/feature-index.md.tmpl`
-- `.agent-code/templates/module_orchestrator/feature-readme.md.tmpl`
-- `.agent-code/templates/module_orchestrator/feature-status.template.json`
-- `.agent-code/templates/module_orchestrator/maestro-packet.md.tmpl`
 - `.agent-code/standards/base.md`
 - `.agent-code/standards/artifact-governance.md`
 - `.agent-code/standards/documentation.md`
 - `.agent-code/standards/testing.md`
 - `.agent-code/standards/security.md`
 - `.agent-code/standards/git-workflow.md`
+
+## Read boundaries
+
+Follow the repository-wide runtime read and validation policy in `AGENTS.md`.
+
+Ordinary Maestro work should read only:
+
+- the exact target module artifacts under `artifacts/{module}/`
+- the exact target feature artifacts under `artifacts/{module}/{feature}/` when seeded
+- the shared Maestro contract/template/standards package
+- `.codex/config.toml` and `.codex/agents/research_codebase.toml` only when preparing native Research dispatch
+
+In `discuss`, read only the discuss pack first:
+
+- `contract.json`
+- `input.schema.json`
+- `output.schema.json`
+- `status.schema.json`
+- `README.md.tmpl`
+- `status.template.json`
+- `request.md.tmpl`
+- `maestro-brief.md.tmpl`
+- `feature-index.md.tmpl`
+
+Do not read feature-root templates, `feature-status.schema.json`, `feature-status.template.json`, or `maestro-packet.md.tmpl` until `seed_features` or `launch_orchestration` actually requires them.
 
 ## Input contract
 
@@ -100,8 +121,11 @@ Do not precreate downstream stage directories.
 
 - Prefer staying inline in the main thread.
 - If a runtime requires native delegation, use the system agent `module_orchestrator`.
+- In Codex `launch_orchestration`, dispatch `research_codebase` as a native sub-agent by default; inline Charlie is fallback-only.
+- For a new independent run, treat only `artifacts/{module}/` as run history; do not inspect or cite other module artifact folders as style references, structure examples, or fallback context unless the owner explicitly asks.
 - Never create a second meaning for the name `maestro`; it is always a skill nickname, not a system agent id.
 - Never recursively spawn `module_orchestrator`.
+- After a downstream stage completes and waits for review, keep the module at a closed review gate: `awaiting_stage_review`, `pending_user_decision = review_stage_output`, both readiness and handoff launch/seeding booleans `false`, and `handoff.recommended_next_agent = null`.
 
 ## Validation
 
@@ -112,6 +136,8 @@ node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module
 ```
 
 Do not report completion unless validation succeeds.
+
+Treat `validate-module` as the enforcement gate described in `AGENTS.md`.
 
 ## Interaction modes
 
@@ -134,7 +160,12 @@ Do not report completion unless validation succeeds.
 
 - use only after explicit owner approval
 - dispatch the first loop to `research_codebase`
+- in Codex, use `.codex/config.toml` and `.codex/agents/research_codebase.toml` as the dispatch contract for Charlie
+- in Codex, launch exactly one native sub-agent with role `research_codebase`; use inline Charlie only when native delegation is unavailable or fails
 - pass only the bounded handoff needed for research
+- require the normal delegated research path to record `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"`
+- do not inspect fixtures, prior example runs, or validator source code to infer the launch transition; use the canonical transition in the shared `module_orchestrator` prompt
+- after dispatch succeeds, move the module to `orchestrating` with `launch_status = "in_progress"` and move the feature to `active/research` with `gate = "in_progress"`
 - return to a Maestro review gate after research completes
 
 ## Naming policy

@@ -58,20 +58,11 @@ Before doing orchestration, read and follow:
 - `.agent-code/contracts/module_orchestrator/input.schema.json`
 - `.agent-code/contracts/module_orchestrator/output.schema.json`
 - `.agent-code/contracts/module_orchestrator/status.schema.json`
-- `.agent-code/contracts/module_orchestrator/feature-status.schema.json`
 - `.agent-code/templates/module_orchestrator/README.md.tmpl`
 - `.agent-code/templates/module_orchestrator/status.template.json`
 - `.agent-code/templates/module_orchestrator/request.md.tmpl`
 - `.agent-code/templates/module_orchestrator/maestro-brief.md.tmpl`
 - `.agent-code/templates/module_orchestrator/feature-index.md.tmpl`
-- `.agent-code/templates/module_orchestrator/global-constraints.md.tmpl`
-- `.agent-code/templates/module_orchestrator/glossary.md.tmpl`
-- `.agent-code/templates/module_orchestrator/dependency-map.md.tmpl`
-- `.agent-code/templates/module_orchestrator/execution-order.md.tmpl`
-- `.agent-code/templates/module_orchestrator/status-board.md.tmpl`
-- `.agent-code/templates/module_orchestrator/feature-readme.md.tmpl`
-- `.agent-code/templates/module_orchestrator/feature-status.template.json`
-- `.agent-code/templates/module_orchestrator/maestro-packet.md.tmpl`
 
 When the task materially touches these concerns, also read:
 
@@ -86,6 +77,31 @@ Treat the Maestro package as the binding contract for:
 - module artifact paths
 - output shape
 - machine-readable orchestration state
+
+## Read Boundaries
+
+Follow the repository-wide runtime read and validation policy in `AGENTS.md`.
+
+Normal orchestration reads are limited to:
+
+- the exact target module root `artifacts/<module>/`
+- the exact target feature root `artifacts/<module>/<feature>/` when that feature already exists
+- the shared Maestro contract, templates, and standards listed above
+- `.codex/config.toml` and `.codex/agents/research_codebase.toml` only when `mode = "launch_orchestration"` and native Research dispatch is being prepared
+
+In `discuss`, read only the discuss pack first:
+
+- `contract.json`
+- `input.schema.json`
+- `output.schema.json`
+- `status.schema.json`
+- `README.md.tmpl`
+- `status.template.json`
+- `request.md.tmpl`
+- `maestro-brief.md.tmpl`
+- `feature-index.md.tmpl`
+
+Do not read feature-root templates, `feature-status.schema.json`, `feature-status.template.json`, `maestro-packet.md.tmpl`, or optional companion templates until the current mode actually requires them.
 
 ## Input Contract
 
@@ -130,9 +146,12 @@ Always:
 - keep seeding minimal: feature root pack only, no empty downstream stage directories
 - separate seeding from downstream dispatch: a seeded feature waits at `current_stage = "seeded"` with `gate = "awaiting_owner_approval"` until orchestration launch is explicitly approved
 - after a downstream stage finishes, route control back through a Maestro review gate before any next-stage dispatch is considered
+- when a downstream stage is complete and waiting for Maestro review, keep the module at a closed review gate: `status = "awaiting_stage_review"`, `interaction.pending_user_decision = "review_stage_output"`, `readiness.ready_for_feature_seeding = false`, `readiness.ready_for_orchestration_launch = false`, `handoff.ready_for_feature_seeding = false`, `handoff.ready_for_orchestration_launch = false`, and `handoff.recommended_next_agent = null`
 - for the current first loop, dispatch `research` through the native downstream role `research_codebase`
+- in Codex `launch_orchestration`, the default path is exactly one native sub-agent with role `research_codebase`
+- use `.codex/config.toml` and `.codex/agents/research_codebase.toml` as the downstream dispatch contract for Charlie
 - do not reread Charlie package docs during ordinary dispatch just to rediscover Charlie's responsibilities
-- if native downstream dispatch is unavailable, inline fallback is allowed, but the fallback must be recorded honestly in the downstream runtime trace
+- if native downstream dispatch is unavailable or fails, inline fallback is allowed, but only then, and the fallback must be recorded honestly in the downstream runtime trace
 - if a template exists for an artifact, preserve its section headings verbatim and put any extra detail only under `## Additional Notes`
 - `request.md` captures normalized input, owner wording, explicit constraints, and at most a narrow current request interpretation; do not move rationale or decomposition analysis there
 - create optional companion artifacts only when they materially reduce ambiguity and, when created, follow their template headings exactly
@@ -143,6 +162,7 @@ Always:
 - before feature seeding, keep `handoff.recommended_next_agent = null`
 - when a requested capability appears mismatched to the named module, explicitly record `module-fit unresolved` in `maestro-brief.md` and wait for owner confirmation before forcing feature ownership
 - for a new independent run, do not inspect artifact folders from other modules just because they look similar; treat only the exact target module root `artifacts/<module>/` as authoritative run history
+- do not read or cite artifact folders from other modules as style references, structure examples, templates, or fallback context
 - if `artifacts/<module>/` does not exist yet, start from the request, package contract, and product code context only
 - inspect another module's artifacts only if the owner explicitly asks for comparison, migration, or continuation from that older run
 
@@ -189,8 +209,22 @@ If the thread resumes after context-window summarization, context trimming, or a
   - `readiness.ready_for_orchestration_launch = true`
   - explicit owner approval
 - for the current first loop, dispatch `research` via `research_codebase`
+- in Codex, launch exactly one native sub-agent with role `research_codebase`; do not run Charlie inline unless native delegation is unavailable or fails
 - launch downstream work from the current orchestration context, but never recursively spawn `module_orchestrator`
 - keep the Research handoff minimal: pass normalized `module`, `feature`, `task`, explicit scope limits, the resolved artifact directory, and the exact research artifact paths
+- require the downstream research run to record `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"` on the normal delegated path
+- do not inspect fixtures, prior example runs, or validator source code to infer the launch transition; use the canonical transition below
+- after the research sub-agent is successfully launched, write the canonical launch transition immediately:
+  - module `status = "orchestrating"`
+  - `interaction.pending_user_decision = "none"`
+  - `approvals.orchestration_launch_received = true`
+  - `orchestration.launch_status = "in_progress"`
+  - `orchestration.active_stage = "research"`
+  - `orchestration.recommended_entry_agent = "research_codebase"`
+  - feature `status = "active"`
+  - feature `current_stage = "research"`
+  - feature `next_stage = "design"`
+  - feature `gate = "in_progress"`
 - do not read Charlie package docs during ordinary dispatch unless native downstream spawning is unavailable and inline fallback is required
 
 ## Validation
@@ -204,8 +238,9 @@ node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module
 Do not report completion unless validation succeeds.
 
 The validation command and artifact contract use the system name `module_orchestrator`; the inline workflow nickname remains `maestro`.
+Treat `validate-module` as the enforcement gate described in `AGENTS.md`.
 
-The validator is the source of truth for:
+The validation gate enforces:
 
 - the primary artifact pair exists at the canonical module paths
 - `status.json` reflects the actual artifact paths that are present
@@ -220,6 +255,7 @@ The validator is the source of truth for:
 1. Normalize the request into the contract fields.
 2. If `mode` is omitted, set it to `discuss`.
 3. If `artifacts/<module>/` already exists, treat it as the only authoritative run history for this module.
+   Do not inspect or cite other module artifact folders as examples, style references, or fallback context.
 4. Build or update the module-level primary artifact pair.
 5. Add companion artifacts only when they materially reduce ambiguity, and when you do, keep their template headings verbatim.
 6. Decide whether the request needs feature decomposition or can remain a single-feature module.

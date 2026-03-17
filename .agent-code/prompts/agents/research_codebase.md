@@ -65,9 +65,19 @@ Persisted artifacts must stay in English.
 If `artifacts/<module>/<feature>/maestro-packet.md` exists, read it first as the primary downstream brief.
 If `artifacts/<module>/<feature>/README.md` exists, read it second as the stable feature charter.
 
-## Output Paths
+## Read Boundaries
 
-Always read `.agent-code/config.json` before saving artifacts.
+Follow the repository-wide runtime read and validation policy in `AGENTS.md`.
+
+Normal research reads are limited to:
+
+- the exact target feature root `artifacts/<module>/<feature>/`
+- the shared Research contract, templates, and standards listed above
+- product/runtime code and docs that materially answer the research question
+
+Do not treat `.codex/`, `.cursor/`, `.agent-cli/`, render/registry surfaces, or other module artifacts as ordinary research inputs unless the task explicitly targets agent tooling or the owner explicitly asks.
+
+## Output Paths
 
 Resolve research paths through `node .agent-cli/bin/agent-stack.mjs resolve-paths research_codebase ...`. The source-of-truth path is:
 
@@ -78,8 +88,9 @@ Set `runtime.run_dir` to `artifacts/<module>/<feature>/research`.
 
 Use:
 
-- `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"` when spawned through `Task`
-- `runtime.execution_mode = "inline"` and `runtime.agent_profile = null` when the same workflow runs inline
+- `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"` when launched through the native delegated role `research_codebase`
+- this delegated path is the default for Codex `launch_orchestration` from Maestro
+- `runtime.execution_mode = "inline"` and `runtime.agent_profile = null` only when the same workflow runs inline directly or as an explicit fallback
 - when launched by Maestro, trust the normalized `module`, `feature`, `task`, and resolved artifact paths passed in the handoff unless they conflict with the artifact contract
 
 ## Research Standards
@@ -114,6 +125,7 @@ node .agent-cli/bin/agent-stack.mjs validate-artifacts research_codebase --modul
 ```
 
 Do not report completion unless validation succeeds.
+Treat `validate-input`, `resolve-paths`, and `validate-artifacts` as the enforcement gates described in `AGENTS.md`.
 
 ## Final Chat Output
 

@@ -26,6 +26,30 @@ Generated adapters are not the source of truth:
 
 Platform folders are adapters. Shared logic lives in `.agent-code/`.
 
+## Runtime Read Policy
+
+Ordinary agent work should read only:
+
+- `AGENTS.md`
+- relevant files under `.agent-code/prompts/`, `.agent-code/contracts/`, `.agent-code/templates/`, and `.agent-code/standards/`
+- the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/<feature>/...`
+- product/runtime code and docs that materially answer the task
+- native runtime config only when the active shared prompt explicitly requires it for dispatch
+
+Do not read build or plumbing surfaces during ordinary work:
+
+- `.agent-code/render/`
+- `.agent-code/registry/`
+- `.agent-code/config.json`
+- `.agent-cli/src/`
+- `.agent-cli/test/`
+- `.cursor/`
+- `.agents/skills/*`
+- `.codex/config.toml` and `.codex/agents/*` unless the active shared prompt explicitly requires them
+- artifact folders for other modules unless the owner explicitly asks
+
+You are not the build system. Do not inspect render templates, registry metadata, validator source, fixtures, runtime adapters, or old runs to infer behavior that is already defined in shared prompts, contracts, templates, or standards.
+
 ## Runtime roles
 
 ### Maestro
@@ -67,7 +91,16 @@ Charlie writes only:
 - stage root: `artifacts/<module>/<feature>/<stage>/...`
 - persisted artifacts stay in English
 
+## Artifact History Policy
+
+- Treat only the exact target module and target feature artifact tree as the active run history.
+- Do not read or cite artifact folders from other modules as style references, structure examples, templates, or fallback context unless the owner explicitly asks.
+
 ## Validation
+
+Treat documented CLI validation commands as enforcement gates.
+If a validation command fails, report the failure clearly and stop.
+Do not inspect `.agent-cli/src/*` to reverse-engineer validator behavior unless the owner explicitly asks to debug the validator itself.
 
 ```bash
 node .agent-cli/bin/agent-stack.mjs validate-input research_codebase --module "<module>" --feature "<feature>" --task "<task>"

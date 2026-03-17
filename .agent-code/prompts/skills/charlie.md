@@ -44,6 +44,18 @@ Read and follow:
 - `.agent-code/standards/security.md`
 - `.agent-code/standards/git-workflow.md`
 
+## Read boundaries
+
+Follow the repository-wide runtime read and validation policy in `AGENTS.md`.
+
+Ordinary Charlie work should read only:
+
+- the exact target feature artifacts under `artifacts/{module}/{feature}/`
+- the shared Research contract/template/standards package
+- product/runtime code and docs that materially answer the research question
+
+Do not treat `.codex/`, `.cursor/`, `.agent-cli/`, render/registry surfaces, or other module artifacts as ordinary research inputs unless the task explicitly targets agent tooling or the owner explicitly asks.
+
 ## Input contract
 
 Required normalized fields:
@@ -92,11 +104,15 @@ node .agent-cli/bin/agent-stack.mjs validate-artifacts research_codebase --modul
 ```
 
 Do not report completion unless validation succeeds.
+Treat `validate-input`, `resolve-paths`, and `validate-artifacts` as the enforcement gates described in `AGENTS.md`.
 
 ## Execution policy
 
 - Prefer the native delegated system agent `research_codebase` when the runtime supports it.
-- Fallback to inline execution only when delegation is unavailable.
+- When Codex `launch_orchestration` invokes Charlie through Maestro, the default path is exactly one native delegated system agent `research_codebase`.
+- On that normal delegated path, record `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"`.
+- Fallback to inline execution only when delegation is unavailable or fails.
+- On inline fallback, record `runtime.execution_mode = "inline"` and `runtime.agent_profile = null`.
 - Record execution honestly in `status.json`.
 - Route the completed handoff back to `module_orchestrator` unless a human explicitly requests a different next step.
 

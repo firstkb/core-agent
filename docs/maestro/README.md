@@ -32,6 +32,28 @@ Supporting docs:
 - [`adding-stage-agents.md`](./adding-stage-agents.md) - proposal
 - [`issues-and-improvements.md`](./issues-and-improvements.md) - notes
 
+## Operational Boundaries
+
+Ordinary Maestro work should read only:
+
+- the exact target module artifacts under `artifacts/{module}/`
+- the exact target feature artifacts under `artifacts/{module}/{feature}/` when seeded
+- the shared `module_orchestrator` contract/template package
+- `.codex/config.toml` and `.codex/agents/research_codebase.toml` only when preparing native Research dispatch
+
+Ordinary Maestro work should not read:
+
+- `.agent-code/render/`
+- `.agent-code/registry/`
+- `.agent-code/config.json`
+- `.agent-cli/src/`
+- `.agent-cli/test/`
+- `.cursor/`
+- `.agents/skills/`
+- artifact folders for other modules unless the owner explicitly asks
+
+Validation commands are enforcement gates. Ordinary Maestro runs should execute `validate-module`, but should not inspect `.agent-cli/src/module-validation.mjs` unless the owner explicitly asks to debug validator behavior.
+
 ## Core Rules
 
 - The user may talk to `Maestro` in Russian.

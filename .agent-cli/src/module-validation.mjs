@@ -719,6 +719,36 @@ function validateStateModel(statusData, featureStatuses, errors) {
       errors.push('status.orchestration.launch_status must equal "awaiting_review" when a feature is awaiting review');
       ok = false;
     }
+
+    if (statusData.interaction.pending_user_decision !== "review_stage_output") {
+      errors.push('status.interaction.pending_user_decision must equal "review_stage_output" when a feature is awaiting review');
+      ok = false;
+    }
+
+    if (statusData.readiness.ready_for_feature_seeding !== false) {
+      errors.push("status.readiness.ready_for_feature_seeding must be false while awaiting stage review");
+      ok = false;
+    }
+
+    if (statusData.readiness.ready_for_orchestration_launch !== false) {
+      errors.push("status.readiness.ready_for_orchestration_launch must be false while awaiting stage review");
+      ok = false;
+    }
+
+    if (statusData.handoff.ready_for_feature_seeding !== false) {
+      errors.push("status.handoff.ready_for_feature_seeding must be false while awaiting stage review");
+      ok = false;
+    }
+
+    if (statusData.handoff.ready_for_orchestration_launch !== false) {
+      errors.push("status.handoff.ready_for_orchestration_launch must be false while awaiting stage review");
+      ok = false;
+    }
+
+    if (statusData.handoff.recommended_next_agent !== null) {
+      errors.push("status.handoff.recommended_next_agent must be null while awaiting stage review");
+      ok = false;
+    }
   }
 
   if (!hasAwaitingReview && moduleStatus === "awaiting_stage_review") {

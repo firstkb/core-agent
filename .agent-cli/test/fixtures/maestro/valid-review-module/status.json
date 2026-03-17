@@ -56,8 +56,8 @@
     "information_complete": true,
     "requires_guessing": false,
     "open_questions_blocking": false,
-    "ready_for_feature_seeding": true,
-    "ready_for_orchestration_launch": true
+    "ready_for_feature_seeding": false,
+    "ready_for_orchestration_launch": false
   },
   "approvals": {
     "feature_seeding_required": true,
@@ -68,12 +68,12 @@
   "orchestration": {
     "launch_status": "awaiting_review",
     "active_stage": "research",
-    "recommended_entry_agent": null,
+    "recommended_entry_agent": "research_codebase",
     "active_feature_count": 1
   },
   "handoff": {
-    "ready_for_feature_seeding": true,
-    "ready_for_orchestration_launch": true,
+    "ready_for_feature_seeding": false,
+    "ready_for_orchestration_launch": false,
     "recommended_next_agent": null,
     "required_artifacts_minimum": [
       "primary_readme",

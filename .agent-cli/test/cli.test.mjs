@@ -6,6 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 import { renderRuntimes } from "../src/lib/render-runtimes.mjs";
+import { getRepoRoot } from "../src/config.mjs";
 import { getArtifactPaths, getTargetRequiredOptions } from "../src/paths.mjs";
 import { getTargetDefinition } from "../src/targets/index.mjs";
 import { validateModule } from "../src/module-validation.mjs";
@@ -13,6 +14,10 @@ import { validateArtifacts, validateInput } from "../src/validation.mjs";
 
 const RESEARCH_FIXTURES_ROOT = ".agent-cli/test/fixtures/artifacts";
 const MODULE_FIXTURES_ROOT = ".agent-cli/test/fixtures/maestro";
+const AGENTS_REGISTRY = JSON.parse(
+  fs.readFileSync(path.join(getRepoRoot(), ".agent-code", "registry", "agents.json"), "utf8")
+);
+const RESEARCH_CODEBASE_MODEL = AGENTS_REGISTRY.research_codebase.runtime.codex_model;
 
 test("research_codebase target remains available", () => {
   assert.equal(getTargetDefinition("research_codebase").id, "research_codebase");
@@ -194,10 +199,10 @@ test("renderRuntimes can write generated adapters to an alternate output root", 
 
   assert.match(generatedAgents, /render-runtimes/);
   assert.match(generatedCursorAgent, /# Cursor adapter for `module_orchestrator`/);
-  assert.match(generatedCodexConfig, /model = "gpt-5"/);
+  assert.match(generatedCodexConfig, /^model = ".+"$/m);
   assert.match(generatedCodexConfig, /\[agents\.research_codebase\]/);
   assert.match(generatedCodexConfig, /config_file = "agents\/research_codebase\.toml"/);
-  assert.match(generatedCodexAgent, /model = "gpt-5"/);
+  assert.match(generatedCodexAgent, new RegExp(`model = "${RESEARCH_CODEBASE_MODEL.replace(".", "\\.")}"`));
   assert.match(generatedCodexAgent, /model_reasoning_effort = "medium"/);
   assert.doesNotMatch(generatedCodexAgent, /^name = /m);
   assert.match(generatedSkill, /# Shared skill wrapper for `charlie`/);

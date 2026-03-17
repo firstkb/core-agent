@@ -12,6 +12,7 @@ This bundle breaks the revised V2 replacement proposal into implementation-orien
 - `state-machine.md` — normative lifecycle model, transition rules, and invariants.
 - `json-schemas/` — the first-cut machine-state schemas for V2.
 - `cli-command-spec.md` — typed CLI command contract for the state-gateway model.
+- `implementation-plan.md` — phased implementation plan with statuses, deliverables, prompts, and acceptance gates.
 - `module-orchestrator-control-plane-v2-revised.md` — the revised replacement proposal that these artifacts derive from.
 
 Recommended reading order:
@@ -20,5 +21,6 @@ Recommended reading order:
 2. `state-machine.md`
 3. `json-schemas/*.schema.json`
 4. `cli-command-spec.md`
+5. `implementation-plan.md`
 
 The intent of this bundle is to make V2 implementable without re-reading long design discussions every time a schema, command, or prompt changes.

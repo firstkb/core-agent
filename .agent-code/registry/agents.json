@@ -24,6 +24,7 @@
       "cursor_model": "inherit",
       "readonly": false,
       "is_background": false,
+      "codex_model": "gpt-5.4",
       "codex_reasoning_effort": "high"
     },
     "critical_invariants": [
@@ -59,6 +60,7 @@
       "cursor_model": "inherit",
       "readonly": false,
       "is_background": false,
+      "codex_model": "gpt-5.4",
       "codex_reasoning_effort": "medium"
     },
     "critical_invariants": [

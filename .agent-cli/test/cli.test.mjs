@@ -188,12 +188,18 @@ test("renderRuntimes can write generated adapters to an alternate output root", 
 
   const generatedAgents = fs.readFileSync(path.join(tempRoot, "AGENTS.md"), "utf8");
   const generatedCursorAgent = fs.readFileSync(path.join(tempRoot, ".cursor/agents/module_orchestrator.md"), "utf8");
+  const generatedCodexConfig = fs.readFileSync(path.join(tempRoot, ".codex/config.toml"), "utf8");
   const generatedCodexAgent = fs.readFileSync(path.join(tempRoot, ".codex/agents/research_codebase.toml"), "utf8");
   const generatedSkill = fs.readFileSync(path.join(tempRoot, ".agents/skills/charlie/SKILL.md"), "utf8");
 
   assert.match(generatedAgents, /render-runtimes/);
   assert.match(generatedCursorAgent, /# Cursor adapter for `module_orchestrator`/);
-  assert.match(generatedCodexAgent, /name = "research_codebase"/);
+  assert.match(generatedCodexConfig, /model = "gpt-5"/);
+  assert.match(generatedCodexConfig, /\[agents\.research_codebase\]/);
+  assert.match(generatedCodexConfig, /config_file = "agents\/research_codebase\.toml"/);
+  assert.match(generatedCodexAgent, /model = "gpt-5"/);
+  assert.match(generatedCodexAgent, /model_reasoning_effort = "medium"/);
+  assert.doesNotMatch(generatedCodexAgent, /^name = /m);
   assert.match(generatedSkill, /# Shared skill wrapper for `charlie`/);
 });
 

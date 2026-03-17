@@ -45,6 +45,14 @@ function buildBulletBlock(items) {
   return items.map((item) => `- ${item}`).join("\n");
 }
 
+function toTomlString(value) {
+  return JSON.stringify(String(value));
+}
+
+function toTomlStringArray(values) {
+  return `[${values.map((value) => toTomlString(value)).join(", ")}]`;
+}
+
 function loadTemplates(repoRoot) {
   const root = path.join(repoRoot, ".agent-code", "render");
 
@@ -81,6 +89,24 @@ function buildSkillsSection(skills) {
     .join("\n");
 }
 
+function buildCodexAgentsRegistry(agents) {
+  const codexRoot = ".codex";
+
+  return Object.values(agents)
+    .sort((left, right) => left.system_name.localeCompare(right.system_name))
+    .map((agent) => {
+      const configFile = toPosix(path.relative(codexRoot, agent.generated_paths.codex_agent));
+
+      return [
+        `[agents.${agent.system_name}]`,
+        `description = ${toTomlString(agent.descriptions.agent)}`,
+        `nickname_candidates = ${toTomlStringArray([agent.skill_nickname])}`,
+        `config_file = ${toTomlString(configFile)}`
+      ].join("\n");
+    })
+    .join("\n\n");
+}
+
 function buildAgentContext(agent) {
   return {
     system_name: agent.system_name,
@@ -93,6 +119,7 @@ function buildAgentContext(agent) {
     cursor_model: agent.runtime.cursor_model,
     readonly: boolToYaml(agent.runtime.readonly),
     is_background: boolToYaml(agent.runtime.is_background),
+    codex_model: agent.runtime.codex_model,
     codex_reasoning_effort: agent.runtime.codex_reasoning_effort,
     critical_invariants: buildBulletBlock(agent.critical_invariants),
     critical_invariants_plain: buildBulletBlock(agent.critical_invariants)
@@ -123,7 +150,9 @@ function buildRenderJobs(repoRoot) {
     },
     {
       relativePath: ".codex/config.toml",
-      content: renderTemplate(templates.codexConfig, {})
+      content: renderTemplate(templates.codexConfig, {
+        codex_agents_registry: buildCodexAgentsRegistry(agents)
+      })
     }
   ];
 

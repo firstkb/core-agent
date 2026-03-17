@@ -16,7 +16,7 @@ npm --prefix .agent-cli test
 npm --prefix .agent-cli run check:runtimes
 ```
 
-`docs/README.md` is the entrypoint for classifying repository docs into canonical documents, proposals, and notes.
+[`docs/README.md`](./README.md) is the entrypoint for classifying repository docs into canonical documents, proposals, and notes.
 
 ---
 

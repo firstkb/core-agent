@@ -1,0 +1,12 @@
+{
+  "module": "{{module}}",
+  "feature": "{{feature}}",
+  "feature_id": "{{feature_id}}",
+  "title": "{{feature_title}}",
+  "status": "queued",
+  "current_stage": "seeded",
+  "next_stage": "research",
+  "gate": "awaiting_owner_approval",
+  "owner": "Maestro",
+  "last_updated": "{{runtime_generated_at}}"
+}

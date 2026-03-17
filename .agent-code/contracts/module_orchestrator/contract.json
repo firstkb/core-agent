@@ -1,0 +1,100 @@
+{
+  "agent_id": "module_orchestrator",
+  "persona_name": "Maestro",
+  "agent_version": "3.1.0",
+  "contract_version": "3.0.0",
+  "step": "orchestration",
+  "role": "module-level orchestrator",
+  "allowed_execution_modes": [
+    "single"
+  ],
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "status_schema": "status.schema.json",
+  "artifact_language": "en",
+  "interaction_modes": {
+    "default": "discuss",
+    "allowed": [
+      "discuss",
+      "seed_features",
+      "launch_orchestration"
+    ]
+  },
+  "artifacts": {
+    "primary_readme": {
+      "path": "{artifacts_root}/{module}/README.md",
+      "media_type": "text/markdown",
+      "role": "human_readable_orchestration_handoff",
+      "template": "../templates/README.md.tmpl"
+    },
+    "status_json": {
+      "path": "{artifacts_root}/{module}/status.json",
+      "media_type": "application/json",
+      "role": "machine_readable_orchestration_state",
+      "template": "../templates/status.template.json",
+      "schema": "status.schema.json"
+    }
+  },
+  "feature_seed_artifacts": {
+    "feature_readme": {
+      "path": "{artifacts_root}/{module}/{feature}/README.md",
+      "media_type": "text/markdown",
+      "role": "feature_root_human_readable_handoff",
+      "template": "../templates/feature-readme.md.tmpl"
+    },
+    "feature_status_json": {
+      "path": "{artifacts_root}/{module}/{feature}/status.json",
+      "media_type": "application/json",
+      "role": "feature_root_machine_readable_state",
+      "template": "../templates/feature-status.template.json",
+      "schema": "feature-status.schema.json"
+    },
+    "maestro_packet_md": {
+      "path": "{artifacts_root}/{module}/{feature}/maestro-packet.md",
+      "media_type": "text/markdown",
+      "role": "feature_seed_packet",
+      "template": "../templates/maestro-packet.md.tmpl"
+    }
+  },
+  "artifact_sets": {
+    "canonical_minimum": [
+      "primary_readme",
+      "status_json",
+      "request_md",
+      "maestro_brief_md",
+      "feature_index_md"
+    ],
+    "optional_companion": [
+      "global_constraints_md",
+      "glossary_md",
+      "dependency_map_md",
+      "execution_order_md",
+      "status_board_md"
+    ]
+  },
+  "consumes_artifacts": [],
+  "produces_status": true,
+  "runtime_policies": {
+    "supports_persist_artifacts": true,
+    "write_scope": "artifacts_only"
+  },
+  "validation_contract": {
+    "cross_artifact_consistency_required": true,
+    "readme_frontmatter_must_match_status_runtime": true,
+    "required_artifact_sets_must_distinguish_minimum_from_available": true
+  },
+  "decision_policy": {
+    "must_not_assume_owner_decisions": true,
+    "recommendations_require_explicit_owner_request": true,
+    "provisional_hypotheses_must_be_labeled": true,
+    "provisional_hypotheses_must_not_unlock_readiness": true
+  },
+  "feature_seeding_policy": {
+    "feature_root_pack_only": true,
+    "precreate_stage_directories": false,
+    "downstream_agents_create_stage_directories_on_first_write": true
+  },
+  "recommended_next_agents": [
+    "research_codebase"
+  ]
+}

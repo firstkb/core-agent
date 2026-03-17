@@ -1,0 +1,110 @@
+{
+  "contract_version": "3.0.0",
+  "agent_id": "module_orchestrator",
+  "persona_name": "Maestro",
+  "step": "orchestration",
+  "module": "broken-review-module",
+  "status": "awaiting_stage_review",
+  "generated_at": "2026-03-16T17:00:00Z",
+  "artifacts": {
+    "primary_readme": ".agent-cli/test/fixtures/maestro/broken-review-module/README.md",
+    "status_json": ".agent-cli/test/fixtures/maestro/broken-review-module/status.json",
+    "request_md": ".agent-cli/test/fixtures/maestro/broken-review-module/request.md",
+    "maestro_brief_md": ".agent-cli/test/fixtures/maestro/broken-review-module/maestro-brief.md",
+    "feature_index_md": ".agent-cli/test/fixtures/maestro/broken-review-module/feature-index.md",
+    "global_constraints_md": null,
+    "glossary_md": null,
+    "dependency_map_md": null,
+    "execution_order_md": null,
+    "status_board_md": null
+  },
+  "summary": {
+    "topic": "Broken review-gate fixture",
+    "open_questions_count": 0,
+    "blockers_count": 1,
+    "current_goal": "Demonstrate research-stage validation failure."
+  },
+  "briefing": {
+    "request_captured": true,
+    "brief_established": true,
+    "scope_state": "confirmed",
+    "constraints_captured": true,
+    "success_criteria_state": "confirmed",
+    "target_alignment_state": "aligned"
+  },
+  "interaction": {
+    "mode": "launch_orchestration",
+    "auto_spawn_enabled": false,
+    "pending_user_decision": "review_stage_output"
+  },
+  "decomposition": {
+    "state": "confirmed",
+    "mode": "single_feature",
+    "features": [
+      {
+        "slug": "restore-executable-npm-test",
+        "title": "Restore executable npm test for the fixture package",
+        "state": "awaiting_review"
+      }
+    ],
+    "candidate_feature_count": 1,
+    "approved_feature_count": 1,
+    "seeded_feature_count": 1,
+    "completed_feature_count": 0
+  },
+  "readiness": {
+    "information_complete": true,
+    "requires_guessing": false,
+    "open_questions_blocking": false,
+    "ready_for_feature_seeding": true,
+    "ready_for_orchestration_launch": true
+  },
+  "approvals": {
+    "feature_seeding_required": true,
+    "feature_seeding_received": true,
+    "orchestration_launch_required": true,
+    "orchestration_launch_received": true
+  },
+  "orchestration": {
+    "launch_status": "awaiting_review",
+    "active_stage": "research",
+    "recommended_entry_agent": null,
+    "active_feature_count": 1
+  },
+  "handoff": {
+    "ready_for_feature_seeding": true,
+    "ready_for_orchestration_launch": true,
+    "recommended_next_agent": null,
+    "required_artifacts_minimum": [
+      "primary_readme",
+      "status_json",
+      "request_md",
+      "maestro_brief_md",
+      "feature_index_md"
+    ],
+    "available_artifacts": [
+      "primary_readme",
+      "status_json",
+      "request_md",
+      "maestro_brief_md",
+      "feature_index_md"
+    ],
+    "required_inputs_for_next_agent": [
+      "Research artifacts are missing."
+    ]
+  },
+  "validation": {
+    "schema_valid": true,
+    "artifact_complete": true,
+    "runtime_trace_valid": true,
+    "cross_artifact_consistent": false
+  },
+  "runtime": {
+    "initiator": "codex",
+    "model": "gpt-5",
+    "effort": "medium",
+    "run_dir": ".agent-cli/test/fixtures/maestro/broken-review-module",
+    "execution_mode": "inline",
+    "agent_profile": null
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "agent_id",
+    "persona_name",
+    "step",
+    "module",
+    "feature",
+    "status",
+    "generated_at",
+    "artifacts",
+    "summary",
+    "handoff",
+    "validation",
+    "runtime"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_id": {
+      "type": "string",
+      "const": "research_codebase"
+    },
+    "persona_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "step": {
+      "type": "string",
+      "const": "research"
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
+    },
+    "feature": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "complete",
+        "blocked",
+        "failed"
+      ]
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "primary_readme",
+        "status_json"
+      ],
+      "properties": {
+        "primary_readme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status_json": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topic",
+        "investigation_areas",
+        "key_findings_count",
+        "open_questions_count",
+        "follow_up_round_used"
+      ],
+      "properties": {
+        "topic": {
+          "type": "string",
+          "minLength": 1
+        },
+        "investigation_areas": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "key_findings_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "open_questions_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "follow_up_round_used": {
+          "type": "boolean"
+        }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ready_for_next_agent",
+        "recommended_next_agent",
+        "required_artifacts",
+        "required_inputs_for_next_agent"
+      ],
+      "properties": {
+        "ready_for_next_agent": {
+          "type": "boolean"
+        },
+        "recommended_next_agent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "required_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required_inputs_for_next_agent": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_valid",
+        "artifact_complete",
+        "runtime_trace_valid"
+      ],
+      "properties": {
+        "schema_valid": {
+          "type": "boolean"
+        },
+        "artifact_complete": {
+          "type": "boolean"
+        },
+        "runtime_trace_valid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "initiator",
+        "model",
+        "effort",
+        "run_dir",
+        "execution_mode",
+        "agent_profile"
+      ],
+      "properties": {
+        "initiator": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1
+        },
+        "run_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "execution_mode": {
+          "type": "string",
+          "enum": [
+            "inline",
+            "sub_agent"
+          ]
+        },
+        "agent_profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

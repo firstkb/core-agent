@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "module",
+    "feature",
+    "feature_id",
+    "title",
+    "status",
+    "current_stage",
+    "next_stage",
+    "gate",
+    "owner",
+    "last_updated"
+  ],
+  "properties": {
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
+    },
+    "feature": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "feature_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "active",
+        "awaiting_review",
+        "blocked",
+        "complete",
+        "failed"
+      ]
+    },
+    "current_stage": {
+      "type": "string",
+      "enum": [
+        "seeded",
+        "research",
+        "design",
+        "planning",
+        "implementation",
+        "documentation",
+        "evidence",
+        "done"
+      ]
+    },
+    "next_stage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "research",
+        "design",
+        "planning",
+        "implementation",
+        "documentation",
+        "evidence",
+        "done",
+        null
+      ]
+    },
+    "gate": {
+      "type": "string",
+      "enum": [
+        "awaiting_owner_approval",
+        "approved_for_dispatch",
+        "in_progress",
+        "awaiting_maestro_review",
+        "changes_requested",
+        "none"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

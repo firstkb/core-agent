@@ -1,0 +1,12 @@
+{
+  "module": "valid-review-module",
+  "feature": "restore-executable-npm-test",
+  "feature_id": "valid-review-module/restore-executable-npm-test",
+  "title": "Restore executable npm test for the fixture package",
+  "status": "awaiting_review",
+  "current_stage": "research",
+  "next_stage": "design",
+  "gate": "awaiting_maestro_review",
+  "owner": "Maestro",
+  "last_updated": "2026-03-16T17:00:00Z"
+}

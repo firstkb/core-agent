@@ -1,0 +1,110 @@
+{
+  "contract_version": "3.0.0",
+  "agent_id": "module_orchestrator",
+  "persona_name": "Maestro",
+  "step": "orchestration",
+  "module": "valid-approval-module",
+  "status": "awaiting_feature_approval",
+  "generated_at": "2026-03-16T18:15:00Z",
+  "artifacts": {
+    "primary_readme": ".agent-cli/test/fixtures/maestro/valid-approval-module/README.md",
+    "status_json": ".agent-cli/test/fixtures/maestro/valid-approval-module/status.json",
+    "request_md": ".agent-cli/test/fixtures/maestro/valid-approval-module/request.md",
+    "maestro_brief_md": ".agent-cli/test/fixtures/maestro/valid-approval-module/maestro-brief.md",
+    "feature_index_md": ".agent-cli/test/fixtures/maestro/valid-approval-module/feature-index.md",
+    "global_constraints_md": null,
+    "glossary_md": null,
+    "dependency_map_md": null,
+    "execution_order_md": null,
+    "status_board_md": null
+  },
+  "summary": {
+    "topic": "Valid approval-gate fixture",
+    "open_questions_count": 0,
+    "blockers_count": 0,
+    "current_goal": "Obtain explicit owner approval to seed the confirmed feature."
+  },
+  "briefing": {
+    "request_captured": true,
+    "brief_established": true,
+    "scope_state": "confirmed",
+    "constraints_captured": true,
+    "success_criteria_state": "confirmed",
+    "target_alignment_state": "aligned"
+  },
+  "interaction": {
+    "mode": "discuss",
+    "auto_spawn_enabled": false,
+    "pending_user_decision": "approve_feature_seeding"
+  },
+  "decomposition": {
+    "state": "confirmed",
+    "mode": "single_feature",
+    "features": [
+      {
+        "slug": "restore-executable-npm-test",
+        "title": "Restore executable npm test for the fixture package",
+        "state": "approved"
+      }
+    ],
+    "candidate_feature_count": 1,
+    "approved_feature_count": 1,
+    "seeded_feature_count": 0,
+    "completed_feature_count": 0
+  },
+  "readiness": {
+    "information_complete": true,
+    "requires_guessing": false,
+    "open_questions_blocking": false,
+    "ready_for_feature_seeding": true,
+    "ready_for_orchestration_launch": false
+  },
+  "approvals": {
+    "feature_seeding_required": true,
+    "feature_seeding_received": false,
+    "orchestration_launch_required": true,
+    "orchestration_launch_received": false
+  },
+  "orchestration": {
+    "launch_status": "not_requested",
+    "active_stage": null,
+    "recommended_entry_agent": null,
+    "active_feature_count": 0
+  },
+  "handoff": {
+    "ready_for_feature_seeding": true,
+    "ready_for_orchestration_launch": false,
+    "recommended_next_agent": null,
+    "required_artifacts_minimum": [
+      "primary_readme",
+      "status_json",
+      "request_md",
+      "maestro_brief_md",
+      "feature_index_md"
+    ],
+    "available_artifacts": [
+      "primary_readme",
+      "status_json",
+      "request_md",
+      "maestro_brief_md",
+      "feature_index_md"
+    ],
+    "required_inputs_for_next_agent": [
+      "Explicit owner approval to seed the confirmed feature root pack."
+    ]
+  },
+  "validation": {
+    "schema_valid": true,
+    "artifact_complete": true,
+    "runtime_trace_valid": true,
+    "cross_artifact_consistent": true
+  },
+  "runtime": {
+    "initiator": "codex",
+    "model": "gpt-5",
+    "effort": "medium",
+    "run_dir": ".agent-cli/test/fixtures/maestro/valid-approval-module",
+    "execution_mode": "inline",
+    "agent_profile": null
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "agent_id": "research_codebase",
+  "persona_name": "Charlie",
+  "agent_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "step": "research",
+  "role": "evidence-based codebase investigator",
+  "allowed_execution_modes": [
+    "sub_agent",
+    "inline"
+  ],
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "status_schema": "status.schema.json",
+  "artifact_language": "en",
+  "artifacts": {
+    "primary_readme": {
+      "path": "{artifacts_root}/{module}/{feature}/research/README.md",
+      "media_type": "text/markdown",
+      "role": "human_readable_handoff",
+      "template": "../templates/README.md.tmpl"
+    },
+    "status_json": {
+      "path": "{artifacts_root}/{module}/{feature}/research/status.json",
+      "media_type": "application/json",
+      "role": "machine_readable_state",
+      "template": "../templates/status.template.json",
+      "schema": "status.schema.json"
+    }
+  },
+  "briefing_sources": {
+    "auto_read_feature_root_if_present": true,
+    "task_required": true,
+    "task_may_be_generic_when_feature_brief_exists": true,
+    "sources_in_priority_order": [
+      {
+        "id": "maestro_packet_md",
+        "path": "{artifacts_root}/{module}/{feature}/maestro-packet.md",
+        "role": "primary_downstream_brief",
+        "required": false
+      },
+      {
+        "id": "feature_root_readme_md",
+        "path": "{artifacts_root}/{module}/{feature}/README.md",
+        "role": "stable_feature_charter",
+        "required": false
+      }
+    ]
+  },
+  "consumes_artifacts": [],
+  "produces_status": true,
+  "runtime_policies": {
+    "supports_persist_artifacts": true,
+    "write_scope": "artifacts_only"
+  },
+  "recommended_next_agents": [
+    "module_orchestrator"
+  ]
+}

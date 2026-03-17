@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/module-orchestrator-v2/json-schemas/feature-status.schema.json",
+  "title": "Feature Status",
+  "description": "Durable feature lifecycle state for Module Orchestrator V2.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "seeded",
+        "ready_for_stage",
+        "stage_in_progress",
+        "awaiting_stage_review",
+        "done",
+        "blocked"
+      ]
+    },
+    "current_stage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9_-]*$",
+      "description": "Current executing or reviewed stage. Null when no stage is active."
+    },
+    "next_recommended_stage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "packet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "working_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "active_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frozen": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "working_path",
+        "active_revision",
+        "frozen"
+      ]
+    },
+    "latest_attempt_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_accepted_review_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blocked_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "feature_id",
+    "phase",
+    "current_stage",
+    "next_recommended_stage",
+    "packet",
+    "latest_attempt_ref",
+    "latest_accepted_review_ref",
+    "blocked_reason",
+    "updated_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "stage_in_progress",
+              "awaiting_stage_review"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "current_stage": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "done"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "latest_accepted_review_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "current_stage": {
+            "type": "null"
+          },
+          "blocked_reason": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "blocked"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "blocked_reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "seeded"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "current_stage": {
+            "type": "null"
+          },
+          "latest_attempt_ref": {
+            "type": "null"
+          },
+          "blocked_reason": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "ready_for_stage"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "current_stage": {
+            "type": "null"
+          },
+          "blocked_reason": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": 1,
+      "module_id": "avatar-service-test-execution",
+      "feature_id": "restore-executable-npm-test",
+      "phase": "stage_in_progress",
+      "current_stage": "research",
+      "next_recommended_stage": null,
+      "packet": {
+        "working_path": "artifacts/avatar-service-test-execution/features/restore-executable-npm-test/packet.md",
+        "active_revision": "artifacts/avatar-service-test-execution/features/restore-executable-npm-test/revisions/packet.v1.md",
+        "frozen": true
+      },
+      "latest_attempt_ref": null,
+      "latest_accepted_review_ref": null,
+      "blocked_reason": null,
+      "updated_at": "2026-03-17T00:00:00Z"
+    }
+  ]
+}

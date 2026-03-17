@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/module-orchestrator-v2/json-schemas/stage-review.schema.json",
+  "title": "Stage Review",
+  "description": "Write-once module_orchestrator review of one specific stage attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "reviewed_stage": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "reviewed_handoff_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "accept",
+        "revise",
+        "block",
+        "escalate_to_owner"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requires_owner_input": {
+      "type": "boolean"
+    },
+    "next_stage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "feature_id",
+    "reviewed_stage",
+    "attempt_id",
+    "reviewed_handoff_ref",
+    "decision",
+    "reason",
+    "requires_owner_input",
+    "next_stage",
+    "reviewed_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "accept"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "requires_owner_input": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "escalate_to_owner"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "requires_owner_input": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": 1,
+      "module_id": "avatar-service-test-execution",
+      "feature_id": "restore-executable-npm-test",
+      "reviewed_stage": "research",
+      "attempt_id": "attempt-001",
+      "reviewed_handoff_ref": "artifacts/avatar-service-test-execution/features/restore-executable-npm-test/stages/research/attempts/attempt-001/handoff.json",
+      "decision": "accept",
+      "reason": "Research is sufficient to proceed to implementation.",
+      "requires_owner_input": false,
+      "next_stage": "implementation",
+      "reviewed_at": "2026-03-17T00:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/module-orchestrator-v2/json-schemas/module-status.schema.json",
+  "title": "Module Status",
+  "description": "Durable module lifecycle state for Module Orchestrator V2.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$",
+      "description": "Stable module identifier."
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "awaiting_owner_brief_approval",
+        "brief_frozen",
+        "awaiting_owner_execution_approval",
+        "executing",
+        "awaiting_owner_decision",
+        "done",
+        "blocked",
+        "cancelled"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "working_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "active_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frozen": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "working_path",
+        "active_revision",
+        "frozen"
+      ]
+    },
+    "owner_approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brief": {
+          "type": "boolean"
+        },
+        "execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "brief",
+        "execution"
+      ]
+    },
+    "brief_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_requested",
+            "pending",
+            "completed"
+          ]
+        },
+        "recommendation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "ready",
+            "revise",
+            "blocked",
+            null
+          ]
+        },
+        "reviewed_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "recommendation",
+        "reviewed_revision"
+      ]
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "uniqueItems": true
+    },
+    "current_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "phase",
+    "brief",
+    "owner_approvals",
+    "brief_review",
+    "open_questions",
+    "features",
+    "current_action",
+    "updated_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "discussion"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "brief": {
+            "properties": {
+              "frozen": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "brief_frozen",
+              "awaiting_owner_execution_approval",
+              "executing",
+              "awaiting_owner_decision",
+              "done",
+              "blocked"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "owner_approvals": {
+            "properties": {
+              "brief": {
+                "const": true
+              }
+            }
+          },
+          "brief": {
+            "properties": {
+              "frozen": {
+                "const": true
+              },
+              "active_revision": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "executing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "owner_approvals": {
+            "properties": {
+              "execution": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": 1,
+      "module_id": "avatar-service-test-execution",
+      "phase": "discussion",
+      "brief": {
+        "working_path": "artifacts/avatar-service-test-execution/brief.md",
+        "active_revision": null,
+        "frozen": false
+      },
+      "owner_approvals": {
+        "brief": false,
+        "execution": false
+      },
+      "brief_review": {
+        "status": "not_requested",
+        "recommendation": null,
+        "reviewed_revision": null
+      },
+      "open_questions": [],
+      "features": [],
+      "current_action": "awaiting_owner_input",
+      "updated_at": "2026-03-17T00:00:00Z"
+    }
+  ]
+}

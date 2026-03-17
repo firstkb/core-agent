@@ -21,6 +21,7 @@ Only `canonical` documents describe the current architecture and workflow contra
 
 - [`unified-review-contract-spec.md`](./unified-review-contract-spec.md) - proposed review contract between downstream stages and Maestro
 - [`maestro/adding-stage-agents.md`](./maestro/adding-stage-agents.md) - proposed pattern for adding new stage agents
+- [`maestro/control-plane-v2.md`](./maestro/control-plane-v2.md) - proposed greenfield control-plane replacement for the current Maestro orchestration model
 
 ## Notes
 

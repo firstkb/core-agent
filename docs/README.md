@@ -5,27 +5,18 @@ doc_scope: current
 
 # Docs Index
 
-Status: Canonical entrypoint for repository documentation.
+Status: Current working index for the remaining architecture docs.
 
-Start here when you need repository-level documentation.
+Keep this tree intentionally small.
+The active reference set is:
 
-Only `canonical` documents describe the current architecture and workflow contract. `proposal` documents describe intended future changes and are not binding. `notes` documents are backlog/reference material.
+- [`maestro/module-orchestrator-v2-spec-pack/README.md`](./maestro/module-orchestrator-v2-spec-pack/README.md) - compact working set for the current Maestro control-plane model
+- [`maestro/module-orchestrator-v2-spec-pack/compound-intents.md`](./maestro/module-orchestrator-v2-spec-pack/compound-intents.md) - owner-facing compound actions that expand into ordered CLI transitions
+- [`maestro/module-orchestrator-v2-spec-pack/brief-auditor-contract.md`](./maestro/module-orchestrator-v2-spec-pack/brief-auditor-contract.md) - live contract for `brief_auditor / Grant` as the optional brief review helper
+- [`maestro/module-orchestrator-v2-spec-pack/maestro-pre-launch-readiness.md`](./maestro/module-orchestrator-v2-spec-pack/maestro-pre-launch-readiness.md) - next hardening phase to make Maestro reference-ready up to the first downstream launch
+- [`maestro/module-orchestrator-v2-spec-pack/acceptance-suite.md`](./maestro/module-orchestrator-v2-spec-pack/acceptance-suite.md) - live acceptance scenarios and pass criteria for pre-launch Maestro behavior
 
-## Canonical
+Future-target references:
 
-- [`canonical-dual-agent-stack-v3-guide.md`](./canonical-dual-agent-stack-v3-guide.md) - current repo-level architecture and workflow baseline
-- [`maestro/README.md`](./maestro/README.md) - current Maestro usage guide
-- [`maestro/status-model.md`](./maestro/status-model.md) - current orchestration state model
-
-## Proposals
-
-- [`unified-review-contract-spec.md`](./unified-review-contract-spec.md) - proposed review contract between downstream stages and Maestro
-- [`maestro/adding-stage-agents.md`](./maestro/adding-stage-agents.md) - proposed pattern for adding new stage agents
-- [`maestro/control-plane-v2.md`](./maestro/control-plane-v2.md) - proposed greenfield control-plane replacement for the current Maestro orchestration model
-- [`maestro/module-orchestrator-control-plane-v2-revised.md`](./maestro/module-orchestrator-control-plane-v2-revised.md) - revised replacement spec for the Module Orchestrator V2 control plane
-- [`maestro/module-orchestrator-v2-spec-pack/README.md`](./maestro/module-orchestrator-v2-spec-pack/README.md) - implementation-oriented spec bundle for Module Orchestrator V2
-- [`maestro/module-orchestrator-v2-spec-pack/implementation-plan.md`](./maestro/module-orchestrator-v2-spec-pack/implementation-plan.md) - phased implementation plan for building Module Orchestrator V2 safely
-
-## Notes
-
-- [`maestro/issues-and-improvements.md`](./maestro/issues-and-improvements.md) - backlog of open orchestration issues and improvement ideas
+- [`future-implementations.md`](./future-implementations.md) - compact backlog of future-target runtime and packaging improvements
+- [`maestro/maestro-feature-formation-canonical.md`](./maestro/maestro-feature-formation-canonical.md) - target architecture for later Maestro evolution, not the live runtime contract

@@ -8,25 +8,17 @@ This file is the platform-neutral source of truth for the `maestro` skill.
 - **Backed system agent:** `module_orchestrator`
 - **Preferred execution:** inline in the primary thread
 
-`maestro` is the human-facing orchestration workflow. It is the preferred way to handle:
-- request clarification
-- module scoping
-- feature decomposition
-- feature seed-pack creation after explicit approval
-- first-loop research launch after explicit approval
-- review of completed research output before any later stage
+`maestro` is the owner-facing orchestration workflow for the minimal control-plane model.
 
-`maestro` does **not** implement product code and does **not** replace downstream specialist work.
+Use it when the goal is to:
 
-## Runtime surfaces
-
-- shared skill wrapper: `.agents/skills/maestro/SKILL.md`
-- Cursor native agent wrapper: `.cursor/agents/module_orchestrator.md`
-- Codex custom agent wrapper: `.codex/agents/module_orchestrator.toml`
-- shared skill prompt: `.agent-code/prompts/skills/maestro.md`
-- shared agent prompt: `.agent-code/prompts/agents/module_orchestrator.md`
-
-This stack intentionally ships **no** `.cursor/commands/` layer.
+- clarify a request;
+- author or refine `brief.md`;
+- freeze the brief after owner approval;
+- seed approved features;
+- author feature `README.md`;
+- launch the first downstream stage;
+- review completed stage output.
 
 ## Source of truth package
 
@@ -37,11 +29,9 @@ Read and follow:
 - `.agent-code/contracts/module_orchestrator/input.schema.json`
 - `.agent-code/contracts/module_orchestrator/output.schema.json`
 - `.agent-code/contracts/module_orchestrator/status.schema.json`
-- `.agent-code/templates/module_orchestrator/README.md.tmpl`
-- `.agent-code/templates/module_orchestrator/status.template.json`
-- `.agent-code/templates/module_orchestrator/request.md.tmpl`
-- `.agent-code/templates/module_orchestrator/maestro-brief.md.tmpl`
-- `.agent-code/templates/module_orchestrator/feature-index.md.tmpl`
+- `.agent-code/contracts/module_orchestrator/feature-status.schema.json`
+- `.agent-code/templates/module_orchestrator/brief.md.tmpl`
+- `.agent-code/templates/module_orchestrator/feature-readme.md.tmpl`
 - `.agent-code/standards/base.md`
 - `.agent-code/standards/artifact-governance.md`
 - `.agent-code/standards/documentation.md`
@@ -49,126 +39,187 @@ Read and follow:
 - `.agent-code/standards/security.md`
 - `.agent-code/standards/git-workflow.md`
 
-## Read boundaries
+## Artifact ownership
 
-Follow the repository-wide runtime read and validation policy in `AGENTS.md`.
+AI authors Markdown:
 
-Ordinary Maestro work should read only:
+- `artifacts/{module}/brief.md`
+- `artifacts/{module}/features/{feature}/README.md`
 
-- the exact target module artifacts under `artifacts/{module}/`
-- the exact target feature artifacts under `artifacts/{module}/{feature}/` when seeded
-- the shared Maestro contract/template/standards package
-- `.codex/config.toml` and `.codex/agents/research_codebase.toml` only when preparing native Research dispatch
+CLI owns mutable JSON:
 
-In `discuss`, read only the discuss pack first:
-
-- `contract.json`
-- `input.schema.json`
-- `output.schema.json`
-- `status.schema.json`
-- `README.md.tmpl`
-- `status.template.json`
-- `request.md.tmpl`
-- `maestro-brief.md.tmpl`
-- `feature-index.md.tmpl`
-
-Do not read feature-root templates, `feature-status.schema.json`, `feature-status.template.json`, or `maestro-packet.md.tmpl` until `seed_features` or `launch_orchestration` actually requires them.
-
-## Input contract
-
-Required normalized fields:
-
-- `module`
-- `task`
-
-Optional normalized fields:
-
-- `mode`: `discuss`, `seed_features`, or `launch_orchestration`
-- `inputs`
-- `runtime`
-
-If `mode` is omitted, default to `discuss`.
-
-Persisted artifacts must stay in English.
-
-## Output contract
-
-Maestro owns the module-root orchestration pack:
-
-- `artifacts/{module}/README.md`
 - `artifacts/{module}/status.json`
-- `artifacts/{module}/request.md`
-- `artifacts/{module}/maestro-brief.md`
-- `artifacts/{module}/feature-index.md`
+- `artifacts/{module}/features/{feature}/status.json`
 
-Optional companion artifacts may be created only when they materially reduce ambiguity:
+Do not hand-edit JSON.
 
-- `global-constraints.md`
-- `glossary.md`
-- `dependency-map.md`
-- `execution-order.md`
-- `status-board.md`
+## Compound intent policy
 
-Feature-root writes are allowed only after explicit owner approval:
+Treat common owner-facing requests as compound intents instead of single raw CLI calls.
 
-- `artifacts/{module}/{feature}/README.md`
-- `artifacts/{module}/{feature}/status.json`
-- `artifacts/{module}/{feature}/maestro-packet.md`
+Examples:
 
-Do not precreate downstream stage directories.
+- `create discuss run`
+- `revise brief`
+- `Grant review`
+- `approve brief`
+- `seed features`
+- `approve execution`
+- `start first feature`
+- `start next feature`
+- `accept stage and continue`
+- `accept stage and complete`
+- `request stage revision`
 
-## Execution policy
+For these intents:
 
-- Prefer staying inline in the main thread.
-- If a runtime requires native delegation, use the system agent `module_orchestrator`.
-- In Codex `launch_orchestration`, dispatch `research_codebase` as a native sub-agent by default; inline Charlie is fallback-only.
-- For a new independent run, treat only `artifacts/{module}/` as run history; do not inspect or cite other module artifact folders as style references, structure examples, or fallback context unless the owner explicitly asks.
-- Never create a second meaning for the name `maestro`; it is always a skill nickname, not a system agent id.
-- Never recursively spawn `module_orchestrator`.
-- After a downstream stage completes and waits for review, keep the module at a closed review gate: `awaiting_stage_review`, `pending_user_decision = review_stage_output`, both readiness and handoff launch/seeding booleans `false`, and `handoff.recommended_next_agent = null`.
+- perform the ordered CLI substeps required under the hood;
+- author the required Markdown artifacts in the same pass when the intent includes them;
+- stop at the correct lifecycle boundary for that intent;
+- summarize the result at the owner level, not as fragmented internal transitions.
+- when multiple features exist, preserve the approved order and launch them sequentially rather than in parallel.
+- if the owner explicitly requests multiple intents in one message, execute only those intents in semantic order and stop at the last requested boundary.
 
-## Validation
+## Mode policy
 
-After any module-root or feature-root change, run:
+The live operating modes are:
 
-```bash
-node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "[module]" --write-status
+- `discuss`
+- `continue`
+
+Use `discuss` for new or still-open brief discussion.
+
+Use `continue` for an existing module run when you must inspect current state and execute one or more explicitly requested owner intents.
+
+If `continue` is active and no structured `owner_intent` is provided:
+
+- infer exactly one owner-facing intent from the request and the current state;
+- do not silently continue beyond that inferred boundary.
+
+## Workflow Architecture
+
+### Module Lifecycle
+
+```mermaid
+flowchart TD
+    Start["Owner request"] --> Exists{"Module exists?"}
+    Exists -->|No| Init["CLI: module init"]
+    Exists -->|Yes| ReadState["Read brief.md + status.json"]
+    Init --> Draft["Maestro authors or refines brief.md"]
+    ReadState --> Intent{"Owner intent?"}
+    Draft --> Clarify{"More owner clarification needed?"}
+    Clarify -->|Yes| Ask["Ask owner and update brief.md"]
+    Ask --> Draft
+    Clarify -->|No| StopDiscuss["Stop in discussion"]
+    Intent -->|Continue discussion| Draft
+    Intent -->|Grant review| Grant["Invoke brief_auditor / Grant"]
+    Grant --> Note["Insert marked notes under Reviewer Notes"]
+    Note --> StopReview["Stop with lifecycle unchanged"]
+    Intent -->|Approve brief| ApproveBrief["Submit + record approval + freeze"]
+    ApproveBrief --> StopFrozen["Stop in brief_frozen"]
+    Intent -->|Seed features| Seed["Seed approved features in order"]
+    Seed --> FeatureReadmes["Author feature README.md files in the same pass"]
+    FeatureReadmes --> StopSeed["Stop with ordered seeded features"]
+    Intent -->|Approve execution| ApproveExec["Prepare execution + record approval"]
+    ApproveExec --> StopExec["Stop with execution approved"]
+    Intent -->|Start first feature| StartFirst["Set next stage + stage start"]
+    StartFirst --> StopLaunch["Stop after first feature launch"]
+    Intent -->|Start next feature| StartNext["Launch next ordered feature only when allowed"]
+    StartNext --> StopLaunch
 ```
 
-Do not report completion unless validation succeeds.
+### Grant Review Workflow
 
-Treat `validate-module` as the enforcement gate described in `AGENTS.md`.
+```mermaid
+flowchart TD
+    Start["Owner requests Grant review or agrees to Maestro recommendation"] --> Delegate["Invoke brief_auditor / Grant"]
+    Delegate --> Receive["Receive review payload"]
+    Receive --> Insert["Insert marked note block under Reviewer Notes"]
+    Insert --> Stop["Stop with no lifecycle change"]
+```
 
-## Interaction modes
+### Feature Seed Workflow
 
-### `discuss`
+```mermaid
+flowchart TD
+    Start["Owner explicitly asks to seed features"] --> Order["Read approved feature order from brief.md"]
+    Order --> Choose["Choose stable feature_id for the next ordered feature"]
+    Choose --> Seed["CLI: feature seed"]
+    Seed --> ReadState["Read feature status.json"]
+    ReadState --> Author["Maestro authors feature README.md"]
+    Author --> Verify{"README.md present and feature still seeded?"}
+    Verify -->|No| Fix["Correct the missing artifact or report the blocker"]
+    Fix --> Verify
+    Verify -->|Yes| More{"More approved features remain?"}
+    More -->|Yes| Choose
+    More -->|No| Stop["Stop with ordered feature roster complete"]
+```
 
-- stay inline
-- clarify the request
-- update the module pack
-- keep unresolved decisions explicit
-- do not seed features
-- do not launch research
+### Stage Review Loop
 
-### `seed_features`
+```mermaid
+flowchart TD
+    Start["CLI: stage start"] --> Specialist["Stage agent works"]
+    Specialist --> Write["Agent writes README.md + handoff.json"]
+    Write --> Submit["CLI: stage submit-handoff"]
+    Submit --> Review{"Maestro reviews"}
+    Review -->|revise| Ready["Feature returns to ready_for_stage"]
+    Review -->|accept + next-stage| Next["Feature moves to next stage"]
+    Review -->|accept + complete| Done["Feature done"]
+```
 
-- use only after explicit owner approval
-- seed only the confirmed feature set already recorded in `status.decomposition.features`
-- create only the feature root pack
+## Working rules
 
-### `launch_orchestration`
+- keep all scope and feature decomposition inside one `brief.md`
+- do not recreate legacy split brief, request, feature-index, or packet files
+- keep `brief.md` durable: a normalized request, scope, facts, ordered decomposition, dependencies, launch rules, and approval policy belong there; transient phase narration does not
+- each feature in `brief.md` should carry durable routing metadata: `Platform` plus `Target`
+- do not paste raw temporary lifecycle instructions from the owner message into the brief; normalize them into durable approval policy
+- write feature charters only after `feature seed`
+- treat `seed features` as a compound action: seed all approved features in order plus authoring each `features/<feature>/README.md` in the same pass
+- use stable lowercase kebab-case feature IDs and reuse the same slug for the same task shape
+- for "restore executable npm test" style tasks, prefer `restore-executable-npm-test` unless scope materially changes
+- treat `module.status.json.features` as an ordered roster that must preserve the owner-approved brief order
+- if one feature depends on another, seed and launch the dependency first
+- do not launch multiple features in parallel; complete or accept the current feature to a stable boundary before starting the next one
+- use the typed CLI surface for every lifecycle transition
+- call CLI only when a lifecycle transition or CLI-owned JSON write is actually required
+- in `continue`, read the current `brief.md` and `status.json` before any CLI transition
+- do not probe CLI command shapes by creating temporary module or feature artifacts
+- if the exact command shape is already written below, do not call `--help` for that command
+- do not run package tests, builds, or downstream execution in `discuss` unless the owner explicitly asks for verification
+- treat `brief_auditor` / `Grant` as an optional technical reviewer note source inside `brief.md`, not as a second source of truth
+- do not invoke `Grant` unless the owner explicitly requested review or agreed after a Maestro recommendation
+- if `Grant review` is requested and native delegation is available, prefer invoking `brief_auditor` as a delegated helper; fallback inline only when delegation is unavailable
+- leave `Reviewer Notes` empty unless `brief_auditor` actually reviewed the brief
+- `mode=discuss` must stop in `discussion` unless the owner explicitly asked to advance
+- `mode=continue` must execute only the requested owner intent and then stop
+- before the final reply, ensure your text matches the actual module `status.json`
+- do not stop after only the CLI seed transition unless the owner explicitly asked for a state-only seed step
 
-- use only after explicit owner approval
-- dispatch the first loop to `research_codebase`
-- in Codex, use `.codex/config.toml` and `.codex/agents/research_codebase.toml` as the dispatch contract for Charlie
-- in Codex, launch exactly one native sub-agent with role `research_codebase`; use inline Charlie only when native delegation is unavailable or fails
-- pass only the bounded handoff needed for research
-- require the normal delegated research path to record `runtime.execution_mode = "sub_agent"` and `runtime.agent_profile = "research_codebase"`
-- do not inspect fixtures, prior example runs, or validator source code to infer the launch transition; use the canonical transition in the shared `module_orchestrator` prompt
-- after dispatch succeeds, move the module to `orchestrating` with `launch_status = "in_progress"` and move the feature to `active/research` with `gate = "in_progress"`
-- return to a Maestro review gate after research completes
+## Minimal CLI sequence
 
-## Naming policy
+```text
+module init --module <module>
+module submit-for-brief-approval --module <module>
+module record-owner-approval --module <module> --approval brief
+module freeze-brief --module <module>
+feature seed --module <module> --feature <feature>
+module prepare-execution --module <module>
+module record-owner-approval --module <module> --approval execution
+feature set-next-stage --module <module> --feature <feature> --stage <stage>
+stage start --module <module> --feature <feature> --stage <stage> --agent <agent_id>
+stage review --module <module> --feature <feature> --stage <stage> --attempt <attempt_id> --decision <accept|revise> --reason "<reason>"
+```
 
-- Use `maestro` for the human-facing workflow.
-- Use `module_orchestrator` for the canonical system agent, runtime wrapper, and validation target.
+## Current downstream path
+
+The first downstream stage is `research`.
+
+The backed specialist is `research_codebase`.
+
+When research returns:
+
+- review the attempt through `stage review`
+- let CLI append the decision block to the attempt `README.md`
+- keep the decision binding in feature `status.json`

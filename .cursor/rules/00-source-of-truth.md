@@ -9,3 +9,4 @@
 - Skill nicknames and system agent names are intentionally different:
   - `maestro` -> `module_orchestrator`
   - `charlie` -> `research_codebase`
+  - `grant` -> `brief_auditor`

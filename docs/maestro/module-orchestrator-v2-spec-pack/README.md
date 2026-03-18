@@ -1,26 +1,40 @@
 ---
-doc_status: proposal
-doc_scope: future
+doc_status: current
+doc_scope: working_set
 doc_type: spec_bundle
-bundle_for: module_orchestrator_v2
 ---
 
-# Module Orchestrator V2 Spec Bundle
+# Module Orchestrator Working Set
 
-This bundle breaks the revised V2 replacement proposal into implementation-oriented artifacts:
+This bundle is the compact working reference for the current Maestro control-plane model.
 
-- `state-machine.md` — normative lifecycle model, transition rules, and invariants.
-- `json-schemas/` — the first-cut machine-state schemas for V2.
-- `cli-command-spec.md` — typed CLI command contract for the state-gateway model.
-- `implementation-plan.md` — phased implementation plan with statuses, deliverables, prompts, and acceptance gates.
-- `module-orchestrator-control-plane-v2-revised.md` — the revised replacement proposal that these artifacts derive from.
+- `minimal-artifact-model.md` — current artifact tree, file responsibilities, and minimal field set.
+- `compound-intents.md` — owner-facing compound actions that Maestro should treat as one semantic operation.
+- `brief-auditor-contract.md` — live contract for `brief_auditor / Grant` as the optional brief review helper.
+- `maestro-pre-launch-readiness.md` — the next hardening phase required to bring Maestro to reference quality up to the first downstream launch.
+- `acceptance-suite.md` — canonical live acceptance scenarios and pass criteria for pre-launch Maestro behavior.
+- `state-machine.md` — lifecycle model, transition rules, and invariants.
+- `cli-command-spec.md` — typed CLI command contract.
+- source-of-truth schemas live under:
+  - `.agent-code/contracts/module_orchestrator/*.schema.json`
+  - `.agent-code/contracts/research_codebase/*.schema.json`
+  - `.agent-code/contracts/brief_auditor/*.schema.json`
 
 Recommended reading order:
 
-1. `module-orchestrator-control-plane-v2-revised.md`
-2. `state-machine.md`
-3. `json-schemas/*.schema.json`
-4. `cli-command-spec.md`
-5. `implementation-plan.md`
+1. `minimal-artifact-model.md`
+2. `compound-intents.md`
+3. `brief-auditor-contract.md`
+4. `maestro-pre-launch-readiness.md`
+5. `acceptance-suite.md`
+6. `state-machine.md`
+7. relevant `.agent-code/contracts/*.schema.json`
+8. `cli-command-spec.md`
 
-The intent of this bundle is to make V2 implementable without re-reading long design discussions every time a schema, command, or prompt changes.
+The intent of this bundle is to keep only the documents needed to reason about the current control-plane shape, without carrying older proposal layers, pilot evidence, or phased rollout history.
+
+The future-target document:
+
+- `docs/maestro/maestro-feature-formation-canonical.md`
+
+is intentionally outside this working set and does not override the current runtime contract.

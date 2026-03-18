@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module_id": "{{module}}",
+  "feature_id": "{{feature}}",
+  "stage": "research",
+  "attempt_id": "{{attempt_id}}",
+  "agent_id": "research_codebase",
+  "result": "complete",
+  "summary": "{{summary}}",
+  "evidence_refs": [
+    "{{evidence_ref_1}}"
+  ],
+  "produced_artifact_refs": [
+    "artifacts/{{module}}/features/{{feature}}/stages/research/{{attempt_id}}/README.md"
+  ],
+  "change_requests": [],
+  "recommended_next_stage": "{{recommended_next_stage}}",
+  "created_at": "{{runtime_generated_at}}"
+}

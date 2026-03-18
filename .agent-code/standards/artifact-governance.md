@@ -9,8 +9,8 @@
 ## Path model
 
 - Module root: `artifacts/<module>/`
-- Feature root: `artifacts/<module>/<feature>/`
-- Stage root: `artifacts/<module>/<feature>/<stage>/`
+- Feature root: `artifacts/<module>/features/<feature>/`
+- Stage root: `artifacts/<module>/features/<feature>/stages/<stage>/`
 
 ## Persistence
 
@@ -21,6 +21,6 @@
 
 ## Validation
 
-Validate normalized input before creating downstream artifacts.
-Validate stage artifacts after writing them.
-Validate Maestro modules after module-root or feature-root changes.
+Validate lifecycle transitions at the CLI write boundary.
+Validate machine-readable stage handoff files when they are submitted.
+Do not invent sidecar validation flows outside the typed CLI surface.

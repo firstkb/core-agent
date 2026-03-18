@@ -3,24 +3,46 @@ module: "{{module}}"
 feature: "{{feature}}"
 feature_id: "{{feature_id}}"
 owner: Maestro
-status: queued
 ---
 
 # {{feature_title}}
 
-## Charter
+## Identity
+- Module: {{module}}
+- Feature ID: {{feature_id}}
+- Feature Slug: {{feature}}
+- Platform: {{feature_platform}}
+- Target: {{feature_target}}
+
+## Mission
+{{mission}}
+
+## Purpose
 {{feature_purpose}}
 
-## Confirmed Scope
+## Scope In
 - {{scope_in_1}}
 
-## Out Of Scope
+## Scope Out
 - {{scope_out_1}}
 
-## Dependency Context
+## Dependencies
 - {{dependency_1}}
 
-## Current State
-- Seed owner: `Maestro`
-- Root packet: `maestro-packet.md`
-- Status: `Seeded and waiting for explicit launch approval before Research dispatch`
+## Constraints
+- {{constraint_1}}
+
+## Owner-Confirmed Decisions
+- {{owner_decision_1}}
+
+## Known Unknowns
+- {{unknown_1}}
+
+## Initial Stage
+- {{initial_stage_1}}
+
+## Acceptance Signals
+- {{acceptance_signal_1}}
+
+## Additional Notes
+- {{additional_note_1}}

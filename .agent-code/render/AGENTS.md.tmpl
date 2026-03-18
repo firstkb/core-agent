@@ -26,13 +26,27 @@ Generated adapters are not the source of truth:
 
 Platform folders are adapters. Shared logic lives in `.agent-code/`.
 
+## Docs classification
+
+Treat the active working set under:
+
+- `docs/maestro/module-orchestrator-v2-spec-pack/`
+
+as the current runtime reference for the Maestro control-plane model.
+
+Treat:
+
+- `docs/maestro/maestro-feature-formation-canonical.md`
+
+as a future-target architecture document, not as the live runtime contract.
+
 ## Runtime Read Policy
 
 Ordinary agent work should read only:
 
 - `AGENTS.md`
 - relevant files under `.agent-code/prompts/`, `.agent-code/contracts/`, `.agent-code/templates/`, and `.agent-code/standards/`
-- the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/<feature>/...`
+- the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/features/<feature>/...`
 - product/runtime code and docs that materially answer the task
 - native runtime config only when the active shared prompt explicitly requires it for dispatch
 
@@ -76,19 +90,37 @@ Use Charlie for read-heavy codebase research when the goal is to:
 
 Charlie writes only:
 
-- `artifacts/<module>/<feature>/research/README.md`
-- `artifacts/<module>/<feature>/research/status.json`
+- `artifacts/<module>/features/<feature>/stages/research/<attempt>/README.md`
+- `artifacts/<module>/features/<feature>/stages/research/<attempt>/handoff.json`
+
+### Grant
+
+Use Grant for optional technical brief review when the goal is to:
+
+- audit `brief.md` before owner approval
+- validate the proposed solution, feature plan, and dependency ordering against the cited technical surface
+- find ambiguity, contradictions, weak decomposition, missing dependencies, unsupported technical assumptions, or transient lifecycle language
+- return a marked reviewer note block for `## Reviewer Notes`
+
+Grant should run as an optional helper to Maestro, not as a lifecycle owner.
+
+Grant does not:
+
+- approve the brief
+- change lifecycle state
+- write repository artifacts directly
 
 ## Naming
 
 - `maestro` -> `module_orchestrator`
 - `charlie` -> `research_codebase`
+- `grant` -> `brief_auditor`
 
 ## Artifact model
 
 - module root: `artifacts/<module>/...`
-- feature root: `artifacts/<module>/<feature>/...`
-- stage root: `artifacts/<module>/<feature>/<stage>/...`
+- feature root: `artifacts/<module>/features/<feature>/...`
+- stage root: `artifacts/<module>/features/<feature>/stages/<stage>/...`
 - persisted artifacts stay in English
 
 ## Artifact History Policy
@@ -96,17 +128,30 @@ Charlie writes only:
 - Treat only the exact target module and target feature artifact tree as the active run history.
 - Do not read or cite artifact folders from other modules as style references, structure examples, templates, or fallback context unless the owner explicitly asks.
 
-## Validation
+## V2 CLI
 
-Treat documented CLI validation commands as enforcement gates.
-If a validation command fails, report the failure clearly and stop.
-Do not inspect `.agent-cli/src/*` to reverse-engineer validator behavior unless the owner explicitly asks to debug the validator itself.
+The active CLI surface is the V2 typed state gateway.
+
+Use:
 
 ```bash
-node .agent-cli/bin/agent-stack.mjs validate-input research_codebase --module "<module>" --feature "<feature>" --task "<task>"
-node .agent-cli/bin/agent-stack.mjs resolve-paths research_codebase --module "<module>" --feature "<feature>"
-node .agent-cli/bin/agent-stack.mjs validate-artifacts research_codebase --module "<module>" --feature "<feature>" --write-status
-node .agent-cli/bin/agent-stack.mjs validate-module module_orchestrator --module "<module>" --write-status
+node .agent-cli/bin/agent-stack.mjs module <subcommand> ...
+node .agent-cli/bin/agent-stack.mjs feature <subcommand> ...
+node .agent-cli/bin/agent-stack.mjs stage <subcommand> ...
+```
+
+Do not assume the old validator-first commands still exist.
+
+Markdown authorship boundary:
+
+- AI authors `brief.md`, feature `README.md`, and stage attempt `README.md`
+- CLI owns mutable JSON state and lifecycle transitions
+
+## Runtime Build
+
+When `.agent-code/config.json`, `.agent-code/registry/*`, or `.agent-code/render/*` changes, rerender the runtime adapters:
+
+```bash
 node .agent-cli/bin/agent-stack.mjs render-runtimes
 node .agent-cli/bin/agent-stack.mjs render-runtimes --check
 ```

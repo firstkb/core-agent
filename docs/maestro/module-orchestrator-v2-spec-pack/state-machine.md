@@ -7,72 +7,120 @@ canonical_for: module_orchestrator_v2
 
 # Module Orchestrator V2 State Machine
 
-This document turns the V2 control-plane proposal into a lifecycle specification.
+This document defines the simplified V2 lifecycle aligned to the minimal artifact model.
 
 It is normative for:
 
 - module lifecycle states
 - feature lifecycle states
-- transition guards
-- control-plane side effects
-- attempt and review behavior
+- stage attempt rules
+- CLI transition guards
+- artifact side effects
 
-It is not a prompt. It is the control-plane contract that prompts and CLI commands must obey.
+If this document conflicts with older V2 drafts that assumed `feature-index.md`, revision directories, or review files, this document wins.
 
 ---
 
 ## 1. Core Invariants
 
-The following invariants are non-negotiable.
-
 ### 1.1. Single lifecycle owner
 
-`module_orchestrator` is the only lifecycle owner for a module.
+`module_orchestrator` is the only lifecycle owner for a module and its features.
 
-No downstream stage agent may advance module or feature lifecycle on its own.
+Downstream stage agents do not advance lifecycle directly.
 
 ### 1.2. CLI is the only mutable state writer
 
-Mutable JSON state is written only through CLI commands.
+Mutable machine state is written only through typed CLI commands.
 
-Agents may edit approved drafting documents during allowed windows, but they do not write `status.json`, `handoff.json`, or `review.json` directly as raw file mutations.
+Agents do not patch `status.json` directly.
 
-### 1.3. One live brief during discussion
+### 1.3. One live module brief
 
-During discussion there is exactly one mutable human document at module root:
+There is exactly one brief document at module root:
 
 - `brief.md`
 
-No second live briefing document may be introduced in the first cut.
+It stays editable during discussion and becomes frozen by process rule after owner approval.
 
-### 1.4. Narrative artifacts are frozen-by-default
+### 1.4. One feature packet document
 
-Once a brief revision or feature packet revision is frozen, it is not silently edited.
+Each feature has exactly one packet document:
 
-Amendments create new revisions and move active pointers through CLI state operations.
+- `features/<feature>/README.md`
+
+It is created from the approved decomposition in `brief.md` and is frozen after creation.
 
 ### 1.5. Attempts are append-only
 
-A stage retry creates a new attempt id and a new attempt directory.
+Each retry allocates a new folder:
 
-Previous attempts remain intact.
+- `attempt-001`
+- `attempt-002`
+- `attempt-003`
 
-### 1.6. Every handoff must be reviewed
+No prior attempt files are overwritten.
 
-A completed stage attempt is not actionable until `module_orchestrator` writes a paired review for that exact attempt.
+### 1.6. No separate review artifact in the minimal model
+
+The attempt-level pair is:
+
+- `handoff.json`
+- `README.md`
+
+The attempt `README.md` carries both:
+
+- the stage narrative;
+- the appended orchestrator decision block.
+
+The current/latest machine-readable decision lives in feature `status.json`.
+
+### 1.7. First-cut review decisions remain narrow
+
+In the minimal aligned cut, `stage review` supports only:
+
+- `accept`
+- `revise`
+
+`block` and `escalate_to_owner` stay deferred to `Phase 3`.
+
+### 1.8. Feature roster order is meaningful
+
+`module.status.json.features` is an ordered roster.
+
+It must preserve:
+
+- the owner-approved feature order from `brief.md`;
+- dependency-first ordering when one feature depends on another.
+
+### 1.9. Feature execution is sequential in the first cut
+
+The first cut does not launch multiple features in parallel.
+
+Operational rule:
+
+- arm and launch one feature at a time;
+- finish or accept the active feature to its next stable boundary before starting the next feature;
+- do not start a dependent feature before its declared upstream dependency is accepted far enough to unblock it.
 
 ---
 
-## 2. State Objects
+## 2. Durable State Objects
 
-V2 tracks two durable lifecycle objects:
+V2 tracks two durable mutable lifecycle objects:
 
 - `module`
 - `feature`
 
-A `stage` is not a top-level durable lifecycle object. It is a bounded execution step inside a feature.
+A `stage` is a bounded execution step inside a feature.
 
 An `attempt` is one try at one stage for one feature.
+
+There are only three JSON families in the minimal model:
+
+- module `status.json`
+- feature `status.json`
+- stage `handoff.json`
 
 ---
 
@@ -80,46 +128,60 @@ An `attempt` is one try at one stage for one feature.
 
 ## 3.1. Module states
 
-| State | Meaning | Entry criteria | Exit conditions |
-|---|---|---|---|
-| `discussion` | Owner-facing clarification loop is active. `brief.md` is mutable. | `module init` | brief submitted for owner approval, blocked, or cancelled |
-| `awaiting_owner_brief_approval` | Brief is strong enough for owner sign-off. | `module submit-for-brief-approval` | owner sends back for changes, or owner brief approval is recorded and brief is frozen |
-| `brief_frozen` | An approved brief revision exists and is frozen. | `module freeze-brief` | features are seeded and module is prepared for execution approval |
-| `awaiting_owner_execution_approval` | Feature packets exist and execution is waiting for owner permission. | `module prepare-execution` | owner execution approval plus first stage start, blocked, or cancelled |
-| `executing` | At least one feature is active, reviewable, or ready to continue. | first legal `stage start` after execution approval, or owner decision resolves back to execution | module finishes, blocks, or needs owner decision |
-| `awaiting_owner_decision` | Execution is paused for a business or scope decision. | stage review with `escalate_to_owner` or explicit orchestrator escalation | owner decision resolves and execution resumes, or module is cancelled |
-| `done` | All required feature work is closed. | explicit close when completion criteria hold | terminal |
-| `blocked` | Module cannot move without intervention. | explicit block or unresolved system condition | discussion, execution, or cancelled, depending on recovery policy |
-| `cancelled` | Module run is terminated. | explicit cancel | terminal |
+| State | Meaning | First cut |
+|---|---|---|
+| `discussion` | Owner-facing clarification loop is active. `brief.md` is AI-authored and mutable when present. | yes |
+| `awaiting_owner_brief_approval` | Brief is ready for owner sign-off. | yes |
+| `brief_frozen` | Brief is approved and frozen for feature seeding. | yes |
+| `awaiting_owner_execution_approval` | Features exist and execution is waiting for owner permission. | yes |
+| `executing` | At least one feature is running, waiting for review, or ready for the next stage. | yes |
+| `awaiting_owner_decision` | Execution is paused for a business decision. | deferred |
+| `blocked` | Module cannot move without intervention. | deferred |
+| `done` | All required feature work is closed. | later |
+| `cancelled` | Module run is terminated. | later |
 
-## 3.2. Module transition table
+## 3.2. First-cut module transitions
 
 | From | Command / event | Guards | Side effects | To |
 |---|---|---|---|---|
-| — | `module init` | module id does not exist | create module root, create `brief.md`, create `status.json` | `discussion` |
-| `discussion` | `module submit-for-brief-approval` | brief passes minimum completeness policy | update module phase; freeze editing window only logically, not physically | `awaiting_owner_brief_approval` |
-| `awaiting_owner_brief_approval` | `module return-to-discussion` | owner or orchestrator requests edits | reopen discussion; keep prior review metadata | `discussion` |
-| `awaiting_owner_brief_approval` | `module record-owner-approval --approval brief` | owner approval is being recorded | set `owner_approvals.brief = true` | `awaiting_owner_brief_approval` |
-| `awaiting_owner_brief_approval` | `module freeze-brief` | `owner_approvals.brief = true`; active brief working file exists | allocate brief revision id; write frozen revision; set brief pointer; set `brief.frozen = true` | `brief_frozen` |
-| `brief_frozen` | `feature seed` | feature id is new; brief frozen | create feature packet and feature status | `brief_frozen` |
-| `brief_frozen` | `module prepare-execution` | at least one feature exists; each feature has packet + status | set execution gate pending | `awaiting_owner_execution_approval` |
+| — | `module init` | module id does not exist | create module root; create module `status.json` with canonical `brief.md` path reserved | `discussion` |
+| `discussion` | `module submit-for-brief-approval` | `brief.md` passes minimum completeness policy | update module phase | `awaiting_owner_brief_approval` |
+| `awaiting_owner_brief_approval` | `module return-to-discussion` | owner or orchestrator requests edits | reopen discussion | `discussion` |
+| `awaiting_owner_brief_approval` | `module record-owner-approval --approval brief` | owner brief approval is being recorded | set `owner_approvals.brief = true` | `awaiting_owner_brief_approval` |
+| `awaiting_owner_brief_approval` | `module freeze-brief` | `owner_approvals.brief = true`; `brief.md` exists | set `brief.approved = true`; set `brief.frozen = true` | `brief_frozen` |
+| `brief_frozen` | `feature seed` | feature id does not exist | create feature `README.md`; create feature `status.json`; append feature id to module state | `brief_frozen` |
+| `brief_frozen` | `module prepare-execution` | at least one feature exists; each feature has `README.md` + `status.json` | update module phase | `awaiting_owner_execution_approval` |
 | `awaiting_owner_execution_approval` | `module record-owner-approval --approval execution` | owner execution approval is being recorded | set `owner_approvals.execution = true` | `awaiting_owner_execution_approval` |
-| `awaiting_owner_execution_approval` | `stage start` | `owner_approvals.execution = true`; target feature is ready | allocate attempt id; create stage attempt skeleton | `executing` |
-| `executing` | `stage review --decision escalate_to_owner` | reviewed attempt exists | write review artifacts; mark owner input required | `awaiting_owner_decision` |
-| `awaiting_owner_decision` | `module resolve-owner-decision --resume` | owner decision recorded; at least one feature can continue | clear owner decision gate | `executing` |
-| `executing` | `module block` | orchestrator determines module-level block | set blocked reason in module status | `blocked` |
-| `blocked` | `module reopen --to discussion` | block is resolved at planning layer | clear block reason | `discussion` |
-| `blocked` | `module reopen --to executing` | block is resolved and execution can resume | clear block reason | `executing` |
-| `discussion` / `awaiting_owner_brief_approval` / `brief_frozen` / `awaiting_owner_execution_approval` / `executing` / `awaiting_owner_decision` / `blocked` | `module cancel` | cancellation policy allows it | mark module cancelled; no further transitions | `cancelled` |
-| `executing` | `module close --status done` | all required features are `done`; no open attempts; no unresolved review | set completion metadata | `done` |
+| `awaiting_owner_execution_approval` | `stage start` | `owner_approvals.execution = true`; target feature is ready | allocate attempt id; create attempt directory | `executing` |
+| `executing` | `stage review --decision accept --complete` for final active feature | all required work is complete | optional later cut | later |
 
-## 3.3. Module state invariants
+Notes:
+
+- `feature seed` does not move the module out of `brief_frozen`.
+- `module prepare-execution` is the explicit boundary between seeding and execution.
+- In the aligned minimal model, `module freeze-brief` no longer creates a separate snapshot file.
+- if multiple features exist, the module-level `features[]` roster preserves the approved execution order.
+
+## 3.3. Deferred module transitions
+
+These transitions are intentionally outside the aligned first cut:
+
+| From | Command / event | To | Planned phase |
+|---|---|---|---|
+| `executing` | `stage review --decision escalate_to_owner` | `awaiting_owner_decision` | `Phase 3` |
+| `awaiting_owner_decision` | `module resolve-owner-decision --resume` | `executing` | `Phase 3` |
+| `executing` | `module block` | `blocked` | `Phase 3` |
+| `blocked` | `module reopen --to discussion` | `discussion` | `Phase 3` |
+| `blocked` | `module reopen --to executing` | `executing` | `Phase 3` |
+| lifecycle non-terminal | `module cancel` | `cancelled` | later |
+| `executing` | `module close --status done` | `done` | later |
+
+## 3.4. Module state invariants
 
 - `phase = discussion` implies `brief.frozen = false`.
-- `phase in {brief_frozen, awaiting_owner_execution_approval, executing, awaiting_owner_decision, done, blocked}` implies `owner_approvals.brief = true`.
-- `phase in {awaiting_owner_execution_approval, executing, awaiting_owner_decision, done, blocked}` implies at least one feature exists.
+- `phase in {brief_frozen, awaiting_owner_execution_approval, executing, awaiting_owner_decision, blocked, done}` implies `owner_approvals.brief = true`.
+- `phase in {awaiting_owner_execution_approval, executing, awaiting_owner_decision, blocked, done}` implies at least one feature exists.
 - `phase = executing` implies `owner_approvals.execution = true`.
-- `phase = done` implies every non-cancelled feature is `done`.
 
 ---
 
@@ -127,39 +189,44 @@ An `attempt` is one try at one stage for one feature.
 
 ## 4.1. Feature states
 
-Feature phase is coarse. Stage identity is carried separately by `current_stage` and `next_recommended_stage`.
-
-| Phase | Meaning | Required fields |
+| Phase | Meaning | First cut |
 |---|---|---|
-| `seeded` | Feature root exists and packet exists, but no stage has been armed yet. | packet active revision |
-| `ready_for_stage` | Feature may begin a stage. | `next_recommended_stage` or an explicit stage at start time |
-| `stage_in_progress` | One attempt is running for one stage. | `current_stage`, active attempt |
-| `awaiting_stage_review` | An attempt has produced a handoff and is waiting for orchestrator review. | `current_stage`, latest attempt ref |
-| `done` | Feature work is complete. | latest accepted review ref |
-| `blocked` | Feature cannot continue until intervention. | blocked reason |
+| `seeded` | Feature root exists and `README.md` exists, but no stage is armed yet. | yes |
+| `ready_for_stage` | Feature may begin the next stage. | yes |
+| `stage_in_progress` | One attempt is running for one stage. | yes |
+| `awaiting_review` | An attempt has produced a handoff and is waiting for orchestrator review. | yes |
+| `done` | Feature work is complete. | optional in aligned cut |
+| `blocked` | Feature cannot continue without intervention. | deferred |
 
-## 4.2. Feature transition table
+## 4.2. First-cut feature transitions
 
 | From | Command / event | Guards | Side effects | To |
 |---|---|---|---|---|
-| — | `feature seed` | feature id does not exist; module is `brief_frozen` or `awaiting_owner_execution_approval` | create feature root, packet, status | `seeded` |
-| `seeded` | `feature set-next-stage --stage <stage>` | packet exists | set `next_recommended_stage` | `ready_for_stage` |
-| `ready_for_stage` | `stage start --stage <stage>` | module execution approved; no active attempt; stage allowed by policy | allocate attempt id; set `current_stage`; clear block reason | `stage_in_progress` |
-| `stage_in_progress` | `stage submit-handoff --from handoff.json` | open attempt exists; handoff passes schema validation | write handoff; update latest attempt ref | `awaiting_stage_review` |
-| `awaiting_stage_review` | `stage review --decision accept --next-stage <stage>` | matching handoff exists | write review; set next stage; clear current stage; update latest accepted review ref | `ready_for_stage` |
-| `awaiting_stage_review` | `stage review --decision accept --complete` | reviewed handoff is sufficient to finish feature | write review; clear current stage; update latest accepted review ref | `done` |
-| `awaiting_stage_review` | `stage review --decision revise` | matching handoff exists | write review; clear current stage; typically set next stage = reviewed stage unless overridden | `ready_for_stage` |
-| `awaiting_stage_review` | `stage review --decision block` | matching handoff exists | write review; set blocked reason | `blocked` |
-| `awaiting_stage_review` | `stage review --decision escalate_to_owner` | matching handoff exists | write review; set blocked reason = `owner_decision_required`; module may move to `awaiting_owner_decision` | `blocked` |
-| `blocked` | `feature unblock --stage <stage>` | block is resolved; module is not cancelled | clear blocked reason; set next stage | `ready_for_stage` |
+| — | `feature seed` | module phase is `brief_frozen`; feature id is new | create feature root; create feature `status.json` with canonical feature `README.md` path reserved | `seeded` |
+| `seeded` | `feature set-next-stage --stage <stage>` | feature packet exists | set `next_stage` | `ready_for_stage` |
+| `ready_for_stage` | `feature set-next-stage --stage <stage>` | no open attempt | replace `next_stage` | `ready_for_stage` |
+| `ready_for_stage` | `stage start --stage <stage>` | module execution approved; stage allowed; no active attempt | set `current_stage`; set `active_attempt_id`; set `latest_attempt_id` | `stage_in_progress` |
+| `stage_in_progress` | `stage submit-handoff --from handoff.json --readme README.md` | active attempt exists; handoff passes schema validation; AI-authored attempt `README.md` exists | write `handoff.json`; copy attempt `README.md`; clear `active_attempt_id`; set `latest_submitted_handoff_ref` | `awaiting_review` |
+| `awaiting_review` | `stage review --decision accept --next-stage <stage>` | matching handoff exists | append decision block to attempt `README.md`; clear `current_stage`; set `last_decision`; set `next_stage` | `ready_for_stage` |
+| `awaiting_review` | `stage review --decision accept --complete` | reviewed attempt is sufficient to finish feature | append decision block to attempt `README.md`; clear `current_stage`; set final decision | `done` |
+| `awaiting_review` | `stage review --decision revise` | matching handoff exists | append decision block to attempt `README.md`; clear `current_stage`; set `next_stage` back to reviewed stage unless overridden later | `ready_for_stage` |
 
-## 4.3. Feature state invariants
+## 4.3. Deferred feature transitions
 
-- `phase = stage_in_progress` implies `current_stage != null`.
-- `phase = awaiting_stage_review` implies `current_stage != null` and `latest_attempt_ref != null`.
-- `phase in {seeded, ready_for_stage, done, blocked}` implies no open attempt exists.
-- `phase = done` implies `latest_accepted_review_ref != null`.
+| From | Command / event | To | Planned phase |
+|---|---|---|---|
+| `awaiting_review` | `stage review --decision block` | `blocked` | `Phase 3` |
+| `awaiting_review` | `stage review --decision escalate_to_owner` | `blocked` | `Phase 3` |
+| `blocked` | `feature unblock --stage <stage>` | `ready_for_stage` | `Phase 3` |
+
+## 4.4. Feature state invariants
+
+- `phase = stage_in_progress` implies `current_stage != null` and `active_attempt_id != null`.
+- `phase = awaiting_review` implies `current_stage != null`, `active_attempt_id = null`, and `latest_submitted_handoff_ref != null`.
+- `phase in {seeded, ready_for_stage, done, blocked}` implies `active_attempt_id = null`.
+- `last_decision != null` implies both `last_reviewed_attempt_id != null` and `last_reviewed_handoff_ref != null`.
 - `phase = blocked` implies `blocked_reason != null`.
+- in the current first cut, at most one feature in a module should be actively running a stage at a time.
 
 ---
 
@@ -169,50 +236,43 @@ Feature phase is coarse. Stage identity is carried separately by `current_stage`
 
 A feature may have at most one open attempt at a time.
 
-V2 does not allow two concurrent attempts for one feature in the first cut.
+The aligned first cut does not support concurrent attempts for one feature.
 
 ## 5.2. Attempt lifecycle
 
 1. `stage start` allocates `attempt-###`.
-2. Downstream stage agent works inside that attempt.
-3. `stage submit-handoff` closes execution and moves the feature to review waiting.
-4. `stage review` binds the review to that exact attempt.
+2. Downstream stage agent works inside that attempt folder.
+3. `stage submit-handoff` writes `handoff.json` and attempt `README.md`.
+4. `stage review` appends the decision block to the same `README.md`.
 
 ## 5.3. Retry behavior
 
-If the review decision is `revise`, the next execution uses a new attempt id.
+If a review decision is `revise`, the next execution uses a new attempt id.
 
 Example:
 
 - `attempt-001` — research attempt, reviewed as `revise`
 - `attempt-002` — new research attempt with amended guidance
 
-No files from `attempt-001` are overwritten.
+Nothing inside `attempt-001` is overwritten.
 
 ---
 
-## 6. Unified Review Contract
+## 6. Decision Binding Rules
 
-A stage is only complete when both sides of the pair exist:
+Because the minimal model has no `review.json`, decision binding is carried by feature state.
 
-- execution side: `handoff.json` and `report.md`
-- control-plane side: `review.json` and `review.md`
+Required binding fields:
 
-## 6.1. Review decision mapping
+- `last_reviewed_attempt_id`
+- `last_reviewed_handoff_ref`
+- `last_decision`
+- `last_decision_reason`
 
-| Decision | Meaning | Feature result | Module result |
-|---|---|---|---|
-| `accept` | attempt is technically sufficient | `ready_for_stage` or `done` | remain `executing`, or later `done` if all features done |
-| `revise` | attempt did not reach acceptable quality but work can continue | `ready_for_stage` with retry | remain `executing` |
-| `block` | feature cannot continue without intervention | `blocked` | usually remain `executing` unless module-wide blockage is declared |
-| `escalate_to_owner` | owner decision is required before proceeding | `blocked` with owner-decision reason | `awaiting_owner_decision` |
+Why these are required:
 
-## 6.2. Review binding rules
-
-- A review must reference one exact `attempt_id`.
-- A review must reference one exact `reviewed_handoff_ref`.
-- Only one accepted review may become `latest_accepted_review_ref` at a time.
-- A later accepted review supersedes earlier accepted reviews only by pointer update, never by deletion.
+- `latest_attempt_id` may point to a newer running attempt after a retry;
+- the latest decision must still remain bound to the exact reviewed attempt and handoff.
 
 ---
 
@@ -224,55 +284,38 @@ Recommended artifact layout:
 artifacts/<module>/
   brief.md
   status.json
-  feature-index.md
-  revisions/
-    brief.v1.md
   features/
     <feature>/
-      packet.md
+      README.md
       status.json
-      revisions/
-        packet.v1.md
       stages/
         <stage>/
-          attempts/
-            attempt-001/
-              handoff.json
-              report.md
-              review.json
-              review.md
+          attempt-001/
+            handoff.json
+            README.md
 ```
 
 Allocation rules:
 
 - `module init` creates module root, `brief.md`, and module `status.json`.
-- `module freeze-brief` creates `revisions/brief.vN.md`.
-- `feature seed` creates feature root, `packet.md`, feature `status.json`, and `revisions/packet.v1.md`.
+- `module freeze-brief` only updates module state. It does not allocate a second brief file.
+- `feature seed` creates feature root, feature `README.md`, and feature `status.json`.
 - `stage start` creates the attempt directory.
-- `stage submit-handoff` writes `handoff.json` and `report.md`.
-- `stage review` writes `review.json` and `review.md`.
+- `stage submit-handoff` writes `handoff.json` and attempt `README.md`.
+- `stage review` appends the decision block to attempt `README.md` and updates feature state.
 
 ---
 
 ## 8. Illegal Patterns
 
-The following patterns are illegal in V2:
+The following patterns are illegal in the aligned minimal model:
 
-- downstream agent edits `module/status.json` directly
-- downstream agent starts the next stage automatically
-- a retry overwrites a previous attempt directory
-- a review exists without a matching handoff
-- a handoff is treated as accepted before review exists
-- `brief.md` is silently rewritten after freeze without a new revision
-- `packet.md` is silently rewritten after freeze without a new revision
-- feature phase uses stage names directly as durable phase values
-
----
-
-## 9. First bounded pilot
-
-The first bounded pilot should prove only this loop:
-
-`discussion -> brief approval -> brief freeze -> feature seed -> execution approval -> research attempt -> stage review`
-
-Only after that loop is stable should V2 add more downstream stages or a more parallel execution model.
+- raw agent edits to mutable JSON state
+- creation of `brief-approved.md` or `feature-index.md` in the minimal aligned flow
+- creation of `review.json` or `review.md`
+- creation of an `attempts/` parent directory
+- feature seeding after module phase leaves `brief_frozen`
+- opening a second attempt while one attempt is still active
+- overwriting a prior attempt folder
+- CLI-authored semantic narrative prose from handoff summary fields
+- automatic stage chaining without an explicit review decision

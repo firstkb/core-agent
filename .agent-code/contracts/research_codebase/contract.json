@@ -1,57 +1,55 @@
 {
   "agent_id": "research_codebase",
   "persona_name": "Charlie",
-  "agent_version": "1.0.0",
-  "contract_version": "1.0.0",
+  "agent_version": "2.0.0",
+  "contract_version": "2.0.0",
   "step": "research",
   "role": "evidence-based codebase investigator",
+  "artifact_language": "en",
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "handoff_schema": "handoff.schema.json",
   "allowed_execution_modes": [
     "sub_agent",
     "inline"
   ],
-  "input_schema": "input.schema.json",
-  "output_schema": "output.schema.json",
-  "status_schema": "status.schema.json",
-  "artifact_language": "en",
   "artifacts": {
-    "primary_readme": {
-      "path": "{artifacts_root}/{module}/{feature}/research/README.md",
+    "attempt_readme": {
+      "path": "{artifacts_root}/{module}/features/{feature}/stages/research/{attempt_id}/README.md",
       "media_type": "text/markdown",
-      "role": "human_readable_handoff",
-      "template": "../templates/README.md.tmpl"
+      "role": "human_readable_research_attempt",
+      "template": "../templates/README.md.tmpl",
+      "authored_by": "ai"
     },
-    "status_json": {
-      "path": "{artifacts_root}/{module}/{feature}/research/status.json",
+    "handoff_json": {
+      "path": "{artifacts_root}/{module}/features/{feature}/stages/research/{attempt_id}/handoff.json",
       "media_type": "application/json",
-      "role": "machine_readable_state",
-      "template": "../templates/status.template.json",
-      "schema": "status.schema.json"
+      "role": "machine_readable_stage_handoff",
+      "template": "../templates/handoff.template.json",
+      "schema": "handoff.schema.json",
+      "authored_by": "ai"
     }
   },
   "briefing_sources": {
-    "auto_read_feature_root_if_present": true,
-    "task_required": true,
-    "task_may_be_generic_when_feature_brief_exists": true,
     "sources_in_priority_order": [
       {
-        "id": "maestro_packet_md",
-        "path": "{artifacts_root}/{module}/{feature}/maestro-packet.md",
-        "role": "primary_downstream_brief",
+        "id": "feature_root_readme_md",
+        "path": "{artifacts_root}/{module}/features/{feature}/README.md",
+        "role": "stable_feature_charter",
         "required": false
       },
       {
-        "id": "feature_root_readme_md",
-        "path": "{artifacts_root}/{module}/{feature}/README.md",
-        "role": "stable_feature_charter",
+        "id": "module_brief_md",
+        "path": "{artifacts_root}/{module}/brief.md",
+        "role": "module_brief",
         "required": false
       }
     ]
   },
-  "consumes_artifacts": [],
-  "produces_status": true,
-  "runtime_policies": {
-    "supports_persist_artifacts": true,
-    "write_scope": "artifacts_only"
+  "authorship_boundary": {
+    "markdown_written_by_ai": true,
+    "handoff_json_written_by_ai": true,
+    "mutable_json_written_by_cli": true
   },
   "recommended_next_agents": [
     "module_orchestrator"

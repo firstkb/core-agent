@@ -4,9 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test ./test/*.test.mjs",
-    "render:runtimes": "node ./bin/agent-stack.mjs render-runtimes",
-    "check:runtimes": "node ./bin/agent-stack.mjs render-runtimes --check"
+    "test": "node --test"
   },
   "bin": {
     "agent-stack": "./bin/agent-stack.mjs"

@@ -24,3 +24,8 @@ config_file = "agents/module_orchestrator.toml"
 description = "System agent for grounded codebase research, dependency tracing, architecture mapping, and research artifact generation."
 nickname_candidates = ["charlie"]
 config_file = "agents/research_codebase.toml"
+
+[agents.brief_auditor]
+description = "System agent for optional technical brief review before owner approval."
+nickname_candidates = ["grant"]
+config_file = "agents/brief_auditor.toml"

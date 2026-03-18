@@ -4,7 +4,9 @@
 
 - Use the `maestro` skill for inline request clarification, module artifacts, feature seeding, launch readiness, and research review gates.
 - Use the `charlie` skill for grounded codebase research.
+- Use the `grant` skill for optional technical brief review before owner approval.
 - When native delegation is needed, the canonical system agent names are:
   - `module_orchestrator`
   - `research_codebase`
+  - `brief_auditor`
 - This stack intentionally has no `.cursor/commands/` layer.

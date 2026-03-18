@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/module-orchestrator-v2/json-schemas/module-status.schema.json",
+  "title": "Module Status",
+  "description": "Durable module lifecycle state for the aligned minimal V2 artifact model.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "awaiting_owner_brief_approval",
+        "brief_frozen",
+        "awaiting_owner_execution_approval",
+        "executing",
+        "awaiting_owner_decision",
+        "blocked",
+        "done",
+        "cancelled"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "frozen": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "approved",
+        "frozen"
+      ]
+    },
+    "owner_approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brief": {
+          "type": "boolean"
+        },
+        "execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "brief",
+        "execution"
+      ]
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "uniqueItems": true
+    },
+    "current_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "phase",
+    "brief",
+    "owner_approvals",
+    "features",
+    "current_action",
+    "updated_at"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "discussion"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "brief": {
+            "properties": {
+              "approved": {
+                "const": false
+              },
+              "frozen": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "enum": [
+              "brief_frozen",
+              "awaiting_owner_execution_approval",
+              "executing",
+              "awaiting_owner_decision",
+              "blocked",
+              "done"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "brief": {
+            "properties": {
+              "approved": {
+                "const": true
+              },
+              "frozen": {
+                "const": true
+              }
+            }
+          },
+          "owner_approvals": {
+            "properties": {
+              "brief": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "executing"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "owner_approvals": {
+            "properties": {
+              "execution": {
+                "const": true
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": 1,
+      "module_id": "avatar-service-test-execution-v2-pilot",
+      "phase": "discussion",
+      "brief": {
+        "path": "artifacts/avatar-service-test-execution-v2-pilot/brief.md",
+        "approved": false,
+        "frozen": false
+      },
+      "owner_approvals": {
+        "brief": false,
+        "execution": false
+      },
+      "features": [],
+      "current_action": "awaiting_owner_input",
+      "updated_at": "2026-03-17T00:00:00Z"
+    }
+  ]
+}

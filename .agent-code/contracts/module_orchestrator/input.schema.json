@@ -19,8 +19,18 @@
       "type": "string",
       "enum": [
         "discuss",
+        "continue"
+      ]
+    },
+    "owner_intent": {
+      "type": "string",
+      "enum": [
+        "grant_review",
+        "approve_brief",
         "seed_features",
-        "launch_orchestration"
+        "approve_execution",
+        "start_first_feature",
+        "start_next_feature"
       ]
     },
     "inputs": {

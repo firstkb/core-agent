@@ -1,0 +1,43 @@
+{
+  "agent_id": "brief_auditor",
+  "persona_name": "Grant",
+  "agent_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "step": "brief_review",
+  "role": "technical brief reviewer",
+  "artifact_language": "en",
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "allowed_execution_modes": [
+    "sub_agent",
+    "inline"
+  ],
+  "artifacts": {},
+  "briefing_sources": {
+    "sources_in_priority_order": [
+      {
+        "id": "module_brief_md",
+        "path": "{artifacts_root}/{module}/brief.md",
+        "role": "module_brief",
+        "required": true
+      },
+      {
+        "id": "module_status_json",
+        "path": "{artifacts_root}/{module}/status.json",
+        "role": "module_state",
+        "required": false
+      }
+    ]
+  },
+  "support_templates": {
+    "reviewer_note_block": "../templates/reviewer-note-block.md.tmpl"
+  },
+  "authorship_boundary": {
+    "writes_artifacts_directly": false,
+    "returns_markdown_note_block": true,
+    "mutable_json_written_by_cli": true
+  },
+  "recommended_next_agents": [
+    "module_orchestrator"
+  ]
+}

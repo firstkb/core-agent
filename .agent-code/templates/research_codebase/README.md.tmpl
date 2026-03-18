@@ -1,61 +1,26 @@
----
-date: {{generated_at_date}}
-researcher: research_codebase
-persona_name: Charlie
-research_question: "{{task}}"
-module: "{{module}}"
-feature: "{{feature}}"
-scope: "{{scope}}"
-status: {{status}}
-confidence: {{confidence}}
-artifact_language: en
-execution_mode: {{runtime_execution_mode}}
-agent_profile: "{{runtime_agent_profile_display}}"
----
+# Research Attempt
 
-# Research: {{topic}}
+## Identity
+- Module: {{module}}
+- Feature: {{feature}}
+- Stage: research
+- Attempt: {{attempt_id}}
+- Agent: research_codebase
 
-## Summary
-{{summary}}
+## Task
+{{task}}
 
-## Artifact Files
-- `{{artifact_primary_path}}` - primary human-readable artifact.
-- `{{artifact_status_path}}` - machine-readable status sidecar.
+## Observed Facts
+- {{observed_fact_1}}
 
-## Runtime Trace
-- **Execution mode**: `{{runtime_execution_mode}}`
-- **Agent profile**: `{{runtime_agent_profile_display}}`
+## Analysis
+{{analysis}}
 
-## Scope and Method
-- **Goal**: {{task}}
-- **What I inspected**: {{inspected_scope}}
-- **What I intentionally skipped**: {{skipped_scope}}
+## Evidence
+- {{evidence_ref_1}}
 
-## Detailed Findings
-### 1. {{finding_area_1_title}}
-- **Location**: `{{finding_area_1_location}}`
-- **Description**: {{finding_area_1_description}}
-- **Dependencies**: {{finding_area_1_dependencies}}
-- **Data flow**: {{finding_area_1_data_flow}}
-- **Status**: {{finding_area_1_status}}
+## Recommended Next Stage
+{{recommended_next_stage}}
 
-## Architecture Notes
-- **Source of truth**: {{source_of_truth}}
-- **Key boundary**: {{key_boundary}}
-- **Risk / coupling note**: {{risk_note}}
-
-## Code References
-- `{{code_reference_1}}` - {{code_reference_1_description}}
-
-## Search Evidence
-- **Query**: `{{search_query_1}}`
-- **Scope**: `{{search_scope_1}}`
-- **Result type**: `{{search_result_type_1}}`
-- **Exact count**: `{{search_exact_count_1}}`
-- **Observed interpretation**: {{search_observation_1}}
-
-## Open Questions
-- {{open_question_1}}
-
-## Recommended Next Steps
-- {{recommended_next_step_1}}
+## Additional Notes
+- {{additional_note_1}}

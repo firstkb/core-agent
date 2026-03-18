@@ -2,541 +2,90 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "contract_version",
-    "agent_id",
-    "persona_name",
-    "step",
-    "module",
-    "status",
-    "generated_at",
-    "artifacts",
-    "summary",
-    "briefing",
-    "interaction",
-    "decomposition",
-    "readiness",
-    "approvals",
-    "orchestration",
-    "handoff",
-    "validation",
-    "runtime"
-  ],
   "properties": {
-    "contract_version": {
-      "type": "string",
-      "const": "3.0.0"
+    "schema_version": {
+      "const": 1
     },
-    "agent_id": {
+    "module_id": {
       "type": "string",
-      "const": "module_orchestrator"
+      "pattern": "^[a-z][a-z0-9_-]*$"
     },
-    "persona_name": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "awaiting_owner_brief_approval",
+        "brief_frozen",
+        "awaiting_owner_execution_approval",
+        "executing",
+        "awaiting_owner_decision",
+        "blocked",
+        "done",
+        "cancelled"
+      ]
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "frozen": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "approved",
+        "frozen"
+      ]
+    },
+    "owner_approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brief": {
+          "type": "boolean"
+        },
+        "execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "brief",
+        "execution"
+      ]
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_-]*$"
+      },
+      "uniqueItems": true
+    },
+    "current_action": {
       "type": "string",
       "minLength": 1
     },
-    "step": {
-      "type": "string",
-      "const": "orchestration"
-    },
-    "module": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "pending",
-        "collecting_context",
-        "briefing",
-        "decomposing",
-        "awaiting_feature_approval",
-        "ready_to_seed",
-        "seeding_features",
-        "seeded",
-        "awaiting_orchestration_approval",
-        "ready_to_orchestrate",
-        "orchestrating",
-        "awaiting_stage_review",
-        "blocked",
-        "complete",
-        "failed"
-      ]
-    },
-    "generated_at": {
+    "updated_at": {
       "type": "string",
       "format": "date-time"
-    },
-    "artifacts": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "primary_readme",
-        "status_json",
-        "request_md",
-        "maestro_brief_md",
-        "feature_index_md"
-      ],
-      "properties": {
-        "primary_readme": {
-          "type": "string",
-          "minLength": 1
-        },
-        "status_json": {
-          "type": "string",
-          "minLength": 1
-        },
-        "request_md": {
-          "type": "string",
-          "minLength": 1
-        },
-        "maestro_brief_md": {
-          "type": "string",
-          "minLength": 1
-        },
-        "feature_index_md": {
-          "type": "string",
-          "minLength": 1
-        },
-        "global_constraints_md": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "glossary_md": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "dependency_map_md": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "execution_order_md": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "status_board_md": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "summary": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "topic",
-        "open_questions_count",
-        "blockers_count",
-        "current_goal"
-      ],
-      "properties": {
-        "topic": {
-          "type": "string",
-          "minLength": 1
-        },
-        "open_questions_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "blockers_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "current_goal": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "briefing": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "request_captured",
-        "brief_established",
-        "scope_state",
-        "constraints_captured",
-        "success_criteria_state"
-      ],
-      "properties": {
-        "request_captured": {
-          "type": "boolean"
-        },
-        "brief_established": {
-          "type": "boolean"
-        },
-        "scope_state": {
-          "type": "string",
-          "enum": [
-            "unstarted",
-            "provisional",
-            "confirmed"
-          ]
-        },
-        "constraints_captured": {
-          "type": "boolean"
-        },
-        "success_criteria_state": {
-          "type": "string",
-          "enum": [
-            "unstarted",
-            "provisional",
-            "confirmed"
-          ]
-        },
-        "target_alignment_state": {
-          "type": "string",
-          "enum": [
-            "unstarted",
-            "aligned",
-            "unresolved",
-            "misaligned"
-          ]
-        }
-      }
-    },
-    "interaction": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mode",
-        "auto_spawn_enabled",
-        "pending_user_decision"
-      ],
-      "properties": {
-        "mode": {
-          "type": "string",
-          "enum": [
-            "discuss",
-            "seed_features",
-            "launch_orchestration"
-          ]
-        },
-        "auto_spawn_enabled": {
-          "type": "boolean"
-        },
-        "pending_user_decision": {
-          "type": "string",
-          "enum": [
-            "continue_briefing",
-            "approve_feature_seeding",
-            "approve_orchestration_launch",
-            "review_stage_output",
-            "none"
-          ]
-        }
-      }
-    },
-    "decomposition": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "state",
-        "mode",
-        "features",
-        "candidate_feature_count",
-        "approved_feature_count",
-        "seeded_feature_count",
-        "completed_feature_count"
-      ],
-      "properties": {
-        "state": {
-          "type": "string",
-          "enum": [
-            "undecided",
-            "provisional",
-            "confirmed"
-          ]
-        },
-        "mode": {
-          "type": "string",
-          "enum": [
-            "undecided",
-            "single_feature",
-            "multi_feature"
-          ]
-        },
-        "features": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "slug",
-              "title",
-              "state"
-            ],
-            "properties": {
-              "slug": {
-                "type": "string",
-                "minLength": 1,
-                "pattern": "^[a-z0-9][a-z0-9_-]*$"
-              },
-              "title": {
-                "type": "string",
-                "minLength": 1
-              },
-              "state": {
-                "type": "string",
-                "enum": [
-                  "candidate",
-                  "approved",
-                  "seeded",
-                  "active",
-                  "awaiting_review",
-                  "blocked",
-                  "failed",
-                  "complete"
-                ]
-              }
-            }
-          }
-        },
-        "candidate_feature_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "approved_feature_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "seeded_feature_count": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "completed_feature_count": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "readiness": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "information_complete",
-        "requires_guessing",
-        "open_questions_blocking",
-        "ready_for_feature_seeding",
-        "ready_for_orchestration_launch"
-      ],
-      "properties": {
-        "information_complete": {
-          "type": "boolean"
-        },
-        "requires_guessing": {
-          "type": "boolean"
-        },
-        "open_questions_blocking": {
-          "type": "boolean"
-        },
-        "ready_for_feature_seeding": {
-          "type": "boolean"
-        },
-        "ready_for_orchestration_launch": {
-          "type": "boolean"
-        }
-      }
-    },
-    "approvals": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "feature_seeding_required",
-        "feature_seeding_received",
-        "orchestration_launch_required",
-        "orchestration_launch_received"
-      ],
-      "properties": {
-        "feature_seeding_required": {
-          "type": "boolean"
-        },
-        "feature_seeding_received": {
-          "type": "boolean"
-        },
-        "orchestration_launch_required": {
-          "type": "boolean"
-        },
-        "orchestration_launch_received": {
-          "type": "boolean"
-        }
-      }
-    },
-    "orchestration": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "launch_status",
-        "active_stage",
-        "recommended_entry_agent",
-        "active_feature_count"
-      ],
-      "properties": {
-        "launch_status": {
-          "type": "string",
-          "enum": [
-            "not_requested",
-            "awaiting_approval",
-            "approved",
-            "started",
-            "in_progress",
-            "awaiting_review",
-            "complete"
-          ]
-        },
-        "active_stage": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "enum": [
-            "research",
-            "design",
-            "planning",
-            "implementation",
-            "documentation",
-            "evidence",
-            null
-          ]
-        },
-        "recommended_entry_agent": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "active_feature_count": {
-          "type": "integer",
-          "minimum": 0
-        }
-      }
-    },
-    "handoff": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "ready_for_feature_seeding",
-        "ready_for_orchestration_launch",
-        "recommended_next_agent",
-        "required_artifacts_minimum",
-        "available_artifacts",
-        "required_inputs_for_next_agent"
-      ],
-      "properties": {
-        "ready_for_feature_seeding": {
-          "type": "boolean"
-        },
-        "ready_for_orchestration_launch": {
-          "type": "boolean"
-        },
-        "recommended_next_agent": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "required_artifacts_minimum": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "available_artifacts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required_inputs_for_next_agent": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      }
-    },
-    "validation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "schema_valid",
-        "artifact_complete",
-        "runtime_trace_valid",
-        "cross_artifact_consistent"
-      ],
-      "properties": {
-        "schema_valid": {
-          "type": "boolean"
-        },
-        "artifact_complete": {
-          "type": "boolean"
-        },
-        "runtime_trace_valid": {
-          "type": "boolean"
-        },
-        "cross_artifact_consistent": {
-          "type": "boolean"
-        }
-      }
-    },
-    "runtime": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "initiator",
-        "model",
-        "effort",
-        "run_dir",
-        "execution_mode",
-        "agent_profile"
-      ],
-      "properties": {
-        "initiator": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "model": {
-          "type": "string",
-          "minLength": 1
-        },
-        "effort": {
-          "type": "string",
-          "minLength": 1
-        },
-        "run_dir": {
-          "type": "string",
-          "minLength": 1
-        },
-        "execution_mode": {
-          "type": "string",
-          "enum": [
-            "inline",
-            "sub_agent"
-          ]
-        },
-        "agent_profile": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
     }
-  }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "phase",
+    "brief",
+    "owner_approvals",
+    "features",
+    "current_action",
+    "updated_at"
+  ]
 }

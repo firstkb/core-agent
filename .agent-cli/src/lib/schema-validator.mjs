@@ -43,6 +43,25 @@ function validateNode(schema, value, path, errors) {
     return;
   }
 
+  if (Array.isArray(schema.allOf)) {
+    for (const branch of schema.allOf) {
+      validateNode(branch, value, path, errors);
+    }
+  }
+
+  if (schema.if && typeof schema.if === "object") {
+    const branchErrors = [];
+    validateNode(schema.if, value, path, branchErrors);
+
+    if (branchErrors.length === 0) {
+      if (schema.then && typeof schema.then === "object") {
+        validateNode(schema.then, value, path, errors);
+      }
+    } else if (schema.else && typeof schema.else === "object") {
+      validateNode(schema.else, value, path, errors);
+    }
+  }
+
   if (schema.const !== undefined && value !== schema.const) {
     errors.push(`${path} must equal ${JSON.stringify(schema.const)}`);
   }
@@ -83,6 +102,18 @@ function validateNode(schema, value, path, errors) {
   }
 
   if (Array.isArray(value)) {
+    if (schema.uniqueItems) {
+      const seen = new Set();
+
+      value.forEach((entry, index) => {
+        const signature = JSON.stringify(entry);
+        if (seen.has(signature)) {
+          errors.push(`${path}[${index}] must be unique`);
+        }
+        seen.add(signature);
+      });
+    }
+
     if (schema.items) {
       value.forEach((entry, index) => {
         validateNode(schema.items, entry, `${path}[${index}]`, errors);

@@ -69,5 +69,41 @@
       "Separate observed facts from inference.",
       "Route the completed research packet back to module_orchestrator for review."
     ]
+  },
+  "brief_auditor": {
+    "system_name": "brief_auditor",
+    "skill_nickname": "grant",
+    "persona_name": "Grant",
+    "role_summary": "technical brief review for solution fit, feature decomposition, dependency ordering, and approval readiness before owner approval",
+    "writes_summary": "Returns a markdown-ready reviewer note block; does not write repository artifacts directly.",
+    "descriptions": {
+      "agent": "System agent for optional technical brief review before owner approval.",
+      "skill": "Optional technical brief review workflow for validating solution fit, decomposition, dependency ordering, technical assumptions, and readiness before approval."
+    },
+    "source_paths": {
+      "agent_prompt": ".agent-code/prompts/agents/brief_auditor.md",
+      "skill_prompt": ".agent-code/prompts/skills/grant.md",
+      "contracts_dir": ".agent-code/contracts/brief_auditor",
+      "templates_dir": ".agent-code/templates/brief_auditor"
+    },
+    "generated_paths": {
+      "cursor_agent": ".cursor/agents/brief_auditor.md",
+      "codex_agent": ".codex/agents/brief_auditor.toml",
+      "repo_skill": ".agents/skills/grant/SKILL.md"
+    },
+    "runtime": {
+      "cursor_model": "inherit",
+      "readonly": true,
+      "is_background": false,
+      "codex_model": "gpt-5.4",
+      "codex_reasoning_effort": "xhigh"
+    },
+    "critical_invariants": [
+      "Do not approve the brief.",
+      "Do not write repository artifacts directly.",
+      "Do not patch JSON state.",
+      "Return a concise recommendation and one markdown-ready reviewer note block.",
+      "Route control back to module_orchestrator after review."
+    ]
   }
 }

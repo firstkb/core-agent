@@ -9,21 +9,22 @@
   ],
   "properties": {
     "chat_summary": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "artifact_paths": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "primary_readme",
-        "status_json"
+        "attempt_readme",
+        "handoff_json"
       ],
       "properties": {
-        "primary_readme": {
+        "attempt_readme": {
           "type": "string",
           "minLength": 1
         },
-        "status_json": {
+        "handoff_json": {
           "type": "string",
           "minLength": 1
         }
@@ -33,13 +34,19 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "ready_for_next_agent",
+        "result",
         "recommended_next_agent",
-        "required_inputs_for_next_agent"
+        "recommended_next_stage"
       ],
       "properties": {
-        "ready_for_next_agent": {
-          "type": "boolean"
+        "result": {
+          "type": "string",
+          "enum": [
+            "complete",
+            "blocked",
+            "failed",
+            "cancelled"
+          ]
         },
         "recommended_next_agent": {
           "type": [
@@ -47,11 +54,11 @@
             "null"
           ]
         },
-        "required_inputs_for_next_agent": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "recommended_next_stage": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

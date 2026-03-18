@@ -2,95 +2,124 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "module",
-    "feature",
-    "feature_id",
-    "title",
-    "status",
-    "current_stage",
-    "next_stage",
-    "gate",
-    "owner",
-    "last_updated"
-  ],
   "properties": {
-    "module": {
-      "type": "string",
-      "minLength": 1,
-      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
+    "schema_version": {
+      "const": 1
     },
-    "feature": {
+    "module_id": {
       "type": "string",
-      "minLength": 1,
-      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+      "pattern": "^[a-z][a-z0-9_-]*$"
     },
     "feature_id": {
       "type": "string",
-      "minLength": 1
+      "pattern": "^[a-z][a-z0-9_-]*$"
     },
-    "title": {
-      "type": "string",
-      "minLength": 1
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "queued",
-        "active",
-        "awaiting_review",
-        "blocked",
-        "complete",
-        "failed"
-      ]
-    },
-    "current_stage": {
+    "phase": {
       "type": "string",
       "enum": [
         "seeded",
-        "research",
-        "design",
-        "planning",
-        "implementation",
-        "documentation",
-        "evidence",
-        "done"
+        "ready_for_stage",
+        "stage_in_progress",
+        "awaiting_review",
+        "done",
+        "blocked"
       ]
+    },
+    "readme_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "current_stage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9_-]*$"
     },
     "next_stage": {
       "type": [
         "string",
         "null"
       ],
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "active_attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "latest_attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "latest_submitted_handoff_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_reviewed_attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "last_reviewed_handoff_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "last_decision": {
+      "type": [
+        "string",
+        "null"
+      ],
       "enum": [
-        "research",
-        "design",
-        "planning",
-        "implementation",
-        "documentation",
-        "evidence",
-        "done",
+        "accept",
+        "revise",
         null
       ]
     },
-    "gate": {
-      "type": "string",
-      "enum": [
-        "awaiting_owner_approval",
-        "approved_for_dispatch",
-        "in_progress",
-        "awaiting_maestro_review",
-        "changes_requested",
-        "none"
+    "last_decision_reason": {
+      "type": [
+        "string",
+        "null"
       ]
     },
-    "owner": {
-      "type": "string",
-      "minLength": 1
+    "blocked_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "last_updated": {
+    "updated_at": {
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "required": [
+    "schema_version",
+    "module_id",
+    "feature_id",
+    "phase",
+    "readme_path",
+    "current_stage",
+    "next_stage",
+    "active_attempt_id",
+    "latest_attempt_id",
+    "latest_submitted_handoff_ref",
+    "last_reviewed_attempt_id",
+    "last_reviewed_handoff_ref",
+    "last_decision",
+    "last_decision_reason",
+    "blocked_reason",
+    "updated_at"
+  ]
 }

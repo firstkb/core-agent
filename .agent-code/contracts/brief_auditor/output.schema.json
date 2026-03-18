@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chat_summary",
+    "review"
+  ],
+  "properties": {
+    "chat_summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recommendation",
+        "key_findings",
+        "note_block_markdown"
+      ],
+      "properties": {
+        "recommendation": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "revise",
+            "blocked"
+          ]
+        },
+        "key_findings": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "note_block_markdown": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

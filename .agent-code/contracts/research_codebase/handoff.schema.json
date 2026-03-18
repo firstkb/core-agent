@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "module_id",
+    "feature_id",
+    "stage",
+    "attempt_id",
+    "agent_id",
+    "result",
+    "summary",
+    "evidence_refs",
+    "produced_artifact_refs",
+    "change_requests",
+    "recommended_next_stage",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "module_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "feature_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "stage": {
+      "type": "string",
+      "const": "research"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "agent_id": {
+      "type": "string",
+      "const": "research_codebase"
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "complete",
+        "blocked",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "produced_artifact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "change_requests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "recommended_next_stage": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

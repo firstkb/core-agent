@@ -7,77 +7,96 @@ canonical_for: module_orchestrator_v2_cli
 
 # Module Orchestrator V2 CLI Command Spec
 
-This document defines the first typed CLI surface for the V2 state-gateway model.
+This document defines the typed CLI surface aligned to the minimal artifact model.
 
-The CLI is not a universal validator. It is the only legal writer of mutable JSON state and the allocator of revision ids and attempt ids.
+The CLI is:
+
+- the only legal writer of mutable JSON state;
+- the allocator of attempt ids;
+- the enforcer of canonical artifact paths.
+
+Examples below use `agent-stack` as shorthand for:
+
+```text
+node .agent-cli/bin/agent-stack.mjs
+```
 
 ---
 
-## 1. Design intent
+## 1. Design Intent
 
-The CLI exists to enforce three boundaries:
+The CLI exists to enforce these boundaries:
 
 - lifecycle transitions happen through typed commands, not ad-hoc JSON edits;
 - write-time validation happens at the mutation boundary;
-- artifact skeletons, revision ids, and attempt ids are allocated consistently.
+- attempt ids and canonical paths are allocated consistently.
 
 The CLI does not own:
 
-- owner-facing reasoning
-- decomposition quality
-- downstream stage execution
-- business approval decisions
+- owner-facing reasoning;
+- decomposition quality;
+- downstream stage execution;
+- business approval decisions;
+- semantic narrative prose generation.
 
 ---
 
-## 2. Command design principles
+## 2. Design Principles
 
 ### 2.1. Typed over generic
 
 Prefer:
 
 ```text
-agent-cli module freeze-brief ...
+agent-stack module freeze-brief ...
 ```
 
 Not:
 
 ```text
-agent-cli patch-json --file status.json --set phase=brief_frozen
+agent-stack patch-json --file status.json --set phase=brief_frozen
 ```
 
-### 2.2. Lifecycle-specific over repository-wide validation
+### 2.2. Validate at the write boundary
 
-Prefer validating the one requested transition and the files it touches.
+Validate the requested transition and the files it touches.
 
-Do not re-validate the whole repository on every normal state mutation.
+Do not re-validate the whole repository on every normal mutation.
 
-### 2.3. Explicit side effects
+### 2.3. No hidden state motion
 
-Every command should have well-defined outputs:
+A command that records an approval must not silently start execution.
 
-- which JSON files it writes
-- which directories it creates
-- whether it allocates a revision id
-- whether it allocates an attempt id
+A command that submits a handoff must not silently accept that handoff.
 
-### 2.4. No hidden state motion
+### 2.4. Markdown authorship belongs to AI, not the CLI
 
-A command that records an approval should not silently start stage execution.
-A command that submits a handoff should not silently mark the stage accepted.
+The CLI must not author Markdown content.
+
+Markdown files are written by AI against canonical templates under `.agent-code/templates/`.
+
+The CLI may:
+
+- create directories;
+- write mutable JSON state;
+- copy an AI-authored attempt `README.md` into the canonical attempt path.
+
+The CLI must not:
+
+- create a seeded `brief.md` body;
+- create a feature `README.md` body;
+- synthesize an attempt `README.md` from handoff content.
 
 ---
 
-## 3. Shared conventions
+## 3. Shared Conventions
 
 ### 3.1. Identifiers
 
-- `module_id`, `feature_id`, `agent_id`, and `stage` are slug-like strings.
-- `attempt_id` is CLI-allocated and follows `attempt-001`, `attempt-002`, and so on.
+- `module_id`, `feature_id`, `agent_id`, and `stage` are slug-like strings
+- `attempt_id` follows `attempt-001`, `attempt-002`, and so on
 
 ### 3.2. Paths
-
-All commands are evaluated relative to repository root.
 
 Default artifact root:
 
@@ -87,53 +106,76 @@ artifacts/<module>/
 
 ### 3.3. Exit codes
 
-Suggested first-cut exit codes:
+Suggested aligned exit codes:
 
 - `0` — success
 - `2` — schema validation failure
 - `3` — illegal transition
 - `4` — missing artifact or missing input file
-- `5` — id collision
+- `5` — id collision or out-of-date generated file check
 - `6` — policy guard failed
 - `7` — internal CLI error
 
-### 3.4. Output style
-
-Each command should return machine-readable JSON to stdout unless `--quiet` or `--human` is requested.
+### 3.4. Output shape
 
 Suggested response shape:
 
 ```json
 {
   "ok": true,
-  "command": "module freeze-brief",
+  "command": "stage review",
   "writes": [
-    "artifacts/avatar-service-test-execution/status.json",
-    "artifacts/avatar-service-test-execution/revisions/brief.v1.md"
+    "artifacts/avatar-service-test-execution/features/restore-executable-npm-test/status.json",
+    "artifacts/avatar-service-test-execution/features/restore-executable-npm-test/stages/research/attempt-001/README.md"
   ],
   "state": {
-    "module_phase": "brief_frozen"
+    "feature_phase": "ready_for_stage"
   }
 }
 ```
 
 ---
 
-## 4. Module commands
+## 4. Active Command Surface
 
-## 4.1. `module init`
+The aligned minimal kernel keeps this active surface:
 
-Creates module root and first mutable artifacts.
+- `module init`
+- `module submit-for-brief-approval`
+- `module return-to-discussion`
+- `module record-owner-approval`
+- `module freeze-brief`
+- `module prepare-execution`
+- `feature seed`
+- `feature set-next-stage`
+- `stage start`
+- `stage submit-handoff`
+- `stage review`
+- `render-runtimes`
+
+First-cut legal `stage review` decisions:
+
+- `accept`
+- `revise`
+
+Deferred commands stay documented separately.
+
+---
+
+## 5. Module Commands
+
+## 5.1. `module init`
+
+Creates module root and the first mutable machine-state artifact.
 
 Syntax:
 
 ```text
-agent-cli module init --module <module_id> --owner <owner_id>
+agent-stack module init --module <module_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/brief.md`
 - `artifacts/<module>/status.json`
 
 State effect:
@@ -146,126 +188,22 @@ Guards:
 
 Notes:
 
-- `owner_id` is metadata for traceability; it does not grant CLI authority by itself.
+- `status.json` reserves the canonical `brief.md` path
+- AI authors `brief.md` separately before brief approval is requested
 
----
-
-## 4.2. `module question add`
-
-Appends an open question to module state.
-
-Syntax:
-
-```text
-agent-cli module question add --module <module_id> --text "<question>"
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- appends to `open_questions`
-
-Guards:
-
-- module must exist
-- module phase must not be terminal
-
----
-
-## 4.3. `module question resolve`
-
-Marks an open question as resolved by text match or id.
-
-Syntax:
-
-```text
-agent-cli module question resolve --module <module_id> --text "<question>"
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- removes the question from `open_questions`
-
-Guards:
-
-- matching open question must exist
-
----
-
-## 4.4. `module request-brief-review`
-
-Requests optional readiness review for the current brief revision.
-
-Syntax:
-
-```text
-agent-cli module request-brief-review --module <module_id>
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- `brief_review.status = "pending"`
-
-Guards:
-
-- module phase must be `discussion`
-
----
-
-## 4.5. `module record-brief-review`
-
-Records the advisory result of brief readiness review.
-
-Syntax:
-
-```text
-agent-cli module record-brief-review --module <module_id> --recommendation <ready|revise|blocked> [--reviewed-revision <path>]
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- `brief_review.status = "completed"`
-- `brief_review.recommendation` updated
-
-Guards:
-
-- module phase must be `discussion`
-- recommendation must be valid
-
-Notes:
-
-- this does not move module lifecycle by itself
-
----
-
-## 4.6. `module submit-for-brief-approval`
+## 5.2. `module submit-for-brief-approval`
 
 Moves the module from active discussion to owner brief approval.
 
 Syntax:
 
 ```text
-agent-cli module submit-for-brief-approval --module <module_id>
+agent-stack module submit-for-brief-approval --module <module_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
@@ -277,21 +215,19 @@ Guards:
 - `brief.md` must exist
 - minimum completeness policy must pass
 
----
-
-## 4.7. `module return-to-discussion`
+## 5.3. `module return-to-discussion`
 
 Reopens the discussion loop after owner or orchestrator feedback.
 
 Syntax:
 
 ```text
-agent-cli module return-to-discussion --module <module_id>
+agent-stack module return-to-discussion --module <module_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
@@ -301,21 +237,19 @@ Guards:
 
 - current phase must be `awaiting_owner_brief_approval`
 
----
-
-## 4.8. `module record-owner-approval`
+## 5.4. `module record-owner-approval`
 
 Records a human approval boundary without silently moving the next lifecycle step.
 
 Syntax:
 
 ```text
-agent-cli module record-owner-approval --module <module_id> --approval <brief|execution>
+agent-stack module record-owner-approval --module <module_id> --approval <brief|execution>
 ```
 
 Writes:
 
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
@@ -328,31 +262,24 @@ Guards:
 - `brief` approval requires module phase `awaiting_owner_brief_approval`
 - `execution` approval requires module phase `awaiting_owner_execution_approval`
 
-Notes:
+## 5.5. `module freeze-brief`
 
-- approval recording and state transition remain separate on purpose
-
----
-
-## 4.9. `module freeze-brief`
-
-Allocates a new brief revision and freezes it for execution planning.
+Freezes the approved brief without creating a second markdown snapshot file.
 
 Syntax:
 
 ```text
-agent-cli module freeze-brief --module <module_id>
+agent-stack module freeze-brief --module <module_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/revisions/brief.vN.md`
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
 - module phase becomes `brief_frozen`
-- `brief.active_revision` points to the new revision
+- `brief.approved = true`
 - `brief.frozen = true`
 
 Guards:
@@ -361,25 +288,19 @@ Guards:
 - `owner_approvals.brief = true`
 - `brief.md` must exist
 
-Notes:
+## 5.6. `module prepare-execution`
 
-- `brief.md` remains as the human-readable current working copy, but the revision path becomes the authoritative frozen basis.
-
----
-
-## 4.10. `module prepare-execution`
-
-Signals that feature seeding is complete and execution may now await owner permission.
+Signals that feature creation is complete and execution may now await owner permission.
 
 Syntax:
 
 ```text
-agent-cli module prepare-execution --module <module_id>
+agent-stack module prepare-execution --module <module_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
@@ -389,157 +310,31 @@ Guards:
 
 - current phase must be `brief_frozen`
 - at least one feature must exist
-- each feature must have `packet.md`, packet revision, and feature `status.json`
+- each feature must have `README.md` and feature `status.json`
 
 ---
 
-## 4.11. `module resolve-owner-decision`
+## 6. Feature Commands
 
-Resolves an owner decision gate and resumes execution.
+## 6.1. `feature seed`
+
+Creates feature root and feature state.
 
 Syntax:
 
 ```text
-agent-cli module resolve-owner-decision --module <module_id> [--resume] [--cancel]
+agent-stack feature seed --module <module_id> --feature <feature_id>
 ```
 
 Writes:
 
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- with `--resume`, module phase becomes `executing`
-- with `--cancel`, module phase becomes `cancelled`
-
-Guards:
-
-- current phase must be `awaiting_owner_decision`
-
----
-
-## 4.12. `module block`
-
-Declares module-level blockage.
-
-Syntax:
-
-```text
-agent-cli module block --module <module_id> --reason "<reason>"
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- module phase becomes `blocked`
-
-Guards:
-
-- current phase must not be terminal
-
----
-
-## 4.13. `module reopen`
-
-Reopens a blocked module to a specific allowed target.
-
-Syntax:
-
-```text
-agent-cli module reopen --module <module_id> --to <discussion|executing>
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- module phase becomes the requested target
-
-Guards:
-
-- current phase must be `blocked`
-- requested target must satisfy policy guards
-
----
-
-## 4.14. `module close`
-
-Closes module execution.
-
-Syntax:
-
-```text
-agent-cli module close --module <module_id> --status done
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- module phase becomes `done`
-
-Guards:
-
-- all required features must be `done`
-- no feature may have an open attempt
-- no feature may be awaiting stage review
-
----
-
-## 4.15. `module cancel`
-
-Cancels a module run.
-
-Syntax:
-
-```text
-agent-cli module cancel --module <module_id>
-```
-
-Writes:
-
-- `artifacts/<module>/status.json`
-
-State effect:
-
-- module phase becomes `cancelled`
-
-Guards:
-
-- current phase must not be `done` or `cancelled`
-
----
-
-## 5. Feature commands
-
-## 5.1. `feature seed`
-
-Creates feature root, first packet revision, and feature state.
-
-Syntax:
-
-```text
-agent-cli feature seed --module <module_id> --feature <feature_id>
-```
-
-Writes:
-
-- `artifacts/<module>/features/<feature>/packet.md`
-- `artifacts/<module>/features/<feature>/revisions/packet.v1.md`
 - `artifacts/<module>/features/<feature>/status.json`
-- `artifacts/<module>/status.json`
+- module `status.json`
 
 State effect:
 
 - feature phase becomes `seeded`
-- feature is appended to module feature list
+- feature id is appended to module feature list
 
 Guards:
 
@@ -548,212 +343,247 @@ Guards:
 
 Notes:
 
-- the initial packet is expected to be frozen for execution use; later amendments must create new packet revisions.
+- in the aligned minimal model, AI authors feature packet content in `features/<feature>/README.md`
 
----
+## 6.2. `feature set-next-stage`
 
-## 5.2. `feature set-next-stage`
-
-Arms a seeded or ready feature for the next intended stage.
+Arms a seeded or already-ready feature for the next intended stage.
 
 Syntax:
 
 ```text
-agent-cli feature set-next-stage --module <module_id> --feature <feature_id> --stage <stage>
+agent-stack feature set-next-stage --module <module_id> --feature <feature_id> --stage <stage>
 ```
 
 Writes:
 
-- `artifacts/<module>/features/<feature>/status.json`
+- feature `status.json`
 
 State effect:
 
 - feature phase becomes `ready_for_stage`
-- `next_recommended_stage` is updated
+- `next_stage` is updated
 
 Guards:
 
-- feature phase must be `seeded` or `ready_for_stage` or `blocked`
-- feature must not have an open attempt
+- feature phase must be `seeded` or `ready_for_stage`
+- feature must not have an active attempt
+
+Notes:
+
+- this command must not double as `feature unblock`
 
 ---
 
-## 5.3. `feature unblock`
+## 7. Stage Commands
 
-Clears a feature block and sets the next stage to run.
-
-Syntax:
-
-```text
-agent-cli feature unblock --module <module_id> --feature <feature_id> --stage <stage>
-```
-
-Writes:
-
-- `artifacts/<module>/features/<feature>/status.json`
-
-State effect:
-
-- feature phase becomes `ready_for_stage`
-- `blocked_reason = null`
-- `next_recommended_stage` is updated
-
-Guards:
-
-- current feature phase must be `blocked`
-
----
-
-## 6. Stage commands
-
-## 6.1. `stage start`
+## 7.1. `stage start`
 
 Opens a new attempt for one feature stage.
 
 Syntax:
 
 ```text
-agent-cli stage start --module <module_id> --feature <feature_id> --stage <stage> --agent <agent_id>
+agent-stack stage start --module <module_id> --feature <feature_id> --stage <stage> --agent <agent_id>
 ```
 
 Writes:
 
-- attempt directory under `stages/<stage>/attempts/attempt-NNN/`
+- attempt directory under `stages/<stage>/attempt-NNN/`
 - feature `status.json`
-- module `status.json` if module enters `executing`
+- module `status.json`
 
 State effect:
 
 - feature phase becomes `stage_in_progress`
 - `current_stage` becomes the requested stage
-- a new attempt id is allocated
-- module phase becomes `executing` if it was awaiting execution approval and execution approval is recorded
+- `active_attempt_id` becomes the new attempt id
+- `latest_attempt_id` becomes the new attempt id
+- module phase becomes `executing` if not already executing
 
 Guards:
 
 - module phase must be `awaiting_owner_execution_approval` or `executing`
 - `owner_approvals.execution = true`
 - feature phase must be `ready_for_stage`
-- no open attempt may exist for that feature
+- no active attempt may exist
+- if `next_stage` is already set, it must match `--stage`
 
----
-
-## 6.2. `stage submit-handoff`
+## 7.2. `stage submit-handoff`
 
 Submits the write-once handoff for the currently open attempt.
 
 Syntax:
 
 ```text
-agent-cli stage submit-handoff --module <module_id> --feature <feature_id> --stage <stage> --from <handoff.json>
+agent-stack stage submit-handoff --module <module_id> --feature <feature_id> --stage <stage> --from <handoff.json> --readme <README.md>
 ```
 
 Writes:
 
 - `.../handoff.json`
-- `.../report.md`
+- `.../README.md`
 - feature `status.json`
+- module `status.json`
 
 State effect:
 
-- feature phase becomes `awaiting_stage_review`
-- `latest_attempt_ref` points to the submitted attempt
+- feature phase becomes `awaiting_review`
+- `active_attempt_id = null`
+- `latest_submitted_handoff_ref` points to the submitted handoff
 
 Guards:
 
 - feature phase must be `stage_in_progress`
-- `current_stage` must match the stage argument
-- an open attempt directory must exist
+- `current_stage` must match `--stage`
+- an active attempt must exist
 - the input handoff must pass schema validation
 
 Notes:
 
-- if `report.md` is not supplied externally, CLI may create it from the handoff summary plus metadata, but the downstream agent remains responsible for the semantic content.
+- `--readme` is required and must point to an AI-authored attempt `README.md`
+- CLI copies that file into the canonical attempt path
+- CLI must not synthesize semantic prose from the handoff payload
 
----
+## 7.3. `stage review`
 
-## 6.3. `stage review`
-
-Writes the orchestrator review for a specific attempt and applies the corresponding state transition.
+Applies the orchestrator decision to a specific attempt and appends that decision to the attempt `README.md`.
 
 Syntax:
 
 ```text
-agent-cli stage review --module <module_id> --feature <feature_id> --stage <stage> --attempt <attempt_id> --decision <accept|revise|block|escalate_to_owner> [--next-stage <stage>] [--complete]
+agent-stack stage review --module <module_id> --feature <feature_id> --stage <stage> --attempt <attempt_id> --decision <accept|revise> --reason "<reason>" [--next-stage <stage>] [--complete]
 ```
 
 Writes:
 
-- `.../review.json`
-- `.../review.md`
+- attempt `README.md`
 - feature `status.json`
-- module `status.json` when module state changes
+- module `status.json`
 
 State effect by decision:
 
 - `accept --next-stage <stage>`:
   - feature phase becomes `ready_for_stage`
   - `current_stage = null`
-  - `next_recommended_stage = <stage>`
-  - `latest_accepted_review_ref` updated
+  - `next_stage = <stage>`
+  - `last_reviewed_attempt_id` and `last_reviewed_handoff_ref` updated
+  - `last_decision = accept`
 - `accept --complete`:
   - feature phase becomes `done`
   - `current_stage = null`
-  - `latest_accepted_review_ref` updated
+  - `next_stage = null`
+  - `last_reviewed_attempt_id` and `last_reviewed_handoff_ref` updated
+  - `last_decision = accept`
 - `revise`:
   - feature phase becomes `ready_for_stage`
   - `current_stage = null`
-  - `next_recommended_stage` defaults to reviewed stage unless explicitly overridden
-- `block`:
-  - feature phase becomes `blocked`
-- `escalate_to_owner`:
-  - feature phase becomes `blocked`
-  - module phase becomes `awaiting_owner_decision`
+  - `next_stage` defaults to the reviewed stage unless explicitly overridden later
+  - `last_reviewed_attempt_id` and `last_reviewed_handoff_ref` updated
+  - `last_decision = revise`
 
 Guards:
 
-- feature phase must be `awaiting_stage_review`
+- feature phase must be `awaiting_review`
 - specified handoff must exist for the exact attempt id
 - stage must match the feature `current_stage`
+- `--reason` must be non-empty
 - `accept` requires either `--next-stage` or `--complete`
+- `revise` must not be combined with `--complete`
 
 Notes:
 
-- the review is the technical acceptance boundary
-- owner approval is separate and is never implied by `accept`
+- there is no separate `review.json` or `review.md` in the aligned minimal model
+- decision binding is carried in feature `status.json`
+- human-readable decision history is carried in attempt `README.md`
 
 ---
 
-## 7. Command choreography for the first pilot
+## 8. Build Command
 
-Recommended first bounded pilot:
+## 8.1. `render-runtimes`
+
+Renders runtime adapters and `AGENTS.md` from `.agent-code/`.
+
+Syntax:
 
 ```text
-agent-cli module init --module avatar-service-test-execution --owner owner
-agent-cli module question add --module avatar-service-test-execution --text "Is E2E required or only unit/integration?"
-agent-cli module submit-for-brief-approval --module avatar-service-test-execution
-agent-cli module record-owner-approval --module avatar-service-test-execution --approval brief
-agent-cli module freeze-brief --module avatar-service-test-execution
-agent-cli feature seed --module avatar-service-test-execution --feature restore-executable-npm-test
-agent-cli feature set-next-stage --module avatar-service-test-execution --feature restore-executable-npm-test --stage research
-agent-cli module prepare-execution --module avatar-service-test-execution
-agent-cli module record-owner-approval --module avatar-service-test-execution --approval execution
-agent-cli stage start --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --agent research_codebase
-agent-cli stage submit-handoff --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --from handoff.json
-agent-cli stage review --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --attempt attempt-001 --decision accept --next-stage implementation
+agent-stack render-runtimes
+agent-stack render-runtimes --check
+```
+
+Writes:
+
+- `AGENTS.md`
+- `.cursor/rules/*`
+- `.cursor/agents/*`
+- `.codex/config.toml`
+- `.codex/agents/*`
+- `.agents/skills/*/SKILL.md`
+
+State effect:
+
+- none on module or feature artifacts
+
+Guards:
+
+- templates, registry, and source-of-truth files must exist
+
+Notes:
+
+- `--check` fails if generated files are out of sync
+
+---
+
+## 9. Deferred Command Surface
+
+These commands are intentionally out of scope for the aligned minimal kernel:
+
+- `module request-brief-review`
+- `module record-brief-review`
+- `module resolve-owner-decision`
+- `module block`
+- `module reopen`
+- `module close`
+- `module cancel`
+- `feature unblock`
+
+Deferred review decisions:
+
+- `block`
+- `escalate_to_owner`
+
+They become legal only when recovery paths are implemented.
+
+---
+
+## 10. Command Choreography For The Minimal Pilot
+
+```text
+agent-stack module init --module avatar-service-test-execution
+agent-stack module submit-for-brief-approval --module avatar-service-test-execution
+agent-stack module record-owner-approval --module avatar-service-test-execution --approval brief
+agent-stack module freeze-brief --module avatar-service-test-execution
+agent-stack feature seed --module avatar-service-test-execution --feature restore-executable-npm-test
+agent-stack feature set-next-stage --module avatar-service-test-execution --feature restore-executable-npm-test --stage research
+agent-stack module prepare-execution --module avatar-service-test-execution
+agent-stack module record-owner-approval --module avatar-service-test-execution --approval execution
+agent-stack stage start --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --agent research_codebase
+agent-stack stage submit-handoff --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --from handoff.json --readme README.md
+agent-stack stage review --module avatar-service-test-execution --feature restore-executable-npm-test --stage research --attempt attempt-001 --decision accept --next-stage implementation --reason "Research is sufficient to proceed."
 ```
 
 ---
 
-## 8. Explicit non-goals for first cut
+## 11. Explicit Non-Goals For The Aligned Cut
 
-The CLI should not support these in the first cut:
+The CLI must not support these in the aligned cut:
 
 - arbitrary JSON patch commands
 - repository-wide background validation on every mutation
 - concurrent attempts for one feature
 - automatic stage chaining without explicit review
 - implicit owner approvals
-- separate queue, dispatch, or run-state files
-
-These may appear later only if the first bounded loop proves insufficient.
+- machine-state question management
+- separate review artifact files
+- separate queue, dispatch, or run-state JSON files

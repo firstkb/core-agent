@@ -1,7 +1,6 @@
 .DS_Store
 __MACOSX/
 node_modules/
-.cursor/workspace/
 artifacts/*
 !artifacts/.gitkeep
 platform/*

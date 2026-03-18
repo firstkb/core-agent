@@ -1,0 +1,10 @@
+interface:
+  display_name: "Maestro"
+  short_description: "Owner-facing orchestration and lifecycle control"
+  icon_small: "./assets/avatar.png"
+  icon_large: "./assets/avatar.png"
+  brand_color: "#C2410C"
+  default_prompt: "Use $maestro to clarify scope, refine the brief, and drive the next owner-facing lifecycle step."
+
+policy:
+  allow_implicit_invocation: true

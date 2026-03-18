@@ -20,7 +20,7 @@ The goal is to keep:
 
 Markdown authorship boundary:
 
-- AI writes Markdown artifacts using canonical templates from `.agent-code/templates/`
+- AI writes Markdown artifacts using canonical templates from `.codex/templates/`
 - CLI writes mutable JSON state and copies AI-authored attempt `README.md` files into canonical paths
 - CLI does not create seeded Markdown content
 
@@ -73,8 +73,8 @@ What is intentionally not present:
 
 Canonical template sources:
 
-- module brief: `.agent-code/templates/module_orchestrator/brief.md.tmpl`
-- feature root README: `.agent-code/templates/module_orchestrator/feature-readme.md.tmpl`
+- module brief: `.codex/templates/module_orchestrator/brief.md.tmpl`
+- feature root README: `.codex/templates/module_orchestrator/feature-readme.md.tmpl`
 
 ---
 

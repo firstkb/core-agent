@@ -23,6 +23,7 @@ test("render-runtimes --check succeeds when generated adapters are in sync", () 
   assert.equal(payload.command, "render-runtimes");
   assert.equal(payload.state.check, true);
   assert.equal(payload.state.mismatches, 0);
+  assert.equal(payload.state.compatibility_mode, "codex_native");
   assert.ok(Array.isArray(payload.files));
-  assert.ok(payload.files.length > 0);
+  assert.equal(payload.files.length, 0);
 });

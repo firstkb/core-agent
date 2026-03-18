@@ -17,8 +17,8 @@ Scope help:
 const HELP_TEXT = {
   renderRuntimes: `Usage: node .agent-cli/bin/agent-stack.mjs render-runtimes [--check] [--json]
 
-Renders generated runtime adapters from .agent-code source-of-truth files.
-Use --check to verify adapters are already in sync without writing changes.`,
+Legacy compatibility command for the retired multi-platform renderer.
+In the active Codex-native repo this command performs no writes, and --check verifies that no legacy render-managed adapters are pending.`,
   module: `Usage: node .agent-cli/bin/agent-stack.mjs module <subcommand> [options]
 
 Subcommands:

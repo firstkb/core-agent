@@ -16,9 +16,9 @@ This bundle is the compact working reference for the current Maestro control-pla
 - `state-machine.md` — lifecycle model, transition rules, and invariants.
 - `cli-command-spec.md` — typed CLI command contract.
 - source-of-truth schemas live under:
-  - `.agent-code/contracts/module_orchestrator/*.schema.json`
-  - `.agent-code/contracts/research_codebase/*.schema.json`
-  - `.agent-code/contracts/brief_auditor/*.schema.json`
+  - `.codex/contracts/module_orchestrator/*.json`
+  - `.codex/contracts/research_codebase/*.json`
+  - `.codex/contracts/brief_auditor/*.json`
 
 Recommended reading order:
 
@@ -28,7 +28,7 @@ Recommended reading order:
 4. `maestro-pre-launch-readiness.md`
 5. `acceptance-suite.md`
 6. `state-machine.md`
-7. relevant `.agent-code/contracts/*.schema.json`
+7. relevant `.codex/contracts/*.json`
 8. `cli-command-spec.md`
 
 The intent of this bundle is to keep only the documents needed to reason about the current control-plane shape, without carrying older proposal layers, pilot evidence, or phased rollout history.

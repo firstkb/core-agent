@@ -73,7 +73,7 @@ A command that submits a handoff must not silently accept that handoff.
 
 The CLI must not author Markdown content.
 
-Markdown files are written by AI against canonical templates under `.agent-code/templates/`.
+Markdown files are written by AI against canonical templates under `.codex/templates/`.
 
 The CLI may:
 
@@ -503,7 +503,7 @@ Notes:
 
 ## 8.1. `render-runtimes`
 
-Renders runtime adapters and `AGENTS.md` from `.agent-code/`.
+Retained as a legacy compatibility command during the cutover away from generated multi-platform adapters.
 
 Syntax:
 
@@ -514,12 +514,7 @@ agent-stack render-runtimes --check
 
 Writes:
 
-- `AGENTS.md`
-- `.cursor/rules/*`
-- `.cursor/agents/*`
-- `.codex/config.toml`
-- `.codex/agents/*`
-- `.agents/skills/*/SKILL.md`
+- none in the active Codex-native layout
 
 State effect:
 
@@ -527,11 +522,12 @@ State effect:
 
 Guards:
 
-- templates, registry, and source-of-truth files must exist
+- CLI must be available
 
 Notes:
 
-- `--check` fails if generated files are out of sync
+- `--check` acts as a compatibility no-op health check
+- active runtime behavior is defined directly in `.agents/skills/`, `.codex/`, and `AGENTS.md`
 
 ---
 

@@ -11,6 +11,7 @@ This document tracks future implementations that are useful for the stack but ar
 
 If this document conflicts with the current working-set documents under:
 
+- `docs/codex-native-repo.md`
 - `docs/maestro/module-orchestrator-v2-spec-pack/`
 
 the working set takes precedence.
@@ -26,7 +27,7 @@ This document exists as a compact backlog for future architecture and runtime im
 
 ## Rules For Future Items
 
-- Do not make a future-target idea part of the live runtime without an explicit source-of-truth update in `.agent-code/`.
+- Do not make a future-target idea part of the live runtime without an explicit source-of-truth update in `AGENTS.md` and the relevant Codex-native runtime files.
 - Do not turn a product-specific adapter into a new source of truth.
 - For each item, separate clearly:
   - source-of-truth;
@@ -36,7 +37,7 @@ This document exists as a compact backlog for future architecture and runtime im
 
 ## Backlog
 
-### 1. Generate `agents/openai.yaml` for skill bundles compatible with Codex / OpenAI-style packaging
+### 1. Automate `agents/openai.yaml` consistency for Codex-native skill bundles
 
 #### Status
 
@@ -44,13 +45,13 @@ Proposed.
 
 #### Context
 
-The current stack generates shared prompts, repo skill wrappers, and runtime adapters for:
+The current Codex-native runtime already stores `agents/openai.yaml` inside each repo-local skill bundle:
 
-- `.agents/skills/*`
-- `.cursor/*`
-- `.codex/*`
+- `.agents/skills/maestro/agents/openai.yaml`
+- `.agents/skills/charlie/agents/openai.yaml`
+- `.agents/skills/grant/agents/openai.yaml`
 
-But the skill bundle does not currently include the product-specific `agents/openai.yaml` file, which the Codex/OpenAI-style skill ecosystem uses as a UI and harness metadata layer:
+These files are currently authored directly and may drift from the intent expressed in `SKILL.md` or adjacent skill metadata. The file remains a UI and harness metadata layer, not a behavior contract:
 
 - `display_name`
 - `short_description`
@@ -59,26 +60,20 @@ But the skill bundle does not currently include the product-specific `agents/ope
 - optional dependency declarations
 - policy flags such as `allow_implicit_invocation`
 
-This does not currently block skill behavior because the core logic is still defined by:
+This does not currently block skill behavior because the core logic is defined by:
 
 - `SKILL.md`
-- source-of-truth in `.agent-code/`
-- generated runtime adapters
+- the active Codex-native source-of-truth surfaces in `.agents/skills/` and `.codex/`
 
 #### Why This May Matter
 
-- It would simplify exporting our skill bundles into environments that expect `agents/openai.yaml`.
-- It would add a proper UI metadata layer for skill lists, chips, and default invocation prompts.
-- It would remove manual drift between `SKILL.md` and product-facing skill metadata.
+- It would reduce manual drift between `SKILL.md` and product-facing skill metadata.
+- It would make skill packaging more repeatable as the Codex-native repo grows.
 - It would let us describe tool dependencies and policy in a machine-readable format rather than only in prose.
 
 #### Desired Outcome
 
-For each generated skill bundle, we want the option to render:
-
-- `agents/openai.yaml`
-
-inside the skill folder, for example:
+For each skill bundle, we want a lightweight consistency mechanism for:
 
 - `.agents/skills/<skill>/agents/openai.yaml`
 
@@ -86,19 +81,19 @@ The file itself must be treated as an adapter/output, not as a new source of tru
 
 #### Source-Of-Truth Boundary
 
-The source of truth should remain in `.agent-code/`.
+The source of truth should remain in the Codex-native runtime surfaces.
 
 Preferred approach:
 
-- add an explicit metadata block in source-of-truth for skill UI/export concerns;
-- render `agents/openai.yaml` from that metadata block;
-- avoid manual edits to generated `agents/openai.yaml`.
+- add an explicit metadata block near the active skill bundle or another Codex-native manifest;
+- validate or render `agents/openai.yaml` from that metadata block;
+- avoid semantic drift between `SKILL.md` and `agents/openai.yaml`.
 
 Possible homes for the source-of-truth metadata:
 
-- extend `.agent-code/registry/skills.json`;
-- add a separate metadata file in `.agent-code/` for skill interface/export fields;
-- use a template-driven block in the render pipeline if the registry already carries enough metadata.
+- add frontmatter or adjacent metadata inside `.agents/skills/<skill>/`
+- add a dedicated Codex-native metadata file under `.agents/skills/<skill>/`
+- extend another repo-local Codex-native manifest if one proves stable enough
 
 #### Proposed Scope For The First Implementation
 
@@ -108,7 +103,7 @@ The first implementation should stay minimal and avoid overengineering:
 - support `interface.short_description`;
 - support `interface.default_prompt`;
 - support `policy.allow_implicit_invocation`;
-- keep generation optional rather than mandatory across all internal runtime surfaces.
+- keep the sync or validation step optional rather than mandatory for all local edits.
 
 Optional later:
 
@@ -121,32 +116,31 @@ Optional later:
 
 - Do not make `agents/openai.yaml` required for skill routing to work.
 - Do not move core skill semantics from `SKILL.md` into `openai.yaml`.
-- Do not add a new parallel registry just for one adapter file.
-- Do not break the current `render-runtimes` contract just to support UI metadata.
+- Do not add a new global registry just for one adapter file.
+- Do not move skill behavior out of the active Codex-native skill and contract files.
 
 #### Example Implementation Task
 
 Title:
 
-`Render agents/openai.yaml for generated Codex-compatible skill bundles`
+`Add Codex-native openai.yaml sync or validation for repo-local skill bundles`
 
 Task:
 
-Add UI/export metadata for skills into source-of-truth and extend the render pipeline to generate `agents/openai.yaml` for each generated skill bundle, starting with `grant`, `maestro`, and `charlie`, without changing their core invocation semantics.
+Add a small Codex-native metadata path and a sync or validation step for `agents/openai.yaml` across `grant`, `maestro`, and `charlie`, without changing their core invocation semantics.
 
 #### Acceptance Criteria
 
 - Skill source-of-truth has a defined place for UI/export metadata fields.
-- `render-runtimes` can generate `agents/openai.yaml` without manual follow-up edits.
-- Generated `agents/openai.yaml` does not become source-of-truth and can be safely re-rendered.
-- Missing `agents/openai.yaml` does not break the current runtime stack.
-- At least one skill bundle gets a correct `display_name`, `short_description`, and `default_prompt`.
+- `agents/openai.yaml` can be checked or refreshed without hand-edit drift.
+- `agents/openai.yaml` does not become source-of-truth and can be safely regenerated or validated.
+- Existing skill bundles keep correct `display_name`, `short_description`, and `default_prompt`.
 - Documentation explains clearly that `openai.yaml` belongs to the product/harness layer, not to core skill logic.
 
 #### Open Questions
 
-- Where should interface metadata live: directly in `skills.json` or in a separate source-of-truth file?
-- Should `agents/openai.yaml` be generated by default for all repo skills or only for exportable bundles?
+- Where should interface metadata live: frontmatter, adjacent skill metadata, or another Codex-native manifest?
+- Should `agents/openai.yaml` be regenerated by default for all repo skills or only checked for drift?
 - Should `default_prompt` be authored manually or assembled automatically from skill metadata?
 
 ## Additional Notes

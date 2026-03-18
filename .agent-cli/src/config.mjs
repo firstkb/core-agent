@@ -13,7 +13,7 @@ export function getRepoRoot() {
 
 export function getProjectConfig() {
   const repoRoot = getRepoRoot();
-  const configPath = path.join(repoRoot, ".agent-code", "config.json");
+  const configPath = path.join(repoRoot, ".agent-cli", "config.json");
 
   if (!fs.existsSync(configPath)) {
     return { ...DEFAULTS };

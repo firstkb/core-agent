@@ -1,8 +1,8 @@
 interface:
   display_name: "Grant"
   short_description: "Technical brief review before approval"
-  icon_small: "./assets/avatar.png"
-  icon_large: "./assets/avatar.png"
+  icon_small: "./assets/grant.jpg"
+  icon_large: "./assets/grant.jpg"
   brand_color: "#1F6FEB"
   default_prompt: "Use $grant to review the current brief for technical soundness before approval."
 

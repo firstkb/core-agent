@@ -7,4 +7,4 @@ interface:
   default_prompt: "Use $grant to review the current brief for technical soundness before approval."
 
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

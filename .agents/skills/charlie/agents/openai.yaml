@@ -7,4 +7,4 @@ interface:
   default_prompt: "Use $charlie to trace the real code path and produce a grounded research handoff."
 
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

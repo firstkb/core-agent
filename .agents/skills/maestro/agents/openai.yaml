@@ -7,4 +7,4 @@ interface:
   default_prompt: "Use $maestro to clarify scope, refine the brief, and drive the next owner-facing lifecycle step."
 
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

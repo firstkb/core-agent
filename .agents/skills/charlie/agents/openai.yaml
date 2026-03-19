@@ -1,8 +1,8 @@
 interface:
   display_name: "Charlie"
   short_description: "Grounded codebase research workflow"
-  icon_small: "./assets/charlie.jpg"
-  icon_large: "./assets/charlie.jpg"
+  icon_small: "./assets/charlie-small.jpg"
+  icon_large: "./assets/charlie-small.jpg"
   brand_color: "#0F9D58"
   default_prompt: "Use $charlie to trace the real code path and produce a grounded research handoff."
 

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex Agent Tree</title>
+  <style>
+    :root {
+      --ink: #1f1b16;
+      --muted: #6f6457;
+      --line: rgba(104, 81, 44, 0.24);
+      --line-strong: rgba(104, 81, 44, 0.5);
+      --paper: rgba(255, 250, 244, 0.92);
+      --shadow: 0 24px 60px rgba(58, 41, 18, 0.12);
+      --live: #165d46;
+      --live-soft: #d7efe5;
+      --planned: #8b641d;
+      --planned-soft: #f6e8b8;
+      --orchestrator: #c45a1d;
+      --auditor: #1f6feb;
+      --research: #0f9d58;
+      --worker: #8a4fff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(246, 201, 103, 0.28), transparent 24%),
+        radial-gradient(circle at top right, rgba(31, 111, 235, 0.14), transparent 24%),
+        linear-gradient(180deg, #fdf9f2 0%, #f4eadb 48%, #efe3d0 100%);
+      font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px 20px 56px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(121, 91, 37, 0.16);
+      border-radius: 32px;
+      padding: 26px 28px 22px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(248, 240, 226, 0.84)),
+        linear-gradient(180deg, rgba(196, 90, 29, 0.06), rgba(15, 157, 88, 0.06));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      bottom: -110px;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(31, 111, 235, 0.11), transparent 68%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: #8b5f1f;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(196, 90, 29, 1), rgba(31, 111, 235, 0.5));
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+    }
+
+    .intro {
+      max-width: 860px;
+      margin: 12px 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 87, 29, 0.14);
+      background: rgba(255, 255, 255, 0.76);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.live {
+      background: var(--live);
+    }
+
+    .legend-dot.planned {
+      background: var(--planned);
+    }
+
+    .org {
+      position: relative;
+      margin-top: 22px;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .agent-card {
+      position: relative;
+      border-radius: 24px;
+      border: 1px solid rgba(110, 88, 51, 0.16);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 241, 232, 0.93)),
+        var(--paper);
+      box-shadow: var(--shadow);
+      padding: 14px 14px 15px;
+    }
+
+    .agent-card.live {
+      outline: 2px solid rgba(22, 93, 70, 0.08);
+    }
+
+    .agent-card.planned {
+      outline: 2px solid rgba(139, 100, 29, 0.08);
+    }
+
+    .agent-card.orchestrator {
+      background:
+        linear-gradient(180deg, rgba(255, 249, 245, 0.98), rgba(252, 238, 229, 0.95));
+    }
+
+    .agent-card.auditor {
+      background:
+        linear-gradient(180deg, rgba(246, 250, 255, 0.98), rgba(233, 241, 255, 0.95));
+    }
+
+    .agent-card.research {
+      background:
+        linear-gradient(180deg, rgba(244, 255, 249, 0.98), rgba(229, 246, 237, 0.95));
+    }
+
+    .agent-card.worker {
+      background:
+        linear-gradient(180deg, rgba(250, 246, 255, 0.98), rgba(240, 233, 255, 0.95));
+    }
+
+    .agent-card.top-card {
+      min-height: 100%;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .role-tag,
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .role-tag {
+      color: rgba(30, 28, 24, 0.9);
+      background: rgba(102, 86, 56, 0.09);
+    }
+
+    .status-tag.live {
+      color: var(--live);
+      background: var(--live-soft);
+    }
+
+    .status-tag.planned {
+      color: var(--planned);
+      background: var(--planned-soft);
+    }
+
+    .avatar {
+      width: 76px;
+      height: 76px;
+      margin-bottom: 10px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(196, 90, 29, 0.12), rgba(15, 157, 88, 0.12));
+      border: 1px solid rgba(120, 87, 29, 0.15);
+    }
+
+    .top-card .avatar {
+      width: 90px;
+      height: 90px;
+    }
+
+    .avatar img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar.placeholder {
+      display: grid;
+      place-items: center;
+      color: #8b641d;
+      text-align: center;
+      background:
+        linear-gradient(135deg, rgba(246, 232, 184, 0.88), rgba(239, 225, 191, 0.65)),
+        linear-gradient(45deg, rgba(127, 93, 21, 0.08), rgba(255, 255, 255, 0));
+    }
+
+    .avatar.placeholder span {
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .employee {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .skill {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .mission,
+    .ownership {
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.52;
+      color: #302b24;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 4px;
+      color: #83663a;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .ownership {
+      color: #53493b;
+    }
+
+    .helper-note {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(31, 111, 235, 0.12);
+      background: rgba(255, 255, 255, 0.66);
+      color: #4a5e78;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .downlink {
+      position: relative;
+      width: 2px;
+      height: 44px;
+      margin: 0 auto;
+      background: linear-gradient(180deg, var(--line-strong), rgba(104, 81, 44, 0));
+    }
+
+    .timeline {
+      position: relative;
+      margin: 0 auto;
+      max-width: 1120px;
+      padding: 2px 0 0;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg,
+          rgba(104, 81, 44, 0.48),
+          rgba(104, 81, 44, 0.16) 80%,
+          rgba(104, 81, 44, 0));
+    }
+
+    .timeline-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 0;
+    }
+
+    .timeline-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .timeline-row+.timeline-row {
+      margin-top: -132px;
+    }
+
+    .timeline-row.left .agent-card {
+      grid-column: 1;
+      justify-self: end;
+    }
+
+    .timeline-row.right .agent-card {
+      grid-column: 3;
+      justify-self: start;
+    }
+
+    .timeline-row::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%, -50%);
+      border: 4px solid #f8f0e2;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(196, 90, 29, 1), rgba(31, 111, 235, 0.86));
+      box-shadow: 0 0 0 1px rgba(104, 81, 44, 0.14);
+      z-index: 2;
+    }
+
+    .timeline-row::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 58px;
+      height: 2px;
+      background: var(--line);
+    }
+
+    .timeline-row.left::after {
+      left: calc(50% - 58px);
+    }
+
+    .timeline-row.right::after {
+      left: 50%;
+    }
+
+    .timeline-row.left.child::after,
+    .timeline-row.right.child::after {
+      background: linear-gradient(90deg, rgba(138, 79, 255, 0.45), rgba(104, 81, 44, 0.2));
+    }
+
+    .timeline-row.child .agent-card {
+      border-style: dashed;
+    }
+
+    .reports-to {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: rgba(102, 86, 56, 0.08);
+      color: #6d604f;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .reports-to::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(102, 86, 56, 0.45);
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        padding: 24px 16px 40px;
+      }
+
+      .hero {
+        padding: 20px 18px 18px;
+        border-radius: 24px;
+      }
+
+      .top-row {
+        grid-template-columns: 1fr;
+      }
+
+      .downlink {
+        height: 34px;
+      }
+
+      .timeline {
+        max-width: 100%;
+      }
+
+      .timeline-row {
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .timeline-row+.timeline-row {
+        margin-top: 0;
+      }
+
+      .timeline::before {
+        left: 16px;
+        transform: none;
+      }
+
+      .timeline-row::before {
+        left: 16px;
+        transform: translate(-50%, -50%);
+      }
+
+      .timeline-row::after {
+        left: 16px;
+        width: 26px;
+      }
+
+      .timeline-row.left .agent-card,
+      .timeline-row.right .agent-card {
+        grid-column: 2;
+        justify-self: stretch;
+      }
+    }
+
+    @media (max-width: 640px) {
+
+      .agent-card,
+      .top-card {
+        padding: 13px 13px 14px;
+        border-radius: 20px;
+      }
+
+      .top-card .avatar,
+      .avatar {
+        width: 72px;
+        height: 72px;
+      }
+
+      .employee {
+        font-size: 24px;
+      }
+
+      .intro {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Codex-native organization map</div>
+      <h1>Agent Timeline</h1>
+      <p class="intro">
+        A compact visual hierarchy for the current and planned Codex team. The command layer sits
+        on top, the optional brief reviewer stays beside the orchestrator, and the rest of the
+        organization flows downward as a two-sided execution timeline.
+      </p>
+      <div class="legend">
+        <div class="legend-chip"><span class="legend-dot live"></span>Implemented now</div>
+        <div class="legend-chip"><span class="legend-dot planned"></span>Coming soon</div>
+      </div>
+    </section>
+
+    <section class="org">
+      <div class="top-row">
+        <article class="agent-card top-card live orchestrator">
+          <div class="card-top">
+            <span class="role-tag">Orchestrator</span>
+            <span class="status-tag live">Implemented</span>
+          </div>
+          <div class="avatar">
+            <img src="../.agents/skills/maestro/assets/maestro.jpg" alt="Maestro avatar" />
+          </div>
+          <h2 class="employee">Maestro</h2>
+          <div class="skill">Skill: $maestro</div>
+          <p class="mission">
+            <span class="label">What He Does</span>
+            Clarifies scope, steers lifecycle decisions, seeds approved features, and decides
+            when downstream work should start or stop.
+          </p>
+          <p class="ownership">
+            <span class="label">What He Owns</span>
+            Module briefs, owner-facing orchestration flow, launch ordering, and the handoff
+            gates between discussion, approval, research, and execution.
+          </p>
+        </article>
+
+        <article class="agent-card top-card live auditor">
+          <div class="card-top">
+            <span class="role-tag">Brief Auditor</span>
+            <span class="status-tag live">Implemented</span>
+          </div>
+          <div class="avatar">
+            <img src="../.agents/skills/grant/assets/grant.jpg" alt="Grant avatar" />
+          </div>
+          <h2 class="employee">Grant</h2>
+          <div class="skill">Skill: $grant</div>
+          <p class="mission">
+            <span class="label">What He Does</span>
+            Reviews `brief.md` before approval and checks whether the proposed solution, feature
+            ordering, and technical assumptions are actually sound.
+          </p>
+          <p class="ownership">
+            <span class="label">What He Owns</span>
+            Technical reviewer notes, ambiguity detection, dependency-order validation, and
+            pre-approval brief hardening.
+          </p>
+          <div class="helper-note">
+            Grant acts as Maestro’s technical helper. He audits the brief, but he does not own
+            lifecycle transitions or final approval.
+          </div>
+        </article>
+      </div>
+
+      <div class="downlink" aria-hidden="true"></div>
+
+      <div class="timeline">
+        <div class="timeline-row left">
+          <article class="agent-card live research">
+            <div class="card-top">
+              <span class="role-tag">Research</span>
+              <span class="status-tag live">Implemented</span>
+            </div>
+            <div class="avatar">
+              <img src="../.agents/skills/charlie/assets/charlie.jpg" alt="Charlie avatar" />
+            </div>
+            <h2 class="employee">Charlie</h2>
+            <div class="skill">Skill: $charlie</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Traces the real code path, maps dependencies, separates fact from inference, and
+              produces grounded research handoffs before implementation starts.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Codebase research, runtime boundary discovery, change-surface mapping, and the
+              persisted research artifact pair.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row right">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Solution Planner</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Atlas</h2>
+            <div class="skill">Skill: $atlas</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Shapes the solution direction before implementation starts, partly replacing the
+              old designer role by turning owner intent into an executable technical plan.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Solution framing, plan quality, dependency sequencing, and the transition from
+              rough idea to buildable implementation path.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row left">
+          <article class="agent-card planned worker">
+            <div class="card-top">
+              <span class="role-tag">Worker</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Mason</h2>
+            <div class="skill">Skill: $mason</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Carries approved implementation work forward in bounded slices, translates plans
+              into production code, and closes scoped delivery loops.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Code changes, integration work, bounded execution tasks, and implementation
+              throughput.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row right child">
+          <article class="agent-card planned worker">
+            <div class="card-top">
+              <span class="role-tag">Code Tester</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Scout</h2>
+            <div class="skill">Skill: $scout</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Acts as the code tester for the delivery loop: writes the right tests, runs them,
+              captures failures, and turns raw output into actionable signals.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Test design, suite execution, fixture quality, failure capture, and confidence in
+              the implemented slice.
+            </p>
+            <div class="reports-to">Supports Mason</div>
+          </article>
+        </div>
+
+        <div class="timeline-row left">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Security Auditor</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Guard</h2>
+            <div class="skill">Skill: $guard</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Audits change plans and implementations for auth, secrets, permissions, unsafe
+              flows, and avoidable attack surface.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Security review findings, risk surfacing, policy gaps, and security hardening
+              guidance.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row right">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Reviewer</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Lens</h2>
+            <div class="skill">Skill: $lens</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Reviews implementation quality before merge, looks for bugs, risky changes,
+              missing coverage, and signals when the code is not yet ready to land.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Code review findings, merge-readiness assessment, quality gaps, and the decision
+              to escalate real defects into a debugging loop.
+            </p>
+            <div class="reports-to">Reports to Maestro and triggers Trace on defects</div>
+          </article>
+        </div>
+
+        <div class="timeline-row left">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Debugger</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Trace</h2>
+            <div class="skill">Skill: $trace</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Investigates broken behavior, reproduces failures, narrows root causes, and helps
+              route the shortest fix path.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Reproduction loops, instrumentation, fault isolation, and debugging evidence.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row right">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Reporter</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Herald</h2>
+            <div class="skill">Skill: $herald</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Converts technical execution into compact owner-facing summaries, progress
+              snapshots, and decision-oriented reporting.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Reporting cadence, progress narratives, stage summaries, and executive-facing
+              delivery context.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+
+        <div class="timeline-row left">
+          <article class="agent-card planned">
+            <div class="card-top">
+              <span class="role-tag">Documenter</span>
+              <span class="status-tag planned">Coming soon</span>
+            </div>
+            <div class="avatar placeholder"><span>Coming<br />soon</span></div>
+            <h2 class="employee">Slate</h2>
+            <div class="skill">Skill: $slate</div>
+            <p class="mission">
+              <span class="label">What He Does</span>
+              Writes and maintains durable documentation for workflows, systems, decisions, and
+              operational knowledge across the repo.
+            </p>
+            <p class="ownership">
+              <span class="label">What He Owns</span>
+              Reference docs, runbooks, explanatory artifacts, and long-term knowledge
+              continuity.
+            </p>
+            <div class="reports-to">Reports to Maestro</div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+
+</html>

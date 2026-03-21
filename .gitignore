@@ -1,7 +1,11 @@
 .DS_Store
 __MACOSX/
 node_modules/
+**/node_modules/
 artifacts/*
 !artifacts/.gitkeep
 platform/*
 !platform/.gitkeep
+!platform/README.md
+!platform/frontend/
+!platform/frontend/**

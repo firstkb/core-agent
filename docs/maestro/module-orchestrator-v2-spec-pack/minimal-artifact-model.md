@@ -402,19 +402,19 @@ Minimal fields:
 ```json
 {
   "schema_version": 1,
-  "module_id": "avatar-service-test-execution-v2-pilot",
-  "feature_id": "restore-executable-npm-test",
+  "module_id": "frontend-platform",
+  "feature_id": "establish-tenant-web-surface",
   "stage": "research",
   "attempt_id": "attempt-001",
   "agent_id": "research_codebase",
   "result": "complete",
-  "summary": "npm test fails before assertions because the tests import .js files while the package currently ships TypeScript source files only.",
+  "summary": "The repository already separates backend and frontend concerns; the next step is to keep app and package work under platform/frontend with explicit frontend package boundaries.",
   "evidence_refs": [
-    "platform/packages/research-avatar-service/package.json",
-    "platform/packages/research-avatar-service/test/avatar_service.test.js"
+    "docs/codex-native-repo.md",
+    "platform/frontend/docs/frontend-skeleton-tree.txt"
   ],
   "produced_artifact_refs": [
-    "artifacts/avatar-service-test-execution-v2-pilot/features/restore-executable-npm-test/stages/research/attempt-001/README.md"
+    "artifacts/frontend-platform/features/establish-tenant-web-surface/stages/research/attempt-001/README.md"
   ],
   "change_requests": [],
   "recommended_next_stage": "implementation",

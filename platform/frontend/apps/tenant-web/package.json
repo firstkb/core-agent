@@ -1,0 +1,21 @@
+{
+  "name": "@platform/tenant-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "@platform/app-shell": "workspace:*",
+    "@platform/auth-core": "workspace:*",
+    "@platform/tenant-core": "workspace:*",
+    "@platform/ui-kit": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  }
+}

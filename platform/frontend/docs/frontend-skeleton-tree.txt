@@ -1,0 +1,107 @@
+.editorconfig
+.github/
+  workflows/
+    ci.yml
+.gitignore
+AGENTS.md
+README.md
+apps/
+  web/
+    index.html
+    package.json
+    playwright.config.ts
+    src/
+      app/
+        providers/
+          index.tsx
+          query-client.ts
+        router.tsx
+        styles/
+          globals.css
+      e2e/
+        smoke.spec.ts
+      entities/
+        session/
+          api/
+            get-me.ts
+          index.ts
+          model/
+            session-store.tsx
+            types.ts
+          ui/
+            current-user-badge.tsx
+      features/
+        auth/
+          sign-in-with-password/
+            api/
+              sign-in.ts
+            index.ts
+            model/
+              schema.test.ts
+              schema.ts
+            ui/
+              sign-in-form.tsx
+        session/
+          sign-out/
+            index.ts
+            ui/
+              sign-out-button.tsx
+      main.tsx
+      pages/
+        auth/
+          sign-in/
+            page.tsx
+        dashboard/
+          page.tsx
+        settings/
+          page.tsx
+      shared/
+        config/
+          env.ts
+          routes.ts
+        ui/
+          page-section.tsx
+      widgets/
+        app-shell/
+          index.ts
+          ui/
+            app-shell.tsx
+        sidebar-nav/
+          index.ts
+          ui/
+            sidebar-nav.tsx
+    tsconfig.json
+    vite.config.ts
+    vitest.config.ts
+docs/
+  adr/
+    0001-frontend-standard.md
+    0002-layer-boundaries.md
+eslint.config.mjs
+package.json
+packages/
+  api-client/
+    README.md
+    openapi/
+      schema.yaml
+    package.json
+    scripts/
+      generate.mjs
+    src/
+      client.ts
+      generated/
+        schema.ts
+      index.ts
+    tsconfig.json
+  ui/
+    package.json
+    src/
+      button.tsx
+      card.tsx
+      index.ts
+      input.tsx
+      ui.css
+    tsconfig.json
+pnpm-workspace.yaml
+tsconfig.base.json
+turbo.json

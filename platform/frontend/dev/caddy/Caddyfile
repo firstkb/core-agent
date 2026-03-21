@@ -1,0 +1,13 @@
+{
+	admin 127.0.0.1:2019
+}
+
+admin.platform.local {
+	tls internal
+	reverse_proxy 127.0.0.1:5173
+}
+
+demo.platform.local {
+	tls internal
+	reverse_proxy 127.0.0.1:5174
+}

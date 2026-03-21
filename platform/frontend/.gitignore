@@ -1,0 +1,7 @@
+.turbo/
+.local/
+coverage/
+**/node_modules/
+dist/
+apps/*/dist/
+packages/*/dist/

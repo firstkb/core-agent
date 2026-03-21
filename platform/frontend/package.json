@@ -1,0 +1,36 @@
+{
+  "name": "@platform/frontend-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.4.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev:admin": "turbo run dev --filter=@platform/platform-admin-web",
+    "dev:tenant": "turbo run dev --filter=@platform/tenant-web",
+    "dev": "turbo run dev --filter=@platform/platform-admin-web --filter=@platform/tenant-web",
+    "dev:https": "./scripts/dev-https.sh",
+    "dev:proxy": "./scripts/dev-proxy.sh",
+    "dev:hosts": "./scripts/dev-hosts.sh",
+    "dev:trust-caddy": "./scripts/dev-trust-caddy.sh",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.20.0",
+    "globals": "^15.15.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.24.0",
+    "vite": "^7.3.1",
+    "vitest": "^2.1.8"
+  }
+}

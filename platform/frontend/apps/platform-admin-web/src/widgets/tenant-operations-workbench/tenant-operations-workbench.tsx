@@ -1,18 +1,18 @@
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import {
   Button,
-  DataToolbar,
-  DataToolbarGroup,
-  DataToolbarMeta,
   EmptyState,
   FilterChip,
   Input,
+  SummaryPillStrip,
+  ToolbarNotice,
 } from "@platform/ui-kit";
 import type { TenantPlan, TenantStatus, TenantSummary } from "@platform/tenant-core";
 
 import { useMediaQuery } from "../../shared/use-media-query";
+import { readEnumSearchParam, setSearchParamsBatch } from "../../shared/search-params";
 import {
   TenantHealthTable,
   type TenantSortDirection,
@@ -27,6 +27,10 @@ type TenantOperationsWorkbenchProps = {
 };
 
 type TenantFilterValue<T extends string> = "all" | T;
+type BulkActionNotice = {
+  title: string;
+  tone: "info" | "success";
+};
 
 const statusFilters: Array<TenantFilterValue<TenantStatus>> = ["all", "active", "trial", "paused"];
 const planFilters: Array<TenantFilterValue<TenantPlan>> = ["all", "Starter", "Growth", "Enterprise"];
@@ -41,6 +45,8 @@ const tenantPlanSortOrder: Record<TenantPlan, number> = {
   Growth: 1,
   Starter: 2,
 };
+const tenantSortFields = ["name", "status", "plan", "members", "lastSync"] as const;
+const tenantSortDirections = ["asc", "desc"] as const;
 
 function matchesSearch(tenant: TenantSummary, searchQuery: string) {
   if (!searchQuery) return true;
@@ -133,16 +139,21 @@ function sortTenants(
 
 export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbenchProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TenantFilterValue<TenantStatus>>("all");
-  const [planFilter, setPlanFilter] = useState<TenantFilterValue<TenantPlan>>("all");
   const [selectedTenantIds, setSelectedTenantIds] = useState<string[]>([]);
-  const [sortField, setSortField] = useState<TenantSortField>("name");
-  const [sortDirection, setSortDirection] = useState<TenantSortDirection>("asc");
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [isConfigSheetOpen, setIsConfigSheetOpen] = useState(false);
-  const [bulkActionMessage, setBulkActionMessage] = useState<string | null>(null);
+  const [bulkActionMessage, setBulkActionMessage] = useState<BulkActionNotice | null>(null);
 
+  const searchQuery = searchParams.get("q") ?? "";
+  const statusFilter = readEnumSearchParam(searchParams, "status", statusFilters, "all");
+  const planFilter = readEnumSearchParam(searchParams, "plan", planFilters, "all");
+  const sortField = readEnumSearchParam<TenantSortField>(searchParams, "sort", tenantSortFields, "name");
+  const sortDirection = readEnumSearchParam<TenantSortDirection>(
+    searchParams,
+    "dir",
+    tenantSortDirections,
+    "asc",
+  );
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const isCompactTenantDetail = useMediaQuery(compactTenantDetailQuery);
   const selectedTenantId = searchParams.get("tenant");
@@ -204,28 +215,45 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
     trial: visibleTenants.filter((tenant) => tenant.status === "trial").length,
     paused: visibleTenants.filter((tenant) => tenant.status === "paused").length,
   };
+  const tenantSummaryItems = [
+    { id: "active", label: "Active", tone: "success", value: visibleStatusSummary.active },
+    { id: "trial", label: "Trial", tone: "warning", value: visibleStatusSummary.trial },
+    { id: "paused", label: "Paused", tone: "neutral", value: visibleStatusSummary.paused },
+    { id: "selected", label: "Selected", tone: "brand", value: selectedTenantIds.length },
+  ] as const;
 
   function resetFilters() {
-    startTransition(() => {
-      setSearchQuery("");
-      setStatusFilter("all");
-      setPlanFilter("all");
-      setBulkActionMessage(null);
-    });
+    setSearchParams(
+      setSearchParamsBatch(searchParams, [
+        ["q", null],
+        ["status", null],
+        ["plan", null],
+        ["sort", null],
+        ["dir", null],
+      ]),
+      { replace: true },
+    );
+    setBulkActionMessage(null);
   }
 
   function handleSort(field: TenantSortField) {
-    startTransition(() => {
-      setBulkActionMessage(null);
+    const nextDirection =
+      field === sortField
+        ? sortDirection === "asc"
+          ? "desc"
+          : "asc"
+        : field === "members" || field === "lastSync"
+          ? "desc"
+          : "asc";
 
-      if (field === sortField) {
-        setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
-        return;
-      }
-
-      setSortField(field);
-      setSortDirection(field === "members" || field === "lastSync" ? "desc" : "asc");
-    });
+    setSearchParams(
+      setSearchParamsBatch(searchParams, [
+        ["sort", field === "name" && nextDirection === "asc" ? null : field],
+        ["dir", field === "name" && nextDirection === "asc" ? null : nextDirection],
+      ]),
+      { replace: true },
+    );
+    setBulkActionMessage(null);
   }
 
   function handleSelectTenant(tenantId: string) {
@@ -263,39 +291,57 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
     if (selectedTenantIds.length === 0) return;
 
     if (action === "queue_review") {
-      setBulkActionMessage(`Queued review for ${selectedTenantIds.length} selected tenants.`);
+      setBulkActionMessage({
+        title: `Queued review for ${selectedTenantIds.length} selected tenants.`,
+        tone: "info",
+      });
       return;
     }
 
-    setBulkActionMessage(`Prepared export bundle for ${selectedTenantIds.length} selected tenants.`);
+    setBulkActionMessage({
+      title: `Prepared export bundle for ${selectedTenantIds.length} selected tenants.`,
+      tone: "success",
+    });
   }
 
   return (
     <div className="admin-web__tenant-workbench">
-      <DataToolbar className="admin-web__tenant-toolbar">
-        <DataToolbarGroup>
+      <div className="admin-web__toolbar admin-web__tenant-toolbar">
+        <div className="admin-web__toolbar-group">
           <Input
             className="admin-web__tenant-search"
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchParams(setSearchParamsBatch(searchParams, [["q", event.target.value || null]]), {
+                replace: true,
+              });
+              setBulkActionMessage(null);
+            }}
             placeholder="Search tenant, slug, region, plan..."
             value={searchQuery}
           />
           {searchQuery ? (
-            <Button onClick={() => setSearchQuery("")} size="sm" variant="ghost">
+            <Button
+              onClick={() => {
+                setSearchParams(setSearchParamsBatch(searchParams, [["q", null]]), { replace: true });
+                setBulkActionMessage(null);
+              }}
+              size="sm"
+              variant="ghost"
+            >
               Clear
             </Button>
           ) : null}
-        </DataToolbarGroup>
+        </div>
 
-        <DataToolbarGroup align="end">
-          <DataToolbarMeta>
+        <div className="admin-web__toolbar-group admin-web__toolbar-group--end">
+          <p className="admin-web__toolbar-meta">
             {visibleTenants.length} of {tenants.length} tenants visible
-          </DataToolbarMeta>
+          </p>
           <Button onClick={resetFilters} size="sm" variant="outline">
             Reset filters
           </Button>
-        </DataToolbarGroup>
-      </DataToolbar>
+        </div>
+      </div>
 
       <div className="admin-web__tenant-filter-groups">
         <div className="admin-web__tenant-filter-group">
@@ -306,11 +352,13 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
                 active={statusFilter === filter}
                 count={getFilterCount(tenants, "status", filter)}
                 key={filter}
-                onClick={() =>
-                  startTransition(() => {
-                    setStatusFilter(filter);
-                  })
-                }
+                onClick={() => {
+                  setSearchParams(
+                    setSearchParamsBatch(searchParams, [["status", filter === "all" ? null : filter]]),
+                    { replace: true },
+                  );
+                  setBulkActionMessage(null);
+                }}
               >
                 {filter === "all" ? "All statuses" : filter}
               </FilterChip>
@@ -326,11 +374,13 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
                 active={planFilter === filter}
                 count={getFilterCount(tenants, "plan", filter)}
                 key={filter}
-                onClick={() =>
-                  startTransition(() => {
-                    setPlanFilter(filter);
-                  })
-                }
+                onClick={() => {
+                  setSearchParams(
+                    setSearchParamsBatch(searchParams, [["plan", filter === "all" ? null : filter]]),
+                    { replace: true },
+                  );
+                  setBulkActionMessage(null);
+                }}
               >
                 {filter === "all" ? "All plans" : filter}
               </FilterChip>
@@ -353,36 +403,19 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
         <div className="admin-web__tenant-workbench-grid">
           <div className="admin-web__tenant-table-surface">
             <div className="admin-web__tenant-table-toolbar">
-              <div className="admin-web__tenant-summary-row">
-                <div className="admin-web__tenant-summary-pill admin-web__tenant-summary-pill--success">
-                  <span className="admin-web__tenant-summary-pill-label">Active</span>
-                  <span className="admin-web__tenant-summary-pill-value">{visibleStatusSummary.active}</span>
-                </div>
-                <div className="admin-web__tenant-summary-pill admin-web__tenant-summary-pill--warning">
-                  <span className="admin-web__tenant-summary-pill-label">Trial</span>
-                  <span className="admin-web__tenant-summary-pill-value">{visibleStatusSummary.trial}</span>
-                </div>
-                <div className="admin-web__tenant-summary-pill admin-web__tenant-summary-pill--neutral">
-                  <span className="admin-web__tenant-summary-pill-label">Paused</span>
-                  <span className="admin-web__tenant-summary-pill-value">{visibleStatusSummary.paused}</span>
-                </div>
-                <div className="admin-web__tenant-summary-pill admin-web__tenant-summary-pill--brand">
-                  <span className="admin-web__tenant-summary-pill-label">Selected</span>
-                  <span className="admin-web__tenant-summary-pill-value">{selectedTenantIds.length}</span>
-                </div>
-              </div>
+              <SummaryPillStrip items={tenantSummaryItems} />
 
-              <DataToolbar className="admin-web__tenant-bulk-toolbar">
-                <DataToolbarGroup>
-                  <DataToolbarMeta>
+              <div className="admin-web__toolbar admin-web__tenant-bulk-toolbar">
+                <div className="admin-web__toolbar-group">
+                  <p className="admin-web__toolbar-meta">
                     Sorted by {sortField} ({sortDirection})
-                  </DataToolbarMeta>
+                  </p>
                   {bulkActionMessage ? (
-                    <p className="admin-web__tenant-bulk-message">{bulkActionMessage}</p>
+                    <ToolbarNotice title={bulkActionMessage.title} tone={bulkActionMessage.tone} />
                   ) : null}
-                </DataToolbarGroup>
+                </div>
 
-                <DataToolbarGroup align="end">
+                <div className="admin-web__toolbar-group admin-web__toolbar-group--end">
                   <Button
                     disabled={selectedTenantIds.length === 0}
                     onClick={() => runBulkAction("queue_review")}
@@ -411,8 +444,8 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
                       Clear selection
                     </Button>
                   ) : null}
-                </DataToolbarGroup>
-              </DataToolbar>
+                </div>
+              </div>
             </div>
 
             <TenantHealthTable

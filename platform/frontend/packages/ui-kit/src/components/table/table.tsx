@@ -8,6 +8,8 @@ import type {
 } from "react";
 
 import { cx } from "../../lib/cx";
+export { TableColumnVisibility } from "./table-column-visibility";
+export { TablePaginationBar } from "./table-pagination-bar";
 
 export type TableDensity = "comfortable" | "compact";
 
@@ -26,6 +28,14 @@ export type TableSortDirection = "asc" | "desc" | null;
 
 export type TableSortButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   direction?: TableSortDirection;
+};
+
+export type TableColumnHeaderProps = HTMLAttributes<HTMLDivElement> & {
+  description?: ReactNode;
+  direction?: TableSortDirection;
+  icon?: ReactNode;
+  onSortToggle?: ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  title: ReactNode;
 };
 
 export function Table({
@@ -93,5 +103,33 @@ export function TableSortButton({
         className={cx("ui-table-sort-button__indicator", direction && `ui-table-sort-button__indicator--${direction}`)}
       />
     </button>
+  );
+}
+
+export function TableColumnHeader({
+  className,
+  description,
+  direction = null,
+  icon,
+  onSortToggle,
+  title,
+  ...props
+}: TableColumnHeaderProps) {
+  const content = onSortToggle ? (
+    <TableSortButton direction={direction} onClick={onSortToggle}>
+      {title}
+    </TableSortButton>
+  ) : (
+    <span className="ui-table-column-header__label">{title}</span>
+  );
+
+  return (
+    <div {...props} className={cx("ui-table-column-header", className)}>
+      <div className="ui-table-column-header__main">
+        {icon ? <span className="ui-table-column-header__icon">{icon}</span> : null}
+        {content}
+      </div>
+      {description ? <span className="ui-table-column-header__description">{description}</span> : null}
+    </div>
   );
 }

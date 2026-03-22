@@ -25,6 +25,7 @@ export function SecondaryTab({
       aria-selected={active}
       className={cx("ui-secondary-tab", active && "ui-secondary-tab--active", className)}
       role="tab"
+      tabIndex={active ? 0 : -1}
       type={type}
     >
       <span>{children}</span>

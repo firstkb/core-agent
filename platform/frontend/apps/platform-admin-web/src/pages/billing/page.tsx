@@ -1,4 +1,4 @@
-import { DateRangeField, SecondaryTab, SecondaryTabs, SummaryStrip, ViewPresetBar } from "@platform/ui-kit";
+import { Badge, DateRangeField, SecondaryTab, SecondaryTabs, ViewPresetBar } from "@platform/ui-kit";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -14,6 +14,31 @@ import { AdminSurfaceContract } from "../../widgets/admin-surface-contract/admin
 
 type BillingSection = "queue" | "exceptions" | "plan-deltas";
 type BillingPreset = "all" | "attention-needed" | "finance-owned" | "revenue-owned" | "platform-review";
+
+function BillingSummaryStrip({
+  items,
+}: {
+  items: ReadonlyArray<{ id: string; label: string; value: string; meta?: string; tone?: "brand" | "info" | "warning" | "success" | "danger" | "neutral" }>;
+}) {
+  return (
+    <div className="admin-web__surface-summary-grid">
+      {items.map((item) => (
+        <section className="admin-web__surface-summary-card" key={item.id}>
+          <div className="admin-web__toolbar admin-web__toolbar--compact">
+            <span className="admin-web__surface-summary-label">{item.label}</span>
+            {item.tone ? (
+              <Badge appearance="soft" size="sm" variant={item.tone}>
+                {item.tone}
+              </Badge>
+            ) : null}
+          </div>
+          <div className="admin-web__surface-summary-value">{item.value}</div>
+          {item.meta ? <p className="admin-web__surface-summary-label">{item.meta}</p> : null}
+        </section>
+      ))}
+    </div>
+  );
+}
 
 const billingDatePresets = [
   { id: "all-time", label: "All time", startDate: "", endDate: "" },
@@ -679,7 +704,7 @@ export function AdminBillingPage({ section }: AdminBillingPageProps) {
           ))}
         </SecondaryTabs>
       }
-      summaryStrip={<SummaryStrip items={summaryItems} />}
+      summaryStrip={<BillingSummaryStrip items={summaryItems} />}
       toolbarControls={
         <DateRangeField
           activePresetId={activeDatePresetId}

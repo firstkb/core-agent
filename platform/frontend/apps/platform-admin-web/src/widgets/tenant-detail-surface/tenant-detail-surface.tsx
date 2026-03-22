@@ -1,15 +1,12 @@
 import {
   Badge,
   Button,
-  DetailPanel,
-  DetailPanelBody,
-  DetailPanelDescription,
-  DetailPanelFooter,
-  DetailPanelHeader,
-  DetailPanelMeta,
-  DetailPanelSection,
-  DetailPanelSectionTitle,
-  DetailPanelTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
   Sheet,
   SheetBody,
   SheetContent,
@@ -60,8 +57,8 @@ function TenantDetailSections({
 
   return (
     <>
-      <DetailPanelSection>
-        <DetailPanelSectionTitle>Snapshot</DetailPanelSectionTitle>
+      <section className="admin-web__detail-section">
+        <h4 className="admin-web__detail-section-title">Snapshot</h4>
         <div className="admin-web__tenant-detail-metrics">
           {getTenantMetrics(tenant).map((metric) => (
             <div key={metric.label} className="admin-web__tenant-detail-metric">
@@ -72,10 +69,10 @@ function TenantDetailSections({
             </div>
           ))}
         </div>
-      </DetailPanelSection>
+      </section>
 
-      <DetailPanelSection>
-        <DetailPanelSectionTitle>Regions</DetailPanelSectionTitle>
+      <section className="admin-web__detail-section">
+        <h4 className="admin-web__detail-section-title">Regions</h4>
         <div className="admin-web__tenant-detail-tags">
           {tenant.regions.map((region) => (
             <Badge appearance="outline" key={region} variant="neutral">
@@ -83,24 +80,24 @@ function TenantDetailSections({
             </Badge>
           ))}
         </div>
-      </DetailPanelSection>
+      </section>
 
-      <DetailPanelSection>
-        <DetailPanelSectionTitle>Operational Focus</DetailPanelSectionTitle>
+      <section className="admin-web__detail-section">
+        <h4 className="admin-web__detail-section-title">Operational Focus</h4>
         <ul className="admin-web__tenant-focus-list">
           {getFocusItems(tenant).map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </DetailPanelSection>
+      </section>
 
       {selectedTenantsCount > 1 ? (
-        <DetailPanelSection>
-          <DetailPanelSectionTitle>Selection Context</DetailPanelSectionTitle>
+        <section className="admin-web__detail-section">
+          <h4 className="admin-web__detail-section-title">Selection Context</h4>
           <p className="admin-web__tenant-selection-context">
             {selectedTenantsCount} tenants are selected for bulk work. The detail surface still shows the primary focused tenant.
           </p>
-        </DetailPanelSection>
+        </section>
       ) : null}
     </>
   );
@@ -177,35 +174,35 @@ export function TenantDetailSurface({
   }
 
   return (
-    <DetailPanel>
-      <DetailPanelHeader>
+    <Card>
+      <CardHeader>
         <div className="admin-web__tenant-detail-header">
           <div className="admin-web__tenant-detail-title-group">
-            <DetailPanelTitle>{tenant.name}</DetailPanelTitle>
-            <DetailPanelDescription>
+            <CardTitle>{tenant.name}</CardTitle>
+            <CardDescription>
               Tenant detail rail now follows URL state instead of local row-only selection.
-            </DetailPanelDescription>
+            </CardDescription>
           </div>
           {statusBadge}
         </div>
-        <DetailPanelMeta>
+        <p className="admin-web__contract-detail-meta">
           slug: {tenant.slug} | plan: {tenant.plan}
-        </DetailPanelMeta>
-      </DetailPanelHeader>
+        </p>
+      </CardHeader>
 
-      <DetailPanelBody>
+      <CardContent className="admin-web__stack">
         <TenantDetailSections
           selectedTenantsCount={selectedTenantsCount}
           tenant={tenant}
         />
-      </DetailPanelBody>
+      </CardContent>
 
-      <DetailPanelFooter>
+      <CardFooter>
         <TenantDetailActions
           onOpenAction={onOpenAction}
           onOpenConfig={onOpenConfig}
         />
-      </DetailPanelFooter>
-    </DetailPanel>
+      </CardFooter>
+    </Card>
   );
 }

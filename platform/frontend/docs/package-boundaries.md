@@ -19,3 +19,6 @@ Canonical package responsibilities for the frontend workspace.
 - Packages must export through `src/index.ts` only.
 - Packages must not depend on app code.
 - UI-free packages should not import `ui-kit`.
+- `ui-kit` defaults to stable primitives and low-risk reusable contracts.
+- Do not treat every donor pattern extracted from Metronic as an automatic `ui-kit` addition.
+- Screen-specific toolbars, route-specific filters, and workflow compositions stay in app code until product contracts are approved.

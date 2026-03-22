@@ -37,15 +37,56 @@ Inventory and migration tracker for the Metronic donor sources under `platform/f
 
 - token package scaffolded under `packages/design-tokens`
 - first product-owned foundations added under `packages/ui-kit`:
+  - `accordion`
+  - `alert-dialog`
+  - `aspect-ratio`
+  - `avatar`
+  - `avatar-group`
   - `button`
   - `input`
+  - `input-otp`
+  - `date-picker`
+  - `date-field`
+  - `label`
+  - `link`
+  - `inline-status`
+  - `status-dot`
+  - `radio-group`
+  - `rating`
+  - `slider`
+  - `toggle`
+  - `toggle-group`
   - `card`
   - `badge`
+  - `alert`
+  - `code`
+  - `context-menu`
+  - `breadcrumb`
+  - `calendar`
+  - `collapsible`
+  - `drawer`
+  - `hover-card`
+  - `kbd`
+  - `menu`
+  - `pagination`
+  - `popover`
+  - `progress-bar`
+  - `skeleton`
+  - `scroll-area`
+  - `separator`
+  - `counting-number`
+  - `stepper`
+  - `switch`
+  - `tabs`
   - `table`
+  - `table-pagination-bar`
+  - `table-column-visibility`
   - `empty-state`
   - `loading-state`
   - `error-state`
+  - `tooltip`
   - `page-toolbar`
+  - `date-range-field`
   - `app-shell`
   - `auth-shell`
   - `error-shell`
@@ -55,3 +96,38 @@ Inventory and migration tracker for the Metronic donor sources under `platform/f
 - Do not copy routing, auth, or provider logic from Metronic as-is.
 - Do not keep demo layout names such as `Demo1Layout`.
 - Every extracted component should become product-owned immediately.
+- Extraction into `ui-kit` is allowed only for stable primitives and approved reusable contracts.
+- If a donor element is still page-specific or design-sensitive, keep it in app-layer until the contract is approved.
+- Metronic exposes `datefield` and `calendar` surfaces with range mode, but not one small standalone shared `date-range` primitive. Keep `date-range-field` provisional until product fit is proven.
+- Treat `date-picker` as the user-facing shared date contract for both single-date and range selection.
+- Treat `calendar` as a review-stage internal building block under `date-picker` until month-grid selection proves necessary across more than one real surface.
+- Keep `date-field` and `date-range-field` as lower-level compatibility layers rather than separate primary product contracts.
+- Treat `alert-dialog` as a safe shared destructive-confirmation overlay when it stays narrower and stricter than a general dialog.
+- Treat `aspect-ratio` as a safe shared framing utility for media, preview, and illustration surfaces.
+- Treat `accordion` as a safe shared grouped disclosure primitive, but keep sidebar tree behavior app-layer until a generic nav API is approved.
+- Treat `drawer` as a safe shared overlay extraction.
+- Treat `code` as a safe shared support primitive for short technical identifiers and inline system values.
+- Treat `label` as a safe shared semantic primitive for standalone control naming outside the heavier field shell.
+- Treat `link` as a safe shared anchor primitive for inline navigation and external references while router-specific adapters stay outside the base contract.
+- Treat `inline-status` and `status-dot` as safe shared status-marker primitives that sit between avatar presence dots and fuller status badges.
+- Treat `slider` as a safe shared single-value range primitive; do not promote multi-thumb or chart-shaped range controls without a stronger reuse case.
+- Treat `hover-card` as a safe richer-preview overlay as long as it stays summary-oriented and not interaction-heavy.
+- Treat `context-menu` as a safe shared contextual action overlay when it stays object-local and does not become a hidden settings or workflow surface.
+- Treat `kbd` and `scroll-area` as safe shared primitives because they stay low-risk, generic, and composition-friendly.
+- Treat `input-otp` as a safe shared fixed-length code-entry primitive; keep auth-screen composition and branded verification flows outside the primitive.
+- Treat `rating` as a safe shared compact scoring primitive as long as review cards, commentary, and richer review workflows stay outside the component.
+- Treat `counting-number` as a review-stage display utility; keep motion, stat-card composition, and dashboard numerics under tighter validation before promotion.
+- Treat linear `progress-bar` as the current safe donor extraction; do not promote radial or dashboard-shaped progress variants without a stronger reuse case.
+- Treat richer helpers like `table-column-header` and `table-pagination-bar` as part of the approved `table` primitive layer, not as a separate data-grid runtime.
+- Treat `table-column-visibility` as a review-stage table helper until personalization demand, toolbar fit, and API shape are proven across more than one surface.
+- Treat `accordion-menu` and sidebar tree behavior as app-layer review material until desktop/mobile navigation rules and a generic API are both approved.
+
+## Next Donor Candidates
+
+Priority order for continued extraction from Metronic:
+
+1. additional table helpers and collection states
+2. remaining low-risk feedback surfaces
+3. any still-missing lightweight form and utility primitives
+4. identity-line compositions only if they stay generic and not profile-screen shaped
+5. app-layer navigation candidates only when the shared primitive boundary stays clear

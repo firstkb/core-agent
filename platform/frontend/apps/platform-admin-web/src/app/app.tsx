@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Button } from "@platform/ui-kit";
 import { WorkspaceShell } from "@platform/app-shell";
 import { formatSessionLabel, getDemoSession } from "@platform/auth-core";
@@ -13,10 +14,38 @@ import {
 import "./app.css";
 
 const session = getDemoSession("admin");
+const AdminUiLabPage = lazy(async () => {
+  const module = await import("../internal/ui-lab");
+  return { default: module.AdminUiLabPage };
+});
 
 export function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const isUiLabRoute = location.pathname.startsWith("/root/ui-lab");
+
+  if (isUiLabRoute) {
+    return (
+      <Suspense
+        fallback={
+          <main className="admin-web__ui-lab-loading-shell">
+            <div className="admin-web__ui-lab-loading-card">
+              <p className="admin-web__ui-lab-loading-eyebrow">UI Lab</p>
+              <h1 className="admin-web__ui-lab-loading-title">Loading documentation surface</h1>
+              <p className="admin-web__ui-lab-loading-copy">
+                Preparing the isolated component lab and token reference view.
+              </p>
+            </div>
+          </main>
+        }
+      >
+        <Routes>
+          <Route element={<AdminUiLabPage />} path="/root/ui-lab" />
+          <Route element={<Navigate replace to="/root/ui-lab" />} path="*" />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   return (
     <WorkspaceShell
@@ -31,7 +60,11 @@ export function App() {
           <Button>Create tenant</Button>
         </>
       }
-      sidebarFooter={<p className="admin-web__sidebar-note">Operational control surface for tenants and platform health.</p>}
+      sidebarFooter={
+        <p className="admin-web__sidebar-note">
+          Operational control surface for tenants and platform health.
+        </p>
+      }
     >
       <Routes>
         <Route element={<Navigate replace to="/overview" />} path="/" />

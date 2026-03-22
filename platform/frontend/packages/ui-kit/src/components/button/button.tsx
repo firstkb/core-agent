@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 import { cx } from "../../lib/cx";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "info" | "success" | "warning" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

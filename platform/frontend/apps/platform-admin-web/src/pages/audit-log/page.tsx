@@ -1,4 +1,4 @@
-import { DateRangeField, SecondaryTab, SecondaryTabs, SummaryStrip, ViewPresetBar } from "@platform/ui-kit";
+import { Badge, DateRangeField, SecondaryTab, SecondaryTabs, ViewPresetBar } from "@platform/ui-kit";
 import { useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -15,6 +15,31 @@ import type { AdminTableSortField } from "../../widgets/admin-table-surface-cont
 
 type AuditSection = "events" | "access-changes" | "system-jobs";
 type AuditPreset = "all" | "investigations" | "automation-watch" | "access-review";
+
+function AuditSummaryStrip({
+  items,
+}: {
+  items: ReadonlyArray<{ id: string; label: string; value: string; meta?: string; tone?: "brand" | "info" | "warning" | "success" | "danger" | "neutral" }>;
+}) {
+  return (
+    <div className="admin-web__surface-summary-grid">
+      {items.map((item) => (
+        <section className="admin-web__surface-summary-card" key={item.id}>
+          <div className="admin-web__toolbar admin-web__toolbar--compact">
+            <span className="admin-web__surface-summary-label">{item.label}</span>
+            {item.tone ? (
+              <Badge appearance="soft" size="sm" variant={item.tone}>
+                {item.tone}
+              </Badge>
+            ) : null}
+          </div>
+          <div className="admin-web__surface-summary-value">{item.value}</div>
+          {item.meta ? <p className="admin-web__surface-summary-label">{item.meta}</p> : null}
+        </section>
+      ))}
+    </div>
+  );
+}
 
 const auditDatePresets = [
   { id: "all-time", label: "All time", startDate: "", endDate: "" },
@@ -664,7 +689,7 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
           ))}
         </SecondaryTabs>
       }
-      summaryStrip={<SummaryStrip items={summaryItems} />}
+      summaryStrip={<AuditSummaryStrip items={summaryItems} />}
       tableDescription={currentSection.tableDescription}
       tableTitle={currentSection.tableTitle}
       toolbarControls={

@@ -19,6 +19,14 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return <header {...props} className={cx("ui-card__header", className)} />;
 }
 
+export function CardHeaderBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} className={cx("ui-card__header-body", className)} />;
+}
+
+export function CardToolbar({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div {...props} className={cx("ui-card__toolbar", className)} />;
+}
+
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div {...props} className={cx("ui-card__content", className)} />;
 }

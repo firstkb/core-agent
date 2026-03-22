@@ -5,7 +5,7 @@ import { cx } from "../../lib/cx";
 
 export type InputSize = "sm" | "md" | "lg";
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+export type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   size?: InputSize;
   invalid?: boolean;
 };

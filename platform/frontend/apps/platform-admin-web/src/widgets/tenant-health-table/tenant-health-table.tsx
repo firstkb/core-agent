@@ -1,4 +1,16 @@
-import { Badge, Button, Checkbox, Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@platform/ui-kit";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableMetaCell,
+  TableRow,
+  TableSortButton,
+} from "@platform/ui-kit";
 import type { TenantSummary } from "@platform/tenant-core";
 import { tenantStatusToBadgeVariant } from "@platform/tenant-core";
 
@@ -19,13 +31,25 @@ type TenantHealthTableProps = {
   onSort?: (field: TenantSortField) => void;
 };
 
-function getSortIndicator(
-  currentField: TenantSortField,
-  activeField: TenantSortField,
-  direction: TenantSortDirection,
-) {
-  if (currentField !== activeField) return "-";
-  return direction === "asc" ? "^" : "v";
+function getRegionMeta(tenant: TenantSummary) {
+  const regionCount = tenant.regions.length;
+  const countLabel = `${regionCount} region${regionCount === 1 ? "" : "s"}`;
+  const regionsLabel = tenant.regions.join(" · ");
+
+  return {
+    countLabel,
+    regionsLabel,
+  };
+}
+
+function getMembersMeta(tenant: TenantSummary) {
+  return `${tenant.members} workspace member${tenant.members === 1 ? "" : "s"}`;
+}
+
+function getSyncMeta(tenant: TenantSummary) {
+  if (tenant.status === "paused") return "sync paused until tenant resumes";
+  if (tenant.status === "trial") return "trial posture under observation";
+  return "control-plane sync healthy";
 }
 
 function SortHeaderButton({
@@ -42,16 +66,12 @@ function SortHeaderButton({
   onSort?: (field: TenantSortField) => void;
 }) {
   return (
-    <button
-      className="tenant-health-table__sort-button"
+    <TableSortButton
+      direction={field === activeField ? direction : null}
       onClick={() => onSort?.(field)}
-      type="button"
     >
-      <span>{children}</span>
-      <span className="tenant-health-table__sort-indicator">
-        {getSortIndicator(field, activeField, direction)}
-      </span>
-    </button>
+      {children}
+    </TableSortButton>
   );
 }
 
@@ -156,17 +176,33 @@ export function TenantHealthTable({
               />
             </TableCell>
             <TableCell>
-              <div className="tenant-health-table__tenant-cell">
-                <span className="tenant-health-table__tenant-name">{tenant.name}</span>
-                <span className="tenant-health-table__tenant-slug">{tenant.slug}</span>
-              </div>
+              <TableMetaCell
+                caption={getRegionMeta(tenant).regionsLabel}
+                description={tenant.slug}
+                title={tenant.name}
+              />
             </TableCell>
             <TableCell>
               <Badge variant={tenantStatusToBadgeVariant(tenant.status)}>{tenant.status}</Badge>
             </TableCell>
-            <TableCell>{tenant.plan}</TableCell>
-            <TableCell>{tenant.members}</TableCell>
-            <TableCell>{tenant.lastSyncLabel}</TableCell>
+            <TableCell>
+              <TableMetaCell
+                description={getRegionMeta(tenant).countLabel}
+                title={tenant.plan}
+              />
+            </TableCell>
+            <TableCell>
+              <TableMetaCell
+                description={getMembersMeta(tenant)}
+                title={String(tenant.members)}
+              />
+            </TableCell>
+            <TableCell>
+              <TableMetaCell
+                description={getSyncMeta(tenant)}
+                title={tenant.lastSyncLabel}
+              />
+            </TableCell>
             <TableCell className="tenant-health-table__cell--action">
               <Button
                 onClick={(event) => {

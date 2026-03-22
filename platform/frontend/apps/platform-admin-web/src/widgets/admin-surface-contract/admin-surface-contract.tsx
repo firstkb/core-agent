@@ -9,25 +9,12 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
   CollectionEmptyState,
   type CollectionEmptyStateHighlight,
-  DataToolbar,
-  DataToolbarGroup,
-  DataToolbarMeta,
-  DetailPanel,
-  DetailPanelBody,
-  DetailPanelDescription,
-  DetailPanelFooter,
-  DetailPanelHeader,
-  DetailPanelMeta,
-  DetailPanelSection,
-  DetailPanelSectionTitle,
-  DetailPanelTitle,
   FilterChip,
-  FilterRail,
-  FilterRailGroup,
   Input,
   PageToolbar,
   TimelineFeed,
@@ -268,42 +255,52 @@ export function AdminSurfaceContract({
       {controlStrip}
 
       <div className="admin-web__contract-grid">
-        <FilterRail
-          className="admin-web__contract-rail"
-          description={railDescription}
-          footer={
+        <Card className="admin-web__contract-rail">
+          <CardHeader>
+            <div>
+              <CardTitle>{railTitle}</CardTitle>
+              <CardDescription>{railDescription}</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="admin-web__contract-rail-content">
+            {filterGroups.map((group) => (
+              <section className="admin-web__contract-filter-group" key={group.key}>
+                <div className="admin-web__stack">
+                  <p className="admin-web__contract-filter-label">{group.label}</p>
+                  {group.description ? <p className="admin-web__sidebar-note">{group.description}</p> : null}
+                </div>
+                <div className="admin-web__contract-filter-row">
+                  {group.options.map((option) => (
+                    <FilterChip
+                      active={activeFilters[group.key] === option.value}
+                      count={filterCounts[group.key]?.[option.value]}
+                      key={option.value}
+                      onClick={() => {
+                        const nextFilters = {
+                          ...activeFilters,
+                          [group.key]: option.value,
+                        };
+
+                        if (onActiveFiltersChange) {
+                          onActiveFiltersChange(nextFilters);
+                        } else {
+                          setInternalActiveFilters(nextFilters);
+                        }
+                      }}
+                    >
+                      {option.label}
+                    </FilterChip>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </CardContent>
+          <CardFooter>
             <Button onClick={resetFilters} size="sm" variant="ghost">
               Reset rail
             </Button>
-          }
-          title={railTitle}
-        >
-          {filterGroups.map((group) => (
-            <FilterRailGroup description={group.description} key={group.key} label={group.label}>
-              {group.options.map((option) => (
-                <FilterChip
-                  active={activeFilters[group.key] === option.value}
-                  count={filterCounts[group.key]?.[option.value]}
-                  key={option.value}
-                  onClick={() => {
-                    const nextFilters = {
-                      ...activeFilters,
-                      [group.key]: option.value,
-                    };
-
-                    if (onActiveFiltersChange) {
-                      onActiveFiltersChange(nextFilters);
-                    } else {
-                      setInternalActiveFilters(nextFilters);
-                    }
-                  }}
-                >
-                  {option.label}
-                </FilterChip>
-              ))}
-            </FilterRailGroup>
-          ))}
-        </FilterRail>
+          </CardFooter>
+        </Card>
 
         <Card className="admin-web__contract-list-zone">
           <CardHeader>
@@ -314,8 +311,8 @@ export function AdminSurfaceContract({
           </CardHeader>
 
           <CardContent className="admin-web__contract-list-content">
-            <DataToolbar className="admin-web__contract-toolbar">
-              <DataToolbarGroup>
+            <div className="admin-web__toolbar admin-web__contract-toolbar">
+              <div className="admin-web__toolbar-group">
                 <Input
                   className="admin-web__contract-search"
                   onChange={(event) => {
@@ -343,15 +340,15 @@ export function AdminSurfaceContract({
                     Clear
                   </Button>
                 ) : null}
-              </DataToolbarGroup>
+              </div>
 
-              <DataToolbarGroup align="end">
+              <div className="admin-web__toolbar-group admin-web__toolbar-group--end">
                 {toolbarControls}
-                <DataToolbarMeta>
+                <p className="admin-web__toolbar-meta">
                   {visibleItems.length} of {items.length} seeded items visible
-                </DataToolbarMeta>
-              </DataToolbarGroup>
-            </DataToolbar>
+                </p>
+              </div>
+            </div>
 
             {visibleItems.length === 0 ? (
               <CollectionEmptyState
@@ -394,47 +391,49 @@ export function AdminSurfaceContract({
           </CardContent>
         </Card>
 
-        <DetailPanel className="admin-web__contract-detail-zone">
+        <Card className="admin-web__contract-detail-zone">
           {selectedItem ? (
             <>
-              <DetailPanelHeader>
-                <div className="admin-web__contract-detail-title-group">
-                  <p className="admin-web__contract-detail-eyebrow">{detailEyebrow}</p>
-                  <DetailPanelTitle>{selectedItem.title}</DetailPanelTitle>
-                  <DetailPanelDescription>{selectedItem.detailDescription}</DetailPanelDescription>
+              <CardHeader>
+                <div className="admin-web__contract-detail-header">
+                  <div className="admin-web__contract-detail-title-group">
+                    <p className="admin-web__contract-detail-eyebrow">{detailEyebrow}</p>
+                    <CardTitle>{selectedItem.title}</CardTitle>
+                    <CardDescription>{selectedItem.detailDescription}</CardDescription>
+                  </div>
+                  <Badge variant={selectedItem.statusVariant}>{selectedItem.statusLabel}</Badge>
                 </div>
-                <Badge variant={selectedItem.statusVariant}>{selectedItem.statusLabel}</Badge>
-                <DetailPanelMeta>{selectedItem.detailMeta}</DetailPanelMeta>
-              </DetailPanelHeader>
+                <p className="admin-web__contract-detail-meta">{selectedItem.detailMeta}</p>
+              </CardHeader>
 
-              <DetailPanelBody>
+              <CardContent className="admin-web__stack">
                 {selectedItem.detailSections.map((section) => (
-                  <DetailPanelSection key={section.title}>
-                    <DetailPanelSectionTitle>{section.title}</DetailPanelSectionTitle>
+                  <section className="admin-web__detail-section" key={section.title}>
+                    <h4 className="admin-web__detail-section-title">{section.title}</h4>
                     <ul className="admin-web__contract-detail-list">
                       {section.items.map((entry) => (
                         <li key={entry}>{entry}</li>
                       ))}
                     </ul>
-                  </DetailPanelSection>
+                  </section>
                 ))}
                 {selectedItem.timelineGroups?.length ? (
-                  <DetailPanelSection>
-                    <DetailPanelSectionTitle>Timeline</DetailPanelSectionTitle>
+                  <section className="admin-web__detail-section">
+                    <h4 className="admin-web__detail-section-title">Timeline</h4>
                     <TimelineFeed groups={selectedItem.timelineGroups} />
-                  </DetailPanelSection>
+                  </section>
                 ) : null}
-              </DetailPanelBody>
+              </CardContent>
 
-              <DetailPanelFooter>
+              <CardFooter>
                 <Button size="sm" variant="outline">
                   Open contract notes
                 </Button>
                 <Button size="sm">Continue later</Button>
-              </DetailPanelFooter>
+              </CardFooter>
             </>
           ) : (
-            <DetailPanelBody>
+            <CardContent>
               <CollectionEmptyState
                 actions={
                   <Button onClick={resetFilters} variant="outline">
@@ -447,9 +446,9 @@ export function AdminSurfaceContract({
                 highlights={detailStateHighlights}
                 title="No detail item selected"
               />
-            </DetailPanelBody>
+            </CardContent>
           )}
-        </DetailPanel>
+        </Card>
       </div>
     </div>
   );

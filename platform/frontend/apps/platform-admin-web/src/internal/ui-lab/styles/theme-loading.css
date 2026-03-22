@@ -1,0 +1,93 @@
+.ui-lab-page--dark .ui-card {
+  background: rgba(18, 27, 44, 0.92);
+  border-color: rgba(102, 119, 150, 0.28);
+  box-shadow: 0 1rem 2rem -1.6rem rgba(0, 0, 0, 0.48);
+}
+
+.ui-lab-page--dark .ui-lab-page__props-list,
+.ui-lab-page--dark .ui-lab-page__note-card,
+.ui-lab-page--dark .ui-lab-page__radius-chip,
+.ui-lab-page--dark .ui-lab-page__sidebar-candidate {
+  background: rgba(20, 30, 47, 0.9);
+  border-color: rgba(102, 119, 150, 0.28);
+}
+
+.ui-lab-page--dark .ui-lab-page__swatch-preview {
+  border-color: rgba(102, 119, 150, 0.32);
+}
+
+.ui-lab-page--dark .ui-lab-page__note-label,
+.ui-lab-page--dark .ui-lab-page__swatch-label,
+.ui-lab-page--dark .ui-lab-page__token-code,
+.ui-lab-page--dark .ui-lab-page__theme-label {
+  color: #b6c2d7;
+}
+
+.ui-lab-page--dark .ui-lab-page__content-summary,
+.ui-lab-page--dark .ui-lab-page__muted,
+.ui-lab-page--dark .ui-lab-page__review-list,
+.ui-lab-page--dark .ui-lab-page__props-notes,
+.ui-lab-page--dark .ui-lab-page__type-caption,
+.ui-lab-page--dark .ui-lab-page__metric-note,
+.ui-lab-page--dark .ui-card__description,
+.ui-lab-page--dark .ui-lab-page__identity-description,
+.ui-lab-page--dark .ui-lab-page__radio-description {
+  color: #aab6ca;
+}
+
+.ui-lab-page--dark .ui-lab-page__metric-bar {
+  background: linear-gradient(90deg, rgba(110, 168, 255, 0.22) 0%, rgba(110, 168, 255, 0.88) 100%);
+}
+
+@media (max-width: 1100px) {
+  .ui-lab-page {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-lab-page__sidebar {
+    position: static;
+    height: auto;
+    max-height: none;
+  }
+
+  .ui-lab-page__nav {
+    max-height: 24rem;
+    padding-right: var(--space-1);
+  }
+}
+
+@media (max-width: 720px) {
+  .ui-lab-page {
+    padding: var(--space-5);
+  }
+
+  .ui-lab-page__content {
+    gap: var(--space-4);
+  }
+
+  .ui-lab-page__content-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-5);
+  }
+
+  .ui-lab-page__type-row,
+  .ui-lab-page__metric-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .ui-lab-page__panel-grid,
+  .ui-lab-page__panel-grid--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-lab-page__showcase-surface {
+    padding: 0;
+    gap: var(--space-2);
+  }
+
+  .ui-lab-page__sidebar {
+    gap: var(--space-4);
+  }
+}

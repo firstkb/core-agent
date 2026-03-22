@@ -4,7 +4,7 @@ import type { SelectHTMLAttributes } from "react";
 import { cx } from "../../lib/cx";
 import type { InputSize } from "../input";
 
-export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
+export type SelectProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, "size"> & {
   size?: InputSize;
   invalid?: boolean;
 };

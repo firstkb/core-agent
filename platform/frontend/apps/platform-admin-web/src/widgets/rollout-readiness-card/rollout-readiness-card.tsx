@@ -1,4 +1,15 @@
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, ProgressBar } from "@platform/ui-kit";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardHeaderBody,
+  CardTitle,
+  CardToolbar,
+  ProgressBar,
+} from "@platform/ui-kit";
 import type { TenantSummary } from "@platform/tenant-core";
 
 type RolloutReadinessCardProps = {
@@ -36,13 +47,15 @@ export function RolloutReadinessCard({ tenants }: RolloutReadinessCardProps) {
   return (
     <Card className="admin-web__panel-card" variant="accent">
       <CardHeader>
-        <div>
-          <CardTitle>Rollout readiness</CardTitle>
-          <CardDescription>Metronic-inspired operational summary rewritten for tenant activation and sync posture.</CardDescription>
-        </div>
-        <Badge appearance="soft" variant={readinessScore >= 75 ? "success" : readinessScore >= 50 ? "warning" : "danger"}>
-          {readinessScore}% ready
-        </Badge>
+        <CardToolbar>
+          <CardHeaderBody>
+            <CardTitle>Rollout readiness</CardTitle>
+            <CardDescription>Metronic-inspired operational summary rewritten for tenant activation and sync posture.</CardDescription>
+          </CardHeaderBody>
+          <Badge appearance="soft" variant={readinessScore >= 75 ? "success" : readinessScore >= 50 ? "warning" : "danger"}>
+            {readinessScore}% ready
+          </Badge>
+        </CardToolbar>
       </CardHeader>
       <CardContent className="admin-web__readiness-card">
         <div className="admin-web__readiness-header">

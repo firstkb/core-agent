@@ -30,13 +30,13 @@ platform/
 
     docs/
       README.md
-      frontend-ai-agent-starter-kit.md
+      ui-delivery-order.md
       package-boundaries.md
       app-surfaces.md
       tenant-model.md
       offline-strategy.md
-      adr/
-      architecture/
+      vendor/
+      metronic/
 
     apps/
       platform-admin-web/
@@ -67,4 +67,4 @@ platform/
 
 ## Frontend Docs
 
-See `platform/frontend/docs/frontend-ai-agent-starter-kit.md` for the starter set and the ordered remaining steps.
+See `platform/frontend/docs/README.md` for the active frontend documentation set.

@@ -19,7 +19,7 @@ Canonical frontend workspace for the multi-tenant platform.
 
 ## Docs
 
-See `docs/frontend-ai-agent-starter-kit.md` for the starter set and ordered next steps.
+See `docs/README.md` for the active frontend documentation set.
 
 ## Local HTTPS
 

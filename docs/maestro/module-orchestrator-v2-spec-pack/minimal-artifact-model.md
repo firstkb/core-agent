@@ -411,7 +411,7 @@ Minimal fields:
   "summary": "The repository already separates backend and frontend concerns; the next step is to keep app and package work under platform/frontend with explicit frontend package boundaries.",
   "evidence_refs": [
     "docs/codex-native-repo.md",
-    "platform/frontend/docs/frontend-skeleton-tree.txt"
+    "platform/frontend/docs/package-boundaries.md"
   ],
   "produced_artifact_refs": [
     "artifacts/frontend-platform/features/establish-tenant-web-surface/stages/research/attempt-001/README.md"

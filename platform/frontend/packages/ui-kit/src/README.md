@@ -11,5 +11,7 @@ Runtime usage:
 
 Migration source of truth:
 
-- `platform/frontend/docs/metronic-ai-standard-guide.md`
 - `platform/frontend/docs/vendor/metronic-inventory.md`
+- `platform/frontend/docs/ui-kit-boundary-audit.md`
+- `platform/frontend/docs/ui-kit-stable-approved-audit.md`
+- `platform/frontend/docs/ui-lab-ui-kit-coverage.md`

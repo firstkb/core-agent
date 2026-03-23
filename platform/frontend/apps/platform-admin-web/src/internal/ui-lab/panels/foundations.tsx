@@ -1,4 +1,46 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Code, Kbd } from "@platform/ui-kit";
+import type { ReactElement } from "react";
+
+import {
+  ArrowRightIcon,
+  BellIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon,
+  Button,
+  CarFrontIcon,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  ChartBarIcon,
+  CheckCircleIcon,
+  CloseIcon,
+  Code,
+  DashboardGridIcon,
+  DataTableIcon,
+  DocumentListIcon,
+  FolderIcon,
+  FormIcon,
+  HelpCircleIcon,
+  InfoCircleIcon,
+  Kbd,
+  LayersIcon,
+  MenuIcon,
+  MapPinIcon,
+  PlusIcon,
+  PulseLineIcon,
+  RoutePathIcon,
+  SearchIcon,
+  SettingsIcon,
+  ShieldKeyIcon,
+  SparkIcon,
+  UserCircleIcon,
+  UsersIcon,
+  WalletCardIcon,
+  WarningTriangleIcon,
+} from "@platform/ui-kit";
+
+import type { IconProps } from "@platform/ui-kit";
 
 import {
   foundationMotion,
@@ -8,6 +50,268 @@ import {
   foundationTypeScale,
 } from "../model/leaf-meta";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
+
+const utilityIconEntries: Array<{
+  Icon: (props: IconProps) => ReactElement;
+  name: string;
+  note: string;
+}> = [
+  { Icon: SearchIcon, name: "SearchIcon", note: "Search fields, search triggers, and compact lookup affordances." },
+  { Icon: PlusIcon, name: "PlusIcon", note: "Add, create, or append actions that need a calm positive cue." },
+  { Icon: ArrowRightIcon, name: "ArrowRightIcon", note: "Forward direction and next-step emphasis around visible action labels." },
+  { Icon: MenuIcon, name: "MenuIcon", note: "Navigation toggles and compact menu-entry affordances." },
+  { Icon: CloseIcon, name: "CloseIcon", note: "Dismiss or close actions when the surrounding control already explains the target." },
+  { Icon: InfoCircleIcon, name: "InfoCircleIcon", note: "Neutral informational callouts and supporting technical guidance." },
+  { Icon: CheckCircleIcon, name: "CheckCircleIcon", note: "Positive completion, verified state, and quiet success confirmation." },
+  { Icon: WarningTriangleIcon, name: "WarningTriangleIcon", note: "Cautionary or review-needed state that should remain explicit in text too." },
+];
+
+const navigationIconEntries: Array<{
+  Icon: (props: IconProps) => ReactElement;
+  name: string;
+  note: string;
+}> = [
+  { Icon: DashboardGridIcon, name: "DashboardGridIcon", note: "Overview, home, workspace landing, and dashboard entry points." },
+  { Icon: SparkIcon, name: "SparkIcon", note: "Foundations, platform core, highlights, and category-level entry points that need a compact star cue." },
+  { Icon: FormIcon, name: "FormIcon", note: "Forms, builders, questionnaires, and structured input modules." },
+  { Icon: RoutePathIcon, name: "RoutePathIcon", note: "Navigation maps, route structures, workflow branching, and topology-oriented sections." },
+  { Icon: DataTableIcon, name: "DataTableIcon", note: "Tables, records, listings, and data-dense collection surfaces." },
+  { Icon: PulseLineIcon, name: "PulseLineIcon", note: "System health, live states, monitoring, alerts, and status-heavy review surfaces." },
+  { Icon: DocumentListIcon, name: "DocumentListIcon", note: "Inventory, checklists, records, audits, and document-driven modules." },
+  { Icon: ChartBarIcon, name: "ChartBarIcon", note: "Reports, analytics, trends, and aggregate operational views." },
+  { Icon: UsersIcon, name: "UsersIcon", note: "People, team, members, operators, or assignee-oriented surfaces." },
+  { Icon: UserCircleIcon, name: "UserCircleIcon", note: "Single-person profiles, contacts, operators, or account-oriented destinations." },
+  { Icon: BuildingOfficeIcon, name: "BuildingOfficeIcon", note: "Companies, branches, offices, facilities, and organization-oriented modules." },
+  { Icon: CarFrontIcon, name: "CarFrontIcon", note: "Vehicles, fleet, transport, dispatch, and mobility-related sections." },
+  { Icon: MapPinIcon, name: "MapPinIcon", note: "Locations, branches, service areas, addresses, and geospatial destinations." },
+  { Icon: BriefcaseIcon, name: "BriefcaseIcon", note: "Work items, business units, staffing, assignments, or professional services areas." },
+  { Icon: WalletCardIcon, name: "WalletCardIcon", note: "Billing, plans, invoices, balances, and finance-adjacent modules." },
+  { Icon: ShieldKeyIcon, name: "ShieldKeyIcon", note: "Security, permissions, access, audit, and trust controls." },
+  { Icon: LayersIcon, name: "LayersIcon", note: "Systems, modules, stacks, grouped resources, or layered tooling areas." },
+  { Icon: FolderIcon, name: "FolderIcon", note: "Files, documents, storage, archives, and asset-oriented sections." },
+  { Icon: BellIcon, name: "BellIcon", note: "Notifications, alerts, and operator attention surfaces." },
+  { Icon: SettingsIcon, name: "SettingsIcon", note: "Configuration, preferences, and management screens." },
+  { Icon: HelpCircleIcon, name: "HelpCircleIcon", note: "Help, docs, support, and guided assistance destinations." },
+];
+
+export function renderIconsDocs() {
+  return (
+    <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
+      <Card>
+        <CardHeader>
+          <CardTitle>Utility and feedback set</CardTitle>
+          <CardDescription>Shared utility icons should stay semantic, compact, and reusable without turning `ui-kit` into an open-ended SVG library.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="ui-lab-page__icon-grid">
+            {utilityIconEntries.map(({ Icon, name, note }) => (
+              <div className="ui-lab-page__note-card ui-lab-page__icon-card" key={name}>
+                <div className="ui-lab-page__icon-sizes">
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--sm" />
+                    <span className="ui-lab-page__icon-size-label">16</span>
+                  </div>
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--md" />
+                    <span className="ui-lab-page__icon-size-label">20</span>
+                  </div>
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--lg" />
+                    <span className="ui-lab-page__icon-size-label">24</span>
+                  </div>
+                </div>
+                <span className="ui-lab-page__note-label">{name}</span>
+                <p className="ui-lab-page__muted">{note}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Menu and navigation set</CardTitle>
+          <CardDescription>These shared icons are safe future candidates for left-rail and top-level menu use as long as visible labels still carry the primary meaning.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="ui-lab-page__icon-grid">
+            {navigationIconEntries.map(({ Icon, name, note }) => (
+              <div className="ui-lab-page__note-card ui-lab-page__icon-card" key={name}>
+                <div className="ui-lab-page__icon-sizes">
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--sm" />
+                    <span className="ui-lab-page__icon-size-label">16</span>
+                  </div>
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--md" />
+                    <span className="ui-lab-page__icon-size-label">20</span>
+                  </div>
+                  <div className="ui-lab-page__icon-sample">
+                    <Icon className="ui-lab-page__icon-symbol ui-lab-page__icon-symbol--lg" />
+                    <span className="ui-lab-page__icon-size-label">24</span>
+                  </div>
+                </div>
+                <span className="ui-lab-page__note-label">{name}</span>
+                <p className="ui-lab-page__muted">{note}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>In context</CardTitle>
+          <CardDescription>The same shared semantic icons should work inside buttons, supporting status rows, and compact utility affordances without needing a second icon system.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Actions">
+            <Button leadingIcon={<PlusIcon />}>Create form</Button>
+            <Button trailingIcon={<ArrowRightIcon />} variant="outline">
+              Review exports
+            </Button>
+          </ShowcaseRow>
+          <ShowcaseRow label="Status" stacked>
+            <div className="ui-lab-page__icon-context-grid">
+              <div className="ui-lab-page__note-card ui-lab-page__icon-context-card">
+                <InfoCircleIcon className="ui-lab-page__icon-context-icon" />
+                <div className="ui-lab-page__stack">
+                  <strong>Needs context</strong>
+                  <p className="ui-lab-page__muted">Use a calm informational icon when the row already contains explicit supporting copy.</p>
+                </div>
+              </div>
+              <div className="ui-lab-page__note-card ui-lab-page__icon-context-card">
+                <CheckCircleIcon className="ui-lab-page__icon-context-icon ui-lab-page__icon-context-icon--success" />
+                <div className="ui-lab-page__stack">
+                  <strong>Verification complete</strong>
+                  <p className="ui-lab-page__muted">Positive icons can reinforce success, but the success meaning still has to be readable as text.</p>
+                </div>
+              </div>
+              <div className="ui-lab-page__note-card ui-lab-page__icon-context-card">
+                <WarningTriangleIcon className="ui-lab-page__icon-context-icon ui-lab-page__icon-context-icon--warning" />
+                <div className="ui-lab-page__stack">
+                  <strong>Review required</strong>
+                  <p className="ui-lab-page__muted">Warning icons stay supporting, not primary, and should never be the only signal for caution.</p>
+                </div>
+              </div>
+            </div>
+          </ShowcaseRow>
+          <ShowcaseRow label="Utility">
+            <div className="ui-lab-page__icon-inline-item">
+              <SearchIcon className="ui-lab-page__icon-inline-symbol" />
+              <span>Search</span>
+            </div>
+            <div className="ui-lab-page__icon-inline-item">
+              <MenuIcon className="ui-lab-page__icon-inline-symbol" />
+              <span>Menu</span>
+            </div>
+            <div className="ui-lab-page__icon-inline-item">
+              <CloseIcon className="ui-lab-page__icon-inline-symbol" />
+              <span>Close</span>
+            </div>
+          </ShowcaseRow>
+          <ShowcaseRow label="Menu preview" stacked>
+            <div className="ui-lab-page__icon-menu-preview">
+              <div className="ui-lab-page__icon-menu-heading">GENERAL</div>
+              <div className="ui-lab-page__icon-menu-row">
+                <SparkIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Foundations</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <FormIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Form controls</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <LayersIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Overlay contracts</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <RoutePathIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Navigation</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <DataTableIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Data display</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-heading">REPORT</div>
+              <div className="ui-lab-page__icon-menu-row">
+                <ChartBarIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Reports</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <PulseLineIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>States</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <DocumentListIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Inventory</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-heading">DIRECTORY</div>
+              <div className="ui-lab-page__icon-menu-row">
+                <UserCircleIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Contacts</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-row">
+                <MapPinIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Locations</span>
+              </div>
+              <div className="ui-lab-page__icon-menu-heading">HELP</div>
+              <div className="ui-lab-page__icon-menu-row">
+                <HelpCircleIcon className="ui-lab-page__icon-inline-symbol" />
+                <span>Help center</span>
+              </div>
+            </div>
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      {renderPropsApiCard("Compact reference for the shared semantic icon set exported from `@platform/ui-kit`.", [
+        { name: "utility and menu icon exports", type: "React SVG component", notes: "Small approved semantic icons that stay generic enough for more than one surface, including future menu-safe entries such as dashboard, reports, settings, and help." },
+        { name: "IconProps", type: "SVGProps<SVGSVGElement>", notes: "Standard SVG props allow `className`, sizing, and other lightweight overrides without inventing an icon wrapper API." },
+        { name: "currentColor", type: "built in", notes: "Icons inherit color from surrounding text or control styling rather than shipping their own semantic palette." },
+      ])}
+
+      {renderReferenceNotesCard(
+        "Shared icons should stay a small semantic set while component-internal structural icons remain private to the owning primitive.",
+        [
+          "The stable anatomy is a plain SVG icon with no built-in background, spacing, or container chrome.",
+          "Shared icons use semantic names such as search, dashboard, reports, warning, or close rather than product-specific route names.",
+          "Component-internal chevrons, carets, stars, or close affordances may still stay private when they are part of one component's own anatomy.",
+        ],
+        [
+          "Use shared icons when the same semantic symbol is needed across more than one surface.",
+          "Menu icons are safe when they support a visible label instead of replacing it.",
+          "Size icons through CSS or standard SVG props instead of inventing a parallel variant system for the icon set itself.",
+          "Keep the approved set small so `ui-kit` does not become a dumping ground for decorative SVGs.",
+        ],
+        [
+          "Icons are decorative by default; the wrapping button, link, or row still needs an accessible name.",
+          "Icon-only controls need explicit accessible labeling from the control itself rather than from the SVG.",
+          "Do not communicate critical meaning through icon or color alone when text can stay explicit.",
+        ],
+      )}
+
+      {renderUsageReviewCard(
+        "Shared icons are appropriate when a generic semantic symbol repeats across multiple surfaces and can stay independent from any single page workflow.",
+        [
+          "A button, utility row, or supporting state needs a small semantic icon that already repeats elsewhere.",
+          "A menu or sidebar item needs a generic category icon that is likely to recur across multiple product surfaces.",
+          "The symbol can be named generically without route or product-specific language.",
+        ],
+        [
+          "Keep icons secondary to visible labels and copy.",
+          "Reuse the same small approved set instead of redrawing near-identical symbols locally.",
+          "Leave component-internal anatomy icons private when they do not need to become a standalone contract.",
+        ],
+        [
+          "Do not publish every private chevron, star, or bespoke illustration as a shared icon.",
+          "Do not build a decorative icon gallery before the semantic set is stable.",
+          "Do not rely on icon-only meaning for primary navigation or destructive actions.",
+        ],
+      )}
+    </div>
+  );
+}
 
 export function renderKbdDocs() {
   return (

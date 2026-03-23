@@ -19,6 +19,7 @@ import {
   EmptyState,
   ErrorState,
   GuidedEmptyState,
+  InfoCircleIcon,
   LoadingState,
   ProgressBar,
   SearchEmptyState,
@@ -26,11 +27,12 @@ import {
   SkeletonText,
   TableLoadingState,
   TopLoader,
+  WarningTriangleIcon,
+  CheckCircleIcon,
   createTopLoaderController,
   type TopLoaderController,
 } from "@platform/ui-kit";
 
-import { CheckCircleIcon, InfoCircleIcon, WarningTriangleIcon } from "../components/icons";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
 
 function TopLoaderPreview() {

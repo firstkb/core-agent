@@ -4,6 +4,39 @@ export type { ButtonProps, ButtonSize, ButtonVariant, SplitButtonItem, SplitButt
 export { Kbd } from "./components/kbd";
 export type { KbdProps, KbdSize, KbdVariant } from "./components/kbd";
 
+export {
+  ArrowRightIcon,
+  BellIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon,
+  CarFrontIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  CloseIcon,
+  DashboardGridIcon,
+  DataTableIcon,
+  DocumentListIcon,
+  FolderIcon,
+  FormIcon,
+  HelpCircleIcon,
+  InfoCircleIcon,
+  LayersIcon,
+  MenuIcon,
+  MapPinIcon,
+  PlusIcon,
+  PulseLineIcon,
+  RoutePathIcon,
+  SearchIcon,
+  SettingsIcon,
+  ShieldKeyIcon,
+  SparkIcon,
+  UserCircleIcon,
+  UsersIcon,
+  WalletCardIcon,
+  WarningTriangleIcon,
+} from "./icons";
+export type { IconProps } from "./icons";
+
 export { DateField } from "./components/date-field";
 export type { DateFieldPicker, DateFieldProps, DateFieldSize } from "./components/date-field";
 

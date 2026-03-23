@@ -7,7 +7,8 @@
 .ui-lab-page--dark .ui-lab-page__props-list,
 .ui-lab-page--dark .ui-lab-page__note-card,
 .ui-lab-page--dark .ui-lab-page__radius-chip,
-.ui-lab-page--dark .ui-lab-page__sidebar-preview {
+.ui-lab-page--dark .ui-lab-page__sidebar-preview,
+.ui-lab-page--dark .ui-lab-page__sidebar-sections-preview {
   background: rgba(20, 30, 47, 0.9);
   border-color: rgba(102, 119, 150, 0.28);
 }
@@ -79,6 +80,10 @@
 
   .ui-lab-page__panel-grid,
   .ui-lab-page__panel-grid--wide {
+    grid-template-columns: 1fr;
+  }
+
+  .ui-lab-page__icon-grid {
     grid-template-columns: 1fr;
   }
 

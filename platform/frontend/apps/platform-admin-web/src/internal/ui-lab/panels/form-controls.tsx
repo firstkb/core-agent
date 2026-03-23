@@ -26,7 +26,9 @@ import {
   InputAddon,
   InputGroup,
   InputOtp,
+  InfoCircleIcon,
   Label,
+  PlusIcon,
   RadioGroup,
   RadioGroupItem,
   ScrollArea,
@@ -40,6 +42,8 @@ import {
   Toggle,
   ToggleGroup,
   ToggleGroupItem,
+  ArrowRightIcon,
+  CheckCircleIcon,
 } from "@platform/ui-kit";
 
 import {
@@ -52,7 +56,6 @@ import {
   inputSizes,
   uiLabRangePresets,
 } from "../model/leaf-meta";
-import { ArrowRightIcon, CheckCircleIcon, InfoCircleIcon, PlusIcon } from "../components/icons";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
 
 function SliderValueRow({

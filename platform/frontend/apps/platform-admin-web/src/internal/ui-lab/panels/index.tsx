@@ -100,6 +100,7 @@ import {
   renderFoundationsOverviewDocs,
   renderFoundationsSurfaceRulesDocs,
   renderFoundationsTokensDocs,
+  renderIconsDocs,
   renderKbdDocs,
 } from "./foundations";
 import {
@@ -725,6 +726,10 @@ export function renderPanel(
 
       if (activeItem.id === "layout-grid-doc") {
         return renderFoundationsLayoutGridDocs();
+      }
+
+      if (activeItem.id === "icons-doc") {
+        return renderIconsDocs();
       }
 
       if (activeItem.id === "kbd-doc") {

@@ -62,6 +62,7 @@ Form note:
 ### Utility And Support Primitives
 
 - `code`
+- `icons`
 
 ### Navigation Primitives
 
@@ -79,6 +80,13 @@ Sidebar note:
 
 - `sidebar-nav` is now approved as the shared nested navigation tree itself
 - search, theme toggles, tenant switching, and shell-specific sidebar chrome remain app-layer concerns
+
+Icon note:
+
+- approve only the small shared semantic icon set itself, including future menu-safe entries such as dashboard, reports, settings, and help
+- the approved menu-safe subset may also cover generic domains such as people, locations, facilities, and transport when the symbol stays reusable across surfaces
+- section-level taxonomy icons like spark, route-path, pulse, and document-list are also acceptable when they stay generic rather than tied to one app's menu wording
+- keep component-internal structural icons private where they are part of one primitive's own anatomy
 
 ### Overlay Primitives
 

@@ -38,6 +38,7 @@ These are low-risk, reusable, and not tied to a specific admin flow.
 - `checkbox`
 - `collapsible`
 - `code`
+- `icons`
 - `kbd`
 - `stepper`
 - `dialog`, `drawer`, and `sheet`
@@ -134,6 +135,14 @@ Phase E note:
 - `data-toolbar`, `detail-panel`, `filter-rail`, and `summary-strip` were removed from `ui-kit` after the component audit because they still read more like reusable compositions than final shared design language
 - `counting-number` was also removed from `ui-kit`; motion-heavy numeric emphasis should be reintroduced only if real module work proves the need
 - `view-preset-bar` remains provisional because its semantics still read more like saved-view workflow state than a broadly reusable base pattern
+
+Icon note:
+
+- keep only a small semantic icon set in `ui-kit`, including utility symbols and menu-safe navigation icons
+- menu-safe entries may cover generic domains such as people, locations, facilities, transport, reports, settings, and help
+- the same shared set may also cover generic section-level categories such as foundations, routes, records, and state monitoring when the names stay reusable
+- component-internal chevrons, stars, carets, and other anatomy-specific SVGs may remain private to the owning primitive
+- do not promote route-specific or donor-only illustrations into the shared icon set
 
 ## Must Stay In App Layer
 

@@ -1,21 +1,28 @@
-import type { ReactNode, SVGProps } from "react";
+import { useState, type ReactNode, type SVGProps } from "react";
 
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, SidebarNav, type SidebarNavItem } from "@platform/ui-kit";
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  DashboardGridIcon,
+  DataTableIcon,
+  DocumentListIcon,
+  FormIcon,
+  LayersIcon,
+  PulseLineIcon,
+  RoutePathIcon,
+  SidebarNav,
+  SparkIcon,
+  type SidebarNavItem,
+  ShieldKeyIcon,
+  UserCircleIcon,
+  WalletCardIcon,
+} from "@platform/ui-kit";
 
 import type { UiLabLeafMeta, UiLabSectionIcon } from "../model/leaf-meta";
-import {
-  DashboardGridIcon,
-  DataDisplayIcon,
-  FormIcon,
-  FoundationsIcon,
-  InventoryIcon,
-  LayersIcon,
-  NavigationIcon,
-  ProfileCircleIcon,
-  ShieldKeyIcon,
-  StatesIcon,
-  WalletCardIcon,
-} from "./icons";
 
 export function renderSectionIcon(icon: UiLabSectionIcon, props: SVGProps<SVGSVGElement>) {
   switch (icon) {
@@ -24,16 +31,16 @@ export function renderSectionIcon(icon: UiLabSectionIcon, props: SVGProps<SVGSVG
     case "overlay-contracts":
       return <LayersIcon {...props} />;
     case "navigation-primitives":
-      return <NavigationIcon {...props} />;
+      return <RoutePathIcon {...props} />;
     case "data-display":
-      return <DataDisplayIcon {...props} />;
+      return <DataTableIcon {...props} />;
     case "states":
-      return <StatesIcon {...props} />;
+      return <PulseLineIcon {...props} />;
     case "inventory":
-      return <InventoryIcon {...props} />;
+      return <DocumentListIcon {...props} />;
     case "foundations":
     default:
-      return <FoundationsIcon {...props} />;
+      return <SparkIcon {...props} />;
   }
 }
 
@@ -104,7 +111,7 @@ const sidebarPreviewItems: SidebarNavItem[] = [
       { id: "teams", label: "Teams", meta: "New" },
     ],
     defaultOpen: true,
-    icon: <ProfileCircleIcon />,
+    icon: <UserCircleIcon />,
     id: "public-profile",
     label: "Public Profile",
   },
@@ -125,6 +132,68 @@ const sidebarPreviewItems: SidebarNavItem[] = [
   },
 ];
 
+const sectionedSidebarPreviewSections: Array<{
+  id: string;
+  items: SidebarNavItem[];
+  label: string;
+}> = [
+  {
+    id: "general",
+    items: [
+      { icon: <DashboardGridIcon />, id: "general-overview", label: "Overview" },
+      { id: "general-workspace", label: "Workspace" },
+      { id: "general-activity", label: "Activity", meta: 3 },
+    ],
+    label: "GENERAL",
+  },
+  {
+    id: "ezform",
+    items: [
+      {
+        children: [
+          { id: "ezform-builders-active", label: "Active forms" },
+          { id: "ezform-builders-drafts", label: "Drafts", meta: 12 },
+          { id: "ezform-builders-archive", label: "Archive" },
+        ],
+        defaultOpen: true,
+        icon: <FormIcon />,
+        id: "ezform-builders",
+        label: "Builders",
+      },
+      { id: "ezform-templates", label: "Templates" },
+      { id: "ezform-submissions", label: "Submissions", meta: 28 },
+    ],
+    label: "EZFORM",
+  },
+  {
+    id: "report",
+    items: [
+      {
+        children: [
+          { id: "report-daily", label: "Daily" },
+          { id: "report-monthly", label: "Monthly" },
+          { id: "report-export-history", label: "Export history", meta: 2 },
+        ],
+        defaultOpen: true,
+        id: "report-exports",
+        label: "Exports",
+      },
+      { id: "report-audit", label: "Audit log" },
+      { id: "report-usage", label: "Usage" },
+    ],
+    label: "REPORT",
+  },
+  {
+    id: "help",
+    items: [
+      { id: "help-docs", label: "Docs" },
+      { id: "help-support", label: "Support", meta: 5 },
+      { id: "help-status", label: "System status" },
+    ],
+    label: "HELP",
+  },
+];
+
 export function SidebarPreviewNav({ compact = false }: { compact?: boolean }) {
   return (
     <SidebarNav
@@ -134,6 +203,27 @@ export function SidebarPreviewNav({ compact = false }: { compact?: boolean }) {
       defaultOpenItemIds={["public-profile", "profiles"]}
       items={sidebarPreviewItems}
     />
+  );
+}
+
+export function SidebarSectionedPreview({ compact = false }: { compact?: boolean }) {
+  const [activeItemId, setActiveItemId] = useState("ezform-builders-active");
+
+  return (
+    <div className="ui-lab-page__sidebar-sections-preview">
+      {sectionedSidebarPreviewSections.map((section) => (
+        <section className="ui-lab-page__sidebar-section" key={section.id}>
+          <div className="ui-lab-page__sidebar-section-heading">{section.label}</div>
+          <SidebarNav
+            activeItemId={activeItemId}
+            className="ui-lab-page__sidebar-preview ui-lab-page__sidebar-preview--section-nav"
+            compact={compact}
+            items={section.items}
+            onActiveItemChange={(itemId) => setActiveItemId(itemId)}
+          />
+        </section>
+      ))}
+    </div>
   );
 }
 

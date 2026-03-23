@@ -32,6 +32,7 @@ import {
   FilterChip,
   GuidedEmptyState,
   Input,
+  InfoCircleIcon,
   InlineStatus,
   Rating,
   ScrollArea,
@@ -50,6 +51,7 @@ import {
   TablePaginationBar,
   TableRow,
   TableSortButton,
+  WarningTriangleIcon,
   type TableColumnVisibilityItem,
   type TableSortDirection,
 } from "@platform/ui-kit";
@@ -63,7 +65,6 @@ import {
   getAvatarPresenceBadgeVariant,
   getStatusTone,
 } from "../model/leaf-meta";
-import { InfoCircleIcon, WarningTriangleIcon } from "../components/icons";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
 
 type TableHeaderSortField = "lastSync" | "signals" | "tenant";

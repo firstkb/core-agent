@@ -1,5 +1,16 @@
 # App Surfaces
 
+Canonical ownership map for the frontend runtime surfaces.
+
+This document answers one question:
+
+- which app owns which user-facing runtime surface
+
+It does not redefine:
+
+- tenant shared logic boundaries from `tenant-model.md`
+- offline escalation rules from `offline-strategy.md`
+
 ## `platform-admin-web`
 
 Internal platform or backoffice application.
@@ -19,13 +30,14 @@ Owns:
 
 - tenant user journeys
 - tenant-specific navigation
-- tenant branding and permissions
-- progressive offline support inside the app boundary
+- tenant page behavior
+- tenant-facing use of branding, permissions, and tenant context
+- current offline capability while it remains part of the tenant app itself
 
 ## Deferred Surface
 
-Add `tenant-pwa` only when at least one of these becomes true:
+`tenant-pwa` is not a current runtime surface.
 
-- offline-first flow diverges from the browser flow;
-- release cadence differs from `tenant-web`;
-- routing, shell, or sync model becomes materially different.
+Add it only if offline becomes a distinct runtime or release track.
+
+For the exact escalation rules, see `offline-strategy.md`.

@@ -1,4 +1,4 @@
-import { CloseIcon, MenuIcon } from "./icons";
+import { CloseIcon, MenuIcon } from "@platform/ui-kit";
 
 type UiLabMobileHeaderProps = {
   menuOpen: boolean;

@@ -33,6 +33,7 @@ export type UiLabLeafId =
   | "combobox-doc"
   | "collapsible-doc"
   | "code-doc"
+  | "icons-doc"
   | "context-menu-doc"
   | "date-field-doc"
   | "empty-states-doc"
@@ -827,6 +828,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     panelId: "foundations",
     title: "Kbd",
   },
+  "icons-doc": {
+    breadcrumb: ["Foundations", "Icons"],
+    description: "Icons page documents the small shared semantic icon set, sizing rhythm, and currentColor rules for the approved shared icon contract.",
+    heroDescription:
+      "Icons are reviewed here as a small support primitive so generic search, add, direction, status, and menu symbols stay consistent without promoting every component-internal SVG into a public contract.",
+    heroTitle: "Icons",
+    id: "icons-doc",
+    label: "Icons",
+    panelId: "foundations",
+    title: "Icons",
+  },
   "layout-grid-doc": {
     breadcrumb: ["Foundations", "Layout Grid"],
     description: "Layout grid page documents the bounded width and section layout rules that keep shared surfaces calm and predictable.",
@@ -1356,6 +1368,7 @@ export const foundationsLeaves = [
   "activity",
   "network",
   "layout-grid-doc",
+  "icons-doc",
   "kbd-doc",
   "code-doc",
 ] as const satisfies readonly UiLabLeafId[];

@@ -60,6 +60,7 @@ export const uiKitLeafIds = new Set<UiLabLeafId>([
   "hover-card-doc",
   "input-doc",
   "input-otp-doc",
+  "icons-doc",
   "kbd-doc",
   "label-doc",
   "link-doc",

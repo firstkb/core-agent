@@ -20,7 +20,7 @@ It does not redefine package boundaries. For promotion rules, see:
 
 Current usable inventory for `UI Lab` is strong enough to support the canonical sections.
 
-- stable component families: 46
+- stable component families: 47
 - low-risk reusable patterns: 14
 - provisional surfaces currently available for review: 15
 - first-circle stable primitives now begin to include `Anatomy / Props / Accessibility` reference notes in addition to previews
@@ -38,6 +38,7 @@ Support already available in `ui-kit`:
 - `badge`
 - `card`
 - `code`
+- `icons`
 - `kbd`
 - `progress-bar`
 - `skeleton`
@@ -50,6 +51,9 @@ Notes:
 
 - typography, spacing, radius, shadows, and surface rules are token-first concerns
 - `Foundations` now includes a dedicated `Layout Grid` page so shell, section, and width-containment rules stay visible alongside token docs
+- `Foundations` now includes a dedicated `Icons` page so the small approved shared icon set, currentColor behavior, icon sizing rhythm, and menu-safe navigation icon candidates stay visible without promoting every private SVG into the public contract
+- that shared icon page now also covers common menu-safe categories such as people, locations, facilities, and transport for future sidebar planning
+- the same page now reflects the actual `UI Lab` left-menu section icon set after those symbols were promoted into the shared icon contract
 - `UI Lab` foundations should show token usage, not invent new decorative components
 - `kbd` now has its own component-deep page so shortcut and keycap hints can be reviewed separately from token swatches
 - `code` now has its own component-deep page so technical identifiers and inline system values can be reviewed separately from badges or note cards

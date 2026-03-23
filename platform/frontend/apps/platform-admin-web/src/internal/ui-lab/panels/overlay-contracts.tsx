@@ -46,6 +46,7 @@ import {
 
 import {
   SidebarPreviewNav,
+  SidebarSectionedPreview,
   ShowcaseRow,
   renderDoNotUseForCard,
   renderPropsApiCard,
@@ -407,6 +408,27 @@ export function renderSidebarDocs(onDrawerOpenChange: (open: boolean) => void) {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Sectioned app shell</CardTitle>
+          <CardDescription>When the product needs headings such as GENERAL, EZFORM, REPORT, and HELP, keep those headings in app-layer shell markup and reuse `SidebarNav` inside each section.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__stack">
+          <div className="ui-lab-page__inline-wrap">
+            <Badge appearance="soft" variant="neutral">
+              App layer
+            </Badge>
+            <Badge appearance="soft" variant="success">
+              4 sections
+            </Badge>
+            <Badge appearance="soft" variant="brand">
+              Shared nav reused
+            </Badge>
+          </div>
+          <SidebarSectionedPreview compact />
+        </CardContent>
+      </Card>
+
       {renderPropsApiCard("Compact reference for the shared nested sidebar navigation contract.", [
         { name: "items", type: "SidebarNavItem[]", notes: "Nested navigation tree with labels, optional icons, optional meta, and recursive children." },
         { name: "activeItemId / defaultActiveItemId", type: "string", notes: "Controls or seeds the active leaf without making parent disclosure state implicit." },
@@ -423,11 +445,12 @@ export function renderSidebarDocs(onDrawerOpenChange: (open: boolean) => void) {
         [
           "The stable anatomy is top-level rows, nested disclosure groups, active leaves, and an optional off-canvas mobile shell.",
           "Desktop and mobile should share the same tree language even when the shell treatment changes.",
-          "Search, routing, workflow badges, and page chrome still belong to the app layer around the shared tree.",
+          "Search, routing, workflow badges, section headings such as GENERAL or HELP, and page chrome still belong to the app layer around the shared tree.",
         ],
         [
           "The stable API should be driven by generic items, active leaf state, and open branch keys rather than product-specific route names.",
           "Use one shared tree contract and keep shell-specific concerns like search or workspace switchers outside the primitive.",
+          "If information architecture needs several labeled blocks, compose multiple `SidebarNav` instances inside one sidebar shell rather than inventing fake section items.",
           "Prefer composition with `Sheet` on mobile rather than adding a second navigation-only overlay primitive.",
         ],
         [
@@ -446,10 +469,12 @@ export function renderSidebarDocs(onDrawerOpenChange: (open: boolean) => void) {
         [
           "Keep the tree generic and compositional even if the surrounding shell remains app-owned.",
           "Reuse the same item language on desktop and mobile so the hierarchy stays familiar.",
+          "Keep section headings in the shell layer when the rail needs grouped blocks such as GENERAL, REPORT, or HELP.",
           "Validate deeper branches and `More` groupings before adding product-only rows and workflow controls.",
         ],
         [
           "Do not promote a whole application sidebar shell with search, tenants, notifications, and workspace switching as one primitive.",
+          "Do not encode section headings as fake disabled items inside the shared tree contract.",
           "Do not hard-code route labels or page-specific action areas into the shared component.",
           "Do not assume the same shell chrome belongs in desktop and mobile once the nav tree itself is stable.",
         ],

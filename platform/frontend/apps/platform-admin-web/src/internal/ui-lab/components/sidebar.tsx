@@ -1,10 +1,10 @@
-import { Switch } from "@platform/ui-kit";
+import { SearchIcon, Switch } from "@platform/ui-kit";
 
 import { uiLabLeafMeta } from "../model/leaf-meta";
 import type { UiLabLeafId, UiLabSectionId, UiLabTheme } from "../model/leaf-meta";
 import type { UiLabSectionEntry } from "../model/navigation";
 import { getLeafStatus, getLeafStatusLabel, hasUiKitCoverage } from "../model/status";
-import { ChevronIcon, SearchIcon } from "./icons";
+import { ChevronIcon } from "./icons";
 import { renderSectionIcon } from "./docs-cards";
 
 type UiLabSidebarProps = {

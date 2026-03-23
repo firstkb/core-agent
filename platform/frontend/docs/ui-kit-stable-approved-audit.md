@@ -49,6 +49,11 @@ These can be treated as approved shared contracts.
 - `field`
 - `form-shell`
 
+Form note:
+
+- `select` remains the approved lightweight native choice control
+- searchable `combobox` and review-stage `tag-input` variants remain outside the stable approval set
+
 ### Feedback Primitives
 
 - `alert`
@@ -65,9 +70,15 @@ These can be treated as approved shared contracts.
 - `collapsible`
 - `kbd`
 - `link`
+- `sidebar-nav`
 - `stepper`
 - `tabs`
 - `pagination`
+
+Sidebar note:
+
+- `sidebar-nav` is now approved as the shared nested navigation tree itself
+- search, theme toggles, tenant switching, and shell-specific sidebar chrome remain app-layer concerns
 
 ### Overlay Primitives
 
@@ -120,7 +131,7 @@ These can be treated as approved shared contracts.
 Note on `table`:
 
 - approve the shared table primitive layer itself
-- this now includes richer helpers such as `table-column-header` and `table-pagination-bar` in addition to sort and meta-cell support
+- this now includes richer helpers such as `table-column-header`, `table-pagination-bar`, and `table-column-visibility` in addition to sort and meta-cell support
 - keep page-specific orchestration such as bulk workflows, investigation rails, and route-bound filter bars outside this approval
 
 ## Provisional, Not Approved Yet
@@ -131,9 +142,10 @@ These may remain in `ui-kit` for donor extraction and review, but they are not a
 - `view-preset-bar`
 - `activity-feed`
 - `calendar`
-- `table-column-visibility`
+- `combobox`
 - `timeline-feed`
 - `stat-card`
+- `tag-input`
 - `toolbar-notice`
 
 Rule:
@@ -151,7 +163,6 @@ Date note:
 
 These are not approval candidates right now:
 
-- `UI Lab` sidebar candidate
 - sidebar search
 - page theme toggle
 - tenant-specific filters
@@ -167,7 +178,6 @@ If another approval pass is needed, the next likely candidates for `stable appro
 
 1. `view-preset-bar` only if its saved-view semantics prove broader than the current route-specific review flows
 2. `summary-pill-strip`
-3. `table-column-visibility`
 
 ## Promotion Warning
 

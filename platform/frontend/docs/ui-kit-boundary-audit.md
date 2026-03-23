@@ -54,6 +54,7 @@ These are low-risk, reusable, and not tied to a specific admin flow.
 - `progress-bar`
 - `radio-group`
 - `rating`
+- `sidebar-nav`
 - `slider`
 - `scroll-area`
 - `inline-status`
@@ -66,6 +67,7 @@ These are low-risk, reusable, and not tied to a specific admin flow.
 - `switch`
 - `table` primitives
 - `table-pagination-bar`
+- `table-column-visibility`
 - `textarea`
 - `tooltip`
 - `skeleton`
@@ -93,9 +95,11 @@ These are useful for donor extraction and live testing, but they are not yet can
 
 - `activity-feed`
 - `calendar`
+- `combobox`
 - `stat-card`
 - `summary-pill-strip`
-- `table-column-visibility`
+- `tag-input`
+- `top-loader`
 - `timeline-feed`
 - `toolbar-notice`
 - `view-preset-bar`
@@ -112,6 +116,16 @@ Date note:
 - `date-picker` is the stable user-facing contract
 - lower-level `date-field` and `date-range-field` layers may remain in `ui-kit` for composition and compatibility, but they should not be treated as separate primary product components
 - `calendar` also remains in `ui-kit` only as an internal review-stage building block under `date-picker`, not as a separate approved user-facing component
+
+Choice-entry note:
+
+- `select` remains the stable native shared contract for short fixed option sets
+- searchable `combobox` and review-stage `tag-input` variants may live in `ui-kit` for review, but they are still provisional until their API and real-surface fit are proven
+
+Transport note:
+
+- `top-loader` may live in `ui-kit` as a review-stage shared viewport activity bar because it stays generic and caller-controlled
+- keep global request coordination, silence policies, and API-wrapper wiring in app/runtime code rather than burying transport policy inside the component
 
 Phase E note:
 
@@ -132,7 +146,7 @@ Do not promote these by default:
 - route-specific section tabs
 - table orchestration wrappers tied to one page flow
 - donor screen compositions from Metronic dashboards
-- sidebar tree candidates built in `UI Lab`
+- sidebar search, theme toggle, and shell-specific chrome around `sidebar-nav`
 
 These belong in `apps/platform-admin-web/src/widgets` or `apps/platform-admin-web/src/pages` until the product contract is explicitly approved.
 
@@ -184,4 +198,4 @@ Reason:
 
 So the target is not "copy Metronic tables as-is". The target is to take the useful donor behavior from Metronic and turn it into the table contract we actually want.
 
-This approved table layer now includes richer helpers like `table-column-header` where they stay generic and semantically table-bound.
+This approved table layer now includes richer helpers like `table-column-header`, `table-pagination-bar`, and `table-column-visibility` where they stay generic and semantically table-bound.

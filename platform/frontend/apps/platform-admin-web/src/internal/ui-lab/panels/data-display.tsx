@@ -22,6 +22,7 @@ import {
   CardHeaderBody,
   CardTitle,
   CardToolbar,
+  Checkbox,
   Code,
   CollectionEmptyState,
   EmptyState,
@@ -49,6 +50,8 @@ import {
   TablePaginationBar,
   TableRow,
   TableSortButton,
+  type TableColumnVisibilityItem,
+  type TableSortDirection,
 } from "@platform/ui-kit";
 
 import {
@@ -62,6 +65,286 @@ import {
 } from "../model/leaf-meta";
 import { InfoCircleIcon, WarningTriangleIcon } from "../components/icons";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
+
+type TableHeaderSortField = "lastSync" | "signals" | "tenant";
+
+const tableColumnHeaderPreviewRows = [
+  {
+    id: "nova",
+    lastSyncMinutes: 180,
+    lastSyncLabel: "3h ago",
+    signalLabel: "Paused",
+    signalRank: 2,
+    signalVariant: "neutral" as const,
+    slug: "nova.platform.local",
+    tenant: "Nova Retail",
+  },
+  {
+    id: "aurora",
+    lastSyncMinutes: 12,
+    lastSyncLabel: "12m ago",
+    signalLabel: "Review",
+    signalRank: 3,
+    signalVariant: "warning" as const,
+    slug: "demo.platform.local",
+    tenant: "Aurora Commerce",
+  },
+  {
+    id: "cinder",
+    lastSyncMinutes: 39,
+    lastSyncLabel: "39m ago",
+    signalLabel: "Healthy",
+    signalRank: 1,
+    signalVariant: "success" as const,
+    slug: "ops.platform.local",
+    tenant: "Cinder Labs",
+  },
+] as const;
+
+const tablePaginationPreviewRows = [
+  { id: "aurora", note: "3 regions · synced 12m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "cinder", note: "1 region · synced 39m ago", plan: "Growth", status: "Trial" },
+  { id: "nova", note: "2 regions · synced 3h ago", plan: "Starter", status: "Paused" },
+  { id: "atlas", note: "5 regions · synced 8m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "meridian", note: "2 regions · synced 27m ago", plan: "Growth", status: "Trial" },
+  { id: "solstice", note: "4 regions · synced 56m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "ember", note: "1 region · synced 2h ago", plan: "Starter", status: "Paused" },
+  { id: "harbor", note: "3 regions · synced 18m ago", plan: "Growth", status: "Healthy" },
+  { id: "orbit", note: "2 regions · synced 44m ago", plan: "Growth", status: "Trial" },
+  { id: "quartz", note: "6 regions · synced 9m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "ridge", note: "1 region · synced 81m ago", plan: "Starter", status: "Paused" },
+  { id: "summit", note: "4 regions · synced 23m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "tundra", note: "2 regions · synced 61m ago", plan: "Growth", status: "Trial" },
+  { id: "vector", note: "3 regions · synced 31m ago", plan: "Growth", status: "Healthy" },
+  { id: "willow", note: "1 region · synced 95m ago", plan: "Starter", status: "Paused" },
+] as const;
+
+const tableColumnVisibilityPreviewColumns: TableColumnVisibilityItem[] = [
+  { checked: true, count: "Always visible", id: "tenant", label: "Tenant" },
+  { checked: true, count: "12 values", id: "plan", label: "Plan" },
+  { checked: true, count: "5 states", id: "status", label: "Status" },
+  { checked: false, count: "8 regions", id: "region", label: "Region" },
+  { checked: false, count: "4 owners", id: "owner", label: "Owner" },
+  { checked: true, count: "Required", disabled: true, id: "lastSync", label: "Last sync" },
+  { checked: false, count: "14 windows", id: "maintenance", label: "Maintenance" },
+  { checked: false, count: 0, id: "incidents", label: "Open incidents" },
+  { checked: false, count: "3 policies", id: "sla", label: "SLA policy" },
+  { checked: false, count: "7 tags", id: "segment", label: "Segment" },
+  { checked: false, count: "2 currencies", id: "billing", label: "Billing" },
+  { checked: false, count: "Optional", id: "notes", label: "Notes" },
+];
+
+function getDefaultHeaderSortDirection(
+  field: TableHeaderSortField,
+): Exclude<TableSortDirection, null> {
+  return field === "tenant" ? "asc" : "desc";
+}
+
+function getHeaderSortLabel(field: TableHeaderSortField) {
+  switch (field) {
+    case "lastSync":
+      return "Last sync";
+    case "signals":
+      return "Signals";
+    case "tenant":
+    default:
+      return "Tenant";
+  }
+}
+
+function TableSelectionPreview() {
+  const visibleRowIds = demoRows.map((row) => row.id);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([visibleRowIds[0] ?? ""]);
+  const allVisibleSelected =
+    visibleRowIds.length > 0 &&
+    visibleRowIds.every((rowId) => selectedRowIds.includes(rowId));
+  const partiallyVisibleSelected =
+    selectedRowIds.length > 0 && !allVisibleSelected;
+
+  return (
+    <div className="ui-lab-page__stack">
+      <div className="ui-lab-page__inline-wrap">
+        <Badge appearance="soft" variant="brand">
+          Selected rows: {selectedRowIds.length}
+        </Badge>
+        <Badge appearance="soft" variant="info">
+          Composed from Checkbox + Table
+        </Badge>
+      </div>
+
+      <div className="ui-lab-page__table-card">
+        <Table density="compact">
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell className="ui-lab-page__table-selection-cell">
+                <Checkbox
+                  aria-label="Select all visible rows"
+                  checked={allVisibleSelected}
+                  indeterminate={partiallyVisibleSelected}
+                  onChange={(event) => {
+                    setSelectedRowIds(event.target.checked ? [...visibleRowIds] : []);
+                  }}
+                />
+              </TableHeaderCell>
+              <TableHeaderCell>Tenant</TableHeaderCell>
+              <TableHeaderCell>Plan</TableHeaderCell>
+              <TableHeaderCell>Status</TableHeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {demoRows.map((row) => {
+              const isSelected = selectedRowIds.includes(row.id);
+
+              return (
+                <TableRow
+                  className={isSelected ? "ui-lab-page__table-row--selected" : undefined}
+                  key={`selection-${row.id}`}
+                >
+                  <TableCell className="ui-lab-page__table-selection-cell">
+                    <Checkbox
+                      aria-label={`Select ${row.id.replace("tenant-", "")}`}
+                      checked={isSelected}
+                      onChange={(event) => {
+                        setSelectedRowIds((currentRowIds) =>
+                          event.target.checked
+                            ? currentRowIds.includes(row.id)
+                              ? currentRowIds
+                              : [...currentRowIds, row.id]
+                            : currentRowIds.filter((rowId) => rowId !== row.id),
+                        );
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <TableMetaCell description={row.note} title={row.id.replace("tenant-", "")} />
+                  </TableCell>
+                  <TableCell>{row.plan}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusTone(row.status)}>{row.status}</Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function TableColumnHeaderSortPreview() {
+  const [sortField, setSortField] = useState<TableHeaderSortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<TableSortDirection>(null);
+
+  const sortedRows =
+    !sortField || !sortDirection
+      ? [...tableColumnHeaderPreviewRows]
+      : [...tableColumnHeaderPreviewRows].sort((left, right) => {
+          let result = 0;
+
+          switch (sortField) {
+            case "tenant":
+              result = left.tenant.localeCompare(right.tenant);
+              break;
+            case "signals":
+              result = left.signalRank - right.signalRank;
+              break;
+            case "lastSync":
+            default:
+              result = left.lastSyncMinutes - right.lastSyncMinutes;
+              break;
+          }
+
+          return sortDirection === "asc" ? result : -result;
+        });
+
+  function toggleSort(field: TableHeaderSortField) {
+    if (sortField !== field) {
+      setSortField(field);
+      setSortDirection(getDefaultHeaderSortDirection(field));
+      return;
+    }
+
+    setSortDirection((currentDirection) =>
+      currentDirection === "asc" ? "desc" : "asc",
+    );
+  }
+
+  return (
+    <div className="ui-lab-page__stack">
+      <div className="ui-lab-page__inline-wrap">
+        {sortField ? (
+          <>
+            <Badge appearance="soft" variant="brand">
+              Sorted by {getHeaderSortLabel(sortField)}
+            </Badge>
+            <Badge appearance="soft" variant="info">
+              {sortDirection === "asc" ? "Ascending" : "Descending"}
+            </Badge>
+          </>
+        ) : (
+          <>
+            <Badge appearance="soft" variant="neutral">
+              No active sort
+            </Badge>
+            <Badge appearance="soft" variant="info">
+              Click a header to sort
+            </Badge>
+          </>
+        )}
+      </div>
+
+      <div className="ui-lab-page__table-card">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeaderCell>
+                <TableColumnHeader
+                  description="Workspace identity"
+                  direction={sortField === "tenant" ? sortDirection : null}
+                  icon={<InfoCircleIcon className="ui-lab-page__header-icon" />}
+                  onSortToggle={() => toggleSort("tenant")}
+                  title="Tenant"
+                />
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <TableColumnHeader
+                  description="Newest first"
+                  direction={sortField === "lastSync" ? sortDirection : null}
+                  onSortToggle={() => toggleSort("lastSync")}
+                  title="Last sync"
+                />
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <TableColumnHeader
+                  description="Most critical first"
+                  direction={sortField === "signals" ? sortDirection : null}
+                  onSortToggle={() => toggleSort("signals")}
+                  title="Signals"
+                />
+              </TableHeaderCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sortedRows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>
+                  <TableMetaCell description={row.slug} title={row.tenant} />
+                </TableCell>
+                <TableCell>{row.lastSyncLabel}</TableCell>
+                <TableCell>
+                  <Badge appearance="soft" variant={row.signalVariant}>
+                    {row.signalLabel}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
 
 export function renderAvatarDocs() {
   return (
@@ -565,59 +848,43 @@ export function renderTableDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Density</CardTitle>
-          <CardDescription>Comfortable and compact modes should preserve hierarchy and status readability.</CardDescription>
+          <CardDescription>Comfortable and compact modes should preserve hierarchy, stay grid-friendly, and expand to the width available to each surface.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
-          <ShowcaseRow label="Comfort" stacked>
-            <div className="ui-lab-page__table-card">
-              <Table density="comfortable">
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>Tenant</TableHeaderCell>
-                    <TableHeaderCell>Plan</TableHeaderCell>
-                    <TableHeaderCell>Status</TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {demoRows.map((row) => (
-                    <TableRow key={`comfortable-${row.id}`}>
-                      <TableCell>
-                        <TableMetaCell description={row.note} title={row.id.replace("tenant-", "")} />
-                      </TableCell>
-                      <TableCell>{row.plan}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusTone(row.status)}>{row.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </ShowcaseRow>
-          <ShowcaseRow label="Compact" stacked>
-            <div className="ui-lab-page__table-card">
-              <Table density="compact">
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>Tenant</TableHeaderCell>
-                    <TableHeaderCell>Plan</TableHeaderCell>
-                    <TableHeaderCell>Status</TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {demoRows.map((row) => (
-                    <TableRow key={`compact-${row.id}`}>
-                      <TableCell>
-                        <TableMetaCell description={row.note} title={row.id.replace("tenant-", "")} />
-                      </TableCell>
-                      <TableCell>{row.plan}</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusTone(row.status)}>{row.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <ShowcaseRow label="Density grid" stacked>
+            <div className="ui-lab-page__table-demo-grid">
+              {([
+                { density: "comfortable" as const, id: "comfortable", label: "Comfortable" },
+                { density: "compact" as const, id: "compact", label: "Compact" },
+              ]).map((mode) => (
+                <div className="ui-lab-page__table-demo-panel" key={mode.id}>
+                  <span className="ui-lab-page__table-demo-label">{mode.label}</span>
+                  <div className="ui-lab-page__table-card">
+                    <Table density={mode.density}>
+                      <TableHead>
+                        <TableRow>
+                          <TableHeaderCell>Tenant</TableHeaderCell>
+                          <TableHeaderCell>Plan</TableHeaderCell>
+                          <TableHeaderCell>Status</TableHeaderCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {demoRows.map((row) => (
+                          <TableRow key={`${mode.id}-${row.id}`}>
+                            <TableCell>
+                              <TableMetaCell description={row.note} title={row.id.replace("tenant-", "")} />
+                            </TableCell>
+                            <TableCell>{row.plan}</TableCell>
+                            <TableCell>
+                              <Badge variant={getStatusTone(row.status)}>{row.status}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              ))}
             </div>
           </ShowcaseRow>
         </CardContent>
@@ -625,22 +892,12 @@ export function renderTableDocs() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Sort and row meta</CardTitle>
-          <CardDescription>Sort affordance and meta-cell hierarchy should stay reusable across admin surfaces.</CardDescription>
+          <CardTitle>Checkbox selection</CardTitle>
+          <CardDescription>Checkbox selection should stay explicit, with select-all and per-row state owned by the surface rather than by the base table primitive.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
-          <ShowcaseRow label="Sort">
-            <TableSortButton direction={null}>Tenant</TableSortButton>
-            <TableSortButton direction="asc">Last sync</TableSortButton>
-            <TableSortButton direction="desc">Errors</TableSortButton>
-          </ShowcaseRow>
-          <ShowcaseRow label="Meta" stacked>
-            <TableMetaCell
-              eyebrow="Workspace"
-              title="Aurora Commerce"
-              description="demo.platform.local"
-              caption="3 regions · 24 users"
-            />
+          <ShowcaseRow label="Select all and one-by-one" stacked>
+            <TableSelectionPreview />
           </ShowcaseRow>
         </CardContent>
       </Card>
@@ -663,7 +920,8 @@ export function renderTableDocs() {
         [
           "`density` is the main shared table-level control, while `TableSortButton` and `TableMetaCell` stay compositional.",
           "Use table primitives to assemble row structure instead of adding screen-specific wrapper markup around every record.",
-          "Keep special row states and selection behavior in app or higher-level patterns unless they stabilize across multiple surfaces.",
+          "Compose checkbox selection from `Checkbox` plus app-owned selected row ids instead of expecting a separate built-in selection runtime.",
+          "Keep special row states and broader selection behavior in app or higher-level patterns unless they stabilize across multiple surfaces.",
         ],
         [
           "Headers must remain explicit so column meaning is clear to both visual and assistive scanning.",
@@ -681,10 +939,12 @@ export function renderTableDocs() {
         [
           "Use clear column labels and keep density choices deliberate.",
           "Preserve primary-secondary row hierarchy through meta cells instead of ad-hoc stacked text.",
+          "Add checkbox selection only when the surface has a real bulk or review action that justifies it.",
           "Expose sort affordance only where the column meaning stays obvious.",
         ],
         [
           "Do not use table for content that is mostly prose, forms, or long freeform descriptions.",
+          "Do not add select-all checkboxes when the page has no meaningful bulk action or multi-row workflow.",
           "Do not overload each row with too many actions or custom cell layouts.",
           "Do not introduce one-off row structures that break the shared scanning rhythm.",
         ],
@@ -699,55 +959,11 @@ export function renderTableColumnHeaderDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Sortable header composition</CardTitle>
-          <CardDescription>Richer header rows should stay inside the shared table layer instead of growing a separate grid runtime.</CardDescription>
+          <CardDescription>Richer header rows should stay inside the shared table layer instead of growing a separate grid runtime, and sortable headers should visibly reorder rows when clicked.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
-          <ShowcaseRow label="Sortable" stacked>
-            <div className="ui-lab-page__table-card">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>
-                      <TableColumnHeader
-                        description="Workspace identity"
-                        icon={<InfoCircleIcon className="ui-lab-page__header-icon" />}
-                        onSortToggle={() => undefined}
-                        title="Tenant"
-                      />
-                    </TableHeaderCell>
-                    <TableHeaderCell>
-                      <TableColumnHeader
-                        description="Newest first"
-                        direction="desc"
-                        onSortToggle={() => undefined}
-                        title="Last sync"
-                      />
-                    </TableHeaderCell>
-                    <TableHeaderCell>
-                      <TableColumnHeader
-                        description="Most critical first"
-                        direction="asc"
-                        onSortToggle={() => undefined}
-                        title="Signals"
-                      />
-                    </TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <TableMetaCell description="demo.platform.local" title="aurora" />
-                    </TableCell>
-                    <TableCell>12m ago</TableCell>
-                    <TableCell>
-                      <Badge appearance="soft" variant="warning">
-                        Review
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
+          <ShowcaseRow label="Interactive sort" stacked>
+            <TableColumnHeaderSortPreview />
           </ShowcaseRow>
         </CardContent>
       </Card>
@@ -798,7 +1014,7 @@ export function renderTableColumnHeaderDocs() {
         { name: "description", type: "ReactNode", notes: "Optional secondary line for brief column guidance or sort context." },
         { name: "icon", type: "ReactNode", notes: "Optional supporting icon for quiet column context, not for decorative overload." },
         { name: "direction", type: "\"asc\" | \"desc\" | null", notes: "Current sort direction when the header exposes the shared sort affordance." },
-        { name: "onSortToggle", type: "(event) => void", notes: "When provided, the helper renders through the shared sort button instead of static text." },
+        { name: "onSortToggle", type: "(event) => void", notes: "When provided, the helper renders through the shared sort button instead of static text; the caller still owns sort state and row reordering." },
       ])}
 
       {renderReferenceNotesCard(
@@ -806,12 +1022,14 @@ export function renderTableColumnHeaderDocs() {
         [
           "The stable anatomy is main label row plus optional supporting description and optional leading icon.",
           "Sorting remains opt-in through the existing shared sort affordance instead of forcing every header to become interactive.",
+          "The helper shows sort state, but the surrounding surface still owns the actual field selection and row order.",
           "The helper belongs inside `th` composition and should remain table-semantic.",
         ],
         [
           "Use `TableColumnHeader` when a column needs a little more structure than plain text but still belongs to the shared table grammar.",
           "Keep icons and descriptions quiet so the table header row remains scannable.",
           "Use `onSortToggle` only when the column genuinely participates in shared sort behavior.",
+          "Wire sortable demos and product surfaces to visible state changes so the affordance never looks inert.",
         ],
         [
           "Interactive column headers need clear button semantics and readable sort state beyond icon direction alone.",
@@ -847,7 +1065,7 @@ export function renderTablePaginationBarDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Pagination rhythm</CardTitle>
-          <CardDescription>Pagination bar should keep page navigation, record range, and rows-per-page control in one small table-owned helper.</CardDescription>
+          <CardDescription>Pagination bar should reuse the shared pagination language, keeping page navigation on the left and total entries context on the right.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="Interactive" stacked>
@@ -859,58 +1077,34 @@ export function renderTablePaginationBarDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Dense table fit</CardTitle>
-          <CardDescription>The helper should compose with compact table surfaces without becoming a generic page footer or donor grid runtime.</CardDescription>
+          <CardDescription>Under a table, pagination should stay on the left while rows-per-page and a total entries count sit on the right on desktop, then collapse to pagination plus entries count on mobile.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="Compact table" stacked>
-            <div className="ui-lab-page__table-card ui-lab-page__stack">
-              <Table density="compact">
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>Tenant</TableHeaderCell>
-                    <TableHeaderCell>Plan</TableHeaderCell>
-                    <TableHeaderCell>Status</TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {demoRows.slice(0, 3).map((row) => (
-                    <TableRow key={`pagination-bar-${row.id}`}>
-                      <TableCell>
-                        <TableMetaCell description={row.note} title={row.id.replace("tenant-", "")} />
-                      </TableCell>
-                      <TableCell>{row.plan}</TableCell>
-                      <TableCell>
-                        <Badge appearance="soft" variant={getStatusTone(row.status)}>
-                          {row.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <TablePaginationBar currentPage={2} onPageChange={() => undefined} pageSize={25} totalItems={78} totalPages={4} />
-            </div>
+            <TablePaginationBarTablePreview />
           </ShowcaseRow>
         </CardContent>
       </Card>
 
       {renderPropsApiCard("Compact reference for the shared table pagination helper that sits above the base table primitive but below app-owned data-grid logic.", [
         { name: "currentPage / totalPages", type: "number", notes: "Defines the current one-based page and the total available page count." },
-        { name: "pageSize / pageSizeOptions", type: "number / number[]", notes: "Controls rows-per-page display when the surface allows page-size switching." },
-        { name: "totalItems", type: "number", notes: "Used to derive the compact record-range summary when the helper should show result counts." },
-        { name: "onPageChange", type: "(page: number) => void", notes: "Required interaction callback for previous, next, and page button navigation." },
+        { name: "pageSize / pageSizeOptions", type: "number / number[]", notes: "Controls optional rows-per-page display when the surface allows page-size switching." },
+        { name: "totalItems", type: "number", notes: "Used to derive the compact total-entries summary shown opposite the page navigation." },
+        { name: "onPageChange", type: "(page: number) => void", notes: "Required interaction callback delegated into the shared pagination control." },
         { name: "onPageSizeChange", type: "(pageSize: number) => void", notes: "Optional callback for surfaces that expose rows-per-page selection." },
+        { name: "editableCurrentPage", type: "boolean", notes: "Keeps the active page slot aligned with the shared pagination contract when inline page entry should stay available." },
       ])}
 
       {renderReferenceNotesCard(
-        "Table pagination bar should stay a small table-owned helper, not a generic route footer or a full data-grid runtime.",
+        "Table pagination bar should stay a small table-owned helper built from the shared pagination primitive, not a generic route footer or a full data-grid runtime.",
         [
-          "The stable anatomy is info summary, optional page-size control, and page navigation controls.",
+          "The stable anatomy is shared page navigation on the left plus total entries context and optional page-size control on the right.",
           "The helper assumes one-based page semantics so product surfaces do not need to leak internal zero-based indexing into the UI contract.",
-          "Record range summary belongs here because it reinforces table position without turning the helper into a full toolbar.",
+          "Total entries summary belongs here because it reinforces collection size without turning the helper into a full toolbar.",
         ],
         [
           "Use this helper directly under tables or dense collection surfaces that need classic page navigation.",
+          "Reuse the approved shared pagination grammar instead of inventing a second table-only page-stepper.",
           "Keep page-size switching optional so small surfaces can stay lighter when the extra control is unnecessary.",
           "Prefer this helper over app-local pagination footers when the same table rhythm repeats across screens.",
         ],
@@ -947,8 +1141,8 @@ export function renderTableColumnVisibilityDocs() {
     <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
       <Card>
         <CardHeader>
-          <CardTitle>Column toggle review</CardTitle>
-          <CardDescription>Column visibility stays review-only until we confirm that this exact popover and checkbox rhythm fits more than one real table surface.</CardDescription>
+          <CardTitle>Column toggle contract</CardTitle>
+          <CardDescription>Column visibility now acts as a shared table helper for modest personalization, using one trigger, one popover, and caller-owned checkbox state across real surfaces.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="Popover" stacked>
@@ -960,15 +1154,15 @@ export function renderTableColumnVisibilityDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Table fit</CardTitle>
-          <CardDescription>This helper is useful, but it still sits above the stable base table contract and needs more product confirmation before promotion.</CardDescription>
+          <CardDescription>The helper stays above the stable base table contract, but its toolbar placement and long-list scroll behavior now match multiple real table surfaces.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
-          <ShowcaseRow label="Why review" stacked>
+          <ShowcaseRow label="Why shared" stacked>
             <Alert tone="info">
               <AlertBody>
-                <AlertTitle>Review-stage helper</AlertTitle>
+                <AlertTitle>Stable shared helper</AlertTitle>
                 <AlertDescription>
-                  The checkbox list, popover copy, and trigger placement may still change depending on how many real tables need column personalization.
+                  The trigger, popover, checkbox list, and caller-owned state pattern are now aligned across both the tenant workbench and audit log table surfaces.
                 </AlertDescription>
               </AlertBody>
             </Alert>
@@ -976,25 +1170,26 @@ export function renderTableColumnVisibilityDocs() {
         </CardContent>
       </Card>
 
-      {renderPropsApiCard("Compact reference for the provisional table column-visibility helper.", [
+      {renderPropsApiCard("Compact reference for the shared table column-visibility helper.", [
         { name: "columns", type: "Array<{ id, label, checked, disabled?, count? }>", notes: "Supplies the visible state and display metadata for each configurable column." },
         { name: "triggerLabel", type: "ReactNode", notes: "Lets surfaces rename the trigger without reimplementing the helper shell." },
-        { name: "label", type: "ReactNode", notes: "Small header label inside the popover content." },
-        { name: "onColumnChange", type: "(id: string, checked: boolean) => void", notes: "Receives toggle events while leaving table state management outside the helper." },
+        { name: "label", type: "ReactNode", notes: "Small header label inside the popover content and the accessible name source for the dialog." },
+        { name: "onColumnChange", type: "(id: string, checked: boolean) => void", notes: "Required interaction callback while table state ownership remains outside the helper." },
         { name: "emptyLabel", type: "ReactNode", notes: "Fallback content when no configurable columns are available." },
       ])}
 
       {renderReferenceNotesCard(
-        "Table column visibility remains provisional because the surrounding operator workflow and toolbar fit still need more validation.",
+        "Table column visibility is a small shared helper for modest table personalization, not a full data-grid preference runtime.",
         [
           "The current anatomy is trigger button, popover container, and checkbox list with optional counts.",
           "Column state remains external so the helper does not turn into a table runtime or state store.",
+          "Longer column lists must scroll inside the popover rather than growing past the viewport.",
           "Optional counts are useful for context, but they should remain secondary metadata rather than a second status system.",
         ],
         [
           "Use this helper only where users truly benefit from choosing visible columns.",
           "Keep the helper outside the base table primitive so tables without personalization stay lighter.",
-          "Treat the popover plus checkbox list as a candidate pattern until at least one more surface confirms the same fit.",
+          "Keep the same trigger, popover, and checkbox rhythm across comparable operator tables instead of forking a second column-settings pattern.",
         ],
         [
           "Do not assume every admin table needs column personalization.",
@@ -1004,20 +1199,20 @@ export function renderTableColumnVisibilityDocs() {
       )}
 
       {renderUsageReviewCard(
-        "Table column visibility is useful when dense operator tables need modest personalization, but it is not yet approved as a final shared language.",
+        "Table column visibility is useful when dense operator tables need modest personalization without escalating into a full grid preferences runtime.",
         [
           "A table has enough optional columns that operators benefit from hiding a few.",
           "The product wants light per-surface column personalization without a full data-grid runtime.",
         ],
         [
-          "Validate trigger placement and popover copy in multiple real table surfaces before promotion.",
           "Keep table state management outside the helper so the API stays generic.",
           "Use simple labels and quiet counts rather than mini analytics inside the popover.",
+          "Keep one or two anchor columns required when the table would become ambiguous without them.",
         ],
         [
-          "Do not promote this helper into stable approved until its toolbar fit and copy model are proven.",
           "Do not use it as a dumping ground for every table preference.",
           "Do not let column personalization outrank the core readability of the default table layout.",
+          "Do not widen the helper toward saved views, pinning, or grid-vendor semantics unless a separate shared contract is actually needed.",
         ],
       )}
     </div>
@@ -1610,6 +1805,7 @@ export function TablePaginationBarPreview() {
   return (
     <TablePaginationBar
       currentPage={Math.min(currentPage, totalPages)}
+      editableCurrentPage
       onPageChange={setCurrentPage}
       onPageSizeChange={(nextPageSize) => {
         setPageSize(nextPageSize);
@@ -1622,15 +1818,60 @@ export function TablePaginationBarPreview() {
   );
 }
 
+function TablePaginationBarTablePreview() {
+  const [pageSize, setPageSize] = useState(3);
+  const [currentPage, setCurrentPage] = useState(2);
+  const totalItems = tablePaginationPreviewRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const visibleRows = tablePaginationPreviewRows.slice(startIndex, startIndex + pageSize);
+
+  return (
+    <div className="ui-lab-page__table-card ui-lab-page__stack">
+      <Table density="compact">
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Tenant</TableHeaderCell>
+            <TableHeaderCell>Plan</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {visibleRows.map((row) => (
+            <TableRow key={`pagination-bar-${row.id}`}>
+              <TableCell>
+                <TableMetaCell description={row.note} title={row.id} />
+              </TableCell>
+              <TableCell>{row.plan}</TableCell>
+              <TableCell>
+                <Badge appearance="soft" variant={getStatusTone(row.status)}>
+                  {row.status}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <TablePaginationBar
+        currentPage={safeCurrentPage}
+        editableCurrentPage
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(nextPageSize) => {
+          setPageSize(nextPageSize);
+          setCurrentPage(1);
+        }}
+        pageSize={pageSize}
+        pageSizeOptions={[3, 5, 10]}
+        totalItems={totalItems}
+        totalPages={totalPages}
+      />
+    </div>
+  );
+}
+
 export function TableColumnVisibilityPreview() {
-  const [columns, setColumns] = useState([
-    { checked: true, count: "Always visible", id: "tenant", label: "Tenant" },
-    { checked: true, count: "12 values", id: "plan", label: "Plan" },
-    { checked: true, count: "5 states", id: "status", label: "Status" },
-    { checked: false, count: "Optional", id: "region", label: "Region" },
-    { checked: false, count: "Optional", id: "owner", label: "Owner" },
-    { checked: true, count: "Required", disabled: true, id: "lastSync", label: "Last sync" },
-  ]);
+  const [columns, setColumns] = useState<TableColumnVisibilityItem[]>(tableColumnVisibilityPreviewColumns);
 
   const visibleCount = columns.filter((column) => column.checked).length;
 

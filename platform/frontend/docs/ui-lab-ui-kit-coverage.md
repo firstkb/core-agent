@@ -20,9 +20,9 @@ It does not redefine package boundaries. For promotion rules, see:
 
 Current usable inventory for `UI Lab` is strong enough to support the canonical sections.
 
-- stable component families: 44
+- stable component families: 46
 - low-risk reusable patterns: 14
-- provisional surfaces currently available for review: 13
+- provisional surfaces currently available for review: 15
 - first-circle stable primitives now begin to include `Anatomy / Props / Accessibility` reference notes in addition to previews
 
 ## Section Mapping
@@ -99,10 +99,15 @@ Ready for immediate `UI Lab` coverage:
 Available but provisional:
 
 - `calendar`
+- `combobox`
+- `tag-input`
 
 Notes:
 
 - `calendar` remains a review-stage internal building block under the shared `date-picker` contract, not a separate primary approval target
+- `select` remains the stable native shared choice control for short fixed lists
+- `combobox` now covers searchable local data and caller-owned async query flows as a review-stage helper
+- `tag-input` now covers both inline free-form entry and preset-only local tag picking as a separate review-stage helper rather than being folded into `select`
 - `UI Lab` now presents one shared `date-picker` page instead of splitting single-date and range selection across separate leaves
 - lower-level `date-field` and `date-range-field` layers still exist for composition and compatibility, but they are no longer treated as separate user-facing contracts
 
@@ -150,6 +155,7 @@ Already available in `ui-kit`:
 - `collapsible`
 - `link`
 - `page-toolbar`
+- `sidebar-nav`
 - `stepper`
 - `tabs`
 - `pagination`
@@ -159,7 +165,7 @@ Already available in `ui-kit`:
 - component-deep page for `collapsible`
 - component-deep page for `stepper`
 - stable navigation primitives now also include `Anatomy / Props / Accessibility` notes
-- `accordion`, `breadcrumb`, `link`, `collapsible`, `stepper`, `tabs`, `pagination`, and `page-toolbar` now expose compact `Props API` reference blocks where applicable
+- `accordion`, `breadcrumb`, `link`, `collapsible`, `sidebar-nav`, `stepper`, `tabs`, `pagination`, and `page-toolbar` now expose compact `Props API` reference blocks where applicable
 
 Available but provisional:
 
@@ -167,16 +173,14 @@ Available but provisional:
 
 Must stay app-layer for now:
 
-- `UI Lab` sidebar accordion itself
-- `UI Lab` sidebar candidate page
 - sidebar search
 - page theme toggle
 
 Reason:
 
-- the sidebar contract is still being validated for desktop behavior, mobile drawer behavior, and reusable API shape
-- the new sidebar candidate page now uses stable `collapsible` and `drawer` primitives underneath, but the navigation-tree API is still intentionally app-owned
-- `secondary-tabs` now qualifies as stable subordinate in-page navigation, while the sidebar tree candidate remains intentionally app-owned
+- `sidebar-nav` is now stable as the shared nested tree itself, but search and shell-specific chrome still remain app-owned
+- mobile uses a left `sheet` shell around the same shared tree rather than a second navigation-only overlay primitive
+- `secondary-tabs` still qualify as stable subordinate in-page navigation and should not replace durable sidebar hierarchy
 
 ### Data Display
 
@@ -197,6 +201,7 @@ Already available in `ui-kit`:
 - `table-meta-cell`
 - `table-column-header`
 - `table-pagination-bar`
+- `table-column-visibility`
 
 Available but provisional:
 
@@ -204,7 +209,6 @@ Available but provisional:
 - `summary-pill-strip`
 - `activity-feed`
 - `timeline-feed`
-- `table-column-visibility`
 
 Ready for immediate `UI Lab` coverage:
 
@@ -214,7 +218,7 @@ Ready for immediate `UI Lab` coverage:
 - bounded scroll surfaces for dense local overflow
 - richer table header composition through `table-column-header`
 - stable page and rows-per-page rhythm through `table-pagination-bar`
-- review-stage column personalization through `table-column-visibility`
+- shared column personalization through `table-column-visibility`
 - avatar sizes, fallback states, presence indicators, and grouped identity clusters
 - compact score display through `rating`
 - compact pressed-state collection controls through `filter-chip`
@@ -227,7 +231,7 @@ Ready for immediate `UI Lab` coverage:
 - component-deep pages for `card`, `filter-chip`, `badge`, `inline status`, `separator`, `scroll-area`, and `table`
 - component-deep page for `table-column-header`
 - component-deep page for `table-pagination-bar`
-- review page for `table-column-visibility`
+- component-deep page for `table-column-visibility`
 - stable data-display primitives now also include `Anatomy / Props / Accessibility` notes
 - `aspect-ratio`, `card`, `separator`, `scroll-area`, `table`, and `table-column-header` now expose compact `Props API` reference blocks
 - `filter-chip` remains documented as the stable small control in this cluster, while heavier local compositions are now expected to be built in app code until real module work proves a shared need
@@ -254,11 +258,16 @@ Already available in `ui-kit`:
 - `error-state`
 - `collection-empty-state`
 
+Available but provisional:
+
+- `top-loader`
+
 Ready for immediate `UI Lab` coverage:
 
 - generic route empty states
 - inline and sectional alert feedback
 - linear progress feedback for workflows and background tasks
+- viewport transport activity through a controlled top loader with external `start()` and `done()` calls
 - skeleton placeholders and grouped loading placeholders
 - collection empty states
 - generic loading states
@@ -274,6 +283,7 @@ Review note:
 
 - after the first full `UI Lab` audit pass, generic `empty-state`, `search-empty-state`, `guided-empty-state`, `loading-state`, `collection-loading-state`, `table-loading-state`, `error-state`, and `collection-empty-state` now qualify for stable approval
 - `collection-empty-state` was promoted once the highlight strip was constrained to short contextual items rather than dashboard-like metric blocks
+- `top-loader` remains review-stage because transport semantics, silent-request policy, and real app-shell integration still need validation outside the lab
 
 ### Inventory Snapshot
 
@@ -296,8 +306,6 @@ What `ui-kit` contributes here:
 
 These are not blockers for `UI Lab`, but they are not yet fully closed.
 
-- a stable reusable sidebar-nav contract is not ready for `ui-kit`
-- mobile drawer behavior for the sidebar candidate is not yet validated
 - some provisional patterns exist in `ui-kit` but are not yet fully surfaced in `UI Lab`
 - `UI Lab` search is a local lab utility and should not be treated as a reusable nav search contract
 

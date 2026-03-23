@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   AspectRatio,
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Combobox,
   DatePicker,
   Field,
   FieldError,
@@ -31,7 +32,9 @@ import {
   ScrollArea,
   Select,
   Slider,
+  SplitButton,
   Switch,
+  TagInput,
   TableMetaCell,
   Textarea,
   Toggle,
@@ -90,6 +93,328 @@ function SliderValueRow({
   );
 }
 
+function SplitButtonPreview({
+  buttonLabel,
+  menuLabel,
+  size = "md",
+  variant = "primary",
+}: {
+  buttonLabel: string;
+  menuLabel: string;
+  size?: "sm" | "md" | "lg";
+  variant?: "primary" | "secondary" | "outline";
+}) {
+  const [lastAction, setLastAction] = useState("Create manually");
+
+  return (
+    <div className="ui-lab-page__stack">
+      <SplitButton
+        dropdownAriaLabel={`${buttonLabel} more actions`}
+        items={[
+          { id: "manual", label: "Create manually" },
+          { id: "import", label: "Import CSV" },
+          { id: "template", label: "Start from template" },
+        ]}
+        menuLabel={menuLabel}
+        onItemSelect={(item) => {
+          if (typeof item.label === "string") {
+            setLastAction(item.label);
+          }
+        }}
+        size={size}
+        variant={variant}
+      >
+        {buttonLabel}
+      </SplitButton>
+      <p className="ui-lab-page__muted">Last secondary action: {lastAction}</p>
+    </div>
+  );
+}
+
+const comboboxAssessmentTypeOptions = [
+  { label: "Satisfactory", searchText: "satisfactory", value: "satisfactory" },
+  { label: "Unsatisfactory", searchText: "unsatisfactory", value: "unsatisfactory" },
+] as const;
+
+const comboboxCompanyOptions = [
+  {
+    description: "Logistics provider",
+    label: "Northstar Freight",
+    searchText: "northstar freight logistics provider",
+    value: "northstar-freight",
+  },
+  {
+    description: "Manufacturing company",
+    label: "Aurora Components",
+    searchText: "aurora components manufacturing company",
+    value: "aurora-components",
+  },
+  {
+    description: "Software vendor",
+    label: "Helio Systems",
+    searchText: "helio systems software vendor",
+    value: "helio-systems",
+  },
+  {
+    description: "Professional services firm",
+    label: "Summit Advisory",
+    searchText: "summit advisory professional services firm",
+    value: "summit-advisory",
+  },
+  {
+    description: "Retail operator",
+    label: "Cinder Retail Group",
+    searchText: "cinder retail group retail operator",
+    value: "cinder-retail-group",
+  },
+] as const;
+
+const comboboxLargeCompanyTypes = [
+  "Logistics provider",
+  "Manufacturing company",
+  "Software vendor",
+  "Professional services firm",
+  "Retail operator",
+  "Energy supplier",
+  "Insurance carrier",
+  "Healthcare network",
+] as const;
+
+const comboboxLargeCompanyNames = [
+  "Northstar",
+  "Aurora",
+  "Helio",
+  "Summit",
+  "Cinder",
+  "Nova",
+  "Vertex",
+  "Lattice",
+  "Pioneer",
+  "Harbor",
+] as const;
+
+const comboboxLargeCompanySuffixes = [
+  "Holdings",
+  "Systems",
+  "Group",
+  "Logistics",
+  "Works",
+  "Partners",
+  "Industries",
+  "Advisory",
+] as const;
+
+const comboboxLargeCompanyDirectory = Array.from({ length: 1000 }, (_, index) => {
+  const companyType = comboboxLargeCompanyTypes[index % comboboxLargeCompanyTypes.length];
+  const companyName = `${comboboxLargeCompanyNames[index % comboboxLargeCompanyNames.length]} ${
+    comboboxLargeCompanySuffixes[index % comboboxLargeCompanySuffixes.length]
+  } ${String(index + 1).padStart(3, "0")}`;
+
+  return {
+    description: companyType,
+    label: companyName,
+    searchText: `${companyName} ${companyType}`.toLowerCase(),
+    value: `company-${String(index + 1).padStart(4, "0")}`,
+  };
+});
+
+function ComboboxSimplePreview() {
+  const [value, setValue] = useState<string | null>("satisfactory");
+  const selectedOption = comboboxAssessmentTypeOptions.find((option) => option.value === value);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        id="ui-lab-combobox-preview-type"
+        label="Type"
+        onValueChange={setValue}
+        options={comboboxAssessmentTypeOptions}
+        placeholder="Select type"
+        searchInputAriaLabel="Search type values"
+        searchPlaceholder="Search type..."
+        triggerAriaLabel="Type"
+        value={value}
+      />
+      <p className="ui-lab-page__muted">
+        Simple enum template renders label only: {selectedOption ? selectedOption.label : "No type selected"}.
+      </p>
+    </div>
+  );
+}
+
+function ComboboxCompanyPreview() {
+  const [value, setValue] = useState<string | null>("aurora-components");
+  const selectedOption = comboboxCompanyOptions.find((option) => option.value === value);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        id="ui-lab-combobox-preview-company"
+        label="Company"
+        onValueChange={setValue}
+        options={comboboxCompanyOptions}
+        placeholder="Select company"
+        searchInputAriaLabel="Search companies"
+        searchPlaceholder="Search company..."
+        triggerAriaLabel="Company"
+        value={value}
+      />
+      <p className="ui-lab-page__muted">
+        Company template stacks the name with the company type below it:{" "}
+        {selectedOption ? selectedOption.label : "No company selected"}.
+      </p>
+    </div>
+  );
+}
+
+function ComboboxLargeCompanyPreview() {
+  const [value, setValue] = useState<string | null>("company-0004");
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        id="ui-lab-combobox-preview-large-directory"
+        initialVisibleCount={10}
+        label="Company"
+        loadMoreStep={10}
+        onValueChange={setValue}
+        options={comboboxLargeCompanyDirectory}
+        placeholder="Search 1000 companies"
+        searchInputAriaLabel="Search large company directory"
+        searchPlaceholder="Search by company name or type..."
+        triggerAriaLabel="Large company directory"
+        value={value}
+      />
+      <p className="ui-lab-page__muted">
+        Local large-list mode starts with 10 records, loads 10 more on scroll, and search matches any word from company name or company type.
+      </p>
+    </div>
+  );
+}
+
+function ComboboxAsyncPreview() {
+  const [value, setValue] = useState<string | null>("company-0004");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [options, setOptions] = useState(comboboxLargeCompanyDirectory.slice(0, 12));
+
+  useEffect(() => {
+    setLoading(true);
+
+    const timeoutId = window.setTimeout(() => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const nextOptions = !normalizedQuery
+        ? comboboxLargeCompanyDirectory.slice(0, 12)
+        : comboboxLargeCompanyDirectory.filter((option) => option.searchText.includes(normalizedQuery)).slice(0, 12);
+
+      setOptions(nextOptions);
+      setLoading(false);
+    }, 280);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query]);
+
+  const selectedOption = comboboxLargeCompanyDirectory.find((option) => option.value === value);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        filterMode="none"
+        id="ui-lab-combobox-preview-remote"
+        label="Remote company search"
+        loading={loading}
+        loadingLabel="Searching companies…"
+        onSearchValueChange={setQuery}
+        onValueChange={setValue}
+        options={options}
+        placeholder="Search companies from server"
+        searchInputAriaLabel="Search remote companies"
+        searchPlaceholder="Type to search remote companies..."
+        triggerAriaLabel="Remote company search"
+        value={value}
+        searchValue={query}
+      />
+      <p className="ui-lab-page__muted">
+        Ajax-style search remains caller-owned: `ui-kit` receives the query string and current result slice. Current selection:{" "}
+        {selectedOption ? selectedOption.label : "None"}.
+      </p>
+    </div>
+  );
+}
+
+function TagInputPreview() {
+  const [tags, setTags] = useState(["enterprise", "priority-support"]);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <TagInput
+        id="ui-lab-tag-input-preview-freeform"
+        inputAriaLabel="Tenant labels"
+        mode="freeform"
+        onValueChange={setTags}
+        placeholder="Add tenant labels"
+        value={tags}
+      />
+      <p className="ui-lab-page__muted">
+        Current tags: {tags.length > 0 ? tags.join(", ") : "No tags yet"}.
+      </p>
+    </div>
+  );
+}
+
+const predefinedTagOptions = [
+  "Enterprise",
+  "Growth",
+  "Trial",
+  "Needs review",
+  "Escalated",
+  "Priority support",
+  "Compliance hold",
+  "Regional rollout",
+] as const;
+
+function PresetTagInputPreview() {
+  const [tags, setTags] = useState(["Enterprise", "Priority support"]);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <TagInput
+        id="ui-lab-tag-input-preview-preset"
+        inputAriaLabel="Preset tenant labels"
+        mode="preset"
+        onValueChange={setTags}
+        placeholder="Choose existing labels"
+        suggestions={predefinedTagOptions}
+        value={tags}
+      />
+      <p className="ui-lab-page__muted">
+        Preset-only mode lets users choose only from the predefined tag dictionary: {tags.join(", ")}.
+      </p>
+    </div>
+  );
+}
+
+function HybridTagInputPreview() {
+  const [tags, setTags] = useState(["Enterprise", "Priority support", "Late payer"]);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <TagInput
+        id="ui-lab-tag-input-preview-hybrid"
+        inputAriaLabel="Flexible tenant labels"
+        mode="hybrid"
+        onValueChange={setTags}
+        placeholder="Choose or create labels"
+        suggestions={predefinedTagOptions}
+        value={tags}
+      />
+      <p className="ui-lab-page__muted">
+        Hybrid mode lets users start from the predefined dictionary and still add custom labels: {tags.join(", ")}.
+      </p>
+    </div>
+  );
+}
+
 export function renderButtonDocs() {
   return (
     <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
@@ -122,6 +447,20 @@ export function renderButtonDocs() {
                 {variant.slice(1)}
               </Button>
             ))}
+          </ShowcaseRow>
+          <ShowcaseRow label="Split actions" stacked>
+            <div className="ui-lab-page__inline-wrap">
+              <SplitButtonPreview
+                buttonLabel="Create tenant"
+                menuLabel="Additional create actions"
+                variant="primary"
+              />
+              <SplitButtonPreview
+                buttonLabel="Assign owner"
+                menuLabel="Additional assignment actions"
+                variant="secondary"
+              />
+            </div>
           </ShowcaseRow>
         </CardContent>
       </Card>
@@ -185,6 +524,7 @@ export function renderButtonDocs() {
         { name: "pending", type: "boolean", notes: "Disables the button and exposes loading feedback while preserving the same footprint." },
         { name: "block", type: "boolean", notes: "Stretches the primitive to full available width without creating a separate component." },
         { name: "leadingIcon / trailingIcon", type: "ReactNode", notes: "Optional icon slots for directional or contextual emphasis around the label." },
+        { name: "SplitButton.items", type: "Array<{ id, label, tone?, shortcut?, disabled? }>", notes: "Provides secondary menu actions while keeping one primary action visible on the main segment." },
       ])}
 
       {renderReferenceNotesCard(
@@ -193,15 +533,18 @@ export function renderButtonDocs() {
           "A button may contain text plus optional leading or trailing icon content.",
           "Pending state adds loading feedback without changing the overall button footprint.",
           "Block mode keeps the same primitive while stretching to full available width.",
+          "Split button keeps one primary action visible and moves secondary actions into a bounded menu trigger.",
         ],
         [
           "`variant` controls action emphasis across neutral and semantic states such as primary, outline, info, success, warning, and danger.",
           "`size`, `pending`, `disabled`, `block`, `leadingIcon`, and `trailingIcon` cover the stable API surface shown in the lab.",
+          "Use `SplitButton` when one dominant action has a small set of nearby alternatives, instead of turning every variation into a separate visible button.",
           "Use native button attributes for submit, reset, and standard click behavior rather than adding app-owned wrapper props.",
         ],
         [
           "Buttons need visible text or an accessible name when rendered as icon-only triggers.",
           "Disabled and danger states must not rely on color alone to communicate meaning.",
+          "Split-button dropdown triggers still need an explicit accessible label because the chevron itself is not descriptive.",
           "Use the correct button type in forms so action semantics stay predictable for keyboard users.",
         ],
       )}
@@ -273,6 +616,9 @@ export function renderScrollAreaDocs() {
                 <Badge appearance="soft" variant="brand">Shared primitive</Badge>
                 <Badge appearance="soft" variant="warning">Range override</Badge>
                 <Badge appearance="soft" variant="danger">Escalation required</Badge>
+                <Badge appearance="soft" variant="neutral">Regional rollout</Badge>
+                <Badge appearance="soft" variant="brand">Enterprise only</Badge>
+                <Badge appearance="soft" variant="info">Muted overflow rail</Badge>
               </div>
             </ScrollArea>
           </ShowcaseRow>
@@ -1169,6 +1515,326 @@ export function renderSelectDocs() {
           "Select still needs a visible label that explains the choice, even when the current value is obvious.",
           "Validation and helper text should be exposed through the field wrapper so the state is announced consistently.",
           "Do not rely on the first option alone to act as hidden instructional text.",
+        ],
+      )}
+    </div>
+  );
+}
+
+export function renderComboboxDocs() {
+  return (
+    <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
+      <Card>
+        <CardHeader>
+          <CardTitle>Template variants</CardTitle>
+          <CardDescription>Combobox should support both plain value lists and stacked company rows without inventing separate components.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Simple values" stacked>
+            <ComboboxSimplePreview />
+          </ShowcaseRow>
+          <ShowcaseRow label="Company list" stacked>
+            <ComboboxCompanyPreview />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Large local directory</CardTitle>
+          <CardDescription>Large local lists should not dump 1000 rows into view immediately when a smaller progressive slice is enough.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="1000 companies" stacked>
+            <ComboboxLargeCompanyPreview />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Caller-owned async search</CardTitle>
+          <CardDescription>Remote search should pass the query string out to app code instead of hiding fetch logic inside the shared primitive.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Ajax search" stacked>
+            <ComboboxAsyncPreview />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Field-level validation matrix</CardTitle>
+          <CardDescription>Combobox should read like the same form family as input and select, even while the interaction model stays richer.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Matrix" stacked>
+            <FormGrid columns={2}>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-combobox-default">Default</FieldLabel>
+                <Combobox
+                  defaultValue="satisfactory"
+                  id="ui-lab-combobox-default"
+                  label="Type"
+                  options={comboboxAssessmentTypeOptions}
+                  placeholder="Select type"
+                  triggerAriaLabel="Type"
+                />
+                <FieldHint>Simple enum rows should work with label-only options and no extra chrome.</FieldHint>
+              </Field>
+              <Field invalid>
+                <FieldLabel htmlFor="ui-lab-combobox-invalid">Invalid</FieldLabel>
+                <Combobox
+                  defaultValue={null}
+                  id="ui-lab-combobox-invalid"
+                  invalid
+                  label="Company"
+                  options={comboboxCompanyOptions}
+                  placeholder="Choose company"
+                  triggerAriaLabel="Company"
+                />
+                <FieldError>Select one company before saving this review.</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-combobox-disabled">Disabled</FieldLabel>
+                <Combobox
+                  disabled
+                  defaultValue="northstar-freight"
+                  id="ui-lab-combobox-disabled"
+                  label="Company"
+                  options={comboboxCompanyOptions}
+                  triggerAriaLabel="Locked company"
+                />
+                <FieldHint>Disabled state should stay aligned with the rest of the form family.</FieldHint>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-combobox-compact">Large local list</FieldLabel>
+                <Combobox
+                  defaultValue="company-0004"
+                  id="ui-lab-combobox-compact"
+                  initialVisibleCount={10}
+                  label="Company directory"
+                  loadMoreStep={10}
+                  options={comboboxLargeCompanyDirectory}
+                  size="sm"
+                  triggerAriaLabel="Company directory"
+                />
+                <FieldHint>Search still works across company name and company type while the list reveals rows progressively on scroll.</FieldHint>
+              </Field>
+            </FormGrid>
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      {renderUsageReviewCard(
+        "Combobox is the review-stage answer for searchable option lists that outgrow native select without requiring a full data-grid runtime.",
+        [
+          "Use combobox when the option set benefits from inline search or richer option copy such as company name plus company type.",
+          "Use `filterMode=\"none\"` when app code owns remote search and only passes current results into the list.",
+          "Use the stable native `Select` when the option set is short, fixed, and does not need search.",
+        ],
+        [
+          "Keep fetch, debounce, and query caching in app code; the shared helper should only render search state and options.",
+          "Use label-only rows for plain enums and label-plus-description rows for richer company-style templates.",
+          "Reuse the same field shell, labels, and validation language as other form controls.",
+          "Use `initialVisibleCount` and `loadMoreStep` when large local datasets should open with a smaller visible slice.",
+        ],
+        [
+          "Do not fold tags, bulk multi-select, or arbitrary free-form creation into the same combobox contract.",
+          "Do not hide route-specific fetch rules or domain wording inside the shared helper.",
+          "Do not replace every stable native select with combobox by default.",
+        ],
+      )}
+
+      {renderPropsApiCard("Review-stage searchable select contract for local data and caller-owned async search.", [
+        { name: "options", type: "Array<{ value, label, description?, meta?, disabled?, searchText? }>", notes: "Provides the rendered option list while keeping filtering and fetch ownership outside the primitive when needed." },
+        { name: "value / onValueChange", type: "string | null", notes: "Keeps selected value controlled by the caller, matching the rest of the shared form layer." },
+        { name: "searchValue / onSearchValueChange", type: "string", notes: "Lets app code own the search string for remote or debounced queries instead of hardwiring Ajax into `ui-kit`." },
+        { name: "filterMode", type: "\"local\" | \"none\"", notes: "Uses lightweight built-in local filtering by default or skips it when the option list already comes from caller-owned async search." },
+        { name: "initialVisibleCount / loadMoreStep", type: "number", notes: "Lets large local lists start with a bounded visible slice and reveal more options as the user scrolls." },
+        { name: "loading / emptyLabel", type: "boolean / ReactNode", notes: "Exposes async and empty states without inventing a second overlay contract." },
+        { name: "size / invalid / disabled", type: "\"sm\" | \"md\" | \"lg\" / boolean / boolean", notes: "Aligns the control with the same density and validation language used by input and select." },
+      ])}
+
+      {renderReferenceNotesCard(
+        "Combobox is intentionally separate from the stable native `Select` contract because searchable lists and remote queries carry a different interaction model.",
+        [
+          "The core structure is trigger button, popover surface, search field, and bounded option list.",
+          "Options may render as label-only rows or as stacked rows with description, while staying list-shaped and lightweight.",
+          "Large local lists may open with a smaller visible slice and reveal more rows on scroll without changing the selection model.",
+          "The current review surface is single-select only; tags and free-form entry live in companion patterns.",
+        ],
+        [
+          "`options`, `value`, and `onValueChange` form the base selection contract.",
+          "`searchValue`, `onSearchValueChange`, `loading`, and `filterMode` are the review-stage hooks for remote search without embedding fetch logic.",
+          "Use `searchText` when the visible template is custom JSX or when search must include extra words beyond the visible label and description.",
+          "Use `placeholder`, `emptyLabel`, `size`, `invalid`, and `disabled` to align the control with field-shell needs.",
+        ],
+        [
+          "Always provide a visible field label or an explicit trigger aria label so the picker has a stable name.",
+          "Search input and list content should stay keyboard reachable without trapping users in the popover.",
+          "Do not rely on placeholder text alone to explain what the option list means.",
+        ],
+      )}
+    </div>
+  );
+}
+
+export function renderTagInputDocs() {
+  return (
+    <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
+      <Card>
+        <CardHeader>
+          <CardTitle>Entry variants</CardTitle>
+          <CardDescription>Tag input should cover free-form entry, strict dictionary selection, and a hybrid choose-or-create mode without changing the basic string-array contract.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Free-form" stacked>
+            <TagInputPreview />
+          </ShowcaseRow>
+          <ShowcaseRow label="Preset-only" stacked>
+            <PresetTagInputPreview />
+          </ShowcaseRow>
+          <ShowcaseRow label="Hybrid" stacked>
+            <HybridTagInputPreview />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Density and validation</CardTitle>
+          <CardDescription>Tag entry should align with the same spacing and validation rules as input, not create a parallel form language.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Matrix" stacked>
+            <FormGrid columns={2}>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-tag-input-default">Default</FieldLabel>
+                <TagInput
+                  defaultValue={["regional", "needs-review"]}
+                  id="ui-lab-tag-input-default"
+                  inputAriaLabel="Default tag input"
+                  mode="freeform"
+                  placeholder="Add tags"
+                />
+                <FieldHint>Press Enter or comma to commit a tag inside the same control surface.</FieldHint>
+              </Field>
+              <Field invalid>
+                <FieldLabel htmlFor="ui-lab-tag-input-invalid">Invalid</FieldLabel>
+                <TagInput
+                  defaultValue={["draft"]}
+                  id="ui-lab-tag-input-invalid"
+                  inputAriaLabel="Invalid tag input"
+                  invalid
+                  mode="freeform"
+                  placeholder="Add labels"
+                />
+                <FieldError>Remove unapproved labels before publishing.</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-tag-input-preset">Preset-only</FieldLabel>
+                <TagInput
+                  defaultValue={["Enterprise", "Needs review"]}
+                  id="ui-lab-tag-input-preset"
+                  inputAriaLabel="Preset-only tag input"
+                  mode="preset"
+                  placeholder="Choose preset labels"
+                  suggestions={predefinedTagOptions}
+                />
+                <FieldHint>Users can search the predefined tags, but cannot create values outside that list.</FieldHint>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-tag-input-hybrid">Hybrid</FieldLabel>
+                <TagInput
+                  defaultValue={["Enterprise", "Late payer"]}
+                  id="ui-lab-tag-input-hybrid"
+                  inputAriaLabel="Hybrid tag input"
+                  mode="hybrid"
+                  placeholder="Choose or create labels"
+                  suggestions={predefinedTagOptions}
+                />
+                <FieldHint>Suggestions stay searchable, but callers may still accept additional custom tags.</FieldHint>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-tag-input-disabled">Disabled</FieldLabel>
+                <TagInput
+                  defaultValue={["enterprise", "signed-contract"]}
+                  disabled
+                  id="ui-lab-tag-input-disabled"
+                  inputAriaLabel="Disabled tag input"
+                  mode="freeform"
+                />
+                <FieldHint>Disabled tags should remain visible but not editable.</FieldHint>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-tag-input-compact">Compact</FieldLabel>
+                <TagInput
+                  defaultValue={["trial", "watchlist"]}
+                  id="ui-lab-tag-input-compact"
+                  inputAriaLabel="Compact tag input"
+                  mode="hybrid"
+                  placeholder="Add compact tags"
+                  size="sm"
+                  suggestions={predefinedTagOptions}
+                />
+                <FieldHint>Compact tagging should still fit dense filter or metadata rails.</FieldHint>
+              </Field>
+            </FormGrid>
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      {renderUsageReviewCard(
+        "Tag input is a review-stage free-form label helper, not a replacement for canonical enums or searchable single-select choice.",
+        [
+          "Use tag input for lightweight labels, ad-hoc metadata, or draft categorization that callers own as string arrays.",
+          "Use `mode=\"preset\"` when users may pick multiple labels, but only from an approved tag dictionary.",
+          "Use `mode=\"hybrid\"` when suggestions should guide selection but callers may still accept custom labels.",
+          "Use combobox or stable select when the user must choose from a canonical option list.",
+          "Use tag input when inline removable pills communicate the resulting state more clearly than a plain textarea or comma-separated text field.",
+        ],
+        [
+          "Keep tags short and human-readable so the inline pill surface stays legible.",
+          "Let the caller own persistence, normalization, and any domain-level validation rules.",
+          "Prefer `mode` to make intent explicit; `allowCustomValues` remains only as backward-compatible fallback wiring.",
+          "Keep the shared contract string-array based until a stronger multi-surface need proves richer token objects.",
+        ],
+        [
+          "Do not turn tag input into a hidden taxonomy browser or route-specific filter runtime.",
+          "Do not overload it with remote search, grouped results, or large controlled menus.",
+          "Do not use tags where a stable enum should stay explicit through select, checkbox, or combobox.",
+        ],
+      )}
+
+      {renderPropsApiCard("Review-stage free-form tag entry contract for compact metadata lists.", [
+        { name: "value / onValueChange", type: "string[]", notes: "Keeps the committed tag array caller-owned rather than hiding persistence inside the control." },
+        { name: "mode", type: "\"freeform\" | \"preset\" | \"hybrid\"", notes: "Makes tag behavior explicit: create only, choose only, or choose from suggestions while still allowing new values." },
+        { name: "placeholder", type: "string", notes: "Guides free-form entry without adding a second visible label layer." },
+        { name: "separators", type: "string[]", notes: "Controls which keyboard separators commit a tag; comma remains the default donor pattern." },
+        { name: "suggestions / allowCustomValues", type: "string[] / boolean", notes: "Adds local suggestion picking; `allowCustomValues` stays as legacy compatibility when `mode` is omitted." },
+        { name: "addOnBlur / allowDuplicates / maxTags", type: "boolean / boolean / number", notes: "Keeps commit and validation rules explicit while the component is still under review." },
+        { name: "size / invalid / disabled", type: "\"sm\" | \"md\" | \"lg\" / boolean / boolean", notes: "Aligns the control with the same shared form density and validation language." },
+      ])}
+
+      {renderReferenceNotesCard(
+        "Tag input stays intentionally narrow so it can validate as a reusable metadata-entry surface before any richer taxonomy workflows are considered.",
+        [
+          "The shared structure is one bordered input shell with inline committed tags and a single text cursor.",
+          "Committed tags stay string-based and removable inside the same control surface.",
+          "Suggestion lists may support strict dictionary selection or hybrid choose-or-create flows while the contract still remains string-array based and lightweight.",
+        ],
+        [
+          "`value`, `onValueChange`, `placeholder`, and `separators` define the main review API.",
+          "`mode` and `suggestions` define whether the control is free-form, preset-only, or hybrid without promoting a heavier tokenized multi-select runtime.",
+          "`addOnBlur`, `allowDuplicates`, and `maxTags` tune commit rules without turning the helper into workflow logic.",
+          "Use `invalid` and `disabled` the same way as other form controls rather than creating new status props.",
+        ],
+        [
+          "The inner text input still needs a visible field label or explicit input aria label.",
+          "Remove buttons should expose the tag name so assistive tech understands what will be deleted.",
+          "Do not rely only on color or chip styling to explain whether a tag is editable.",
         ],
       )}
     </div>

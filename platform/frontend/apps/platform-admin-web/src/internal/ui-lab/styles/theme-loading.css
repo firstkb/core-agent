@@ -7,7 +7,7 @@
 .ui-lab-page--dark .ui-lab-page__props-list,
 .ui-lab-page--dark .ui-lab-page__note-card,
 .ui-lab-page--dark .ui-lab-page__radius-chip,
-.ui-lab-page--dark .ui-lab-page__sidebar-candidate {
+.ui-lab-page--dark .ui-lab-page__sidebar-preview {
   background: rgba(20, 30, 47, 0.9);
   border-color: rgba(102, 119, 150, 0.28);
 }

@@ -17,7 +17,7 @@ export type TableColumnVisibilityProps = HTMLAttributes<HTMLDivElement> & {
   columns: readonly TableColumnVisibilityItem[];
   emptyLabel?: ReactNode;
   label?: ReactNode;
-  onColumnChange?: (id: string, checked: boolean) => void;
+  onColumnChange: (id: string, checked: boolean) => void;
   triggerLabel?: ReactNode;
 };
 
@@ -31,6 +31,7 @@ export function TableColumnVisibility({
   ...props
 }: TableColumnVisibilityProps) {
   const baseId = useId();
+  const titleId = `${baseId}-title`;
 
   return (
     <div {...props} className={cx("ui-table-column-visibility", className)}>
@@ -40,9 +41,14 @@ export function TableColumnVisibility({
             {triggerLabel}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="ui-table-column-visibility__content">
+        <PopoverContent
+          aria-labelledby={titleId}
+          className="ui-table-column-visibility__content"
+        >
           <div className="ui-table-column-visibility__header">
-            <span className="ui-table-column-visibility__title">{label}</span>
+            <span className="ui-table-column-visibility__title" id={titleId}>
+              {label}
+            </span>
           </div>
           {columns.length > 0 ? (
             <div className="ui-table-column-visibility__list">
@@ -63,11 +69,11 @@ export function TableColumnVisibility({
                         checked={column.checked}
                         disabled={column.disabled}
                         id={inputId}
-                        onChange={(event) => onColumnChange?.(column.id, event.currentTarget.checked)}
+                        onChange={(event) => onColumnChange(column.id, event.currentTarget.checked)}
                       />
                       <span className="ui-table-column-visibility__item-label">{column.label}</span>
                     </span>
-                    {column.count ? (
+                    {column.count != null ? (
                       <span className="ui-table-column-visibility__item-count">{column.count}</span>
                     ) : null}
                   </label>

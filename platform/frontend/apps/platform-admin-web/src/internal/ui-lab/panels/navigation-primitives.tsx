@@ -49,7 +49,6 @@ import {
 
 import { ChevronIcon } from "../components/icons";
 import {
-  SidebarCandidateNav,
   ShowcaseRow,
   renderDoNotUseForCard,
   renderPropsApiCard,

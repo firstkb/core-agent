@@ -16,6 +16,15 @@ import { tenantStatusToBadgeVariant } from "@platform/tenant-core";
 
 export type TenantSortField = "name" | "status" | "plan" | "members" | "lastSync";
 export type TenantSortDirection = "asc" | "desc";
+export type TenantHealthTableColumnId = TenantSortField;
+
+export const tenantHealthTableColumnOrder: readonly TenantHealthTableColumnId[] = [
+  "name",
+  "status",
+  "plan",
+  "members",
+  "lastSync",
+];
 
 type TenantHealthTableProps = {
   tenants: TenantSummary[];
@@ -25,6 +34,7 @@ type TenantHealthTableProps = {
   partiallyVisibleSelected: boolean;
   sortField: TenantSortField;
   sortDirection: TenantSortDirection;
+  visibleColumns: readonly TenantHealthTableColumnId[];
   onSelectTenant?: (tenantId: string) => void;
   onToggleTenant?: (tenantId: string, checked: boolean) => void;
   onToggleAllVisible?: (checked: boolean) => void;
@@ -83,11 +93,16 @@ export function TenantHealthTable({
   partiallyVisibleSelected,
   sortField,
   sortDirection,
+  visibleColumns,
   onSelectTenant,
   onToggleTenant,
   onToggleAllVisible,
   onSort,
 }: TenantHealthTableProps) {
+  const visibleColumnSet = new Set<TenantHealthTableColumnId>(visibleColumns);
+  const isColumnVisible = (columnId: TenantHealthTableColumnId) =>
+    visibleColumnSet.has(columnId);
+
   return (
     <Table>
       <TableHead>
@@ -101,56 +116,66 @@ export function TenantHealthTable({
               onClick={(event) => event.stopPropagation()}
             />
           </TableHeaderCell>
-          <TableHeaderCell>
-            <SortHeaderButton
-              activeField={sortField}
-              direction={sortDirection}
-              field="name"
-              onSort={onSort}
-            >
-              Tenant
-            </SortHeaderButton>
-          </TableHeaderCell>
-          <TableHeaderCell>
-            <SortHeaderButton
-              activeField={sortField}
-              direction={sortDirection}
-              field="status"
-              onSort={onSort}
-            >
-              Status
-            </SortHeaderButton>
-          </TableHeaderCell>
-          <TableHeaderCell>
-            <SortHeaderButton
-              activeField={sortField}
-              direction={sortDirection}
-              field="plan"
-              onSort={onSort}
-            >
-              Plan
-            </SortHeaderButton>
-          </TableHeaderCell>
-          <TableHeaderCell>
-            <SortHeaderButton
-              activeField={sortField}
-              direction={sortDirection}
-              field="members"
-              onSort={onSort}
-            >
-              Members
-            </SortHeaderButton>
-          </TableHeaderCell>
-          <TableHeaderCell>
-            <SortHeaderButton
-              activeField={sortField}
-              direction={sortDirection}
-              field="lastSync"
-              onSort={onSort}
-            >
-              Last Sync
-            </SortHeaderButton>
-          </TableHeaderCell>
+          {isColumnVisible("name") ? (
+            <TableHeaderCell>
+              <SortHeaderButton
+                activeField={sortField}
+                direction={sortDirection}
+                field="name"
+                onSort={onSort}
+              >
+                Tenant
+              </SortHeaderButton>
+            </TableHeaderCell>
+          ) : null}
+          {isColumnVisible("status") ? (
+            <TableHeaderCell>
+              <SortHeaderButton
+                activeField={sortField}
+                direction={sortDirection}
+                field="status"
+                onSort={onSort}
+              >
+                Status
+              </SortHeaderButton>
+            </TableHeaderCell>
+          ) : null}
+          {isColumnVisible("plan") ? (
+            <TableHeaderCell>
+              <SortHeaderButton
+                activeField={sortField}
+                direction={sortDirection}
+                field="plan"
+                onSort={onSort}
+              >
+                Plan
+              </SortHeaderButton>
+            </TableHeaderCell>
+          ) : null}
+          {isColumnVisible("members") ? (
+            <TableHeaderCell>
+              <SortHeaderButton
+                activeField={sortField}
+                direction={sortDirection}
+                field="members"
+                onSort={onSort}
+              >
+                Members
+              </SortHeaderButton>
+            </TableHeaderCell>
+          ) : null}
+          {isColumnVisible("lastSync") ? (
+            <TableHeaderCell>
+              <SortHeaderButton
+                activeField={sortField}
+                direction={sortDirection}
+                field="lastSync"
+                onSort={onSort}
+              >
+                Last Sync
+              </SortHeaderButton>
+            </TableHeaderCell>
+          ) : null}
           <TableHeaderCell className="tenant-health-table__cell--action">Action</TableHeaderCell>
         </tr>
       </TableHead>
@@ -175,34 +200,44 @@ export function TenantHealthTable({
                 onClick={(event) => event.stopPropagation()}
               />
             </TableCell>
-            <TableCell>
-              <TableMetaCell
-                caption={getRegionMeta(tenant).regionsLabel}
-                description={tenant.slug}
-                title={tenant.name}
-              />
-            </TableCell>
-            <TableCell>
-              <Badge variant={tenantStatusToBadgeVariant(tenant.status)}>{tenant.status}</Badge>
-            </TableCell>
-            <TableCell>
-              <TableMetaCell
-                description={getRegionMeta(tenant).countLabel}
-                title={tenant.plan}
-              />
-            </TableCell>
-            <TableCell>
-              <TableMetaCell
-                description={getMembersMeta(tenant)}
-                title={String(tenant.members)}
-              />
-            </TableCell>
-            <TableCell>
-              <TableMetaCell
-                description={getSyncMeta(tenant)}
-                title={tenant.lastSyncLabel}
-              />
-            </TableCell>
+            {isColumnVisible("name") ? (
+              <TableCell>
+                <TableMetaCell
+                  caption={getRegionMeta(tenant).regionsLabel}
+                  description={tenant.slug}
+                  title={tenant.name}
+                />
+              </TableCell>
+            ) : null}
+            {isColumnVisible("status") ? (
+              <TableCell>
+                <Badge variant={tenantStatusToBadgeVariant(tenant.status)}>{tenant.status}</Badge>
+              </TableCell>
+            ) : null}
+            {isColumnVisible("plan") ? (
+              <TableCell>
+                <TableMetaCell
+                  description={getRegionMeta(tenant).countLabel}
+                  title={tenant.plan}
+                />
+              </TableCell>
+            ) : null}
+            {isColumnVisible("members") ? (
+              <TableCell>
+                <TableMetaCell
+                  description={getMembersMeta(tenant)}
+                  title={String(tenant.members)}
+                />
+              </TableCell>
+            ) : null}
+            {isColumnVisible("lastSync") ? (
+              <TableCell>
+                <TableMetaCell
+                  description={getSyncMeta(tenant)}
+                  title={tenant.lastSyncLabel}
+                />
+              </TableCell>
+            ) : null}
             <TableCell className="tenant-health-table__cell--action">
               <Button
                 onClick={(event) => {

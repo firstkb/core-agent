@@ -27,7 +27,7 @@ export function useUiLabState() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sidebarCandidateDrawerOpen, setSidebarCandidateDrawerOpen] = useState(false);
+  const [sidebarDrawerOpen, setSidebarDrawerOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [openSectionId, setOpenSectionId] = useState<UiLabSectionId | null>("foundations");
   const [page, setPage] = useState(2);
@@ -248,10 +248,10 @@ export function useUiLabState() {
     setPageTheme,
     setSearchQuery,
     setSheetOpen,
-    setSidebarCandidateDrawerOpen,
+    setSidebarDrawerOpen,
     setStepperStep,
     sheetOpen,
-    sidebarCandidateDrawerOpen,
+    sidebarDrawerOpen,
     stepperStep,
     toggleSection,
     visibleLeafIds,

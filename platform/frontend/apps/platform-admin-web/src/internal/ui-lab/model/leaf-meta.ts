@@ -30,6 +30,7 @@ export type UiLabLeafId =
   | "button-doc"
   | "card-doc"
   | "checkbox-doc"
+  | "combobox-doc"
   | "collapsible-doc"
   | "code-doc"
   | "context-menu-doc"
@@ -72,6 +73,7 @@ export type UiLabLeafId =
   | "projects-2-columns"
   | "popover-doc"
   | "progress-doc"
+  | "top-loader-doc"
   | "radio-group-doc"
   | "rating-doc"
   | "scroll-area-doc"
@@ -105,6 +107,7 @@ export type UiLabLeafId =
   | "campaigns-empty"
   | "select-doc"
   | "switch-doc"
+  | "tag-input-doc"
   | "table-doc";
 
 export type UiLabLeafMeta = {
@@ -693,13 +696,13 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     title: "Foundations",
   },
   "api-keys": {
-    breadcrumb: ["Navigation Primitives", "Sidebar Candidate"],
-    description: "Local nav experiments stay visible here but remain outside ui-kit until approved.",
+    breadcrumb: ["Navigation Primitives", "Sidebar"],
+    description: "Nested sidebar navigation stays visible here as a shared tree contract with desktop and mobile examples.",
     heroDescription:
-      "Navigation primitives section shows reusable pieces first and keeps sidebar experiments explicitly app-layer until the contract is stable.",
-    heroTitle: "Sidebar Candidate",
+      "Navigation primitives section now treats sidebar as a shared nested tree contract while keeping search, routing, and shell-specific chrome outside the primitive.",
+    heroTitle: "Sidebar",
     id: "api-keys",
-    label: "Sidebar Candidate",
+    label: "Sidebar",
     panelId: "navigation-primitives",
     title: "Navigation Primitives",
   },
@@ -923,6 +926,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     panelId: "states",
     title: "Progress",
   },
+  "top-loader-doc": {
+    breadcrumb: ["States", "Top Loader"],
+    description: "Top loader page documents the review-stage shared viewport loading bar for transport and route-level activity.",
+    heroDescription:
+      "Top loader is reviewed here as a restrained NProgress-like bar for shared API and route activity, separate from determinate content progress.",
+    heroTitle: "Top Loader",
+    id: "top-loader-doc",
+    label: "Top Loader",
+    panelId: "states",
+    title: "Top Loader",
+  },
   "radio-group-doc": {
     breadcrumb: ["Form Controls", "Radio Group"],
     description: "Radio group page documents option density, orientation, and field-level usage for the current single-choice contract.",
@@ -969,10 +983,10 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
   },
   "table-column-visibility-doc": {
     breadcrumb: ["Data Display", "Table Column Visibility"],
-    description: "Table column visibility page reviews column toggle controls and checkbox-driven visibility management above the stable base table contract.",
+    description: "Table column visibility page documents shared column toggle controls and checkbox-driven visibility management above the stable base table contract.",
     heroDescription:
-      "Table column visibility is reviewed here as a donor-inspired helper for denser operator tables, while copy, toolbar fit, and long-term API shape remain under validation.",
-    heroTitle: "Table Column Visibility Review",
+      "Table column visibility is documented here as a small shared helper for denser operator tables, with caller-owned state, popover-based toggles, and validated toolbar fit across real surfaces.",
+    heroTitle: "Table Column Visibility",
     id: "table-column-visibility-doc",
     label: "Table Column Visibility",
     panelId: "data-display",
@@ -1010,6 +1024,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     label: "Select",
     panelId: "form-controls",
     title: "Select",
+  },
+  "combobox-doc": {
+    breadcrumb: ["Form Controls", "Combobox"],
+    description: "Combobox page documents searchable single-select behavior for local datasets and caller-owned async search.",
+    heroDescription:
+      "Combobox is reviewed here as the richer searchable choice surface that sits beside the stable native select without replacing it.",
+    heroTitle: "Combobox",
+    id: "combobox-doc",
+    label: "Combobox",
+    panelId: "form-controls",
+    title: "Combobox",
   },
   "skeleton-doc": {
     breadcrumb: ["States", "Skeleton"],
@@ -1220,6 +1245,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     panelId: "form-controls",
     title: "Slider",
   },
+  "tag-input-doc": {
+    breadcrumb: ["Form Controls", "Tag Input"],
+    description: "Tag input page documents inline removable labels, free-form string entry, and preset-only tag selection for compact metadata lists.",
+    heroDescription:
+      "Tag input is reviewed here as a narrow label-entry helper that can stay free-form or constrained to a predefined tag list without becoming a taxonomy picker or multi-select runtime.",
+    heroTitle: "Tag Input",
+    id: "tag-input-doc",
+    label: "Tag Input",
+    panelId: "form-controls",
+    title: "Tag Input",
+  },
   "toggle-doc": {
     breadcrumb: ["Form Controls", "Toggle"],
     description: "Toggle page documents pressed state, outline treatment, sizes, and icon-bearing selection controls for the shared pressed-button contract.",
@@ -1331,7 +1367,9 @@ export const formControlLeaves = [
   "label-doc",
   "date-field-doc",
   "select-doc",
+  "combobox-doc",
   "textarea-doc",
+  "tag-input-doc",
   "checkbox-doc",
   "radio-group-doc",
   "switch-doc",
@@ -1404,6 +1442,7 @@ export const dataDisplayLeaves = [
 export const stateLeaves = [
   "alert-doc",
   "progress-doc",
+  "top-loader-doc",
   "skeleton-doc",
   "empty-states-doc",
   "loading-states-doc",
@@ -1433,7 +1472,7 @@ export const uiLabSections = [
   {
     icon: "form-controls",
     id: "form-controls",
-    keywords: ["button", "input", "date", "calendar", "select", "textarea", "checkbox", "radio", "switch", "field", "form shell"],
+    keywords: ["button", "input", "date", "calendar", "select", "combobox", "tag input", "textarea", "checkbox", "radio", "switch", "field", "form shell"],
     label: "Form Controls",
     leaves: formControlLeaves,
   },

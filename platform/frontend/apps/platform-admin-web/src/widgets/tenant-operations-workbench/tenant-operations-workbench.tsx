@@ -7,6 +7,8 @@ import {
   FilterChip,
   Input,
   SummaryPillStrip,
+  TableColumnVisibility,
+  type TableColumnVisibilityItem,
   ToolbarNotice,
 } from "@platform/ui-kit";
 import type { TenantPlan, TenantStatus, TenantSummary } from "@platform/tenant-core";
@@ -15,6 +17,8 @@ import { useMediaQuery } from "../../shared/use-media-query";
 import { readEnumSearchParam, setSearchParamsBatch } from "../../shared/search-params";
 import {
   TenantHealthTable,
+  tenantHealthTableColumnOrder,
+  type TenantHealthTableColumnId,
   type TenantSortDirection,
   type TenantSortField,
 } from "../tenant-health-table/tenant-health-table";
@@ -143,6 +147,9 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
   const [isActionDialogOpen, setIsActionDialogOpen] = useState(false);
   const [isConfigSheetOpen, setIsConfigSheetOpen] = useState(false);
   const [bulkActionMessage, setBulkActionMessage] = useState<BulkActionNotice | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<TenantHealthTableColumnId[]>([
+    ...tenantHealthTableColumnOrder,
+  ]);
 
   const searchQuery = searchParams.get("q") ?? "";
   const statusFilter = readEnumSearchParam(searchParams, "status", statusFilters, "all");
@@ -221,6 +228,54 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
     { id: "paused", label: "Paused", tone: "neutral", value: visibleStatusSummary.paused },
     { id: "selected", label: "Selected", tone: "brand", value: selectedTenantIds.length },
   ] as const;
+  const columnVisibilityItems = useMemo<TableColumnVisibilityItem[]>(() => {
+    return [
+      {
+        checked: visibleColumns.includes("name"),
+        count: "Required",
+        disabled: true,
+        id: "name",
+        label: "Tenant",
+      },
+      {
+        checked: visibleColumns.includes("status"),
+        count: `${new Set(tenants.map((tenant) => tenant.status)).size} states`,
+        id: "status",
+        label: "Status",
+      },
+      {
+        checked: visibleColumns.includes("plan"),
+        count: `${new Set(tenants.map((tenant) => tenant.plan)).size} tiers`,
+        id: "plan",
+        label: "Plan",
+      },
+      {
+        checked: visibleColumns.includes("members"),
+        count: "Optional",
+        id: "members",
+        label: "Members",
+      },
+      {
+        checked: visibleColumns.includes("lastSync"),
+        count: "Optional",
+        id: "lastSync",
+        label: "Last sync",
+      },
+    ];
+  }, [tenants, visibleColumns]);
+
+  function handleColumnVisibilityChange(columnId: string, checked: boolean) {
+    const typedColumnId = columnId as TenantHealthTableColumnId;
+
+    setVisibleColumns((currentColumns) =>
+      checked
+        ? tenantHealthTableColumnOrder.filter(
+            (column) => column === typedColumnId || currentColumns.includes(column),
+          )
+        : currentColumns.filter((column) => column !== typedColumnId),
+    );
+    setBulkActionMessage(null);
+  }
 
   function resetFilters() {
     setSearchParams(
@@ -416,6 +471,12 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
                 </div>
 
                 <div className="admin-web__toolbar-group admin-web__toolbar-group--end">
+                  <TableColumnVisibility
+                    columns={columnVisibilityItems}
+                    label="Visible tenant columns"
+                    onColumnChange={handleColumnVisibilityChange}
+                    triggerLabel="Columns"
+                  />
                   <Button
                     disabled={selectedTenantIds.length === 0}
                     onClick={() => runBulkAction("queue_review")}
@@ -460,6 +521,7 @@ export function TenantOperationsWorkbench({ tenants }: TenantOperationsWorkbench
               sortDirection={sortDirection}
               sortField={sortField}
               tenants={visibleTenants}
+              visibleColumns={visibleColumns}
             />
           </div>
 

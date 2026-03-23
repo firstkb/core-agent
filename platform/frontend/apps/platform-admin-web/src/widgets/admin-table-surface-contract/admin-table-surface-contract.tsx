@@ -20,6 +20,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableColumnVisibility,
+  type TableColumnVisibilityItem,
   type TableDensity,
   TableHead,
   TableHeaderCell,
@@ -66,6 +68,16 @@ export type AdminTableSurfaceItem = {
 };
 
 export type AdminTableSortField = "event" | "scope" | "severity" | "actor" | "source" | "recorded";
+type AdminTableVisibleColumn = AdminTableSortField;
+
+const adminTableVisibleColumnOrder: readonly AdminTableVisibleColumn[] = [
+  "event",
+  "scope",
+  "severity",
+  "actor",
+  "source",
+  "recorded",
+];
 
 type AdminTableSurfaceContractProps = {
   title: string;
@@ -250,6 +262,9 @@ export function AdminTableSurfaceContract({
   const [internalSortDirection, setInternalSortDirection] = useState<Exclude<TableSortDirection, null>>("desc");
   const [tableDensity, setTableDensity] = useState<TableDensity>("comfortable");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(items[0]?.id ?? null);
+  const [visibleColumns, setVisibleColumns] = useState<AdminTableVisibleColumn[]>([
+    ...adminTableVisibleColumnOrder,
+  ]);
   const [internalActiveFilters, setInternalActiveFilters] = useState<Record<string, string>>(() =>
     Object.fromEntries(filterGroups.map((group) => [group.key, group.options[0]?.value ?? "all"])),
   );
@@ -259,6 +274,10 @@ export function AdminTableSurfaceContract({
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const sortField = controlledSortField ?? internalSortField;
   const sortDirection = controlledSortDirection ?? internalSortDirection;
+  const visibleColumnSet = useMemo(
+    () => new Set<AdminTableVisibleColumn>(visibleColumns),
+    [visibleColumns],
+  );
   const defaultFilterState = useMemo(
     () =>
       Object.fromEntries(
@@ -298,6 +317,48 @@ export function AdminTableSurfaceContract({
     () => getSortedItems(filteredItems, sortField, sortDirection),
     [filteredItems, sortDirection, sortField],
   );
+  const columnVisibilityItems = useMemo<TableColumnVisibilityItem[]>(() => {
+    return [
+      {
+        checked: visibleColumns.includes("event"),
+        count: "Required",
+        disabled: true,
+        id: "event",
+        label: "Event",
+      },
+      {
+        checked: visibleColumns.includes("scope"),
+        count: `${new Set(items.map((item) => item.scopeLabel)).size} scopes`,
+        id: "scope",
+        label: "Scope",
+      },
+      {
+        checked: visibleColumns.includes("severity"),
+        count: `${new Set(items.map((item) => item.severityLabel)).size} levels`,
+        id: "severity",
+        label: "Severity",
+      },
+      {
+        checked: visibleColumns.includes("actor"),
+        count: `${new Set(items.map((item) => item.actorLabel)).size} actors`,
+        id: "actor",
+        label: "Actor",
+      },
+      {
+        checked: visibleColumns.includes("source"),
+        count: `${new Set(items.map((item) => item.sourceLabel)).size} sources`,
+        id: "source",
+        label: "Source",
+      },
+      {
+        checked: visibleColumns.includes("recorded"),
+        count: "Required",
+        disabled: true,
+        id: "recorded",
+        label: "Recorded",
+      },
+    ];
+  }, [items, visibleColumns]);
 
   useEffect(() => {
     if (visibleItems.length === 0) {
@@ -394,6 +455,22 @@ export function AdminTableSurfaceContract({
 
   function getSortDirectionFor(field: AdminTableSortField): TableSortDirection {
     return sortField === field ? sortDirection : null;
+  }
+
+  function isColumnVisible(columnId: AdminTableVisibleColumn) {
+    return visibleColumnSet.has(columnId);
+  }
+
+  function handleColumnVisibilityChange(columnId: string, checked: boolean) {
+    const typedColumnId = columnId as AdminTableVisibleColumn;
+
+    setVisibleColumns((currentColumns) =>
+      checked
+        ? adminTableVisibleColumnOrder.filter(
+            (column) => column === typedColumnId || currentColumns.includes(column),
+          )
+        : currentColumns.filter((column) => column !== typedColumnId),
+    );
   }
 
   return (
@@ -515,6 +592,12 @@ export function AdminTableSurfaceContract({
 
               <div className="admin-web__toolbar-group admin-web__toolbar-group--end">
                 {toolbarControls}
+                <TableColumnVisibility
+                  columns={columnVisibilityItems}
+                  label="Visible audit columns"
+                  onColumnChange={handleColumnVisibilityChange}
+                  triggerLabel="Columns"
+                />
                 <div className="admin-web__contract-density-toggle" role="group" aria-label="Table density">
                   <Button
                     aria-pressed={tableDensity === "comfortable"}
@@ -557,54 +640,66 @@ export function AdminTableSurfaceContract({
                 <Table density={tableDensity}>
                   <TableHead>
                     <tr>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("event")}
-                          onClick={() => toggleSort("event")}
-                        >
-                          Event
-                        </TableSortButton>
-                      </TableHeaderCell>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("scope")}
-                          onClick={() => toggleSort("scope")}
-                        >
-                          Scope
-                        </TableSortButton>
-                      </TableHeaderCell>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("severity")}
-                          onClick={() => toggleSort("severity")}
-                        >
-                          Severity
-                        </TableSortButton>
-                      </TableHeaderCell>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("actor")}
-                          onClick={() => toggleSort("actor")}
-                        >
-                          Actor
-                        </TableSortButton>
-                      </TableHeaderCell>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("source")}
-                          onClick={() => toggleSort("source")}
-                        >
-                          Source
-                        </TableSortButton>
-                      </TableHeaderCell>
-                      <TableHeaderCell>
-                        <TableSortButton
-                          direction={getSortDirectionFor("recorded")}
-                          onClick={() => toggleSort("recorded")}
-                        >
-                          Recorded
-                        </TableSortButton>
-                      </TableHeaderCell>
+                      {isColumnVisible("event") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("event")}
+                            onClick={() => toggleSort("event")}
+                          >
+                            Event
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
+                      {isColumnVisible("scope") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("scope")}
+                            onClick={() => toggleSort("scope")}
+                          >
+                            Scope
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
+                      {isColumnVisible("severity") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("severity")}
+                            onClick={() => toggleSort("severity")}
+                          >
+                            Severity
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
+                      {isColumnVisible("actor") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("actor")}
+                            onClick={() => toggleSort("actor")}
+                          >
+                            Actor
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
+                      {isColumnVisible("source") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("source")}
+                            onClick={() => toggleSort("source")}
+                          >
+                            Source
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
+                      {isColumnVisible("recorded") ? (
+                        <TableHeaderCell>
+                          <TableSortButton
+                            direction={getSortDirectionFor("recorded")}
+                            onClick={() => toggleSort("recorded")}
+                          >
+                            Recorded
+                          </TableSortButton>
+                        </TableHeaderCell>
+                      ) : null}
                     </tr>
                   </TableHead>
                   <TableBody>
@@ -614,42 +709,54 @@ export function AdminTableSurfaceContract({
                         key={item.id}
                         onClick={() => setSelectedItemId(item.id)}
                       >
-                        <TableCell className="admin-web__contract-table-event-cell">
-                          <TableMetaCell
-                            caption={item.summary}
-                            description={item.eventMeta}
-                            title={item.eventTitle}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TableMetaCell
-                            description={getScopeMeta(item)}
-                            title={item.scopeLabel}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Badge appearance="soft" variant={item.severityVariant}>
-                            {item.severityLabel}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <TableMetaCell
-                            description={getActorMeta(item)}
-                            title={item.actorLabel}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TableMetaCell
-                            description={getSourceMeta(item)}
-                            title={item.sourceLabel}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TableMetaCell
-                            description={`${item.severityLabel} signal`}
-                            title={item.recordedAt}
-                          />
-                        </TableCell>
+                        {isColumnVisible("event") ? (
+                          <TableCell className="admin-web__contract-table-event-cell">
+                            <TableMetaCell
+                              caption={item.summary}
+                              description={item.eventMeta}
+                              title={item.eventTitle}
+                            />
+                          </TableCell>
+                        ) : null}
+                        {isColumnVisible("scope") ? (
+                          <TableCell>
+                            <TableMetaCell
+                              description={getScopeMeta(item)}
+                              title={item.scopeLabel}
+                            />
+                          </TableCell>
+                        ) : null}
+                        {isColumnVisible("severity") ? (
+                          <TableCell>
+                            <Badge appearance="soft" variant={item.severityVariant}>
+                              {item.severityLabel}
+                            </Badge>
+                          </TableCell>
+                        ) : null}
+                        {isColumnVisible("actor") ? (
+                          <TableCell>
+                            <TableMetaCell
+                              description={getActorMeta(item)}
+                              title={item.actorLabel}
+                            />
+                          </TableCell>
+                        ) : null}
+                        {isColumnVisible("source") ? (
+                          <TableCell>
+                            <TableMetaCell
+                              description={getSourceMeta(item)}
+                              title={item.sourceLabel}
+                            />
+                          </TableCell>
+                        ) : null}
+                        {isColumnVisible("recorded") ? (
+                          <TableCell>
+                            <TableMetaCell
+                              description={`${item.severityLabel} signal`}
+                              title={item.recordedAt}
+                            />
+                          </TableCell>
+                        ) : null}
                       </TableRow>
                     ))}
                   </TableBody>

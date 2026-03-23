@@ -1,5 +1,5 @@
-export { Button } from "./components/button";
-export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/button";
+export { Button, SplitButton } from "./components/button";
+export type { ButtonProps, ButtonSize, ButtonVariant, SplitButtonItem, SplitButtonProps } from "./components/button";
 
 export { Kbd } from "./components/kbd";
 export type { KbdProps, KbdSize, KbdVariant } from "./components/kbd";
@@ -120,8 +120,14 @@ export type { InputAddonProps, InputGroupProps, InputProps, InputSize } from "./
 export { Select } from "./components/select";
 export type { SelectProps } from "./components/select";
 
+export { Combobox } from "./components/combobox";
+export type { ComboboxFilterMode, ComboboxOption, ComboboxProps } from "./components/combobox";
+
 export { Textarea } from "./components/textarea";
 export type { TextareaProps } from "./components/textarea";
+
+export { TagInput } from "./components/tag-input";
+export type { TagInputMode, TagInputProps } from "./components/tag-input";
 
 export { Checkbox } from "./components/checkbox";
 export type { CheckboxProps } from "./components/checkbox";
@@ -139,11 +145,24 @@ export type { MenuContentProps, MenuItemProps, MenuItemTone, MenuProps } from ".
 export { ProgressBar } from "./components/progress-bar";
 export type { ProgressBarProps, ProgressBarTone } from "./components/progress-bar";
 
+export { TopLoader, createTopLoaderController } from "./components/top-loader";
+export type {
+  TopLoaderController,
+  TopLoaderControllerOptions,
+  TopLoaderPhase,
+  TopLoaderProps,
+  TopLoaderSnapshot,
+  TopLoaderTone,
+} from "./components/top-loader";
+
 export { Pagination } from "./components/pagination";
 export type { PaginationProps } from "./components/pagination";
 
 export { ScrollArea } from "./components/scroll-area";
 export type { ScrollAreaOrientation, ScrollAreaProps } from "./components/scroll-area";
+
+export { SidebarNav } from "./components/sidebar";
+export type { SidebarNavItem, SidebarNavProps } from "./components/sidebar";
 
 export { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
 export type { PopoverContentProps, PopoverProps } from "./components/popover";

@@ -45,10 +45,10 @@ export function AdminUiLabPage() {
     setPageTheme,
     setSearchQuery,
     setSheetOpen,
-    setSidebarCandidateDrawerOpen,
+    setSidebarDrawerOpen,
     setStepperStep,
     sheetOpen,
-    sidebarCandidateDrawerOpen,
+    sidebarDrawerOpen,
     stepperStep,
     toggleSection,
     visibleLeafIds,
@@ -116,7 +116,7 @@ export function AdminUiLabPage() {
               setDialogOpen,
               setDrawerOpen,
               setSheetOpen,
-              setSidebarCandidateDrawerOpen,
+              setSidebarDrawerOpen,
               activePresetId,
               setActivePresetId,
               page,
@@ -144,9 +144,9 @@ export function AdminUiLabPage() {
         onDialogOpenChange={setDialogOpen}
         onDrawerOpenChange={setDrawerOpen}
         onSheetOpenChange={setSheetOpen}
-        onSidebarCandidateDrawerOpenChange={setSidebarCandidateDrawerOpen}
+        onSidebarDrawerOpenChange={setSidebarDrawerOpen}
         sheetOpen={sheetOpen}
-        sidebarCandidateDrawerOpen={sidebarCandidateDrawerOpen}
+        sidebarDrawerOpen={sidebarDrawerOpen}
       />
     </main>
   );

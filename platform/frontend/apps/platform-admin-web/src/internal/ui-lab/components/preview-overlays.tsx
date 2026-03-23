@@ -41,7 +41,7 @@ import {
   SheetTitle,
 } from "@platform/ui-kit";
 
-import { SidebarCandidateNav } from "./docs-cards";
+import { SidebarPreviewNav } from "./docs-cards";
 
 type UiLabPreviewOverlaysProps = {
   alertDialogOpen: boolean;
@@ -51,9 +51,9 @@ type UiLabPreviewOverlaysProps = {
   onDialogOpenChange: (open: boolean) => void;
   onDrawerOpenChange: (open: boolean) => void;
   onSheetOpenChange: (open: boolean) => void;
-  onSidebarCandidateDrawerOpenChange: (open: boolean) => void;
+  onSidebarDrawerOpenChange: (open: boolean) => void;
   sheetOpen: boolean;
-  sidebarCandidateDrawerOpen: boolean;
+  sidebarDrawerOpen: boolean;
 };
 
 export function UiLabPreviewOverlays({
@@ -64,9 +64,9 @@ export function UiLabPreviewOverlays({
   onDialogOpenChange,
   onDrawerOpenChange,
   onSheetOpenChange,
-  onSidebarCandidateDrawerOpenChange,
+  onSidebarDrawerOpenChange,
   sheetOpen,
-  sidebarCandidateDrawerOpen,
+  sidebarDrawerOpen,
 }: UiLabPreviewOverlaysProps) {
   return (
     <>
@@ -164,25 +164,25 @@ export function UiLabPreviewOverlays({
         </SheetContent>
       </Sheet>
 
-      <Drawer onOpenChange={onSidebarCandidateDrawerOpenChange} open={sidebarCandidateDrawerOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Sidebar candidate mobile preview</DrawerTitle>
-            <DrawerDescription>
-              Review-only mobile container for the app-layer sidebar tree. The drawer is shared; the nav contract is not.
-            </DrawerDescription>
-          </DrawerHeader>
-          <DrawerBody>
-            <SidebarCandidateNav compact />
-          </DrawerBody>
-          <DrawerFooter>
-            <Button onClick={() => onSidebarCandidateDrawerOpenChange(false)} variant="ghost">
+      <Sheet onOpenChange={onSidebarDrawerOpenChange} open={sidebarDrawerOpen} side="left">
+        <SheetContent className="ui-lab-page__sidebar-preview-mobile-sheet">
+          <SheetHeader>
+            <SheetTitle>Sidebar mobile preview</SheetTitle>
+            <SheetDescription>
+              The same shared nav tree should remain usable inside a compact left mobile shell.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetBody>
+            <SidebarPreviewNav compact />
+          </SheetBody>
+          <SheetFooter>
+            <Button onClick={() => onSidebarDrawerOpenChange(false)} variant="ghost">
               Close
             </Button>
-            <Button onClick={() => onSidebarCandidateDrawerOpenChange(false)}>Mark reviewed</Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+            <Button onClick={() => onSidebarDrawerOpenChange(false)}>Mark reviewed</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { useEffect, useRef, useSyncExternalStore } from "react";
+
 import {
   Alert,
   AlertActions,
@@ -23,10 +25,52 @@ import {
   Skeleton,
   SkeletonText,
   TableLoadingState,
+  TopLoader,
+  createTopLoaderController,
+  type TopLoaderController,
 } from "@platform/ui-kit";
 
 import { CheckCircleIcon, InfoCircleIcon, WarningTriangleIcon } from "../components/icons";
 import { ShowcaseRow, renderPropsApiCard, renderReferenceNotesCard, renderUsageReviewCard } from "../components/docs-cards";
+
+function TopLoaderPreview() {
+  const controllerRef = useRef<TopLoaderController | null>(null);
+
+  if (!controllerRef.current) {
+    controllerRef.current = createTopLoaderController();
+  }
+
+  const controller = controllerRef.current;
+  const snapshot = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+    controller.getSnapshot,
+  );
+
+  useEffect(() => () => controller.reset(), [controller]);
+
+  function handleRestart() {
+    controller.reset();
+    controller.start();
+  }
+
+  return (
+    <div className="ui-lab-page__stack">
+      <TopLoader controller={controller} />
+      <div className="ui-lab-page__inline-wrap">
+        <Button onClick={() => controller.start()}>Start</Button>
+        <Button onClick={() => controller.done()} variant="outline">Finish</Button>
+        <Button onClick={handleRestart} variant="ghost">Restart</Button>
+      </div>
+      <p className="ui-lab-page__muted">
+        Phase: {snapshot.phase} · Visual progress: {Math.round(snapshot.progress * 100)}%.
+      </p>
+      <p className="ui-lab-page__muted">
+        The bar stays fixed to the top of the viewport so transport wrappers can reuse the same `start()` and `done()` calls around API work. In the raw controller, `reset()` still means an immediate hard stop.
+      </p>
+    </div>
+  );
+}
 
 export function renderLoadingStatesDocs() {
   return (
@@ -296,6 +340,90 @@ export function renderProgressDocs() {
           "Do not use progress for qualitative states that are not truly measurable as completion.",
           "Do not overload the primitive with inline actions, labels, and multi-line metadata inside the bar itself.",
           "Do not treat dashboard-specific metrics cards as part of the base progress contract.",
+        ],
+      )}
+    </div>
+  );
+}
+
+export function renderTopLoaderDocs() {
+  return (
+    <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
+      <Card>
+        <CardHeader>
+          <CardTitle>Manual transport control</CardTitle>
+          <CardDescription>Top loader should behave like a restrained NProgress-style transport indicator, not like a determinate workflow progress bar.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Interactive" stacked>
+            <TopLoaderPreview />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Separation from progress</CardTitle>
+          <CardDescription>Global network activity and measured task completion should stay separate so transport feedback does not dilute real workflow progress.</CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Use top loader for transport" stacked>
+            <p className="ui-lab-page__muted">
+              Use top loader when a request, route refresh, or global transport action needs quick page-level feedback without reflowing local content.
+            </p>
+          </ShowcaseRow>
+          <ShowcaseRow label="Use progress bar for measured work" stacked>
+            <div className="ui-lab-page__progress-row">
+              <div className="ui-lab-page__progress-copy">
+                <strong>Artifact upload</strong>
+                <span className="ui-lab-page__muted">Measured completion should still use a determinate progress bar.</span>
+              </div>
+              <ProgressBar tone="brand" value={61} />
+            </div>
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      {renderPropsApiCard("Compact reference for the review-stage top loader contract used for app-level transport activity.", [
+        { name: "controller", type: "TopLoaderController", notes: "Caller-owned controller exposes `start()`, `done()`, `reset()`, `set()`, and `inc()` so transport wrappers can drive the bar without local prop drilling. In the lab, replay uses `reset()` plus `start()`." },
+        { name: "tone", type: "\"brand\" | \"success\" | \"warning\" | \"danger\" | \"neutral\"", notes: "Keeps the same slim viewport bar while allowing semantic emphasis if a product surface later proves the need." },
+        { name: "insetBlockStart / zIndex", type: "CSS length / number", notes: "Lets app shells offset the bar below trusted chrome such as fixed headers without rewriting the component." },
+      ])}
+
+      {renderReferenceNotesCard(
+        "Top loader is a review-stage viewport activity indicator for transport work, separate from determinate content progress.",
+        [
+          "The contract is one thin fixed bar at the top of the viewport plus a caller-owned controller.",
+          "The controller owns the NProgress-like lifecycle: start, trickle, finish, and reset.",
+          "Measured upload or rollout completion should stay on `ProgressBar`, not migrate into the viewport loader.",
+        ],
+        [
+          "Instantiate one controller near the app shell and let transport wrappers call `start()` and `done()` around shared API work.",
+          "Use the viewport loader for short-lived global activity that should not re-layout the current page.",
+          "Keep the bar visually restrained so it reads as system transport feedback rather than branded decoration.",
+        ],
+        [
+          "Do not use top loader as the only feedback for long operations that need precise percentages or surrounding explanation.",
+          "Do not stack multiple competing top loaders in the same viewport.",
+          "Do not let local widget fetches trigger the global bar if they are background or silent activity.",
+        ],
+      )}
+
+      {renderUsageReviewCard(
+        "Top loader fits app-level transport activity where users need quick reassurance that work is happening, but not a full local loading placeholder.",
+        [
+          "A route refresh, global refetch, or shared API wrapper needs one compact feedback surface at the page level.",
+          "The work is real enough to acknowledge, but not rich enough to justify a modal, skeleton, or determinate progress block.",
+        ],
+        [
+          "Keep one shared controller close to the shell and reuse it across transport calls.",
+          "Delay or suppress the loader for silent background requests so the viewport signal stays meaningful.",
+          "Pair it with richer local states when an individual panel still needs structural loading context.",
+        ],
+        [
+          "Do not treat top loader as a substitute for empty, loading, or error states inside real content surfaces.",
+          "Do not use it for exact completion semantics such as file upload percentages.",
+          "Do not wire it directly to every micro-interaction without a threshold or silence policy.",
         ],
       )}
     </div>

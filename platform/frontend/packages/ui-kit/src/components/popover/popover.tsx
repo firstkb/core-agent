@@ -9,6 +9,7 @@ import {
   useId,
   useMemo,
   useRef,
+  useState,
   type HTMLAttributes,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactElement,
@@ -167,6 +168,7 @@ export type PopoverContentProps = HTMLAttributes<HTMLDivElement>;
 export function PopoverContent({ children, className, ...props }: PopoverContentProps) {
   const { align, contentId, contentRef, open, side, sideOffset, triggerRef } =
     usePopoverContext();
+  const [positionReady, setPositionReady] = useState(false);
   const style = useAnchoredPosition({
     align,
     anchorRef: triggerRef,
@@ -175,6 +177,21 @@ export function PopoverContent({ children, className, ...props }: PopoverContent
     side,
     sideOffset,
   });
+
+  useEffect(() => {
+    if (!open || typeof window === "undefined") {
+      setPositionReady(false);
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setPositionReady(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [open]);
 
   if (!open || typeof document === "undefined") {
     return null;
@@ -187,7 +204,11 @@ export function PopoverContent({ children, className, ...props }: PopoverContent
       id={contentId}
       ref={contentRef}
       role="dialog"
-      style={style}
+      style={{
+        ...style,
+        pointerEvents: positionReady ? "auto" : "none",
+        visibility: positionReady ? "visible" : "hidden",
+      }}
       tabIndex={-1}
     >
       {children}

@@ -1,10 +1,8 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-import { Button } from "../button";
+import { Pagination } from "../pagination";
 import { Select } from "../select";
 import { cx } from "../../lib/cx";
-
-type TablePaginationToken = number | "ellipsis-left" | "ellipsis-right";
 
 export type TablePaginationBarProps = HTMLAttributes<HTMLDivElement> & {
   currentPage: number;
@@ -14,6 +12,7 @@ export type TablePaginationBarProps = HTMLAttributes<HTMLDivElement> & {
   totalItems?: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  editableCurrentPage?: boolean;
   info?: ReactNode;
 };
 
@@ -21,35 +20,22 @@ function clampPage(page: number, totalPages: number) {
   return Math.min(Math.max(page, 1), Math.max(totalPages, 1));
 }
 
-function getPaginationTokens(currentPage: number, totalPages: number): TablePaginationToken[] {
-  if (totalPages <= 5) {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }
+function renderEntryInfo(totalItems: number) {
+  const entryCount = Math.max(totalItems, 0);
+  const entryLabel = entryCount === 1 ? "entry" : "entries";
 
-  if (currentPage <= 3) {
-    return [1, 2, 3, 4, "ellipsis-right", totalPages];
-  }
-
-  if (currentPage >= totalPages - 2) {
-    return [1, "ellipsis-left", totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  }
-
-  return [1, "ellipsis-left", currentPage - 1, currentPage, currentPage + 1, "ellipsis-right", totalPages];
-}
-
-function renderRangeInfo(currentPage: number, pageSize: number, totalItems: number) {
-  if (totalItems <= 0) {
-    return "0 of 0";
-  }
-
-  const from = (currentPage - 1) * pageSize + 1;
-  const to = Math.min(currentPage * pageSize, totalItems);
-  return `${from}-${to} of ${totalItems}`;
+  return (
+    <span className="ui-table-pagination-bar__entry-summary">
+      <span className="ui-table-pagination-bar__entry-count">{entryCount}</span>
+      <span className="ui-table-pagination-bar__entry-label">{entryLabel}</span>
+    </span>
+  );
 }
 
 export function TablePaginationBar({
   className,
   currentPage,
+  editableCurrentPage = true,
   info,
   onPageChange,
   onPageSizeChange,
@@ -59,12 +45,23 @@ export function TablePaginationBar({
   totalPages,
   ...props
 }: TablePaginationBarProps) {
-  const safePage = clampPage(currentPage, totalPages);
-  const pageTokens = getPaginationTokens(safePage, totalPages);
-  const infoLabel = info ?? (typeof totalItems === "number" ? renderRangeInfo(safePage, pageSize, totalItems) : null);
+  const safeTotalPages = Math.max(totalPages, 0);
+  const safePage = clampPage(currentPage, safeTotalPages);
+  const infoLabel = info ?? (typeof totalItems === "number" ? renderEntryInfo(totalItems) : null);
 
   return (
     <div {...props} className={cx("ui-table-pagination-bar", className)}>
+      {safeTotalPages > 1 ? (
+        <Pagination
+          className="ui-table-pagination-bar__controls"
+          currentPage={safePage}
+          editableCurrentPage={editableCurrentPage}
+          onPageChange={onPageChange}
+          size="sm"
+          totalPages={safeTotalPages}
+        />
+      ) : null}
+
       <div className="ui-table-pagination-bar__meta">
         {typeof onPageSizeChange === "function" ? (
           <label className="ui-table-pagination-bar__size-control">
@@ -84,53 +81,6 @@ export function TablePaginationBar({
           </label>
         ) : null}
         {infoLabel ? <span className="ui-table-pagination-bar__info">{infoLabel}</span> : null}
-      </div>
-
-      <div className="ui-table-pagination-bar__controls" role="navigation" aria-label="Table pagination">
-        <Button
-          aria-label="Go to previous page"
-          disabled={safePage <= 1}
-          onClick={() => onPageChange(safePage - 1)}
-          size="sm"
-          variant="ghost"
-        >
-          Prev
-        </Button>
-        <div className="ui-table-pagination-bar__pages">
-          {pageTokens.map((token) => {
-            if (typeof token !== "number") {
-              return (
-                <span aria-hidden="true" className="ui-table-pagination-bar__ellipsis" key={token}>
-                  …
-                </span>
-              );
-            }
-
-            const active = token === safePage;
-
-            return (
-              <Button
-                aria-current={active ? "page" : undefined}
-                className={cx(active && "ui-table-pagination-bar__page-button--active")}
-                key={token}
-                onClick={() => onPageChange(token)}
-                size="sm"
-                variant={active ? "secondary" : "ghost"}
-              >
-                {token}
-              </Button>
-            );
-          })}
-        </div>
-        <Button
-          aria-label="Go to next page"
-          disabled={safePage >= totalPages}
-          onClick={() => onPageChange(safePage + 1)}
-          size="sm"
-          variant="ghost"
-        >
-          Next
-        </Button>
       </div>
     </div>
   );

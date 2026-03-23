@@ -77,6 +77,7 @@ import {
   renderAspectRatioDocs,
   renderButtonDocs,
   renderCheckboxDocs,
+  renderComboboxDocs,
   renderDateFieldDocs,
   renderFieldDocs,
   renderFormShellDocs,
@@ -88,6 +89,7 @@ import {
   renderSelectDocs,
   renderSliderDocs,
   renderSwitchDocs,
+  renderTagInputDocs,
   renderTextareaDocs,
   renderToggleDocs,
   renderToggleGroupDocs,
@@ -120,7 +122,7 @@ import {
   renderMenuDocs,
   renderPopoverDocs,
   renderSheetDocs,
-  renderSidebarCandidateDocs,
+  renderSidebarDocs,
   renderTooltipDocs,
 } from "./overlay-contracts";
 import {
@@ -144,6 +146,7 @@ import {
   renderLoadingStatesDocs,
   renderProgressDocs,
   renderSkeletonDocs,
+  renderTopLoaderDocs,
 } from "./states";
 import {
   renderSummaryPillStripDocs,
@@ -157,7 +160,7 @@ export function renderPanel(
   onDialogOpenChange: (open: boolean) => void,
   onDrawerOpenChange: (open: boolean) => void,
   onSheetOpenChange: (open: boolean) => void,
-  onSidebarCandidateDrawerOpenChange: (open: boolean) => void,
+  onSidebarDrawerOpenChange: (open: boolean) => void,
   activePresetId: string,
   onPresetSelect: (presetId: string) => void,
   page: number,
@@ -212,8 +215,16 @@ export function renderPanel(
         return renderSelectDocs();
       }
 
+      if (activeItem.id === "combobox-doc") {
+        return renderComboboxDocs();
+      }
+
       if (activeItem.id === "textarea-doc") {
         return renderTextareaDocs();
+      }
+
+      if (activeItem.id === "tag-input-doc") {
+        return renderTagInputDocs();
       }
 
       if (activeItem.id === "checkbox-doc") {
@@ -466,7 +477,7 @@ export function renderPanel(
       }
 
       if (activeItem.id === "api-keys") {
-        return renderSidebarCandidateDocs(onSidebarCandidateDrawerOpenChange);
+        return renderSidebarDocs(onSidebarDrawerOpenChange);
       }
 
       if (activeItem.id === "secondary-tabs-doc") {
@@ -647,6 +658,10 @@ export function renderPanel(
 
       if (activeItem.id === "progress-doc") {
         return renderProgressDocs();
+      }
+
+      if (activeItem.id === "top-loader-doc") {
+        return renderTopLoaderDocs();
       }
 
       if (activeItem.id === "skeleton-doc") {

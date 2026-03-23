@@ -1,10 +1,9 @@
 import type { ReactNode, SVGProps } from "react";
 
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, Collapsible, CollapsibleContent, CollapsibleTrigger } from "@platform/ui-kit";
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, SidebarNav, type SidebarNavItem } from "@platform/ui-kit";
 
 import type { UiLabLeafMeta, UiLabSectionIcon } from "../model/leaf-meta";
 import {
-  ChevronIcon,
   DashboardGridIcon,
   DataDisplayIcon,
   FormIcon,
@@ -63,139 +62,80 @@ export function ShowcaseRow({
   );
 }
 
-export function SidebarCandidateRow({
-  active = false,
-  children,
-  className = "",
-}: {
-  active?: boolean;
-  children: ReactNode;
-  className?: string;
-}) {
+const sidebarPreviewItems: SidebarNavItem[] = [
+  {
+    icon: <DashboardGridIcon />,
+    id: "dashboards",
+    label: "Dashboards",
+  },
+  {
+    children: [
+      {
+        children: [
+          { id: "profiles-default", label: "Default" },
+          { id: "profiles-creator", label: "Creator" },
+          { id: "profiles-company", label: "Company" },
+          {
+            children: [
+              { id: "profiles-feeds", label: "Feeds" },
+              { id: "profiles-gamer", label: "Gamer" },
+              { id: "profiles-modal", label: "Modal" },
+              { id: "profiles-plain", label: "Plain" },
+            ],
+            collapsedLabel: "More 4",
+            id: "profiles-more",
+            expandedLabel: "Less",
+            label: "More",
+          },
+        ],
+        defaultOpen: true,
+        id: "profiles",
+        label: "Profiles",
+      },
+      {
+        children: [
+          { id: "projects-2-columns", label: "2 Columns" },
+          { id: "projects-3-columns", label: "3 Columns" },
+        ],
+        id: "projects",
+        label: "Projects",
+      },
+      { id: "works", label: "Works", meta: 2 },
+      { id: "teams", label: "Teams", meta: "New" },
+    ],
+    defaultOpen: true,
+    icon: <ProfileCircleIcon />,
+    id: "public-profile",
+    label: "Public Profile",
+  },
+  {
+    children: [
+      { id: "account", label: "Account" },
+      { id: "billing", label: "Billing" },
+      { id: "notifications", label: "Notifications", meta: 6 },
+      {
+        icon: <ShieldKeyIcon />,
+        id: "security",
+        label: "Security",
+      },
+    ],
+    icon: <WalletCardIcon />,
+    id: "my-account",
+    label: "My Account",
+  },
+];
+
+export function SidebarPreviewNav({ compact = false }: { compact?: boolean }) {
   return (
-    <div
-      className={`ui-lab-page__sidebar-candidate-row${active ? " ui-lab-page__sidebar-candidate-row--active" : ""}${className ? ` ${className}` : ""}`}
-    >
-      {children}
-    </div>
+    <SidebarNav
+      className="ui-lab-page__sidebar-preview"
+      compact={compact}
+      defaultActiveItemId="profiles-default"
+      defaultOpenItemIds={["public-profile", "profiles"]}
+      items={sidebarPreviewItems}
+    />
   );
 }
-
-export function SidebarCandidateNav({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={`ui-lab-page__sidebar-candidate${compact ? " ui-lab-page__sidebar-candidate--compact" : ""}`}>
-      <SidebarCandidateRow active className="ui-lab-page__sidebar-candidate-row--root">
-        <span className="ui-lab-page__sidebar-candidate-row-copy">
-          <DashboardGridIcon className="ui-lab-page__sidebar-candidate-icon" />
-          <span>Dashboards</span>
-        </span>
-      </SidebarCandidateRow>
-
-      <Collapsible defaultOpen>
-        <CollapsibleTrigger className="ui-lab-page__sidebar-candidate-row ui-lab-page__sidebar-candidate-row--root">
-          <span className="ui-lab-page__sidebar-candidate-row-copy">
-            <ProfileCircleIcon className="ui-lab-page__sidebar-candidate-icon" />
-            <span>Public Profile</span>
-          </span>
-          <ChevronIcon className="ui-lab-page__sidebar-candidate-caret" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ui-lab-page__sidebar-candidate-branch">
-          <Collapsible defaultOpen>
-            <CollapsibleTrigger className="ui-lab-page__sidebar-candidate-row ui-lab-page__sidebar-candidate-row--nested">
-              <span className="ui-lab-page__sidebar-candidate-row-copy">
-                <span>Profiles</span>
-              </span>
-              <ChevronIcon className="ui-lab-page__sidebar-candidate-caret" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="ui-lab-page__sidebar-candidate-sub-branch">
-              <SidebarCandidateRow active className="ui-lab-page__sidebar-candidate-row--leaf">
-                <span className="ui-lab-page__sidebar-candidate-row-copy">
-                  <span>Default</span>
-                </span>
-              </SidebarCandidateRow>
-              <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--leaf">
-                <span className="ui-lab-page__sidebar-candidate-row-copy">
-                  <span>Creator</span>
-                </span>
-              </SidebarCandidateRow>
-              <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--leaf">
-                <span className="ui-lab-page__sidebar-candidate-row-copy">
-                  <span>Company</span>
-                </span>
-              </SidebarCandidateRow>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <Collapsible>
-            <CollapsibleTrigger className="ui-lab-page__sidebar-candidate-row ui-lab-page__sidebar-candidate-row--nested">
-              <span className="ui-lab-page__sidebar-candidate-row-copy">
-                <span>Projects</span>
-              </span>
-              <ChevronIcon className="ui-lab-page__sidebar-candidate-caret" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="ui-lab-page__sidebar-candidate-sub-branch">
-              <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--leaf">
-                <span className="ui-lab-page__sidebar-candidate-row-copy">
-                  <span>2 Columns</span>
-                </span>
-              </SidebarCandidateRow>
-              <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--leaf">
-                <span className="ui-lab-page__sidebar-candidate-row-copy">
-                  <span>3 Columns</span>
-                </span>
-              </SidebarCandidateRow>
-            </CollapsibleContent>
-          </Collapsible>
-
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <span>Works</span>
-            </span>
-          </SidebarCandidateRow>
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <span>Teams</span>
-            </span>
-          </SidebarCandidateRow>
-        </CollapsibleContent>
-      </Collapsible>
-
-      <Collapsible>
-        <CollapsibleTrigger className="ui-lab-page__sidebar-candidate-row ui-lab-page__sidebar-candidate-row--root">
-          <span className="ui-lab-page__sidebar-candidate-row-copy">
-            <WalletCardIcon className="ui-lab-page__sidebar-candidate-icon" />
-            <span>My Account</span>
-          </span>
-          <ChevronIcon className="ui-lab-page__sidebar-candidate-caret" />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="ui-lab-page__sidebar-candidate-branch">
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <span>Account</span>
-            </span>
-          </SidebarCandidateRow>
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <span>Billing</span>
-            </span>
-          </SidebarCandidateRow>
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <span>Notifications</span>
-            </span>
-          </SidebarCandidateRow>
-          <SidebarCandidateRow className="ui-lab-page__sidebar-candidate-row--nested">
-            <span className="ui-lab-page__sidebar-candidate-row-copy">
-              <ShieldKeyIcon className="ui-lab-page__sidebar-candidate-icon ui-lab-page__sidebar-candidate-icon--inline" />
-              <span>Security</span>
-            </span>
-          </SidebarCandidateRow>
-        </CollapsibleContent>
-      </Collapsible>
-    </div>
-  );
-}
-
 
 export function renderUsageReviewCard(
   description: string,

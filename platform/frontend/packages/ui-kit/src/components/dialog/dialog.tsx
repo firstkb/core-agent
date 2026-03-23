@@ -434,7 +434,7 @@ export function DrawerContent({
   children,
   className,
   showCloseButton = true,
-  showHandle = true,
+  showHandle = false,
   ...props
 }: DrawerContentProps) {
   const { onOpenChange } = useOverlaySurfaceContext();

@@ -45,7 +45,7 @@ import {
 } from "@platform/ui-kit";
 
 import {
-  SidebarCandidateNav,
+  SidebarPreviewNav,
   ShowcaseRow,
   renderDoNotUseForCard,
   renderPropsApiCard,
@@ -284,7 +284,7 @@ export function renderDrawerDocs(onDrawerOpenChange: (open: boolean) => void) {
       <Card>
         <CardHeader>
           <CardTitle>Structure</CardTitle>
-          <CardDescription>Handle, header, body, and footer define the bottom-sheet contract without promoting product-specific navigation.</CardDescription>
+          <CardDescription>Optional handle, header, body, and footer define the bottom-sheet contract without promoting product-specific navigation.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <div className="ui-lab-page__showcase-row">
@@ -292,7 +292,7 @@ export function renderDrawerDocs(onDrawerOpenChange: (open: boolean) => void) {
             <div className="ui-lab-page__note-card ui-lab-page__structure-card">
               <div className="ui-lab-page__structure-item">
                 <span className="ui-lab-page__note-label">Handle</span>
-                <p className="ui-lab-page__structure-copy">Small drag affordance that marks the surface as a temporary bottom layer.</p>
+                <p className="ui-lab-page__structure-copy">Optional visual marker for a bottom-sheet surface. Do not show it by default unless the product really supports drag-style behavior.</p>
               </div>
               <div className="ui-lab-page__structure-item">
                 <span className="ui-lab-page__note-label">Header</span>
@@ -315,7 +315,7 @@ export function renderDrawerDocs(onDrawerOpenChange: (open: boolean) => void) {
         { name: "open", type: "boolean", notes: "Controls whether the drawer is mounted and visible." },
         { name: "onOpenChange", type: "(open: boolean) => void", notes: "Single visibility callback for triggers, backdrop click, escape, and close affordances." },
         { name: "closeOnOverlay / closeOnEscape", type: "boolean", notes: "Optional dismissal controls that keep the drawer behavior aligned with the other overlay primitives." },
-        { name: "DrawerContent.showHandle", type: "boolean", notes: "Toggles the shared top handle without changing the rest of the bottom-sheet composition." },
+        { name: "DrawerContent.showHandle", type: "boolean", notes: "Optional visual handle for teams that intentionally want a bottom-sheet marker. It should not imply drag support unless the product adds that behavior." },
         { name: "DrawerHeader / DrawerBody / DrawerFooter", type: "composition", notes: "Bottom-sheet content stays composed rather than receiving page-specific props." },
       ])}
 
@@ -369,36 +369,36 @@ export function renderDrawerDocs(onDrawerOpenChange: (open: boolean) => void) {
 }
 
 
-export function renderSidebarCandidateDocs(onDrawerOpenChange: (open: boolean) => void) {
+export function renderSidebarDocs(onDrawerOpenChange: (open: boolean) => void) {
   return (
     <div className="ui-lab-page__panel-grid ui-lab-page__panel-grid--wide">
       <Card>
         <CardHeader>
-          <CardTitle>Desktop candidate</CardTitle>
-          <CardDescription>Sidebar candidate stays app-layer while we validate nested disclosure, active state, and overall navigation rhythm.</CardDescription>
+          <CardTitle>Desktop navigation</CardTitle>
+          <CardDescription>Sidebar should stay a generic nested navigation tree with reusable disclosure and active-state behavior.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__stack">
           <div className="ui-lab-page__inline-wrap">
-            <Badge appearance="soft" variant="warning">
-              Review only
+            <Badge appearance="soft" variant="brand">
+              UI Kit
             </Badge>
-            <Badge appearance="soft" variant="neutral">
-              App-layer candidate
+            <Badge appearance="soft" variant="success">
+              Shared navigation tree
             </Badge>
           </div>
-          <SidebarCandidateNav />
+          <SidebarPreviewNav />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>Mobile relation</CardTitle>
-          <CardDescription>Mobile sidebar should likely ride inside the stable drawer shell, but the navigation tree itself is still not a shared primitive.</CardDescription>
+          <CardDescription>The same sidebar tree should stay usable inside a left off-canvas mobile shell without changing its item contract.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__stack">
-          <div className="ui-lab-page__sidebar-candidate-mobile-callout">
+          <div className="ui-lab-page__sidebar-preview-mobile-callout">
             <p className="ui-lab-page__muted">
-              Use the mobile preview to validate that nested navigation works inside a bottom overlay before any `sidebar-nav` API is promoted.
+              Use the mobile preview to validate that the same shared tree still reads clearly when it slides in from the left on smaller screens.
             </p>
             <Button onClick={() => onDrawerOpenChange(true)} variant="outline">
               Open mobile nav preview
@@ -407,17 +407,28 @@ export function renderSidebarCandidateDocs(onDrawerOpenChange: (open: boolean) =
         </CardContent>
       </Card>
 
+      {renderPropsApiCard("Compact reference for the shared nested sidebar navigation contract.", [
+        { name: "items", type: "SidebarNavItem[]", notes: "Nested navigation tree with labels, optional icons, optional meta, and recursive children." },
+        { name: "activeItemId / defaultActiveItemId", type: "string", notes: "Controls or seeds the active leaf without making parent disclosure state implicit." },
+        { name: "openItemIds / defaultOpenItemIds", type: "string[]", notes: "Controls or seeds which parent branches are expanded." },
+        { name: "onActiveItemChange", type: "(itemId, item) => void", notes: "Emits whenever a leaf is selected so routing can stay app-owned." },
+        { name: "onOpenItemIdsChange", type: "(itemIds) => void", notes: "Emits disclosure updates for teams that want controlled sidebar state." },
+        { name: "disclosureMode", type: "\"single\" | \"multiple\"", notes: "Lets sibling branches behave like a classic sidebar accordion when only one section per level should stay open." },
+        { name: "SidebarNavItem.collapsedLabel / expandedLabel", type: "string", notes: "Allows rows such as `More 4` to flip to `Less` without inventing special-case markup outside the shared tree." },
+        { name: "compact", type: "boolean", notes: "Reduces padding slightly for tighter mobile or embedded shells without changing the hierarchy model." },
+      ])}
+
       {renderReferenceNotesCard(
-        "Sidebar candidate remains a review-only app-layer construct even though it reuses stable primitives like collapsible and drawer.",
+        "Sidebar should stay a reusable nested tree primitive while routing, search, and workflow-specific badges remain app-owned.",
         [
-          "The candidate anatomy is top-level rows, nested disclosure groups, active leaf pills, and optional mobile container behavior.",
-          "Desktop and mobile should share the same tree language, but not necessarily the same shell treatment.",
-          "Search, routing, badges, and workflow labels still belong to the app layer until the contract hardens.",
+          "The stable anatomy is top-level rows, nested disclosure groups, active leaves, and an optional off-canvas mobile shell.",
+          "Desktop and mobile should share the same tree language even when the shell treatment changes.",
+          "Search, routing, workflow badges, and page chrome still belong to the app layer around the shared tree.",
         ],
         [
-          "There is intentionally no approved shared props API yet for a reusable `sidebar-nav` primitive.",
-          "Keep node data, open-state rules, and product routing local to the app while behavior is still under review.",
-          "If this is promoted later, the API should be driven by generic items and open keys, not product-specific menu names.",
+          "The stable API should be driven by generic items, active leaf state, and open branch keys rather than product-specific route names.",
+          "Use one shared tree contract and keep shell-specific concerns like search or workspace switchers outside the primitive.",
+          "Prefer composition with `Sheet` on mobile rather than adding a second navigation-only overlay primitive.",
         ],
         [
           "Every branch and leaf needs clear labels and visible active state without relying on shell context alone.",
@@ -427,29 +438,29 @@ export function renderSidebarCandidateDocs(onDrawerOpenChange: (open: boolean) =
       )}
 
       {renderUsageReviewCard(
-        "Sidebar Candidate exists to validate navigation tree behavior before anything app-shaped reaches ui-kit.",
+        "Sidebar fits durable left-rail navigation where users need a stable tree of sections, groups, and deeper leaves.",
         [
-          "The team needs to test nested navigation rhythm, active states, and mobile relation against real app surfaces.",
-          "Collapsible and drawer already exist, but the composed sidebar behavior still needs product confirmation.",
+          "The product needs a left navigation tree with nested disclosure and clearly visible active state.",
+          "Mobile still needs access to the same hierarchy through a temporary left shell rather than a permanent rail.",
         ],
         [
-          "Keep the candidate local to app code while desktop, mobile, and routing behavior are still being tuned.",
-          "Use stable shared primitives underneath instead of inventing a second hidden navigation stack.",
-          "Promote only after the tree shape and API can be named generically without product-specific language.",
+          "Keep the tree generic and compositional even if the surrounding shell remains app-owned.",
+          "Reuse the same item language on desktop and mobile so the hierarchy stays familiar.",
+          "Validate deeper branches and `More` groupings before adding product-only rows and workflow controls.",
         ],
         [
-          "Do not promote the current UI Lab sidebar markup directly into ui-kit just because the preview looks good.",
-          "Do not freeze a nav API before mobile drawer behavior and disclosure rules are approved.",
-          "Do not let the candidate absorb product-specific search, counts, or workflow controls prematurely.",
+          "Do not promote a whole application sidebar shell with search, tenants, notifications, and workspace switching as one primitive.",
+          "Do not hard-code route labels or page-specific action areas into the shared component.",
+          "Do not assume the same shell chrome belongs in desktop and mobile once the nav tree itself is stable.",
         ],
       )}
 
       {renderDoNotUseForCard(
-        "Sidebar Candidate should not be treated as a finished design-system primitive yet.",
+        "Sidebar should stay a generic tree primitive instead of becoming a whole app shell.",
         [
-          "Immediate reuse across product apps before desktop, mobile, and routing semantics are stable.",
-          "A dumping ground for per-product search, badges, workflow status, or domain-specific command groups.",
-          "A shortcut to move app shell decisions into ui-kit without a clean generic API and approval pass.",
+          "Product-wide app shells that bundle navigation, search, tenant switching, and notifications into one unbreakable component.",
+          "Workflow-specific control clusters that belong to page toolbars or local route chrome.",
+          "Any API that requires product route names, tenancy language, or screen-owned orchestration logic.",
         ],
       )}
     </div>

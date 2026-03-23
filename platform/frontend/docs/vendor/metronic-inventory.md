@@ -74,6 +74,8 @@ Inventory and migration tracker for the Metronic donor sources under `platform/f
   - `skeleton`
   - `scroll-area`
   - `separator`
+  - `combobox`
+  - `tag-input`
   - `counting-number`
   - `stepper`
   - `switch`
@@ -118,8 +120,10 @@ Inventory and migration tracker for the Metronic donor sources under `platform/f
 - Treat `rating` as a safe shared compact scoring primitive as long as review cards, commentary, and richer review workflows stay outside the component.
 - Treat `counting-number` as a review-stage display utility; keep motion, stat-card composition, and dashboard numerics under tighter validation before promotion.
 - Treat linear `progress-bar` as the current safe donor extraction; do not promote radial or dashboard-shaped progress variants without a stronger reuse case.
+- Treat searchable combobox donors such as `country-combobox` as the basis for a product-owned review-stage `combobox`, not as an expansion of the stable native `select`.
+- Treat lightweight donor tagging patterns such as `ProductFormTagInput` as the basis for a separate review-stage `tag-input`, not as an overloaded combobox or select variant.
 - Treat richer helpers like `table-column-header` and `table-pagination-bar` as part of the approved `table` primitive layer, not as a separate data-grid runtime.
-- Treat `table-column-visibility` as a review-stage table helper until personalization demand, toolbar fit, and API shape are proven across more than one surface.
+- Treat `table-column-visibility` as part of the approved shared table helper layer now that toolbar fit, accessibility, and real-surface reuse have been proven.
 - Treat `accordion-menu` and sidebar tree behavior as app-layer review material until desktop/mobile navigation rules and a generic API are both approved.
 
 ## Next Donor Candidates

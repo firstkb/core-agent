@@ -1,6 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   Badge,
@@ -16,12 +15,9 @@ import {
   type CollectionEmptyStateHighlight,
   FilterChip,
   Input,
-  PageToolbar,
   TimelineFeed,
   type TimelineFeedGroup,
 } from "@platform/ui-kit";
-
-import { getAdminRoutePath } from "../../shared/navigation";
 
 export type AdminSurfaceFilterGroup = {
   key: string;
@@ -52,10 +48,8 @@ export type AdminSurfaceListItem = {
 };
 
 type AdminSurfaceContractProps = {
-  title: string;
-  eyebrow: string;
-  description: string;
   sectionTabs?: ReactNode;
+  sectionTabsClassName?: string;
   summaryStrip?: ReactNode;
   controlStrip?: ReactNode;
   toolbarControls?: ReactNode;
@@ -85,13 +79,11 @@ function matchesSearch(item: AdminSurfaceListItem, searchQuery: string) {
 
 export function AdminSurfaceContract({
   activeFilters: controlledActiveFilters,
-  description,
   detailEyebrow,
   controlStrip,
   externalStateHighlights,
   filterGroups,
   items,
-  eyebrow,
   listDescription,
   listTitle,
   onActiveFiltersChange,
@@ -101,11 +93,10 @@ export function AdminSurfaceContract({
   railTitle,
   searchQuery: controlledSearchQuery,
   sectionTabs,
+  sectionTabsClassName,
   summaryStrip,
   toolbarControls,
-  title,
 }: AdminSurfaceContractProps) {
-  const navigate = useNavigate();
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(items[0]?.id ?? null);
   const [internalActiveFilters, setInternalActiveFilters] = useState<Record<string, string>>(() =>
@@ -226,31 +217,13 @@ export function AdminSurfaceContract({
 
   return (
     <div className="admin-web__stack">
-      <PageToolbar
-        actions={
-          <>
-            <Button
-              onClick={() => navigate(getAdminRoutePath("overview"))}
-              size="sm"
-              variant="outline"
-            >
-              Return to overview
-            </Button>
-            <Button
-              onClick={() => navigate(getAdminRoutePath("tenants"))}
-              size="sm"
-              variant="secondary"
-            >
-              Open tenant workbench
-            </Button>
-          </>
-        }
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-      />
-
-      {sectionTabs ? <div className="admin-web__section-tabs-bar">{sectionTabs}</div> : null}
+      {sectionTabs ? (
+        <div
+          className={`admin-web__section-tabs-bar${sectionTabsClassName ? ` ${sectionTabsClassName}` : ""}`}
+        >
+          {sectionTabs}
+        </div>
+      ) : null}
       {summaryStrip}
       {controlStrip}
 

@@ -57,6 +57,42 @@ export function DashboardGridIcon(props: IconProps) {
   );
 }
 
+export function HomeIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M4.75 10.25 12 4.75l7.25 5.5" />
+      <path d="M6.75 9.75v8.5h10.5v-8.5" />
+      <path d="M10 18.25V14h4v4.25" />
+    </svg>
+  );
+}
+
+export function StarIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="m12 4.1 2.2 4.45 4.9.72-3.55 3.45.84 4.88L12 15.3l-4.39 2.3.84-4.88L4.9 9.27l4.9-.72Z" />
+    </svg>
+  );
+}
+
 export function SparkIcon(props: IconProps) {
   return (
     <svg
@@ -70,6 +106,24 @@ export function SparkIcon(props: IconProps) {
       {...props}
     >
       <path d="m12 3 1.7 3.8L18 8.5l-3 3.1.7 4.4L12 13.9 8.3 16l.7-4.4-3-3.1 4.3-1.7Z" />
+    </svg>
+  );
+}
+
+export function ChatBubbleIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M7.25 7.75h9.5A2.75 2.75 0 0 1 19.5 10.5v5A2.75 2.75 0 0 1 16.75 18.25H11.4L8 20.75v-2.5H7.25A2.75 2.75 0 0 1 4.5 15.5v-5a2.75 2.75 0 0 1 2.75-2.75Z" />
+      <path d="M8.5 11.25h7M8.5 14.25h4.5" />
     </svg>
   );
 }
@@ -264,6 +318,43 @@ export function MenuIcon(props: IconProps) {
   );
 }
 
+export function SidebarCollapseIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <rect height="14" rx="2" width="16" x="4" y="5" />
+      <path d="M9 5v14" />
+      <path d="m14.75 9.25-2.75 2.75 2.75 2.75" />
+    </svg>
+  );
+}
+
+export function SunMoonIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M15.5 4.75A6.75 6.75 0 1 0 19.25 16a7.5 7.5 0 0 1-3.75-11.25Z" />
+      <path d="M7.25 4.5v1.5M4.55 7.2H6.1M7.25 17.95v1.55M4.55 16.3H6.1" />
+    </svg>
+  );
+}
+
 export function BellIcon(props: IconProps) {
   return (
     <svg
@@ -276,8 +367,8 @@ export function BellIcon(props: IconProps) {
       viewBox="0 0 24 24"
       {...props}
     >
-      <path d="M8.25 16.5h7.5c-.85-1-1.25-2.15-1.25-3.9V10.9A4.5 4.5 0 0 0 10 6.5v-.25a2 2 0 1 1 4 0v.25a4.5 4.5 0 0 1 4.5 4.4v1.7c0 1.75-.4 2.9-1.25 3.9H8.25Z" />
-      <path d="M10.15 18a2.1 2.1 0 0 0 3.7 0" />
+      <path d="M12 5.25a4.5 4.5 0 0 1 4.5 4.5v2.05c0 1.05.22 2.08.64 3.04l.53 1.21H6.33l.53-1.21c.42-.96.64-1.99.64-3.04V9.75A4.5 4.5 0 0 1 12 5.25Z" />
+      <path d="M9.8 18.25a2.2 2.2 0 0 0 4.4 0" />
     </svg>
   );
 }
@@ -318,6 +409,25 @@ export function CloseIcon(props: IconProps) {
     >
       <path d="m6 6 12 12" />
       <path d="M18 6 6 18" />
+    </svg>
+  );
+}
+
+export function LogOutIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M10 5.25H7.75A2.75 2.75 0 0 0 5 8v8a2.75 2.75 0 0 0 2.75 2.75H10" />
+      <path d="M13 8.25 17.5 12 13 15.75" />
+      <path d="M9.5 12h8" />
     </svg>
   );
 }

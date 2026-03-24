@@ -625,7 +625,6 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
           presets={presetItems}
         />
       }
-      description={currentSection.description}
       detailEyebrow="Audit detail"
       externalStateHighlights={[
         {
@@ -648,7 +647,6 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
         },
       ]}
       filterGroups={[...currentSection.filterGroups]}
-      eyebrow="Governance"
       items={[...filteredSectionItems]}
       activeFilters={activeFilters}
       onResetExternalControls={resetAuditControls}
@@ -675,6 +673,7 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
       railDescription="Filter rail stays visible so governance views do not bury scope and severity controls."
       railTitle="Audit filters"
       searchQuery={searchQuery}
+      sectionTabsClassName="admin-web__section-tabs-bar--offset"
       sectionTabs={
         <SecondaryTabs>
           {(Object.entries(auditSectionConfig) as Array<[AuditSection, (typeof auditSectionConfig)[AuditSection]]>).map(([key, value]) => (
@@ -689,7 +688,7 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
           ))}
         </SecondaryTabs>
       }
-      summaryStrip={<AuditSummaryStrip items={summaryItems} />}
+      summaryStrip={section === "events" ? null : <AuditSummaryStrip items={summaryItems} />}
       tableDescription={currentSection.tableDescription}
       tableTitle={currentSection.tableTitle}
       toolbarControls={
@@ -731,7 +730,6 @@ export function AdminAuditLogPage({ section }: AdminAuditLogPageProps) {
       }
       sortDirection={sortDirection}
       sortField={sortField}
-      title={currentSection.title}
     />
   );
 }

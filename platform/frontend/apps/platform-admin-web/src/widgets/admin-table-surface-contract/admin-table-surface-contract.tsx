@@ -1,6 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   Badge,
@@ -16,7 +15,6 @@ import {
   type CollectionEmptyStateHighlight,
   FilterChip,
   Input,
-  PageToolbar,
   Table,
   TableBody,
   TableCell,
@@ -32,8 +30,6 @@ import {
   TimelineFeed,
   type TimelineFeedGroup,
 } from "@platform/ui-kit";
-
-import { getAdminRoutePath } from "../../shared/navigation";
 
 export type AdminTableSurfaceFilterGroup = {
   key: string;
@@ -80,10 +76,8 @@ const adminTableVisibleColumnOrder: readonly AdminTableVisibleColumn[] = [
 ];
 
 type AdminTableSurfaceContractProps = {
-  title: string;
-  eyebrow: string;
-  description: string;
   sectionTabs?: ReactNode;
+  sectionTabsClassName?: string;
   summaryStrip?: ReactNode;
   controlStrip?: ReactNode;
   toolbarControls?: ReactNode;
@@ -234,12 +228,10 @@ function getSortedItems(
 export function AdminTableSurfaceContract({
   activeFilters: controlledActiveFilters,
   controlStrip,
-  description,
   detailEyebrow,
   externalStateHighlights,
   filterGroups,
   items,
-  eyebrow,
   onActiveFiltersChange,
   onResetExternalControls,
   onSearchQueryChange,
@@ -247,16 +239,15 @@ export function AdminTableSurfaceContract({
   railTitle,
   searchQuery: controlledSearchQuery,
   sectionTabs,
+  sectionTabsClassName,
   summaryStrip,
   sortDirection: controlledSortDirection,
   sortField: controlledSortField,
   tableDescription,
   tableTitle,
   toolbarControls,
-  title,
   onSortChange,
 }: AdminTableSurfaceContractProps) {
-  const navigate = useNavigate();
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
   const [internalSortField, setInternalSortField] = useState<AdminTableSortField>("recorded");
   const [internalSortDirection, setInternalSortDirection] = useState<Exclude<TableSortDirection, null>>("desc");
@@ -475,31 +466,13 @@ export function AdminTableSurfaceContract({
 
   return (
     <div className="admin-web__stack">
-      <PageToolbar
-        actions={
-          <>
-            <Button
-              onClick={() => navigate(getAdminRoutePath("overview"))}
-              size="sm"
-              variant="outline"
-            >
-              Return to overview
-            </Button>
-            <Button
-              onClick={() => navigate(getAdminRoutePath("tenants"))}
-              size="sm"
-              variant="secondary"
-            >
-              Open tenant workbench
-            </Button>
-          </>
-        }
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-      />
-
-      {sectionTabs ? <div className="admin-web__section-tabs-bar">{sectionTabs}</div> : null}
+      {sectionTabs ? (
+        <div
+          className={`admin-web__section-tabs-bar${sectionTabsClassName ? ` ${sectionTabsClassName}` : ""}`}
+        >
+          {sectionTabs}
+        </div>
+      ) : null}
       {summaryStrip}
       {controlStrip}
 

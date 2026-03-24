@@ -10,8 +10,8 @@ type DemoSession = {
 function getDemoSession(surface: AppSurface): DemoSession {
   if (surface === "admin") {
     return {
-      displayName: "Alex Morgan",
-      email: "alex@firstkb.internal",
+      displayName: "Andrii Koien",
+      email: "akoien@esafetysystems.com",
       roleLabel: "Platform Operator",
     };
   }

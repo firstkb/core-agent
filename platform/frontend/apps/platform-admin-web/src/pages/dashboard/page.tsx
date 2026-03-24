@@ -1,222 +1,277 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
 import {
-  Button,
+  Badge,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  EmptyState,
-  ErrorState,
-  FilterChip,
+  CollectionLoadingState,
   LoadingState,
-  PageToolbar,
-  SecondaryTab,
-  SecondaryTabs,
+  Skeleton,
+  SkeletonText,
+  TableLoadingState,
 } from "@platform/ui-kit";
-import { listDemoTenants } from "@platform/tenant-core";
 
-import {
-  getAdminTabPath,
-  type AdminPageTab,
-} from "../../shared/navigation";
-import { RolloutReadinessCard } from "../../widgets/rollout-readiness-card/rollout-readiness-card";
-import { TenantActivityFeed } from "../../widgets/tenant-activity-feed/tenant-activity-feed";
-import { TenantOperationsWorkbench } from "../../widgets/tenant-operations-workbench/tenant-operations-workbench";
-import { TenantPortfolioStats } from "../../widgets/tenant-portfolio-stats/tenant-portfolio-stats";
+type DashboardMetricCard = {
+  badge: string;
+  id: string;
+  label: string;
+  tone: "brand" | "info" | "neutral";
+  widths: string[];
+};
 
-const tenants = listDemoTenants();
-
-type AdminPageFlowState = "ready" | "loading" | "error" | "empty";
-
-const pageCopy: Record<
-  AdminPageTab,
+const dashboardMetricCards: DashboardMetricCard[] = [
   {
-    description: string;
-    title: string;
-  }
-> = {
-  overview: {
-    description:
-      "Metronic-inspired control-plane dashboard for monitoring tenant health, rollout posture, and operational follow-up.",
-    title: "Tenant operations overview",
+    badge: "Live mock",
+    id: "tenant-readiness",
+    label: "Tenant readiness",
+    tone: "brand",
+    widths: ["78%", "58%", "42%"],
   },
-  tenants: {
-    description:
-      "Route-aware rollout workbench with URL-driven tenant detail, bulk actions, and operational drill-down.",
-    title: "Tenant rollout workbench",
+  {
+    badge: "Shared states",
+    id: "route-hydration",
+    label: "Route hydration",
+    tone: "info",
+    widths: ["74%", "62%", "48%"],
   },
-  signals: {
-    description:
-      "Secondary operational surface for alert routing, automation posture, and follow-up review flows.",
-    title: "Signal review surface",
+  {
+    badge: "Desktop scroll",
+    id: "operator-queue",
+    label: "Operator queue",
+    tone: "neutral",
+    widths: ["82%", "52%", "38%"],
   },
-};
+];
 
-type AdminDashboardPageProps = {
-  activeTab: AdminPageTab;
-};
+const queueMockRows = [
+  {
+    id: "identity-cluster",
+    titleWidth: "10rem",
+    textWidths: ["15rem", "11rem"],
+  },
+  {
+    id: "surface-reconciliation",
+    titleWidth: "12rem",
+    textWidths: ["17rem", "12rem"],
+  },
+  {
+    id: "routing-readiness",
+    titleWidth: "9rem",
+    textWidths: ["14rem", "10rem"],
+  },
+  {
+    id: "audit-hydration",
+    titleWidth: "11rem",
+    textWidths: ["16rem", "12rem"],
+  },
+];
 
-export function AdminDashboardPage({ activeTab }: AdminDashboardPageProps) {
-  const navigate = useNavigate();
-  const [pageFlowState, setPageFlowState] = useState<AdminPageFlowState>("ready");
-
-  function renderReadyTab() {
-    if (activeTab === "overview") {
-      return (
-        <>
-          <TenantPortfolioStats tenants={tenants} />
-
-          <div className="admin-web__dashboard-grid">
-            <RolloutReadinessCard tenants={tenants} />
-            <TenantActivityFeed tenants={tenants} />
-          </div>
-        </>
-      );
-    }
-
-    if (activeTab === "signals") {
-      return (
-        <>
-          <div className="admin-web__dashboard-grid">
-            <TenantActivityFeed tenants={tenants} />
-            <EmptyState
-              actions={<Button variant="outline">Create automation</Button>}
-              description="Secondary page-flow states stay explicit instead of hiding behind menu config or route-only logic."
-              title="No saved signal automations yet"
-            />
-          </div>
-
-          <EmptyState
-            actions={<Button variant="outline">Connect notification routing</Button>}
-            description="Alerting and workflow rules become meaningful only after backend control-plane endpoints are wired."
-            title="Escalation flows remain in setup"
-          />
-        </>
-      );
-    }
-
-    return (
-      <Card className="admin-web__panel-card">
-        <CardHeader>
-          <div>
-            <CardTitle>Tenant rollout health</CardTitle>
-            <CardDescription>Search, filter, inspect, and review seeded tenants through a Metronic-inspired operations workbench.</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <TenantOperationsWorkbench tenants={tenants} />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  function renderPageFlow() {
-    if (pageFlowState === "loading") {
-      return (
-        <LoadingState
-          className="admin-web__page-state"
-          description="Simulating a control-plane fetch while keeping the whole page-flow surface explicit."
-          title="Loading admin surface"
-        />
-      );
-    }
-
-    if (pageFlowState === "error") {
-      return (
-        <ErrorState
-          actions={
-            <Button onClick={() => setPageFlowState("ready")} variant="outline">
-              Retry surface
-            </Button>
-          }
-          className="admin-web__page-state"
-          description="The whole page-flow is intentionally replaced by an error surface instead of scattering failure states across cards."
-          title="Failed to load control-plane data"
-        />
-      );
-    }
-
-    if (pageFlowState === "empty") {
-      return (
-        <EmptyState
-          actions={
-            <Button onClick={() => setPageFlowState("ready")} variant="outline">
-              Return to ready state
-            </Button>
-          }
-          className="admin-web__page-state"
-          description="Useful when backend or tenant filters return no records and the entire page-flow needs a deliberate empty mode."
-          title="No control-plane content available"
-        />
-      );
-    }
-
-    return renderReadyTab();
-  }
-
+function renderMetricCard(card: DashboardMetricCard) {
   return (
-    <div className="admin-web__stack">
-      <PageToolbar
-        actions={
-          <>
-            <Button size="sm" variant="outline">
-              Export status
-            </Button>
-            <Button size="sm" variant="secondary">
-              Review rollout
-            </Button>
-          </>
-        }
-        eyebrow="Platform"
-        title={pageCopy[activeTab].title}
-        description={pageCopy[activeTab].description}
-      />
-
-      <div className="admin-web__page-flow-bar">
-        <SecondaryTabs>
-          <SecondaryTab
-            active={activeTab === "overview"}
-            badge="1"
-            onClick={() => navigate(getAdminTabPath("overview"))}
-          >
-            Overview
-          </SecondaryTab>
-          <SecondaryTab
-            active={activeTab === "tenants"}
-            badge={String(tenants.length)}
-            onClick={() => navigate(getAdminTabPath("tenants"))}
-          >
-            Tenants
-          </SecondaryTab>
-          <SecondaryTab
-            active={activeTab === "signals"}
-            badge="2"
-            onClick={() => navigate(getAdminTabPath("signals"))}
-          >
-            Signals
-          </SecondaryTab>
-        </SecondaryTabs>
-
-        <div className="admin-web__page-flow-state-switcher">
-          <span className="admin-web__page-flow-state-label">Flow state</span>
-          <div className="admin-web__page-flow-state-row">
-            {(["ready", "loading", "error", "empty"] as const).map((state) => (
-              <FilterChip
-                active={pageFlowState === state}
-                key={state}
-                onClick={() => setPageFlowState(state)}
-              >
-                {state}
-              </FilterChip>
-            ))}
+    <Card className="admin-web__dashboard-metric-card" key={card.id}>
+      <CardHeader>
+        <div className="admin-web__dashboard-metric-card-header">
+          <div>
+            <CardTitle>{card.label}</CardTitle>
+            <CardDescription>Shared placeholder grammar from UI Lab, reused as a dashboard-first mock.</CardDescription>
           </div>
+          <Badge appearance="soft" size="sm" variant={card.tone}>
+            {card.badge}
+          </Badge>
         </div>
-      </div>
+      </CardHeader>
+      <CardContent className="admin-web__dashboard-metric-card-body">
+        <div className="admin-web__dashboard-metric-value">
+          <Skeleton height="2.75rem" width="7.5rem" />
+          <Skeleton height="2rem" width="5rem" />
+        </div>
+        <SkeletonText lines={3} widths={card.widths} />
+        <div className="admin-web__dashboard-metric-meta">
+          <Skeleton height="0.875rem" variant="text" width="36%" />
+          <Skeleton height="0.875rem" variant="text" width="22%" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-      {renderPageFlow()}
+export function AdminDashboardPage() {
+  return (
+    <div className="admin-web__dashboard-shell">
+      <section className="admin-web__dashboard-hero">
+        <div className="admin-web__dashboard-hero-tags">
+          <Badge size="sm" variant="brand">Dashboard</Badge>
+          <Badge appearance="outline" size="sm" variant="neutral">UI Lab Mock</Badge>
+          <Badge appearance="soft" size="sm" variant="info">Skeleton + Loading States</Badge>
+        </div>
+
+        <div className="admin-web__dashboard-hero-copy">
+          <h2 className="admin-web__dashboard-hero-title">Loading-first control plane canvas</h2>
+          <p className="admin-web__dashboard-hero-description">
+            The admin shell now resolves to a single dashboard route. Real module pages are removed from the menu,
+            and the surface is intentionally filled with shared loading and skeleton patterns so desktop review can
+            focus on shell rhythm, spacing, and scroll behavior.
+          </p>
+        </div>
+      </section>
+
+      <section className="admin-web__dashboard-metric-grid">
+        {dashboardMetricCards.map((card) => renderMetricCard(card))}
+      </section>
+
+      <section className="admin-web__dashboard-section-grid admin-web__dashboard-section-grid--lead">
+        <Card className="admin-web__dashboard-card">
+          <CardHeader>
+            <div>
+              <CardTitle>Dashboard collection canvas</CardTitle>
+              <CardDescription>
+                A wide collection loading block keeps the first screen visually anchored while the shell chrome stays
+                sticky above it.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CollectionLoadingState
+              className="admin-web__dashboard-pattern"
+              description="Preparing dashboard sections, routing summaries, and collection-level placeholders."
+              items={4}
+              layout="grid"
+              title="Hydrating dashboard modules"
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="admin-web__dashboard-card">
+          <CardHeader>
+            <div>
+              <CardTitle>Route-level loading state</CardTitle>
+              <CardDescription>
+                The simple route placeholder remains visible as a secondary pattern beside the richer dashboard mock.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <LoadingState
+              className="admin-web__dashboard-loading-state"
+              description="Shared route-level state stays product-neutral while larger blocks use structured placeholders."
+              title="Loading dashboard context"
+            />
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="admin-web__dashboard-section-grid">
+        <Card className="admin-web__dashboard-card admin-web__dashboard-card--tall">
+          <CardHeader>
+            <div>
+              <CardTitle>Table loading surface</CardTitle>
+              <CardDescription>
+                Dense operational surfaces still preserve toolbar, header, and row rhythm while data is unavailable.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TableLoadingState
+              className="admin-web__dashboard-pattern"
+              columns={5}
+              description="Preparing table filters, review controls, and row placeholders for the dashboard shell."
+              rows={6}
+              title="Loading review table"
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="admin-web__dashboard-card admin-web__dashboard-card--tall">
+          <CardHeader>
+            <div>
+              <CardTitle>Skeleton composition</CardTitle>
+              <CardDescription>
+                Smaller skeleton primitives are combined here into identity, note, and queue shapes instead of using
+                one fixed dashboard-specific loading card.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="admin-web__dashboard-skeleton-stack">
+            <div className="admin-web__dashboard-skeleton-panel admin-web__dashboard-skeleton-panel--hero">
+              <div className="admin-web__dashboard-skeleton-identity">
+                <Skeleton height="3.5rem" variant="circle" width="3.5rem" />
+                <div className="admin-web__dashboard-skeleton-identity-copy">
+                  <Skeleton height="1rem" variant="text" width="10rem" />
+                  <SkeletonText lines={2} widths={["14rem", "11rem"]} />
+                </div>
+              </div>
+
+              <div className="admin-web__dashboard-skeleton-chip-row">
+                <Skeleton height="2rem" width="7rem" />
+                <Skeleton height="2rem" width="6rem" />
+                <Skeleton height="2rem" width="5rem" />
+              </div>
+            </div>
+
+            <div className="admin-web__dashboard-skeleton-panel">
+              {queueMockRows.map((row) => (
+                <div className="admin-web__dashboard-queue-row" key={row.id}>
+                  <Skeleton height="2.75rem" variant="circle" width="2.75rem" />
+                  <div className="admin-web__dashboard-queue-copy">
+                    <Skeleton height="0.95rem" variant="text" width={row.titleWidth} />
+                    <SkeletonText lines={2} widths={row.textWidths} />
+                  </div>
+                  <Skeleton height="1.75rem" width="4.75rem" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="admin-web__dashboard-section-grid admin-web__dashboard-section-grid--balanced">
+        <Card className="admin-web__dashboard-card">
+          <CardHeader>
+            <div>
+              <CardTitle>Operator queue mock</CardTitle>
+              <CardDescription>
+                This section is intentionally taller so the desktop shell can be reviewed with real page scroll below
+                the sticky top bar.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="admin-web__dashboard-queue-surface">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div className="admin-web__dashboard-queue-surface-row" key={index}>
+                <div className="admin-web__dashboard-queue-surface-copy">
+                  <Skeleton height="1rem" variant="text" width={index % 2 === 0 ? "12rem" : "10rem"} />
+                  <SkeletonText lines={2} widths={["100%", index % 2 === 0 ? "74%" : "68%"]} />
+                </div>
+                <div className="admin-web__dashboard-queue-surface-meta">
+                  <Skeleton height="1.75rem" width="5.5rem" />
+                  <Skeleton height="0.875rem" variant="text" width="4rem" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="admin-web__dashboard-card">
+          <CardHeader>
+            <div>
+              <CardTitle>List loading state</CardTitle>
+              <CardDescription>
+                The narrower column keeps a reusable list placeholder visible beside the taller mock surfaces.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CollectionLoadingState
+              className="admin-web__dashboard-pattern"
+              description="Preparing grouped review items and list-level supporting copy."
+              items={3}
+              layout="list"
+              title="Loading review queue"
+            />
+          </CardContent>
+        </Card>
+      </section>
     </div>
   );
 }

@@ -644,7 +644,6 @@ export function AdminBillingPage({ section }: AdminBillingPageProps) {
           presets={presetItems}
         />
       }
-      description={currentSection.description}
       detailEyebrow="Billing detail"
       externalStateHighlights={[
         {
@@ -661,7 +660,6 @@ export function AdminBillingPage({ section }: AdminBillingPageProps) {
         },
       ]}
       filterGroups={[...currentSection.filterGroups]}
-      eyebrow="Finance"
       items={[...filteredSectionItems]}
       activeFilters={activeFilters}
       listDescription={currentSection.listDescription}
@@ -690,6 +688,7 @@ export function AdminBillingPage({ section }: AdminBillingPageProps) {
       railDescription="Filter rail stays explicit so large billing surfaces do not collapse into hidden controls."
       railTitle="Billing filters"
       searchQuery={searchQuery}
+      sectionTabsClassName="admin-web__section-tabs-bar--offset"
       sectionTabs={
         <SecondaryTabs>
           {(Object.entries(billingSectionConfig) as Array<[BillingSection, (typeof billingSectionConfig)[BillingSection]]>).map(([key, value]) => (
@@ -733,7 +732,6 @@ export function AdminBillingPage({ section }: AdminBillingPageProps) {
           startDate={startDate}
         />
       }
-      title={currentSection.title}
     />
   );
 }

@@ -18,8 +18,7 @@
 .ui-overlay-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(11, 18, 32, 0.44);
-  backdrop-filter: blur(8px);
+  background: rgba(11, 18, 32, 0.64);
 }
 
 .ui-overlay-positioner {

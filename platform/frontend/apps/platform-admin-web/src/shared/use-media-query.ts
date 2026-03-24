@@ -16,10 +16,19 @@ export function useMediaQuery(query: string) {
     }
 
     updateMatch();
-    mediaQuery.addEventListener("change", updateMatch);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateMatch);
+    } else {
+      mediaQuery.addListener(updateMatch);
+    }
 
     return () => {
-      mediaQuery.removeEventListener("change", updateMatch);
+      if (typeof mediaQuery.removeEventListener === "function") {
+        mediaQuery.removeEventListener("change", updateMatch);
+      } else {
+        mediaQuery.removeListener(updateMatch);
+      }
     };
   }, [query]);
 

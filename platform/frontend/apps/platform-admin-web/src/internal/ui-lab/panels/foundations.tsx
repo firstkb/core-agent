@@ -31,13 +31,17 @@ import {
   PulseLineIcon,
   RoutePathIcon,
   SearchIcon,
+  SidebarCollapseIcon,
   SettingsIcon,
   ShieldKeyIcon,
   SparkIcon,
+  StarIcon,
+  SunMoonIcon,
   UserCircleIcon,
   UsersIcon,
   WalletCardIcon,
   WarningTriangleIcon,
+  LogOutIcon,
 } from "@platform/ui-kit";
 
 import type { IconProps } from "@platform/ui-kit";
@@ -60,10 +64,14 @@ const utilityIconEntries: Array<{
   { Icon: PlusIcon, name: "PlusIcon", note: "Add, create, or append actions that need a calm positive cue." },
   { Icon: ArrowRightIcon, name: "ArrowRightIcon", note: "Forward direction and next-step emphasis around visible action labels." },
   { Icon: MenuIcon, name: "MenuIcon", note: "Navigation toggles and compact menu-entry affordances." },
+  { Icon: SidebarCollapseIcon, name: "SidebarCollapseIcon", note: "Shell-level navigation collapse or expand controls when sidebar density needs a deliberate desktop mode." },
+  { Icon: SunMoonIcon, name: "SunMoonIcon", note: "Theme switching and appearance mode controls that act at shell or workspace level." },
   { Icon: CloseIcon, name: "CloseIcon", note: "Dismiss or close actions when the surrounding control already explains the target." },
+  { Icon: StarIcon, name: "StarIcon", note: "Favorites, pinned items, saved shortcuts, and quick-access utility entry points." },
   { Icon: InfoCircleIcon, name: "InfoCircleIcon", note: "Neutral informational callouts and supporting technical guidance." },
   { Icon: CheckCircleIcon, name: "CheckCircleIcon", note: "Positive completion, verified state, and quiet success confirmation." },
   { Icon: WarningTriangleIcon, name: "WarningTriangleIcon", note: "Cautionary or review-needed state that should remain explicit in text too." },
+  { Icon: LogOutIcon, name: "LogOutIcon", note: "Session exit, sign-out, and utility footer controls that are not part of the main module navigation." },
 ];
 
 const navigationIconEntries: Array<{

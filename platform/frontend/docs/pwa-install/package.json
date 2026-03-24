@@ -1,0 +1,91 @@
+{
+  "name": "@khmyznikov/pwa-install",
+  "version": "0.4.4",
+  "description": "PWA install dialog provide more convenience user experience and fix lack of native dialogs in some browsers.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khmyznikov/pwa-install.git"
+  },
+  "type": "module",
+  "types": "dist/types/index.d.ts",
+  "main": "dist/pwa-install.es.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/pwa-install.es.js"
+      },
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/pwa-install.bundle.js"
+      }
+    },
+    "./react-legacy": {
+      "import": {
+        "types": "./dist/types/react-legacy/pwa-install.react-legacy.d.ts",
+        "default": "./dist/react-legacy/pwa-install.react-legacy.js"
+      }
+    },
+    "./dist/react-legacy/pwa-install.react-legacy.js": {
+      "import": {
+        "types": "./dist/types/react-legacy/pwa-install.react-legacy.d.ts",
+        "default": "./dist/react-legacy/pwa-install.react-legacy.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run localize:extract && npm run localize:build && npm run build:noloc && npm run cem:analyze",
+    "build:noloc": "webpack --config webpack/webpack.prod.js --mode=production && webpack --config webpack/webpack.prod.module.js --mode=production  && webpack --config webpack/webpack.prod.umd.js --mode=production && npx webpack --config webpack/webpack.prod.react.js --mode=production && npm run cem:analyze",
+    "localize:extract": "lit-localize extract",
+    "localize:build": "lit-localize build",
+    "cem:analyze": "cem analyze",
+    "test": "npm run build:noloc && node ./webpack/serve.js",
+    "test:nobuild": "node ./webpack/serve.js",
+    "dev": "webpack serve --config webpack/webpack.dev.js --mode=development"
+  },
+  "author": "khmyznikov",
+  "license": "MIT",
+  "devDependencies": {
+    "@custom-elements-manifest/analyzer": "^0.10.3",
+    "@lit/localize": "^0.12.2",
+    "@lit/localize-tools": "^0.7.2",
+    "@types/node": "^20.14.10",
+    "autoprefixer": "^10.4.19",
+    "clean-webpack-plugin": "4.0.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "eslint": "^9.7.0",
+    "express": "^4.19.2",
+    "filemanager-webpack-plugin": "^8.0.0",
+    "lit-scss-loader": "^2.0.1",
+    "minify-lit-html-loader": "github:khmyznikov/minify-lit-html-loader",
+    "null-loader": "^4.0.1",
+    "postcss": "^8.4.39",
+    "postcss-import": "^16.1.0",
+    "postcss-loader": "^8.1.1",
+    "sass": "^1.77.8",
+    "sass-loader": "^14.2.1",
+    "terser-webpack-plugin": "^5.3.10",
+    "ts-loader": "9.5.1",
+    "typescript": "^5.5.4",
+    "typescript-lit-html-plugin": "^0.9.0",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4",
+    "webpack-merge": "^6.0.1"
+  },
+  "peerDependencies": {
+    "lit": "^3.2.0",
+    "@lit/react": "^1.0.5",
+    "@types/web-app-manifest": "^1.0.8",
+    "@types/dom-chromium-installation-events": "^101.0.4"
+  },
+  "bugs": {
+    "url": "https://github.com/khmyznikov/pwa-install/issues"
+  },
+  "homepage": "https://github.com/khmyznikov/pwa-install#readme",
+  "keywords": [
+    "PWA",
+    "lit-element",
+    "lit"
+  ]
+}

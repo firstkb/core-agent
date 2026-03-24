@@ -1,0 +1,209 @@
+.gallery {
+	position: relative;
+	--scrollbar-background-color: #fff;
+	--scrollbar-thumb-color: rgb(146, 146, 146);
+	--scrollbar-thumb-hover-color: rgb(100, 100, 100);
+	--nav-btn-background-color: #fff;
+	--nav-btn-fill-color: #141414;
+	
+	.gallery_scroller {
+		/* snap mandatory on horizontal axis  */
+		scroll-snap-type: x mandatory;
+	
+		overflow-x: auto;
+		overflow-y: hidden;
+	
+		display: flex;
+		align-items: center;
+		// max-height: 40vh;
+	
+		padding: 10px 13px;
+		padding-bottom: 10px;
+	
+		margin: 0 10px;
+	
+		-webkit-overflow-scrolling: touch;
+
+		img {
+			border-radius: 6px;
+			max-height: min(45vh, 500px);
+			box-shadow: 0px 3px 10px 0px rgb(0 0 0 / 15%);
+
+			scroll-snap-align: center;
+			scroll-snap-stop: always;
+		
+			position: relative;
+		
+			&+img {
+				margin-left: 15px;
+			}
+		}
+	
+		&::-webkit-scrollbar {
+			width: 4px;
+			height: 2px;
+		}
+	
+		&::-webkit-scrollbar-thumb {
+			background: var(--scrollbar-thumb-color);
+			border-radius: 4px;
+			
+			&:hover{
+				background: var(--scrollbar-thumb-hover-color)
+			}
+		}
+	
+		&::-webkit-scrollbar-track {
+			// background: rgb(233, 233, 233);
+			background: var(--scrollbar-background-color);
+			border-radius: 4px;
+		}
+	
+		.scroller_wrap {
+			display: flex;
+			flex-direction: row;
+			// box-sizing: border-box;
+			padding-right: 13px;
+			// float: left;
+		}
+	}
+	.btn {
+		position: absolute;
+		display: flex;
+		align-items: center;
+	
+		user-select: none;
+	
+		top: 50%;
+		transform: translateY(-50%);
+	
+		height: 30px;
+		width: 30px;
+	
+		border-radius: 50%;
+		background-color: var(--nav-btn-background-color);
+	
+		box-shadow: rgb(0 0 0 / 30%) 2px 4px 4px 1px;
+	
+		background-repeat: no-repeat;
+		opacity: 0.8;
+
+		z-index: 1;
+
+		&.prev {
+			left: 5px;
+			svg{
+				margin-left: 4px;
+			}
+			
+		}
+
+		&.next {
+			right: 5px;
+			svg{
+				transform: rotate(180deg);
+				margin-left: 6px;
+			}
+			
+		}
+	
+		&:hover {
+			box-shadow: rgb(0 0 0 / 50%) 2px 4px 4px 1px;
+			cursor: pointer;
+			opacity: 1;
+		}
+	
+		svg{
+			width: 20px;
+			height: 20px;
+			path{ 
+				fill: var(--nav-btn-fill-color);
+			}
+		}
+	}
+
+	&.apple_desktop {
+		--scrollbar-background-color: rgba(0, 0, 0, 0.1);
+		--scrollbar-thumb-color: rgb(100, 100, 100);
+		--scrollbar-thumb-hover-color: rgba(0, 0, 0, 0.85);
+
+		.gallery_scroller{
+			margin: 0;
+			padding-top: 15px;
+		}
+		.btn{
+			height: 26px;
+			width: 26px;
+			
+			box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 2px 1px;
+			&:hover{
+				box-shadow: rgba(0, 0, 0, 0.3) 0px 2px 2px 1px;
+				
+			}
+
+			&:active{
+				filter: brightness(95%);
+				.svg{
+					filter:brightness(110%)
+				}
+			}
+            
+			svg{
+				width: 12px;
+				height: auto;
+				opacity: 1;
+			}
+		}
+		.btn svg{
+			margin-left: 7px;
+		}
+	}
+
+	&.apple_mobile{
+		.btn{
+			&.prev svg{
+				margin-left: 7px;
+			}
+			svg {
+				width: 16px;
+				height: auto;
+			}
+		}
+	}
+	&.apple_desktop, &.apple_mobile{
+		.btn{
+			opacity: 1;
+		}
+	}
+}
+
+
+@media(hover: none) and (pointer: coarse){
+	.gallery .btn.next, .gallery .btn.prev{
+		display: none;
+	}
+	.gallery_scroller::-webkit-scrollbar{
+		display: none;
+	}
+}
+@media (prefers-color-scheme: dark) {
+    .gallery{
+        --scrollbar-background-color: #424242;
+		--nav-btn-background-color: #555555;
+		--nav-btn-fill-color: #fff;
+		&.apple_desktop{
+			--scrollbar-thumb-color: var(--nav-btn-fill-color);
+			--scrollbar-background-color: var(--nav-btn-background-color);
+			--scrollbar-thumb-hover-color: var(--nav-btn-fill-color);
+
+			.btn{
+				&:active{
+					filter: brightness(110%);
+					.svg{
+						filter:brightness(90%)
+					}
+				}
+			}
+		}
+    }
+}

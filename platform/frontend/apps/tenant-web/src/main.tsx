@@ -3,10 +3,10 @@ import { createRoot } from "react-dom/client";
 
 import "@platform/app-shell/styles.css";
 
-import { App } from "./app/app";
+import { Root } from "./app/root";
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
-    <App />
+    <Root />
   </StrictMode>,
 );

@@ -8,7 +8,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@platform/ui-kit": "workspace:*"
+    "@platform/ui-kit": "workspace:*",
+    "qrcode.react": "^4.2.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",

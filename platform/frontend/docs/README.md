@@ -12,6 +12,9 @@ Entry point for the active frontend documentation set.
 - `foundation-rollout-plan.md`: closed rollout document for the foundation baseline and current rollout status
 - `layout-baseline.md`: lightweight layout and grid contract for stable width behavior without a heavy framework grid system
 - `phase-e-gap-review.md`: closed-cycle gap review for shared-layer expansion after the first full approval pass
+- `smart-app-bootstrap-1to1.md`: donor bootstrap/auth flow reference
+- `smart-app-bootstrap-code-reference.md`: code-level companion for bootstrap/auth flow
+- `smart-app-pwa-install-1to1.md`: exact contract for `pwa-install` rebuild and integration into the current frontend
 - `deferred-composed-surfaces.md`: backlog and boundary rules for larger workflow-shaped surfaces that should be revisited after the main interface baseline
 - `ui-lab-structure.md`: exact `UI Lab` section structure, purpose, and promotion boundary
 - `ui-lab-ui-kit-coverage.md`: current `ui-kit` inventory mapped to the canonical `UI Lab` sections

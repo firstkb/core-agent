@@ -1,0 +1,5 @@
+{
+    "adminApiUrl": "http://localhost:3000",
+    "tenantApiUrl": "http://localhost:3100",
+    "authApiUrl": "http://localhost:3200"
+}

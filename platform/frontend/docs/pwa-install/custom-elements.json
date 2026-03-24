@@ -1,0 +1,417 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/index.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "PWAInstallElement",
+          "members": [
+            {
+              "kind": "field",
+              "name": "manifestUrl",
+              "type": {
+                "text": "string"
+              },
+              "default": "'/manifest.json'",
+              "attribute": "manifest-url"
+            },
+            {
+              "kind": "field",
+              "name": "icon",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "attribute": "icon"
+            },
+            {
+              "kind": "field",
+              "name": "name",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "attribute": "name"
+            },
+            {
+              "kind": "field",
+              "name": "description",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "attribute": "description"
+            },
+            {
+              "kind": "field",
+              "name": "installDescription",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "attribute": "install-description"
+            },
+            {
+              "kind": "field",
+              "name": "disableDescription",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-install-description"
+            },
+            {
+              "kind": "field",
+              "name": "disableScreenshots",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-screenshots"
+            },
+            {
+              "kind": "field",
+              "name": "disableScreenshotsApple",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-screenshots-apple"
+            },
+            {
+              "kind": "field",
+              "name": "disableScreenshotsChrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-screenshots-chrome"
+            },
+            {
+              "kind": "field",
+              "name": "manualApple",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "manual-apple"
+            },
+            {
+              "kind": "field",
+              "name": "manualChrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "manual-chrome"
+            },
+            {
+              "kind": "field",
+              "name": "disableChrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-chrome"
+            },
+            {
+              "kind": "field",
+              "name": "disableClose",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "attribute": "disable-close"
+            },
+            {
+              "kind": "field",
+              "name": "externalPromptEvent",
+              "type": {
+                "text": "BeforeInstallPromptEvent | null"
+              },
+              "default": "null"
+            },
+            {
+              "kind": "field",
+              "name": "platforms",
+              "type": {
+                "text": "BeforeInstallPromptEvent['platforms']"
+              },
+              "privacy": "public",
+              "default": "[]"
+            },
+            {
+              "kind": "field",
+              "name": "userChoiceResult",
+              "type": {
+                "text": "string"
+              },
+              "privacy": "public",
+              "default": "''"
+            },
+            {
+              "kind": "field",
+              "name": "isDialogHidden",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public"
+            },
+            {
+              "kind": "field",
+              "name": "isInstallAvailable",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "isAppleMobilePlatform",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "isAppleDesktopPlatform",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "isUnderStandaloneMode",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "isRelatedAppsInstalled",
+              "type": {
+                "text": "boolean"
+              },
+              "privacy": "public",
+              "default": "false"
+            },
+            {
+              "kind": "field",
+              "name": "install",
+              "privacy": "public"
+            },
+            {
+              "kind": "field",
+              "name": "hideDialog",
+              "privacy": "public"
+            },
+            {
+              "kind": "field",
+              "name": "showDialog",
+              "privacy": "public"
+            },
+            {
+              "kind": "field",
+              "name": "getInstalledRelatedApps",
+              "privacy": "public"
+            }
+          ],
+          "events": [
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "App install success (Chromium/Android only)",
+              "name": "pwa-install-success-event"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "App install failed (Chromium/Android only)",
+              "name": "pwa-install-fail-event"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "dismissed, accepted",
+              "name": "pwa-user-choice-result-event"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "App install available",
+              "name": "pwa-install-available-event"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "App install instruction showed",
+              "name": "pwa-install-how-to-event"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "App install gallery showed",
+              "name": "pwa-install-gallery-event"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "manifest-url",
+              "type": {
+                "text": "string"
+              },
+              "default": "'/manifest.json'",
+              "fieldName": "manifestUrl"
+            },
+            {
+              "name": "icon",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "fieldName": "icon"
+            },
+            {
+              "name": "name",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "fieldName": "name"
+            },
+            {
+              "name": "description",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "fieldName": "description"
+            },
+            {
+              "name": "install-description",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "fieldName": "installDescription"
+            },
+            {
+              "name": "disable-install-description",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableDescription"
+            },
+            {
+              "name": "disable-screenshots",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableScreenshots"
+            },
+            {
+              "name": "disable-screenshots-apple",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableScreenshotsApple"
+            },
+            {
+              "name": "disable-screenshots-chrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableScreenshotsChrome"
+            },
+            {
+              "name": "manual-apple",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "manualApple"
+            },
+            {
+              "name": "manual-chrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "manualChrome"
+            },
+            {
+              "name": "disable-chrome",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableChrome"
+            },
+            {
+              "name": "disable-close",
+              "type": {
+                "text": "boolean"
+              },
+              "default": "false",
+              "fieldName": "disableClose"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "pwa-install",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "PWAInstallElement",
+          "declaration": {
+            "name": "PWAInstallElement",
+            "module": "src/index.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "pwa-install",
+          "declaration": {
+            "name": "PWAInstallElement",
+            "module": "src/index.ts"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "PWAInstallAttributes",
+          "declaration": {
+            "name": "PWAInstallAttributes",
+            "module": "src/index.ts"
+          }
+        }
+      ]
+    }
+  ]
+}

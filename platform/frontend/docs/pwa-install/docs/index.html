@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html lang="en" class="notranslate" translate="no">
+
+<head>
+	<meta charset="UTF-8">
+	<title>PWA Install Demo</title>
+
+	<meta name="viewport"
+		content="viewport-fit=cover, width=device-width, initial-scale=1.0">
+
+	<meta name="apple-touch-fullscreen" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	<!-- <script type="module" src="https://cdn.jsdelivr.net/gh/lit/dist@2/all/lit-all.min.js"></script> -->
+	<script type="module" src="pwa-install.bundle.js"></script>
+
+	<link rel="manifest" href="manifest.json">
+	
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+	<script type="text/javascript">
+		if ("serviceWorker" in navigator) {
+			if (navigator.serviceWorker.controller) {
+				console.log("Active service worker found, no need to register");
+			} else {
+				navigator.serviceWorker.register('service-worker.js', {scope: '/pwa-install/'}).then(function (reg) {
+					console.log("Service worker registered");
+				});
+			}
+		}
+	</script>
+
+	<section class="control-panel">
+		<header>
+			<a href="https://www.npmjs.com/package/@khmyznikov/pwa-install" target="_blank">
+				<img alt="NPM Downloads" src="https://img.shields.io/npm/dt/%40khmyznikov%2Fpwa-install?style=flat-square&logo=npm&cacheSeconds=43200">
+			</a>
+			<a href="https://github.com/khmyznikov/pwa-install/graphs/contributors" target="_blank">
+				<img alt="GitHub contributors" src="https://img.shields.io/github/contributors/khmyznikov/pwa-install?style=flat-square&logo=github&cacheSeconds=43200">
+			</a>
+			<a href="https://github.com/khmyznikov/pwa-install" target="_blank">
+				<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/khmyznikov/pwa-install?style=flat-square&logo=github&cacheSeconds=43200">
+			</a>
+		</header>
+		
+
+		<fieldset>
+			<legend>
+				Dialog manual control
+			</legend>
+			<button onclick="pwaInstall.showDialog()">Show</button>
+			<button onclick="pwaInstall.showDialog(true)">Show(forced)</button>
+			<button onclick="pwaInstall.hideDialog()">Hide</button><hr>
+			<button onclick="pwaInstall.install()">Install</button>
+			<button onclick="getRelated()">Get related apps</button>
+		</fieldset>
+		<fieldset>
+			<legend>
+				Style Override
+			</legend>
+			<button onclick="forceStyle('apple-desktop')">Apple Desktop</button>
+			<button onclick="forceStyle('apple-mobile')">Apple Mobile</button>
+			<button onclick="forceStyle('chrome')">Chrome</button><br>
+			<i>*end style depends on browser and OS</i>
+			<hr>
+
+			<input type="text" placeholder="Install description override" onchange="setAttr('install-description', this.value)"><br>
+			<input type="text" placeholder="App name override" onchange="setAttr('name', this.value)"><br>
+			<input type="text" placeholder="App description override" onchange="setAttr('description', this.value)"><br>
+			<hr>
+			<label>
+				<input type="checkbox" onchange="disableInstallDescription(this)">
+				Hide install description
+			</label><br>
+
+			<label>
+				<input type="checkbox" onchange="disableClose(this)">
+				Hide Close Button
+			</label>
+			
+			<fieldset>
+				<legend>
+					Hide screenshots
+				</legend>
+				<label>
+					<input type="checkbox" onchange="disableScreenshots(this)">
+					All
+				</label>
+				<label>
+					<input type="checkbox" onchange="disableScreenshotsPlatform(this, 'chrome')">
+					Chrome
+				</label><label>
+					<input type="checkbox" onchange="disableScreenshotsPlatform(this, 'apple')">
+					Apple
+				</label>
+			</fieldset>
+			
+			
+	
+			
+		</fieldset>
+		<fieldset>
+			<legend>
+				Events
+			</legend>
+			<textarea readonly id="events-area" rows="10">
+
+			</textarea>
+		</fieldset>
+	</section>
+
+	<!-- <script>
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			window.promptEvent = e;
+
+			document.getElementById("pwa-install").externalPromptEvent = window.promptEvent;
+        });
+		// var pwaInstallEl = document.createElement('pwa-install');
+		// pwaInstallEl.id = "pwa-install";
+		// document.body.appendChild(pwaInstallEl);
+    </script> -->
+
+	<pwa-install id="pwa-install" manifest-url="manifest.json"></pwa-install>
+
+	<script type="text/javascript">
+		var pwaInstall = document.getElementById("pwa-install");
+
+		document.getElementById('events-area').value = "";
+		const logMessage = (message) => {
+			console.log(message);
+			document.getElementById('events-area').value+=`>: ${message}\r\n`;
+		}
+
+		const getRelated = () => {
+			pwaInstall.getInstalledRelatedApps().then(
+				(result) => {
+					logMessage(result.toString() || 'None');
+				}
+			)
+		}
+		
+		const forceStyle = (style) => {
+			switch (style) {
+				case 'apple-mobile':
+					pwaInstall.isAppleDesktopPlatform = false;
+					pwaInstall.isAppleMobilePlatform = true;
+					break;
+				case 'apple-desktop':
+					pwaInstall.isAppleMobilePlatform = false;
+					pwaInstall.isAppleDesktopPlatform = true;
+					break;
+				case 'chrome':
+					pwaInstall.isAppleMobilePlatform = false;
+					pwaInstall.isAppleDesktopPlatform = false;
+					break;
+			}
+			pwaInstall.hideDialog();
+			pwaInstall.showDialog();
+		}
+
+		const disableInstallDescription = (cb) => {
+			cb.checked ? pwaInstall.setAttribute('disable-install-description', true) :
+			pwaInstall.removeAttribute('disable-install-description');
+		}
+		const disableScreenshots = (cb) => {
+			cb.checked ? pwaInstall.setAttribute('disable-screenshots', true) :
+			pwaInstall.removeAttribute('disable-screenshots');
+		}
+		const disableScreenshotsPlatform = (cb, platform) => {
+			cb.checked ? pwaInstall.setAttribute(`disable-screenshots-${platform}`, true) :
+			pwaInstall.removeAttribute(`disable-screenshots-${platform}`);
+		}
+		const disableClose = (cb) => {
+			cb.checked ? pwaInstall.setAttribute('disable-close', true) :
+			pwaInstall.removeAttribute('disable-close');
+		}
+		const setAttr = (attr, value) => {
+			value? pwaInstall.setAttribute(attr, value) :
+			pwaInstall.removeAttribute(attr);
+			pwaInstall._init();
+		}
+
+		pwaInstall.addEventListener('pwa-install-success-event', (event) => {logMessage(event.detail.message)});
+		pwaInstall.addEventListener('pwa-install-fail-event', (event) => {logMessage(event.detail.message)});
+		pwaInstall.addEventListener('pwa-user-choice-result-event', (event) => {logMessage(event.detail.message)});
+		pwaInstall.addEventListener('pwa-install-available-event', (event) => {logMessage(event.detail.message)});
+		pwaInstall.addEventListener('pwa-install-how-to-event', (event) => {logMessage(event.detail.message)});
+		pwaInstall.addEventListener('pwa-install-gallery-event', (event) => {logMessage(event.detail.message)});
+	</script>
+</body>
+
+</html>

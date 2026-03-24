@@ -30,5 +30,23 @@ function formatSessionLabel(session: DemoSession) {
     : `${session.displayName} · ${session.roleLabel}`;
 }
 
+export { AuthGuard, RequireAuth } from "./auth-guard";
+export type { AuthGuardProps, RequireAuthProps } from "./auth-guard";
+
+export { AuthProvider, useAuth } from "./auth-provider";
+export type { AuthContextValue, AuthProviderProps, AuthStatus } from "./auth-provider";
+
+export {
+  clearStoredAuthSession,
+  defaultAuthStorageNamespace,
+  extractUserIdFromToken,
+  persistAuthTokens,
+  readStoredAuthSession,
+} from "./auth-storage";
+export type { AuthStorageNamespace, AuthTokens, StoredAuthSession } from "./auth-storage";
+
+export { MockAuthService, mockAuthService } from "./mock-auth-service";
+export type { AuthCodeRequest, AuthMethod, AuthService } from "./mock-auth-service";
+
 export { formatSessionLabel, getDemoSession };
 export type { AppSurface, DemoSession };

@@ -5,6 +5,7 @@ import {
   useAuth,
 } from "@platform/auth-core";
 import {
+  AuthLocaleFooter,
   AuthSignInForm,
   FullscreenBrandLoader,
   normalizeAuthIdentifier,
@@ -12,6 +13,7 @@ import {
   sanitizeAuthInputValue,
   type AuthContactMethod,
 } from "@platform/app-shell";
+import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { PrivateApp } from "./private-app";
@@ -69,14 +71,17 @@ function AdminBootstrapLoader({
 }
 
 function AdminAuthSurfaceBadge() {
+  const { t } = useTranslation();
+
   return (
     <div className="admin-web__auth-surface-badge">
-      <span>Admin Console</span>
+      <span>{t("admin.auth.surfaceBadge")}</span>
     </div>
   );
 }
 
 export function App() {
+  const { t } = useTranslation();
   const { isAuthenticated, requestCode, signIn, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
@@ -111,7 +116,7 @@ export function App() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);
 
     if (!normalizedIdentifier) {
-      setError(method === "email" ? "Enter an email address to continue." : "Enter a phone number to continue.");
+      setError(method === "email" ? t("auth.errors.enterEmail") : t("auth.errors.enterPhone"));
       return;
     }
 
@@ -125,7 +130,7 @@ export function App() {
       setCodeSent(true);
       setCodeValue("");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Unable to send the code.");
+      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
     } finally {
       setIsBusy(false);
     }
@@ -136,7 +141,7 @@ export function App() {
     const normalizedCode = codeValue.trim();
 
     if (!normalizedCode) {
-      setError("Enter the authorization code to continue.");
+      setError(t("auth.errors.enterCode"));
       return;
     }
 
@@ -146,7 +151,7 @@ export function App() {
     try {
       await signIn(normalizedCode, normalizedIdentifier);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Unable to verify the code.");
+      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
     } finally {
       setIsBusy(false);
     }
@@ -161,8 +166,8 @@ export function App() {
 
   const currentYear = new Date().getFullYear();
   const authDescription = codeSent
-    ? `Enter the Authorization Code sent to ${requestedIdentifier}.`
-    : "Use your platform admin email or phone to access Admin Console.";
+    ? t("admin.auth.descriptionCode", { identifier: requestedIdentifier })
+    : t("admin.auth.descriptionEnter");
 
   return (
     <AuthGuard
@@ -174,15 +179,15 @@ export function App() {
           </Routes>
         ) : (
           <AdminBootstrapLoader
-            description="Loading your platform controls."
-            label="Opening Admin Console"
+            description={t("admin.loaders.profileDescription")}
+            label={t("admin.loaders.profileLabel")}
           />
         )
       }
       pending={
         <AdminBootstrapLoader
-          description="Checking your admin session."
-          label="Welcome back"
+          description={t("admin.loaders.pendingDescription")}
+          label={t("admin.loaders.pendingLabel")}
         />
       }
       unauthenticated={
@@ -192,9 +197,9 @@ export function App() {
               <PublicAuthShell
                 brand={<AdminAuthBrandRow />}
                 description={authDescription}
-                footer={`© ${currentYear} eSafety Systems. All rights reserved.`}
-                tagline="Control. Visibility. Reliability."
-                title="Sign in to Admin Console"
+                footer={<AuthLocaleFooter year={currentYear} />}
+                tagline={t("admin.auth.tagline")}
+                title={t("admin.auth.title")}
               >
                 <AuthSignInForm
                   codeSent={codeSent}
@@ -224,9 +229,7 @@ export function App() {
                   onVerifyCode={() => {
                     void handleVerifyCode();
                   }}
-                  phonePlaceholder="Enter your phone number"
-                  requestLabel="Send code"
-                  verifyLabel="Enter Admin Console"
+                  verifyLabel={t("admin.auth.verifyLabel")}
                 />
               </PublicAuthShell>
             }

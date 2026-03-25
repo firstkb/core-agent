@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 
+import { useTranslation } from "@platform/i18n";
 import {
   AppShell,
   AppShellContent,
@@ -104,6 +105,7 @@ export function WorkspaceShell({
   themeStorageKey = "workspace-shell-theme",
   children,
 }: WorkspaceShellProps) {
+  const { t } = useTranslation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isHeaderElevated, setIsHeaderElevated] = useState(false);
@@ -308,7 +310,7 @@ export function WorkspaceShell({
       return (
         <SidebarNav
           activeItemId={activeItemId}
-          ariaLabel="Primary module navigation"
+          ariaLabel={t("shell.aria.primaryModuleNavigation")}
           className="workspace-shell__sidebar-nav"
           compact
           items={items}
@@ -326,7 +328,7 @@ export function WorkspaceShell({
     }
 
     return (
-      <nav aria-label="Primary" className="workspace-shell__nav">
+      <nav aria-label={t("shell.aria.primary")} className="workspace-shell__nav">
         <ul className="workspace-shell__nav-list">
           {navigation.map((item) => (
             <li key={item.label}>
@@ -398,7 +400,9 @@ export function WorkspaceShell({
                 {
                   className: "workspace-shell__rail-link--collapse",
                   icon: <SidebarCollapseIcon />,
-                  label: shellIsSidebarCollapsed ? "Expand navigation" : "Collapse navigation",
+                  label: shellIsSidebarCollapsed
+                    ? t("shell.actions.expandNavigation")
+                    : t("shell.actions.collapseNavigation"),
                   onSelect: () => setIsSidebarCollapsed((value) => !value),
                 },
                 { active: shellIsSidebarCollapsed },
@@ -409,7 +413,9 @@ export function WorkspaceShell({
             ? renderRailActionButton(
                 {
                   icon: <SunMoonIcon />,
-                  label: themeMode === "dark" ? "Switch to light theme" : "Switch to dark theme",
+                  label: themeMode === "dark"
+                    ? t("shell.actions.switchToLightTheme")
+                    : t("shell.actions.switchToDarkTheme"),
                   onSelect: () => setThemeMode((value) => (value === "dark" ? "light" : "dark")),
                 },
                 { active: themeMode === "dark" },
@@ -418,7 +424,7 @@ export function WorkspaceShell({
         </div>
 
         {railUtilities.length > 0 ? (
-          <nav aria-label="Platform utilities" className="workspace-shell__rail-nav">
+          <nav aria-label={t("shell.aria.platformUtilities")} className="workspace-shell__rail-nav">
             {railUtilities.map((item) => renderRailActionButton(item))}
           </nav>
         ) : null}
@@ -439,7 +445,11 @@ export function WorkspaceShell({
     }
 
     return (
-      <div className="workspace-shell__sidebar-mobile-utilities" role="group" aria-label="Platform utilities">
+      <div
+        aria-label={t("shell.aria.platformUtilities")}
+        className="workspace-shell__sidebar-mobile-utilities"
+        role="group"
+      >
         {railUtilities.map((item) =>
           renderSidebarMobileRailButton(
             {
@@ -461,7 +471,7 @@ export function WorkspaceShell({
       <div className="workspace-shell__panel">
         <div className="workspace-shell__sidebar-mobile-bar">
           <button
-            aria-label="Close navigation"
+            aria-label={t("shell.aria.closeNavigation")}
             className="workspace-shell__sidebar-close"
             onClick={() => setIsSidebarOpen(false)}
             type="button"
@@ -475,7 +485,7 @@ export function WorkspaceShell({
         ) : (
           <div className="workspace-shell__brand">
             <div>
-              <p className="workspace-shell__eyebrow">FirstKB Platform</p>
+              <p className="workspace-shell__eyebrow">{t("shell.brand.firstkbPlatform")}</p>
               <h2 className="workspace-shell__brand-title">{brand}</h2>
             </div>
           </div>
@@ -513,7 +523,7 @@ export function WorkspaceShell({
       </AppShellSidebar>
 
       <button
-        aria-label="Close navigation"
+        aria-label={t("shell.aria.closeNavigation")}
         className="workspace-shell__backdrop"
         onClick={() => setIsSidebarOpen(false)}
         type="button"
@@ -523,7 +533,7 @@ export function WorkspaceShell({
         <AppShellHeader className={`workspace-shell__header${isHeaderElevated ? " workspace-shell__header--elevated" : ""}`}>
           <div className="workspace-shell__header-left">
             <button
-              aria-label="Open navigation"
+              aria-label={t("shell.aria.openNavigation")}
               className="workspace-shell__sidebar-toggle"
               onClick={() => {
                 if (layout === "rail") {

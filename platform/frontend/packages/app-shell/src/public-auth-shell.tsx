@@ -1,5 +1,6 @@
 import type { FormEvent, HTMLAttributes, ReactNode } from "react";
 
+import { useTranslation } from "@platform/i18n";
 import {
   Alert,
   AlertDescription,
@@ -94,11 +95,11 @@ export function PublicAuthShell({
 }
 
 export function AuthSignInForm({
-  backLabel = "Use another contact",
+  backLabel,
   codeSent,
   codeValue,
   emailEnabled = true,
-  emailPlaceholder = "Enter your email address",
+  emailPlaceholder,
   error,
   helper,
   inputValue,
@@ -112,12 +113,18 @@ export function AuthSignInForm({
   onVerifyCode,
   otpLength = 6,
   phoneEnabled = true,
-  phonePlaceholder = "Enter your phone number",
-  requestLabel = "Send code",
-  verifyLabel = "Verify code",
+  phonePlaceholder,
+  requestLabel,
+  verifyLabel,
 }: AuthSignInFormProps) {
-  const inputLabel = method === "email" ? "Email address" : "Phone number";
-  const inputPlaceholder = method === "email" ? emailPlaceholder : phonePlaceholder;
+  const { t } = useTranslation();
+  const resolvedBackLabel = backLabel ?? t("auth.back");
+  const resolvedEmailPlaceholder = emailPlaceholder ?? t("auth.placeholders.email");
+  const resolvedPhonePlaceholder = phonePlaceholder ?? t("auth.placeholders.phone");
+  const resolvedRequestLabel = requestLabel ?? t("auth.actions.requestCode");
+  const resolvedVerifyLabel = verifyLabel ?? t("auth.actions.verifyCode");
+  const inputLabel = method === "email" ? t("auth.labels.email") : t("auth.labels.phone");
+  const inputPlaceholder = method === "email" ? resolvedEmailPlaceholder : resolvedPhonePlaceholder;
   const canSwitchMethods = emailEnabled && phoneEnabled;
   const fieldId = !codeSent ? "public-auth-identifier" : "public-auth-code-slot-1";
 
@@ -135,7 +142,11 @@ export function AuthSignInForm({
   return (
     <form className="public-auth-shell__form" onSubmit={handleSubmit}>
       {!codeSent && canSwitchMethods ? (
-        <div aria-label="Sign-in method" className="public-auth-shell__method-switcher" role="tablist">
+        <div
+          aria-label={t("auth.methods.label")}
+          className="public-auth-shell__method-switcher"
+          role="tablist"
+        >
           <button
             aria-selected={method === "email"}
             className={`public-auth-shell__method-pill${method === "email" ? " public-auth-shell__method-pill--active" : ""}`}
@@ -143,7 +154,7 @@ export function AuthSignInForm({
             role="tab"
             type="button"
           >
-            Email
+            {t("auth.methods.email")}
           </button>
           <button
             aria-selected={method === "phone"}
@@ -152,7 +163,7 @@ export function AuthSignInForm({
             role="tab"
             type="button"
           >
-            Phone
+            {t("auth.methods.phone")}
           </button>
         </div>
       ) : null}
@@ -177,7 +188,7 @@ export function AuthSignInForm({
       ) : (
         <div className="public-auth-shell__field-stack">
           <label className="public-auth-shell__field-label" htmlFor={fieldId}>
-            Authorization code
+            {t("auth.labels.code")}
           </label>
           <InputOtp
             autoFocus
@@ -199,14 +210,14 @@ export function AuthSignInForm({
       <div className="public-auth-shell__actions">
         {codeSent ? (
           <Button disabled={isBusy} onClick={onBack} size="lg" type="button" variant="ghost">
-            {backLabel}
+            {resolvedBackLabel}
           </Button>
         ) : (
           <span />
         )}
 
         <Button disabled={isBusy} size="lg" type="submit">
-          {codeSent ? verifyLabel : requestLabel}
+          {codeSent ? resolvedVerifyLabel : resolvedRequestLabel}
         </Button>
       </div>
 

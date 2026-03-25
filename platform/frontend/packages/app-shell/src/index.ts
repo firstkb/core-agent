@@ -9,7 +9,14 @@ export type {
 export { AppUpdateBanner } from "./app-update-banner";
 export type { AppUpdateBannerProps } from "./app-update-banner";
 
+export { AuthLocaleFooter } from "./auth-locale-footer";
+export type { AuthLocaleFooterProps } from "./auth-locale-footer";
+
 export { normalizeAuthIdentifier, sanitizeAuthInputValue } from "./auth-input";
+
+export { LocaleMenuItems } from "./locale-menu-items";
+
+export { appShellLocaleResources } from "./locales";
 
 export { AuthSignInForm, PublicAuthShell } from "./public-auth-shell";
 export type { AuthContactMethod, AuthSignInFormProps, PublicAuthShellProps } from "./public-auth-shell";

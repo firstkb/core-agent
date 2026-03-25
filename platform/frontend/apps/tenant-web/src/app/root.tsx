@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
 
 import { AuthProvider } from "@platform/auth-core";
-import { AppUpdateBanner, FullscreenBrandLoader } from "@platform/app-shell";
+import {
+  appShellLocaleResources,
+  AppUpdateBanner,
+  FullscreenBrandLoader,
+} from "@platform/app-shell";
+import {
+  mergeLocaleResources,
+  PlatformI18nProvider,
+  useTranslation,
+} from "@platform/i18n";
 import { BrowserRouter } from "react-router-dom";
 
 import { App, type TenantBranding } from "./app";
+import { tenantLocaleResources } from "../locales";
 import { TenantBrandImage } from "./tenant-brand-image";
 
 const fallbackBranding: TenantBranding = {
@@ -12,6 +22,11 @@ const fallbackBranding: TenantBranding = {
   tenantDomain: "demo.platform.local",
   tenantId: "1000",
 };
+
+const tenantI18nResources = mergeLocaleResources(
+  appShellLocaleResources,
+  tenantLocaleResources,
+);
 
 function TenantBrandLockup() {
   return (
@@ -133,8 +148,20 @@ function bootstrapTenantRuntime() {
 }
 
 export function Root() {
+  return (
+    <PlatformI18nProvider
+      resources={tenantI18nResources}
+      storageKey="tenant-workspace-locale"
+    >
+      <TenantRuntimeRoot />
+    </PlatformI18nProvider>
+  );
+}
+
+function TenantRuntimeRoot() {
   const [branding, setBranding] = useState<TenantBranding>(fallbackBranding);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let isActive = true;
@@ -153,8 +180,8 @@ export function Root() {
   if (isBootstrapping) {
     return (
       <FullscreenBrandLoader
-        description="Please wait a moment."
-        label="Opening sign in"
+        description={t("tenant.loaders.bootstrapDescription")}
+        label={t("tenant.loaders.bootstrapLabel")}
         logo={<TenantBrandLockup />}
       />
     );

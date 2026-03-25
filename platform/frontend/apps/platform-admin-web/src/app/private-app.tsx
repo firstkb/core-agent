@@ -15,8 +15,13 @@ import {
   ShieldKeyIcon,
   StarIcon,
 } from "@platform/ui-kit";
-import { getAppBuildMetadata, WorkspaceShell } from "@platform/app-shell";
+import {
+  getAppBuildMetadata,
+  LocaleMenuItems,
+  WorkspaceShell,
+} from "@platform/app-shell";
 import { getDemoSession, useAuth } from "@platform/auth-core";
+import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { AdminAuditLogPage } from "../pages/audit-log/page";
@@ -45,6 +50,7 @@ const AdminUiLabPage = lazy(async () => {
 });
 
 export function PrivateApp() {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
@@ -64,19 +70,19 @@ export function PrivateApp() {
     return "light";
   });
   const isUiLabRoute = location.pathname.startsWith("/root/ui-lab");
-  const activeThemeLabel = themeMode === "dark" ? "Dark" : "Light";
+  const activeThemeLabel = themeMode === "dark" ? t("common.themes.dark") : t("common.themes.light");
   const activeRoute = getActiveAdminRoute(location.pathname);
-  const activeRouteMeta = getAdminRouteMeta(location.pathname);
+  const activeRouteMeta = getAdminRouteMeta(location.pathname, t);
   const quickActionMenuLabel = activeRoute === "billing"
-    ? "Billing Actions"
+    ? t("admin.shell.menu.billingActions")
     : activeRoute === "audit-log"
-      ? "Audit Actions"
-      : "Dashboard Actions";
+      ? t("admin.shell.menu.auditActions")
+      : t("admin.shell.menu.dashboardActions");
   const notificationSummary = activeRoute === "billing"
-    ? "Billing review surfaces are live"
+    ? t("admin.shell.menu.billingReviewLive")
     : activeRoute === "audit-log"
-      ? "Audit event streams are live"
-      : "Dashboard placeholder set refreshed";
+      ? t("admin.shell.menu.auditLive")
+      : t("admin.shell.menu.dashboardRefreshed");
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -96,12 +102,13 @@ export function PrivateApp() {
   function renderProfileMenuItems() {
     return (
       <>
-        <MenuItem>My profile</MenuItem>
-        <MenuItem>Preferences</MenuItem>
+        <MenuItem>{t("shell.menu.myProfile")}</MenuItem>
+        <MenuItem>{t("shell.menu.preferences")}</MenuItem>
         <MenuSeparator />
+        <LocaleMenuItems />
         <MenuItem onClick={() => setThemeMode((value) => (value === "dark" ? "light" : "dark"))}>
           <>
-            <span>Theme switcher</span>
+            <span>{t("shell.menu.themeSwitcher")}</span>
             <span className="admin-web__profile-theme-value">{activeThemeLabel}</span>
           </>
         </MenuItem>
@@ -112,7 +119,7 @@ export function PrivateApp() {
           }}
           tone="danger"
         >
-          Sign out
+          {t("shell.menu.signOut")}
         </MenuItem>
       </>
     );
@@ -123,25 +130,25 @@ export function PrivateApp() {
       case "billing":
         return (
           <>
-            <MenuItem onClick={() => navigate("/billing/queue")}>Open billing queue</MenuItem>
-            <MenuItem onClick={() => navigate("/billing/exceptions")}>Open exceptions lane</MenuItem>
-            <MenuItem onClick={() => navigate("/billing/plan-deltas")}>Review plan deltas</MenuItem>
+            <MenuItem onClick={() => navigate("/billing/queue")}>{t("admin.shell.menu.openBillingQueue")}</MenuItem>
+            <MenuItem onClick={() => navigate("/billing/exceptions")}>{t("admin.shell.menu.openExceptionsLane")}</MenuItem>
+            <MenuItem onClick={() => navigate("/billing/plan-deltas")}>{t("admin.shell.menu.reviewPlanDeltas")}</MenuItem>
           </>
         );
       case "audit-log":
         return (
           <>
-            <MenuItem onClick={() => navigate("/audit-log/events")}>Open audit events</MenuItem>
-            <MenuItem onClick={() => navigate("/audit-log/access-changes")}>Review access changes</MenuItem>
-            <MenuItem onClick={() => navigate("/audit-log/system-jobs")}>Open system jobs</MenuItem>
+            <MenuItem onClick={() => navigate("/audit-log/events")}>{t("admin.shell.menu.openAuditEvents")}</MenuItem>
+            <MenuItem onClick={() => navigate("/audit-log/access-changes")}>{t("admin.shell.menu.reviewAccessChanges")}</MenuItem>
+            <MenuItem onClick={() => navigate("/audit-log/system-jobs")}>{t("admin.shell.menu.openSystemJobs")}</MenuItem>
           </>
         );
       default:
         return (
           <>
-            <MenuItem onClick={() => navigate("/dashboard")}>Open dashboard</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("tasks")}>Open tasks center</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("favorites")}>Review saved mockups</MenuItem>
+            <MenuItem onClick={() => navigate("/dashboard")}>{t("admin.shell.menu.openDashboard")}</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.tasksCenter")}</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("admin.shell.menu.reviewFavorites")}</MenuItem>
           </>
         );
     }
@@ -153,10 +160,10 @@ export function PrivateApp() {
         fallback={
           <main className="admin-web__ui-lab-loading-shell">
             <div className="admin-web__ui-lab-loading-card">
-              <p className="admin-web__ui-lab-loading-eyebrow">UI Lab</p>
-              <h1 className="admin-web__ui-lab-loading-title">Loading documentation surface</h1>
+              <p className="admin-web__ui-lab-loading-eyebrow">{t("admin.loaders.uiLabEyebrow")}</p>
+              <h1 className="admin-web__ui-lab-loading-title">{t("admin.loaders.uiLabTitle")}</h1>
               <p className="admin-web__ui-lab-loading-copy">
-                Preparing the isolated component lab and token reference view.
+                {t("admin.loaders.uiLabCopy")}
               </p>
             </div>
           </main>
@@ -173,12 +180,12 @@ export function PrivateApp() {
   return (
     <>
       <WorkspaceShell
-        brand="Platform Admin"
+        brand={t("admin.shell.brand")}
         layout="rail"
         showHeaderSurfaceMarker={false}
         showSidebarSurfaceMarker={false}
         surfaceIcon={<ShieldKeyIcon />}
-        surfaceLabel="Admin Console"
+        surfaceLabel={t("admin.shell.surfaceLabel")}
         surfaceTone="admin"
         railBottom={
           <div className="admin-web__rail-bottom-block">
@@ -192,7 +199,7 @@ export function PrivateApp() {
           <Menu align="end">
             <MenuTrigger>
               <button
-                aria-label="Open user menu"
+                aria-label={t("admin.shell.aria.openUserMenu")}
                 className="admin-web__header-profile-trigger admin-web__rail-user-trigger"
                 type="button"
               >
@@ -206,31 +213,31 @@ export function PrivateApp() {
             </MenuContent>
           </Menu>
         }
-        railBrandLabel="Dashboard"
+        railBrandLabel={t("admin.navigation.dashboard.label")}
         railBrandOnSelect={() => navigate("/dashboard")}
         railMark={<DashboardGridIcon />}
         railUtilities={[
           {
             badge: "3",
             icon: <DocumentListIcon />,
-            label: "Tasks center",
+            label: t("admin.shell.menu.tasksCenter"),
             onSelect: () => setUtilityPanel("tasks"),
           },
           {
             icon: <StarIcon />,
-            label: "Favorites",
+            label: t("admin.shell.menu.favorites"),
             onSelect: () => setUtilityPanel("favorites"),
           },
         ]}
         showRailCollapse
         sidebarNavigationLabel={
-          <div className="admin-web__sidebar-section-heading">Admin Console</div>
+          <div className="admin-web__sidebar-section-heading">{t("admin.shell.sidebarSection")}</div>
         }
         sidebarFooter={
           <Menu align="end">
             <MenuTrigger>
               <button
-                aria-label="Open user menu"
+                aria-label={t("admin.shell.aria.openUserMenu")}
                 className="admin-web__sidebar-user"
                 type="button"
               >
@@ -276,18 +283,18 @@ export function PrivateApp() {
             />
           </div>
         }
-        navigation={getAdminNavigation(location.pathname, (path) => navigate(path))}
-        headerTitle={getAdminHeaderTitle(location.pathname)}
+        navigation={getAdminNavigation(location.pathname, t, (path) => navigate(path))}
+        headerTitle={getAdminHeaderTitle(location.pathname, t)}
         headerCenter={
           <button
-            aria-label="Open global search"
+            aria-label={t("admin.shell.aria.openGlobalSearch")}
             className="admin-web__header-search"
-            title={`${activeRouteMeta.headerTitle} command search will be wired in a later step.`}
+            title={t("admin.shell.searchTitle", { title: activeRouteMeta.headerTitle })}
             type="button"
           >
             <span className="admin-web__header-search-copy">
               <SearchIcon className="admin-web__header-search-icon" />
-              <span className="admin-web__header-search-label">Search or run command</span>
+              <span className="admin-web__header-search-label">{t("admin.shell.searchPlaceholder")}</span>
             </span>
             <Kbd className="admin-web__header-search-shortcut" size="sm">
               Ctrl K
@@ -299,7 +306,7 @@ export function PrivateApp() {
             <Menu align="end">
               <MenuTrigger>
                 <button
-                  aria-label="Open quick create menu"
+                  aria-label={t("admin.shell.aria.openQuickCreateMenu")}
                   className="admin-web__header-icon-button"
                   type="button"
                 >
@@ -315,7 +322,7 @@ export function PrivateApp() {
             <Menu align="end">
               <MenuTrigger>
                 <button
-                  aria-label="Open notifications"
+                  aria-label={t("admin.shell.aria.openNotifications")}
                   className="admin-web__header-icon-button"
                   type="button"
                 >
@@ -324,10 +331,10 @@ export function PrivateApp() {
                 </button>
               </MenuTrigger>
               <MenuContent className="admin-web__header-menu">
-                <MenuLabel>Notifications</MenuLabel>
+                <MenuLabel>{t("admin.shell.menu.notifications")}</MenuLabel>
                 <MenuItem onClick={() => navigate(activeRouteMeta.path)}>{notificationSummary}</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("help")}>Loading state guidance available</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>3 operator notes still pinned</MenuItem>
+                <MenuItem onClick={() => setUtilityPanel("help")}>{t("admin.shell.menu.loadingGuidance")}</MenuItem>
+                <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.operatorNotes", { count: 3 })}</MenuItem>
               </MenuContent>
             </Menu>
 

@@ -16,12 +16,17 @@ import {
   SearchIcon,
   StarIcon,
 } from "@platform/ui-kit";
-import { getAppBuildMetadata, WorkspaceShell } from "@platform/app-shell";
+import {
+  getAppBuildMetadata,
+  LocaleMenuItems,
+  WorkspaceShell,
+} from "@platform/app-shell";
 import { getDemoSession, useAuth } from "@platform/auth-core";
+import { useTranslation } from "@platform/i18n";
 
 import { offlineSyncStatus } from "../offline/sync-status";
 import { TenantDashboardPage } from "../pages/dashboard/page";
-import { tenantNavigation } from "../shared/navigation";
+import { getTenantNavigation } from "../shared/navigation";
 import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
@@ -53,6 +58,7 @@ function scrollToDashboardSection(sectionId?: string) {
 }
 
 export function PrivateApp() {
+  const { t } = useTranslation();
   const { signOut } = useAuth();
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
@@ -69,7 +75,7 @@ export function PrivateApp() {
 
     return "light";
   });
-  const activeThemeLabel = themeMode === "dark" ? "Dark" : "Light";
+  const activeThemeLabel = themeMode === "dark" ? t("common.themes.dark") : t("common.themes.light");
 
   useEffect(() => {
     const root = document.documentElement;
@@ -85,12 +91,13 @@ export function PrivateApp() {
   function renderProfileMenuItems() {
     return (
       <>
-        <MenuItem>My profile</MenuItem>
-        <MenuItem>Preferences</MenuItem>
+        <MenuItem>{t("shell.menu.myProfile")}</MenuItem>
+        <MenuItem>{t("shell.menu.preferences")}</MenuItem>
         <MenuSeparator />
+        <LocaleMenuItems />
         <MenuItem onClick={() => setThemeMode((value) => (value === "dark" ? "light" : "dark"))}>
           <>
-            <span>Theme switcher</span>
+            <span>{t("shell.menu.themeSwitcher")}</span>
             <span className="tenant-web__profile-theme-value">{activeThemeLabel}</span>
           </>
         </MenuItem>
@@ -101,7 +108,7 @@ export function PrivateApp() {
           }}
           tone="danger"
         >
-          Sign out
+          {t("shell.menu.signOut")}
         </MenuItem>
       </>
     );
@@ -110,12 +117,12 @@ export function PrivateApp() {
   return (
     <>
       <WorkspaceShell
-        brand="Tenant Workspace"
+        brand={t("tenant.shell.brand")}
         layout="rail"
         showHeaderSurfaceMarker={false}
         showSidebarSurfaceMarker={false}
         surfaceIcon={<BuildingOfficeIcon />}
-        surfaceLabel="Workspace"
+        surfaceLabel={t("tenant.shell.surfaceLabel")}
         surfaceTone="workspace"
         railBottom={
           <div className="workspace-shell__rail-bottom-block">
@@ -129,7 +136,7 @@ export function PrivateApp() {
           <Menu align="end">
             <MenuTrigger>
               <button
-                aria-label="Open user menu"
+                aria-label={t("tenant.shell.aria.openUserMenu")}
                 className="workspace-shell__header-profile-trigger workspace-shell__rail-user-trigger"
                 type="button"
               >
@@ -143,19 +150,19 @@ export function PrivateApp() {
             </MenuContent>
           </Menu>
         }
-        railBrandLabel="Dashboard"
+        railBrandLabel={t("tenant.navigation.dashboard.label")}
         railBrandOnSelect={() => scrollToDashboardSection()}
         railMark={<DashboardGridIcon />}
         railUtilities={[
           {
             badge: String(offlineSyncStatus.queuedActions),
             icon: <DocumentListIcon />,
-            label: "Tasks center",
+            label: t("tenant.shell.menu.tasksCenter"),
             onSelect: () => setUtilityPanel("tasks"),
           },
           {
             icon: <StarIcon />,
-            label: "Favorites",
+            label: t("tenant.shell.menu.favorites"),
             onSelect: () => setUtilityPanel("favorites"),
           },
         ]}
@@ -164,7 +171,7 @@ export function PrivateApp() {
           <Menu align="end">
             <MenuTrigger>
               <button
-                aria-label="Open user menu"
+                aria-label={t("tenant.shell.aria.openUserMenu")}
                 className="workspace-shell__sidebar-user"
                 type="button"
               >
@@ -217,22 +224,22 @@ export function PrivateApp() {
             />
           </div>
         }
-        navigation={tenantNavigation.map((item) => ({
+        navigation={getTenantNavigation(t).map((item) => ({
           ...item,
           onNavigate: () => scrollToDashboardSection(),
         }))}
-        headerTitle="Dashboard"
+        headerTitle={t("tenant.navigation.dashboard.headerTitle")}
         headerCenter={
           <button
-            aria-label="Open workspace search"
+            aria-label={t("tenant.shell.aria.openWorkspaceSearch")}
             className="workspace-shell__header-search"
             onClick={() => scrollToDashboardSection()}
-            title="Workspace command search will be wired in a later step."
+            title={t("tenant.shell.searchTitle")}
             type="button"
           >
             <span className="workspace-shell__header-search-copy">
               <SearchIcon className="workspace-shell__header-search-icon" />
-              <span className="workspace-shell__header-search-label">Search or run command</span>
+              <span className="workspace-shell__header-search-label">{t("tenant.shell.searchPlaceholder")}</span>
             </span>
             <Kbd className="workspace-shell__header-search-shortcut" size="sm">
               Ctrl K
@@ -244,7 +251,7 @@ export function PrivateApp() {
             <Menu align="end">
               <MenuTrigger>
                 <button
-                  aria-label="Open workspace actions"
+                  aria-label={t("tenant.shell.aria.openWorkspaceActions")}
                   className="workspace-shell__header-icon-button"
                   type="button"
                 >
@@ -252,17 +259,17 @@ export function PrivateApp() {
                 </button>
               </MenuTrigger>
               <MenuContent className="workspace-shell__header-menu">
-                <MenuLabel>Workspace Actions</MenuLabel>
-                <MenuItem onClick={() => scrollToDashboardSection()}>Open dashboard</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>Open tasks center</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("favorites")}>Review saved mockups</MenuItem>
+                <MenuLabel>{t("tenant.shell.actionsLabel")}</MenuLabel>
+                <MenuItem onClick={() => scrollToDashboardSection()}>{t("tenant.shell.menu.openDashboard")}</MenuItem>
+                <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("tenant.shell.menu.tasksCenter")}</MenuItem>
+                <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("tenant.shell.menu.reviewFavorites")}</MenuItem>
               </MenuContent>
             </Menu>
 
             <Menu align="end">
               <MenuTrigger>
                 <button
-                  aria-label="Open notifications"
+                  aria-label={t("tenant.shell.aria.openNotifications")}
                   className="workspace-shell__header-icon-button"
                   type="button"
                 >
@@ -273,15 +280,15 @@ export function PrivateApp() {
                 </button>
               </MenuTrigger>
               <MenuContent className="workspace-shell__header-menu">
-                <MenuLabel>Notifications</MenuLabel>
+                <MenuLabel>{t("tenant.shell.menu.notifications")}</MenuLabel>
                 <MenuItem onClick={() => setUtilityPanel("tasks")}>
-                  Dashboard placeholder set refreshed
+                  {t("tenant.shell.menu.dashboardRefreshed")}
                 </MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("help")}>
-                  Loading state guidance available
+                  {t("tenant.shell.menu.loadingGuidance")}
                 </MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("tasks")}>
-                  {offlineSyncStatus.queuedActions} operator notes still pinned
+                  {t("tenant.shell.menu.operatorNotes", { count: offlineSyncStatus.queuedActions })}
                 </MenuItem>
               </MenuContent>
             </Menu>

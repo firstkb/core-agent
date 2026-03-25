@@ -6,6 +6,7 @@
   "dependencies": {
     "@platform/app-shell": "workspace:*",
     "@platform/auth-core": "workspace:*",
+    "@platform/i18n": "workspace:*",
     "@platform/tenant-core": "workspace:*",
     "@platform/ui-kit": "workspace:*",
     "react": "^19.0.0",

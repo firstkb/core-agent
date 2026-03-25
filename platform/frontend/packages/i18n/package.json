@@ -1,5 +1,5 @@
 {
-  "name": "@platform/app-shell",
+  "name": "@platform/i18n",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,16 +8,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@platform/i18n": "workspace:*",
-    "@platform/ui-kit": "workspace:*",
-    "qrcode.react": "^4.2.0"
+    "i18next": "^23.11.5",
+    "react-i18next": "^14.1.2"
   },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./styles.css": "./src/styles.css"
+    ".": "./src/index.ts"
   }
 }

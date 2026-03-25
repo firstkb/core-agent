@@ -1,10 +1,25 @@
 import { useEffect, useState } from "react";
 
 import { AuthProvider } from "@platform/auth-core";
-import { AppUpdateBanner, FullscreenBrandLoader } from "@platform/app-shell";
+import {
+  appShellLocaleResources,
+  AppUpdateBanner,
+  FullscreenBrandLoader,
+} from "@platform/app-shell";
+import {
+  mergeLocaleResources,
+  PlatformI18nProvider,
+  useTranslation,
+} from "@platform/i18n";
 import { BrowserRouter } from "react-router-dom";
 
 import { App } from "./app";
+import { adminLocaleResources } from "../locales";
+
+const adminI18nResources = mergeLocaleResources(
+  appShellLocaleResources,
+  adminLocaleResources,
+);
 
 function AdminBrandLockup() {
   return (
@@ -70,7 +85,19 @@ function bootstrapAdminRuntime() {
 }
 
 export function Root() {
+  return (
+    <PlatformI18nProvider
+      resources={adminI18nResources}
+      storageKey="platform-admin-locale"
+    >
+      <AdminRuntimeRoot />
+    </PlatformI18nProvider>
+  );
+}
+
+function AdminRuntimeRoot() {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let isActive = true;
@@ -88,8 +115,8 @@ export function Root() {
   if (isBootstrapping) {
     return (
       <FullscreenBrandLoader
-        description="Please wait a moment."
-        label="Opening sign in"
+        description={t("admin.loaders.bootstrapDescription")}
+        label={t("admin.loaders.bootstrapLabel")}
         logo={<AdminBrandLockup />}
       />
     );

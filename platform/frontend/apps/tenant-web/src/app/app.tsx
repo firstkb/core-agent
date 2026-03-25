@@ -5,6 +5,7 @@ import {
   useAuth,
 } from "@platform/auth-core";
 import {
+  AuthLocaleFooter,
   AuthSignInForm,
   FullscreenBrandLoader,
   normalizeAuthIdentifier,
@@ -13,6 +14,7 @@ import {
   sanitizeAuthInputValue,
   type AuthContactMethod,
 } from "@platform/app-shell";
+import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { PrivateApp } from "./private-app";
@@ -92,6 +94,7 @@ export function App({
 }: {
   tenantBranding: TenantBranding;
 }) {
+  const { t } = useTranslation();
   const { isAuthenticated, requestCode, signIn, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
@@ -126,7 +129,7 @@ export function App({
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);
 
     if (!normalizedIdentifier) {
-      setError(method === "email" ? "Enter an email address to continue." : "Enter a phone number to continue.");
+      setError(method === "email" ? t("auth.errors.enterEmail") : t("auth.errors.enterPhone"));
       return;
     }
 
@@ -140,7 +143,7 @@ export function App({
       setCodeSent(true);
       setCodeValue("");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Unable to send the code.");
+      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
     } finally {
       setIsBusy(false);
     }
@@ -151,7 +154,7 @@ export function App({
     const normalizedCode = codeValue.trim();
 
     if (!normalizedCode) {
-      setError("Enter the authorization code to continue.");
+      setError(t("auth.errors.enterCode"));
       return;
     }
 
@@ -161,7 +164,7 @@ export function App({
     try {
       await signIn(normalizedCode, normalizedIdentifier);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Unable to verify the code.");
+      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
     } finally {
       setIsBusy(false);
     }
@@ -177,8 +180,8 @@ export function App({
   const qrValue = typeof window === "undefined" ? "/sign-in" : window.location.href;
   const currentYear = new Date().getFullYear();
   const authDescription = codeSent
-    ? `Enter the Authorization Code sent to ${requestedIdentifier}.`
-    : "To receive an Authorization Code, please provide your email address or phone number.";
+    ? t("tenant.auth.descriptionCode", { identifier: requestedIdentifier })
+    : t("tenant.auth.descriptionEnter");
 
   return (
     <AuthGuard
@@ -192,15 +195,15 @@ export function App({
           </Routes>
         ) : (
           <TenantBootstrapLoader
-            description="Please wait a moment."
-            label="Please wait"
+            description={t("tenant.loaders.profileDescription")}
+            label={t("tenant.loaders.profileLabel")}
           />
         )
       }
       pending={
         <TenantBootstrapLoader
-          description="Checking your session."
-          label="Welcome"
+          description={t("tenant.loaders.pendingDescription")}
+          label={t("tenant.loaders.pendingLabel")}
         />
       }
       unauthenticated={
@@ -210,9 +213,9 @@ export function App({
               <PublicAuthShell
                 brand={<TenantAuthBrandRow qrValue={qrValue} />}
                 description={authDescription}
-                footer={`© ${currentYear} eSafety Systems. All rights reserved.`}
-                tagline="Fast. Efficient. Productive."
-                title="Sign in"
+                footer={<AuthLocaleFooter year={currentYear} />}
+                tagline={t("tenant.auth.tagline")}
+                title={t("tenant.auth.title")}
               >
                 <AuthSignInForm
                   codeSent={codeSent}
@@ -242,8 +245,6 @@ export function App({
                   onVerifyCode={() => {
                     void handleVerifyCode();
                   }}
-                  phonePlaceholder="Enter your phone number"
-                  requestLabel="Send code"
                 />
               </PublicAuthShell>
             }

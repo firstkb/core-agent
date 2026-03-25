@@ -380,6 +380,66 @@
   text-align: center;
 }
 
+.public-auth-shell__locale-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.public-auth-shell__locale-switcher {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.public-auth-shell__locale-link-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.public-auth-shell__locale-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.28em;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--easing-standard),
+    text-decoration-color var(--motion-fast) var(--easing-standard);
+}
+
+.public-auth-shell__locale-link:hover,
+.public-auth-shell__locale-link:focus-visible {
+  color: white;
+  text-decoration: underline;
+}
+
+.public-auth-shell__locale-link--active {
+  color: white;
+  text-decoration: underline;
+}
+
+.public-auth-shell__locale-separator {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.public-auth-shell__locale-legal {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.94);
+}
+
 [data-theme="dark"] .public-brand-loader__logo .public-brand-logo--dark,
 [data-theme="dark"] .public-auth-shell__brand .public-brand-logo--dark {
   display: none;
@@ -406,6 +466,20 @@
   background: color-mix(in srgb, var(--color-bg-surface) 92%, black 8%);
 }
 
+[data-theme="dark"] .public-auth-shell__locale-link {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+[data-theme="dark"] .public-auth-shell__locale-link:hover,
+[data-theme="dark"] .public-auth-shell__locale-link:focus-visible,
+[data-theme="dark"] .public-auth-shell__locale-link--active {
+  color: white;
+}
+
+[data-theme="dark"] .public-auth-shell__locale-separator {
+  color: rgba(255, 255, 255, 0.52);
+}
+
 @media (max-width: 720px) {
   .public-auth-shell__floating {
     position: static;
@@ -424,6 +498,14 @@
     --public-auth-brand-frame-segment: 0.45rem;
     align-items: flex-start;
     gap: var(--space-3);
+  }
+
+  .public-auth-shell__locale-switcher {
+    justify-content: center;
+  }
+
+  .public-auth-shell__locale-link-group {
+    gap: var(--space-2);
   }
 }
 

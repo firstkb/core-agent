@@ -109,6 +109,9 @@ function bootstrapTenantRuntime() {
       ensureTenantStylesheet();
 
       try {
+        // TODO(runtime-config): Keep config bootstrap ahead of auth/profile initialization.
+        // tenant-web needs both shared /config.json and tenant branding from /tenant/config.json
+        // before the private-area profile request is introduced in app.tsx.
         const [appConfig, tenantConfig] = await Promise.all([
           loadJson<Record<string, unknown>>("/config.json"),
           loadJson<Record<string, unknown>>("/tenant/config.json", true),

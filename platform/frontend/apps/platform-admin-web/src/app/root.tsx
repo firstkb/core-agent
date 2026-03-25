@@ -69,6 +69,8 @@ let adminBootstrapPromise: Promise<void> | null = null;
 
 function bootstrapAdminRuntime() {
   if (!adminBootstrapPromise) {
+    // TODO(runtime-config): Keep config bootstrap ahead of auth/profile initialization.
+    // The private-area gate in app.tsx should eventually consume API base URLs from /config.json.
     adminBootstrapPromise = Promise.all([
       loadRequiredJson("/config.json"),
       sleep(250),

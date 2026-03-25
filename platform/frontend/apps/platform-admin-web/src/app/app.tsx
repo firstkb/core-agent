@@ -103,6 +103,9 @@ export function App() {
     }
 
     setProfileReady(false);
+    // TODO(auth-profile): Replace this dev-only delay with a real admin /profile bootstrap.
+    // After auth is restored, call the API and only enter <PrivateApp /> when the profile is loaded.
+    // Until the API exists, keep an explicit mock here instead of silently bypassing the gate.
     const timeoutId = window.setTimeout(() => {
       setProfileReady(true);
     }, 650);

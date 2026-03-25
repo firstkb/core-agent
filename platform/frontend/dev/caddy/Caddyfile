@@ -1,13 +1,26 @@
 {
 	admin 127.0.0.1:2019
+	servers {
+		protocols h1 h2
+	}
 }
 
 admin.platform.local {
 	tls internal
-	reverse_proxy 127.0.0.1:5173
+	reverse_proxy 127.0.0.1:5173 {
+		transport http {
+			keepalive off
+			versions 1.1
+		}
+	}
 }
 
 demo.platform.local {
 	tls internal
-	reverse_proxy 127.0.0.1:5174
+	reverse_proxy 127.0.0.1:5174 {
+		transport http {
+			keepalive off
+			versions 1.1
+		}
+	}
 }

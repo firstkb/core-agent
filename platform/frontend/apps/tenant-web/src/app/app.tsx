@@ -116,6 +116,9 @@ export function App({
     }
 
     setProfileReady(false);
+    // TODO(auth-profile): Replace this dev-only delay with a real tenant /profile bootstrap.
+    // Load the private-area profile after auth is restored and after runtime config/branding bootstrap.
+    // Until the API exists, keep an explicit mock here instead of silently bypassing the gate.
     const timeoutId = window.setTimeout(() => {
       setProfileReady(true);
     }, 650);

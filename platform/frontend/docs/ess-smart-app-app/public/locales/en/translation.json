@@ -1,0 +1,66 @@
+{
+    "general": {
+        "signOut": "Sign out",
+        "dashboard": "Dashboard",
+        "offline": "No internet connection.",
+        "menu": "Menu",
+        "forms": "Forms",
+        "sync_table": "Sync Status",
+        "request": "Contact Support",
+        "version": "Version",
+        "edit": "Edit",
+        "pdf": "Pdf",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "finish": "Finish"
+    },
+    "login": {
+        "tagLine": "Fast. Efficient. Productive.",
+        "title": "Sign In",
+        "info": "To receive an Authorization Code, please provide your email address or phone number.",
+        "byEmail": "by Email",
+        "byPhone": "by Phone",
+        "enterClientId": "Enter your Client ID",
+        "enterEmail": "Enter your email address",
+        "enterPhone": "Enter your phone number",
+        "enterCode": "Enter your code",
+        "button": {
+            "sendCode": "Send code",
+            "verifyCode": "Verify Code",
+            "loading": "Loading...",
+            "loadingVerify": "Verifying..."
+        },
+        "error": {
+            "emptyClientId": "Empty Client ID",
+            "emptyEmail": "Empty E-Mail Address",
+            "emptyPhone": "Empty Phone Number",
+            "emptyCode": "Empty Code",
+            "authFailed": "Authentication failed",
+            "varifyFailed": "Verification failed",
+            "codeNotCorrect": "code is not correct"
+        }
+    },
+    "edit": {
+        "back": "Back to list",
+        "info_save_1": "This form will automatically save every action.",
+        "info_save_2": "You can always continue working with this form.",
+        "info_read_only": "You will be able to change this form after synchronization.",
+        "image": {
+            "info_unformat": "Unsupported format. Please use jpg, jpeg, png, heic, or heif.",
+            "add": "Add Photo",
+            "del_title": "Confirm Delete",
+            "del_info": "Are you sure you want to delete this image?"
+        }
+    },
+    "form": {
+        "error": {
+            "required": "required field",
+            "incorrectly": "incorrectly filled field"
+        }
+    },
+    "table": {
+        "new": "Start NEW",
+        "no_data": "No data loaded",
+        "no_data_sync": "No data for sync"
+    }
+}

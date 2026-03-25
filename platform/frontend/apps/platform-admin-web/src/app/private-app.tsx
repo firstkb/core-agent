@@ -15,18 +15,22 @@ import {
   ShieldKeyIcon,
   StarIcon,
 } from "@platform/ui-kit";
-import { WorkspaceShell } from "@platform/app-shell";
+import { getAppBuildMetadata, WorkspaceShell } from "@platform/app-shell";
 import { getDemoSession, useAuth } from "@platform/auth-core";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
+import { AdminAuditLogPage } from "../pages/audit-log/page";
+import { AdminBillingPage } from "../pages/billing/page";
 import { AdminDashboardPage } from "../pages/dashboard/page";
 import {
   AdminRailUtilitySheet,
   type AdminRailUtilityPanel,
 } from "../widgets/admin-rail-utility-sheet/admin-rail-utility-sheet";
 import {
+  getActiveAdminRoute,
   getAdminHeaderTitle,
   getAdminNavigation,
+  getAdminRouteMeta,
 } from "../shared/navigation";
 import "./app.css";
 
@@ -34,6 +38,7 @@ type AdminThemeMode = "light" | "dark";
 
 const adminThemeStorageKey = "platform-admin-theme";
 const session = getDemoSession("admin");
+const appBuild = getAppBuildMetadata();
 const AdminUiLabPage = lazy(async () => {
   const module = await import("../internal/ui-lab");
   return { default: module.AdminUiLabPage };
@@ -60,6 +65,18 @@ export function PrivateApp() {
   });
   const isUiLabRoute = location.pathname.startsWith("/root/ui-lab");
   const activeThemeLabel = themeMode === "dark" ? "Dark" : "Light";
+  const activeRoute = getActiveAdminRoute(location.pathname);
+  const activeRouteMeta = getAdminRouteMeta(location.pathname);
+  const quickActionMenuLabel = activeRoute === "billing"
+    ? "Billing Actions"
+    : activeRoute === "audit-log"
+      ? "Audit Actions"
+      : "Dashboard Actions";
+  const notificationSummary = activeRoute === "billing"
+    ? "Billing review surfaces are live"
+    : activeRoute === "audit-log"
+      ? "Audit event streams are live"
+      : "Dashboard placeholder set refreshed";
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -101,6 +118,35 @@ export function PrivateApp() {
     );
   }
 
+  function renderQuickActionMenuItems() {
+    switch (activeRoute) {
+      case "billing":
+        return (
+          <>
+            <MenuItem onClick={() => navigate("/billing/queue")}>Open billing queue</MenuItem>
+            <MenuItem onClick={() => navigate("/billing/exceptions")}>Open exceptions lane</MenuItem>
+            <MenuItem onClick={() => navigate("/billing/plan-deltas")}>Review plan deltas</MenuItem>
+          </>
+        );
+      case "audit-log":
+        return (
+          <>
+            <MenuItem onClick={() => navigate("/audit-log/events")}>Open audit events</MenuItem>
+            <MenuItem onClick={() => navigate("/audit-log/access-changes")}>Review access changes</MenuItem>
+            <MenuItem onClick={() => navigate("/audit-log/system-jobs")}>Open system jobs</MenuItem>
+          </>
+        );
+      default:
+        return (
+          <>
+            <MenuItem onClick={() => navigate("/dashboard")}>Open dashboard</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("tasks")}>Open tasks center</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("favorites")}>Review saved mockups</MenuItem>
+          </>
+        );
+    }
+  }
+
   if (isUiLabRoute) {
     return (
       <Suspense
@@ -137,8 +183,8 @@ export function PrivateApp() {
         railBottom={
           <div className="admin-web__rail-bottom-block">
             <div className="admin-web__rail-environment">
-              <span className="admin-web__rail-environment-label">DEV</span>
-              <span className="admin-web__rail-environment-version">v3.0.0</span>
+              <span className="admin-web__rail-environment-label">{appBuild.env}</span>
+              <span className="admin-web__rail-environment-version">v{appBuild.version}</span>
             </div>
           </div>
         }
@@ -236,7 +282,7 @@ export function PrivateApp() {
           <button
             aria-label="Open global search"
             className="admin-web__header-search"
-            title="Global command search will be wired in a later step."
+            title={`${activeRouteMeta.headerTitle} command search will be wired in a later step.`}
             type="button"
           >
             <span className="admin-web__header-search-copy">
@@ -261,10 +307,8 @@ export function PrivateApp() {
                 </button>
               </MenuTrigger>
               <MenuContent className="admin-web__header-menu">
-                <MenuLabel>Dashboard Actions</MenuLabel>
-                <MenuItem onClick={() => navigate("/dashboard")}>Open dashboard</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>Open tasks center</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("favorites")}>Review saved mockups</MenuItem>
+                <MenuLabel>{quickActionMenuLabel}</MenuLabel>
+                {renderQuickActionMenuItems()}
               </MenuContent>
             </Menu>
 
@@ -281,7 +325,7 @@ export function PrivateApp() {
               </MenuTrigger>
               <MenuContent className="admin-web__header-menu">
                 <MenuLabel>Notifications</MenuLabel>
-                <MenuItem onClick={() => navigate("/dashboard")}>Dashboard placeholder set refreshed</MenuItem>
+                <MenuItem onClick={() => navigate(activeRouteMeta.path)}>{notificationSummary}</MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("help")}>Loading state guidance available</MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("tasks")}>3 operator notes still pinned</MenuItem>
               </MenuContent>
@@ -296,10 +340,16 @@ export function PrivateApp() {
           <Route element={<Navigate replace to="/dashboard" />} path="/overview" />
           <Route element={<Navigate replace to="/dashboard" />} path="/tenants" />
           <Route element={<Navigate replace to="/dashboard" />} path="/signals" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/billing" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/billing/*" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/audit-log" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/audit-log/*" />
+          <Route element={<Navigate replace to="/billing/queue" />} path="/billing" />
+          <Route element={<AdminBillingPage section="queue" />} path="/billing/queue" />
+          <Route element={<AdminBillingPage section="exceptions" />} path="/billing/exceptions" />
+          <Route element={<AdminBillingPage section="plan-deltas" />} path="/billing/plan-deltas" />
+          <Route element={<Navigate replace to="/billing/queue" />} path="/billing/*" />
+          <Route element={<Navigate replace to="/audit-log/events" />} path="/audit-log" />
+          <Route element={<AdminAuditLogPage section="events" />} path="/audit-log/events" />
+          <Route element={<AdminAuditLogPage section="access-changes" />} path="/audit-log/access-changes" />
+          <Route element={<AdminAuditLogPage section="system-jobs" />} path="/audit-log/system-jobs" />
+          <Route element={<Navigate replace to="/audit-log/events" />} path="/audit-log/*" />
           <Route element={<Navigate replace to="/dashboard" />} path="*" />
         </Routes>
       </WorkspaceShell>

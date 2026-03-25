@@ -16,7 +16,7 @@ import {
   SearchIcon,
   StarIcon,
 } from "@platform/ui-kit";
-import { WorkspaceShell } from "@platform/app-shell";
+import { getAppBuildMetadata, WorkspaceShell } from "@platform/app-shell";
 import { getDemoSession, useAuth } from "@platform/auth-core";
 
 import { offlineSyncStatus } from "../offline/sync-status";
@@ -33,6 +33,7 @@ type TenantThemeMode = "light" | "dark";
 
 const tenantThemeStorageKey = "tenant-workspace-theme";
 const session = getDemoSession("tenant");
+const appBuild = getAppBuildMetadata();
 
 function scrollToDashboardSection(sectionId?: string) {
   if (typeof window === "undefined") {
@@ -119,8 +120,8 @@ export function PrivateApp() {
         railBottom={
           <div className="workspace-shell__rail-bottom-block">
             <div className="workspace-shell__rail-status">
-              <span className="workspace-shell__rail-status-label">DEV</span>
-              <span className="workspace-shell__rail-status-meta">v3.0.0</span>
+              <span className="workspace-shell__rail-status-label">{appBuild.env}</span>
+              <span className="workspace-shell__rail-status-meta">v{appBuild.version}</span>
             </div>
           </div>
         }

@@ -1,3 +1,14 @@
+export { getAppBuildMetadata, useAppUpdate } from "./app-build";
+export type {
+  AppBuildMetadata,
+  AppUpdateOptions,
+  AppUpdateState,
+  AppVersionDocument,
+} from "./app-build";
+
+export { AppUpdateBanner } from "./app-update-banner";
+export type { AppUpdateBannerProps } from "./app-update-banner";
+
 export { normalizeAuthIdentifier, sanitizeAuthInputValue } from "./auth-input";
 
 export { AuthSignInForm, PublicAuthShell } from "./public-auth-shell";

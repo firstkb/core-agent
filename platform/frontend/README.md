@@ -34,3 +34,17 @@ Configured local domains:
 
 - `https://admin.platform.local`
 - `https://demo.platform.local`
+
+## Build Targets
+
+- `pnpm build:admin:dev`
+- `pnpm build:admin:prod`
+- `pnpm build:tenant:dev`
+- `pnpm build:tenant:prod`
+
+App-level equivalents:
+
+- `pnpm --filter @platform/platform-admin-web build:dev`
+- `pnpm --filter @platform/platform-admin-web build:prod`
+- `pnpm --filter @platform/tenant-web build:dev`
+- `pnpm --filter @platform/tenant-web build:prod`

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { AuthProvider } from "@platform/auth-core";
-import { FullscreenBrandLoader } from "@platform/app-shell";
+import { AppUpdateBanner, FullscreenBrandLoader } from "@platform/app-shell";
 import { BrowserRouter } from "react-router-dom";
 
 import { App, type TenantBranding } from "./app";
@@ -163,7 +163,10 @@ export function Root() {
   return (
     <AuthProvider storageNamespace="tenant-workspace-auth">
       <BrowserRouter>
-        <App tenantBranding={branding} />
+        <>
+          <App tenantBranding={branding} />
+          <AppUpdateBanner />
+        </>
       </BrowserRouter>
     </AuthProvider>
   );

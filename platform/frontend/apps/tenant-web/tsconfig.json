@@ -1,4 +1,4 @@
 {
   "extends": "../../tooling/typescript/react-app.json",
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "../../tooling/typescript/app-build-globals.d.ts"]
 }

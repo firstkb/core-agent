@@ -29,7 +29,7 @@ const panelCopy: Record<
   }
 > = {
   favorites: {
-    description: "Pinned shortcuts now point at the dashboard mock and UI Lab references instead of a wider admin page tree.",
+    description: "Pinned shortcuts now cover dashboard, seeded admin routes, and UI references without changing the shared shell.",
     title: "Favorites",
   },
   help: {
@@ -37,7 +37,7 @@ const panelCopy: Record<
     title: "Help and support",
   },
   tasks: {
-    description: "Pinned review notes stay visible as one operator utility even while the runtime is reduced to a single dashboard route.",
+    description: "Pinned review notes stay grouped in one operator utility while dashboard, billing, and audit skeletons settle into the runtime.",
     title: "Tasks",
   },
 };
@@ -72,7 +72,7 @@ export function AdminRailUtilitySheet({
               <Card>
                 <CardHeader>
                   <CardTitle>Dashboard review queue</CardTitle>
-                  <CardDescription>Use the dashboard mock as the current shell review surface while real module pages stay removed from the menu.</CardDescription>
+                  <CardDescription>Use the dashboard surface as the primary shell-level mock while the denser admin routes focus on module-specific layout review.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => handleRoute("/dashboard")} variant="outline">
@@ -83,24 +83,24 @@ export function AdminRailUtilitySheet({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Loading state pass</CardTitle>
-                  <CardDescription>Review how the route-level and collection-level loading surfaces sit inside the desktop shell.</CardDescription>
+                  <CardTitle>Billing lane review</CardTitle>
+                  <CardDescription>Use the seeded billing routes to review list-detail rhythm, summary strips, and filter-rail density inside the frozen shell.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleRoute("/root/ui-lab")} variant="outline">
-                    Open UI Lab
+                  <Button onClick={() => handleRoute("/billing/queue")} variant="outline">
+                    Open billing queue
                   </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Shell spacing notes</CardTitle>
-                  <CardDescription>Keep mobile and desktop spacing aligned while the dashboard mock becomes the only primary route.</CardDescription>
+                  <CardTitle>Audit stream pass</CardTitle>
+                  <CardDescription>Review the seeded audit routes when you need table-heavy governance layouts inside the same shell chrome.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleRoute("/dashboard")} variant="outline">
-                    Return to mock canvas
+                  <Button onClick={() => handleRoute("/audit-log/events")} variant="outline">
+                    Open audit log
                   </Button>
                 </CardContent>
               </Card>
@@ -112,7 +112,7 @@ export function AdminRailUtilitySheet({
               <Card>
                 <CardHeader>
                   <CardTitle>Dashboard surface</CardTitle>
-                  <CardDescription>The single retained route now acts as the primary shell review destination.</CardDescription>
+                  <CardDescription>The dashboard remains the broadest shell review surface for cross-tenant status and placeholder composition.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => handleRoute("/dashboard")} variant="outline">
@@ -123,24 +123,24 @@ export function AdminRailUtilitySheet({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>States gallery</CardTitle>
-                  <CardDescription>UI Lab remains the clean reference for the shared loading and skeleton contract.</CardDescription>
+                  <CardTitle>Billing queue</CardTitle>
+                  <CardDescription>Use the billing routes for summary-strip, filter, and list-detail review without leaving the admin runtime.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleRoute("/root/ui-lab")} variant="outline">
-                    Open UI Lab
+                  <Button onClick={() => handleRoute("/billing/queue")} variant="outline">
+                    Open billing queue
                   </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Skeleton composition</CardTitle>
-                  <CardDescription>Use the dashboard mock to review grouped placeholder rhythm without leaving the main shell.</CardDescription>
+                  <CardTitle>Audit event stream</CardTitle>
+                  <CardDescription>Open the seeded governance surface when you need the table-first review flow rather than the dashboard mock.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleRoute("/dashboard")} variant="outline">
-                    Review dashboard mock
+                  <Button onClick={() => handleRoute("/audit-log/events")} variant="outline">
+                    Open audit log
                   </Button>
                 </CardContent>
               </Card>

@@ -186,6 +186,15 @@
   gap: var(--space-2);
 }
 
+.public-auth-shell__brand + .public-auth-shell__copy {
+  margin-top: var(--space-2);
+}
+
+.public-auth-shell__surface {
+  display: flex;
+  align-items: center;
+}
+
 .public-auth-shell__title {
   margin: 0;
   color: var(--color-text-primary);
@@ -284,6 +293,11 @@
   color: var(--color-text-secondary);
   font-size: 0.9rem;
   line-height: 1.6;
+}
+
+.public-auth-shell__secondary-link {
+  display: flex;
+  align-items: center;
 }
 
 .public-auth-shell__support {
@@ -494,6 +508,18 @@
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
+}
+
+.workspace-shell__sidebar-navigation-group {
+  display: flex;
+  flex: 1 1 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.workspace-shell__sidebar-navigation-label {
+  flex: 0 0 auto;
 }
 
 .workspace-shell__nav-link {
@@ -964,6 +990,60 @@
   margin-top: auto;
 }
 
+.workspace-shell__sidebar-surface,
+.workspace-shell__header-surface {
+  display: flex;
+  align-items: center;
+}
+
+.workspace-shell__sidebar-surface {
+  margin-bottom: var(--space-4);
+}
+
+.workspace-shell__surface-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.35rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 94%, transparent);
+  color: var(--color-text-secondary);
+  box-shadow: 0 1rem 2rem -2.1rem rgba(15, 23, 42, 0.24);
+}
+
+.workspace-shell__surface-marker-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-shell__surface-marker-icon > svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.workspace-shell__surface-marker-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.workspace-shell__surface-marker--admin {
+  border-color: color-mix(in srgb, #334155 22%, transparent);
+  background: color-mix(in srgb, #eef2ff 78%, white 22%);
+  color: #334155;
+}
+
+.workspace-shell__surface-marker--workspace {
+  border-color: color-mix(in srgb, #0f8ca8 24%, transparent);
+  background: color-mix(in srgb, #dff5fb 84%, white 16%);
+  color: #0f6f83;
+}
+
 .workspace-shell--rail .workspace-shell__sidebar {
   position: sticky;
   top: 0;
@@ -1253,6 +1333,12 @@
   min-width: 0;
 }
 
+.workspace-shell--rail .workspace-shell__header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .workspace-shell--rail .workspace-shell__header-title {
   font-size: 1.05rem;
   font-weight: var(--font-weight-semibold);
@@ -1324,6 +1410,24 @@
 
 [data-theme="dark"] .workspace-shell__sidebar-user:hover {
   background: color-mix(in srgb, var(--color-bg-surface-elevated) 88%, black 12%);
+}
+
+[data-theme="dark"] .workspace-shell__surface-marker {
+  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, black 10%);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .workspace-shell__surface-marker--admin {
+  border-color: color-mix(in srgb, #6b7280 26%, transparent);
+  background: color-mix(in srgb, #1f2937 88%, black 12%);
+  color: #dbe4f4;
+}
+
+[data-theme="dark"] .workspace-shell__surface-marker--workspace {
+  border-color: color-mix(in srgb, #1b8da1 26%, transparent);
+  background: color-mix(in srgb, #113641 88%, black 12%);
+  color: #d6f5fb;
 }
 
 [data-theme="dark"] .workspace-shell--rail .workspace-shell__header.workspace-shell__header--elevated {
@@ -1544,6 +1648,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .workspace-shell--mobile .workspace-shell__header-surface {
+    margin-bottom: var(--space-1);
   }
 
   .workspace-shell--mobile .workspace-shell__mobile-context--with-meta .ui-breadcrumb {

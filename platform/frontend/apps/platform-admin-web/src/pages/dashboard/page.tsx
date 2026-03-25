@@ -20,49 +20,78 @@ type DashboardMetricCard = {
   widths: string[];
 };
 
+type DashboardStatusTile = {
+  id: string;
+  label: string;
+  value: string;
+};
+
 const dashboardMetricCards: DashboardMetricCard[] = [
   {
-    badge: "Live mock",
-    id: "tenant-readiness",
-    label: "Tenant readiness",
+    badge: "23 queued",
+    id: "sync-operations",
+    label: "Sync operations",
     tone: "brand",
     widths: ["78%", "58%", "42%"],
   },
   {
-    badge: "Shared states",
-    id: "route-hydration",
-    label: "Route hydration",
+    badge: "5 regions",
+    id: "region-coverage",
+    label: "Region coverage",
     tone: "info",
     widths: ["74%", "62%", "48%"],
   },
   {
-    badge: "Desktop scroll",
-    id: "operator-queue",
-    label: "Operator queue",
+    badge: "12 reviews",
+    id: "policy-review",
+    label: "Policy review load",
     tone: "neutral",
     widths: ["82%", "52%", "38%"],
   },
 ];
 
+const dashboardStatusTiles: DashboardStatusTile[] = [
+  {
+    id: "environment",
+    label: "Environment",
+    value: "DEV v3.0.0",
+  },
+  {
+    id: "operators",
+    label: "Operators online",
+    value: "14 active",
+  },
+  {
+    id: "incidents",
+    label: "Elevated incidents",
+    value: "2 open",
+  },
+  {
+    id: "tenants",
+    label: "Tenant coverage",
+    value: "148 workspaces",
+  },
+];
+
 const queueMockRows = [
   {
-    id: "identity-cluster",
-    titleWidth: "10rem",
+    id: "policy-drift",
+    titleWidth: "10.5rem",
     textWidths: ["15rem", "11rem"],
   },
   {
-    id: "surface-reconciliation",
-    titleWidth: "12rem",
+    id: "incident-routing",
+    titleWidth: "11rem",
     textWidths: ["17rem", "12rem"],
   },
   {
-    id: "routing-readiness",
-    titleWidth: "9rem",
+    id: "region-saturation",
+    titleWidth: "10rem",
     textWidths: ["14rem", "10rem"],
   },
   {
-    id: "audit-hydration",
-    titleWidth: "11rem",
+    id: "audit-handoff",
+    titleWidth: "10.5rem",
     textWidths: ["16rem", "12rem"],
   },
 ];
@@ -74,7 +103,7 @@ function renderMetricCard(card: DashboardMetricCard) {
         <div className="admin-web__dashboard-metric-card-header">
           <div>
             <CardTitle>{card.label}</CardTitle>
-            <CardDescription>Shared placeholder grammar from UI Lab, reused as a dashboard-first mock.</CardDescription>
+            <CardDescription>Operational placeholder grammar keeps platform health, queue pressure, and review load visible.</CardDescription>
           </div>
           <Badge appearance="soft" size="sm" variant={card.tone}>
             {card.badge}
@@ -101,19 +130,28 @@ export function AdminDashboardPage() {
     <div className="admin-web__dashboard-shell">
       <section className="admin-web__dashboard-hero">
         <div className="admin-web__dashboard-hero-tags">
-          <Badge size="sm" variant="brand">Dashboard</Badge>
-          <Badge appearance="outline" size="sm" variant="neutral">UI Lab Mock</Badge>
-          <Badge appearance="soft" size="sm" variant="info">Skeleton + Loading States</Badge>
+          <Badge size="sm" variant="brand">Admin Console</Badge>
+          <Badge appearance="outline" size="sm" variant="neutral">Control Plane</Badge>
+          <Badge appearance="soft" size="sm" variant="info">Cross-tenant operations</Badge>
         </div>
 
         <div className="admin-web__dashboard-hero-copy">
-          <h2 className="admin-web__dashboard-hero-title">Loading-first control plane canvas</h2>
+          <h2 className="admin-web__dashboard-hero-title">Platform control plane overview</h2>
           <p className="admin-web__dashboard-hero-description">
-            The admin shell now resolves to a single dashboard route. Real module pages are removed from the menu,
-            and the surface is intentionally filled with shared loading and skeleton patterns so desktop review can
-            focus on shell rhythm, spacing, and scroll behavior.
+            Monitor tenant health, regions, policy drift, and sync pressure while the first real admin modules are
+            wired into the frozen shell. The mock stays intentionally status-heavy so this surface reads like platform
+            operations instead of a general workspace.
           </p>
         </div>
+      </section>
+
+      <section className="admin-web__dashboard-status-strip" aria-label="Admin Console status">
+        {dashboardStatusTiles.map((tile) => (
+          <div className="admin-web__dashboard-status-tile" key={tile.id}>
+            <p className="admin-web__dashboard-status-label">{tile.label}</p>
+            <p className="admin-web__dashboard-status-value">{tile.value}</p>
+          </div>
+        ))}
       </section>
 
       <section className="admin-web__dashboard-metric-grid">
@@ -124,20 +162,20 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Dashboard collection canvas</CardTitle>
+              <CardTitle>Platform region board</CardTitle>
               <CardDescription>
-                A wide collection loading block keeps the first screen visually anchored while the shell chrome stays
-                sticky above it.
+                The lead admin surface keeps region health, tenant rollups, and ownership clusters visible while
+                platform data resolves.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <CollectionLoadingState
               className="admin-web__dashboard-pattern"
-              description="Preparing dashboard sections, routing summaries, and collection-level placeholders."
+              description="Preparing region health boards, incident clusters, and cross-tenant summary cards."
               items={4}
               layout="grid"
-              title="Hydrating dashboard modules"
+              title="Hydrating platform regions"
             />
           </CardContent>
         </Card>
@@ -145,17 +183,18 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Route-level loading state</CardTitle>
+              <CardTitle>Incident response state</CardTitle>
               <CardDescription>
-                The simple route placeholder remains visible as a secondary pattern beside the richer dashboard mock.
+                A smaller companion state keeps escalations, routing, and response ownership in view beside the denser
+                control-plane board.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <LoadingState
               className="admin-web__dashboard-loading-state"
-              description="Shared route-level state stays product-neutral while larger blocks use structured placeholders."
-              title="Loading dashboard context"
+              description="Preparing escalations, platform signals, and operational summaries for the admin surface."
+              title="Loading incident signals"
             />
           </CardContent>
         </Card>
@@ -165,9 +204,10 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card admin-web__dashboard-card--tall">
           <CardHeader>
             <div>
-              <CardTitle>Table loading surface</CardTitle>
+              <CardTitle>Cross-tenant review table</CardTitle>
               <CardDescription>
-                Dense operational surfaces still preserve toolbar, header, and row rhythm while data is unavailable.
+                Dense control-plane tables preserve toolbar, filter, and row rhythm while cross-tenant review data is
+                still loading.
               </CardDescription>
             </div>
           </CardHeader>
@@ -175,9 +215,9 @@ export function AdminDashboardPage() {
             <TableLoadingState
               className="admin-web__dashboard-pattern"
               columns={5}
-              description="Preparing table filters, review controls, and row placeholders for the dashboard shell."
+              description="Preparing policy filters, operator review controls, and row placeholders for the control plane."
               rows={6}
-              title="Loading review table"
+              title="Loading operator review queue"
             />
           </CardContent>
         </Card>
@@ -185,10 +225,10 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card admin-web__dashboard-card--tall">
           <CardHeader>
             <div>
-              <CardTitle>Skeleton composition</CardTitle>
+              <CardTitle>Operations watchlist</CardTitle>
               <CardDescription>
-                Smaller skeleton primitives are combined here into identity, note, and queue shapes instead of using
-                one fixed dashboard-specific loading card.
+                Smaller primitives are combined into escalations, ownership notes, and watchlist rows so the surface
+                feels operational even before the real data arrives.
               </CardDescription>
             </div>
           </CardHeader>
@@ -229,10 +269,10 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Operator queue mock</CardTitle>
+              <CardTitle>Sync command queue</CardTitle>
               <CardDescription>
-                This section is intentionally taller so the desktop shell can be reviewed with real page scroll below
-                the sticky top bar.
+                This taller queue keeps real page scroll in the admin shell while still reading like a live command
+                surface instead of a generic card list.
               </CardDescription>
             </div>
           </CardHeader>
@@ -255,19 +295,19 @@ export function AdminDashboardPage() {
         <Card className="admin-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>List loading state</CardTitle>
+              <CardTitle>Audit review list</CardTitle>
               <CardDescription>
-                The narrower column keeps a reusable list placeholder visible beside the taller mock surfaces.
+                The narrower column keeps audit summaries and review-ready items visible beside the denser queue.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <CollectionLoadingState
               className="admin-web__dashboard-pattern"
-              description="Preparing grouped review items and list-level supporting copy."
+              description="Preparing audit summaries, review notes, and list-level supporting copy for platform operators."
               items={3}
               layout="list"
-              title="Loading review queue"
+              title="Loading audit trail"
             />
           </CardContent>
         </Card>

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import {
   AuthGuard,
-  getDemoSession,
   useAuth,
 } from "@platform/auth-core";
 import {
@@ -24,8 +23,6 @@ type TenantBranding = {
   tenantDomain?: string;
   tenantId?: string;
 };
-
-const tenantSession = getDemoSession("tenant");
 
 function TenantBrandLockup() {
   return (
@@ -99,7 +96,7 @@ export function App({
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [identifier, setIdentifier] = useState(tenantSession.email);
+  const [identifier, setIdentifier] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [method, setMethod] = useState<AuthContactMethod>("email");
   const [profileReady, setProfileReady] = useState(false);
@@ -195,7 +192,7 @@ export function App({
           </Routes>
         ) : (
           <TenantBootstrapLoader
-            description="Opening your workspace."
+            description="Please wait a moment."
             label="Please wait"
           />
         )
@@ -214,12 +211,6 @@ export function App({
                 brand={<TenantAuthBrandRow qrValue={qrValue} />}
                 description={authDescription}
                 footer={`© ${currentYear} eSafety Systems. All rights reserved.`}
-                floating={(
-                  <div className="public-auth-shell__floating-card">
-                    <p className="public-auth-shell__floating-title">{tenantBranding.name}</p>
-                    <p className="public-auth-shell__floating-subtitle">Secure access</p>
-                  </div>
-                )}
                 tagline="Fast. Efficient. Productive."
                 title="Sign in"
               >
@@ -252,6 +243,7 @@ export function App({
                     void handleVerifyCode();
                   }}
                   phonePlaceholder="Enter your phone number"
+                  requestLabel="Send code"
                 />
               </PublicAuthShell>
             }

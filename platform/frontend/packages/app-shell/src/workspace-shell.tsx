@@ -7,7 +7,6 @@ import {
   AppShellHeader,
   AppShellMain,
   AppShellSidebar,
-  Badge,
   CloseIcon,
   MenuIcon,
   SidebarNav,
@@ -46,10 +45,16 @@ type WorkspaceRailItem = {
 
 type WorkspaceShellLayout = "classic" | "rail";
 type WorkspaceShellTheme = "light" | "dark";
+type WorkspaceSurfaceTone = "admin" | "workspace" | "neutral";
 
 type WorkspaceShellProps = {
   brand: string;
   surfaceLabel?: string;
+  surfaceIcon?: ReactNode;
+  surfaceTone?: WorkspaceSurfaceTone;
+  showHeaderSurfaceMarker?: boolean;
+  showSidebarSurfaceMarker?: boolean;
+  sidebarNavigationLabel?: ReactNode;
   navigation: WorkspaceNavItem[];
   headerTitle?: string;
   headerMeta?: ReactNode;
@@ -74,6 +79,11 @@ type WorkspaceShellProps = {
 export function WorkspaceShell({
   brand,
   surfaceLabel,
+  surfaceIcon,
+  surfaceTone = "neutral",
+  showHeaderSurfaceMarker = true,
+  showSidebarSurfaceMarker = true,
+  sidebarNavigationLabel,
   navigation,
   headerTitle,
   headerMeta,
@@ -340,6 +350,19 @@ export function WorkspaceShell({
     );
   }
 
+  function renderSurfaceMarker() {
+    if (!surfaceLabel) {
+      return null;
+    }
+
+    return (
+      <div className={`workspace-shell__surface-marker workspace-shell__surface-marker--${surfaceTone}`}>
+        {surfaceIcon ? <span className="workspace-shell__surface-marker-icon">{surfaceIcon}</span> : null}
+        <span className="workspace-shell__surface-marker-label">{surfaceLabel}</span>
+      </div>
+    );
+  }
+
   function renderRailNavigation() {
     if (layout !== "rail") {
       return null;
@@ -455,13 +478,21 @@ export function WorkspaceShell({
               <p className="workspace-shell__eyebrow">FirstKB Platform</p>
               <h2 className="workspace-shell__brand-title">{brand}</h2>
             </div>
-            {surfaceLabel ? <Badge variant="brand">{surfaceLabel}</Badge> : null}
           </div>
         )}
 
+        {surfaceLabel && showSidebarSurfaceMarker ? <div className="workspace-shell__sidebar-surface">{renderSurfaceMarker()}</div> : null}
+
         {renderSidebarMobileUtilities()}
 
-        {renderSidebarNavigation()}
+        {sidebarNavigationLabel ? (
+          <div className="workspace-shell__sidebar-navigation-group">
+            <div className="workspace-shell__sidebar-navigation-label">{sidebarNavigationLabel}</div>
+            {renderSidebarNavigation()}
+          </div>
+        ) : (
+          renderSidebarNavigation()
+        )}
 
         {layout === "rail" && railBottom ? (
           <div className="workspace-shell__sidebar-mobile-bottom">{railBottom}</div>
@@ -507,6 +538,7 @@ export function WorkspaceShell({
             </button>
             {(headerTitle || headerMeta) ? (
               <div className="workspace-shell__header-copy">
+                {surfaceLabel && showHeaderSurfaceMarker ? <div className="workspace-shell__header-surface">{renderSurfaceMarker()}</div> : null}
                 {headerTitle ? <h1 className="workspace-shell__header-title">{headerTitle}</h1> : null}
                 {headerMeta ? <div className="workspace-shell__header-meta">{headerMeta}</div> : null}
               </div>
@@ -518,6 +550,7 @@ export function WorkspaceShell({
         </AppShellHeader>
         {isMobileViewport && (headerTitle || headerMeta) ? (
           <div className={`workspace-shell__mobile-context${headerMeta ? " workspace-shell__mobile-context--with-meta" : ""}`}>
+            {surfaceLabel && showHeaderSurfaceMarker ? <div className="workspace-shell__header-surface">{renderSurfaceMarker()}</div> : null}
             {headerTitle ? <h1 className="workspace-shell__header-title">{headerTitle}</h1> : null}
             {headerMeta ? <div className="workspace-shell__header-meta">{headerMeta}</div> : null}
           </div>
@@ -533,5 +566,6 @@ export type {
   WorkspaceRailItem,
   WorkspaceShellLayout,
   WorkspaceShellProps,
+  WorkspaceSurfaceTone,
   WorkspaceShellTheme,
 };

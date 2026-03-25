@@ -16,6 +16,8 @@ type PublicAuthShellProps = HTMLAttributes<HTMLDivElement> & {
   description?: ReactNode;
   floating?: ReactNode;
   footer?: ReactNode;
+  secondaryLink?: ReactNode;
+  surfaceBadge?: ReactNode;
   tagline?: ReactNode;
   title?: ReactNode;
 };
@@ -51,6 +53,8 @@ export function PublicAuthShell({
   description,
   floating,
   footer,
+  secondaryLink,
+  surfaceBadge,
   tagline,
   title,
   ...props
@@ -67,6 +71,7 @@ export function PublicAuthShell({
 
         <section className="public-auth-shell__card">
           {brand ? <div className="public-auth-shell__brand">{brand}</div> : null}
+          {surfaceBadge ? <div className="public-auth-shell__surface">{surfaceBadge}</div> : null}
 
           {(title || description) ? (
             <header className="public-auth-shell__copy">
@@ -78,6 +83,8 @@ export function PublicAuthShell({
           <div className="public-auth-shell__body">
             {children}
           </div>
+
+          {secondaryLink ? <div className="public-auth-shell__secondary-link">{secondaryLink}</div> : null}
         </section>
 
         {footer ? <div className="public-auth-shell__footer">{footer}</div> : null}

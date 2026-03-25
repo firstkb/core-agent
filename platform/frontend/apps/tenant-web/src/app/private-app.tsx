@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import {
   BellIcon,
+  BuildingOfficeIcon,
   DashboardGridIcon,
   DocumentListIcon,
   Kbd,
@@ -110,6 +111,11 @@ export function PrivateApp() {
       <WorkspaceShell
         brand="Tenant Workspace"
         layout="rail"
+        showHeaderSurfaceMarker={false}
+        showSidebarSurfaceMarker={false}
+        surfaceIcon={<BuildingOfficeIcon />}
+        surfaceLabel="Workspace"
+        surfaceTone="workspace"
         railBottom={
           <div className="workspace-shell__rail-bottom-block">
             <div className="workspace-shell__rail-status">

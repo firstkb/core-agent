@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import {
   AuthGuard,
-  getDemoSession,
   useAuth,
 } from "@platform/auth-core";
 import {
@@ -10,15 +9,12 @@ import {
   FullscreenBrandLoader,
   normalizeAuthIdentifier,
   PublicAuthShell,
-  PublicAuthQrPanel,
   sanitizeAuthInputValue,
   type AuthContactMethod,
 } from "@platform/app-shell";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { PrivateApp } from "./private-app";
-
-const adminSession = getDemoSession("admin");
 
 function AdminBrandLockup() {
   return (
@@ -47,20 +43,11 @@ function AdminLoaderLogo() {
   );
 }
 
-function AdminAuthBrandRow({
-  qrValue,
-}: {
-  qrValue: string;
-}) {
+function AdminAuthBrandRow() {
   return (
-    <div className="public-auth-shell__brand-row">
+    <div className="public-auth-shell__brand-row admin-web__auth-brand-row">
       <AdminBrandLockup />
-      <PublicAuthQrPanel
-        className="public-auth-shell__brand-qr"
-        foregroundColor="#111111"
-        size={50}
-        value={qrValue}
-      />
+      <AdminAuthSurfaceBadge />
     </div>
   );
 }
@@ -81,12 +68,20 @@ function AdminBootstrapLoader({
   );
 }
 
+function AdminAuthSurfaceBadge() {
+  return (
+    <div className="admin-web__auth-surface-badge">
+      <span>Admin Console</span>
+    </div>
+  );
+}
+
 export function App() {
   const { isAuthenticated, requestCode, signIn, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [identifier, setIdentifier] = useState(adminSession.email);
+  const [identifier, setIdentifier] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [method, setMethod] = useState<AuthContactMethod>("email");
   const [profileReady, setProfileReady] = useState(false);
@@ -164,11 +159,10 @@ export function App() {
     setRequestedIdentifier("");
   }
 
-  const qrValue = typeof window === "undefined" ? "/sign-in" : window.location.href;
   const currentYear = new Date().getFullYear();
   const authDescription = codeSent
     ? `Enter the Authorization Code sent to ${requestedIdentifier}.`
-    : "To receive an Authorization Code, please provide your email address or phone number.";
+    : "Use your platform admin email or phone to access Admin Console.";
 
   return (
     <AuthGuard
@@ -180,15 +174,15 @@ export function App() {
           </Routes>
         ) : (
           <AdminBootstrapLoader
-            description="Opening your workspace."
-            label="Please wait"
+            description="Loading your platform controls."
+            label="Opening Admin Console"
           />
         )
       }
       pending={
         <AdminBootstrapLoader
-          description="Checking your session."
-          label="Welcome"
+          description="Checking your admin session."
+          label="Welcome back"
         />
       }
       unauthenticated={
@@ -196,17 +190,11 @@ export function App() {
           <Route
             element={
               <PublicAuthShell
-                brand={<AdminAuthBrandRow qrValue={qrValue} />}
+                brand={<AdminAuthBrandRow />}
                 description={authDescription}
                 footer={`© ${currentYear} eSafety Systems. All rights reserved.`}
-                floating={(
-                  <div className="public-auth-shell__floating-card">
-                    <p className="public-auth-shell__floating-title">Platform Admin</p>
-                    <p className="public-auth-shell__floating-subtitle">Secure access</p>
-                  </div>
-                )}
                 tagline="Control. Visibility. Reliability."
-                title="Sign in"
+                title="Sign in to Admin Console"
               >
                 <AuthSignInForm
                   codeSent={codeSent}
@@ -237,6 +225,8 @@ export function App() {
                     void handleVerifyCode();
                   }}
                   phonePlaceholder="Enter your phone number"
+                  requestLabel="Send code"
+                  verifyLabel="Enter Admin Console"
                 />
               </PublicAuthShell>
             }

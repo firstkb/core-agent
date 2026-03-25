@@ -12,6 +12,7 @@ import {
   MenuTrigger,
   PlusIcon,
   SearchIcon,
+  ShieldKeyIcon,
   StarIcon,
 } from "@platform/ui-kit";
 import { WorkspaceShell } from "@platform/app-shell";
@@ -128,6 +129,11 @@ export function PrivateApp() {
       <WorkspaceShell
         brand="Platform Admin"
         layout="rail"
+        showHeaderSurfaceMarker={false}
+        showSidebarSurfaceMarker={false}
+        surfaceIcon={<ShieldKeyIcon />}
+        surfaceLabel="Admin Console"
+        surfaceTone="admin"
         railBottom={
           <div className="admin-web__rail-bottom-block">
             <div className="admin-web__rail-environment">
@@ -171,6 +177,9 @@ export function PrivateApp() {
           },
         ]}
         showRailCollapse
+        sidebarNavigationLabel={
+          <div className="admin-web__sidebar-section-heading">Admin Console</div>
+        }
         sidebarFooter={
           <Menu align="end">
             <MenuTrigger>

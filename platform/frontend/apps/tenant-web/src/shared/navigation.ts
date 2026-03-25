@@ -8,6 +8,6 @@ export const tenantNavigation: WorkspaceNavItem[] = [
     active: true,
     icon: createElement(DashboardGridIcon),
     label: "Dashboard",
-    note: "Workspace loading canvas",
+    note: "Workspace overview",
   },
 ];

@@ -9,7 +9,7 @@ const adminDashboardRoute = {
   badge: "Mock",
   headerTitle: "Dashboard",
   label: "Dashboard",
-  note: "Skeleton + loading states",
+  note: "Control plane overview",
   path: "/dashboard",
 } as const;
 

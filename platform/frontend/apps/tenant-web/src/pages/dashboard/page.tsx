@@ -27,6 +27,13 @@ type DashboardMetricCard = {
   widths: string[];
 };
 
+type WorkspaceFocusItem = {
+  description: string;
+  eyebrow: string;
+  id: string;
+  title: string;
+};
+
 const tenant = getDemoTenant("northwind");
 const metrics = getTenantMetrics(tenant);
 
@@ -48,8 +55,29 @@ const dashboardMetricCards: DashboardMetricCard[] = metrics.map((metric, index) 
         ? ["70%", "64%", "44%"]
         : index === 2
           ? ["78%", "54%", "36%"]
-          : ["66%", "60%", "40%"],
+        : ["66%", "60%", "40%"],
 }));
+
+const workspaceFocusItems: WorkspaceFocusItem[] = [
+  {
+    description: "Keep approvals, follow-ups, and next actions ready at the top of the workspace.",
+    eyebrow: "Today",
+    id: "tasks",
+    title: "My tasks",
+  },
+  {
+    description: "Review team changes, member activity, and announcements without leaving the dashboard.",
+    eyebrow: "Team",
+    id: "activity",
+    title: "Activity stream",
+  },
+  {
+    description: "Stay close to reports, organization health, and lightweight operational summaries.",
+    eyebrow: "Reports",
+    id: "reports",
+    title: "Workspace review",
+  },
+];
 
 const queueMockRows = [
   {
@@ -82,7 +110,8 @@ function renderMetricCard(card: DashboardMetricCard) {
           <div>
             <CardTitle>{card.label}</CardTitle>
             <CardDescription>
-              Tenant dashboard keeps shared loading grammar visible while real modules are still being wired.
+              Workspace-facing loading grammar keeps tasks, team health, and reporting surfaces visible while modules
+              are still being wired.
             </CardDescription>
           </div>
           <Badge appearance="soft" size="sm" variant={card.tone}>
@@ -110,25 +139,36 @@ export function TenantDashboardPage() {
     <div className="tenant-web__dashboard-shell">
       <section className="tenant-web__dashboard-hero">
         <div className="tenant-web__dashboard-hero-tags">
-          <Badge size="sm" variant="brand">Dashboard</Badge>
+          <Badge size="sm" variant="brand">Workspace</Badge>
           <Badge appearance="soft" size="sm" variant={tenantStatusToBadgeVariant(tenant.status)}>
             {tenant.status}
           </Badge>
-          <Badge appearance="outline" size="sm" variant="neutral">
-            {tenant.plan} tenant
-          </Badge>
           <Badge appearance="soft" size="sm" variant="info">
-            {offlineSyncStatus.queuedActions} queued sync actions
+            Team operations
+          </Badge>
+          <Badge appearance="outline" size="sm" variant="neutral">
+            {tenant.plan} workspace
           </Badge>
         </div>
 
         <div className="tenant-web__dashboard-hero-copy">
-          <h2 className="tenant-web__dashboard-hero-title">Loading-first tenant workspace canvas</h2>
+          <h2 className="tenant-web__dashboard-hero-title">{tenant.name} workspace overview</h2>
           <p className="tenant-web__dashboard-hero-description">
-            Tenant app is now reduced to a single dashboard route. The surface uses shared skeleton and loading-state
-            primitives so we can move into real tenant screens without reopening shell work.
+            Keep your team, activity, reports, and daily operations in view while the first real workspace modules are
+            wired into the frozen shell. This mock stays intentionally task-and-activity oriented so it reads like an
+            organization workspace instead of platform operations.
           </p>
         </div>
+      </section>
+
+      <section className="tenant-web__dashboard-focus-strip" aria-label="Workspace focus">
+        {workspaceFocusItems.map((item) => (
+          <div className="tenant-web__dashboard-focus-card" key={item.id}>
+            <p className="tenant-web__dashboard-focus-eyebrow">{item.eyebrow}</p>
+            <h3 className="tenant-web__dashboard-focus-title">{item.title}</h3>
+            <p className="tenant-web__dashboard-focus-description">{item.description}</p>
+          </div>
+        ))}
       </section>
 
       <section className="tenant-web__dashboard-metric-grid">
@@ -142,20 +182,20 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Workspace modules</CardTitle>
+              <CardTitle>Daily workspace board</CardTitle>
               <CardDescription>
-                The first block keeps a wide collection placeholder in view while the tenant shell settles into real
-                dashboard sections.
+                The first workspace block keeps tasks, summaries, and team-facing modules in view while the tenant
+                shell settles into its real sections.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <CollectionLoadingState
               className="tenant-web__dashboard-pattern"
-              description="Preparing workspace modules, summary cards, and member-facing sections."
+              description="Preparing tasks, workspace summaries, announcements, and member-facing modules."
               items={4}
               layout="grid"
-              title={`Hydrating ${tenant.name}`}
+              title={`Hydrating ${tenant.name} workspace`}
             />
           </CardContent>
         </Card>
@@ -163,17 +203,17 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Route loading</CardTitle>
+              <CardTitle>Announcements & briefings</CardTitle>
               <CardDescription>
-                A smaller route-level state stays visible beside the richer dashboard canvas for basic tenant screens.
+                A lighter companion block keeps workspace updates and short-form context visible beside the larger board.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <LoadingState
               className="tenant-web__dashboard-loading-state"
-              description="Preparing workspace context, member permissions, and tenant-scoped controls."
-              title="Loading workspace context"
+              description="Preparing organization updates, member notices, and workspace-level context."
+              title="Loading workspace brief"
             />
           </CardContent>
         </Card>
@@ -186,9 +226,10 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card tenant-web__dashboard-card--tall">
           <CardHeader>
             <div>
-              <CardTitle>Activity table placeholder</CardTitle>
+              <CardTitle>Activity stream</CardTitle>
               <CardDescription>
-                The denser tenant surface keeps table rhythm visible for future member activity and sync history.
+                The denser workspace surface keeps recent activity, approvals, and team events readable while data is
+                still loading.
               </CardDescription>
             </div>
           </CardHeader>
@@ -196,7 +237,7 @@ export function TenantDashboardPage() {
             <TableLoadingState
               className="tenant-web__dashboard-pattern"
               columns={5}
-              description="Preparing tenant activity table, quick filters, and row-level actions."
+              description="Preparing activity filters, team updates, and row-level actions for workspace operators."
               rows={6}
               title="Loading activity stream"
             />
@@ -206,9 +247,10 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card tenant-web__dashboard-card--tall">
           <CardHeader>
             <div>
-              <CardTitle>Workspace skeleton composition</CardTitle>
+              <CardTitle>Team & task composition</CardTitle>
               <CardDescription>
-                Shared skeleton primitives are composed into tenant-specific identity, members, and sync queue shapes.
+                Shared skeleton primitives are composed into workspace identity, task blocks, member notes, and follow-up
+                shapes.
               </CardDescription>
             </div>
           </CardHeader>
@@ -252,10 +294,10 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>Tenant sync queue mock</CardTitle>
+              <CardTitle>Upcoming work queue</CardTitle>
               <CardDescription>
-                This taller section gives us real desktop scroll under the fixed shell while tenant content is still a
-                placeholder surface.
+                This taller section gives the workspace real desktop scroll while still reading like actionable
+                follow-ups instead of platform queue management.
               </CardDescription>
             </div>
           </CardHeader>
@@ -268,7 +310,7 @@ export function TenantDashboardPage() {
                 </div>
                 <div className="tenant-web__dashboard-queue-surface-meta">
                   <Skeleton height="1.75rem" width="5rem" />
-                  <Skeleton height="0.875rem" variant="text" width="4.25rem" />
+                  <Skeleton height="0.875rem" variant="text" width={index % 2 === 0 ? "5.25rem" : "4.5rem"} />
                 </div>
               </div>
             ))}
@@ -278,20 +320,19 @@ export function TenantDashboardPage() {
         <Card className="tenant-web__dashboard-card">
           <CardHeader>
             <div>
-              <CardTitle>List loading state</CardTitle>
+              <CardTitle>Reports & reminders</CardTitle>
               <CardDescription>
-                A narrower list placeholder stays visible for onboarding tasks, support notes, and lightweight tenant
-                inbox surfaces.
+                A narrower list placeholder keeps reminders, onboarding notes, and reports within easy reach.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <CollectionLoadingState
               className="tenant-web__dashboard-pattern"
-              description="Preparing onboarding tasks, support notes, and tenant reminders."
+              description="Preparing reports, reminders, and lightweight follow-up items for the workspace inbox."
               items={3}
               layout="list"
-              title="Loading tenant queue"
+              title={`Loading ${offlineSyncStatus.queuedActions} workspace follow-ups`}
             />
           </CardContent>
         </Card>

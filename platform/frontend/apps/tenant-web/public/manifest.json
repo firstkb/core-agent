@@ -1,6 +1,6 @@
 {
-    "short_name": "Admin Console",
-    "name": "Admin Console",
+    "short_name": "Demo Tenant",
+    "name": "Demo Tenant",
     "theme_color": "#1e63b8",
     "background_color": "#FFFFFF",
     "start_url": "/",

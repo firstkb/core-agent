@@ -1,4 +1,5 @@
 @import "@platform/ui-kit/styles.css";
+@import "@platform/install-helper/styles.css";
 
 .public-brand-loader,
 .public-auth-shell {

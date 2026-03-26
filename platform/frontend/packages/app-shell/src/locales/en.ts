@@ -66,6 +66,7 @@ export const appShellEnglishMessages = {
       firstkbPlatform: "FirstKB Platform",
     },
     menu: {
+      installApp: "Install app",
       language: "Language",
       myProfile: "My profile",
       preferences: "Preferences",

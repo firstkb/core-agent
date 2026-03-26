@@ -106,6 +106,9 @@ importers:
       '@platform/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@platform/install-helper':
+        specifier: workspace:*
+        version: link:../install-helper
       '@platform/ui-kit':
         specifier: workspace:*
         version: link:../ui-kit
@@ -146,6 +149,21 @@ importers:
       react-i18next:
         specifier: ^14.1.2
         version: 14.1.3(i18next@23.16.8)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  packages/install-helper:
+    dependencies:
+      '@platform/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@platform/ui-kit':
+        specifier: workspace:*
+        version: link:../ui-kit
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
 
   packages/tenant-core: {}
 

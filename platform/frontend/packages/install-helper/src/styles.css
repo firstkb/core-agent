@@ -1,0 +1,335 @@
+@import "@platform/ui-kit/styles.css";
+
+.install-helper__card {
+  --install-helper-card-border: rgba(255, 255, 255, 0.34);
+  --install-helper-card-bg: rgba(255, 255, 255, 0.96);
+  display: flex;
+  min-width: min(20rem, calc(100vw - 3rem));
+  max-width: 22.75rem;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0.95rem 1rem 1rem;
+  border: 1px solid var(--install-helper-card-border);
+  border-radius: calc(var(--radius-xl) + 0.2rem);
+  background: var(--install-helper-card-bg);
+  box-shadow: 0 1.55rem 3.5rem -2.1rem rgba(15, 23, 42, 0.44);
+  backdrop-filter: blur(14px);
+}
+
+.install-helper__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.install-helper__identity {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.install-helper__icon-wrap {
+  display: inline-flex;
+  width: 2.8rem;
+  height: 2.8rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-brand-primary) 10%, white 90%);
+  color: var(--color-brand-primary);
+  overflow: hidden;
+}
+
+.install-helper__icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.install-helper__icon-fallback {
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.install-helper__copy {
+  min-width: 0;
+  padding-top: 0.15rem;
+}
+
+.install-helper__name,
+.install-helper__host {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.install-helper__name {
+  color: var(--color-text-primary);
+  font-size: 1.04rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+}
+
+.install-helper__host {
+  color: var(--color-text-secondary);
+  margin-top: 0.18rem;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.install-helper__close {
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--easing-standard),
+    color var(--motion-fast) var(--easing-standard);
+}
+
+.install-helper__close:hover,
+.install-helper__close:focus-visible {
+  background: rgba(15, 23, 42, 0.075);
+  color: var(--color-text-primary);
+}
+
+.install-helper__close svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.install-helper__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.install-helper__actions .ui-button {
+  min-width: 8.3rem;
+}
+
+.install-helper__dialog {
+  width: 100%;
+  max-width: min(31rem, calc(100vw - 2rem));
+  margin-inline: auto;
+}
+
+.install-helper__dialog-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding-right: 2.5rem;
+}
+
+.install-helper__dialog-identity {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.install-helper__dialog-title-wrap {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding-top: 0.2rem;
+}
+
+.install-helper__dialog .ui-dialog__content {
+  gap: var(--space-4);
+  padding: 1.25rem 1.35rem 1.35rem;
+  border-radius: calc(var(--radius-xl) + 0.35rem);
+  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.985) 0%, rgba(255, 255, 255, 0.965) 100%);
+  box-shadow: 0 2.3rem 4.4rem -2.4rem rgba(15, 23, 42, 0.46);
+}
+
+.install-helper__dialog-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1;
+}
+
+.install-helper__dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.install-helper__dialog-copy {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.install-helper__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.install-helper__step {
+  display: grid;
+  grid-template-columns: 2.35rem 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  border-radius: calc(var(--radius-lg) + 0.1rem);
+  background: color-mix(in srgb, var(--color-brand-primary) 3%, white 97%);
+}
+
+.install-helper__step-icon {
+  display: inline-flex;
+  width: 2.35rem;
+  height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-brand-primary) 8%, white 92%);
+  color: var(--color-brand-primary);
+}
+
+.install-helper__step-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.install-helper__step-copy {
+  display: flex;
+  min-height: 2.1rem;
+  align-items: center;
+  color: var(--color-text-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-weight: var(--font-weight-medium);
+}
+
+.install-helper__dialog-footer {
+  justify-content: flex-end;
+  padding-top: var(--space-1);
+}
+
+.install-helper__dialog-footer .ui-button {
+  min-width: 7.25rem;
+}
+
+[data-theme="dark"] .install-helper__card {
+  --install-helper-card-border: color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  --install-helper-card-bg: color-mix(in srgb, var(--color-bg-surface-elevated) 95%, black 5%);
+}
+
+[data-theme="dark"] .install-helper__icon-wrap,
+[data-theme="dark"] .install-helper__step-icon {
+  background: color-mix(in srgb, var(--color-brand-primary) 18%, var(--color-bg-surface-elevated) 82%);
+}
+
+[data-theme="dark"] .install-helper__dialog .ui-dialog__content {
+  border-color: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-overlay) 96%, white 4%) 0%, color-mix(in srgb, var(--color-bg-overlay) 92%, black 8%) 100%);
+}
+
+[data-theme="dark"] .install-helper__step {
+  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  background: color-mix(in srgb, var(--color-brand-primary) 10%, var(--color-bg-surface-elevated) 90%);
+}
+
+[data-theme="dark"] .install-helper__close:hover,
+[data-theme="dark"] .install-helper__close:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 720px) {
+  .install-helper__card {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0.9rem 0.95rem 0.95rem;
+    border-radius: calc(var(--radius-xl) + 0.35rem);
+  }
+
+  .install-helper__actions {
+    justify-content: stretch;
+  }
+
+  .install-helper__actions .ui-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .install-helper__dialog {
+    max-width: min(28rem, calc(100vw - 0.75rem));
+  }
+
+  .install-helper__dialog .ui-dialog__content {
+    padding: 1rem 1rem 1.05rem;
+    border-radius: 1.45rem;
+  }
+
+  .install-helper__dialog-header {
+    gap: var(--space-3);
+    padding-right: 2.15rem;
+  }
+
+  .install-helper__dialog-identity {
+    gap: var(--space-2);
+  }
+
+  .install-helper__dialog-copy {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+
+  .install-helper__step {
+    grid-template-columns: 2.1rem 1fr;
+    gap: var(--space-2);
+    padding: 0.8rem 0.82rem;
+  }
+
+  .install-helper__step-icon {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .install-helper__step-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .install-helper__step-copy {
+    min-height: 1.95rem;
+    font-size: 0.92rem;
+  }
+
+  .install-helper__dialog-footer {
+    justify-content: stretch;
+  }
+
+  .install-helper__dialog-footer .ui-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .install-helper__dialog-close {
+    top: 0.82rem;
+    right: 0.82rem;
+  }
+}

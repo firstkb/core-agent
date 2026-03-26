@@ -5,6 +5,8 @@ import {
   useAuth,
 } from "@platform/auth-core";
 import {
+  AppInstallProvider,
+  AppInstallPrompt,
   AuthLocaleFooter,
   AuthSignInForm,
   FullscreenBrandLoader,
@@ -213,43 +215,46 @@ export function App({
         <Routes>
           <Route
             element={
-              <PublicAuthShell
-                brand={<TenantAuthBrandRow qrValue={qrValue} />}
-                description={authDescription}
-                footer={<AuthLocaleFooter year={currentYear} />}
-                tagline={t("tenant.auth.tagline")}
-                title={t("tenant.auth.title")}
-              >
-                <AuthSignInForm
-                  codeSent={codeSent}
-                  codeValue={codeValue}
-                  error={error}
-                  inputValue={identifier}
-                  isBusy={isBusy}
-                  method={method}
-                  onBack={resetFlow}
-                  onCodeValueChange={(value) => {
-                    setCodeValue(value);
-                    setError(null);
-                  }}
-                  onInputValueChange={(value) => {
-                    setIdentifier(sanitizeAuthInputValue(value, method));
-                    setError(null);
-                  }}
-                  onMethodChange={(value) => {
-                    setMethod(value);
-                    setIdentifier("");
-                    setError(null);
-                    setRequestedIdentifier("");
-                  }}
-                  onRequestCode={() => {
-                    void handleRequestCode();
-                  }}
-                  onVerifyCode={() => {
-                    void handleVerifyCode();
-                  }}
-                />
-              </PublicAuthShell>
+              <AppInstallProvider>
+                <PublicAuthShell
+                  brand={<TenantAuthBrandRow qrValue={qrValue} />}
+                  description={authDescription}
+                  footer={<AuthLocaleFooter year={currentYear} />}
+                  floating={<AppInstallPrompt />}
+                  tagline={t("tenant.auth.tagline")}
+                  title={t("tenant.auth.title")}
+                >
+                  <AuthSignInForm
+                    codeSent={codeSent}
+                    codeValue={codeValue}
+                    error={error}
+                    inputValue={identifier}
+                    isBusy={isBusy}
+                    method={method}
+                    onBack={resetFlow}
+                    onCodeValueChange={(value) => {
+                      setCodeValue(value);
+                      setError(null);
+                    }}
+                    onInputValueChange={(value) => {
+                      setIdentifier(sanitizeAuthInputValue(value, method));
+                      setError(null);
+                    }}
+                    onMethodChange={(value) => {
+                      setMethod(value);
+                      setIdentifier("");
+                      setError(null);
+                      setRequestedIdentifier("");
+                    }}
+                    onRequestCode={() => {
+                      void handleRequestCode();
+                    }}
+                    onVerifyCode={() => {
+                      void handleVerifyCode();
+                    }}
+                  />
+                </PublicAuthShell>
+              </AppInstallProvider>
             }
             path="/sign-in"
           />

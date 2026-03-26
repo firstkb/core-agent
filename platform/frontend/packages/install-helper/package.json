@@ -1,5 +1,5 @@
 {
-  "name": "@platform/app-shell",
+  "name": "@platform/install-helper",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,10 +8,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@platform/install-helper": "workspace:*",
     "@platform/i18n": "workspace:*",
-    "@platform/ui-kit": "workspace:*",
-    "qrcode.react": "^4.2.0"
+    "@platform/ui-kit": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0",

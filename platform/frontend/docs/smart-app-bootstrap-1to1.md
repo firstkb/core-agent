@@ -516,21 +516,21 @@ const fetchConfig = async () => {
 
 Для mock этапа проще второй вариант.
 
-## 8. PWA installer: как работает и какую библиотеку использует
+## 8. PWA installer: donor reference и текущая трактовка
 
-### 8.1 Используемая библиотека
+### 8.1 Что использовал donor
 
-В проекте используется библиотека:
+В donor-проекте использовалась библиотека:
 
 - `@khmyznikov/pwa-install`
 
-В React она подключена так:
+В React она подключалась так:
 
 ```ts
 import PWAInstall from '@khmyznikov/pwa-install/react-legacy';
 ```
 
-### 8.2 Как работает текущая схема
+### 8.2 Как работала donor-схема
 
 1. В `src/main.tsx` ловится событие `beforeinstallprompt`.
 2. Событие не показывается браузером автоматически:
@@ -543,9 +543,18 @@ window.deferredPrompt = e;
 3. В `src/App.tsx` это событие кладётся в state `promptEvent`.
 4. `PWAInstall` получает его через `externalPromptEvent={promptEvent}`.
 
-Итог: приложение само управляет моментом показа install prompt.
+Итог: donor-приложение само управляло моментом показа install prompt.
 
-### 8.3 Дополнительно по PWA
+### 8.3 Что важно для текущего frontend
+
+Текущий frontend больше не использует внешний runtime `@khmyznikov/pwa-install`.
+
+Актуальный install/access слой теперь живёт в:
+
+- [install-helper-runtime.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/install-helper-runtime.md)
+- [packages/install-helper](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/packages/install-helper)
+
+### 8.4 Дополнительно по donor PWA
 
 В `App.tsx` ещё есть:
 
@@ -558,7 +567,7 @@ window.deferredPrompt = e;
 1. установка приложения через `@khmyznikov/pwa-install`;
 2. service worker и manifest через `vite-plugin-pwa`.
 
-### 8.4 Как трактовать install flow в новом проекте
+### 8.5 Как трактовать install flow в новом проекте
 
 Для нашего нового frontend это нужно трактовать узко и прагматично:
 

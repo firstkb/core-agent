@@ -6,6 +6,15 @@ export type {
   AppVersionDocument,
 } from "./app-build";
 
+export { AppInstallProvider, bootstrapAppInstallCapture, useAppInstall } from "./app-install";
+export type {
+  AppInstallContextValue,
+  AppInstallProviderProps,
+  DeferredInstallPromptEvent,
+} from "./app-install";
+export { AppInstallPrompt } from "./app-install";
+export type { InstallManifest, InstallManifestAsset, InstallPlatform } from "./app-install";
+
 export { AppUpdateBanner } from "./app-update-banner";
 export type { AppUpdateBannerProps } from "./app-update-banner";
 

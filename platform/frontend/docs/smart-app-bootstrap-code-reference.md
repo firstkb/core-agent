@@ -36,6 +36,12 @@
 
 В этом reference есть `beforeinstallprompt`, `PWAInstall`, `manifest` и service worker, но в нашем текущем продукте это не надо трактовать как требование сделать offline-first PWA.
 
+Актуальная реализация install/access layer больше не использует внешний runtime `pwa-install`.
+Текущий source of truth:
+
+- [install-helper-runtime.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/install-helper-runtime.md)
+- [packages/install-helper](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/packages/install-helper)
+
 Для `Admin App` и `Tenant App` install flow нужен как вспомогательный UX-слой:
 
 - показать кнопку `Install app` или инструкцию по установке;
@@ -48,9 +54,9 @@
 
 Источник: `src/main.tsx`.
 
-Это первый обязательный кусок flow. Он не просто монтирует `App`, а сначала:
+Это первый обязательный кусок donor flow. Он не просто монтирует `App`, а сначала:
 
-- подготавливает PWA install prompt;
+- подготавливает donor PWA install prompt;
 - показывает `GlobalConfigLoader`;
 - только после загрузки конфигов импортирует и монтирует `App`.
 

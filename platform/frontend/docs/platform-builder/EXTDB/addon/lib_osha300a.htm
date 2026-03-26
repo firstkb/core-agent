@@ -1,0 +1,40 @@
+{{PAGE_BEGIN}}
+
+<style>
+    .page-body {
+        padding: 20px;
+    }
+</style>
+<script>
+    function getReport(){
+        var url = '/Modules/EXTDB/addon/osha300a.asp?year='+$('#yearSelect').val()+'&dt='+cdate;
+        $("#divId").dialog({modal:true,width:400,height:200,minWidth:400,minHeight:200});
+        $("#divId").html($('#divIdwait').html());
+        $.get(url).done(function(html) { $("#divId").html(html); });
+    }
+</script>
+
+<h3>OSHA300A Report</h3>
+
+<form class="form-inline">
+    <div class="form-group">
+        <label style="width:100px;">Year:</label> 
+        <SELECT ID="yearSelect" NAME="yearSelect" style="width:400px;" class="form-control">
+            <option value="{{YEAR1}}" SELECTED>{{YEAR1}}</option>
+            <option value="{{YEAR2}}">{{YEAR2}}</option>
+            <option value="{{YEAR3}}">{{YEAR3}}</option>
+            <option value="{{YEAR4}}">{{YEAR4}}</option>
+            <option value="{{YEAR5}}">{{YEAR5}}</option>
+            <option value="{{YEAR6}}">{{YEAR6}}</option>
+            <option value="{{YEAR7}}">{{YEAR7}}</option>
+            <option value="{{YEAR8}}">{{YEAR8}}</option>
+        </SELECT>
+        <button class='btn btn-success' onclick="getReport();" style="margin-left:10px;">&nbsp; Get Report &nbsp;</button>
+    </div>
+</form>
+
+<br>
+<div id="divId" title="Report"></div>
+<div id="divIdwait" style="display:none;"><table width='400' height='200'><tr><td align=center><p><font size=2 id=text face="verdana"><b>Please wait.</b></font><p><img src='/Template/images/await.gif'></td></tr></table></div>
+
+{{PAGE_END}}

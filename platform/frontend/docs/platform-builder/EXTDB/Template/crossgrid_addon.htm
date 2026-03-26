@@ -1,0 +1,50 @@
+<script>
+	var DataListCross[[ID]];
+    if("[[PARENT]]" == "new")
+    {
+        DataListCross[[ID]] = new jsDataList("default.asp?action=list&table=ExtDB[[ID]]&usefilter=[[FLD]]=[[PARENT]]", "#listTableCross[[ID]]");
+    }
+    else
+    {
+        DataListCross[[ID]] = new jsDataList("default.asp?action=list&table=ExtDB[[ID]]&usefilter=[[FLD]]=[[PARENT]]", "#listTableCross[[ID]]");
+    }
+</script>
+
+<SCRIPT language="JavaScript">
+    function AddNew[[ID]](){
+		var t = document.editForm.table.value;
+		var p = document.editForm.param.value;
+		if(p=="new"){
+			alert("Save Form before");
+		}else{
+			var d = new Date();
+			var obj = new Object; obj.opener = self;
+			var win = new top.ModalDialog("?action=edit&table=ExtDB[[ID]]&param=new&crossId={{ID}}&crossFld=[[FLD]]&now="+d,obj,"dialogWidth:550px;dialogHeight:500px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+			win.onclose(function(){
+				DataListCross[[ID]].Reset();
+			})
+		}
+	}
+    function Edit[[ID]](valTable,valParam){
+		var d = new Date();
+		var obj = new Object; obj.opener = self;
+		var win = new top.ModalDialog("?action=edit&table=ExtDB[[ID]]&param="+valParam+"&crossId={{ID}}&crossFld=[[FLD]]&now="+d,obj,"dialogWidth:550px;dialogHeight:500px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+		win.onclose(function(){
+			DataListCross[[ID]].Reset();
+		})
+	}
+    function Delete[[ID]](valTable,valParam){
+      if ( confirm("Delete record #"+el+" ?") ) {
+      
+        $.ajax({ type: "POST", url: "default.asp", cache: false, data: { action: "delete", table: valTable, param: el, type: 'crossgrid' }})
+        .done(function( msg ) {
+            if(msg!='DONE'){
+                alert( "ERROR: " + msg );
+            }else{
+                bootbox.alert('Record deleted.');
+                DataListCross[[ID]].Reset();
+            }
+        });
+      }
+	}
+</SCRIPT>

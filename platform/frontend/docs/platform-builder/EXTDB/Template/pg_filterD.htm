@@ -1,0 +1,204 @@
+{{POPUP2_BEGIN}}
+
+<style>
+	#listTable th {
+		background-color: #0080c0; 
+		height: 25px;
+		color: #ffffff;
+		font-size:12px;
+		border:1px solid #8db2e3;
+	}
+	#listTable td {
+		color: #15428b;
+		border:1px solid #8db2e3;
+	}
+	h5 {
+		font-size:12px;
+		color: #0080c0;
+		margin: 5px;
+		text-align: center;
+	}
+	.line1 {
+		background:#e1e9f5;
+	}
+	.line2 {
+		background:#fcfcfc;
+	}
+	#contentDiv {
+		padding:10px;
+	}
+	li {
+		padding: 5px;
+	}
+	.chartbar {
+		background-color:#ff8040;
+		border:1px solid white;
+	}
+	fieldset {
+		display: inline;
+	}
+	.Btn {
+		display: inline;
+		border: none;
+		background: #00aef0;
+		color: white;
+		margin: 2;
+		text-align: center;
+		white-space: nowrap;
+		height: 20px;
+		width: 150px;
+		line-height: 20px;
+		cursor: hand;
+		font-weight: bold;
+		width: auto;
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+	.checkbox {
+		width:auto;
+		border:0px;
+		background:;
+	}
+	fieldset {
+	  padding: 10px;
+	  border:1px solid #00aef0;
+	  width:90%;
+	}
+	legend {
+		font-weight:bold;
+		color:#00aef0;
+	}
+	.Off {
+		background:silver;
+	}
+</style>
+
+<script>
+	var fld_name = "[{{FIELD_NAME}}]";
+	var wObject = new Object();
+	wObject = parent.wObject;
+	window.returnValue = false;
+	function setSelected(){
+		if(document.filterFrm.datePeriod.value=='static'){
+			if(document.filterFrm.dateFrom.value == ""){alert("Please fill Date From.");return false;}
+			if(document.filterFrm.dateTo.value == ""){alert("Please fill Date To.");return false;}
+			wObject.FILTER = fld_name+" BETWEEN '"+document.filterFrm.dateFrom.value+"' AND '"+document.filterFrm.dateTo.value+"'";
+		}else{
+			switch(document.filterFrm.datePeriod.value){
+			case 'cW':
+				wObject.FILTER = "DateDiff(week,GetDate(),"+fld_name+")=0";
+				break;
+			case 'lW':
+				wObject.FILTER = "DateDiff(week,GetDate(),"+fld_name+")=-1";
+				break;
+			case 'nW':
+				wObject.FILTER = "DateDiff(week,GetDate(),"+fld_name+")=1";
+				break;
+			case 'cM':
+				wObject.FILTER = "DateDiff(month,GetDate(),"+fld_name+")=0";
+				break;
+			case 'lM':
+				wObject.FILTER = "DateDiff(month,GetDate(),"+fld_name+")=-1";
+				break;
+			case 'nM':
+				wObject.FILTER = "DateDiff(month,GetDate(),"+fld_name+")=1";
+				break;
+			case 'cQ':
+				wObject.FILTER = "DateDiff(quarter,GetDate(),"+fld_name+")=0";
+				break;
+			case 'lQ':
+				wObject.FILTER = "DateDiff(quarter,GetDate(),"+fld_name+")=-1";
+				break;
+			case 'nQ':
+				wObject.FILTER = "DateDiff(quarter,GetDate(),"+fld_name+")=1";
+				break;
+			case 'cY':
+				wObject.FILTER = "DateDiff(year,GetDate(),"+fld_name+")=0";
+				break;
+			case 'lY':
+				wObject.FILTER = "DateDiff(year,GetDate(),"+fld_name+")=-1";
+				break;
+			case 'nY':
+				wObject.FILTER = "DateDiff(year,GetDate(),"+fld_name+")=1";
+				break;
+			case 'lTM':
+				wObject.FILTER = "DateDiff(month,"+fld_name+",GetDate()) BETWEEN 1 AND 12";
+				break;
+			case 'mYTD':
+				wObject.FILTER = "DateDiff(year,GetDate(),"+fld_name+")=0 AND "+fld_name+"<GetDate()";
+				break;
+			case 'greatTD':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+")>0";
+				break;
+			case 'equalTD':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+")=0";
+				break;
+			case 'lessTD':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+")<0";
+				break;
+			case 'next3d':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+") BETWEEN 1 AND 3";
+				break;
+			case 'next5d':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+") BETWEEN 1 AND 5";
+				break;
+			case 'next7d':
+				wObject.FILTER = "DateDiff(day,GetDate(),"+fld_name+") BETWEEN 1 AND 7";
+				break;
+			}			
+		}
+		window.returnValue = wObject.FILTER;
+	    window.dialogClose();
+	}
+	function sellectPeriod(obj){
+		var el = document.getElementById("staticPeriod");
+		var val = document.filterFrm.datePeriod.value;
+		el.style.display = "none";
+		document.filterFrm.dateFrom.value = "";
+		document.filterFrm.dateTo.value = "";
+		if(val=='static'){
+			el.style.display = "inline";
+		}
+	}
+</script>
+
+<form name="filterFrm">
+<br>
+<b>{{FIELD_TITLE}}</b><p>
+
+		<fieldset>
+			<b>Date:</b> <select NAME="datePeriod" TITLE="Date From" STYLE="width:200px" onchange='sellectPeriod(this)'>
+			<option value='static'>Static</option>
+			<option value='cW'>Current Week</option>
+			<option value='lW'>Last Week</option>
+			<option value='nW'>Next Week</option>
+			<option value='cM'>Current Month</option>
+			<option value='lM'>Last Month</option>
+			<option value='nM'>Next Month</option>
+			<option value='cQ'>Current Quarter</option>
+			<option value='lQ'>Last Quarter</option>
+			<option value='nQ'>Next Quarter</option>
+			<option value='cY'>Current Year</option>
+			<option value='lY'>Last Year</option>
+			<option value='nY'>Next Year</option>
+			<option value='lTM'>Last 12 Months</option>
+			<option value='mYTD'>From Jan to YTD Months</option>
+			<option value='mTD'>From Jan to YTD Months</option>
+			<option value='greatTD'>Great than Today</option>
+			<option value='equalTD'>Equal to Today</option>
+			<option value='lessTD'>Less than Today</option>
+			<option value='next3d'>In next 3 Days</option>
+			<option value='next5d'>In next 5 Days</option>
+			<option value='next7d'>In next 7 Days</option>
+			</select>
+			<div id='staticPeriod'>
+				<p>
+				<b>Date From:</b> <INPUT TYPE="text" NAME="dateFrom" TITLE="Date From" STYLE="width:60px" READONLY><IMG SRC="/Template/images/calendar.gif" STYLE="cursor:pointer" ALIGN="absmiddle" onclick="doCalendar(this,dateFrom)"> &nbsp;
+				<b>To:</b> <INPUT TYPE="text" NAME="dateTo" TITLE="Date To" STYLE="width:60px" READONLY><IMG SRC="/Template/images/calendar.gif" STYLE="cursor:pointer" ALIGN="absmiddle" onclick="doCalendar(this,dateTo)">
+			</div>
+		</fieldset>
+
+<p><button class=Btn onclick="setSelected();">Set Selected</button>
+</form>
+
+{{POPUP2_END}}

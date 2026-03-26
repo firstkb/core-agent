@@ -1,0 +1,387 @@
+{{POPUP_BEGIN}}
+
+<script type="text/javascript" src="/Template/js/jquery.tmpl.js"></script>
+
+<style>
+    #fieldsPlace {
+        background:#e1e9f5;
+        text-align:left;
+        padding:2px;
+        font-size:11px;
+    }
+    #fieldsPlace .added{
+        background:#e1e9f5;
+        text-align:left;
+        margin:1px;
+        padding:1px;
+        border:1px solid white;
+    }
+    #fieldsPlace .delColumn{
+      font-size:10px;
+      color:red;
+      margin-left:10px;
+    }
+</style>
+    <script>
+        function getFilter(){
+            var columntSrc = document.editForm.field_src;
+            var wObject = new Object; 
+            wObject.opener = self;
+            var field_title = columntSrc.options[columntSrc.selectedIndex].text;
+            var field_name = columntSrc.options[columntSrc.selectedIndex].value;
+            var field_type = columntSrc.options[columntSrc.selectedIndex].getAttribute('type');
+            var win = new top.ModalDialog("default.asp?page=PgFilter&field_name="+field_name+"&field_type="+field_type+"&field_title="+escape(field_title)+"", wObject, "dialogWidth:600px;dialogHeight:450px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+            win.onclose(function(_return){
+                if(_return)addColumn(field_title,field_name,wObject.FILTER);
+            });
+        }
+        function changeColumn(){
+            var obj = document.editForm.field_src;
+            if(obj.value!=""){
+                document.getElementById("column_button").disabled = false;
+            }else{
+                document.getElementById("column_button").disabled = true;
+            }
+        }
+        function delColumn(obj){
+            var el = obj.parentNode;
+            el.remove(true);
+        }
+        function addColumn(title,name,filter){
+            var place = document.getElementById("fieldsPlace");
+            var columntSrc = document.editForm.field_src;
+            var div = document.createElement('div');
+            div.className = "added";
+            div.innerHTML = "<br><b>"+title+":</b> <input type=hidden name=filter_title value=\""+title+"\"><input type=hidden name=filter_name value=\""+name+"\"><input type=edit style='width:350px;font-size:10px;' name=filter_value value=\"("+filter+")\" readonly> "
+                +"<button class=delColumn onclick='delColumn(this)'>[x]</button>";
+            place.appendChild(div);
+        }
+        function saveFilters(){
+            if(document.getElementsByName("filter_title").length>0){
+                var field_title = document.getElementsByName("filter_title");
+                var field_name = document.getElementsByName("filter_name");
+                var field_value = document.getElementsByName("filter_value");
+                var text = "";
+                for(var i=0;i<field_title.length;i++){
+                    text = text + field_title[i].value+"@@"+field_name[i].value+"@@"+field_value[i].value+"||||";
+                }
+                document.editForm.ExtDBpg_filter.value = text;
+            }else{
+                document.editForm.ExtDBpg_filter.value = "";
+            }
+        }
+    </script>
+
+<script>
+    var DataList = new jsDataList("default.asp?action={{ACTION}}&table={{TABLE}}&param={{ID}}", "#listTable");
+    DataList.onload(()=>{
+        if(document.getElementById("ExtDBpg_menuorder").value==''){
+            document.getElementById("ExtDBpg_menuorder").value = 0;
+        }
+    });
+</script>
+
+<FORM METHOD="post" ACTION="default.asp" TARGET="actFrame" onfocusout="clearStyle(event.srcElement);" onsubmit="saveFilters();window.returnValue = true;if(validateForm(this,0,0,0,0)){prepareUpload(this)}else{return false;};" NAME="editForm">
+  <INPUT TYPE="hidden" NAME="action" VALUE="save">
+  <INPUT TYPE="hidden" NAME="table" VALUE="{{TABLE}}">
+  <INPUT TYPE="hidden" NAME="ExtDBtbl" VALUE="{{ExtDBtbl}}">
+  <INPUT TYPE="hidden" NAME="param" VALUE="{{ID}}">
+  
+  <TABLE id="listTable" data-src="#DataList" style="width:100%" ALIGN="center" class='table table-striped table-bordered'>
+    <TR>
+        <TD class="t_hd" WIDTH="40%" NOWRAP COLSPAN="{{COLSPAN}}"><B>Module</B></TD>
+        <TD class="t_td">
+            <SELECT NAME=ExtDBpg_ExtDBmdl_id DATAFLD=ExtDBpg_ExtDBmdl_id TITLE="Module" ALT="selecti|-1" style="width: 100%;max-width: 500px;">{{MODULES_LIST}}</SELECT>
+        </TD>
+    </TR>
+    <!-- BEGIN tROW -->
+    <TR>
+        <TD class="t_hd" WIDTH="40%" NOWRAP COLSPAN="{{COLSPAN}}"><B>{{tFIELD_NAME}}</B></TD>
+        <TD class="t_td">{{tINPUT}}</TD>
+    </TR>
+    <!-- END tROW -->
+    <TR>
+        <TD class="t_hd" NOWRAP ><B>Web Share Settings</B></TD>
+        <TD class="t_td">
+                Field By: <SELECT title="Web Share - Field By" dataFld=ExtDBpg_webby name=ExtDBpg_webby ALT=""><option></option>{{WEBBY_LIST}}</SELECT>
+            <br>Field Date: <SELECT title="Web Share - Field Date" dataFld=ExtDBpg_webdate name=ExtDBpg_webdate ALT=""><option></option>{{WEBDATE_LIST}}</SELECT>
+            <br>Field Status: <SELECT title="Web Share - Field Status" dataFld=ExtDBpg_webstatus name=ExtDBpg_webstatus ALT=""><option></option>{{WEBSTATUS_LIST}}</SELECT>
+            <br>Field Status - Draft variant: <input title="Web Share - Status: Draft" dataFld=ExtDBpg_webstatusnew name=ExtDBpg_webstatusnew ALT="" placeholder="Draft">
+            <br>Field Status - Finish variant: <input title="Web Share - Status: Finish" dataFld=ExtDBpg_webstatusdone name=ExtDBpg_webstatusdone ALT="" placeholder="Open">
+            <br>Icon: <input title="Web Share - Icon" dataFld=ExtDBpg_shareicon name=ExtDBpg_shareicon ALT="" placeholder="base64,png">
+            <br>CA page: <SELECT title="Web Share - CA page" dataFld=ExtDBpg_capage name=ExtDBpg_capage ALT=""><option></option>{{WEBPAGE_LIST}}</SELECT>
+        </TD>
+    </TR>
+    <TR>
+        <TD class="t_hd" NOWRAP ><B>Actions Settings</B></TD>
+        <TD class="t_td">
+            Enable Edit: <SELECT title="Enable Edit" style="WIDTH: 70px" dataFld=ExtDBpg_aEdit name=ExtDBpg_aEdit ALT="selecti|-1"><OPTION selected value=Yes>Yes</OPTION><OPTION value=No>No</OPTION></SELECT>
+            <br>Enable Delete: <SELECT title="Enable Delete" style="WIDTH: 70px" dataFld=ExtDBpg_aDelete name=ExtDBpg_aDelete ALT="selecti|-1"><OPTION selected value=Yes>Yes</OPTION><OPTION value=No>No</OPTION></SELECT>
+            <br>Enable AddNew: <SELECT title="Enable AddNew" style="WIDTH: 70px" dataFld=ExtDBpg_aNew name=ExtDBpg_aNew ALT="selecti|-1"><OPTION selected value=Yes>Yes</OPTION><OPTION value=No>No</OPTION></SELECT>
+        </TD>
+    </TR>
+    <TR>
+        <TD class="t_hd" NOWRAP ><B>Page Filter</B></TD>
+        <TD class="t_td">
+        <textarea name=ExtDBpg_filter style="display:none">{{ExtDBpg_filter}}</textarea>
+        <div id="fieldsPlace"></div>
+        {{FORM_FIELDS}}
+        </TD>
+    </TR>
+    <TR>
+        <TD class="t_hd" NOWRAP ><B>Grid Sorting</B></TD>
+        <TD class="t_td">
+            <select dataFld='ExtDBpg_order1' name='ExtDBpg_order1' ALT="" align=absmiddle style='width:350px;'>{{ORDER_LIST}}</select>
+            <select dataFld='ExtDBpg_order2' name='ExtDBpg_order2' ALT="" align=absmiddle style='width:80px;'><option>ASC</option><option>DESC</option></select>
+        </TD>
+    </TR>
+    <TR>
+        <TD class="t_hd" NOWRAP ><B>Grid PreFilters</B></TD>
+        <TD class="t_td">
+            <textarea dataFld='ExtDBpg_prefilter' id='ExtDBpg_prefilter' name='ExtDBpg_prefilter' ALT="" readonly align=absmiddle style='width:100%;'>{{ExtDBpg_prefilter}}</textarea>
+            <button type='button' onclick="editPreFilters()">Edit Filters</button>
+        </TD>
+    </TR>
+    <TD COLSPAN="2" ALIGN="center">
+        <b>FIELDS SETINGS</b>
+    </TD>
+    {{FIELDS_LIST}}
+    <TR>
+      <TD COLSPAN="2" ALIGN="center">
+        <INPUT ID=Btn TYPE="submit" VALUE="Submit" NAME="submit">
+       </TD>
+    </TR>
+  </TABLE>
+
+</FORM>
+
+<script>
+    var text = document.editForm.ExtDBpg_filter.value;
+    if(text>""){
+        var flds = text.split("||||");
+        for(var i=0;i<flds.length;i++){
+            fld = flds[i];
+            if(fld>""){
+                var field_title = fld.split("@@")[0];
+                var field_name = fld.split("@@")[1];
+                var field_value = fld.split("@@")[2];
+                addColumn(field_title,field_name,field_value);
+            }
+        }
+    
+    }
+    $('select[name=field_access]').each(function(){
+        $(this).val($(this).data('val'));
+    })
+    $('select[name=field_ingrid]').each(function(){
+        $(this).val($(this).data('val'));
+    })
+    $( document ).ready(function() {
+        //$("select[datafld]").select2();
+        document.getElementById("ExtDBpg_menuorder").setAttribute("type", "number");
+    });	
+</script>
+
+<!-- JsRender Template for filter list -->
+<script id="filtersTemplate" type="text/x-jsrender">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Field Title</th>
+                <th>Filter Value</th>
+                <th>Filter Title</th>
+                <th>&nbsp;</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{for filters}}
+                <tr>
+                    <td>{{:fieldTitle}}</td>
+                    <td>{{:filterValue}}</td>
+                    <td>{{:filterTitle}}</td>
+                    <td>
+                        <button class="btn btn-primary btn-xs edit-filter" data-index="{{:#index}}">Edit</button>
+                        <button class="btn btn-danger btn-xs delete-filter" data-index="{{:#index}}">Delete</button>
+                    </td>
+                </tr>
+            {{/for}}
+        </tbody>
+    </table>
+</script>
+<script>
+    function editPreFilters() {
+        var textareaVal = $("#ExtDBpg_prefilter").val();
+        var filters = textareaVal.split("|").map(row => {
+            const [fieldName, filterValue, color, fieldTitle, filterTitle] = row.split("~");
+            return { fieldName, filterValue, color, fieldTitle, filterTitle };
+        });
+        if(textareaVal.trim()=='' || textareaVal.includes('~')==false){
+            filters = [];
+        }
+
+        const dialogContent = `
+            <div id="filtersList"></div>
+            <button class="btn btn-success" id="addNewFilter" style="margin-top: 10px;">Add New Filter</button>
+        `;
+
+        const dialog = bootbox.dialog({
+            title: "Edit Filters",
+            message: dialogContent,
+            size: "large",
+            buttons: {
+                cancel: {
+                    label: "Cancel",
+                    className: "btn-default"
+                },
+                success: {
+                    label: "Save",
+                    className: "btn-primary",
+                    callback: function() {
+                        const updatedFilters = filters.map(f => 
+                            [f.fieldName, f.filterValue, f.color, f.fieldTitle, f.filterTitle].join("~")
+                        ).join("|");
+                        $("#ExtDBpg_prefilter").val(updatedFilters);
+                    }
+                }
+            }
+        });
+
+        // Render initial filters list
+        renderFiltersList(filters);
+
+        // Add new filter handler
+        dialog.find("#addNewFilter").click(function() {
+            showFilterEditDialog(null, filters.length, (newFilter) => {
+                filters.push(newFilter);
+                renderFiltersList(filters);
+            });
+        });
+
+        // Edit filter handler
+        dialog.on("click", ".edit-filter", function() {
+            const index = $(this).data("index");
+            showFilterEditDialog(filters[index], index, (updatedFilter) => {
+                filters[index] = updatedFilter;
+                renderFiltersList(filters);
+            });
+        });
+        
+        // Delete filter handler
+        dialog.on("click", ".delete-filter", function() {
+            const index = $(this).data("index");
+            bootbox.confirm("This this filter?", function(result){ 
+                if(result){
+                console.log(index);
+                    var rez = filters.splice(index,1);
+                    renderFiltersList(filters);
+                    $("#ExtDBpg_prefilter").val(filters);
+                }
+            });        
+        });
+    }
+    function renderFiltersList(filters) {
+        const template = $.templates("#filtersTemplate");
+        const html = template.render({ filters: filters });
+        $("#filtersList").html(html);
+    }
+    function selectFilterSrc(selectElement){
+        if(selectElement.value>''){
+            const selectedIndex = selectElement.selectedIndex;
+            const selectedOption = selectElement.options[selectedIndex];
+            const selectedTexts = selectedOption.textContent;
+            const selectedType = selectedOption.getAttribute('type');
+            const $form = $("#filterForm");
+            $form.find(".fieldName").val(selectElement.value);
+            if([30,31,32,33].includes(parseInt(selectedType))){
+                $form.find(".fieldName").val(selectElement.value+'_out');
+            }
+            $form.find(".fieldTitle").val(selectedTexts);
+            $form.find(".filterValue").val('Sample');
+            $form.find(".color").val("#000");
+        }
+    }
+    function showFilterEditDialog(filter, index, callback) {
+        const isNew = !filter;
+        filter = filter || { fieldName: "", filterValue: "", color: "#000", fieldTitle: "", filterTitle: "" };
+
+        const formHtml = `
+            <form id="filterForm">
+                <div class="form-group">
+                    <label>Field</label>
+                    <select class="form-control fieldSrc" onchange="selectFilterSrc(this)">
+                        <option></option>{{FORM_FIELDS2}}
+                    </select>
+                    <input type="hidden" class="form-control fieldTitle" value="${filter.fieldTitle}">
+                    <input type="hidden" class="form-control fieldName" value="${filter.fieldName}">
+                </div>
+                <div class="form-group">
+                    <label>Filter Value</label>
+                    <input type="text" class="form-control filterValue" value="${filter.filterValue}">
+                </div>
+                <div class="form-group" style="display:none">
+                    <label>Color</label>
+                    <input type="text" class="form-control color" value="${filter.color}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Filter Title</label>
+                    <input type="text" class="form-control filterTitle" value="${filter.filterTitle}">
+                </div>
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+            </form>
+        `;
+
+        const dialog = bootbox.dialog({
+            title: isNew ? "Add Filter" : "Edit Filter",
+            backdrop: true,
+            onEscape: true,
+            message: formHtml,
+            onShown: function(e) {
+                const $form = $("#filterForm");
+                $form.find(".fieldSrc").val(filter.fieldName);
+            },
+            buttons: {
+                cancel: {
+                    label: "Cancel",
+                    className: "btn-default"
+                },
+                success: {
+                    label: "Save",
+                    className: "btn-primary",
+                    callback: function() {
+                        const $form = $("#filterForm");
+                        const updatedFilter = {
+                            fieldName: $form.find(".fieldName").val().trim(),
+                            filterValue: $form.find(".filterValue").val().trim(),
+                            color: $form.find(".color").val().trim(),
+                            fieldTitle: $form.find(".fieldTitle").val().trim(),
+                            filterTitle: $form.find(".filterTitle").val().trim()
+                        };
+
+                        // Validation
+                        const emptyFields = [];
+                        if (!updatedFilter.filterValue) emptyFields.push("Filter");
+                        if (!updatedFilter.color) emptyFields.push("Color");
+                        if (!updatedFilter.fieldTitle) emptyFields.push("Field Title");
+                        if (!updatedFilter.filterTitle) emptyFields.push("Filter Title");
+
+                        if (emptyFields.length > 0) {
+                            $form.find("#errorMessage")
+                                .text(`Please fill in: ${emptyFields.join(", ")}`)
+                                .show();
+                            return false; // Prevent dialog from closing
+                        }
+
+                        callback(updatedFilter);
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+
+
+
+{{SCRIPT_ADDON}}
+
+{{POPUP_END}}

@@ -1,0 +1,56 @@
+{{POPUP_BEGIN}}
+
+<style>
+#listTable .t_hd {text-align:center;}
+#actFrame {height:150px;}
+</style>
+
+<SCRIPT>
+  function goStep_1(file){
+      var obj = new Object; obj.opener = self;
+	  win = new top.ModalDialog("?action=edit&table=ImportStep_1&param="+document.editForm.param.value, obj, "dialogWidth:550px;dialogHeight:500px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+      self.close();
+  }
+</SCRIPT>
+
+<FORM METHOD="post" ACTION="default.asp" TARGET="actFrame" onfocusout="clearStyle(event.srcElement);" onsubmit="window.returnValue = true;if(validateForm(this,0,0,0,0)){prepareUpload(this)}else{return false;};" NAME="editForm">
+  <INPUT TYPE="hidden" NAME="action" VALUE="ImportStep_2">
+  <INPUT TYPE="hidden" NAME="param" VALUE="{{ID}}">
+  <INPUT TYPE="hidden" NAME="table" VALUE="{{TABLE}}">
+  <INPUT TYPE="hidden" NAME="targetForm" VALUE="{{targetForm}}">
+  <INPUT TYPE="hidden" NAME="ExtFile" VALUE="{{ExtFile}}">
+
+  <TABLE id="listTable" ALIGN="center" CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="95%" height="100%">
+    <TR>
+        <TD class="t_hd" align=center>
+			<center>
+			
+			<b>Data Import: Step 1</b>
+
+			<p>(Select How Need To Import)<br>
+			<SELECT ID="mode" NAME="mode" style="width:250px;" ALT="select" TITLE="Import Mode">
+				<option value=""></option>
+				<option value="append">Append All Records</option>
+				<option value="clearappend">'Clear' Append All Records (delete old records)</option>
+				<option value="update">Update Exists Records (select 'Compare by')</option>
+			</SELECT>
+			
+			<p>(Select Source and Destination of the Import)<br>
+			<table width="100%" border=1>
+			<tr>
+				<td class="t_hd" align=center><b>Import From <font color=red>CSV</font> &gt;</b></td>
+				<td class="t_hd" align=center><b>&gt; Import Into <font color=red>DB</font></b></td>
+				<td class="t_hd" align=center><b>Compare by</b></td>
+			</tr>
+				{{FIELDS_LIST}}
+			</table>
+			
+			<p><INPUT ID=Btn TYPE="submit" VALUE="Submit" NAME="submit">
+			</center>
+		</TD>
+    </TR>
+  </TABLE>
+
+</FORM>
+
+{{POPUP_END}}

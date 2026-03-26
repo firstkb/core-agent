@@ -1,0 +1,59 @@
+{{POPUP_BEGIN}}
+
+<style>
+	#Webs { width:90%; height:100%; text-align:left; border:1px solid #8db2e3; padding:5px;}
+	#Webs b{ color:#000000;}
+	#Webs .line0 { background-color: #f0f8ff; border:1px solid silver; color:navy; padding: 10px;}
+	#Webs .line1 { background-color: #ffffff; border:1px solid silver; color:navy; padding: 10px;}
+</style>
+
+<div id='Webs' style="display: none;"></div>
+
+<center>
+	<form name=editFrm2>
+		<input type="hidden" name="action" value="edit">
+		<input type="hidden" name="table" value="TblWebEdit">
+		<input type="hidden" name="page" value="TblWebEdit">
+		<input type="hidden" name="param" value="new">
+		<input type="hidden" name="ExtDBweb_ExtDBtbl_id" value="{{ID}}">
+		<button onclick="addNewWeb();"  class="btn btn-xs btn-success">Add New Web Form</button>
+	</form>
+</center>
+
+<script>
+	function addNewWeb(){
+		document.editFrm2.param.value="new";
+		document.editFrm2.submit();
+	}
+	function DeleteWeb(valParam){
+		document.editFrm2.action.value="delete";
+		document.editFrm2.param.value=valParam;
+		document.editFrm2.submit();
+	}
+	function EditWeb(valParam){
+		document.editFrm2.param.value=valParam;
+		document.editFrm2.submit();
+	}
+</script>
+
+<script>
+	$(document).ready(function() {
+		jQuery('#Webs').html( $("#itemTemplate").render( [{{WebsList}}] ) );
+		//$('#Views').css('overflow','auto').show();
+		//$('#Webs').css('overflow','auto').show();
+		$('#Views').show();
+		$('#Webs').show();
+	});
+</script>
+<script id="itemTemplate" type="text/x-jsrender">
+	<div class='item'>
+		<div class='line{{:#index % 2}}'>
+			<input type=hidden name=web_id value="{{>id}}">
+			<span style='width:600px;border-right:1px solid silver;'><b>{{>title}}</b></span> 
+			<button style='font:menu;' class="btn btn-xs btn-info" onclick="EditWeb('{{>id}}')">Edit</button> &nbsp;&nbsp; <button class="btn btn-xs btn-info" style='font:menu;' onclick="DeleteWeb('{{>id}}')">Delete</button>
+			<div>Link: <input class="form-control" type=text value="{{>link}}" style="width:90%;font-size:10px;"></div>
+		</div>
+	</div>
+</script>
+
+{{POPUP_END}}

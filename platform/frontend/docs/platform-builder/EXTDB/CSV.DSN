@@ -1,0 +1,20 @@
+[ODBC]
+DRIVER=Microsoft Text Driver (*.txt; *.csv)
+UID=admin
+UserCommitSync=Yes
+Threads=3
+SafeTransactions=0
+PageTimeout=5
+MaxScanRows=0
+MaxBufferSize=512
+ImplicitCommitSync=Yes
+FIL=text
+Extensions=txt,csv,tab,asc
+TextDelimiter=,
+DriverId=27
+ReadOnly=True
+HDR=Yes
+FMT=CSVDelimited
+Format=CSVDelimited
+CharacterSet=ANSI
+ColNameHeader=True 

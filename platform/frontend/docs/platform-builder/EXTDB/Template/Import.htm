@@ -1,0 +1,55 @@
+{{POPUP_BEGIN}}
+
+<SCRIPT>
+  function goStep_1(file){
+      var obj = new Object; obj.opener = self;
+	  if(document.editForm.targetForm.value!='main'){
+		win = new top.ModalDialog("?action=edit&table=ImportStep_1&param="+document.editForm.targetForm.value+"&targetForm={{ID}}&ExtFile="+file, obj, "dialogWidth:650px;dialogHeight:600px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+	  }else{
+		win = new top.ModalDialog("?action=edit&table=ImportStep_1&param="+document.editForm.param.value+"&targetForm="+document.editForm.targetForm.value+"&ExtFile="+file, obj, "dialogWidth:650px;dialogHeight:600px;center:yes;edge:sunken;help:no;resizable:yes;scroll:no;status:no");
+	  }
+      self.close();
+  }
+  function SetAction(obj){
+	  if(document.editForm.targetForm.value!='main'){
+	    obj.param.value = obj.targetForm.value;
+	    obj.table.value = "ExtDB"+obj.targetForm.value;
+		obj.action = "default.asp?action=Import&table="+obj.targetForm.value+"&param="+obj.targetForm.value+"&targetForm={{ID}}";
+	  }else{
+	    obj.param.value = "{{ID}}";
+	    obj.table.value = "{{TABLE}}";
+		obj.action = "default.asp?action=Import&table="+obj.table.value+"&param="+obj.param.value+"&targetForm="+document.editForm.targetForm.value;
+	  }
+  }
+</SCRIPT>
+
+<FORM METHOD="post" ACTION="default.asp" TARGET="actFrame" onfocusout="clearStyle(event.srcElement);" onsubmit="if(file.value==''){alert('Choose file!');return false;};window.returnValue = true;SetAction(this);if(validateForm(this,0,0,0,0)){prepareUpload(this)}else{return false;};" NAME="editForm" ENCTYPE="multipart/form-data">
+  <INPUT TYPE="hidden" NAME="param" VALUE="{{ID}}">
+  <INPUT TYPE="hidden" NAME="table" VALUE="{{TABLE}}">
+  <INPUT TYPE="hidden" NAME="ExtFile" VALUE="">
+
+  <TABLE id="listTable" ALIGN="center" CELLPADDING="2" CELLSPACING="0" BORDER="0" WIDTH="95%" height="100%">
+    <TR>
+        <TD class="t_hd" align=center>
+			<center>
+			
+			<b>Data import</b>
+			
+			<p>Import Data into <select name="targetForm">
+					<option value="main">Main Form</option>
+					{{SubFORMS}}
+				</select>
+			</p>
+			
+			<p><input type="file" name="file" ALT="file|csv"/>
+			
+			<p><INPUT ID=Btn TYPE="submit" VALUE="Submit" NAME="submit">
+			</center>
+		</TD>
+    </TR>
+  </TABLE>
+
+</FORM>
+
+
+{{POPUP_END}}

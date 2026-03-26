@@ -1,0 +1,75 @@
+<SCRIPT>
+    var arrFields[[ID]] = [];
+    [[GridConfig]]
+</SCRIPT>
+
+<DIV style='width:100%;height: auto;max-height:420px;overflow:scroll;text-align:center;border: 10px solid #EFF1F5;' ID='SubForm'>
+<style>
+    #SubForm td,th {
+        font-size:10px;
+    }
+    .listTableCross thead td {
+        text-align: center !important;
+    }
+    .listTableCross,.listTableSurvey {
+        border: 1px solid silver;
+    }
+    .listTableCross .hd,.listTableSurvey .hd {
+        background: url(/Template/images/bg_lib.png) repeat-x -0 -153;
+        background-color:#ffffff;
+        text-align:center;
+        border:1px solid rgb(192,192,192);
+        border-top:none;
+        margin-left:1px;
+        padding:4px;
+    }
+    .listTableCross .td,.listTableSurvey .td {
+       background-color:white;
+       color:black;
+       border-width: 1px;
+       border-style: solid;
+       border-color: threedhighlight threedhighlight threedhighlight silver;
+        padding:4px;
+    }
+    .listTableCross .shortText {
+        width: unset;
+        max-width: 100%;
+        overflow: unset;
+        white-space: unset;
+        text-align: left;
+    }
+
+</style>
+<TABLE style='display:none;table-layout: fixed;' data-src="#DataListCross[[ID]]" BORDER="0" id="listTableCross[[ID]]" class="listTableCross" ALIGN="center" WIDTH="100%" class='table table-striped table-bordered'>
+    <THEAD>
+        <TR id="TH-Rows[[ID]]">
+            <TD class=hd ALIGN=right style='width:80px;'><IMG ID="AddCross" SRC="\Template\images\new.png " ALIGN="absmiddle" ALT="Add New Record" TITLE="Add New Record" style='cursor:pointer;display:[[iNew]];' onclick="AddNew[[ID]]()"></TD>
+        </TR>
+    </THEAD>
+    <TBODY>
+        <TR id="TB-Rows[[ID]]">
+            <TD class=td ALIGN=right>
+                <INPUT TYPE="hidden" DATAFLD="ExtDB[[ID]]_id">
+                <div class='tools'>
+                    <i class="icon-pencil" onclick="javascript:el=$(this).closest('td').find('input:eq(0)').val();Edit[[ID]]('ExtDB[[ID]]',el);" TITLE="Edit Record" style="display:{{iEdit}};cursor:pointer;"></i>
+                    <i class="icon-remove2" onclick="javascript:el=$(this).closest('td').find('input:eq(0)').val();Delete[[ID]]('ExtDB[[ID]]',el);" TITLE="Delete Record" style="display:{{iDelete}};cursor:pointer;"></i>
+                </div>
+            </TD>
+        </TR>
+    </TBODY>
+</TABLE>
+</DIV>
+<SCRIPT>
+document.addEventListener("DOMContentLoaded", function(event){
+    var tmp = [];
+    for ( rec in arrFields[[ID]] ) {
+        tmp.push("<TD class=hd ALIGN=center><B>"+arrFields[[ID]][rec].title+"</B></TD>");
+    }
+    $('#TH-Rows[[ID]]').append( tmp.join('') );
+    var tmp = [];
+    for ( rec in arrFields[[ID]] ) {
+        tmp.push("<TD class=td><SPAN ID='"+arrFields[[ID]][rec].field+"' DATAFLD='"+arrFields[[ID]][rec].field+"' DATAFORMATAS=html></SPAN></TD>");
+    }
+    $('#TB-Rows[[ID]]').append( tmp.join('') );
+})
+</SCRIPT>

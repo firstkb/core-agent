@@ -1,0 +1,327 @@
+{{PAGE_BEGIN}}
+
+<br>
+<div id="tabs" style='width:95%;display: block;margin: auto auto;'>
+  <ul style="padding:0px;">
+    <li><a href="#tabs-1">Data Forms</a></li>
+    <li><a href="#tabs-2">Modules</a></li>
+    <li><a href="#tabs-3">Pages</a></li>
+    <li><a href="#tabs-4">PWA</a></li>
+  </ul>
+  <div id="tabs-1" style="background-color:#BFDFFF;padding:10px;">
+    {{ExtDBtblList}}
+    <br><button class='btn btn-info' onclick="extTblNew()" title="Add New Page"><img src="\Template\images\new.png" align=absmiddle> new DATA FORM</button><br><br>
+  </div>
+  <div id="tabs-2" style="background-color:#BFDFFF;padding:10px;">
+    {{ExtDBmdlList}}
+    <br><button class='btn btn-info'onclick="extMdlNew()" title="Add New"><img src="\Template\images\new.png" align=absmiddle> add MODULE</button><br><br>
+  </div>
+  <div id="tabs-3" style="background-color:#BFDFFF;padding:10px;">
+    <fieldset class="acc">
+        <table id="listTable" style="width: 100%;" align="center" class="table table-bordered">
+            <tbody><tr>
+                <td class="t_hd" width="50%"><b>Filter by modules</b></td>
+                <td class="t_td">
+                    <select name="PageMdlFilter" id="PageMdlFilter" title="Filter" style="width:240px;" class="form-control field-required">
+                        <option value="">All</option>
+                        {{ExtDBmdlOption}}
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </fieldset>
+    {{ExtDBpgList}}
+    <br><button class='btn btn-info'onclick="extTblExt()" title="Add Ext Page"><img src="\Template\images\new.png" align=absmiddle> new PAGE</button><br><br>
+  </div>
+  <div id="tabs-4" style="background-color:#BFDFFF;padding:10px;">
+    <fieldset class="acc">
+        <table id="listTable" style="width: 100%;" align="center" class="table table-bordered">
+            <tbody><tr>
+                <td class="t_hd" width="50%"><b>Filter by modules</b></td>
+                <td class="t_td">
+                    <select name="PageMdlFilter" id="PageMdlFilter" title="Filter" style="width:240px;" class="form-control field-required">
+                        <option value="">All</option>
+                        {{ExtDBmdlOptionPWA}}
+                    </select>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </fieldset>
+    {{ExtDBpgListPWA}}
+    <br><button class='btn btn-info'onclick="extTblExt()" title="Add Ext Page"><img src="\Template\images\new.png" align=absmiddle> new PAGE</button><br><br>
+  </div>
+</div>
+<style>
+    .ui-tabs .ui-tabs-panel {padding:0px;}
+    .ui-tabs .ui-tabs-nav {
+        border-bottom: 0px;
+    }
+    .ui-widget.ui-widget-content {
+        border: 0px;
+    }
+    #tabs td {
+        padding: 2px 5px;
+    }
+    #tabs td button {
+        border: 0px;
+        background: unset;
+    }
+    #tabs td button:hover {
+        color: cornflowerblue;
+    }
+    #tabs td button i {
+    }
+    .extlib > td {
+        background-color: beige !important;
+    }
+    .ui-dialog .ui-dialog-content {
+        padding: 20px;
+    }
+</style>
+<script>
+$(function() {
+    $( "#tabs" ).tabs({
+        active   : Cookies.get('activetab'),
+        activate : function( event, ui ){
+            Cookies.set( 'activetab', ui.newTab.index());
+        }
+    });
+});
+</script>
+
+<p align=center>
+    <button class='btn btn-info' onclick="extInport()" title="import"><img src="\Template\images\new.png" align=absmiddle>Import Config</button>
+    <button class='btn btn-info' onclick="mdlImport()" title="import"><img src="\Template\images\new.png" align=absmiddle>Import Module</button>
+    <button class='btn btn-xs btn-warning' onclick="runReCheck()" title="import">Full ReCheck</button>
+</p>
+
+<script>
+    var DataList = {} ;
+    DataList.Reset = function(){}
+    function runReCheck(){
+        document.location.replace("?action=FullReCheck");
+    }
+    function extTblNewAs(asTbl){
+        el=asTbl; Edit('newExtDBtblAs',null,function(){document.location.reload(true);});
+    }
+    function extTblNew(){
+        AddNew('ExtDBtbl',function(){document.location.reload(true);});
+    }
+    function extTblExt(){
+        $('#dialog-form').dialog('open');
+    }
+    function extInport(){
+        $('#dialog-import').dialog('open');
+    }
+    function mdlImport(){
+        $('#dialog-modules').dialog('open');
+    }
+    function extTblEdit(obj){
+        el=obj; Edit('ExtDBtbl',null,function(){document.location.reload(true);});
+    }
+    function extPgEditViews(obj){
+        el=obj; Edit('EditViews');
+    }
+    function extPgHelp(obj){
+        el=obj; Edit('PgHelpEdit');
+    }
+    function extPgEdit(obj){
+        el=obj; Edit('ExtDBpg',null,function(){document.location.reload(true);});
+    }
+    function extTblDel(obj){
+        if(confirm("Delete this Form?")){
+            actFrame.location.replace("?action=delete&table=ExtDBtbl&param="+obj);
+        }
+    }
+    function extPgDel(obj){
+        if(confirm("Delete this Page?")){
+            actFrame.location.replace("?action=delete&table=ExtDBpg&param="+obj);
+        }
+    }
+    function extMdlNew(){
+        AddNew('ExtDBmdl',function(){document.location.reload(true);});
+    }
+    function extPgNew(id,title){
+        el=id; Edit('ExtDBpg_new',title,function(){document.location.reload(true);});
+    }
+    function extMdlEdit(obj){
+        el=obj; Edit('ExtDBmdl',null,function(){document.location.reload(true);});
+    }
+    function extMdlDel(obj){
+        if(confirm("Delete this record?")){
+            actFrame.location.replace("?action=delete&table=ExtDBmdl&param="+obj);
+        }
+    }
+    function extPgAccess(obj){
+        el=obj; Edit('PgAccess');
+    }
+    function extFldAccess(obj){
+        el=obj; Edit('FldAccess');
+    }
+    function extMdlAccess(obj){
+        el=obj; Edit('MdlAccess');
+    }
+    function extImport(obj){
+        el=obj; Edit('Import',null,function(){document.location.reload(true);});
+    }
+    function extExport(obj){
+        document.location.assign("Excel.aspx?fid="+obj);
+    }
+    function extExportConfig(obj){
+        document.location.assign("default.asp?action=ExportConfig&param="+obj);
+    }
+    function extTemplate(file){
+        actFrame.location.assign("/Files/{{SYSTEM.ID}}/ExtDB/"+file);
+    }
+    function WebAccess(obj){
+        el=obj; Edit('WebAccess');
+    }
+    function PgWebAccess(obj){
+        el=obj; Edit('PgWebAccess');
+    }
+</script>
+
+<script type="text/javascript">
+    var _field = null;
+    var _access = null;
+    $(function() {
+        $("#dialog").dialog("destroy");
+        $("#dialog-form").dialog({
+            autoOpen: false,
+            height: 400,
+            width: 300,
+            modal: true,
+            buttons: {
+                'Create': function() {
+                    var title = $('input[name=ext_title]').val();
+                    var page = $('select[name=ext_list]').val();
+                    if(page!=null&&title>""){
+                        title = title.replace(/,/g,' ').replace(/'/g,'').replace(/"/g,'');
+                        extPgNew(page,title);
+                        $(this).dialog('close');
+                    }
+                },
+                Cancel: function() {
+                    $(this).dialog('close');
+                }
+            },
+            open: function(event, ui) {
+                $('input[name=ext_title]').val("new Page Title");
+            }
+        });
+        $("#dialog-import").dialog({
+            autoOpen: false,
+            height: 500,
+            width: 450,
+            modal: true,
+            buttons: {
+                'Import': function() {
+                    if($('textarea[name=ext_xml]').val()>""){
+                        document.importFrm.submit();
+                    }
+                },
+                Cancel: function() {
+                    $(this).dialog('close');
+                }
+            },
+            open: function(event, ui) {
+                $('textarea[name=ext_xml]').val("");
+                $('.ui-dialog-buttonpane').find('button').addClass('btn btn-info');
+            }
+        });
+        $("#dialog-modules").dialog({
+            autoOpen: false,
+            height: 500,
+            width: 450,
+            modal: true,
+            buttons: {
+                'Import': function() {
+                    if($('#mdl_list').val()>""){
+                        document.importMdlFrm.submit();
+                    }
+                },
+                Cancel: function() {
+                    $(this).dialog('close');
+                }
+            },
+            open: function(event, ui) {
+                $('textarea[name=ext_xml]').val("");
+                $('.ui-dialog-buttonpane').find('button').addClass('btn btn-info');
+            }
+        });
+        $('#addForm').click(function() { $('#dialog-form').dialog('open'); });
+        
+        var savedValue = localStorage.getItem('PageMdlFilterValue');
+        if (savedValue !== null) {
+            $('#PageMdlFilter').val(savedValue);
+            filterTable(savedValue.toLowerCase());
+        }
+        
+        $('#PageMdlFilter').on('change', function(){
+            var selected = $(this).val();
+            localStorage.setItem('PageMdlFilterValue', selected);
+            filterTable(selected.toLowerCase());
+        });
+    });
+    
+    function filterTable(selected) {
+        var sel = (selected || "").trim().toLowerCase();
+
+        $('#PageMdlFilter').closest("fieldset").next().find("tr").each(function () {
+            var $tr = $(this);
+            if ($tr.find('th').length) return;
+
+            var $td = $tr.find('td:first');
+
+            var base = $td.contents()
+            .filter(function () { return this.nodeType === 3; })
+            .first()
+            .text()
+            .trim()
+            .toLowerCase();
+
+            if (!base) {
+            base = $td.text().split(/\s*\[/)[0].trim().toLowerCase();
+            }
+
+            $tr.toggle(!sel || base === sel);
+        });
+    }
+</script>
+<style>
+.ui-dialog {font:menu;}
+.ui-button-text {font:menu;}
+.ui-dialog .ui-dialog-buttonpane button {}
+.ui-dialog input { margin-bottom:12px; width:95%; }
+fieldset { padding:0; border:0; margin-top:25px; }
+.access_list {width:auto;border:0;padding:0;margin:0;}
+</style>
+<div id="dialog-form" title="Create Ext. Page">
+    <form style="width:500px">
+        <label for=ext_title><b>Page Title</b></label>
+        <br/><input name=ext_title class="form-control" type=text value="">
+        <br/><label for=ext_list><b>Ext.Pages List</b></label>
+        <br/><select name=ext_list class="form-control" size=5 style="width:100%">
+            {{TABLES_LIST}}
+        </select>
+    </form>
+</div>
+<div id="dialog-import" title="Import Config">
+    <form name='importFrm' target="actFrame" method="POST" action='default.asp' style="width:500px">
+        <input type='hidden' name='action' value='ImportConfig'>
+        <label for=ext_title><b>XML Config</b></label>
+        <br/><textarea style='width:500px;height:180px;' name=ext_xml></textarea>
+    </form>
+</div>
+<div id="dialog-modules" title="Import Config">
+    <form name='importMdlFrm' target="actFrame" method="POST" action='default.asp' style="width:500px">
+        <input type='hidden' name='action' value='ImportModule'>
+        <select id="mdl_list" name="module" class='form-control'>
+            {{MODULES_LIST}}
+        </select>
+    </form>
+</div>
+
+{{PAGE_END}}

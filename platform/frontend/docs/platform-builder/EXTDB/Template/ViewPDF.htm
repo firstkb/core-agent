@@ -1,0 +1,48 @@
+{{POPUP2_BEGIN}}
+
+<style>
+#wait {
+    font-size: 14px;
+    padding: 10px;
+    text-align: center;
+}
+</style>
+
+<div id="wait">
+    <div id="dialog-message" style='text-align:center;'>
+        <br><img src='/Template/images/ajax-loader.gif'>
+        <br>Please, wait...
+    </div>
+</div>
+<br> 
+
+<form name=editFrm>
+    <input type="hidden" name="action" value="page">
+    <input type="hidden" name="page" value="ViewReport">
+    <input type="hidden" name="report" value="">
+    <input type="hidden" name="record" value="{{record}}">
+</form>
+<script>
+	$(document).ready(function() {
+        $("#wait").html( $("#pdf-wait-tpl").html() );
+        $.get("default.asp",{
+            action: 'page',
+            page: 'GetReport',
+            report: "{{action_link}}"
+        },function(data){
+            $('#wait').html( $("#pdf-link-tpl").html().replace(/{{link}}/gi,data) );
+        }).fail(function(xhr, status, error) { 
+            var msg = "Sorry but there was an error: ";    
+            $('#wait').html(msg + xhr.status + ". " + error);
+        });
+    });
+</script>
+
+<script id="pdf-link-tpl" type="text/x-template">
+    <div style='font-size: 16px;'>
+        PDF file ready.
+        <br> Click <a href="{{link}}" target='_blank'><b>[HERE]</b></a> for downloading file.
+    </div>
+</script>
+
+{{POPUP2_END}}

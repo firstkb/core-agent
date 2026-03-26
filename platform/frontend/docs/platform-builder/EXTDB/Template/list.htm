@@ -1,0 +1,245 @@
+{{POPUP2_BEGIN}}
+
+  <SCRIPT LANGUAGE="JavaScript">
+    var contextMenu;
+    var openerWindow = self;
+    var win;
+    var FiltersArr = new Array();
+    var SortingFld = "";
+    var curFilter = "";
+    var curPage = "";
+    var el;
+    var FILESPATH = "{{FILES_PATH}}";
+    var varTable = "{{TABLE}}";
+    var wObject = new Object();
+    wObject.TITLE = "";
+    wObject.TPL = "";
+    wObject.PARAM = "";
+    wObject.FIELDS = "";
+    wObject.FIELDS_IN = "";
+    wObject.FIELDS_OUT = "";
+    wObject.OPENER = "";
+    wObject.RESULT = "";
+    wObject.FILTER = "";
+    wObject = window.parent.wObject;
+    this.opener = wObject.OPENER;
+    function SelectRecord( valTable ){
+        if(valTable.indexOf("users|")==0){
+            valTable = valTable.split("|")[1];
+        }
+        if(valTable.indexOf("company|")==0){
+            valTable = valTable.split("|")[1];
+        }
+        wObject = window.parent.wObject;
+        if(wObject.FIELDS_OUT>"" && wObject.FIELDS_OUT.indexOf("|")>0) {
+            var arr = wObject.FIELDS_OUT.split("|");
+            var inarr = wObject.FIELDS_IN.split("|");
+            var simple = false;
+        }else{
+            var arr = wObject.FIELDS.split("|");
+            var simple = true;
+        }
+        var rowIndex = el+1;
+        DataList.recordset.Move(rowIndex-1);
+        wObject.ID = DataList.recordset.Fields(valTable+"_id");
+        fld = wObject.FIELDS;
+        wObject.FIELDS="";
+        wObject.FIELDS_OUT="";
+        var FIELDS=[];
+        var FIELDS_OUT=[];
+        if(wObject.LIST=="company"&&fld.indexOf("company")==0&&fld!="company_name"){arr=["company_name"]};
+        if(wObject.LIST=="users"&&fld.indexOf("users")==0&&fld.indexOf("|")<0&&fld.indexOf("_name")>0){arr=["users_firstname","users_lastname"]};
+        if(wObject.LIST=="projects"&&fld.indexOf("projects")==0&&fld.indexOf("|")<0&&fld.indexOf("_name")>0){arr=["projects_num","projects_name"]};
+        for ( var rec=0; rec<arr.length; rec++ ){
+            fld = arr[rec].replace('*','');
+            if(fld=="maincomp_name" && !fldExists("maincomp_name")){
+                if(fld=="maincomp_name"){fld="company_name"};
+            }
+            if(fld=="bunit_name"&&wObject.LIST!="projects"){fld="company_name"};
+            if(fld=="contractor_name"&&wObject.LIST!="projects"){fld="company_name"};
+            if (simple==false){
+                if(inarr[rec].indexOf("+")>=0){
+                    var arr_txt = ""
+                    var arr_tmp = inarr[rec].split("+");
+                    for ( var subfld in arr_tmp ) {
+                        if ( arr_tmp[subfld].substr(0,1) == "{" ) {
+                            arr_txt += arr_tmp[subfld].substr(1,arr_tmp[subfld].indexOf("}")-1) + DataList.recordset.Fields(arr_tmp[subfld].substr(arr_tmp[subfld].indexOf("}")+1));
+                        }else{
+                            arr_txt += DataList.recordset.Fields(arr_tmp[subfld]);
+                        }
+                    }
+                    FIELDS.push(arr_txt);
+                    FIELDS_OUT.push(arr_txt);
+                }else{
+                    FIELDS.push(DataList.recordset.Fields(fld));
+                    FIELDS_OUT.push(DataList.recordset.Fields(fld));
+                }
+            }else{
+                FIELDS.push(DataList.recordset.Fields(fld));
+                FIELDS_OUT.push(DataList.recordset.Fields(fld));
+            }
+        }
+        wObject.FIELDS = FIELDS.join("|");
+        wObject.FIELDS_OUT = FIELDS_OUT.join("|");
+        parent.wObject = wObject;
+        window.returnValue = wObject;
+        window.dialogClose();
+
+    }
+    function fldExists(name){
+        return (DataList.fields.indexOf(name)>=0);
+    }
+    function getID(rowIndex){
+        valTable = varTable;
+        if(valTable.indexOf("users|")==0){
+            valTable = valTable.split("|")[1];
+        }
+        if(valTable.indexOf("company|")==0){
+            valTable = valTable.split("|")[1];
+        }
+        DataList.recordset.MoveFirst();
+        for(var rec=1;rec<rowIndex;rec++){DataList.recordset.MoveNext();}
+        return DataList.recordset.Fields(valTable+"_id");
+    };
+
+    var arr = wObject.FIELDS.split("|");
+    var filter = wObject.FILTER;
+    if ( filter>"" && wObject.OPENER.editForm) {
+        $(document.editForm).find('input').each(function(){
+            filter = filter.replace("{"+this.name+"}",this.value);
+        })
+    }
+    var DataList = new jsDataList("default.asp?action=list&table="+wObject.LIST+"&fields="+wObject.FIELDS+"&list=SELECT&filter="+filter+"&extfilter={{EXTFILTER}}", "#listTable");
+    DataList.onload(function(){
+        initSelect2();
+    })
+</script>
+
+    <TABLE class='table table-striped table-bordered' id="listTable" data-src="#DataList" ALIGN="center" WIDTH="100%" style="display:none;">
+        <THEAD>
+        <TR>
+            <Th WIDTH="1"></Th>
+          <!-- BEGIN tHEADER -->
+            <Th data-field="{{tFIELD}}">{{tFIELD_NAME}}</Th>
+          <!-- END tHEADER -->
+        </TR>
+        </THEAD>
+        <TBODY id="tableBody">
+          <TR>
+            <TD class="t_td" ALIGN="center" VALIGN="middle" NOWRAP WIDTH=10>
+                <INPUT TYPE="hidden" DATAFLD="{{TABLE}}_id">
+                <div class='tools'><i class="icon-share" onclick="el=$(this).closest('tr').index();SelectRecord('{{TABLE}}');" TITLE="Select Record" style="cursor:pointer;"></i></div>
+            </TD>
+            <!-- BEGIN tROW -->
+              <TD class="t_td" ALIGN="{{tALIGN}}">{{SPAN}}</TD>
+            <!-- END tROW -->
+          </TR>
+        </TBODY>
+    </TABLE>
+
+    <script>
+        function initSelect2() {
+            $("#listTable thead th:not(:first, :last)").each(function(index) {
+                $(this).attr('data-filtering','on');
+                $(this).append(`<select class="filtering" data-column="${index+1}"></select>`);
+            });
+        
+            // Cache frequently used elements
+            const $table = $('#listTable');
+            const $tbody = $table.find('tbody');
+            const $filters = $('.filtering');
+
+            // Initialize Select2
+            $filters.select2({
+                width: '100%',
+                placeholder: "All",
+                minimumResultsForSearch: 1
+            });
+
+            // Pre-cache filter configurations
+            const filterConfigs = Array.from($table.find('thead th[data-filtering]'), ($th, index) => ({
+                $select: $($th).find('.filtering'),
+                column: parseInt($($th).find('.filtering').data('column'))
+            }));
+            console.log(filterConfigs);
+
+
+            // Debounce function for performance
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // Optimized update dropdowns
+            const updateDropdowns = () => {
+                const visibleRows = $tbody.find('tr:visible').get();
+                const columnValues = filterConfigs.map(() => new Set());
+
+                // Single pass to collect unique values
+                visibleRows.forEach(row => {
+                    const cells = row.cells;
+                    filterConfigs.forEach((config, index) => {
+                        columnValues[index].add(cells[config.column].textContent);
+                    });
+                });
+
+                // Update each dropdown
+                filterConfigs.forEach((config, index) => {
+                    const $select = config.$select;
+                    const currentValue = $select.val() || "all";
+                    const values = Array.from(columnValues[index]).sort();
+
+                    // Minimize DOM manipulations
+                    const options = [
+                        new Option("All", "all", currentValue === "all", currentValue === "all"),
+                        ...values.map(value => 
+                            new Option(value, value, false, value === currentValue)
+                        )
+                    ];
+                    $select.off('change').empty().append(options).on('change', debouncedFilter);
+                    $select.trigger('change.select2');
+                });
+            };
+
+            // Optimized filter function
+            const filterTable = () => {
+                const filters = filterConfigs
+                    .map(config => {
+                        const value = config.$select.val();
+                        return value && value !== "all" ? { column: config.column, value } : null;
+                    })
+                    .filter(Boolean);
+
+                const rows = $tbody.find('tr').get();
+                
+                // Bulk visibility update
+                rows.forEach(row => {
+                    const cells = row.cells;
+                    const showRow = filters.every(filter => 
+                        cells[filter.column].textContent === filter.value
+                    );
+                    row.style.display = showRow ? '' : 'none';
+                });
+
+                updateDropdowns();
+            };
+
+            // Debounced version for performance
+            const debouncedFilter = debounce(filterTable, 100);
+
+            // Initial setup
+            updateDropdowns();
+            $filters.on('change', debouncedFilter);
+
+            // Cleanup on page unload
+            $(window).on('unload', () => {
+                $filters.off('change');
+                $filters.select2('destroy');
+            });
+        }
+    </script>
+  
+{{POPUP2_END}}

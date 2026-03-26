@@ -1,0 +1,53 @@
+<script>
+     $(document).ready(function() {
+        $('#FilesList').closest('tr').hide();
+        if( $("input[name=param]").val()=='new' ){
+            let btn = document.createElement('button')
+            btn.className = 'btn btn-warning';
+            btn.innerText = 'Save And Create New';
+            btn.onclick = async e => {
+                if( !validateForm($('form[name=editForm]').get(0),0,0,0,0) ){
+                    return false;
+                }else{
+                    let param = $("input[name=param]").val();
+                    let table = $("input[name=table]").val();
+                    let ExtDB4_id = $("input[name=ExtDB4_id]").val();
+                    let ExtDB4_Fld33 = $("input[name=ExtDB4_Fld33]").val();
+                    let ExtDB4_Fld34 = $("input[name=ExtDB4_Fld34]").val();
+                    let ExtDB4_Fld35 = $("input[name=ExtDB4_Fld35]").val();
+                    let ExtDB4_Fld36 = $("select[name=ExtDB4_Fld36]").val();
+                    let ExtDB4_ExtDB3_id = $("input[name=ExtDB4_ExtDB3_id]").val();
+                    let formData = new FormData();
+                        formData.append("param", param);
+                        formData.append("table", table);
+                        formData.append("ExtDB4_id", ExtDB4_id);
+                        formData.append("ExtDB4_Fld33", ExtDB4_Fld33);
+                        formData.append("ExtDB4_Fld34", ExtDB4_Fld34);
+                        formData.append("ExtDB4_Fld35", ExtDB4_Fld35);
+                        formData.append("ExtDB4_Fld36", ExtDB4_Fld36);
+                        formData.append("ExtDB4_ExtDB3_id", ExtDB4_ExtDB3_id);
+                    $.ajax({
+                       url: `/Modules/EXTDB/default.asp?action=save&table=${table}&param=${param}`, 
+                       type: 'POST', data: formData,
+                       processData: false, contentType: false,
+                       success: function(response) {
+                            $("input[name=ExtDB4_id]").val("new");
+                            $("input[name=ExtDB4_Fld33]").val("");
+                            $("input[name=ExtDB4_Fld34]").val("");
+                            $("input[name=ExtDB4_Fld35]").val("");
+                            $("select[name=ExtDB4_Fld36]").val("");
+
+                           bootbox.alert("Record Added. <br>Please add another <b>Contact Distribution</b> or close the form");
+                           $('#btnClearList').click();
+                       },
+                       error: function(xhr, status, error) {
+                           bootbox.alert("Error: " + error.message);
+                           console.log('Error:', error);
+                       }
+                    });
+                }
+            }
+            $('#iframe-footer-btn').parent().append(btn)
+        }
+    })
+</script>

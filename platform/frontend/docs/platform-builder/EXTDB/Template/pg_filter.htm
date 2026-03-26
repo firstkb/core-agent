@@ -1,0 +1,63 @@
+{{POPUP2_BEGIN}}
+
+<script>
+    var wObject = new Object();
+    wObject = parent.wObject;
+    window.returnValue = false;
+    function setSelected(){
+        var val = new Array;
+        var obj = document.filterFrm.elements;
+        var regex = new RegExp("^[a-zA-Z0-9_ .#]+ ?$");
+        if(obj.length>0){
+            for(var i=0;i<obj.length;i++){
+                if (obj[i].value>""&&obj[i].name=="filter") {
+                    if (!regex.test(obj[i].value) ) {
+                        alert("Filter for ["+obj[i].title+"] used wrong symbols!");
+                        return false;
+                    }
+                    if(obj[i].type=='checkbox'){
+                        if(obj[i].checked) val.push(obj[i].getAttribute('fld')+"='"+obj[i].value+"'")
+                    }else{
+                        val.push(obj[i].getAttribute('fld')+"='"+obj[i].value+"'")
+                    }
+                };
+            }
+        }else{
+            val.push(obj.getAttribute('fld')+"='"+obj.value+"'")
+        }
+        wObject.FILTER = val.join(" AND ");
+        parent.wObject = wObject;
+        window.returnValue = true;
+        window.dialogClose();
+    }
+</script>
+
+<form name="filterFrm">
+
+  <TABLE id="listTable" ALIGN="center" CELLPADDING="0" CELLSPACING="0" BORDER="0" WIDTH="98%">
+    <THEAD>
+        <tr>
+            <TD class="t_hd"><b>Field Title:</b>
+            <TD class="t_hd"><b>Field Filter:</b></TD>
+        </tr>
+    </THEAD>
+    <TBODY>
+    <!-- BEGIN tLIST -->
+    <TR>
+            <TD class="t_td"><b>{{FIELD_TITLE}}:</b>
+            <TD class="t_td">{{FIELD_SELECT}}</TD>
+    </TR>
+    <!-- END tLIST -->
+    </TBODY>
+  </TABLE>
+
+    <center>
+        <BUTTON title="Cancel" onclick='window.dialogClose()'><img align=absmiddle src="/Template/images/comm_close.gif"> Cancel</BUTTON>
+        &nbsp; 
+        <BUTTON title="Save" onclick='setSelected()'><img align=absmiddle src="/Template/images/fm.png"> Save</BUTTON>
+    </center>
+  <br>
+    
+</form>
+
+{{POPUP2_END}}

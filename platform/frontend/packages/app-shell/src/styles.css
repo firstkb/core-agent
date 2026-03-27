@@ -517,6 +517,8 @@
 .workspace-shell--rail {
   --workspace-shell-rail-width: 3.75rem;
   --workspace-shell-sidebar-width: 16.5rem;
+  --workspace-shell-content-padding-top: var(--space-6);
+  --workspace-shell-content-padding-bottom: var(--space-6);
   --ui-shell-sidebar-width: calc(var(--workspace-shell-rail-width) + var(--workspace-shell-sidebar-width));
   background: var(--color-bg-canvas);
 }
@@ -1408,21 +1410,32 @@
   transition: box-shadow var(--motion-fast) var(--easing-standard);
 }
 
+.workspace-shell--rail .ui-app-shell__content {
+  padding: var(--workspace-shell-content-padding-top) var(--space-6) var(--workspace-shell-content-padding-bottom);
+}
+
 .workspace-shell--rail .workspace-shell__header.workspace-shell__header--elevated {
   box-shadow: 0 1.1rem 2.4rem -1.65rem rgba(15, 23, 42, 0.22);
 }
 
 .workspace-shell--rail .workspace-shell__header-left {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .workspace-shell--rail .workspace-shell__header-copy {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  align-items: flex-start;
+  gap: 0.1rem;
+  min-width: 0;
+  max-width: min(46vw, 40rem);
 }
 
 .workspace-shell--rail .workspace-shell__header-title {
+  flex: 0 1 auto;
+  width: 100%;
+  min-width: 0;
   font-size: 1.05rem;
   font-weight: var(--font-weight-semibold);
   overflow: hidden;
@@ -1431,7 +1444,14 @@
 }
 
 .workspace-shell--rail .workspace-shell__header-meta {
+  display: block;
+  width: 100%;
+  flex: 0 1 auto;
+  min-width: 0;
   color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workspace-shell--rail .workspace-shell__header-center {
@@ -1701,29 +1721,36 @@
   .workspace-shell--mobile .workspace-shell__mobile-context {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    align-items: flex-start;
+    gap: 0.1rem;
     padding: var(--space-3) var(--space-4) var(--space-3);
   }
 
   .workspace-shell--mobile .workspace-shell__mobile-context .workspace-shell__header-title {
     font-size: var(--font-size-lg);
     line-height: 1.25;
-    display: -webkit-box;
+    display: block;
+    width: 100%;
+    flex: 0 1 auto;
     min-width: 0;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
     overflow: hidden;
-    white-space: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .workspace-shell--mobile .workspace-shell__mobile-context .workspace-shell__header-meta {
+    display: block;
+    width: 100%;
+    flex: 0 1 auto;
     min-width: 0;
     line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .workspace-shell--mobile .workspace-shell__mobile-context--with-meta .workspace-shell__header-title {
     display: block;
-    -webkit-line-clamp: 1;
   }
 
   .workspace-shell--mobile .workspace-shell__mobile-context--with-meta .workspace-shell__header-title,

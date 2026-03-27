@@ -19,6 +19,7 @@ import {
 import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import { renderPlatformBuilderRoutes } from "../features/platform-builder-v2";
 import {
   PublishedAppRoutePage,
 } from "../features/published-app";
@@ -201,6 +202,7 @@ export function App({
             <Route element={<PrivateApp tenantName={tenantBranding.name} />} path="/">
               <Route element={<Navigate replace to="/dashboard" />} index />
               <Route element={<TenantDashboardPage />} path="dashboard" />
+              {renderPlatformBuilderRoutes()}
               <Route element={<PublishedAppRoutePage />} path="app/:routeKey/*" />
               <Route element={<Navigate replace to="/dashboard" />} path="*" />
             </Route>

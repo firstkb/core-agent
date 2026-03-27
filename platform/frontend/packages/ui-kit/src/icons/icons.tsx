@@ -37,6 +37,62 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+export function LockIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <rect height="10" rx="2.25" width="12" x="6" y="10" />
+      <path d="M8.75 10V8a3.25 3.25 0 1 1 6.5 0v2" />
+    </svg>
+  );
+}
+
+export function EyeIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M2.8 12s3.55-5.8 9.2-5.8 9.2 5.8 9.2 5.8-3.55 5.8-9.2 5.8S2.8 12 2.8 12Z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M3.75 3.75 20.25 20.25" />
+      <path d="M10.6 6.38a8.76 8.76 0 0 1 1.4-.12c5.65 0 9.2 5.74 9.2 5.74a16.8 16.8 0 0 1-3.4 3.83" />
+      <path d="M6.3 9.04A16.55 16.55 0 0 0 2.8 12s3.55 5.74 9.2 5.74a9.3 9.3 0 0 0 3.02-.49" />
+      <path d="M10.02 10.02A2.8 2.8 0 0 0 14 13.98" />
+    </svg>
+  );
+}
+
 export function DashboardGridIcon(props: IconProps) {
   return (
     <svg

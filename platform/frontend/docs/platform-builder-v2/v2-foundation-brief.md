@@ -2,77 +2,80 @@
 
 ## Recommendation
 
-Platform Builder V2 should start as a builder workspace entered from the tenant workspace header, not as a tenant sidebar module.
-Its first durable product shape should be two builders:
+Platform Builder V2 should stay app-local in tenant-web and enter from the left rail area, not from a header split-button and not from the tenant sidebar module list.
+Its first durable product shape remains:
 
 1. Forms
 2. Navigation
 
-Forms is the primary builder and the first implementation slice.
-The product baseline should be:
+Forms is still the first implementation slice, but its live scaffold should now match the approved product direction more closely:
 
-- a clear list of data schemas
-- multiple UI schemas under each data schema
-- direct opening of a selected UI schema into a real builder workspace
-- permissions and locking enforced from the first slice
+- one master-detail Forms screen
+- selected object details on the same screen as the object list
+- a separate minimal screen workspace route only when the user opens a specific screen
+- short top-bar titles plus shell meta breadcrumbs
+- simplified visible copy: `Object`, `Screen`, `Structure locked`, `Field locked`, `Can edit screens only`
 
-The current cockpit-style builder UI should remain retired.
-The current typed contract and published-runtime foundation are still worth keeping, but only as technical substrate.
+The scaffold should not present metadata-heavy summary cards, header-entry chrome, or a three-step object-summary-to-workspace flow as the product baseline.
 
 ## Recommended V2 IA
 
 ### Global entry
 
-- Platform Builder enters from a trail bar or workspace-header control wired through the existing `WorkspaceShell` header surface in `platform/frontend/apps/tenant-web/src/app/private-app.tsx`
+- add one `Platform Builder` entry to the tenant left rail area through `WorkspaceShell.railUtilities`
+- remove the live header split-button entry
 - do not restore Platform Builder to `platform/frontend/apps/tenant-web/src/shared/tenant-sidebar-navigation.tsx`
-- the entry opens a compact builder switcher with:
-  - `Forms`
-  - `Navigation`
 
 ### Forms IA
 
-Forms should use a three-step information architecture:
+Forms should use a master-detail model, not three disconnected steps.
 
-1. `Platform Builder / Forms`
-   - primary screen is a data schema index
-   - each data schema row shows name, structural lock state, field count, UI schema count, and ownership summary
-2. `Platform Builder / Forms / {Data Schema}`
-   - selected data schema shows:
-     - structural summary
-     - field list with lock badges
-     - UI schemas grouped under that data schema
-3. `Platform Builder / Forms / {Data Schema} / {UI Schema}`
-   - opens a real builder workspace
-   - workspace composition:
-     - left: schema field palette and layout outline
-     - center: authoring canvas
-     - right: contextual inspector
-     - secondary preview pane or preview mode
+Recommended route shape:
 
-This keeps the primary mental model clear:
+- `/builder/forms`
+  - Forms master-detail screen with object list and empty detail state
+- `/builder/forms/:objectId`
+  - same Forms master-detail screen with one selected object
+- `/builder/forms/:objectId/screens/:screenId`
+  - minimal screen workspace route
 
-- pick a data schema
-- pick one of its UI schemas
-- edit that UI schema in a workspace
+Recommended Forms screen behavior:
+
+- left side: object list
+- right side: selected object detail
+- selected object detail includes:
+  - lock badges
+  - field tags
+  - direct list of screens
+  - small search field above the screen list
+  - `Add screen` scaffold action
+- object list includes `Add object` scaffold action
+
+Primary-screen rules:
+
+- do not emphasize raw field counts
+- do not emphasize owner labels
+- do not emphasize raw screen-count summaries
+- show actual screens directly in the UI area instead
+
+### Screen workspace IA
+
+The separate screen workspace route is still valid, but it should stay visually light for this pass:
+
+- no hero block
+- no inspector-heavy summary chrome
+- small back action
+- lock badges in compact form
+- local workspace placeholder only
 
 ### Navigation IA
 
-Navigation should remain compact and direct:
-
-1. `Platform Builder / Navigation`
-   - editable tree is the main surface
-   - item target selection and access settings live in a secondary panel
-
-Navigation should not start with a separate Module object.
-The first-class concepts should remain:
-
-- `group`
-- `item`
-- `divider`
+Navigation remains the second primary builder, but it is not part of this correction pass.
+The compact target-first direction from the existing V2 brief still stands.
 
 ## Kept Foundation
 
-### Keep active as technical foundation
+Keep active as technical substrate:
 
 - `platform/frontend/packages/platform-builder-core/src/contracts/**`
 - `platform/frontend/packages/platform-builder-core/src/schemas/**`
@@ -83,367 +86,158 @@ The first-class concepts should remain:
 - `platform/frontend/packages/platform-builder-core/src/runtime/validate-draft-snapshot.ts`
 - `platform/frontend/packages/platform-builder-core/src/runtime/validate-published-manifest.ts`
 - `platform/frontend/apps/tenant-web/src/features/published-app/**`
-- the tenant workspace shell entry points in:
+- tenant shell integration seams in:
   - `platform/frontend/apps/tenant-web/src/app/app.tsx`
   - `platform/frontend/apps/tenant-web/src/app/private-app.tsx`
   - `platform/frontend/apps/tenant-web/src/shared/navigation.ts`
 
-### Why these stay
+Why these stay:
 
-- the current contract layer is UI-free and already separates model, navigation, policy, and published-runtime validation
-- the published runtime already proves route resolution, visibility evaluation, and manifest consumption without depending on the retired builder UI
-- the workspace shell already has the correct header surface for a builder entry
-
-### Keep only as technical reference, not as live product baseline
-
-- `platform/frontend/docs/platform-builder-v2/old-code-reference/code-snapshot/tenant-web/src/features/platform-builder/draft/builder-draft-store.ts`
-- `platform/frontend/docs/platform-builder-v2/old-code-reference/code-snapshot/tenant-web/src/features/platform-builder/draft/builder-preview-manifest.ts`
-- `platform/frontend/docs/platform-builder-v2/old-code-reference/code-snapshot/tenant-web/src/features/platform-builder/views/view-builder-state.ts`
-
-These are useful for immutable draft updates, preview adaptation, and layout-tree mutation patterns, but they should be re-homed into app-local V2 modules instead of revived as old builder code.
+- the runtime contracts remain useful substrate
+- validation and runtime resolution remain useful substrate
+- the tenant shell already exposes the rail and header seams needed for the corrected scaffold
 
 ## Retired Surfaces
 
-The following should stay retired as product baseline:
+These should stay retired as the live product baseline:
 
-- builder as a tenant sidebar section
-- cockpit-style hero, diagnostics cards, action rail, and state rail
-- top-level `Access`, `Publish`, `Workflows`, and similar diagnostics-first pages
-- metadata-card-first editing in place of a real builder workspace
-- preview-first and publish-first product framing
-- capability-gate rollout UI and demo allowlist framing
-- old builder-specific CSS shell and page chrome
+- header split-button entry for Platform Builder
+- Forms as a three-step list -> summary -> workspace journey
+- hero blocks on the Forms screen
+- hero blocks on the screen workspace
+- summary-noise cards focused on counts, owners, and admin diagnostics
+- visible `Data Schema` and `UI Schema` copy in the live scaffold
+- cockpit-style builder chrome
 
-The archive under `platform/frontend/docs/platform-builder-v2/old-code-reference/` remains reference material only.
+## Visible Product Language And Technical Mapping
 
-## Schema / UI Model
+### Visible product language
 
-### Product language
+The live scaffold should use:
 
-The authoring model should use product language that is clearer than the current flat registry bundle:
+- `Object`
+- `Screen`
+- `Structure locked`
+- `Field locked`
+- `Can edit screens only`
 
-- `Data Schema`
-- `UI Schema`
-- `Navigation Tree`
+### Technical mapping
 
-### Data schema
+Under the hood, the current runtime substrate is still based on data-schema and view-style contracts.
+That remains acceptable as an internal foundation.
 
-A data schema is the structural contract and ownership boundary.
-It should aggregate:
+Recommended rule:
 
-- entity identity and labels
-- fields
-- relations
-- child collections
-- option sets
-- semantic roles
-- structural ownership
-- schema lock state
-- field lock state
-
-Current technical mapping:
-
-- `EntityDefinition`
-- `FieldDefinition`
-- `RelationDefinition`
-- `ChildCollectionDefinition`
-- `OptionSetDefinition`
-- `SemanticRoleBinding`
-
-### UI schema
-
-A UI schema is one presentation of one data schema.
-It should have its own lifecycle and authorship, separate from structural schema ownership.
-
-Required UI schema attributes:
-
-- `id`
-- `dataSchemaId`
-- `key`
-- `title`
-- `kind`
-  - `form`
-  - `detail`
-  - `list`
-  - `grid`
-  - future variants as needed
-- `channel`
-- `isDefault`
-- `owner mode`
-  - owned
-  - inherited-from-base
-- layout nodes
-- UI-only behavior
-  - default sort
-  - visible columns
-  - filter presets
-  - widget configuration
-  - preview seed metadata
-
-Current technical mapping:
-
-- `ViewDefinition`
-- `ViewLayoutNode`
-
-### Recommended model boundary
-
-Keep the current `platform-builder-core` registry bundle as the runtime and validation substrate.
-Do not let that flat bundle become the V2 product IA.
-
-Recommended authoring boundary:
-
-- app-local Forms authoring state should model data schemas and UI schemas explicitly
-- an adapter layer should translate that authoring model into the existing draft/published contract shape when needed
-
-This preserves current runtime value without forcing the old registry language into the new product.
+- use `Object` and `Screen` in user-facing copy
+- keep runtime contract terms such as `EntityDefinition` and `ViewDefinition` behind local adapters or fixture helpers
 
 ## Permissions / Lock Model
 
-Permissions and locking are core V2 requirements and should be first-class in the Forms foundation.
+Permissions and locking remain core V2 requirements.
+For this scaffold pass, the live UX only needs to show the approved language clearly:
 
-### Roles
+- `Structure locked`
+- `Field locked`
+- `Can edit screens only`
 
-#### Schema owners
+The deeper authoring and enforcement model still remains:
 
-Can:
+- schema owners control structure
+- UI-only authors can work on screens without structural edits
+- field locks remain visible and meaningful
+- readonly users can open workspaces without editing
 
-- create and edit data schema structure
-- add, remove, rename, and retype fields
-- manage relations, child collections, and option sets
-- lock or unlock schema structure
-- lock or unlock individual fields
-- assign UI authors for the schema
-
-Cannot delegate structural changes through UI-only permissions.
-
-#### UI-only authors
-
-Can:
-
-- create UI schemas under an allowed data schema
-- edit UI layout and presentation
-- bind existing fields into UI schemas
-- configure widget and layout behavior allowed by the UI schema
-
-Cannot:
-
-- change field structure
-- add or remove fields from the data schema
-- rename or retype fields
-- change schema or field locks
-
-#### Navigation authors
-
-Can:
-
-- edit the navigation tree
-- reorder nodes
-- change labels, icons, targets, and visibility settings
-
-Cannot:
-
-- change data schema structure
-- bypass schema or field locks
-
-#### Readonly users
-
-Can:
-
-- see schema lists, UI schema lists, and navigation trees if granted visibility
-- open builder workspaces in readonly mode
-- inspect lock state and ownership state
-
-Cannot edit anything.
-
-### Lock rules
-
-#### Schema lock
-
-When schema lock is on:
-
-- only schema owners can change data schema structure
-- UI-only authors can still create and edit UI schemas under that data schema
-- existing UI schemas remain editable unless a separate UI-level restriction is applied later
-
-#### Field lock
-
-When a field lock is on:
-
-- the field remains bindable in UI schemas
-- structural field properties are readonly except for schema owners
-- UI authors may still control presentation-only settings for that field in a UI schema
-- destructive changes such as delete, key change, or type change require unlock or clone-to-new-schema-version
-
-#### Readonly workspace state
-
-When a user lacks edit permission:
-
-- the workspace still opens
-- outline, palette, and inspector show current state
-- editing controls are disabled with explicit permission or lock messaging
-
-### Recommended persistence boundary
-
-Do not overload current published-runtime `PolicySet` objects to carry authoring locks.
-
-Use a separate authoring-side permission model for:
-
-- schema ownership
-- UI authoring rights
-- navigation authoring rights
-- readonly visibility
-- schema lock
-- field locks
-
-Current `PolicySet` and visibility evaluation stay valuable for runtime navigation access, but they are not sufficient as the primary authoring permission system.
+Do not overload runtime visibility policies as the authoring lock model.
 
 ## Navigation Target Model
 
-Navigation should remain compact and target-first.
+No change from the earlier V2 direction:
 
-Recommended target union:
-
-- `ui-schema`
-  - primary target for authored application pages
-- `static-tool`
-  - stable internal tools exposed by the tenant shell
-- `internal-route`
-  - escape hatch for known runtime routes that are not UI schemas
-- `external-link`
-
-Recommended node model:
-
-- `group`
-- `item`
-- `divider`
-
-This preserves the useful compactness of the current `NavigationNode` model while changing the product language from generic `view` targets to explicit UI-schema targets.
+- keep Navigation compact and target-first
+- do not force a separate Module object
+- keep target modeling smaller until Navigation implementation begins
 
 ## First Implementation Slice
 
 ### Slice name
 
-Forms Foundation: schema index, UI schema index, and real builder workspace
+Forms Foundation A: master-detail scaffold correction
 
 ### Goal
 
-Establish the real V2 Forms baseline without implementing backend behavior, publishing, or the Navigation UI yet.
+Make the live tenant-web scaffold reflect the approved product direction before real authoring logic begins.
 
 ### Included in the slice
 
-- Platform Builder entry from the workspace header
-- first route shape:
+- move the Platform Builder live entry into the left rail area
+- remove the header split-button entry
+- use shell `headerTitle` plus `headerMeta`
+- use the corrected Forms route model:
   - `/builder/forms`
-  - `/builder/forms/:dataSchemaId`
-  - `/builder/forms/:dataSchemaId/ui/:uiSchemaId`
-- Forms home screen with:
-  - data schema list
-  - selected data schema details
-  - multiple UI schemas under that data schema
-- route into a real UI schema workspace
-- app-local authoring state seeded from fixtures or mock data
-- builder workspace with:
-  - field palette from the selected data schema
-  - layout outline
-  - canvas
-  - inspector
-  - mock preview
-- first editable node set:
-  - `section`
-  - `group`
-  - `field`
-  - `text`
-  - `divider`
-- permission and lock enforcement for:
-  - schema owners
-  - UI-only authors
-  - field locks
-  - readonly users
+  - `/builder/forms/:objectId`
+  - `/builder/forms/:objectId/screens/:screenId`
+- keep `/builder/forms` and `/builder/forms/:objectId` as one master-detail page
+- retire the standalone object summary page from the live route model
+- replace visible schema/UI-schema copy with object/screen copy
+- remove summary-noise emphasis
+- add a small search field above screens
+- add visible `Add object` and `Add screen` scaffold actions
+- keep the screen workspace route minimal and local-placeholder only
+- update English and Spanish locale strings used by the scaffold
 
 ### Explicitly deferred from the slice
 
-- backend persistence
-- publishing flow
-- runtime diagnostics
-- workflow authoring
-- access dashboards
-- full Navigation builder UI
-- child-collection and subform editing beyond model placeholders
-- advanced list/grid filter editors
+- real canvas behavior
+- drag/drop
+- persistence
+- backend integration
+- real permission enforcement
+- screen creation flow
+- object creation flow
+- Navigation builder implementation
 - shared-package extraction
-
-### Why this is the right first slice
-
-- it matches the approved product direction exactly
-- it creates the real Forms workflow instead of another summary dashboard
-- it proves the critical model boundary between data schemas and multiple UI schemas
-- it forces permissions and locks into the first workspace design instead of treating them as follow-up polish
 
 ## Out Of Scope
 
 - production backend contracts or persistence
-- route publishing or release workflow
-- broad cleanup beyond the already retired builder surfaces
-- detailed Navigation implementation beyond compact target model framing
-- copying code or UI from `EXTDB`, `ezform`, or the retired builder
-- creating a new shared package
+- publish/release workflow
+- broad refactors outside tenant-web and directly conflicting V2 docs
+- copied code or copied UI from `EXTDB`, `ezform`, or the retired builder
 
 ## Concrete File / Module Boundaries
 
-### New app-local feature boundary
+### App-local feature boundary
 
-Add the first V2 slice under tenant-web, not a shared package:
+Keep the scaffold under:
 
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/index.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/routes.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/shell/platform-builder-header-entry.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/shell/platform-builder-shell.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/model/forms-authoring-types.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/model/forms-authoring-fixtures.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/model/forms-permissions.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/model/platform-builder-core-adapter.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/state/forms-authoring-store.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/state/ui-schema-layout.ts`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/pages/forms-home-page.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/pages/ui-schema-workspace-page.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/schema-list-panel.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/ui-schema-list-panel.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/workspace-header.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/field-palette.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/layout-outline.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/builder-canvas.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/inspector-panel.tsx`
-- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/components/mock-preview-panel.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-builder-v2/`
 
-### Limited shell integration touch points
+The live scaffold should remain tenant-web local.
+Do not extract a new shared package for this pass.
 
-Only the following live shell files should change for the first slice:
+### Shell integration touch points
 
-- `platform/frontend/apps/tenant-web/src/app/app.tsx`
-  - add builder routes
+The bounded live integration remains:
+
 - `platform/frontend/apps/tenant-web/src/app/private-app.tsx`
-  - add header entry for Platform Builder
+  - left rail entry
+  - shell `headerMeta`
 - `platform/frontend/apps/tenant-web/src/shared/navigation.ts`
-  - add header-title resolution for builder routes
+  - short titles plus breadcrumb/meta resolution
+- `platform/frontend/apps/tenant-web/src/locales/en.ts`
+- `platform/frontend/apps/tenant-web/src/locales/es.ts`
 
-Do not change:
-
-- `platform/frontend/apps/tenant-web/src/shared/tenant-sidebar-navigation.tsx`
-
-### Existing foundation intentionally reused, not replaced
-
-- `platform/frontend/packages/platform-builder-core/**`
-  - keep as typed contract and validation substrate
-- `platform/frontend/apps/tenant-web/src/features/published-app/**`
-  - keep as runtime/preview reference
-
-For the first slice, avoid edits in those areas unless a narrow adapter or additive contract gap is unavoidable.
+Sidebar navigation should remain unchanged.
 
 ## Reference Notes
 
-The legacy interaction and business-behavior references used for this brief live in:
+Reference usage for this brief remains:
 
-- `platform/frontend/docs/platform-builder-v2/ezform/**`
+- `platform/frontend/docs/platform-builder-v2/old-code-reference/**`
+  - consult only when previous technical behavior is truly needed
 - `platform/frontend/docs/platform-builder-v2/EXTDB/**`
+  - legacy product-behavior reference only
+- `platform/frontend/docs/platform-builder-v2/ezform/**`
+  - interaction reference only
 
-They are useful for ergonomics and hidden product requirements, but they should not be copied forward as code or UI baseline.
+None of these references should become the live scaffold baseline.

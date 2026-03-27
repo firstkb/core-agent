@@ -1,5 +1,7 @@
 export {
   DocumentListIcon,
+  EyeIcon,
+  EyeOffIcon,
   ArrowRightIcon,
   BellIcon,
   BriefcaseIcon,
@@ -17,6 +19,7 @@ export {
   HomeIcon,
   InfoCircleIcon,
   LayersIcon,
+  LockIcon,
   LogOutIcon,
   MenuIcon,
   MapPinIcon,

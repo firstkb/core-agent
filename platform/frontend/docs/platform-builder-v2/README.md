@@ -43,11 +43,9 @@ This is enough for a meaningful Platform Builder V1.
 Do not add many top-level pages unless they are proven necessary.
 The likely shape is:
 
-- one Platform Builder entry in the trail bar or workspace header
-- a dropdown or switcher that opens:
-  - `Forms`
-  - `Navigation`
-  - later, optional supporting surfaces if justified
+- one Platform Builder entry in the left rail area
+- that entry opens `Forms` first
+- later, optional supporting builder surfaces can be added if justified
 
 Platform Builder should not be mixed into the main tenant sidebar as if it were a normal app module.
 It is a builder workspace, not tenant runtime navigation.
@@ -197,8 +195,9 @@ These are mandatory for V2.
 
 ### Forms
 
-- the user lands in a schema-and-UI workflow, not a summary dashboard
-- the selected UI opens into a real builder workspace
+- the user lands in a master-detail object-and-screen workflow, not a summary dashboard
+- the selected object detail stays on the same screen as the object list
+- the selected screen opens into a real builder workspace
 - the workspace centers the composed UI, not metadata cards
 - tree, palette, and inspector support the canvas; they do not replace it
 
@@ -333,4 +332,4 @@ The correct direction is:
 - keep useful contracts and technical learnings
 - reset the product around `Forms` and `Navigation`
 - treat permissions and locking as core design work
-- enter Platform Builder from the trail bar/header, not the tenant sidebar
+- enter Platform Builder from the left rail area, not the tenant sidebar

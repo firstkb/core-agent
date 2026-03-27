@@ -12,7 +12,9 @@ import {
   BuildingOfficeIcon,
   DashboardGridIcon,
   DocumentListIcon,
+  HelpCircleIcon,
   Kbd,
+  LayersIcon,
   Menu,
   MenuContent,
   MenuItem,
@@ -29,8 +31,13 @@ import {
   useNavigate,
 } from "react-router-dom";
 
+import {
+  isPlatformBuilderPath,
+  platformBuilderPaths,
+} from "../features/platform-builder-v2";
 import { offlineSyncStatus } from "../offline/sync-status";
 import {
+  getTenantShellHeaderMeta,
   getTenantShellHeaderTitle,
 } from "../shared/navigation";
 import { TenantSidebarNavigation } from "../shared/tenant-sidebar-navigation";
@@ -41,11 +48,29 @@ import {
 import { TenantBrandImage } from "./tenant-brand-image";
 import "./app.css";
 
+declare global {
+  interface Window {
+    __tenantPlatformBuilderLeaveGuard?: () => boolean | Promise<boolean>;
+  }
+}
+
 type TenantThemeMode = "light" | "dark";
 
 const tenantThemeStorageKey = "tenant-workspace-theme";
 const session = getDemoSession("tenant");
 const appBuild = getAppBuildMetadata();
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable || target.closest("[contenteditable='true']")) {
+    return true;
+  }
+
+  return ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName);
+}
 
 function scrollToDashboardSection(sectionId?: string) {
   if (typeof window === "undefined") {
@@ -116,6 +141,58 @@ export function PrivateApp({
     };
   }, [location.hash, location.pathname]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.shiftKey) {
+        return;
+      }
+
+      if (!event.ctrlKey && !event.metaKey) {
+        return;
+      }
+
+      if (event.key.toLowerCase() !== "k") {
+        return;
+      }
+
+      if (isEditableTarget(event.target)) {
+        return;
+      }
+
+      event.preventDefault();
+      setUtilityPanel("search");
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  async function canLeaveCurrentPlatformBuilderSurface() {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    const guard = window.__tenantPlatformBuilderLeaveGuard;
+    if (!guard) {
+      return true;
+    }
+
+    const result = guard();
+    return typeof result === "boolean" ? result : await result;
+  }
+
+  async function guardedNavigate(nextPath: string | { hash?: string; pathname: string }) {
+    const canLeave = await canLeaveCurrentPlatformBuilderSurface();
+    if (!canLeave) {
+      return;
+    }
+
+    navigate(nextPath);
+  }
+
   function openDashboard(sectionId?: string) {
     const nextHash = sectionId ? `#${sectionId}` : "";
 
@@ -124,7 +201,7 @@ export function PrivateApp({
       return;
     }
 
-    navigate({
+    void guardedNavigate({
       hash: nextHash,
       pathname: "/dashboard",
     });
@@ -212,7 +289,7 @@ export function PrivateApp({
           <button
             aria-label={t("tenant.shell.aria.openWorkspaceSearch")}
             className="workspace-shell__header-search"
-            onClick={() => setUtilityPanel("help")}
+            onClick={() => setUtilityPanel("search")}
             title={t("tenant.shell.searchTitle")}
             type="button"
           >
@@ -225,6 +302,7 @@ export function PrivateApp({
             </Kbd>
           </button>
         }
+        headerMeta={getTenantShellHeaderMeta(t, location.pathname)}
         headerTitle={getTenantShellHeaderTitle(t, location.pathname)}
         layout="rail"
         mobileHeaderBrand={(
@@ -275,6 +353,12 @@ export function PrivateApp({
         railMark={<DashboardGridIcon />}
         railUtilities={[
           {
+            active: isPlatformBuilderPath(location.pathname),
+            icon: <LayersIcon />,
+            label: t("tenant.navigation.platformBuilder.label"),
+            onSelect: () => navigate(platformBuilderPaths.forms),
+          },
+          {
             badge: String(offlineSyncStatus.queuedActions),
             icon: <DocumentListIcon />,
             label: t("tenant.shell.menu.tasksCenter"),
@@ -285,13 +369,20 @@ export function PrivateApp({
             label: t("tenant.shell.menu.favorites"),
             onSelect: () => setUtilityPanel("favorites"),
           },
+          {
+            icon: <HelpCircleIcon />,
+            label: t("tenant.shell.menu.helpCenter"),
+            onSelect: () => setUtilityPanel("help"),
+          },
         ]}
         showHeaderSurfaceMarker={false}
         showRailCollapse
         showSidebarSurfaceMarker={false}
         sidebarNavigationLabel={(
           <TenantSidebarNavigation
-            navigate={(path) => navigate(path)}
+            navigate={(path) => {
+              void guardedNavigate(path);
+            }}
             pathname={location.pathname}
           />
         )}

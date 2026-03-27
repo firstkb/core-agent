@@ -18,16 +18,16 @@ Primary source of truth:
 
 Reference inputs:
 - platform/frontend/docs/platform-builder-v2/old-code-reference/** only if there is a real need to inspect previous technical behavior or extract a proven reusable helper
-- platform/frontend/docs/platform-builder/EXTDB/** as a legacy product-behavior reference for details such as fields, filters, pages, hidden business rules, and operational model gaps; never as code to copy
-- platform/frontend/docs/platform-builder/ezform/** as the main interaction reference for the future Form Builder; use it to study builder flow and editing ergonomics, never as a copy-paste implementation
+- platform/frontend/docs/platform-builder-v2/EXTDB/** as a legacy product-behavior reference for details such as fields, filters, pages, hidden business rules, and operational model gaps; never as code to copy
+- platform/frontend/docs/platform-builder-v2/ezform/** as the main interaction reference for the future Form Builder; use it to study builder flow and editing ergonomics, never as a copy-paste implementation
 - current tenant-web Platform Builder code only as technical reference
 
 Hard rules:
 - do not continue the current cockpit-style Platform Builder UI as the product baseline
 - treat Forms and Navigation as the two primary builders
-- Platform Builder should enter from the trail bar/header, not from the tenant sidebar
+- Platform Builder should enter from the left rail area, not from the tenant sidebar
 - permissions and locking are core product requirements, not follow-up polish
-- the Form Builder must start from a clean list of data schemas and their multiple UI schemas; selecting a UI schema must open a real form builder workspace
+- the Form Builder must start from a clean object list with the selected object detail on the same master-detail screen; selecting a screen must open a minimal real workspace route
 - the Form Builder must support the product model where schema owners may lock schema editing while other users can still create or edit UI schemas
 - field-level locks must be part of the design, not an afterthought
 - Navigation should stay compact and direct; do not force a first-class Module object unless the behavior clearly requires it
@@ -90,19 +90,20 @@ Primary source of truth:
 
 Reference usage rules:
 - platform/frontend/docs/platform-builder-v2/old-code-reference/** may be consulted only when there is a real need to inspect previous technical behavior or reusable helpers
-- platform/frontend/docs/platform-builder/EXTDB/** is a legacy product-behavior reference for details like fields, filters, pages, workflows, and hidden business requirements; do not copy code from it
-- platform/frontend/docs/platform-builder/ezform/** is the main interaction reference for the future Form Builder; study interaction patterns and builder ergonomics, but do not copy-paste code or UI
+- platform/frontend/docs/platform-builder-v2/EXTDB/** is a legacy product-behavior reference for details like fields, filters, pages, workflows, and hidden business requirements; do not copy code from it
+- platform/frontend/docs/platform-builder-v2/ezform/** is the main interaction reference for the future Form Builder; study interaction patterns and builder ergonomics, but do not copy-paste code or UI
 
 Approved product direction:
 - Platform Builder V2 should focus first on two primary builders:
   - Forms
   - Navigation
-- Platform Builder is entered from a trail bar or header control, not from the tenant sidebar
+- Platform Builder is entered from the left rail area, not from the tenant sidebar
 - Forms is the highest-priority builder
 - Forms means:
-  - clear list of data schemas
-  - multiple UI schemas under each data schema
-  - selecting a UI schema opens a real form builder workspace
+  - clear object list
+  - selected object detail on the same master-detail screen
+  - multiple screens under each object
+  - selecting a screen opens a minimal real workspace route
   - structured visual editing
   - room for nested structures, filters, variants, and preview
 - Permissions are core:
@@ -127,6 +128,8 @@ How you must operate:
 5. Explain in 3-6 bullets why this is the next step.
 6. Do not jump straight into broad implementation if planning or clarification is still missing.
 7. If a returned result drifts away from the approved product direction, say so directly and correct the course.
+8. Write your chat responses and the prompts for the owner in Russian.
+9. Write durable Markdown documents and repository artifacts in English.
 
 Prompt design rules:
 - each prompt must have:

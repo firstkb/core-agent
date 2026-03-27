@@ -12,10 +12,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@platform/ui-kit";
+import { useTranslation } from "@platform/i18n";
 
 import { tenantDashboardSectionIds } from "../../pages/dashboard/page";
 
-type TenantRailUtilityPanel = "favorites" | "help" | "tasks";
+type TenantRailUtilityPanel = "favorites" | "help" | "search" | "tasks";
 
 type TenantRailUtilitySheetProps = {
   onOpenChange: (open: boolean) => void;
@@ -38,6 +39,10 @@ const panelCopy: Record<
     description: "Runbooks, mock references, and tenant support notes stay grouped as workspace-level utilities.",
     title: "Help and support",
   },
+  search: {
+    description: "Workspace search and command palette wiring stays separate from Help Center utilities.",
+    title: "Search and commands",
+  },
   tasks: {
     description: "Pinned review notes stay visible as one operator utility while tenant routing remains reduced to a single dashboard route.",
     title: "Tasks",
@@ -49,6 +54,8 @@ export function TenantRailUtilitySheet({
   onScrollToSection,
   panel,
 }: TenantRailUtilitySheetProps) {
+  const { t } = useTranslation();
+
   if (!panel) {
     return null;
   }
@@ -63,8 +70,10 @@ export function TenantRailUtilitySheet({
       <DialogContent className="tenant-web__utility-sheet">
         <DialogHeader>
           <div>
-            <DialogTitle>{panelCopy[panel].title}</DialogTitle>
-            <DialogDescription>{panelCopy[panel].description}</DialogDescription>
+            <DialogTitle>{panel === "search" ? t("tenant.shell.searchPanel.title") : panelCopy[panel].title}</DialogTitle>
+            <DialogDescription>
+              {panel === "search" ? t("tenant.shell.searchPanel.description") : panelCopy[panel].description}
+            </DialogDescription>
           </div>
         </DialogHeader>
 
@@ -183,6 +192,34 @@ export function TenantRailUtilitySheet({
                 <CardContent>
                   <Button onClick={() => handleSelect(tenantDashboardSectionIds.queue)} variant="outline">
                     Open support notes
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          ) : null}
+
+          {panel === "search" ? (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("tenant.shell.searchPanel.primaryCardTitle")}</CardTitle>
+                  <CardDescription>{t("tenant.shell.searchPanel.primaryCardDescription")}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => handleSelect()} variant="outline">
+                    {t("tenant.shell.searchPanel.primaryAction")}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("tenant.shell.searchPanel.secondaryCardTitle")}</CardTitle>
+                  <CardDescription>{t("tenant.shell.searchPanel.secondaryCardDescription")}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.modules)} variant="outline">
+                    {t("tenant.shell.searchPanel.secondaryAction")}
                   </Button>
                 </CardContent>
               </Card>

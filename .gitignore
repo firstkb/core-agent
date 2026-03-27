@@ -9,4 +9,3 @@ platform/*
 !platform/README.md
 !platform/frontend/
 !platform/frontend/**
-docs/*

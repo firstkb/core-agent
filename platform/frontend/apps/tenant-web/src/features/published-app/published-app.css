@@ -1,0 +1,152 @@
+.tenant-published-app__page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  padding-top: var(--space-2);
+}
+
+.tenant-published-app__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: start;
+  padding: clamp(1.5rem, 1.125rem + 1.1vw, 2.25rem);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border-radius: calc(var(--radius-xl) + 0.25rem);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-accent-primary-soft) 86%, transparent), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(149, 216, 232, 0.14), transparent 38%),
+    linear-gradient(
+      140deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 97%, white 3%) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas) 8%) 100%
+    );
+  box-shadow: 0 1.55rem 3.1rem -2.55rem rgba(15, 23, 42, 0.2);
+}
+
+.tenant-published-app__hero-copy,
+.tenant-published-app__hero-actions,
+.tenant-published-app__stack,
+.tenant-published-app__list-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.tenant-published-app__hero-copy {
+  gap: var(--space-3);
+  max-width: 48rem;
+}
+
+.tenant-published-app__hero-actions {
+  gap: var(--space-3);
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.tenant-published-app__eyebrow,
+.tenant-published-app__title,
+.tenant-published-app__description,
+.tenant-published-app__list-title,
+.tenant-published-app__list-meta,
+.tenant-published-app__section-title,
+.tenant-published-app__section-copy {
+  margin: 0;
+}
+
+.tenant-published-app__eyebrow {
+  color: #0f6f83;
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tenant-published-app__title {
+  color: var(--color-text-primary);
+  font-size: clamp(1.7rem, 1.35rem + 1vw, 2.35rem);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.tenant-published-app__description,
+.tenant-published-app__list-meta,
+.tenant-published-app__section-copy {
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.tenant-published-app__badge-row,
+.tenant-published-app__tag-row,
+.tenant-published-app__action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tenant-published-app__detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.95fr);
+  gap: var(--space-4);
+}
+
+.tenant-published-app__stack {
+  gap: var(--space-4);
+}
+
+.tenant-published-app__section-title,
+.tenant-published-app__list-title {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tenant-published-app__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-published-app__list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  border-radius: calc(var(--radius-lg) + 0.125rem);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 95%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-canvas) 12%) 100%
+    );
+}
+
+.tenant-published-app__list-copy {
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.tenant-published-app__empty-surface {
+  padding: var(--space-5);
+  border: 1px dashed color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  border-radius: calc(var(--radius-xl) + 0.125rem);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas) 8%);
+}
+
+@media (max-width: 960px) {
+  .tenant-published-app__hero,
+  .tenant-published-app__detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-published-app__hero-actions {
+    align-items: stretch;
+  }
+
+  .tenant-published-app__list-row {
+    grid-template-columns: 1fr;
+  }
+}

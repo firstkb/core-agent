@@ -1,0 +1,4 @@
+{
+  "extends": "../../tooling/typescript/base-package.json",
+  "include": ["src"]
+}

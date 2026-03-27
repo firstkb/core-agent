@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 
 import {
+  getAppBuildMetadata,
+  LocaleMenuItems,
+  WorkspaceShell,
+} from "@platform/app-shell";
+import { getDemoSession, useAuth } from "@platform/auth-core";
+import { useTranslation } from "@platform/i18n";
+import {
   BellIcon,
   BuildingOfficeIcon,
   DashboardGridIcon,
@@ -17,16 +24,16 @@ import {
   StarIcon,
 } from "@platform/ui-kit";
 import {
-  getAppBuildMetadata,
-  LocaleMenuItems,
-  WorkspaceShell,
-} from "@platform/app-shell";
-import { getDemoSession, useAuth } from "@platform/auth-core";
-import { useTranslation } from "@platform/i18n";
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import { offlineSyncStatus } from "../offline/sync-status";
-import { TenantDashboardPage } from "../pages/dashboard/page";
-import { getTenantNavigation } from "../shared/navigation";
+import {
+  getTenantShellHeaderTitle,
+} from "../shared/navigation";
+import { TenantSidebarNavigation } from "../shared/tenant-sidebar-navigation";
 import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
@@ -57,9 +64,16 @@ function scrollToDashboardSection(sectionId?: string) {
   });
 }
 
-export function PrivateApp() {
+export function PrivateApp({
+  tenantName,
+}: {
+  tenantName?: string;
+}) {
   const { t } = useTranslation();
   const { signOut } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const shellBrand = tenantName?.trim() ? tenantName : t("tenant.shell.brand");
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -87,6 +101,34 @@ export function PrivateApp() {
 
     window.localStorage.setItem(tenantThemeStorageKey, themeMode);
   }, [themeMode]);
+
+  useEffect(() => {
+    if (location.pathname !== "/dashboard") {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      scrollToDashboardSection(location.hash ? location.hash.slice(1) : undefined);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [location.hash, location.pathname]);
+
+  function openDashboard(sectionId?: string) {
+    const nextHash = sectionId ? `#${sectionId}` : "";
+
+    if (location.pathname === "/dashboard" && location.hash === nextHash) {
+      scrollToDashboardSection(sectionId);
+      return;
+    }
+
+    navigate({
+      hash: nextHash,
+      pathname: "/dashboard",
+    });
+  }
 
   function renderProfileMenuItems() {
     return (
@@ -117,135 +159,7 @@ export function PrivateApp() {
   return (
     <>
       <WorkspaceShell
-        brand={t("tenant.shell.brand")}
-        layout="rail"
-        showHeaderSurfaceMarker={false}
-        showSidebarSurfaceMarker={false}
-        surfaceIcon={<BuildingOfficeIcon />}
-        surfaceLabel={t("tenant.shell.surfaceLabel")}
-        surfaceTone="workspace"
-        railBottom={
-          <div className="workspace-shell__rail-bottom-block">
-            <div className="workspace-shell__rail-status">
-              <span className="workspace-shell__rail-status-label">{appBuild.env}</span>
-              <span className="workspace-shell__rail-status-meta">v{appBuild.version}</span>
-            </div>
-          </div>
-        }
-        railBottomCollapsed={
-          <Menu align="end">
-            <MenuTrigger>
-              <button
-                aria-label={t("tenant.shell.aria.openUserMenu")}
-                className="workspace-shell__header-profile-trigger workspace-shell__rail-user-trigger"
-                type="button"
-              >
-                <span className="workspace-shell__header-profile-initial">
-                  {session.displayName.slice(0, 1).toUpperCase()}
-                </span>
-              </button>
-            </MenuTrigger>
-            <MenuContent className="workspace-shell__header-menu workspace-shell__header-menu--profile">
-              {renderProfileMenuItems()}
-            </MenuContent>
-          </Menu>
-        }
-        railBrandLabel={t("tenant.navigation.dashboard.label")}
-        railBrandOnSelect={() => scrollToDashboardSection()}
-        railMark={<DashboardGridIcon />}
-        railUtilities={[
-          {
-            badge: String(offlineSyncStatus.queuedActions),
-            icon: <DocumentListIcon />,
-            label: t("tenant.shell.menu.tasksCenter"),
-            onSelect: () => setUtilityPanel("tasks"),
-          },
-          {
-            icon: <StarIcon />,
-            label: t("tenant.shell.menu.favorites"),
-            onSelect: () => setUtilityPanel("favorites"),
-          },
-        ]}
-        showRailCollapse
-        sidebarFooter={
-          <Menu align="end">
-            <MenuTrigger>
-              <button
-                aria-label={t("tenant.shell.aria.openUserMenu")}
-                className="workspace-shell__sidebar-user"
-                type="button"
-              >
-                <div
-                  aria-hidden="true"
-                  className="workspace-shell__sidebar-user-avatar"
-                >
-                  {session.displayName.slice(0, 1).toUpperCase()}
-                </div>
-                <div className="workspace-shell__sidebar-user-copy">
-                  <span className="workspace-shell__sidebar-user-name">{session.displayName}</span>
-                  <span className="workspace-shell__sidebar-user-email">{session.email}</span>
-                </div>
-              </button>
-            </MenuTrigger>
-            <MenuContent className="workspace-shell__header-menu workspace-shell__header-menu--profile">
-              {renderProfileMenuItems()}
-            </MenuContent>
-          </Menu>
-        }
-        mobileHeaderBrand={
-          <div className="workspace-shell__mobile-logo-lockup">
-            <TenantBrandImage
-              alt="Tenant Workspace"
-              className="workspace-shell__brand-logo workspace-shell__brand-logo--mobile workspace-shell__brand-logo--dark"
-              fallbackSrc="/assets/logo-dark.svg"
-              primarySrc="/tenant/logo-dark.svg"
-            />
-            <TenantBrandImage
-              alt="Tenant Workspace"
-              className="workspace-shell__brand-logo workspace-shell__brand-logo--mobile workspace-shell__brand-logo--light"
-              fallbackSrc="/assets/logo-light.svg"
-              primarySrc="/tenant/logo-light.svg"
-            />
-          </div>
-        }
-        sidebarHeader={
-          <div className="workspace-shell__sidebar-logo-lockup">
-            <TenantBrandImage
-              alt="Tenant Workspace"
-              className="workspace-shell__brand-logo workspace-shell__brand-logo--sidebar workspace-shell__brand-logo--dark"
-              fallbackSrc="/assets/logo-dark.svg"
-              primarySrc="/tenant/logo-dark.svg"
-            />
-            <TenantBrandImage
-              alt="Tenant Workspace"
-              className="workspace-shell__brand-logo workspace-shell__brand-logo--sidebar workspace-shell__brand-logo--light"
-              fallbackSrc="/assets/logo-light.svg"
-              primarySrc="/tenant/logo-light.svg"
-            />
-          </div>
-        }
-        navigation={getTenantNavigation(t).map((item) => ({
-          ...item,
-          onNavigate: () => scrollToDashboardSection(),
-        }))}
-        headerTitle={t("tenant.navigation.dashboard.headerTitle")}
-        headerCenter={
-          <button
-            aria-label={t("tenant.shell.aria.openWorkspaceSearch")}
-            className="workspace-shell__header-search"
-            onClick={() => scrollToDashboardSection()}
-            title={t("tenant.shell.searchTitle")}
-            type="button"
-          >
-            <span className="workspace-shell__header-search-copy">
-              <SearchIcon className="workspace-shell__header-search-icon" />
-              <span className="workspace-shell__header-search-label">{t("tenant.shell.searchPlaceholder")}</span>
-            </span>
-            <Kbd className="workspace-shell__header-search-shortcut" size="sm">
-              Ctrl K
-            </Kbd>
-          </button>
-        }
+        brand={shellBrand}
         headerActions={
           <div className="workspace-shell__header-utility-bar">
             <Menu align="end">
@@ -260,7 +174,7 @@ export function PrivateApp() {
               </MenuTrigger>
               <MenuContent className="workspace-shell__header-menu">
                 <MenuLabel>{t("tenant.shell.actionsLabel")}</MenuLabel>
-                <MenuItem onClick={() => scrollToDashboardSection()}>{t("tenant.shell.menu.openDashboard")}</MenuItem>
+                <MenuItem onClick={() => openDashboard()}>{t("tenant.shell.menu.openDashboard")}</MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("tenant.shell.menu.tasksCenter")}</MenuItem>
                 <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("tenant.shell.menu.reviewFavorites")}</MenuItem>
               </MenuContent>
@@ -294,8 +208,139 @@ export function PrivateApp() {
             </Menu>
           </div>
         }
+        headerCenter={
+          <button
+            aria-label={t("tenant.shell.aria.openWorkspaceSearch")}
+            className="workspace-shell__header-search"
+            onClick={() => setUtilityPanel("help")}
+            title={t("tenant.shell.searchTitle")}
+            type="button"
+          >
+            <span className="workspace-shell__header-search-copy">
+              <SearchIcon className="workspace-shell__header-search-icon" />
+              <span className="workspace-shell__header-search-label">{t("tenant.shell.searchPlaceholder")}</span>
+            </span>
+            <Kbd className="workspace-shell__header-search-shortcut" size="sm">
+              Ctrl K
+            </Kbd>
+          </button>
+        }
+        headerTitle={getTenantShellHeaderTitle(t, location.pathname)}
+        layout="rail"
+        mobileHeaderBrand={(
+          <div className="workspace-shell__mobile-logo-lockup">
+            <TenantBrandImage
+              alt="Tenant Workspace"
+              className="workspace-shell__brand-logo workspace-shell__brand-logo--mobile workspace-shell__brand-logo--dark"
+              fallbackSrc="/assets/logo-dark.svg"
+              primarySrc="/tenant/logo-dark.svg"
+            />
+            <TenantBrandImage
+              alt="Tenant Workspace"
+              className="workspace-shell__brand-logo workspace-shell__brand-logo--mobile workspace-shell__brand-logo--light"
+              fallbackSrc="/assets/logo-light.svg"
+              primarySrc="/tenant/logo-light.svg"
+            />
+          </div>
+        )}
+        navigation={[]}
+        railBottom={(
+          <div className="workspace-shell__rail-bottom-block">
+            <div className="workspace-shell__rail-status">
+              <span className="workspace-shell__rail-status-label">{appBuild.env}</span>
+              <span className="workspace-shell__rail-status-meta">v{appBuild.version}</span>
+            </div>
+          </div>
+        )}
+        railBottomCollapsed={(
+          <Menu align="end">
+            <MenuTrigger>
+              <button
+                aria-label={t("tenant.shell.aria.openUserMenu")}
+                className="workspace-shell__header-profile-trigger workspace-shell__rail-user-trigger"
+                type="button"
+              >
+                <span className="workspace-shell__header-profile-initial">
+                  {session.displayName.slice(0, 1).toUpperCase()}
+                </span>
+              </button>
+            </MenuTrigger>
+            <MenuContent className="workspace-shell__header-menu workspace-shell__header-menu--profile">
+              {renderProfileMenuItems()}
+            </MenuContent>
+          </Menu>
+        )}
+        railBrandLabel={t("tenant.navigation.dashboard.label")}
+        railBrandOnSelect={() => openDashboard()}
+        railMark={<DashboardGridIcon />}
+        railUtilities={[
+          {
+            badge: String(offlineSyncStatus.queuedActions),
+            icon: <DocumentListIcon />,
+            label: t("tenant.shell.menu.tasksCenter"),
+            onSelect: () => setUtilityPanel("tasks"),
+          },
+          {
+            icon: <StarIcon />,
+            label: t("tenant.shell.menu.favorites"),
+            onSelect: () => setUtilityPanel("favorites"),
+          },
+        ]}
+        showHeaderSurfaceMarker={false}
+        showRailCollapse
+        showSidebarSurfaceMarker={false}
+        sidebarNavigationLabel={(
+          <TenantSidebarNavigation
+            navigate={(path) => navigate(path)}
+            pathname={location.pathname}
+          />
+        )}
+        sidebarFooter={(
+          <Menu align="end">
+            <MenuTrigger>
+              <button
+                aria-label={t("tenant.shell.aria.openUserMenu")}
+                className="workspace-shell__sidebar-user"
+                type="button"
+              >
+                <div
+                  aria-hidden="true"
+                  className="workspace-shell__sidebar-user-avatar"
+                >
+                  {session.displayName.slice(0, 1).toUpperCase()}
+                </div>
+                <div className="workspace-shell__sidebar-user-copy">
+                  <span className="workspace-shell__sidebar-user-name">{session.displayName}</span>
+                  <span className="workspace-shell__sidebar-user-email">{session.email}</span>
+                </div>
+              </button>
+            </MenuTrigger>
+            <MenuContent className="workspace-shell__header-menu workspace-shell__header-menu--profile">
+              {renderProfileMenuItems()}
+            </MenuContent>
+          </Menu>
+        )}
+        sidebarHeader={(
+          <div className="workspace-shell__sidebar-logo-lockup">
+            <TenantBrandImage
+              alt="Tenant Workspace"
+              className="workspace-shell__brand-logo workspace-shell__brand-logo--sidebar workspace-shell__brand-logo--dark"
+              fallbackSrc="/assets/logo-dark.svg"
+              primarySrc="/tenant/logo-dark.svg"
+            />
+            <TenantBrandImage
+              alt="Tenant Workspace"
+              className="workspace-shell__brand-logo workspace-shell__brand-logo--sidebar workspace-shell__brand-logo--light"
+              fallbackSrc="/assets/logo-light.svg"
+              primarySrc="/tenant/logo-light.svg"
+            />
+          </div>
+        )}
+        surfaceIcon={<BuildingOfficeIcon />}
+        surfaceLabel={t("tenant.shell.surfaceLabel")}
+        surfaceTone="workspace"
       >
-        <TenantDashboardPage />
+        <Outlet />
       </WorkspaceShell>
 
       <TenantRailUtilitySheet
@@ -304,7 +349,7 @@ export function PrivateApp() {
             setUtilityPanel(null);
           }
         }}
-        onScrollToSection={(sectionId) => scrollToDashboardSection(sectionId)}
+        onScrollToSection={(sectionId) => openDashboard(sectionId)}
         panel={utilityPanel}
       />
     </>

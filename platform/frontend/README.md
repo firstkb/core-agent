@@ -16,6 +16,7 @@ Canonical frontend workspace for the multi-tenant platform.
 - `packages/tenant-core`
 - `packages/app-shell`
 - `packages/forms`
+- `packages/platform-builder-core`
 
 ## Docs
 

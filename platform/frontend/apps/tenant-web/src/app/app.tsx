@@ -19,6 +19,10 @@ import {
 import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import {
+  PublishedAppRoutePage,
+} from "../features/published-app";
+import { TenantDashboardPage } from "../pages/dashboard/page";
 import { PrivateApp } from "./private-app";
 import { TenantBrandImage } from "./tenant-brand-image";
 
@@ -193,10 +197,13 @@ export function App({
       authenticated={
         profileReady ? (
           <Routes>
-            <Route element={<Navigate replace to="/dashboard" />} path="/" />
             <Route element={<Navigate replace to="/dashboard" />} path="/sign-in" />
-            <Route element={<PrivateApp />} path="/dashboard" />
-            <Route element={<Navigate replace to="/dashboard" />} path="*" />
+            <Route element={<PrivateApp tenantName={tenantBranding.name} />} path="/">
+              <Route element={<Navigate replace to="/dashboard" />} index />
+              <Route element={<TenantDashboardPage />} path="dashboard" />
+              <Route element={<PublishedAppRoutePage />} path="app/:routeKey/*" />
+              <Route element={<Navigate replace to="/dashboard" />} path="*" />
+            </Route>
           </Routes>
         ) : (
           <TenantBootstrapLoader

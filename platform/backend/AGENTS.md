@@ -52,11 +52,11 @@ For non-trivial backend work, cover as applicable:
 
 ## Backend commands
 Replace these placeholders with real repo commands:
-- BACKEND_TEST = <replace me>
-- BACKEND_BUILD = <replace me>
-- BACKEND_LINT = <replace me>
-- BACKEND_MIGRATE = <replace me>
-- BACKEND_SEED = <replace me>
+- BACKEND_TEST = `go test ./...`
+- BACKEND_BUILD = `go build ./cmd/...`
+- BACKEND_LINT = `go test ./...`
+- BACKEND_MIGRATE = `go run ./cmd/migrate --env ./env/migrate.local.env`
+- BACKEND_SEED = `psql -d postgres -f ./seeds/local/001_create_databases.sql` then `psql -d 108-master -f ./seeds/local/010_master_seed.sql` and `psql -d 108-sandbox -f ./seeds/local/020_sandbox_tenant_seed.sql` plus `psql -d 108-demo -f ./seeds/local/021_demo_tenant_seed.sql`
 
 ## Backend summary format
 - Goal

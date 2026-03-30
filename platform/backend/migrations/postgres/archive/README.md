@@ -1,40 +1,21 @@
-# Archived migrations
+# Archived tenant migrations
 
-Этот каталог предназначен для **архива старых миграций**, которые:
+This directory is part of the active migration layout.
 
-- Уже «запакованы» в golden schema (`bundle/app_schema_full.sql`), и
-- Больше не должны выполняться `ApplyAll` на новых деплоях.
+Purpose:
 
-## Правила
+- store future tenant migrations that were already folded into the current full tenant bundle
+- keep the active `tenant/` directory focused on the current forward migration chain
+- remain part of the tenant bundle input when `bundle/tenant_schema_full.sql` is regenerated
 
-- **Активные** миграции, которые должны применяться ко всем app-базам — лежат в `../app/`.
-- Когда миграция становится частью bundle и больше не нужна для инкрементального применения:
-  - её можно **вручную** перенести из `../app/` в этот каталог,
-  - Runner с `MigrationsDir = src/migrations/postgres/app` её больше не увидит.
+Rules:
 
-## Когда архивировать?
+- new tenant migrations are created in `../tenant/`
+- after a tenant migration is included in the approved full tenant build and no longer needs to run incrementally on live environments, it may be moved here
+- this directory must stay empty or near-empty at the clean-start phase
 
-Миграцию можно переместить в архив когда:
+Important:
 
-1. ✅ Миграция применена ко **всем существующим базам** (проверить через `schema_migrations`)
-2. ✅ Миграция включена в `bundle/app_schema_full.sql` (перегенерировать bundle после архивации)
-3. ✅ Нет новых баз, которые ещё не получили эту миграцию
-
-## Процесс архивации (ручной)
-
-```bash
-# 1. Проверить статус миграции во всех базах
-# 2. Переместить файл
-mv src/migrations/postgres/app/XXX_migration.sql src/migrations/postgres/archive/
-
-# 3. Перегенерировать bundle
-task schema-bundle
-
-# 4. Закоммитить изменения
-```
-
-**Примечание:** Архивация — ручной процесс. Автоматизация возможна, но требует осторожности.
-
-Файлы здесь служат **историей изменений** схемы, но не участвуют в автоматическом прогоне.
-
-
+- this is not the legacy SQL dump storage
+- old historical SQL reference was moved to `docs/legacy/postgres-archive/`
+- only future archive-worthy tenant migrations should live here

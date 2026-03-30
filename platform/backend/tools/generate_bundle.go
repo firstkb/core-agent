@@ -12,187 +12,169 @@ import (
 	"time"
 )
 
-const (
-	archiveDir = "src/migrations/postgres/archive"
-	appDir     = "src/migrations/postgres/app"
-	bundlePath = "bundle/app_schema_full.sql"
-)
+type bundleConfig struct {
+	Name       string
+	SourceDirs []string
+	OutputPath string
+	Required   []bundleRequirement
+}
 
-// Migration represents a migration file to include in the bundle.
-type Migration struct {
-	Version string // e.g., "010_app_template"
-	Name    string // full filename
-	Path    string // full path to file
-	Source  string // "archive" or "app"
+type bundleRequirement struct {
+	Name     string
+	Patterns []string
+}
+
+type migration struct {
+	Version string
+	Name    string
+	Path    string
 }
 
 func main() {
-	if err := generateBundle(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	configs := []bundleConfig{
+		{
+			Name:       "tenant_schema_full.sql",
+			SourceDirs: []string{"migrations/postgres/archive", "migrations/postgres/tenant"},
+			OutputPath: "bundle/tenant_schema_full.sql",
+			Required: []bundleRequirement{
+				{Name: "users table", Patterns: []string{"create table if not exists users", "tenant_id"}},
+				{Name: "company table", Patterns: []string{"create table if not exists company", "company_tenant_id"}},
+				{Name: "public code table", Patterns: []string{"create table if not exists public_code"}},
+				{Name: "events table", Patterns: []string{"create table if not exists events", "events_tenant_id"}},
+			},
+		},
 	}
-	fmt.Printf("✓ Generated bundle: %s\n", bundlePath)
+
+	for _, cfg := range configs {
+		if err := generateBundle(cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "Error generating %s: %v\n", cfg.Name, err)
+			os.Exit(1)
+		}
+	}
+
+	outputs := make([]string, 0, len(configs))
+	for _, cfg := range configs {
+		outputs = append(outputs, cfg.OutputPath)
+	}
+	fmt.Printf("✓ Generated bundles: %s\n", strings.Join(outputs, ", "))
 }
 
-func generateBundle() error {
-	// Load migrations from archive and app directories
-	migrations, err := loadMigrations()
+func generateBundle(cfg bundleConfig) error {
+	migrations, err := loadMigrationsFromDirs(cfg.SourceDirs)
 	if err != nil {
-		return fmt.Errorf("load migrations: %w", err)
+		return fmt.Errorf("load migrations from %v: %w", cfg.SourceDirs, err)
 	}
-
 	if len(migrations) == 0 {
-		return fmt.Errorf("no migrations found in %s and %s", archiveDir, appDir)
+		return fmt.Errorf("no migrations found in %v", cfg.SourceDirs)
 	}
 
-	// Sort by version (filename)
 	sort.Slice(migrations, func(i, j int) bool {
 		return migrations[i].Name < migrations[j].Name
 	})
 
-	// Read and concatenate migration files
-	var bundleContent strings.Builder
-	var migrationVersions []string
+	var b strings.Builder
+	var versions []string
 
-	// Write header
-	writeHeader(&bundleContent, migrations)
+	writeHeader(&b, cfg, migrations)
 
-	// Write each migration
 	for _, m := range migrations {
 		content, err := os.ReadFile(m.Path)
 		if err != nil {
 			return fmt.Errorf("read migration %s: %w", m.Path, err)
 		}
-
-		// Add migration marker
-		bundleContent.WriteString("\n-- ============================================\n")
-		bundleContent.WriteString(fmt.Sprintf("-- Migration: %s (%s)\n", m.Name, m.Source))
-		bundleContent.WriteString("-- ============================================\n\n")
-		bundleContent.WriteString(string(content))
-		bundleContent.WriteString("\n")
-
-		migrationVersions = append(migrationVersions, m.Version)
+		b.WriteString("\n-- ============================================\n")
+		b.WriteString(fmt.Sprintf("-- Migration: %s\n", m.Name))
+		b.WriteString("-- ============================================\n\n")
+		b.WriteString(string(content))
+		b.WriteString("\n")
+		versions = append(versions, m.Version)
 	}
 
-	// Write footer with metadata
-	writeFooter(&bundleContent, migrationVersions)
+	writeFooter(&b, versions)
 
-	// Calculate checksum
-	contentBytes := []byte(bundleContent.String())
+	contentBytes := []byte(b.String())
 	checksum := sha256.Sum256(contentBytes)
-	checksumHex := hex.EncodeToString(checksum[:])
+	finalContent := strings.ReplaceAll(b.String(), "{{CHECKSUM}}", hex.EncodeToString(checksum[:]))
 
-	// Replace placeholder in footer
-	finalContent := strings.ReplaceAll(
-		bundleContent.String(),
-		"{{CHECKSUM}}",
-		checksumHex,
-	)
-
-	// Ensure bundle directory exists
-	if err := os.MkdirAll(filepath.Dir(bundlePath), 0755); err != nil {
-		return fmt.Errorf("create bundle directory: %w", err)
+	if err := os.MkdirAll(filepath.Dir(cfg.OutputPath), 0755); err != nil {
+		return fmt.Errorf("create bundle dir: %w", err)
 	}
-
-	// Write bundle file
-	if err := os.WriteFile(bundlePath, []byte(finalContent), 0644); err != nil {
+	if err := os.WriteFile(cfg.OutputPath, []byte(finalContent), 0644); err != nil {
 		return fmt.Errorf("write bundle: %w", err)
 	}
-
-	// Validate bundle (check for required objects)
-	if err := validateBundle(finalContent); err != nil {
+	if err := validateBundle(cfg, finalContent); err != nil {
 		return fmt.Errorf("validate bundle: %w", err)
 	}
 
 	fmt.Printf("Bundle generated successfully:\n")
-	fmt.Printf("  - Path: %s\n", bundlePath)
+	fmt.Printf("  - Path: %s\n", cfg.OutputPath)
 	fmt.Printf("  - Migrations: %d\n", len(migrations))
-	fmt.Printf("  - Checksum: %s\n", checksumHex)
+	fmt.Printf("  - Checksum: %s\n", hex.EncodeToString(checksum[:]))
 	fmt.Printf("  - Size: %d bytes\n", len(finalContent))
 
 	return nil
 }
 
-func loadMigrations() ([]Migration, error) {
-	var migrations []Migration
+func loadMigrationsFromDirs(dirs []string) ([]migration, error) {
+	var migrations []migration
+	seen := make(map[string]string)
 
-	// Load from archive directory
-	archiveMigrations, err := loadMigrationsFromDir(archiveDir, "archive")
-	if err != nil {
-		return nil, fmt.Errorf("load archive migrations: %w", err)
-	}
-	migrations = append(migrations, archiveMigrations...)
+	for _, dir := range dirs {
+		if strings.TrimSpace(dir) == "" {
+			continue
+		}
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			continue
+		}
 
-	// Load from app directory
-	appMigrations, err := loadMigrationsFromDir(appDir, "app")
-	if err != nil {
-		return nil, fmt.Errorf("load app migrations: %w", err)
+		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(d.Name(), ".sql") {
+				return nil
+			}
+			if strings.HasPrefix(strings.ToLower(d.Name()), "readme") {
+				return nil
+			}
+
+			version := strings.TrimSuffix(d.Name(), ".sql")
+			if existing, ok := seen[version]; ok {
+				return fmt.Errorf("duplicate migration version %q in %s and %s", version, existing, path)
+			}
+			seen[version] = path
+
+			migrations = append(migrations, migration{
+				Version: version,
+				Name:    d.Name(),
+				Path:    path,
+			})
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
-	migrations = append(migrations, appMigrations...)
 
 	return migrations, nil
 }
 
-func loadMigrationsFromDir(dir, source string) ([]Migration, error) {
-	var migrations []Migration
-
-	// Check if directory exists
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		// Directory doesn't exist, return empty (not an error)
-		return migrations, nil
-	}
-
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if !strings.HasSuffix(d.Name(), ".sql") {
-			return nil
-		}
-
-		// Skip README and other non-migration files
-		if strings.HasPrefix(strings.ToLower(d.Name()), "readme") {
-			return nil
-		}
-
-		version := strings.TrimSuffix(d.Name(), ".sql")
-		migrations = append(migrations, Migration{
-			Version: version,
-			Name:    d.Name(),
-			Path:    path,
-			Source:  source,
-		})
-
-		return nil
-	})
-
-	return migrations, err
-}
-
-func writeHeader(b *strings.Builder, migrations []Migration) {
+func writeHeader(b *strings.Builder, cfg bundleConfig, migrations []migration) {
 	b.WriteString("-- ============================================\n")
-	b.WriteString("-- Golden Schema Bundle: app_schema_full.sql\n")
+	b.WriteString(fmt.Sprintf("-- Golden Schema Bundle: %s\n", cfg.Name))
 	b.WriteString("-- ============================================\n")
 	b.WriteString("--\n")
-	b.WriteString("-- This file contains all app database migrations\n")
-	b.WriteString("-- concatenated in order for fast database provisioning.\n")
-	b.WriteString("--\n")
-	b.WriteString("-- Generated: " + time.Now().Format(time.RFC3339) + "\n")
-	b.WriteString("-- Source: migrations from archive/ and app/ directories\n")
-	b.WriteString("--\n")
-	b.WriteString("-- Usage:\n")
-	b.WriteString("--   1. CREATE DATABASE new_db;\n")
-	b.WriteString("--   2. psql -d new_db -f bundle/app_schema_full.sql\n")
-	b.WriteString("--   3. Run migrations to catch up if bundle is behind HEAD\n")
+	b.WriteString(fmt.Sprintf("-- Generated: %s\n", time.Now().Format(time.RFC3339)))
+	b.WriteString(fmt.Sprintf("-- Source: migrations from %s\n", strings.Join(cfg.SourceDirs, ", ")))
 	b.WriteString("--\n")
 	b.WriteString("-- Checksum: {{CHECKSUM}}\n")
 	b.WriteString("--\n")
 	b.WriteString("-- Migrations included:\n")
 	for _, m := range migrations {
-		b.WriteString(fmt.Sprintf("--   - %s (%s)\n", m.Name, m.Source))
+		b.WriteString(fmt.Sprintf("--   - %s\n", m.Name))
 	}
 	b.WriteString("-- ============================================\n\n")
 }
@@ -201,72 +183,30 @@ func writeFooter(b *strings.Builder, versions []string) {
 	b.WriteString("\n-- ============================================\n")
 	b.WriteString("-- Bundle End\n")
 	b.WriteString("-- ============================================\n")
-	b.WriteString("--\n")
-	b.WriteString("-- Total migrations: " + fmt.Sprintf("%d", len(versions)) + "\n")
+	b.WriteString(fmt.Sprintf("-- Total migrations: %d\n", len(versions)))
 	b.WriteString("-- Versions: " + strings.Join(versions, ", ") + "\n")
-	b.WriteString("--\n")
-	b.WriteString("-- After applying this bundle, check schema_migrations table\n")
-	b.WriteString("-- and apply any additional migrations if needed.\n")
 	b.WriteString("-- ============================================\n")
 }
 
-// validateBundle checks that the bundle contains required database objects.
-func validateBundle(content string) error {
-	required := []struct {
-		name        string
-		description string
-		patterns    []string
-	}{
-		{
-			name:        "users table",
-			description: "CREATE TABLE.*users",
-			patterns:    []string{"CREATE TABLE", "users", "tenant_id"},
-		},
-		{
-			name:        "contacts table",
-			description: "CREATE TABLE.*contacts",
-			patterns:    []string{"CREATE TABLE", "contacts", "tenant_id"},
-		},
-		{
-			name:        "public_code table",
-			description: "CREATE TABLE.*public_code",
-			patterns:    []string{"CREATE TABLE", "public_code"},
-		},
-		/*{
-			name:        "idempotency_keys table",
-			description: "CREATE TABLE.*idempotency_keys",
-			patterns:    []string{"CREATE TABLE", "idempotency_keys"},
-		},*/
-		{
-			name:        "RLS policies",
-			description: "ROW LEVEL SECURITY",
-			patterns:    []string{"ROW LEVEL SECURITY", "ENABLE ROW LEVEL SECURITY"},
-		},
-		{
-			name:        "citext extension",
-			description: "CREATE EXTENSION.*citext",
-			patterns:    []string{"CREATE EXTENSION", "citext"},
-		},
-	}
-
+func validateBundle(cfg bundleConfig, content string) error {
 	contentLower := strings.ToLower(content)
 	var missing []string
 
-	for _, req := range required {
+	for _, req := range cfg.Required {
 		found := true
-		for _, pattern := range req.patterns {
+		for _, pattern := range req.Patterns {
 			if !strings.Contains(contentLower, strings.ToLower(pattern)) {
 				found = false
 				break
 			}
 		}
 		if !found {
-			missing = append(missing, req.name+" ("+req.description+")")
+			missing = append(missing, req.Name)
 		}
 	}
 
 	if len(missing) > 0 {
-		return fmt.Errorf("bundle validation failed: missing required objects:\n  - %s", strings.Join(missing, "\n  - "))
+		return fmt.Errorf("missing required objects: %s", strings.Join(missing, ", "))
 	}
 
 	return nil

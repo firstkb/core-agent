@@ -4,7 +4,7 @@ vars:
   BUILD_VERSION: "1.0.17"
   BUILD_TIME:
     sh: date +%s
-  BINARY_NAME: "scapi"
+  BINARY_NAME: "tenantapi"
   BINARY_PATH: "/app/bin/{{.BINARY_NAME}}"
   LDFLAGS: '-X main.Version={{.BUILD_VERSION}} -X main.Build={{.BUILD_TIME}} -extldflags "-static"'
 
@@ -18,14 +18,14 @@ tasks:
     desc: Checking directory contents
     cmds:
       - ls -la /app/src
-      - ls -la /app/src/cmd/scapi
+      - ls -la /app/src/cmd/api-tenant
 
   build:
     desc: Building a Go project
     cmds:
       - task: install-deps
       #- task: check-dir
-      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '{{.LDFLAGS}}' -o /app/bin/{{.BINARY_NAME}} /app/src/cmd/scapi
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '{{.LDFLAGS}}' -o /app/bin/{{.BINARY_NAME}} /app/src/cmd/api-tenant
 
   clean:
     desc: Cleaning up build artifacts

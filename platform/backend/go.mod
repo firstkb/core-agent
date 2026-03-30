@@ -1,4 +1,4 @@
-module github.com/firstkb/sc-api
+module dtriton.com/platform/backend
 
 go 1.24.0
 

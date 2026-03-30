@@ -7,8 +7,9 @@ Date: 2026-03-29
 ## Fixed decisions
 
 - `api-client` is renamed to `api-tenant`.
-- `scapi` is retired and should be removed after cutover.
+- `scapi` is retired and removed from the active backend tree.
 - `auth` is a dedicated runtime for email and phone OTP authentication.
+- Cognito is not part of the target authentication model.
 - OTP request and OTP verify flows must log both successful and failed outcomes to the events log.
 - PostgreSQL is the target runtime database.
 - `docs/MSSQL` is a legacy source-shape reference, not the target schema contract.
@@ -16,6 +17,16 @@ Date: 2026-03-29
 - Tenant-aware design is required in the current engine.
 - For shared-database and sandbox operation, application tables must carry `tenant_id`.
 - Even for dedicated databases, retaining `tenant_id` is preferred for portability, operational consistency, and simpler future extraction.
+- `api-tenant` and `api-admin` target AWS API Gateway JWT authorizers with self-issued RSA tokens and JWKS.
+- The auth gateway baseline is documented in `docs/backend-auth-gateway-contract.md`.
+
+## Module identity
+
+- Backend module path is `dtriton.com/platform/backend`.
+- The module path is intentionally decoupled from the current GitHub repository location.
+- `dtriton.com` is preferred over `d-triton.com` and `digitaltriton.us` for shorter and cleaner import paths.
+- Near-term compatibility can remain on the currently installed toolchain.
+- Recommended upgrade target is Go `1.26.x` after local and CI toolchains are updated.
 
 ## Proposed target structure
 
@@ -84,7 +95,6 @@ platform/backend/
       audit/
       authentication/
       forms/
-      identity/
       notifications/
       sessions/
 ```
@@ -181,9 +191,9 @@ Initial responsibility:
 | `internal/auth/jwt_issuer.go`, `jwks.go`, `jwt_claims.go`, `claim_resolver.go`, `otp_generator.go`, `otp_hash.go`, `rate_limiter.go` | `internal/platform/auth/*` | move | These are security and token primitives, not business workflow. |
 | `internal/auth/otp_repo.go` | `modules/shared/authentication/repository_pg.go` | move | OTP persistence belongs to the auth business module. |
 | `internal/auth/refresh_repo.go` | `modules/shared/sessions/repository_pg.go` | move | Refresh token persistence belongs to session lifecycle. |
-| `internal/auth/membership_repo.go` | `modules/shared/identity/repository_pg.go` | move | Membership is part of identity and tenant access domain. |
-| `internal/auth/types.go` | `modules/shared/identity/model.go` and `modules/shared/sessions/model.go` | split | Identity and session domain types should not remain in a mixed infra package. |
-| `internal/identity/*` | `modules/shared/identity/*` | move | Global identity subjects and tenant membership are shared business logic. |
+| `internal/auth/membership_repo.go` | removed from active contract | remove | Direct tenant auth no longer uses master identity membership lookup. |
+| `internal/auth/types.go` | `modules/shared/sessions/model.go` or removed | split or remove | Keep only session and auth types that remain necessary after direct tenant auth. |
+| `internal/identity/*` | removed from active contract | remove | Global identity mirror is no longer part of the accepted auth model. |
 | `internal/tokencoder/*` | `internal/platform/auth/*` | move | Keep signed token codec as a platform security primitive. |
 | `internal/utils/*` | owner packages only | delete and redistribute | Move executable and stack helpers to hosting or errors packages if still needed. |
 | `tools/generate_bundle.go` | `tools/` or removed | isolate | Keep tooling outside the runtime package graph. |
@@ -198,8 +208,8 @@ Target direction:
 
 - tenant-local user profile and employment details
 - feed `modules/tenant/profile/*`
-- identity handles email or phone subject matching globally
-- tenant-local user record keeps business fields for the tenant application
+- direct auth reads email or phone from tenant `users`
+- tenant-local user record keeps both business fields and auth-critical flags for the tenant application
 
 ### `company.sql` and `companytype.sql`
 
@@ -239,11 +249,11 @@ The restructure should preserve these existing strengths:
 
 1. Master database as the source of tenant registry, DB bindings, and plan history.
 2. `db_instance`, `tenant`, `tenant_domain`, `tenant_db`, and `tenant_plan_history` as the basis for sandbox and dedicated-database mode.
-3. `identity_subject` plus `identity_tenant_membership` as a clean split between global identity and tenant-local access.
+3. Direct tenant auth without a master identity mirror; master keeps only routing, auth state, and policy surfaces.
 4. Tenant resolver by host or tenant id, including in-memory cache.
 5. Separate onboarding pools for sandbox and dedicated databases.
 6. Shared migrator logic with `migration_runs` tracking in master and `schema_migrations` per tenant DB.
-7. Tenant-aware `event_log` shape with `tenant_id`, `user_id`, `event_type`, `event_data`, `ip_address`, and `user_agent`.
+7. Tenant-aware `events` table as the canonical audit/event surface for auth and business activity.
 
 ## Target data-boundary rules
 
@@ -320,10 +330,10 @@ Do not log raw OTP values or unmasked secrets.
 
 ## Migration sequence
 
-1. Freeze `scapi`. No new feature work lands there.
+1. `scapi` is removed. No feature work should reintroduce a combined legacy runtime.
 2. Create the new runtime skeleton: `api-tenant`, `api-admin`, `auth`, `worker`, `migrate`.
 3. Move platform packages under `internal/platform/*` without changing behavior.
-4. Extract `modules/shared/identity/*`, `modules/shared/authentication/*`, and `modules/shared/sessions/*`.
+4. Finalize `modules/shared/authentication/*` and `modules/shared/sessions/*`; remove old identity-mirror surfaces.
 5. Build `cmd/auth` first and cut OTP flows over to it.
 6. Remove migration execution from API startup and move it to `cmd/migrate`.
 7. Extract `internal/platform/tenant/*` from `tenantsvc`.
@@ -331,13 +341,13 @@ Do not log raw OTP values or unmasked secrets.
 9. Replace `pingsvc` with `modules/tenant/profile/*` and a real `/profile` endpoint.
 10. Extract `modules/shared/audit/*` and `modules/shared/notifications/*`.
 11. Add `cmd/worker` jobs for auth cleanup and notification work.
-12. Delete `cmd/scapi` after route parity, migration parity, and test coverage are in place.
+12. `cmd/scapi` has been deleted from the active tree. Remaining work is legacy package cleanup under root `internal/*`.
 
 ## Immediate implementation priority
 
 1. `internal/platform/*` move
 2. `cmd/auth`
-3. `modules/shared/identity`
+3. direct tenant `users` auth lookup with no master identity mirror
 4. `modules/shared/authentication`
 5. `modules/shared/sessions`
 6. `internal/platform/tenant`
@@ -345,4 +355,3 @@ Do not log raw OTP values or unmasked secrets.
 8. `modules/admin/tenantmanagement`
 9. `modules/tenant/profile`
 10. `modules/tenant/projects`
-

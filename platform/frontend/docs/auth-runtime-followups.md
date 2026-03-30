@@ -8,6 +8,8 @@ Tracks frontend runtime work that is intentionally mocked today so the future AP
 - `tenant-web` bootstraps shared runtime config from `/config.json` and tenant branding from `/tenant/config.json` in `apps/tenant-web/src/app/root.tsx`.
 - both apps still use a temporary `setTimeout(..., 650)` gate in `src/app/app.tsx` before entering the private area
 - auth state is currently backed by the mock service in `packages/auth-core`
+- current frontend auth storage still incorrectly requires `idToken`, while backend returns only `access_token` and `refresh_token`
+- current real backend support exists for both tenant auth/profile and admin auth/profile
 
 ## Required Follow-ups
 
@@ -17,6 +19,7 @@ Tracks frontend runtime work that is intentionally mocked today so the future AP
 - while the API is unavailable, keep an explicit mock profile bootstrap so the contract stays visible in code
 - land the typed profile client in `packages/api-client` instead of calling `fetch` ad hoc from app code
 - ensure the future profile bootstrap reads API base URLs only after runtime config has been persisted from `root.tsx`
+- for the concrete implementation plan, use `docs/auth-agent-integration-brief.md`
 
 ## Integration Notes
 

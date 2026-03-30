@@ -11,4 +11,6 @@ platform/*
 !platform/frontend/**
 !platform/backend/**
 !platform/backend/
-platform/backend/certs/
+platform/backend/certs/*.pem
+platform/backend/certs/*.key
+platform/backend/certs/*.crt

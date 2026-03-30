@@ -66,18 +66,23 @@ type Config struct {
 }
 
 type AuthConfig struct {
-	OTPTTL            string        `json:"otpttl"`
-	OTPLength         int           `json:"otplength"`
-	RefreshTTL        string        `json:"refreshttl"`
-	AccessTTL         string        `json:"accessttl"`
-	Audience          string        `json:"audience"`
-	Issuer            string        `json:"issuer"`
-	JWTAlgorithm      string        `json:"jwtalg"`
-	JWTPrivateKeyPath string        `json:"jwtprivatepempath"`
-	JWTPublicKeyPath  string        `json:"jwtpublicpempath"`
-	JWKSCacheTTL      string        `json:"jwkscachettl"`
-	RateLimitIP       string        `json:"ratelimitip"`
-	Dev               AuthDevConfig `json:"dev"`
+	OTPTTL                  string        `json:"otpttl"`
+	OTPLength               int           `json:"otplength"`
+	RefreshTTL              string        `json:"refreshttl"`
+	AccessTTL               string        `json:"accessttl"`
+	Audience                string        `json:"audience"`
+	Issuer                  string        `json:"issuer"`
+	JWTAlgorithm            string        `json:"jwtalg"`
+	JWTKeySource            string        `json:"keysource"`
+	JWTPrivateKeyPath       string        `json:"jwtprivatepempath"`
+	JWTPublicKeyPath        string        `json:"jwtpublicpempath"`
+	JWTPrivateKeySecretName string        `json:"jwtprivatepemsecretname"`
+	JWTPublicKeySecretName  string        `json:"jwtpublicpemsecretname"`
+	JWTAWSRegion            string        `json:"jwtawsregion"`
+	JWTKMSKeyID             string        `json:"jwtkmskeyid"`
+	JWKSCacheTTL            string        `json:"jwkscachettl"`
+	RateLimitIP             string        `json:"ratelimitip"`
+	Dev                     AuthDevConfig `json:"dev"`
 }
 
 type AuthDevConfig struct {
@@ -137,11 +142,16 @@ func NewService(sqlClient *postgres.Client, cfg *config.Config, logger *slog.Log
 	policyRepo := NewTenantAuthPolicyRepository(sqlClient)
 
 	jwtCfg := auth.JWTConfig{
-		Algorithm:      strings.ToLower(c.Auth.JWTAlgorithm),
-		PrivateKeyPath: c.Auth.JWTPrivateKeyPath,
-		PublicKeyPath:  c.Auth.JWTPublicKeyPath,
-		Issuer:         c.Auth.Issuer,
-		Audience:       c.Auth.Audience,
+		Algorithm:            strings.ToLower(c.Auth.JWTAlgorithm),
+		KeySource:            c.Auth.JWTKeySource,
+		PrivateKeyPath:       c.Auth.JWTPrivateKeyPath,
+		PublicKeyPath:        c.Auth.JWTPublicKeyPath,
+		PrivateKeySecretName: c.Auth.JWTPrivateKeySecretName,
+		PublicKeySecretName:  c.Auth.JWTPublicKeySecretName,
+		AWSRegion:            c.Auth.JWTAWSRegion,
+		KMSKeyID:             c.Auth.JWTKMSKeyID,
+		Issuer:               c.Auth.Issuer,
+		Audience:             c.Auth.Audience,
 	}
 	jwtIssuer, err := auth.NewJWTIssuer(jwtCfg)
 	if err != nil {

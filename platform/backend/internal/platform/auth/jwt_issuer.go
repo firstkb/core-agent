@@ -1,14 +1,11 @@
 package auth
 
 import (
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/pem"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -23,46 +20,41 @@ type JWTIssuer interface {
 }
 
 type jwtIssuer struct {
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
-	keyID      string
-	issuer     string
-	audience   string
-	algorithm  string
+	publicKey *rsa.PublicKey
+	signer    tokenSigner
+	keyID     string
+	issuer    string
+	audience  string
+	algorithm string
 }
 
 // Config holds JWT issuer configuration
 type JWTConfig struct {
-	Algorithm      string // "rs256" or "eddsa"
-	PrivateKeyPath string
-	PublicKeyPath  string
-	Issuer         string
-	Audience       string
-	AccessTTL      time.Duration
+	Algorithm            string // "rs256" or "eddsa"
+	KeySource            string
+	PrivateKeyPath       string
+	PublicKeyPath        string
+	PrivateKeySecretName string
+	PublicKeySecretName  string
+	AWSRegion            string
+	KMSKeyID             string
+	Issuer               string
+	Audience             string
+	AccessTTL            time.Duration
 }
 
 // NewJWTIssuer creates a new JWT issuer
 func NewJWTIssuer(config JWTConfig) (JWTIssuer, error) {
+	config = normalizeJWTConfig(config)
+
 	// For now, we'll support RS256 only
 	if config.Algorithm != "rs256" {
 		return nil, fmt.Errorf("unsupported algorithm: %s (only rs256 supported for now)", config.Algorithm)
 	}
 
-	// Load private key
-	privateKey, err := loadPrivateKey(config.PrivateKeyPath)
+	privateKey, publicKey, err := loadJWTKeyMaterial(config)
 	if err != nil {
-		return nil, fmt.Errorf("load private key: %w", err)
-	}
-
-	// Load or derive public key
-	var publicKey *rsa.PublicKey
-	if config.PublicKeyPath != "" {
-		publicKey, err = loadPublicKey(config.PublicKeyPath)
-		if err != nil {
-			return nil, fmt.Errorf("load public key: %w", err)
-		}
-	} else {
-		publicKey = &privateKey.PublicKey
+		return nil, err
 	}
 
 	keyID, err := computeKeyID(publicKey)
@@ -70,13 +62,18 @@ func NewJWTIssuer(config JWTConfig) (JWTIssuer, error) {
 		return nil, fmt.Errorf("compute key id: %w", err)
 	}
 
+	signer, err := newTokenSigner(config, privateKey)
+	if err != nil {
+		return nil, err
+	}
+
 	return &jwtIssuer{
-		privateKey: privateKey,
-		publicKey:  publicKey,
-		keyID:      keyID,
-		issuer:     config.Issuer,
-		audience:   config.Audience,
-		algorithm:  config.Algorithm,
+		publicKey: publicKey,
+		signer:    signer,
+		keyID:     keyID,
+		issuer:    config.Issuer,
+		audience:  config.Audience,
+		algorithm: config.Algorithm,
 	}, nil
 }
 
@@ -93,8 +90,11 @@ func (j *jwtIssuer) IssueToken(claims *JWTClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims(claims.ToMap()))
 	token.Header["kid"] = j.keyID
 
-	// Sign token
-	tokenString, err := token.SignedString(j.privateKey)
+	if j.signer == nil {
+		return "", fmt.Errorf("sign token: private signing key is not configured")
+	}
+
+	tokenString, err := j.signer.Sign(token)
 	if err != nil {
 		return "", fmt.Errorf("sign token: %w", err)
 	}
@@ -189,63 +189,4 @@ func computeKeyID(publicKey *rsa.PublicKey) (string, error) {
 
 	sum := sha256.Sum256(der)
 	return base64.RawURLEncoding.EncodeToString(sum[:]), nil
-}
-
-// loadPrivateKey loads an RSA private key from a PEM file
-func loadPrivateKey(path string) (*rsa.PrivateKey, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read private key file: %w", err)
-	}
-
-	block, _ := pem.Decode(data)
-	if block == nil {
-		return nil, fmt.Errorf("failed to decode PEM block")
-	}
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		// Try PKCS8 format
-		key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-		if err != nil {
-			return nil, fmt.Errorf("parse private key: %w", err)
-		}
-		rsaKey, ok := key.(*rsa.PrivateKey)
-		if !ok {
-			return nil, fmt.Errorf("not an RSA private key")
-		}
-		return rsaKey, nil
-	}
-
-	return privateKey, nil
-}
-
-// loadPublicKey loads an RSA public key from a PEM file
-func loadPublicKey(path string) (*rsa.PublicKey, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read public key file: %w", err)
-	}
-
-	block, _ := pem.Decode(data)
-	if block == nil {
-		return nil, fmt.Errorf("failed to decode PEM block")
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, fmt.Errorf("parse public key: %w", err)
-	}
-
-	rsaPub, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		return nil, fmt.Errorf("not an RSA public key")
-	}
-
-	return rsaPub, nil
-}
-
-// GenerateKeyPair generates a new RSA key pair (for development/testing)
-func GenerateKeyPair(bits int) (*rsa.PrivateKey, error) {
-	return rsa.GenerateKey(rand.Reader, bits)
 }

@@ -85,13 +85,25 @@ Runtime mode contract:
 
 `auth` requires RSA keys.
 
+Important:
+
+- local keys must not be committed to git
+- `platform/backend/certs/*.pem` is ignored
+- generate local keys on each machine with the provided script
+- full key-source setup examples live in `docs/auth/auth-key-source-configuration.md`
+
 Example:
 
 ```bash
-mkdir -p certs
-openssl genrsa -out certs/dev-auth-private.pem 2048
-openssl rsa -in certs/dev-auth-private.pem -pubout -out certs/dev-auth-public.pem
+./scripts/generate-dev-auth-keys.sh
 ```
+
+Key source contract:
+
+- local default: `AUTHAPI_AUTH_KEYSOURCE=file`
+- supported runtime sources in config: `file`, `secretsmanager`, `kms`
+- current build fully supports `file` and `secretsmanager`
+- `kms` is reserved in config for the future signer integration and is not yet active in this build
 
 ## Create local databases
 

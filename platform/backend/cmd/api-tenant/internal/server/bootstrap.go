@@ -97,11 +97,16 @@ type authConfigEnvelope struct {
 }
 
 type authConfig struct {
-	Audience          string `json:"audience"`
-	Issuer            string `json:"issuer"`
-	JWTAlgorithm      string `json:"jwtalg"`
-	JWTPrivateKeyPath string `json:"jwtprivatepempath"`
-	JWTPublicKeyPath  string `json:"jwtpublicpempath"`
+	Audience                string `json:"audience"`
+	Issuer                  string `json:"issuer"`
+	JWTAlgorithm            string `json:"jwtalg"`
+	JWTKeySource            string `json:"keysource"`
+	JWTPrivateKeyPath       string `json:"jwtprivatepempath"`
+	JWTPublicKeyPath        string `json:"jwtpublicpempath"`
+	JWTPrivateKeySecretName string `json:"jwtprivatepemsecretname"`
+	JWTPublicKeySecretName  string `json:"jwtpublicpemsecretname"`
+	JWTAWSRegion            string `json:"jwtawsregion"`
+	JWTKMSKeyID             string `json:"jwtkmskeyid"`
 }
 
 func newTokenValidator(cfg *config.Config) (authpkg.JWTIssuer, error) {
@@ -109,11 +114,16 @@ func newTokenValidator(cfg *config.Config) (authpkg.JWTIssuer, error) {
 	_ = cfg.Unmarshal("", &c)
 
 	jwtCfg := authpkg.JWTConfig{
-		Algorithm:      strings.ToLower(c.Auth.JWTAlgorithm),
-		PrivateKeyPath: c.Auth.JWTPrivateKeyPath,
-		PublicKeyPath:  c.Auth.JWTPublicKeyPath,
-		Issuer:         c.Auth.Issuer,
-		Audience:       c.Auth.Audience,
+		Algorithm:            strings.ToLower(c.Auth.JWTAlgorithm),
+		KeySource:            c.Auth.JWTKeySource,
+		PrivateKeyPath:       c.Auth.JWTPrivateKeyPath,
+		PublicKeyPath:        c.Auth.JWTPublicKeyPath,
+		PrivateKeySecretName: c.Auth.JWTPrivateKeySecretName,
+		PublicKeySecretName:  c.Auth.JWTPublicKeySecretName,
+		AWSRegion:            c.Auth.JWTAWSRegion,
+		KMSKeyID:             c.Auth.JWTKMSKeyID,
+		Issuer:               c.Auth.Issuer,
+		Audience:             c.Auth.Audience,
 	}
 
 	return authpkg.NewJWTIssuer(jwtCfg)

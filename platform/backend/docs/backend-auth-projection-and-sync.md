@@ -92,6 +92,12 @@ Accepted baseline:
 - TTL: `10m`
 - max attempts: `5`
 
+Request contract decision:
+
+- `otp_request` should return the effective `otp_length`
+- tenant auth returns the resolved tenant policy length
+- admin auth currently returns the global admin length from config
+
 Accepted behavior:
 
 - new OTP request deletes only expired rows for the same `tenant + channel + address`

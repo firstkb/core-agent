@@ -8,13 +8,34 @@ import {
 import type { FormsAuthoringAccess } from "./forms-actors";
 import type {
   FormsPlaceholderField,
+  FormsPlaceholderFieldFamily,
   FormsPlaceholderObject,
   FormsPlaceholderScreen,
 } from "./forms-placeholder-data";
+import {
+  getFormsPlaceholderFieldIconKey,
+  getFormsPlaceholderFieldSearchText,
+} from "./forms-placeholder-data";
 
-export type FormBuilderElementCategory = "containers" | "content" | "fields" | "layout";
-export type FormBuilderNodeType = "divider" | "field" | "group" | "section" | "tab_item" | "tabs" | "text";
+export type FormBuilderElementCategory = "containers" | "content" | "layout";
+export type FormBuilderNodeType =
+  | "column"
+  | "divider"
+  | "field"
+  | "grid"
+  | "group"
+  | "heading"
+  | "repeater"
+  | "rich_text"
+  | "section"
+  | "spacer"
+  | "subform"
+  | "tab_item"
+  | "tabs"
+  | "text";
 export type FormBuilderNodeVisibility = "hidden" | "readonly" | "visible";
+export type FormBuilderFieldPaletteCategory = FormsPlaceholderFieldFamily;
+type FormBuilderContainerNodeType = "column" | "grid" | "group" | "repeater" | "section" | "subform" | "tab_item" | "tabs";
 
 export type FormBuilderNode = {
   fieldId?: string;
@@ -49,6 +70,7 @@ export type FormBuilderElementDefinition = {
   iconKey: string;
   labelKey: string;
   nodeType: Exclude<FormBuilderNodeType, "field">;
+  searchTerms: ReadonlyArray<string>;
 };
 
 export type FormBuilderElementPaletteItem = FormBuilderElementDefinition & {
@@ -58,13 +80,13 @@ export type FormBuilderElementPaletteItem = FormBuilderElementDefinition & {
 };
 
 export type FormBuilderFieldPaletteItem = {
+  category: FormBuilderFieldPaletteCategory;
   descriptionKey: string;
   disabled: boolean;
   disabledReasonKey: string | null;
   field: FormsPlaceholderField;
-  iconKey: FormsPlaceholderField["kind"];
+  iconKey: string;
   kind: "field";
-  labelKey: string;
 };
 
 export type FormBuilderPaletteItem = FormBuilderElementPaletteItem | FormBuilderFieldPaletteItem;
@@ -72,11 +94,15 @@ export type FormBuilderPaletteItem = FormBuilderElementPaletteItem | FormBuilder
 const legacyFormsWorkspaceStoragePrefix = "tenant-web-platform-builder-v2-screen-document";
 const formsWorkspaceSavedStoragePrefix = "tenant-web-platform-builder-v2-screen-document-saved";
 
-const containerChildTypes: Record<"root" | Exclude<FormBuilderNodeType, "divider" | "field" | "text">, ReadonlyArray<FormBuilderNodeType>> = {
-  group: ["group", "tabs", "text", "divider", "field"],
-  root: ["section", "group", "tabs", "text", "divider", "field"],
-  section: ["group", "tabs", "text", "divider", "field"],
-  tab_item: ["group", "text", "divider", "field"],
+const containerChildTypes: Record<"root" | FormBuilderContainerNodeType, ReadonlyArray<FormBuilderNodeType>> = {
+  column: ["group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field", "subform", "repeater"],
+  grid: ["column"],
+  group: ["group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field", "subform", "repeater"],
+  repeater: ["group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field"],
+  root: ["section", "group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field", "subform", "repeater"],
+  section: ["group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field", "subform", "repeater"],
+  subform: ["group", "grid", "tabs", "heading", "text", "rich_text", "divider", "spacer", "field"],
+  tab_item: ["group", "grid", "heading", "text", "rich_text", "divider", "spacer", "field", "subform", "repeater"],
   tabs: ["tab_item"],
 };
 
@@ -87,6 +113,7 @@ export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefi
     iconKey: "section",
     labelKey: "tenant.platformBuilder.forms.builder.palette.section",
     nodeType: "section",
+    searchTerms: ["section"],
   },
   {
     category: "layout",
@@ -94,6 +121,23 @@ export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefi
     iconKey: "group",
     labelKey: "tenant.platformBuilder.forms.builder.palette.group",
     nodeType: "group",
+    searchTerms: ["group"],
+  },
+  {
+    category: "layout",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.gridDescription",
+    iconKey: "grid",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.grid",
+    nodeType: "grid",
+    searchTerms: ["grid", "grid layout", "columns"],
+  },
+  {
+    category: "layout",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.columnDescription",
+    iconKey: "column",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.column",
+    nodeType: "column",
+    searchTerms: ["column"],
   },
   {
     category: "containers",
@@ -101,6 +145,7 @@ export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefi
     iconKey: "tabs",
     labelKey: "tenant.platformBuilder.forms.builder.palette.tabs",
     nodeType: "tabs",
+    searchTerms: ["tabs", "tabbed"],
   },
   {
     category: "containers",
@@ -108,6 +153,31 @@ export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefi
     iconKey: "tab_item",
     labelKey: "tenant.platformBuilder.forms.builder.palette.tabItem",
     nodeType: "tab_item",
+    searchTerms: ["tab", "tab item"],
+  },
+  {
+    category: "containers",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.subformDescription",
+    iconKey: "subform",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.subform",
+    nodeType: "subform",
+    searchTerms: ["subform", "nested form", "related model"],
+  },
+  {
+    category: "containers",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.repeaterDescription",
+    iconKey: "repeater",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.repeater",
+    nodeType: "repeater",
+    searchTerms: ["repeater", "repeatable group"],
+  },
+  {
+    category: "content",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.headingDescription",
+    iconKey: "heading",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.heading",
+    nodeType: "heading",
+    searchTerms: ["heading", "title"],
   },
   {
     category: "content",
@@ -115,20 +185,45 @@ export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefi
     iconKey: "text",
     labelKey: "tenant.platformBuilder.forms.builder.palette.text",
     nodeType: "text",
+    searchTerms: ["text", "text block", "copy"],
   },
   {
     category: "content",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.richTextDescription",
+    iconKey: "rich_text",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.richText",
+    nodeType: "rich_text",
+    searchTerms: ["rich text", "formatted content"],
+  },
+  {
+    category: "layout",
     descriptionKey: "tenant.platformBuilder.forms.builder.palette.dividerDescription",
     iconKey: "divider",
     labelKey: "tenant.platformBuilder.forms.builder.palette.divider",
     nodeType: "divider",
+    searchTerms: ["divider", "separator"],
+  },
+  {
+    category: "layout",
+    descriptionKey: "tenant.platformBuilder.forms.builder.palette.spacerDescription",
+    iconKey: "spacer",
+    labelKey: "tenant.platformBuilder.forms.builder.palette.spacer",
+    nodeType: "spacer",
+    searchTerms: ["spacer", "space", "gap"],
   },
 ] as const;
 
 const formBuilderElementLabels: Record<Exclude<FormBuilderNodeType, "field">, string> = {
+  column: "Column",
   divider: "Divider",
+  grid: "Grid layout",
   group: "Group",
+  heading: "Heading",
+  repeater: "Repeater",
+  rich_text: "Rich text",
   section: "Section",
+  spacer: "Spacer",
+  subform: "Subform",
   tab_item: "Tab",
   tabs: "Tabs",
   text: "Text",
@@ -148,14 +243,22 @@ function createNode(
   const baseTitle =
     type === "field"
       ? undefined
-      : formBuilderElementLabels[type];
+      : type === "heading"
+        ? "Section heading"
+        : formBuilderElementLabels[type];
+  const baseText =
+    type === "text"
+      ? "Add supporting guidance or helper copy here."
+      : type === "rich_text"
+        ? "Use rich text for formatted guidance, callouts, or release notes."
+        : undefined;
 
   return {
     helperText: "",
     id: idFactory(type),
     order,
     parentId,
-    text: type === "text" ? "Add supporting guidance or helper copy here." : undefined,
+    text: partial?.text ?? baseText,
     title: partial?.title ?? baseTitle,
     type,
     visibility: "visible",
@@ -164,7 +267,16 @@ function createNode(
 }
 
 export function isFormBuilderContainer(type: FormBuilderNodeType) {
-  return type === "section" || type === "group" || type === "tabs" || type === "tab_item";
+  return (
+    type === "section" ||
+    type === "group" ||
+    type === "grid" ||
+    type === "column" ||
+    type === "tabs" ||
+    type === "tab_item" ||
+    type === "subform" ||
+    type === "repeater"
+  );
 }
 
 export function getFormsWorkspaceAccess(
@@ -218,8 +330,15 @@ export function createDefaultFormBuilderDocument(
 
 function isValidNodeType(value: unknown): value is FormBuilderNodeType {
   return (
+    value === "column" ||
     value === "section" ||
     value === "group" ||
+    value === "grid" ||
+    value === "heading" ||
+    value === "repeater" ||
+    value === "rich_text" ||
+    value === "spacer" ||
+    value === "subform" ||
     value === "tabs" ||
     value === "tab_item" ||
     value === "text" ||
@@ -746,7 +865,7 @@ export function getElementPaletteItems(
         return true;
       }
 
-      return definition.nodeType.replaceAll("_", " ").includes(normalizedSearch);
+      return definition.searchTerms.some((term) => term.includes(normalizedSearch));
     })
     .map((definition) => ({
       ...definition,
@@ -773,13 +892,14 @@ export function getFieldPaletteItems(
 
   return object.fields
     .filter((field) =>
-      !normalizedSearch || field.label.toLowerCase().includes(normalizedSearch),
+      !normalizedSearch || getFormsPlaceholderFieldSearchText(field).includes(normalizedSearch),
     )
     .map((field) => {
       const alreadyPlaced = boundFieldIds.has(field.id);
       const disabled = !access.canAddItems || alreadyPlaced;
 
       return {
+        category: field.family,
         descriptionKey: field.isLocked
           ? "tenant.platformBuilder.forms.builder.palette.fieldLockedDescription"
           : "tenant.platformBuilder.forms.builder.palette.fieldDescription",
@@ -788,9 +908,8 @@ export function getFieldPaletteItems(
           ? "tenant.platformBuilder.forms.builder.palette.fieldAlreadyPlaced"
           : (!access.canAddItems ? access.lockReasonKey : null),
         field,
-        iconKey: field.kind,
+        iconKey: getFormsPlaceholderFieldIconKey(field),
         kind: "field",
-        labelKey: "tenant.platformBuilder.forms.builder.palette.field",
       } satisfies FormBuilderFieldPaletteItem;
     });
 }
@@ -823,12 +942,24 @@ export function getFormBuilderNodeSummary(
       : "tenant.platformBuilder.forms.builder.summary.field";
   }
 
+  if (node.type === "heading") {
+    return "tenant.platformBuilder.forms.builder.summary.heading";
+  }
+
   if (node.type === "text") {
     return "tenant.platformBuilder.forms.builder.summary.text";
   }
 
+  if (node.type === "rich_text") {
+    return "tenant.platformBuilder.forms.builder.summary.richText";
+  }
+
   if (node.type === "divider") {
     return "tenant.platformBuilder.forms.builder.summary.divider";
+  }
+
+  if (node.type === "spacer") {
+    return "tenant.platformBuilder.forms.builder.summary.spacer";
   }
 
   const children = getFormBuilderChildren(document, node.id);

@@ -22,11 +22,12 @@ func (h *Handler) RequestOTP(ctx context.Context, r *http.Request, req OTPReques
 	req.IP = extractIP(r)
 	req.UserAgent = r.Header.Get("User-Agent")
 
-	if err := h.service.RequestOTP(ctx, req, r); err != nil {
+	resp, err := h.service.RequestOTP(ctx, req, r)
+	if err != nil {
 		return nil, mapError(err)
 	}
 
-	return map[string]string{"status": "ok"}, nil
+	return resp, nil
 }
 
 func (h *Handler) VerifyOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {
@@ -44,11 +45,12 @@ func (h *Handler) RequestAdminOTP(ctx context.Context, r *http.Request, req OTPR
 	req.IP = extractIP(r)
 	req.UserAgent = r.Header.Get("User-Agent")
 
-	if err := h.service.RequestAdminOTP(ctx, req, r); err != nil {
+	resp, err := h.service.RequestAdminOTP(ctx, req, r)
+	if err != nil {
 		return nil, mapError(err)
 	}
 
-	return map[string]string{"status": "ok"}, nil
+	return resp, nil
 }
 
 func (h *Handler) VerifyAdminOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {

@@ -61,6 +61,7 @@ import {
   getFormBuilderNode,
   getFormBuilderNodeSummary,
   getFormsWorkspaceAccess,
+  isFormBuilderContainer,
   reorderFormBuilderNode,
   removeFormBuilderNode,
   selectFormBuilderNode,
@@ -68,19 +69,28 @@ import {
   updateFormBuilderNode,
   useFormBuilderDocument,
   type FormBuilderNode,
-  type FormBuilderPaletteItem,
 } from "../forms-builder-state";
 import {
   getFormsAuthoringAccess,
   getFormsPlaceholderActor,
 } from "../forms-actors";
 import {
+  getFormsPlaceholderFieldIconKey,
   getFormsPlaceholderObject,
+  type FormsPlaceholderField,
   getFormsPlaceholderScreen,
   useFormsPlaceholderObjects,
 } from "../forms-placeholder-data";
 
 type InspectorTab = "selection" | "view";
+type PaletteSectionKey =
+  | "advancedFields"
+  | "choiceFields"
+  | "containers"
+  | "content"
+  | "coreFields"
+  | "layout"
+  | "presets";
 
 declare global {
   interface Window {
@@ -92,12 +102,118 @@ function getScreenKindKey(kind: "detail" | "form") {
   return `tenant.platformBuilder.forms.screenKind.${kind}`;
 }
 
-function getPaletteCategoryKey(category: "containers" | "content" | "fields" | "layout") {
+function getPaletteCategoryKey(category: PaletteSectionKey) {
   return `tenant.platformBuilder.forms.builder.category.${category}`;
 }
 
 function getNodeTypeKey(nodeType: FormBuilderNode["type"]) {
   return `tenant.platformBuilder.forms.builder.nodeType.${nodeType}`;
+}
+
+function getFieldTypeKey(field: FormsPlaceholderField) {
+  return `tenant.platformBuilder.forms.builder.fieldType.${field.kind}`;
+}
+
+function getFieldPresetKey(preset: NonNullable<FormsPlaceholderField["preset"]>) {
+  return `tenant.platformBuilder.forms.builder.fieldPreset.${preset}`;
+}
+
+function getFieldFamilyKey(field: FormsPlaceholderField) {
+  return `tenant.platformBuilder.forms.builder.fieldFamily.${field.family}`;
+}
+
+function getFieldPaletteDescription(
+  field: FormsPlaceholderField,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  const typeLabel = t(getFieldTypeKey(field));
+
+  if (field.kind === "db_lookup") {
+    return `${typeLabel} / ${field.sourceLabel ?? t("tenant.platformBuilder.forms.builder.fieldMeta.lookupReady")}`;
+  }
+
+  if (field.kind === "long_text" && field.historicalUpdates) {
+    return `${typeLabel} / ${t("tenant.platformBuilder.forms.builder.fieldMeta.historyEnabled")}`;
+  }
+
+  if (field.preset) {
+    return `${typeLabel} / ${t(getFieldPresetKey(field.preset))}`;
+  }
+
+  if (field.options?.length) {
+    return `${typeLabel} / ${t("tenant.platformBuilder.forms.builder.fieldMeta.optionsCount", { count: field.options.length })}`;
+  }
+
+  return typeLabel;
+}
+
+function getFieldInspectorMeta(
+  field: FormsPlaceholderField,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  const rows = [
+    {
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.family"),
+      value: t(getFieldFamilyKey(field)),
+    },
+    {
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.baseType"),
+      value: t(getFieldTypeKey(field)),
+    },
+  ];
+
+  if (field.preset) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.preset"),
+      value: t(getFieldPresetKey(field.preset)),
+    });
+  }
+
+  if (field.kind === "long_text") {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.historicalUpdates"),
+      value: field.historicalUpdates
+        ? t("tenant.platformBuilder.forms.builder.fieldMeta.enabled")
+        : t("tenant.platformBuilder.forms.builder.fieldMeta.disabled"),
+    });
+  }
+
+  if (field.options?.length) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.options"),
+      value: field.options.join(", "),
+    });
+  }
+
+  if (field.sourceLabel) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.lookupSource"),
+      value: field.sourceLabel,
+    });
+  }
+
+  if (field.displayFields?.length) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.displayFields"),
+      value: field.displayFields.join(", "),
+    });
+  }
+
+  if (field.sourceFilters?.length) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.sourceFilters"),
+      value: field.sourceFilters.join(", "),
+    });
+  }
+
+  if (field.dependentFilter) {
+    rows.push({
+      label: t("tenant.platformBuilder.forms.builder.fieldMeta.dependentFilter"),
+      value: field.dependentFilter,
+    });
+  }
+
+  return rows;
 }
 
 function getSummaryText(
@@ -241,9 +357,7 @@ function CanvasNodeRow({
   const isCurrentLevel = currentLevelId === node.id;
   const isDragging = draggedNodeId === node.id;
   const isDropTarget = dragOverNodeId === node.id && draggedNodeId !== node.id;
-  const isContainer = node.type !== "field" && node.type !== "text" && node.type !== "divider"
-    ? true
-    : false;
+  const isContainer = isFormBuilderContainer(node.type);
   const summaryKey = getFormBuilderNodeSummary(
     node,
     document,
@@ -305,7 +419,19 @@ function CanvasNodeRow({
           </span>
         ) : null}
         <span className="tenant-web__platform-builder-item-icon tenant-web__platform-builder-item-icon--canvas">
-          <FormBuilderElementIcon iconKey={node.type === "field" ? (object.fields.find((field) => field.id === node.fieldId)?.kind ?? "field") : node.type} />
+          <FormBuilderElementIcon
+            iconKey={
+              node.type === "field"
+                ? getFormsPlaceholderFieldIconKey(object.fields.find((field) => field.id === node.fieldId) ?? {
+                  family: "core",
+                  id: "missing-field",
+                  isLocked: false,
+                  kind: "text",
+                  label: "Field",
+                })
+                : node.type
+            }
+          />
         </span>
         <div className="tenant-web__platform-builder-canvas-copy">
           <span className="tenant-web__platform-builder-canvas-item-title">{getFormBuilderDisplayLabel(node, object)}</span>
@@ -386,6 +512,10 @@ export function FormsScreenWorkspacePage() {
   const [draftScreenIsActive, setDraftScreenIsActive] = useState(currentScreen.isActive);
   const currentNodes = getCurrentFormBuilderChildren(document);
   const selectedNode = getFormBuilderNode(document, document.selectedNodeId);
+  const selectedField =
+    selectedNode?.type === "field"
+      ? currentObject.fields.find((field) => field.id === selectedNode.fieldId) ?? null
+      : null;
   const currentParentNode = getFormBuilderNode(document, document.currentParentId);
   const breadcrumb = getFormBuilderBreadcrumb(document);
   const elementItems = getElementPaletteItems(document, workspaceAccess, paletteQuery);
@@ -445,8 +575,20 @@ export function FormsScreenWorkspacePage() {
         key: "content" as const,
       },
       {
-        items: fieldItems,
-        key: "fields" as const,
+        items: fieldItems.filter((item) => item.category === "core"),
+        key: "coreFields" as const,
+      },
+      {
+        items: fieldItems.filter((item) => item.category === "choice"),
+        key: "choiceFields" as const,
+      },
+      {
+        items: fieldItems.filter((item) => item.category === "advanced"),
+        key: "advancedFields" as const,
+      },
+      {
+        items: fieldItems.filter((item) => item.category === "preset"),
+        key: "presets" as const,
       },
     ].filter((section) => section.items.length > 0),
     [elementItems, fieldItems],
@@ -627,7 +769,7 @@ export function FormsScreenWorkspacePage() {
 
                           return (
                             <PaletteItem
-                              description={t(item.descriptionKey)}
+                              description={getFieldPaletteDescription(item.field, t)}
                               disabled={item.disabled}
                               disabledReason={item.disabledReasonKey ? t(item.disabledReasonKey) : null}
                               iconKey={item.iconKey}
@@ -791,7 +933,13 @@ export function FormsScreenWorkspacePage() {
                       <div className="tenant-web__platform-builder-inspector-section">
                         <div className="tenant-web__platform-builder-inspector-head">
                           <span className="tenant-web__platform-builder-item-icon">
-                            <FormBuilderElementIcon iconKey={selectedNode.type === "field" ? (object.fields.find((field) => field.id === selectedNode.fieldId)?.kind ?? "field") : selectedNode.type} />
+                            <FormBuilderElementIcon
+                              iconKey={
+                                selectedField
+                                  ? getFormsPlaceholderFieldIconKey(selectedField)
+                                  : selectedNode.type
+                              }
+                            />
                           </span>
                           <div>
                             <p className="tenant-web__platform-builder-inspector-title">{getFormBuilderDisplayLabel(selectedNode, currentObject)}</p>
@@ -810,9 +958,29 @@ export function FormsScreenWorkspacePage() {
                                   <Input
                                     disabled
                                     id="tenant-platform-builder-bound-field"
-                                    value={currentObject.fields.find((field) => field.id === selectedNode.fieldId)?.label ?? ""}
+                                    value={selectedField?.label ?? ""}
                                   />
                                 </div>
+                                {selectedField ? (
+                                  <div className="tenant-web__platform-builder-field-meta-grid">
+                                    {getFieldInspectorMeta(selectedField, t).map((item) => (
+                                      <div className="tenant-web__platform-builder-field-meta-item" key={item.label}>
+                                        <span className="tenant-web__platform-builder-field-meta-label">{item.label}</span>
+                                        <span className="tenant-web__platform-builder-field-meta-value">{item.value}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : null}
+                                {selectedField?.kind === "multi_select" ? (
+                                  <p className="tenant-web__platform-builder-inline-help">
+                                    {t("tenant.platformBuilder.forms.builder.fieldMeta.multiSelectDeferred")}
+                                  </p>
+                                ) : null}
+                                {selectedField?.kind === "db_lookup" ? (
+                                  <p className="tenant-web__platform-builder-inline-help">
+                                    {t("tenant.platformBuilder.forms.builder.fieldMeta.dbLookupPlaceholder")}
+                                  </p>
+                                ) : null}
                                 <div className="tenant-web__platform-builder-form-group">
                                   <Label htmlFor="tenant-platform-builder-node-title">
                                     {t("tenant.platformBuilder.forms.builder.nodeTitleLabel")}
@@ -857,7 +1025,7 @@ export function FormsScreenWorkspacePage() {
                                   />
                                 </div>
                               </>
-                            ) : selectedNode.type === "text" ? (
+                            ) : selectedNode.type === "text" || selectedNode.type === "rich_text" ? (
                               <>
                                 <div className="tenant-web__platform-builder-form-group">
                                   <Label htmlFor="tenant-platform-builder-node-title">
@@ -885,7 +1053,7 @@ export function FormsScreenWorkspacePage() {
                                   />
                                 </div>
                               </>
-                            ) : selectedNode.type === "divider" ? (
+                            ) : selectedNode.type === "divider" || selectedNode.type === "spacer" ? (
                               <p className="tenant-web__platform-builder-inline-help">
                                 {t("tenant.platformBuilder.forms.builder.noAdvancedSettings")}
                               </p>

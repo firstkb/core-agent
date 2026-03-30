@@ -99,6 +99,11 @@ type OTPVerifyRequest struct {
 	UserAgent string
 }
 
+type OTPRequestResponse struct {
+	Status    string `json:"status"`
+	OTPLength int    `json:"otp_length"`
+}
+
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 	IP           string
@@ -174,13 +179,13 @@ func (s *AuthService) NewJWKSEndpoint() *auth.JWKSEndpoint {
 	return auth.NewJWKSEndpoint(s.jwtIssuer, auth.NewJWKSCache(), s.jwksTTL)
 }
 
-func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Request) error {
+func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Request) (*OTPRequestResponse, error) {
 	if req.Email == nil && req.Phone == nil {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeOTPRequestFail, eventsvc.EventData{
 			"status": "failed",
 			"reason": "invalid_input",
 		})
-		return ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	if req.IP != "" {
@@ -190,7 +195,7 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 				"reason": "rate_limited_ip",
 				"ip":     req.IP,
 			})
-			return ErrRateLimited
+			return nil, ErrRateLimited
 		}
 	}
 
@@ -200,7 +205,7 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 			"status": "failed",
 			"reason": "invalid_input",
 		})
-		return ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	if ok, err := s.rateLimiter.Check("addr:" + address); err != nil || !ok {
@@ -210,7 +215,7 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 			"channel": channel,
 			"address": address,
 		})
-		return ErrRateLimited
+		return nil, ErrRateLimited
 	}
 
 	tenantInfo, tenantID, err := tenantFromContext(ctx)
@@ -221,12 +226,12 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 			"channel": channel,
 			"address": address,
 		})
-		return err
+		return nil, err
 	}
 
 	policy, err := s.tenantPolicy(ctx, tenantID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	user, tenantCtx, err := s.resolveTenantUserByContact(ctx, tenantInfo, channel, address, policy)
@@ -237,16 +242,16 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 			"channel": channel,
 			"address": address,
 		})
-		return err
+		return nil, err
 	}
 	code, err := s.nextOTPCode(policy.OTPLength)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	hash, err := auth.HashOTP(code)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_ = s.otpRepo.DeleteExpiredOTPsByAddress(ctx, tenantID, OTPChannel(channel), address)
@@ -267,7 +272,7 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 			"address": address,
 			"code":    code,
 		})
-		return err
+		return nil, err
 	}
 
 	data := map[string]any{
@@ -309,16 +314,19 @@ func (s *AuthService) RequestOTP(ctx context.Context, req OTPRequest, r *http.Re
 		"user_id": user.ID.String(),
 	})
 
-	return nil
+	return &OTPRequestResponse{
+		Status:    "ok",
+		OTPLength: policy.OTPLength,
+	}, nil
 }
 
-func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *http.Request) error {
+func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *http.Request) (*OTPRequestResponse, error) {
 	if req.Email == nil && req.Phone == nil {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeOTPRequestFail, eventsvc.EventData{
 			"status": "failed",
 			"reason": "invalid_input",
 		})
-		return ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	if req.IP != "" {
@@ -328,7 +336,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 				"reason": "rate_limited_ip",
 				"ip":     req.IP,
 			})
-			return ErrRateLimited
+			return nil, ErrRateLimited
 		}
 	}
 
@@ -338,7 +346,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 			"status": "failed",
 			"reason": "invalid_input",
 		})
-		return ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	if ok, err := s.rateLimiter.Check("admin-addr:" + address); err != nil || !ok {
@@ -348,7 +356,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 			"channel": channel,
 			"address": address,
 		})
-		return ErrRateLimited
+		return nil, ErrRateLimited
 	}
 
 	user, err := s.resolveAdminUserByContact(ctx, channel, address)
@@ -359,7 +367,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 			"channel": channel,
 			"address": address,
 		})
-		return err
+		return nil, err
 	}
 
 	adminCtx := requestctx.WithUser(ctx, requestctx.UserInfo{
@@ -371,12 +379,12 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 
 	code, err := s.nextOTPCode(s.otpLength)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	hash, err := auth.HashOTP(code)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_ = s.otpRepo.DeleteExpiredOTPsByAddress(ctx, platformAuthTenantID, OTPChannel(channel), address)
@@ -397,7 +405,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 			"address": address,
 			"code":    code,
 		})
-		return err
+		return nil, err
 	}
 
 	if err := s.sendAdminOTP(ctx, channel, address, code); err != nil {
@@ -417,7 +425,10 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 		"status":  "success",
 		"user_id": user.ID.String(),
 	})
-	return nil
+	return &OTPRequestResponse{
+		Status:    "ok",
+		OTPLength: s.otpLength,
+	}, nil
 }
 
 func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {

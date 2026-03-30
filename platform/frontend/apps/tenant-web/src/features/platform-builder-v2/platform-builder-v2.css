@@ -795,6 +795,36 @@
   gap: 0.45rem;
 }
 
+.tenant-web__platform-builder-field-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.tenant-web__platform-builder-field-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 0.78rem 0.82rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+}
+
+.tenant-web__platform-builder-field-meta-label {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tenant-web__platform-builder-field-meta-value {
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 .tenant-web__platform-builder-checkbox-row {
   display: inline-flex;
   align-items: center;
@@ -846,6 +876,10 @@
 
 [data-theme="dark"] .tenant-web__platform-builder-menu-trigger,
 [data-theme="dark"] .tenant-web__platform-builder-field-tag {
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, black 12%);
+}
+
+[data-theme="dark"] .tenant-web__platform-builder-field-meta-item {
   background: color-mix(in srgb, var(--color-bg-surface) 88%, black 12%);
 }
 

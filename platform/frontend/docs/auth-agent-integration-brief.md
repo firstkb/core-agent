@@ -182,10 +182,16 @@ Success envelope:
 {
   "status": "ok",
   "data": {
-    "status": "ok"
+    "status": "ok",
+    "otp_length": 6
   }
 }
 ```
+
+Meaning:
+
+- the frontend must size or validate the OTP input from `data.otp_length`
+- do not hardcode OTP length in the UI
 
 ### `POST /auth/otp/verify`
 
@@ -282,10 +288,16 @@ Success envelope:
 {
   "status": "ok",
   "data": {
-    "status": "ok"
+    "status": "ok",
+    "otp_length": 6
   }
 }
 ```
+
+Meaning:
+
+- current local seeded admin returns `otp_length = 6`
+- the frontend must size or validate the OTP input from `data.otp_length`
 
 ### `POST /auth/admin/otp/verify`
 

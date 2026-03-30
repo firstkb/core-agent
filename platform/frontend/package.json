@@ -11,6 +11,7 @@
     "dev:tenant": "turbo run dev --filter=@platform/tenant-web",
     "dev": "turbo run dev --filter=@platform/platform-admin-web --filter=@platform/tenant-web",
     "dev:https": "./scripts/dev-https.sh",
+    "dev:stack:https": "./scripts/dev-stack-https.sh",
     "dev:proxy": "./scripts/dev-proxy.sh",
     "dev:hosts": "./scripts/dev-hosts.sh",
     "dev:trust-caddy": "./scripts/dev-trust-caddy.sh",

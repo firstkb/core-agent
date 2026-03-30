@@ -164,6 +164,22 @@ func generateRefreshToken() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
+func optionalString(value string) *string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
+}
+
+func refreshSurfaceOrDefault(value, fallback string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return fallback
+	}
+	return trimmed
+}
+
 func parseDuration(value string, def time.Duration) time.Duration {
 	if strings.TrimSpace(value) == "" {
 		return def

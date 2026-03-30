@@ -8,7 +8,7 @@ Entry point for the active frontend documentation set.
 - `package-boundaries.md`: canonical package responsibilities and import rules
 - `app-surfaces.md`: app responsibilities and naming decisions
 - `tenant-model.md`: tenant runtime model and cross-app tenant concerns
-- `auth-runtime-followups.md`: tracked follow-up work for config bootstrap, mock auth/profile gating, and future API integration
+- `auth-runtime-followups.md`: tracked follow-up work for auth runtime bootstrap, profile gating, and later integration cleanup
 - `offline-strategy.md`: when offline stays inside `tenant-web` and when it becomes its own surface
 - `foundation-rollout-plan.md`: closed rollout document for the foundation baseline and current rollout status
 - `layout-baseline.md`: lightweight layout and grid contract for stable width behavior without a heavy framework grid system

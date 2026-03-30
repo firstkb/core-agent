@@ -327,14 +327,21 @@ Purpose:
 Columns:
 
 - `id uuid not null`
+- `session_id uuid not null`
 - `tenant_id bigint not null`
 - `user_id uuid not null`
+- `surface text not null`
 - `token_hash text not null`
+- `token_family_id uuid not null`
 - `client_id text null`
 - `device_id text null`
+- `ip_address inet null`
+- `user_agent text null`
 - `created_at timestamptz not null`
+- `updated_at timestamptz not null`
 - `expires_at timestamptz not null`
 - `revoked_at timestamptz null`
+- `rotated_at timestamptz null`
 
 Keys and indexes:
 
@@ -343,11 +350,20 @@ Keys and indexes:
 - index: `ix_refresh_token_user (tenant_id, user_id)`
 - index: `ix_refresh_token_expires (tenant_id, expires_at)`
 - partial index: `ix_refresh_token_revoked (tenant_id, revoked_at) where revoked_at is null`
+- index: `ix_refresh_token_session_id (session_id)`
+- index: `ix_refresh_token_family_created (token_family_id, created_at desc)`
+- partial index: `ix_refresh_token_active_user (tenant_id, user_id, created_at desc) where revoked_at is null`
 
 Rules:
 
 - raw refresh token is never persisted
 - revocation is soft via `revoked_at`
+- `session_id` identifies one browser/app session contour
+- `token_family_id` groups all rotated refresh-token versions for that session
+- `rotated_at` marks the token version that has already been exchanged for a newer token in the same family
+- refresh rotation must preserve both `session_id` and `token_family_id`
+- presenting a rotated token again is treated as reuse and must revoke the active family members
+- `surface` explicitly separates `tenant` and `admin` session issuance
 - tenant filter is mandatory in auth flows
 - this is a session/security table, so UUID identity is correct here
 

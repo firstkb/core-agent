@@ -13,6 +13,7 @@ export const appShellEnglishMessages = {
     back: "Use another contact",
     errors: {
       enterCode: "Enter the authorization code to continue.",
+      enterCodeLength: "Enter the {{count}}-digit authorization code to continue.",
       enterEmail: "Enter an email address to continue.",
       enterPhone: "Enter a phone number to continue.",
       unableToSendCode: "Unable to send the code.",
@@ -20,6 +21,9 @@ export const appShellEnglishMessages = {
     },
     footer: {
       copyright: "© {{year}} {{companyName}}. All rights reserved.",
+    },
+    helper: {
+      codeLength: "This authorization code has {{count}} digits.",
     },
     labels: {
       code: "Authorization code",

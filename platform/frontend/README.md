@@ -29,12 +29,20 @@ Local HTTPS is handled by Caddy and is intended for development only.
 - `pnpm dev:hosts`: add local host mappings
 - `pnpm dev:trust-caddy`: trust the local Caddy CA
 - `pnpm dev:https`: run Vite apps plus the local HTTPS proxy, or reuse existing app dev servers on ports `5173` and `5174`
+- `pnpm dev:stack:https`: run frontend apps, backend APIs, and the local HTTPS proxy together
 - `pnpm dev:proxy`: run only the local HTTPS proxy when the apps are already running
 
 Configured local domains:
 
 - `https://admin.platform.local`
 - `https://demo.platform.local`
+- `https://acme.platform.local`
+
+Same-site dev routing:
+
+- `/` -> frontend app
+- `/api/v1/*` -> app API
+- `/auth/v1/*` -> auth API
 
 ## Build Targets
 

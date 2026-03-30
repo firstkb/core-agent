@@ -10,7 +10,7 @@ import (
 )
 
 func TestHandlerGetProfileSuccess(t *testing.T) {
-	handler := NewHandler(NewService())
+	handler := NewHandler(NewService(nil))
 	req, err := http.NewRequest(http.MethodGet, "/profile", nil)
 	if err != nil {
 		t.Fatalf("NewRequest returned error: %v", err)
@@ -25,6 +25,7 @@ func TestHandlerGetProfileSuccess(t *testing.T) {
 	})
 	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
 		ID:     "101",
+		Name:   "Demo Tenant",
 		Host:   "demo.dtriton.local",
 		Plan:   "sandbox",
 		Status: "active",
@@ -38,10 +39,13 @@ func TestHandlerGetProfileSuccess(t *testing.T) {
 	if profile.Tenant.Host != "demo.dtriton.local" {
 		t.Fatalf("tenant host = %q, want %q", profile.Tenant.Host, "demo.dtriton.local")
 	}
+	if profile.Tenant.Name != "Demo Tenant" {
+		t.Fatalf("tenant name = %q, want %q", profile.Tenant.Name, "Demo Tenant")
+	}
 }
 
 func TestHandlerGetProfileUnauthorized(t *testing.T) {
-	handler := NewHandler(NewService())
+	handler := NewHandler(NewService(nil))
 	req, err := http.NewRequest(http.MethodGet, "/profile", nil)
 	if err != nil {
 		t.Fatalf("NewRequest returned error: %v", err)
@@ -49,6 +53,7 @@ func TestHandlerGetProfileUnauthorized(t *testing.T) {
 
 	ctx := requestctx.WithTenant(context.Background(), requestctx.TenantInfo{
 		ID:     "101",
+		Name:   "Demo Tenant",
 		Host:   "demo.dtriton.local",
 		Plan:   "sandbox",
 		Status: "active",

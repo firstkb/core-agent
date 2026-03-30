@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { AuthProvider } from "@platform/auth-core";
+import {
+  AuthProvider,
+  createOtpAuthService,
+} from "@platform/auth-core";
 import {
   appShellLocaleResources,
   AppUpdateBanner,
@@ -13,7 +16,10 @@ import {
 } from "@platform/i18n";
 import { BrowserRouter } from "react-router-dom";
 
-import { App } from "./app";
+import {
+  App,
+  type AdminRuntimeConfig,
+} from "./app";
 import { adminLocaleResources } from "../locales";
 
 const adminI18nResources = mergeLocaleResources(
@@ -59,28 +65,32 @@ function persistConfigEntries(config: Record<string, unknown>) {
   }
 }
 
-function sleep(durationMs: number) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, durationMs);
-  });
+function requireRuntimeUrl(config: Record<string, unknown>, key: keyof AdminRuntimeConfig) {
+  const value = config[key];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Runtime config is missing ${key}.`);
+  }
+
+  return value.trim();
 }
 
-let adminBootstrapPromise: Promise<void> | null = null;
+let adminBootstrapPromise: Promise<AdminRuntimeConfig> | null = null;
 
 function bootstrapAdminRuntime() {
   if (!adminBootstrapPromise) {
-    // TODO(runtime-config): Keep config bootstrap ahead of auth/profile initialization.
-    // The private-area gate in app.tsx should eventually consume API base URLs from /config.json.
-    adminBootstrapPromise = Promise.all([
-      loadRequiredJson("/config.json"),
-      sleep(250),
-    ])
-      .then(([config]) => {
-        if (config && typeof config === "object" && !Array.isArray(config)) {
-          persistConfigEntries(config as Record<string, unknown>);
+    adminBootstrapPromise = loadRequiredJson("/config.json")
+      .then((config) => {
+        if (!config || typeof config !== "object" || Array.isArray(config)) {
+          throw new Error("Unable to resolve admin runtime config.");
         }
-      })
-      .catch(() => undefined);
+
+        persistConfigEntries(config as Record<string, unknown>);
+
+        return {
+          adminApiUrl: requireRuntimeUrl(config as Record<string, unknown>, "adminApiUrl"),
+          authApiUrl: requireRuntimeUrl(config as Record<string, unknown>, "authApiUrl"),
+        };
+      });
   }
 
   return adminBootstrapPromise;
@@ -98,26 +108,47 @@ export function Root() {
 }
 
 function AdminRuntimeRoot() {
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [runtimeConfig, setRuntimeConfig] = useState<AdminRuntimeConfig | null>(null);
   const { t } = useTranslation();
+  const authService = useMemo(() => {
+    if (!runtimeConfig) {
+      return null;
+    }
+
+    return createOtpAuthService({
+      authApiUrl: runtimeConfig.authApiUrl,
+      surface: "admin",
+    });
+  }, [runtimeConfig]);
 
   useEffect(() => {
     let isActive = true;
-    void bootstrapAdminRuntime().finally(() => {
-      if (isActive) {
-        setIsBootstrapping(false);
-      }
-    });
+    void bootstrapAdminRuntime()
+      .then((config) => {
+        if (isActive) {
+          setRuntimeConfig(config);
+          setBootstrapError(null);
+          setIsBootstrapping(false);
+        }
+      })
+      .catch((error) => {
+        if (isActive) {
+          setBootstrapError(error instanceof Error ? error.message : t("admin.loaders.bootstrapDescription"));
+          setIsBootstrapping(false);
+        }
+      });
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [t]);
 
-  if (isBootstrapping) {
+  if (isBootstrapping || !runtimeConfig || !authService) {
     return (
       <FullscreenBrandLoader
-        description={t("admin.loaders.bootstrapDescription")}
+        description={bootstrapError ?? t("admin.loaders.bootstrapDescription")}
         label={t("admin.loaders.bootstrapLabel")}
         logo={<AdminBrandLockup />}
       />
@@ -125,10 +156,13 @@ function AdminRuntimeRoot() {
   }
 
   return (
-    <AuthProvider storageNamespace="platform-admin-auth">
+    <AuthProvider
+      service={authService}
+      storageNamespace="platform-admin-auth"
+    >
       <BrowserRouter>
         <>
-          <App />
+          <App runtimeConfig={runtimeConfig} />
           <AppUpdateBanner />
         </>
       </BrowserRouter>

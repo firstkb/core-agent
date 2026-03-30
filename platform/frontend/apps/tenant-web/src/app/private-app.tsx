@@ -5,7 +5,7 @@ import {
   LocaleMenuItems,
   WorkspaceShell,
 } from "@platform/app-shell";
-import { getDemoSession, useAuth } from "@platform/auth-core";
+import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import {
   BellIcon,
@@ -45,6 +45,7 @@ import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
 } from "../widgets/tenant-rail-utility-sheet/tenant-rail-utility-sheet";
+import type { TenantWorkspaceUserSession } from "./app";
 import { TenantBrandImage } from "./tenant-brand-image";
 import "./app.css";
 
@@ -57,7 +58,6 @@ declare global {
 type TenantThemeMode = "light" | "dark";
 
 const tenantThemeStorageKey = "tenant-workspace-theme";
-const session = getDemoSession("tenant");
 const appBuild = getAppBuildMetadata();
 
 function isEditableTarget(target: EventTarget | null) {
@@ -91,8 +91,10 @@ function scrollToDashboardSection(sectionId?: string) {
 
 export function PrivateApp({
   tenantName,
+  userSession,
 }: {
   tenantName?: string;
+  userSession: TenantWorkspaceUserSession;
 }) {
   const { t } = useTranslation();
   const { signOut } = useAuth();
@@ -339,7 +341,7 @@ export function PrivateApp({
                 type="button"
               >
                 <span className="workspace-shell__header-profile-initial">
-                  {session.displayName.slice(0, 1).toUpperCase()}
+                  {userSession.initial}
                 </span>
               </button>
             </MenuTrigger>
@@ -398,11 +400,11 @@ export function PrivateApp({
                   aria-hidden="true"
                   className="workspace-shell__sidebar-user-avatar"
                 >
-                  {session.displayName.slice(0, 1).toUpperCase()}
+                  {userSession.initial}
                 </div>
                 <div className="workspace-shell__sidebar-user-copy">
-                  <span className="workspace-shell__sidebar-user-name">{session.displayName}</span>
-                  <span className="workspace-shell__sidebar-user-email">{session.email}</span>
+                  <span className="workspace-shell__sidebar-user-name">{userSession.displayName}</span>
+                  <span className="workspace-shell__sidebar-user-email">{userSession.secondaryLabel}</span>
                 </div>
               </button>
             </MenuTrigger>

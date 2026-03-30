@@ -2,6 +2,7 @@ package apperr
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 )
 
@@ -17,5 +18,16 @@ func WrapAndLog(
 ) *AppError {
 	fields := append([]any{"code", code, "error", err}, kv...)
 	logger.Error(msg, fields...)
+
+	var appErr *AppError
+	if errors.As(err, &appErr) && appErr != nil {
+		return &AppError{
+			Code:       appErr.Code,
+			Message:    appErr.Message,
+			StatusCode: appErr.StatusCode,
+			Err:        err,
+		}
+	}
+
 	return Wrap(err, code, status, msg)
 }

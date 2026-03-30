@@ -5,6 +5,11 @@ export const adminEnglishMessages = {
     auth: {
       descriptionCode: "Enter the Authorization Code sent to {{identifier}}.",
       descriptionEnter: "Use your platform admin email or phone to access Admin Console.",
+      errors: {
+        emailNotFound: "We could not find a platform admin account for this email address.",
+        invalidCode: "The authorization code you entered is incorrect. Request a new code and try again.",
+        phoneNotFound: "We could not find a platform admin account for this phone number.",
+      },
       surfaceBadge: "Admin Console",
       tagline: "Control. Visibility. Reliability.",
       title: "Sign in to Admin Console",
@@ -35,7 +40,7 @@ export const adminEnglishMessages = {
         note: "Revenue lanes",
       },
       dashboard: {
-        badge: "Mock",
+        badge: "Live",
         headerTitle: "Dashboard",
         label: "Dashboard",
         note: "Control plane overview",
@@ -43,7 +48,6 @@ export const adminEnglishMessages = {
     },
     shell: {
       aria: {
-        openGlobalSearch: "Open global search",
         openNotifications: "Open notifications",
         openQuickCreateMenu: "Open quick create menu",
         openUserMenu: "Open user menu",
@@ -70,8 +74,6 @@ export const adminEnglishMessages = {
         reviewPlanDeltas: "Review plan deltas",
         tasksCenter: "Tasks center",
       },
-      searchPlaceholder: "Search or run command",
-      searchTitle: "{{title}} command search will be wired in a later step.",
       sidebarSection: "Admin Console",
       surfaceLabel: "Admin Console",
     },

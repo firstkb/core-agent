@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { AuthProvider } from "@platform/auth-core";
+import {
+  AuthProvider,
+  createOtpAuthService,
+} from "@platform/auth-core";
 import {
   appShellLocaleResources,
   AppUpdateBanner,
@@ -13,29 +16,30 @@ import {
 } from "@platform/i18n";
 import { BrowserRouter } from "react-router-dom";
 
-import { App, type TenantBranding } from "./app";
+import {
+  App,
+  type TenantRuntimeConfig,
+} from "./app";
 import { tenantLocaleResources } from "../locales";
 import { TenantBrandImage } from "./tenant-brand-image";
-
-const fallbackBranding: TenantBranding = {
-  name: "Demo Tenant",
-  tenantDomain: "demo.platform.local",
-  tenantId: "1000",
-};
 
 const tenantI18nResources = mergeLocaleResources(
   appShellLocaleResources,
   tenantLocaleResources,
 );
 
+type TenantRuntimeBootstrap = {
+  runtimeConfig: TenantRuntimeConfig;
+};
+
 function TenantBrandLockup() {
   return (
     <div className="public-brand-lockup">
       <TenantBrandImage
-        alt="eSafety Systems"
+        alt="Tenant Workspace"
         className="public-brand-logo"
         fallbackSrc="/assets/logo-light.svg"
-        primarySrc="/assets/logo-light.svg"
+        primarySrc="/tenant/logo-light.svg"
       />
     </div>
   );
@@ -95,55 +99,36 @@ function ensureTenantStylesheet() {
   document.head.append(link);
 }
 
-function sleep(durationMs: number) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, durationMs);
-  });
+function requireRuntimeUrl(config: Record<string, unknown>, key: keyof TenantRuntimeConfig) {
+  const value = config[key];
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`Runtime config is missing ${key}.`);
+  }
+
+  return value.trim();
 }
 
-let tenantBootstrapPromise: Promise<TenantBranding> | null = null;
+let tenantBootstrapPromise: Promise<TenantRuntimeBootstrap> | null = null;
 
 function bootstrapTenantRuntime() {
   if (!tenantBootstrapPromise) {
     tenantBootstrapPromise = (async () => {
       ensureTenantStylesheet();
 
-      try {
-        // TODO(runtime-config): Keep config bootstrap ahead of auth/profile initialization.
-        // tenant-web needs both shared /config.json and tenant branding from /tenant/config.json
-        // before the private-area profile request is introduced in app.tsx.
-        const [appConfig, tenantConfig] = await Promise.all([
-          loadJson<Record<string, unknown>>("/config.json"),
-          loadJson<Record<string, unknown>>("/tenant/config.json", true),
-          sleep(250),
-        ]);
+      const appConfig = await loadJson<Record<string, unknown>>("/config.json");
 
-        if (appConfig) {
-          persistConfigEntries("platform.tenant.config", appConfig);
-        }
-
-        if (tenantConfig) {
-          persistConfigEntries("platform.tenant.branding", tenantConfig);
-        }
-
-        if (!tenantConfig) {
-          return fallbackBranding;
-        }
-
-        return {
-          name: typeof tenantConfig.name === "string" && tenantConfig.name.trim()
-            ? tenantConfig.name
-            : fallbackBranding.name,
-          tenantDomain: typeof tenantConfig.tenantDomain === "string"
-            ? tenantConfig.tenantDomain
-            : fallbackBranding.tenantDomain,
-          tenantId: typeof tenantConfig.tenantId === "string"
-            ? tenantConfig.tenantId
-            : fallbackBranding.tenantId,
-        };
-      } catch {
-        return fallbackBranding;
+      if (!appConfig) {
+        throw new Error("Unable to resolve tenant runtime config.");
       }
+
+      persistConfigEntries("platform.tenant.config", appConfig);
+
+      return {
+        runtimeConfig: {
+          authApiUrl: requireRuntimeUrl(appConfig, "authApiUrl"),
+          tenantApiUrl: requireRuntimeUrl(appConfig, "tenantApiUrl"),
+        },
+      };
     })();
   }
 
@@ -162,28 +147,47 @@ export function Root() {
 }
 
 function TenantRuntimeRoot() {
-  const [branding, setBranding] = useState<TenantBranding>(fallbackBranding);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [runtimeConfig, setRuntimeConfig] = useState<TenantRuntimeConfig | null>(null);
   const { t } = useTranslation();
+  const authService = useMemo(() => {
+    if (!runtimeConfig) {
+      return null;
+    }
+
+    return createOtpAuthService({
+      authApiUrl: runtimeConfig.authApiUrl,
+      surface: "tenant",
+    });
+  }, [runtimeConfig]);
 
   useEffect(() => {
     let isActive = true;
-    void bootstrapTenantRuntime().then((resolvedBranding) => {
-      if (isActive) {
-        setBranding(resolvedBranding);
-        setIsBootstrapping(false);
-      }
-    });
+    void bootstrapTenantRuntime()
+      .then((bootstrap) => {
+        if (isActive) {
+          setRuntimeConfig(bootstrap.runtimeConfig);
+          setBootstrapError(null);
+          setIsBootstrapping(false);
+        }
+      })
+      .catch((error) => {
+        if (isActive) {
+          setBootstrapError(error instanceof Error ? error.message : t("tenant.loaders.bootstrapDescription"));
+          setIsBootstrapping(false);
+        }
+      });
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [t]);
 
-  if (isBootstrapping) {
+  if (isBootstrapping || !runtimeConfig || !authService) {
     return (
       <FullscreenBrandLoader
-        description={t("tenant.loaders.bootstrapDescription")}
+        description={bootstrapError ?? t("tenant.loaders.bootstrapDescription")}
         label={t("tenant.loaders.bootstrapLabel")}
         logo={<TenantBrandLockup />}
       />
@@ -191,10 +195,13 @@ function TenantRuntimeRoot() {
   }
 
   return (
-    <AuthProvider storageNamespace="tenant-workspace-auth">
+    <AuthProvider
+      service={authService}
+      storageNamespace="tenant-workspace-auth"
+    >
       <BrowserRouter>
         <>
-          <App tenantBranding={branding} />
+          <App runtimeConfig={runtimeConfig} />
           <AppUpdateBanner />
         </>
       </BrowserRouter>

@@ -28,6 +28,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		logger: logger,
 		config: &c,
 	}
+	server.config.Cookie = normalizeCookieConfig(server.config.Cookie)
 
 	if err := server.initialize(); err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 
 	if srv.config.Origin != "" {
 		corsCfg := appmw.CORSConfig{
-			AllowedOrigins:   []string{srv.config.Origin},
+			AllowedOrigins:   splitAllowedOrigins(srv.config.Origin),
 			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 			AllowedHeaders:   []string{"Content-Type", "Authorization", "X-Requested-With"},
 			AllowCredentials: true,
@@ -91,4 +92,17 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 
 func (srv *Server) Handler() http.Handler {
 	return srv.handler
+}
+
+func splitAllowedOrigins(value string) []string {
+	parts := strings.Split(value, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		origins = append(origins, part)
+	}
+	return origins
 }

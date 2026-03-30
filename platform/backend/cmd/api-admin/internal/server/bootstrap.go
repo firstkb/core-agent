@@ -76,7 +76,7 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 
 	if srv.config.Origin != "" {
 		corsCfg := appmw.CORSConfig{
-			AllowedOrigins:   []string{srv.config.Origin},
+			AllowedOrigins:   splitAllowedOrigins(srv.config.Origin),
 			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 			AllowedHeaders:   []string{"Content-Type", "Authorization", "X-Requested-With", authpkg.HeaderAuthTenantID, authpkg.HeaderAuthUserID, authpkg.HeaderAuthEmail, authpkg.HeaderAuthPhone, authpkg.HeaderAuthLevel, authpkg.HeaderAuthRole, authpkg.HeaderAuthScope},
 			AllowCredentials: true,
@@ -121,4 +121,17 @@ func newTokenValidator(cfg *config.Config) (authpkg.JWTIssuer, error) {
 
 func shouldValidateTokensLocally(mode string) bool {
 	return strings.EqualFold(strings.TrimSpace(mode), "internal")
+}
+
+func splitAllowedOrigins(value string) []string {
+	parts := strings.Split(value, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		origins = append(origins, part)
+	}
+	return origins
 }

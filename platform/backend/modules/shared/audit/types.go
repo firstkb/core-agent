@@ -22,6 +22,10 @@ const (
 	EventTypeLogoutFail       EventType = "logout_fail"
 	EventTypeTokenRefresh     EventType = "token_refresh"
 	EventTypeTokenRefreshFail EventType = "token_refresh_fail"
+	EventTypeSessionCreated   EventType = "session_created"
+	EventTypeSessionRotated   EventType = "session_rotated"
+	EventTypeSessionRevoked   EventType = "session_revoked"
+	EventTypeSessionReuse     EventType = "session_reuse_detected"
 
 	// User events
 	EventTypeUserCreate     EventType = "user_create"

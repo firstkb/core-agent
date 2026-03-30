@@ -5,6 +5,11 @@ export const adminSpanishMessages = {
     auth: {
       descriptionCode: "Introduce el codigo de autorizacion enviado a {{identifier}}.",
       descriptionEnter: "Usa tu correo o telefono de administrador para acceder a la consola.",
+      errors: {
+        emailNotFound: "No pudimos encontrar una cuenta de administrador de plataforma para esta direccion de correo.",
+        invalidCode: "El codigo de autorizacion introducido no es correcto. Solicita un codigo nuevo y vuelve a intentarlo.",
+        phoneNotFound: "No pudimos encontrar una cuenta de administrador de plataforma para este numero de telefono.",
+      },
       surfaceBadge: "Consola de administracion",
       tagline: "Control. Visibilidad. Fiabilidad.",
       title: "Iniciar sesion en la consola",
@@ -43,7 +48,6 @@ export const adminSpanishMessages = {
     },
     shell: {
       aria: {
-        openGlobalSearch: "Abrir busqueda global",
         openNotifications: "Abrir notificaciones",
         openQuickCreateMenu: "Abrir menu de acciones",
         openUserMenu: "Abrir menu de usuario",
@@ -70,8 +74,6 @@ export const adminSpanishMessages = {
         reviewPlanDeltas: "Revisar cambios del plan",
         tasksCenter: "Centro de tareas",
       },
-      searchPlaceholder: "Buscar o ejecutar comando",
-      searchTitle: "La busqueda de comandos para {{title}} se conectara en un paso posterior.",
       sidebarSection: "Consola de administracion",
       surfaceLabel: "Consola de administracion",
     },

@@ -32,6 +32,7 @@ type RouteInfo struct {
 
 type TenantInfo struct {
 	ID             string // prefer numeric if DB is BIGINT
+	Name           string
 	Host           string
 	Status         string
 	Plan           string

@@ -6,14 +6,17 @@ type Profile struct {
 }
 
 type UserProfile struct {
-	ID    string `json:"id"`
-	Email string `json:"email,omitempty"`
-	Level int    `json:"level"`
-	Role  string `json:"role,omitempty"`
+	ID        string `json:"id"`
+	Email     string `json:"email,omitempty"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Level     int    `json:"level"`
+	Role      string `json:"role,omitempty"`
 }
 
 type TenantProfile struct {
 	ID     string `json:"id"`
+	Name   string `json:"name,omitempty"`
 	Host   string `json:"host,omitempty"`
 	Plan   string `json:"plan,omitempty"`
 	Status string `json:"status,omitempty"`

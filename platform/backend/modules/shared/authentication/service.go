@@ -105,13 +105,14 @@ type OTPRequestResponse struct {
 }
 
 type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string
 	IP           string
 	UserAgent    string
 }
 
 type LogoutRequest struct {
-	AllDevices bool `json:"all_devices"`
+	AllDevices   bool `json:"all_devices"`
+	RefreshToken string
 }
 
 func NewService(sqlClient *postgres.Client, cfg *config.Config, logger *slog.Logger, tenants *tenantsvc.ServiceTenantProvider) (*AuthService, error) {
@@ -431,7 +432,7 @@ func (s *AuthService) RequestAdminOTP(ctx context.Context, req OTPRequest, r *ht
 	}, nil
 }
 
-func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {
+func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*IssuedTokens, error) {
 	if req.Code == "" {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeOTPVerifyFail, eventsvc.EventData{
 			"status": "failed",
@@ -535,16 +536,27 @@ func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVer
 	}
 
 	refreshToken := generateRefreshToken()
+	issuedAt := time.Now()
 	refreshRecord := &sessions.RefreshToken{
-		TenantID:  tenantID,
-		UserID:    user.ID,
-		TokenHash: sessions.HashToken(refreshToken),
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(s.refreshTTL),
+		SessionID:     uuid.New(),
+		TenantID:      tenantID,
+		UserID:        user.ID,
+		Surface:       sessions.RefreshSurfaceTenant,
+		TokenHash:     sessions.HashToken(refreshToken),
+		TokenFamilyID: uuid.New(),
+		IPAddress:     optionalString(req.IP),
+		UserAgent:     optionalString(req.UserAgent),
+		CreatedAt:     issuedAt,
+		UpdatedAt:     issuedAt,
+		ExpiresAt:     issuedAt.Add(s.refreshTTL),
 	}
 	if err := s.refreshRepo.CreateToken(ctx, refreshRecord); err != nil {
 		return nil, err
 	}
+	s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeSessionCreated, sessionEventData(refreshRecord, eventsvc.EventData{
+		"status": "success",
+		"action": "login",
+	}))
 
 	s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeOTPVerify, eventsvc.EventData{
 		"channel": channel,
@@ -562,14 +574,15 @@ func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVer
 		"user_id": user.ID.String(),
 	})
 
-	return &TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    int(s.accessTTL.Seconds()),
+	return &IssuedTokens{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		RefreshExpiresAt: refreshRecord.ExpiresAt,
+		ExpiresIn:        int(s.accessTTL.Seconds()),
 	}, nil
 }
 
-func (s *AuthService) VerifyAdminOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {
+func (s *AuthService) VerifyAdminOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*IssuedTokens, error) {
 	if req.Code == "" {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeOTPVerifyFail, eventsvc.EventData{
 			"status": "failed",
@@ -652,16 +665,27 @@ func (s *AuthService) VerifyAdminOTP(ctx context.Context, r *http.Request, req O
 	}
 
 	refreshToken := generateRefreshToken()
+	issuedAt := time.Now()
 	refreshRecord := &sessions.RefreshToken{
-		TenantID:  platformAuthTenantID,
-		UserID:    user.ID,
-		TokenHash: sessions.HashToken(refreshToken),
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(s.refreshTTL),
+		SessionID:     uuid.New(),
+		TenantID:      platformAuthTenantID,
+		UserID:        user.ID,
+		Surface:       sessions.RefreshSurfaceAdmin,
+		TokenHash:     sessions.HashToken(refreshToken),
+		TokenFamilyID: uuid.New(),
+		IPAddress:     optionalString(req.IP),
+		UserAgent:     optionalString(req.UserAgent),
+		CreatedAt:     issuedAt,
+		UpdatedAt:     issuedAt,
+		ExpiresAt:     issuedAt.Add(s.refreshTTL),
 	}
 	if err := s.refreshRepo.CreateToken(ctx, refreshRecord); err != nil {
 		return nil, err
 	}
+	s.logAuthEvent(adminCtx, r, eventsvc.EventTypeSessionCreated, sessionEventData(refreshRecord, eventsvc.EventData{
+		"status": "success",
+		"action": "login",
+	}))
 
 	s.logAuthEvent(adminCtx, r, eventsvc.EventTypeOTPVerify, eventsvc.EventData{
 		"channel": channel,
@@ -678,88 +702,129 @@ func (s *AuthService) VerifyAdminOTP(ctx context.Context, r *http.Request, req O
 		"text":    "OK",
 		"user_id": user.ID.String(),
 	})
-	return &TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    int(s.accessTTL.Seconds()),
+	return &IssuedTokens{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		RefreshExpiresAt: refreshRecord.ExpiresAt,
+		ExpiresIn:        int(s.accessTTL.Seconds()),
 	}, nil
 }
 
-func (s *AuthService) Refresh(ctx context.Context, r *http.Request, req RefreshRequest) (*TokenResponse, error) {
+func (s *AuthService) Refresh(ctx context.Context, r *http.Request, req RefreshRequest) (*IssuedTokens, error) {
 	if strings.TrimSpace(req.RefreshToken) == "" {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, eventsvc.EventData{
 			"status": "failed",
-			"reason": "invalid_input",
-		})
-		return nil, ErrInvalidInput
-	}
-
-	token, err := s.refreshRepo.GetToken(ctx, sessions.HashToken(req.RefreshToken))
-	if err != nil {
-		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, eventsvc.EventData{
-			"status": "failed",
-			"reason": "token_not_found",
+			"reason": "refresh_cookie_missing",
 		})
 		return nil, ErrUnauthorized
 	}
 
-	_ = s.refreshRepo.RevokeToken(ctx, sessions.HashToken(req.RefreshToken))
-
-	if token.TenantID == platformAuthTenantID {
-		return s.refreshAdminToken(ctx, token)
+	tokenHash := sessions.HashToken(req.RefreshToken)
+	token, err := s.refreshRepo.GetTokenRecord(ctx, tokenHash)
+	if err != nil {
+		reason := refreshFailureReason(nil, err)
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData(reason, nil))
+		if errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+			return nil, ErrUnauthorized
+		}
+		return nil, err
 	}
 
-	return s.refreshTenantToken(ctx, r, token)
+	switch token.StateAt(time.Now()) {
+	case sessions.RefreshTokenStateRotated:
+		s.revokeTokenFamilyQuietly(ctx, token)
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeSessionReuse, sessionEventData(token, eventsvc.EventData{
+			"status": "failed",
+			"reason": "reuse_detected",
+		}))
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("reuse_detected", token))
+		return nil, ErrUnauthorized
+	case sessions.RefreshTokenStateRevoked:
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("token_revoked", token))
+		return nil, ErrUnauthorized
+	case sessions.RefreshTokenStateExpired:
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("token_expired", token))
+		return nil, ErrUnauthorized
+	}
+
+	if token.TenantID == platformAuthTenantID {
+		return s.refreshAdminToken(ctx, token, tokenHash, req)
+	}
+
+	return s.refreshTenantToken(ctx, r, token, tokenHash, req)
 }
 
 func (s *AuthService) Logout(ctx context.Context, r *http.Request, req LogoutRequest) error {
-	claims, ok := requestctx.Claims(ctx)
-	if !ok || claims.UserID == "" {
+	refreshToken := strings.TrimSpace(req.RefreshToken)
+	if refreshToken == "" {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
 			"status": "failed",
-			"reason": "unauthorized",
-		})
-		return ErrUnauthorized
-	}
-
-	userUUID, err := uuid.Parse(claims.UserID)
-	if err != nil {
-		s.logAuthEvent(ctx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
-			"status": "failed",
-			"reason": "unauthorized",
-		})
-		return ErrUnauthorized
-	}
-
-	tenantID := int64(0)
-	if claims.TenantID != "" {
-		if parsed, err := strconv.ParseInt(strings.TrimSpace(claims.TenantID), 10, 64); err == nil {
-			tenantID = parsed
-		}
-	}
-
-	if tenantID == 0 && !scopeContains(claims.Scope, auth.AccessScopeAdminAPI) {
-		s.logAuthEvent(ctx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
-			"status": "failed",
-			"reason": "tenant_missing",
-		})
-		return ErrTenantMissing
-	}
-
-	_ = s.refreshRepo.RevokeUserTokens(ctx, tenantID, userUUID, nil)
-
-	if tenantID == 0 {
-		s.logAuthEvent(ctx, r, eventsvc.EventTypeLogout, eventsvc.EventData{
-			"all_devices": req.AllDevices,
-			"status":      "success",
+			"reason": "refresh_cookie_missing",
 		})
 		return nil
 	}
 
-	s.logAuthEvent(ctx, r, eventsvc.EventTypeLogout, eventsvc.EventData{
+	tokenHash := sessions.HashToken(refreshToken)
+	token, err := s.refreshRepo.GetTokenRecord(ctx, tokenHash)
+	if err != nil {
+		if errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+			s.logAuthEvent(ctx, r, eventsvc.EventTypeLogout, eventsvc.EventData{
+				"all_devices": req.AllDevices,
+				"status":      "success",
+				"reason":      "session_not_found",
+			})
+			return nil
+		}
+		s.logAuthEvent(ctx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
+			"status": "failed",
+			"reason": "token_lookup_failed",
+		})
+		return err
+	}
+
+	logoutCtx := ctx
+	if token.TenantID != platformAuthTenantID {
+		if tenantCtx, tenantInfo, terr := s.ensureTenantContext(ctx, token.TenantID); terr == nil {
+			if !routeDomainMatchesTenantHost(refreshRouteDomain(ctx), tenantInfo.Host) {
+				s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
+					"status":    "failed",
+					"reason":    "tenant_host_mismatch",
+					"tenant_id": token.TenantID,
+					"surface":   sessions.RefreshSurfaceTenant,
+				})
+				return ErrUnauthorized
+			}
+			logoutCtx = tenantCtx
+		}
+	}
+
+	if req.AllDevices {
+		err = s.refreshRepo.RevokeUserTokens(ctx, token.TenantID, token.UserID, nil)
+	} else if token.TokenFamilyID != uuid.Nil {
+		err = s.refreshRepo.RevokeTokenFamily(ctx, token.TokenFamilyID)
+	} else {
+		err = s.refreshRepo.RevokeToken(ctx, tokenHash)
+	}
+	if err != nil && !errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+		s.logAuthEvent(logoutCtx, r, eventsvc.EventTypeLogoutFail, eventsvc.EventData{
+			"status":      "failed",
+			"reason":      "revoke_failed",
+			"all_devices": req.AllDevices,
+		})
+		return err
+	}
+
+	s.logAuthEvent(logoutCtx, r, eventsvc.EventTypeLogout, eventsvc.EventData{
 		"all_devices": req.AllDevices,
 		"status":      "success",
+		"surface":     token.Surface,
+		"user_id":     token.UserID.String(),
 	})
+	s.logAuthEvent(logoutCtx, r, eventsvc.EventTypeSessionRevoked, sessionEventData(token, eventsvc.EventData{
+		"status":      "success",
+		"all_devices": req.AllDevices,
+		"action":      "logout",
+	}))
 
 	return nil
 }
@@ -806,17 +871,22 @@ func resolveDevOTPCode(length int, fixed string) (string, error) {
 		return strings.Repeat("9", length), nil
 	}
 
-	if len(fixed) != length {
-		return "", fmt.Errorf("auth.dev.fixedotp length must match auth.otplength: got %d want %d", len(fixed), length)
-	}
-
 	for _, r := range fixed {
 		if r < '0' || r > '9' {
 			return "", errors.New("auth.dev.fixedotp must contain only digits")
 		}
 	}
 
-	return fixed, nil
+	if len(fixed) == length {
+		return fixed, nil
+	}
+
+	if len(fixed) > length {
+		return fixed[:length], nil
+	}
+
+	last := fixed[len(fixed)-1:]
+	return fixed + strings.Repeat(last, length-len(fixed)), nil
 }
 
 func latestAttempt(otps []*OTP) int {
@@ -906,6 +976,11 @@ func shouldLogAuthEvent(eventType eventsvc.EventType) bool {
 	switch eventType {
 	case eventsvc.EventTypeOTPRequest,
 		eventsvc.EventTypeLogin,
+		eventsvc.EventTypeLogout,
+		eventsvc.EventTypeSessionCreated,
+		eventsvc.EventTypeSessionRotated,
+		eventsvc.EventTypeSessionRevoked,
+		eventsvc.EventTypeSessionReuse,
 		eventsvc.EventTypeOTPRequestFail,
 		eventsvc.EventTypeOTPVerifyFail,
 		eventsvc.EventTypeTokenRefreshFail,
@@ -978,7 +1053,7 @@ func (s *AuthService) sendAdminOTP(ctx context.Context, channel, address, code s
 	}
 }
 
-func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, token *sessions.RefreshToken) (*TokenResponse, error) {
+func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, token *sessions.RefreshToken, currentTokenHash string, req RefreshRequest) (*IssuedTokens, error) {
 	tenantCtx, tenantInfo, terr := s.ensureTenantContext(ctx, token.TenantID)
 	if terr != nil {
 		s.logAuthEvent(ctx, r, eventsvc.EventTypeTokenRefreshFail, eventsvc.EventData{
@@ -986,6 +1061,15 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 			"reason": "tenant_missing",
 		})
 		return nil, ErrTenantMissing
+	}
+	if !routeDomainMatchesTenantHost(refreshRouteDomain(ctx), tenantInfo.Host) {
+		s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefreshFail, eventsvc.EventData{
+			"status":    "failed",
+			"reason":    "tenant_host_mismatch",
+			"tenant_id": token.TenantID,
+			"surface":   sessions.RefreshSurfaceTenant,
+		})
+		return nil, ErrUnauthorized
 	}
 
 	policy, err := s.tenantPolicy(ctx, token.TenantID)
@@ -1025,14 +1109,34 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 	}
 
 	newRefresh := generateRefreshToken()
+	issuedAt := time.Now()
 	refreshRecord := &sessions.RefreshToken{
-		TenantID:  token.TenantID,
-		UserID:    token.UserID,
-		TokenHash: sessions.HashToken(newRefresh),
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(s.refreshTTL),
+		SessionID:     token.SessionID,
+		TenantID:      token.TenantID,
+		UserID:        token.UserID,
+		Surface:       refreshSurfaceOrDefault(token.Surface, sessions.RefreshSurfaceTenant),
+		TokenHash:     sessions.HashToken(newRefresh),
+		TokenFamilyID: token.TokenFamilyID,
+		IPAddress:     optionalString(req.IP),
+		UserAgent:     optionalString(req.UserAgent),
+		CreatedAt:     issuedAt,
+		UpdatedAt:     issuedAt,
+		ExpiresAt:     issuedAt.Add(s.refreshTTL),
 	}
-	if err := s.refreshRepo.CreateToken(ctx, refreshRecord); err != nil {
+	if err := s.refreshRepo.RotateToken(ctx, currentTokenHash, refreshRecord); err != nil {
+		if errors.Is(err, sessions.ErrRefreshTokenRotated) {
+			s.revokeTokenFamilyQuietly(tenantCtx, token)
+			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeSessionReuse, sessionEventData(token, eventsvc.EventData{
+				"status": "failed",
+				"reason": "reuse_detected",
+			}))
+			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("reuse_detected", token))
+			return nil, ErrUnauthorized
+		}
+		if errors.Is(err, sessions.ErrRefreshTokenRevoked) || errors.Is(err, sessions.ErrRefreshTokenExpired) || errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData(refreshFailureReason(token, err), token))
+			return nil, ErrUnauthorized
+		}
 		return nil, err
 	}
 
@@ -1040,15 +1144,20 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 		"status":  "success",
 		"user_id": user.ID.String(),
 	})
+	s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeSessionRotated, sessionEventData(refreshRecord, eventsvc.EventData{
+		"status": "success",
+		"action": "refresh",
+	}))
 
-	return &TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: newRefresh,
-		ExpiresIn:    int(s.accessTTL.Seconds()),
+	return &IssuedTokens{
+		AccessToken:      accessToken,
+		RefreshToken:     newRefresh,
+		RefreshExpiresAt: refreshRecord.ExpiresAt,
+		ExpiresIn:        int(s.accessTTL.Seconds()),
 	}, nil
 }
 
-func (s *AuthService) refreshAdminToken(ctx context.Context, token *sessions.RefreshToken) (*TokenResponse, error) {
+func (s *AuthService) refreshAdminToken(ctx context.Context, token *sessions.RefreshToken, currentTokenHash string, req RefreshRequest) (*IssuedTokens, error) {
 	user, err := s.adminUsers.GetByID(ctx, token.UserID)
 	if err != nil {
 		return nil, ErrUnauthorized
@@ -1066,31 +1175,56 @@ func (s *AuthService) refreshAdminToken(ctx context.Context, token *sessions.Ref
 	}
 
 	newRefresh := generateRefreshToken()
+	issuedAt := time.Now()
 	refreshRecord := &sessions.RefreshToken{
-		TenantID:  platformAuthTenantID,
-		UserID:    token.UserID,
-		TokenHash: sessions.HashToken(newRefresh),
-		CreatedAt: time.Now(),
-		ExpiresAt: time.Now().Add(s.refreshTTL),
+		SessionID:     token.SessionID,
+		TenantID:      platformAuthTenantID,
+		UserID:        token.UserID,
+		Surface:       refreshSurfaceOrDefault(token.Surface, sessions.RefreshSurfaceAdmin),
+		TokenHash:     sessions.HashToken(newRefresh),
+		TokenFamilyID: token.TokenFamilyID,
+		IPAddress:     optionalString(req.IP),
+		UserAgent:     optionalString(req.UserAgent),
+		CreatedAt:     issuedAt,
+		UpdatedAt:     issuedAt,
+		ExpiresAt:     issuedAt.Add(s.refreshTTL),
 	}
-	if err := s.refreshRepo.CreateToken(ctx, refreshRecord); err != nil {
-		return nil, err
-	}
-
 	refreshCtx := requestctx.WithUser(ctx, requestctx.UserInfo{
 		ID:    user.ID.String(),
 		Email: user.Email,
 		Level: user.Level,
 		Role:  user.Role,
 	})
+	if err := s.refreshRepo.RotateToken(ctx, currentTokenHash, refreshRecord); err != nil {
+		if errors.Is(err, sessions.ErrRefreshTokenRotated) {
+			s.revokeTokenFamilyQuietly(refreshCtx, token)
+			s.logAuthEvent(refreshCtx, nil, eventsvc.EventTypeSessionReuse, sessionEventData(token, eventsvc.EventData{
+				"status": "failed",
+				"reason": "reuse_detected",
+			}))
+			s.logAuthEvent(refreshCtx, nil, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("reuse_detected", token))
+			return nil, ErrUnauthorized
+		}
+		if errors.Is(err, sessions.ErrRefreshTokenRevoked) || errors.Is(err, sessions.ErrRefreshTokenExpired) || errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+			s.logAuthEvent(refreshCtx, nil, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData(refreshFailureReason(token, err), token))
+			return nil, ErrUnauthorized
+		}
+		return nil, err
+	}
+
 	s.logAuthEvent(refreshCtx, nil, eventsvc.EventTypeTokenRefresh, eventsvc.EventData{
 		"status":  "success",
 		"user_id": user.ID.String(),
 	})
-	return &TokenResponse{
-		AccessToken:  accessToken,
-		RefreshToken: newRefresh,
-		ExpiresIn:    int(s.accessTTL.Seconds()),
+	s.logAuthEvent(refreshCtx, nil, eventsvc.EventTypeSessionRotated, sessionEventData(refreshRecord, eventsvc.EventData{
+		"status": "success",
+		"action": "refresh",
+	}))
+	return &IssuedTokens{
+		AccessToken:      accessToken,
+		RefreshToken:     newRefresh,
+		RefreshExpiresAt: refreshRecord.ExpiresAt,
+		ExpiresIn:        int(s.accessTTL.Seconds()),
 	}, nil
 }
 
@@ -1106,6 +1240,102 @@ func findMatchingOTP(code string, otps []*OTP) (*OTP, error) {
 	}
 
 	return nil, nil
+}
+
+func refreshFailureReason(token *sessions.RefreshToken, err error) string {
+	switch {
+	case errors.Is(err, sessions.ErrRefreshTokenNotFound):
+		return "token_not_found"
+	case errors.Is(err, sessions.ErrRefreshTokenRotated):
+		return "reuse_detected"
+	case errors.Is(err, sessions.ErrRefreshTokenRevoked):
+		return "token_revoked"
+	case errors.Is(err, sessions.ErrRefreshTokenExpired):
+		return "token_expired"
+	}
+
+	if token == nil {
+		return "internal_error"
+	}
+
+	switch token.StateAt(time.Now()) {
+	case sessions.RefreshTokenStateRotated:
+		return "reuse_detected"
+	case sessions.RefreshTokenStateRevoked:
+		return "token_revoked"
+	case sessions.RefreshTokenStateExpired:
+		return "token_expired"
+	default:
+		return "internal_error"
+	}
+}
+
+func refreshFailureEventData(reason string, token *sessions.RefreshToken) eventsvc.EventData {
+	data := eventsvc.EventData{
+		"status": "failed",
+		"reason": reason,
+	}
+	if token == nil {
+		return data
+	}
+	if token.SessionID != uuid.Nil {
+		data["session_id"] = token.SessionID.String()
+	}
+	if token.TokenFamilyID != uuid.Nil {
+		data["token_family_id"] = token.TokenFamilyID.String()
+	}
+	if token.UserID != uuid.Nil {
+		data["user_id"] = token.UserID.String()
+	}
+	if token.TenantID != 0 {
+		data["tenant_id"] = token.TenantID
+	}
+	if surface := strings.TrimSpace(token.Surface); surface != "" {
+		data["surface"] = surface
+	}
+	return data
+}
+
+func sessionEventData(token *sessions.RefreshToken, base eventsvc.EventData) eventsvc.EventData {
+	data := eventsvc.EventData{}
+	for k, v := range base {
+		data[k] = v
+	}
+	if token == nil {
+		return data
+	}
+	if token.SessionID != uuid.Nil {
+		data["session_id"] = token.SessionID.String()
+	}
+	if token.TokenFamilyID != uuid.Nil {
+		data["token_family_id"] = token.TokenFamilyID.String()
+	}
+	if token.UserID != uuid.Nil {
+		data["user_id"] = token.UserID.String()
+	}
+	if token.TenantID != 0 {
+		data["tenant_id"] = token.TenantID
+	}
+	if surface := strings.TrimSpace(token.Surface); surface != "" {
+		data["surface"] = surface
+	}
+	if token.ExpiresAt.IsZero() {
+		return data
+	}
+	data["expires_at"] = token.ExpiresAt.UTC().Format(time.RFC3339)
+	return data
+}
+
+func (s *AuthService) revokeTokenFamilyQuietly(ctx context.Context, token *sessions.RefreshToken) {
+	if s.refreshRepo == nil || token == nil || token.TokenFamilyID == uuid.Nil {
+		return
+	}
+	if err := s.refreshRepo.RevokeTokenFamily(ctx, token.TokenFamilyID); err != nil && !errors.Is(err, sessions.ErrRefreshTokenNotFound) {
+		s.logger.Debug("refresh token family revoke failed",
+			"token_family_id", token.TokenFamilyID.String(),
+			"error", err,
+		)
+	}
 }
 
 func (s *AuthService) resolveTenantUserByContact(ctx context.Context, tenantInfo requestctx.TenantInfo, channel, address string, policy TenantAuthPolicy) (*TenantUser, context.Context, error) {
@@ -1163,6 +1393,7 @@ func (s *AuthService) ensureTenantContext(ctx context.Context, tenantID int64) (
 
 	info := requestctx.TenantInfo{
 		ID:             tenant.ID,
+		Name:           tenant.Name,
 		Host:           tenant.Host,
 		Status:         tenant.Status,
 		Plan:           tenant.Plan,
@@ -1171,4 +1402,21 @@ func (s *AuthService) ensureTenantContext(ctx context.Context, tenantID int64) (
 		DBInstanceCode: tenant.DBInstanceCode,
 	}
 	return requestctx.WithTenant(ctx, info), info, nil
+}
+
+func refreshRouteDomain(ctx context.Context) string {
+	route, ok := requestctx.Route(ctx)
+	if !ok {
+		return ""
+	}
+	return strings.TrimSpace(route.Domain)
+}
+
+func routeDomainMatchesTenantHost(routeDomain, tenantHost string) bool {
+	routeDomain = strings.TrimSpace(strings.ToLower(routeDomain))
+	tenantHost = strings.TrimSpace(strings.ToLower(tenantHost))
+	if routeDomain == "" || routeDomain == "undefined" || tenantHost == "" {
+		return false
+	}
+	return routeDomain == tenantHost
 }

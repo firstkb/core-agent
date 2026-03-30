@@ -21,6 +21,8 @@ type TenantUser struct {
 	BusinessID int64
 	TenantID   int64
 	Email      string
+	FirstName  string
+	LastName   string
 	Phone      string
 	Access     bool
 	Active     bool
@@ -54,6 +56,8 @@ SELECT users_guid,
        users_id,
        users_tenant_id,
        users_email,
+       COALESCE(users_firstname, '') AS auth_first_name,
+       COALESCE(users_lastname, '') AS auth_last_name,
        COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
        COALESCE(users_access, false) AS auth_access,
        users_active AS auth_active,
@@ -87,6 +91,8 @@ SELECT users_guid,
        users_id,
        users_tenant_id,
        users_email,
+       COALESCE(users_firstname, '') AS auth_first_name,
+       COALESCE(users_lastname, '') AS auth_last_name,
        COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
        COALESCE(users_access, false) AS auth_access,
        users_active AS auth_active,
@@ -119,6 +125,8 @@ SELECT users_guid,
        users_id,
        users_tenant_id,
        users_email,
+       COALESCE(users_firstname, '') AS auth_first_name,
+       COALESCE(users_lastname, '') AS auth_last_name,
        COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
        COALESCE(users_access, false) AS auth_access,
        users_active AS auth_active,
@@ -168,6 +176,8 @@ func (r *tenantUserRepository) queryOne(ctx context.Context, tenant requestctx.T
 		&user.BusinessID,
 		&user.TenantID,
 		&user.Email,
+		&user.FirstName,
+		&user.LastName,
 		&user.Phone,
 		&user.Access,
 		&user.Active,

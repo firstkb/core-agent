@@ -5,6 +5,11 @@ export const tenantEnglishMessages = {
     auth: {
       descriptionCode: "Enter the Authorization Code sent to {{identifier}}.",
       descriptionEnter: "To receive an Authorization Code, please provide your email address or phone number.",
+      errors: {
+        emailNotRegistered: "This email address is currently not registered, please try again or register through your company administrator.",
+        invalidCode: "The authorization code you entered is incorrect. Request a new code and try again.",
+        phoneNotRegistered: "This phone number is currently not registered, please try again or register through your company administrator.",
+      },
       tagline: "Fast. Efficient. Productive.",
       title: "Sign in",
     },

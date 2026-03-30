@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import {
+  ApiClientError,
+  createTenantProfileClient,
+  isUnauthorizedApiError,
+  type TenantProfile,
+} from "@platform/api-client";
 import {
   AuthGuard,
   useAuth,
@@ -27,11 +33,78 @@ import { TenantDashboardPage } from "../pages/dashboard/page";
 import { PrivateApp } from "./private-app";
 import { TenantBrandImage } from "./tenant-brand-image";
 
-type TenantBranding = {
-  name: string;
-  tenantDomain?: string;
-  tenantId?: string;
+type TenantRuntimeConfig = {
+  authApiUrl: string;
+  tenantApiUrl: string;
 };
+
+type TenantWorkspaceUserSession = {
+  displayName: string;
+  initial: string;
+  secondaryLabel: string;
+};
+
+function formatRoleLabel(role?: string) {
+  if (!role?.trim()) {
+    return "";
+  }
+
+  return role
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function buildTenantWorkspaceUserSession(profile: TenantProfile): TenantWorkspaceUserSession {
+  const fullName = [profile.user.first_name, profile.user.last_name]
+    .map((segment) => segment?.trim() || "")
+    .filter(Boolean)
+    .join(" ");
+  const contactLabel = profile.user.email?.trim() || profile.user.phone?.trim() || "";
+  const roleLabel = formatRoleLabel(profile.user.role) || "Tenant User";
+  const tenantLabel = profile.tenant.name?.trim() || profile.tenant.host?.trim() || "";
+  const displayName = fullName || contactLabel || roleLabel;
+  const secondaryLabel = contactLabel || [roleLabel, tenantLabel].filter(Boolean).join(" · ") || profile.user.id;
+  const initial = displayName.slice(0, 1).toUpperCase() || "U";
+
+  return {
+    displayName,
+    initial,
+    secondaryLabel,
+  };
+}
+
+function isLookupFailure(error: unknown) {
+  if (!(error instanceof ApiClientError)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return error.statusCode === 400 ||
+    error.statusCode === 404 ||
+    error.statusCode === 422 ||
+    error.code === "AUTH_USER_NOT_FOUND" ||
+    message.includes("user not found") ||
+    message.includes("tenant user not found");
+}
+
+function isInvalidCodeFailure(error: unknown) {
+  if (!(error instanceof ApiClientError)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return error.statusCode === 400 ||
+    error.statusCode === 401 ||
+    error.statusCode === 403 ||
+    error.statusCode === 404 ||
+    error.statusCode === 422 ||
+    error.code === "AUTH_OTP_INVALID" ||
+    message.includes("invalid code") ||
+    message.includes("invalid otp") ||
+    message.includes("cannot verify otp");
+}
 
 function TenantBrandLockup() {
   return (
@@ -97,43 +170,83 @@ function TenantBootstrapLoader({
 }
 
 export function App({
-  tenantBranding,
+  runtimeConfig,
 }: {
-  tenantBranding: TenantBranding;
+  runtimeConfig: TenantRuntimeConfig;
 }) {
   const { t } = useTranslation();
-  const { isAuthenticated, requestCode, signIn, userId } = useAuth();
+  const profileClient = useMemo(
+    () => createTenantProfileClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
+  const { isAuthenticated, requestCode, signIn, signOut, tokens, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [method, setMethod] = useState<AuthContactMethod>("email");
+  const [otpLength, setOtpLength] = useState(6);
+  const [profile, setProfile] = useState<TenantProfile | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [profileReady, setProfileReady] = useState(false);
   const [requestedIdentifier, setRequestedIdentifier] = useState("");
+  const [requestedMethod, setRequestedMethod] = useState<AuthContactMethod | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setProfileReady(false);
       setCodeSent(false);
       setCodeValue("");
       setError(null);
+      setOtpLength(6);
+      setProfile(null);
+      setProfileError(null);
+      setProfileReady(false);
       setRequestedIdentifier("");
+      setRequestedMethod(null);
       return;
     }
 
+    const accessToken = tokens?.accessToken;
+    if (!accessToken) {
+      void signOut();
+      return;
+    }
+
+    let isActive = true;
+    setProfile(null);
+    setProfileError(null);
     setProfileReady(false);
-    // TODO(auth-profile): Replace this dev-only delay with a real tenant /profile bootstrap.
-    // Load the private-area profile after auth is restored and after runtime config/branding bootstrap.
-    // Until the API exists, keep an explicit mock here instead of silently bypassing the gate.
-    const timeoutId = window.setTimeout(() => {
-      setProfileReady(true);
-    }, 650);
+
+    void profileClient
+      .getProfile(accessToken)
+      .then((nextProfile) => {
+        if (isActive) {
+          setProfile(nextProfile);
+          setProfileReady(true);
+        }
+      })
+      .catch((profileRequestError: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (isUnauthorizedApiError(profileRequestError)) {
+          void signOut();
+          return;
+        }
+
+        setProfileError(
+          profileRequestError instanceof Error
+            ? profileRequestError.message
+            : t("tenant.loaders.profileDescription"),
+        );
+      });
 
     return () => {
-      window.clearTimeout(timeoutId);
+      isActive = false;
     };
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, profileClient, signOut, t, tokens?.accessToken, userId]);
 
   async function handleRequestCode() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);
@@ -147,20 +260,42 @@ export function App({
     setError(null);
 
     try {
-      await requestCode(normalizedIdentifier, { method });
-      setIdentifier(normalizedIdentifier);
-      setRequestedIdentifier(normalizedIdentifier);
+      const response = await requestCode(normalizedIdentifier, { method });
       setCodeSent(true);
       setCodeValue("");
+      setIdentifier(normalizedIdentifier);
+      setOtpLength(response.otpLength);
+      setRequestedIdentifier(normalizedIdentifier);
+      setRequestedMethod(method);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
+      if (isLookupFailure(requestError)) {
+        setError(
+          method === "email"
+            ? t("tenant.auth.errors.emailNotRegistered")
+            : t("tenant.auth.errors.phoneNotRegistered"),
+        );
+      } else {
+        setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
+      }
     } finally {
       setIsBusy(false);
     }
   }
 
+  function returnToRequestStep(nextError: string, nextIdentifier: string, nextMethod: AuthContactMethod) {
+    setCodeSent(false);
+    setCodeValue("");
+    setError(nextError);
+    setIdentifier(nextIdentifier);
+    setMethod(nextMethod);
+    setOtpLength(6);
+    setRequestedIdentifier("");
+    setRequestedMethod(null);
+  }
+
   async function handleVerifyCode() {
     const normalizedIdentifier = requestedIdentifier || normalizeAuthIdentifier(identifier, method);
+    const normalizedMethod = requestedMethod ?? method;
     const normalizedCode = codeValue.trim();
 
     if (!normalizedCode) {
@@ -168,13 +303,26 @@ export function App({
       return;
     }
 
+    if (normalizedCode.length !== otpLength) {
+      setError(t("auth.errors.enterCodeLength", { count: otpLength }));
+      return;
+    }
+
     setIsBusy(true);
     setError(null);
 
     try {
-      await signIn(normalizedCode, normalizedIdentifier);
+      await signIn(normalizedCode, normalizedIdentifier, { method: normalizedMethod });
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
+      if (isInvalidCodeFailure(requestError)) {
+        returnToRequestStep(
+          t("tenant.auth.errors.invalidCode"),
+          normalizedIdentifier,
+          normalizedMethod,
+        );
+      } else {
+        setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
+      }
     } finally {
       setIsBusy(false);
     }
@@ -184,7 +332,9 @@ export function App({
     setCodeSent(false);
     setCodeValue("");
     setError(null);
+    setOtpLength(6);
     setRequestedIdentifier("");
+    setRequestedMethod(null);
   }
 
   const qrValue = typeof window === "undefined" ? "/sign-in" : window.location.href;
@@ -192,14 +342,25 @@ export function App({
   const authDescription = codeSent
     ? t("tenant.auth.descriptionCode", { identifier: requestedIdentifier })
     : t("tenant.auth.descriptionEnter");
+  const profileLoaderDescription = profileError ?? t("tenant.loaders.profileDescription");
+  const workspaceUser = profile ? buildTenantWorkspaceUserSession(profile) : null;
+  const tenantName = profile?.tenant.name?.trim();
 
   return (
     <AuthGuard
       authenticated={
-        profileReady ? (
+        profileReady && workspaceUser ? (
           <Routes>
             <Route element={<Navigate replace to="/dashboard" />} path="/sign-in" />
-            <Route element={<PrivateApp tenantName={tenantBranding.name} />} path="/">
+              <Route
+                element={(
+                  <PrivateApp
+                    tenantName={tenantName}
+                    userSession={workspaceUser}
+                  />
+                )}
+              path="/"
+            >
               <Route element={<Navigate replace to="/dashboard" />} index />
               <Route element={<TenantDashboardPage />} path="dashboard" />
               {renderPlatformBuilderRoutes()}
@@ -209,7 +370,7 @@ export function App({
           </Routes>
         ) : (
           <TenantBootstrapLoader
-            description={t("tenant.loaders.profileDescription")}
+            description={profileLoaderDescription}
             label={t("tenant.loaders.profileLabel")}
           />
         )
@@ -237,6 +398,7 @@ export function App({
                     codeSent={codeSent}
                     codeValue={codeValue}
                     error={error}
+                    helper={codeSent ? t("auth.helper.codeLength", { count: otpLength }) : undefined}
                     inputValue={identifier}
                     isBusy={isBusy}
                     method={method}
@@ -254,6 +416,7 @@ export function App({
                       setIdentifier("");
                       setError(null);
                       setRequestedIdentifier("");
+                      setRequestedMethod(null);
                     }}
                     onRequestCode={() => {
                       void handleRequestCode();
@@ -261,6 +424,7 @@ export function App({
                     onVerifyCode={() => {
                       void handleVerifyCode();
                     }}
+                    otpLength={otpLength}
                   />
                 </PublicAuthShell>
               </AppInstallProvider>
@@ -274,4 +438,4 @@ export function App({
   );
 }
 
-export type { TenantBranding };
+export type { TenantRuntimeConfig, TenantWorkspaceUserSession };

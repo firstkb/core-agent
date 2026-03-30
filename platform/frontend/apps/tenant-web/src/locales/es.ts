@@ -5,6 +5,11 @@ export const tenantSpanishMessages = {
     auth: {
       descriptionCode: "Introduce el codigo de autorizacion enviado a {{identifier}}.",
       descriptionEnter: "Para recibir un codigo de autorizacion, proporciona tu correo electronico o numero de telefono.",
+      errors: {
+        emailNotRegistered: "Esta direccion de correo no esta registrada actualmente. Intentalo de nuevo o registrate a traves del administrador de tu empresa.",
+        invalidCode: "El codigo de autorizacion introducido no es correcto. Solicita un codigo nuevo y vuelve a intentarlo.",
+        phoneNotRegistered: "Este numero de telefono no esta registrado actualmente. Intentalo de nuevo o registrate a traves del administrador de tu empresa.",
+      },
       tagline: "Rapido. Eficiente. Productivo.",
       title: "Iniciar sesion",
     },

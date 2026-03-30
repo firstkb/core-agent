@@ -61,14 +61,7 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 			return info, nil
 		}, srv.logger))
 	b.Handle("OTP_VERIFY", "POST", "/auth/otp/verify", router.TierPublicTenant,
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req authsvc.OTPVerifyRequest) (*authsvc.TokenResponse, error) {
-			info, err := srv.authHTTP.VerifyOTP(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(srv.logger, ctx, "OTP_VERIFY",
-					http.StatusInternalServerError, "cannot verify OTP", err, srv.FieldsForLog(ctx, r, req)...)
-			}
-			return info, nil
-		}, srv.logger))
+		srv.handleOTPVerifyCookie())
 	b.Handle("ADMIN_OTP_REQUEST", "POST", "/auth/admin/otp/request", router.TierPublic,
 		handler.HandleJson(func(ctx context.Context, r *http.Request, req authsvc.OTPRequest) (any, error) {
 			info, err := srv.authHTTP.RequestAdminOTP(ctx, r, req)
@@ -79,32 +72,11 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 			return info, nil
 		}, srv.logger))
 	b.Handle("ADMIN_OTP_VERIFY", "POST", "/auth/admin/otp/verify", router.TierPublic,
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req authsvc.OTPVerifyRequest) (*authsvc.TokenResponse, error) {
-			info, err := srv.authHTTP.VerifyAdminOTP(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_OTP_VERIFY",
-					http.StatusInternalServerError, "cannot verify admin OTP", err, srv.FieldsForLog(ctx, r, req)...)
-			}
-			return info, nil
-		}, srv.logger))
-	b.Handle("REFRESH", "POST", "/auth/refresh", router.TierSecure,
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req authsvc.RefreshRequest) (*authsvc.TokenResponse, error) {
-			info, err := srv.authHTTP.Refresh(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(srv.logger, ctx, "REFRESH",
-					http.StatusInternalServerError, "cannot refresh", err, srv.FieldsForLog(ctx, r, req)...)
-			}
-			return info, nil
-		}, srv.logger))
-	b.Handle("LOGOUT", "POST", "/auth/logout", router.TierSecure,
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req authsvc.LogoutRequest) (any, error) {
-			info, err := srv.authHTTP.Logout(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(srv.logger, ctx, "LOGOUT",
-					http.StatusInternalServerError, "cannot logout", err, srv.FieldsForLog(ctx, r, req)...)
-			}
-			return info, nil
-		}, srv.logger))
+		srv.handleAdminOTPVerifyCookie())
+	b.Handle("REFRESH", "POST", "/auth/refresh", router.TierPublic,
+		srv.handleRefreshCookie())
+	b.Handle("LOGOUT", "POST", "/auth/logout", router.TierPublic,
+		srv.handleLogoutCookie())
 
 	return b.Mux(), b.Classifier()
 }

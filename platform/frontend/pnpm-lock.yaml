@@ -47,6 +47,9 @@ importers:
 
   apps/platform-admin-web:
     dependencies:
+      '@platform/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@platform/app-shell':
         specifier: workspace:*
         version: link:../../packages/app-shell
@@ -74,6 +77,9 @@ importers:
 
   apps/tenant-web:
     dependencies:
+      '@platform/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@platform/app-shell':
         specifier: workspace:*
         version: link:../../packages/app-shell
@@ -127,6 +133,9 @@ importers:
 
   packages/auth-core:
     dependencies:
+      '@platform/api-client':
+        specifier: workspace:*
+        version: link:../api-client
       react:
         specifier: ^19.0.0
         version: 19.2.4

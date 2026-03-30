@@ -57,6 +57,7 @@ func (s *ServiceTenantProvider) Validate(ctx context.Context, tier router.Tier, 
 
 	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
 		ID:             tenant.ID,
+		Name:           tenant.Name,
 		Host:           tenant.Host,
 		Status:         tenant.Status,
 		Plan:           tenant.Plan,

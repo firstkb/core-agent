@@ -31,6 +31,14 @@ func (h *Handler) RequestOTP(ctx context.Context, r *http.Request, req OTPReques
 }
 
 func (h *Handler) VerifyOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {
+	resp, err := h.VerifyOTPIssuedTokens(ctx, r, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.PublicResponse(), nil
+}
+
+func (h *Handler) VerifyOTPIssuedTokens(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*IssuedTokens, error) {
 	req.IP = extractIP(r)
 	req.UserAgent = r.Header.Get("User-Agent")
 
@@ -54,6 +62,14 @@ func (h *Handler) RequestAdminOTP(ctx context.Context, r *http.Request, req OTPR
 }
 
 func (h *Handler) VerifyAdminOTP(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*TokenResponse, error) {
+	resp, err := h.VerifyAdminOTPIssuedTokens(ctx, r, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.PublicResponse(), nil
+}
+
+func (h *Handler) VerifyAdminOTPIssuedTokens(ctx context.Context, r *http.Request, req OTPVerifyRequest) (*IssuedTokens, error) {
 	req.IP = extractIP(r)
 	req.UserAgent = r.Header.Get("User-Agent")
 
@@ -65,6 +81,14 @@ func (h *Handler) VerifyAdminOTP(ctx context.Context, r *http.Request, req OTPVe
 }
 
 func (h *Handler) Refresh(ctx context.Context, r *http.Request, req RefreshRequest) (*TokenResponse, error) {
+	resp, err := h.RefreshIssuedTokens(ctx, r, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.PublicResponse(), nil
+}
+
+func (h *Handler) RefreshIssuedTokens(ctx context.Context, r *http.Request, req RefreshRequest) (*IssuedTokens, error) {
 	req.IP = extractIP(r)
 	req.UserAgent = r.Header.Get("User-Agent")
 

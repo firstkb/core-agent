@@ -7,20 +7,114 @@
 
 admin.platform.local {
 	tls internal
-	reverse_proxy 127.0.0.1:5173 {
-		transport http {
-			keepalive off
-			versions 1.1
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8081 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5173 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
 		}
 	}
 }
 
 demo.platform.local {
 	tls internal
-	reverse_proxy 127.0.0.1:5174 {
-		transport http {
-			keepalive off
-			versions 1.1
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8080 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5174 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+}
+
+acme.platform.local {
+	tls internal
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8080 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5174 {
+			transport http {
+				keepalive off
+				versions 1.1
+			}
 		}
 	}
 }

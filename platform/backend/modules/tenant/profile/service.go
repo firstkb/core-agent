@@ -3,8 +3,12 @@ package profilesvc
 import (
 	"context"
 	"errors"
+	"strings"
+
+	"github.com/google/uuid"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	authsvc "dtriton.com/platform/backend/modules/shared/authentication"
 )
 
 var (
@@ -12,10 +16,16 @@ var (
 	ErrTenantMissing = errors.New("profile tenant missing")
 )
 
-type Service struct{}
+type TenantUserReader interface {
+	GetByID(ctx context.Context, tenant requestctx.TenantInfo, userID uuid.UUID) (*authsvc.TenantUser, error)
+}
 
-func NewService() *Service {
-	return &Service{}
+type Service struct {
+	users TenantUserReader
+}
+
+func NewService(users TenantUserReader) *Service {
+	return &Service{users: users}
 }
 
 func (s *Service) GetProfile(ctx context.Context) (*Profile, error) {
@@ -29,15 +39,30 @@ func (s *Service) GetProfile(ctx context.Context) (*Profile, error) {
 		return nil, ErrTenantMissing
 	}
 
+	userProfile := UserProfile{
+		ID:    claims.UserID,
+		Email: claims.Email,
+		Level: claims.Level,
+		Role:  claims.Role,
+	}
+
+	if s.users != nil {
+		if userID, err := uuid.Parse(strings.TrimSpace(claims.UserID)); err == nil {
+			if user, err := s.users.GetByID(ctx, tenant, userID); err == nil && user != nil {
+				if strings.TrimSpace(user.Email) != "" {
+					userProfile.Email = user.Email
+				}
+				userProfile.FirstName = strings.TrimSpace(user.FirstName)
+				userProfile.LastName = strings.TrimSpace(user.LastName)
+			}
+		}
+	}
+
 	return &Profile{
-		User: UserProfile{
-			ID:    claims.UserID,
-			Email: claims.Email,
-			Level: claims.Level,
-			Role:  claims.Role,
-		},
+		User: userProfile,
 		Tenant: TenantProfile{
 			ID:     tenant.ID,
+			Name:   tenant.Name,
 			Host:   tenant.Host,
 			Plan:   tenant.Plan,
 			Status: tenant.Status,

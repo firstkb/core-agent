@@ -11,3 +11,4 @@ platform/*
 !platform/frontend/**
 !platform/backend/**
 !platform/backend/
+platform/backend/certs/

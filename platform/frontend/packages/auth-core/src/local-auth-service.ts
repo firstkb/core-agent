@@ -6,20 +6,23 @@ import {
 type AuthMethod = "email" | "phone";
 
 type AuthCodeRequest = {
-  challengeId: string;
+  challengeId?: string;
   ok: true;
+  otpLength: number;
 };
 
 type AuthService = {
-  refreshAuthToken: (
-    refreshToken: string | null,
-    currentTokens?: AuthTokens | null,
-  ) => Promise<AuthTokens>;
+  refreshAuthToken: (currentTokens?: AuthTokens | null) => Promise<AuthTokens>;
   requestCode: (
     login: string,
     options?: { method?: AuthMethod },
   ) => Promise<AuthCodeRequest>;
-  verifyCode: (code: string, login?: string) => Promise<AuthTokens>;
+  signOut: (options?: { allDevices?: boolean }) => Promise<void>;
+  verifyCode: (
+    code: string,
+    login?: string,
+    options?: { method?: AuthMethod },
+  ) => Promise<AuthTokens>;
 };
 
 function sleep(durationMs: number) {
@@ -35,11 +38,11 @@ function encodeBase64Url(input: string) {
     .replace(/=+$/g, "");
 }
 
-function makeFakeJwt(payload: Record<string, unknown>) {
+function makeLocalJwt(payload: Record<string, unknown>) {
   const header = encodeBase64Url(JSON.stringify({ alg: "none", typ: "JWT" }));
   const body = encodeBase64Url(JSON.stringify(payload));
 
-  return `${header}.${body}.mock-signature`;
+  return `${header}.${body}.local-signature`;
 }
 
 function normalizeUserId(login?: string) {
@@ -52,7 +55,7 @@ function normalizeUserId(login?: string) {
   return normalizedLogin.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "demo-user-1";
 }
 
-class MockAuthService implements AuthService {
+class LocalAuthService implements AuthService {
   async requestCode(
     login: string,
     _options?: { method?: AuthMethod },
@@ -66,66 +69,64 @@ class MockAuthService implements AuthService {
     await sleep(450);
 
     return {
-      challengeId: `mock-challenge:${normalizeUserId(normalizedLogin)}`,
+      challengeId: `local-challenge:${normalizeUserId(normalizedLogin)}`,
       ok: true,
+      otpLength: 6,
     };
   }
 
-  async verifyCode(code: string, login?: string): Promise<AuthTokens> {
+  async verifyCode(
+    code: string,
+    login?: string,
+    _options?: { method?: AuthMethod },
+  ): Promise<AuthTokens> {
     const normalizedCode = code.trim();
 
-    if (!/^[A-Z0-9]{4,8}$/i.test(normalizedCode)) {
+    if (!/^[0-9]{4,8}$/i.test(normalizedCode)) {
       throw new Error("Verification code is invalid.");
     }
 
     await sleep(450);
 
     const userId = normalizeUserId(login);
-    const exp = Math.floor(Date.now() / 1000) + 60 * 60;
+    const expiresAt = Date.now() + 60 * 60 * 1000;
+    const exp = Math.floor(expiresAt / 1000);
 
     return {
-      accessToken: makeFakeJwt({
+      accessToken: makeLocalJwt({
         exp,
         preferred_username: login ?? "demo",
         sub: userId,
       }),
-      idToken: makeFakeJwt({
-        "custom:user_id": userId,
-        email: login ?? "demo@example.com",
-        exp,
-      }),
-      refreshToken: `mock-refresh-token:${userId}`,
+      expiresAt,
     };
   }
 
-  async refreshAuthToken(
-    refreshToken: string | null,
-    currentTokens?: AuthTokens | null,
-  ): Promise<AuthTokens> {
+  async refreshAuthToken(currentTokens?: AuthTokens | null): Promise<AuthTokens> {
     await sleep(250);
 
-    const userId =
-      (currentTokens?.idToken ? extractUserIdFromToken(currentTokens.idToken) : "") ||
-      normalizeUserId(refreshToken ?? undefined);
-    const exp = Math.floor(Date.now() / 1000) + 60 * 60;
+    const userId = currentTokens?.accessToken
+      ? extractUserIdFromToken(currentTokens.accessToken) || normalizeUserId(currentTokens.accessToken)
+      : "demo-user-1";
+    const expiresAt = Date.now() + 60 * 60 * 1000;
+    const exp = Math.floor(expiresAt / 1000);
 
     return {
-      accessToken: makeFakeJwt({
+      accessToken: makeLocalJwt({
         exp,
         preferred_username: userId,
         sub: userId,
       }),
-      idToken: makeFakeJwt({
-        "custom:user_id": userId,
-        email: `${userId}@example.com`,
-        exp,
-      }),
-      refreshToken: refreshToken ?? `mock-refresh-token:${userId}`,
+      expiresAt,
     };
+  }
+
+  async signOut(_options?: { allDevices?: boolean }) {
+    await sleep(200);
   }
 }
 
-const mockAuthService = new MockAuthService();
+const localAuthService = new LocalAuthService();
 
-export { MockAuthService, mockAuthService };
+export { LocalAuthService, localAuthService };
 export type { AuthCodeRequest, AuthMethod, AuthService };

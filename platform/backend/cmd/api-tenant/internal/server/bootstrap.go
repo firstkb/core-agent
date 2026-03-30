@@ -12,6 +12,7 @@ import (
 	appmw "dtriton.com/platform/backend/internal/platform/httpx/middleware"
 	"dtriton.com/platform/backend/internal/platform/httpx/mw"
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
+	authsvc "dtriton.com/platform/backend/modules/shared/authentication"
 	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
 )
 
@@ -48,7 +49,8 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		server.tokenValidator = tokenValidator
 	}
 
-	profileService := profilesvc.NewService()
+	tenantUserRepo := authsvc.NewTenantUserRepository(server.sqlClient)
+	profileService := profilesvc.NewService(tenantUserRepo)
 	server.profileHTTP = profilesvc.NewHandler(profileService)
 
 	mux, class := server.buildRoutes()
@@ -74,7 +76,7 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 
 	if srv.config.Origin != "" {
 		corsCfg := appmw.CORSConfig{
-			AllowedOrigins:   []string{srv.config.Origin},
+			AllowedOrigins:   splitAllowedOrigins(srv.config.Origin),
 			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 			AllowedHeaders:   []string{"Content-Type", "Authorization", "X-Requested-With"},
 			AllowCredentials: true,
@@ -119,4 +121,17 @@ func newTokenValidator(cfg *config.Config) (authpkg.JWTIssuer, error) {
 
 func shouldValidateTokensLocally(mode string) bool {
 	return strings.EqualFold(strings.TrimSpace(mode), "internal")
+}
+
+func splitAllowedOrigins(value string) []string {
+	parts := strings.Split(value, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		origins = append(origins, part)
+	}
+	return origins
 }

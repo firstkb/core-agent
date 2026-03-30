@@ -3,7 +3,6 @@ import {
   BellIcon,
   DashboardGridIcon,
   DocumentListIcon,
-  Kbd,
   Menu,
   MenuContent,
   MenuItem,
@@ -11,7 +10,6 @@ import {
   MenuSeparator,
   MenuTrigger,
   PlusIcon,
-  SearchIcon,
   ShieldKeyIcon,
   StarIcon,
 } from "@platform/ui-kit";
@@ -20,7 +18,7 @@ import {
   LocaleMenuItems,
   WorkspaceShell,
 } from "@platform/app-shell";
-import { getDemoSession, useAuth } from "@platform/auth-core";
+import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
@@ -37,19 +35,23 @@ import {
   getAdminNavigation,
   getAdminRouteMeta,
 } from "../shared/navigation";
+import type { AdminWorkspaceUserSession } from "./app";
 import "./app.css";
 
 type AdminThemeMode = "light" | "dark";
 
 const adminThemeStorageKey = "platform-admin-theme";
-const session = getDemoSession("admin");
 const appBuild = getAppBuildMetadata();
 const AdminUiLabPage = lazy(async () => {
   const module = await import("../internal/ui-lab");
   return { default: module.AdminUiLabPage };
 });
 
-export function PrivateApp() {
+export function PrivateApp({
+  userSession,
+}: {
+  userSession: AdminWorkspaceUserSession;
+}) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -204,7 +206,7 @@ export function PrivateApp() {
                 type="button"
               >
                 <span className="admin-web__header-profile-initial">
-                  {session.displayName.slice(0, 1).toUpperCase()}
+                  {userSession.initial}
                 </span>
               </button>
             </MenuTrigger>
@@ -242,11 +244,11 @@ export function PrivateApp() {
                 type="button"
               >
                 <div aria-hidden="true" className="admin-web__sidebar-user-avatar">
-                  {session.displayName.slice(0, 1).toUpperCase()}
+                  {userSession.initial}
                 </div>
                 <div className="admin-web__sidebar-user-copy">
-                  <span className="admin-web__sidebar-user-name">{session.displayName}</span>
-                  <span className="admin-web__sidebar-user-email">{session.email}</span>
+                  <span className="admin-web__sidebar-user-name">{userSession.displayName}</span>
+                  <span className="admin-web__sidebar-user-email">{userSession.secondaryLabel}</span>
                 </div>
               </button>
             </MenuTrigger>
@@ -285,22 +287,6 @@ export function PrivateApp() {
         }
         navigation={getAdminNavigation(location.pathname, t, (path) => navigate(path))}
         headerTitle={getAdminHeaderTitle(location.pathname, t)}
-        headerCenter={
-          <button
-            aria-label={t("admin.shell.aria.openGlobalSearch")}
-            className="admin-web__header-search"
-            title={t("admin.shell.searchTitle", { title: activeRouteMeta.headerTitle })}
-            type="button"
-          >
-            <span className="admin-web__header-search-copy">
-              <SearchIcon className="admin-web__header-search-icon" />
-              <span className="admin-web__header-search-label">{t("admin.shell.searchPlaceholder")}</span>
-            </span>
-            <Kbd className="admin-web__header-search-shortcut" size="sm">
-              Ctrl K
-            </Kbd>
-          </button>
-        }
         headerActions={
           <div className="admin-web__header-utility-bar">
             <Menu align="end">

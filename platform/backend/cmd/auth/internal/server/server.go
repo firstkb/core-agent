@@ -22,8 +22,17 @@ type Config struct {
 	Origin  string         `json:"origin"`
 	Timeout int            `json:"timeout"` // seconds
 	Token   TokenConfig    `json:"token"`
+	Cookie  CookieConfig   `json:"cookie"`
 	DB      DatabaseConfig `json:"db"`
 	MW      MWConfig       `json:"mw"`
+}
+
+type CookieConfig struct {
+	Name       string `json:"name"`
+	Path       string `json:"path"`
+	Domain     string `json:"domain"`
+	SameSite   string `json:"samesite"`
+	SecureMode string `json:"securemode"`
 }
 
 type MWConfig struct {

@@ -1,28 +1,54 @@
 # Auth Runtime Follow-ups
 
-Tracks frontend runtime work that is intentionally mocked today so the future API integration is not forgotten.
+Tracks the remaining frontend rollout work now that backend cookie-based refresh is ready.
 
-## Current State
+## Current Backend State
 
-- `platform-admin-web` bootstraps shared runtime config from `/config.json` in `apps/platform-admin-web/src/app/root.tsx`.
-- `tenant-web` bootstraps shared runtime config from `/config.json` and tenant branding from `/tenant/config.json` in `apps/tenant-web/src/app/root.tsx`.
-- both apps still use a temporary `setTimeout(..., 650)` gate in `src/app/app.tsx` before entering the private area
-- auth state is currently backed by the mock service in `packages/auth-core`
-- current frontend auth storage still incorrectly requires `idToken`, while backend returns only `access_token` and `refresh_token`
-- current real backend support exists for both tenant auth/profile and admin auth/profile
+- tenant auth is live
+- admin auth is live
+- `/profile` is live for both tenant and admin apps
+- `verify` returns only `access_token` and `expires_in`
+- refresh token is issued only through `HttpOnly` cookie
+- `POST /auth/v1/refresh` is cookie-only
+- `POST /auth/v1/logout` is cookie-backed and clears the refresh cookie
+- `POST /auth/v1/refresh` and `POST /auth/v1/logout` require allowed `Origin`
+
+## Current Frontend Gap
+
+Frontend still needs to align with the backend cookie contract.
+
+Main gaps:
+
+- `auth-core` still stores `refreshToken` in browser storage
+- auth client still expects `refresh_token` in verify/refresh JSON
+- refresh flow still tries to pass refresh token from JavaScript
+- logout client still assumes bearer access token ownership on the auth endpoint
+- app bootstrap still needs to ensure private area is gated by real `/profile`
 
 ## Required Follow-ups
 
-- replace the admin private-area delay in `apps/platform-admin-web/src/app/app.tsx` with a real authenticated `/profile` request
-- replace the tenant private-area delay in `apps/tenant-web/src/app/app.tsx` with a real authenticated `/profile` request
-- keep the private-area gate in place until `/profile` resolves; do not bypass it once API work starts
-- while the API is unavailable, keep an explicit mock profile bootstrap so the contract stays visible in code
-- land the typed profile client in `packages/api-client` instead of calling `fetch` ad hoc from app code
-- ensure the future profile bootstrap reads API base URLs only after runtime config has been persisted from `root.tsx`
-- for the concrete implementation plan, use `docs/auth-agent-integration-brief.md`
+- remove `refreshToken` from `packages/auth-core/src/auth-storage.ts`
+- update `packages/auth-core/src/auth-provider.tsx` to refresh without browser-held refresh token
+- update `packages/auth-core/src/otp-auth-service.ts` to use cookie-backed verify/refresh/logout
+- update `packages/api-client/src/index.ts` so auth endpoints use `credentials: "include"`
+- remove `refresh_token` from frontend auth DTO assumptions
+- keep bearer access token only for `/profile` and app API requests
+- keep same-site runtime config via `/auth/v1/*` and `/api/v1/*`
+- ensure tenant and admin private areas boot only after successful `/profile`
 
 ## Integration Notes
 
-- admin flow depends on `/config.json` being loaded before auth/profile bootstrap
-- tenant flow depends on both `/config.json` and `/tenant/config.json` being loaded before auth/profile bootstrap
-- `useAuth()` already exposes restored auth state and tokens; the future `/profile` client should build on that instead of introducing a second auth source
+- auth requests must go through same-site `/auth/v1/*`
+- app API requests must go through same-site `/api/v1/*`
+- frontend must not send `tenantId` during login
+- frontend must not attempt to read refresh cookie
+- frontend must treat missing/expired access token as local state loss and recover through `/auth/v1/refresh`
+- if `/auth/v1/refresh` or `/auth/v1/logout` returns `403`, treat it as auth-origin policy failure or invalid browser context
+
+## Handoff Source
+
+Use:
+
+- [`auth-agent-integration-brief.md`](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/auth-agent-integration-brief.md)
+
+as the canonical frontend implementation brief.

@@ -1,5 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import {
+  type AdminProfile,
+  ApiClientError,
+  createAdminProfileClient,
+  isUnauthorizedApiError,
+} from "@platform/api-client";
 import {
   AuthGuard,
   useAuth,
@@ -19,6 +25,75 @@ import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { PrivateApp } from "./private-app";
+
+type AdminRuntimeConfig = {
+  adminApiUrl: string;
+  authApiUrl: string;
+};
+
+type AdminWorkspaceUserSession = {
+  displayName: string;
+  initial: string;
+  secondaryLabel: string;
+};
+
+function formatRoleLabel(role?: string) {
+  if (!role?.trim()) {
+    return "";
+  }
+
+  return role
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((segment) => segment[0]?.toUpperCase() + segment.slice(1))
+    .join(" ");
+}
+
+function buildAdminWorkspaceUserSession(profile: AdminProfile): AdminWorkspaceUserSession {
+  const contactLabel = profile.user.email?.trim() || profile.user.phone?.trim() || "";
+  const roleLabel = formatRoleLabel(profile.user.role) || "Platform Admin";
+  const displayName = profile.user.name?.trim() || contactLabel || roleLabel;
+  const scopeLabel = profile.user.scope?.trim() || "";
+  const secondaryLabel = contactLabel || [roleLabel, scopeLabel].filter(Boolean).join(" · ") || profile.user.id;
+  const initial = displayName.slice(0, 1).toUpperCase() || "U";
+
+  return {
+    displayName,
+    initial,
+    secondaryLabel,
+  };
+}
+
+function isLookupFailure(error: unknown) {
+  if (!(error instanceof ApiClientError)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return error.statusCode === 400 ||
+    error.statusCode === 404 ||
+    error.statusCode === 422 ||
+    error.code === "AUTH_USER_NOT_FOUND" ||
+    message.includes("user not found") ||
+    message.includes("admin user not found");
+}
+
+function isInvalidCodeFailure(error: unknown) {
+  if (!(error instanceof ApiClientError)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return error.statusCode === 400 ||
+    error.statusCode === 401 ||
+    error.statusCode === 403 ||
+    error.statusCode === 404 ||
+    error.statusCode === 422 ||
+    error.code === "AUTH_OTP_INVALID" ||
+    message.includes("invalid code") ||
+    message.includes("invalid otp") ||
+    message.includes("cannot verify otp");
+}
 
 function AdminBrandLockup() {
   return (
@@ -82,40 +157,84 @@ function AdminAuthSurfaceBadge() {
   );
 }
 
-export function App() {
+export function App({
+  runtimeConfig,
+}: {
+  runtimeConfig: AdminRuntimeConfig;
+}) {
   const { t } = useTranslation();
-  const { isAuthenticated, requestCode, signIn, userId } = useAuth();
+  const profileClient = useMemo(
+    () => createAdminProfileClient(runtimeConfig.adminApiUrl),
+    [runtimeConfig.adminApiUrl],
+  );
+  const { isAuthenticated, requestCode, signIn, signOut, tokens, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [isBusy, setIsBusy] = useState(false);
   const [method, setMethod] = useState<AuthContactMethod>("email");
+  const [otpLength, setOtpLength] = useState(6);
+  const [profile, setProfile] = useState<AdminProfile | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [profileReady, setProfileReady] = useState(false);
   const [requestedIdentifier, setRequestedIdentifier] = useState("");
+  const [requestedMethod, setRequestedMethod] = useState<AuthContactMethod | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      setProfileReady(false);
       setCodeSent(false);
       setCodeValue("");
       setError(null);
+      setOtpLength(6);
+      setProfile(null);
+      setProfileError(null);
+      setProfileReady(false);
       setRequestedIdentifier("");
+      setRequestedMethod(null);
       return;
     }
 
+    const accessToken = tokens?.accessToken;
+    if (!accessToken) {
+      void signOut();
+      return;
+    }
+
+    let isActive = true;
+    setProfile(null);
+    setProfileError(null);
     setProfileReady(false);
-    // TODO(auth-profile): Replace this dev-only delay with a real admin /profile bootstrap.
-    // After auth is restored, call the API and only enter <PrivateApp /> when the profile is loaded.
-    // Until the API exists, keep an explicit mock here instead of silently bypassing the gate.
-    const timeoutId = window.setTimeout(() => {
-      setProfileReady(true);
-    }, 650);
+
+    void profileClient
+      .getProfile(accessToken)
+      .then((nextProfile) => {
+        if (isActive) {
+          setProfile(nextProfile);
+          setProfileReady(true);
+        }
+      })
+      .catch((profileRequestError: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (isUnauthorizedApiError(profileRequestError)) {
+          void signOut();
+          return;
+        }
+
+        setProfileError(
+          profileRequestError instanceof Error
+            ? profileRequestError.message
+            : t("admin.loaders.profileDescription"),
+        );
+      });
 
     return () => {
-      window.clearTimeout(timeoutId);
+      isActive = false;
     };
-  }, [isAuthenticated, userId]);
+  }, [isAuthenticated, profileClient, signOut, t, tokens?.accessToken, userId]);
 
   async function handleRequestCode() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);
@@ -129,20 +248,42 @@ export function App() {
     setError(null);
 
     try {
-      await requestCode(normalizedIdentifier, { method });
-      setIdentifier(normalizedIdentifier);
-      setRequestedIdentifier(normalizedIdentifier);
+      const response = await requestCode(normalizedIdentifier, { method });
       setCodeSent(true);
       setCodeValue("");
+      setIdentifier(normalizedIdentifier);
+      setOtpLength(response.otpLength);
+      setRequestedIdentifier(normalizedIdentifier);
+      setRequestedMethod(method);
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
+      if (isLookupFailure(requestError)) {
+        setError(
+          method === "email"
+            ? t("admin.auth.errors.emailNotFound")
+            : t("admin.auth.errors.phoneNotFound"),
+        );
+      } else {
+        setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToSendCode"));
+      }
     } finally {
       setIsBusy(false);
     }
   }
 
+  function returnToRequestStep(nextError: string, nextIdentifier: string, nextMethod: AuthContactMethod) {
+    setCodeSent(false);
+    setCodeValue("");
+    setError(nextError);
+    setIdentifier(nextIdentifier);
+    setMethod(nextMethod);
+    setOtpLength(6);
+    setRequestedIdentifier("");
+    setRequestedMethod(null);
+  }
+
   async function handleVerifyCode() {
     const normalizedIdentifier = requestedIdentifier || normalizeAuthIdentifier(identifier, method);
+    const normalizedMethod = requestedMethod ?? method;
     const normalizedCode = codeValue.trim();
 
     if (!normalizedCode) {
@@ -150,13 +291,26 @@ export function App() {
       return;
     }
 
+    if (normalizedCode.length !== otpLength) {
+      setError(t("auth.errors.enterCodeLength", { count: otpLength }));
+      return;
+    }
+
     setIsBusy(true);
     setError(null);
 
     try {
-      await signIn(normalizedCode, normalizedIdentifier);
+      await signIn(normalizedCode, normalizedIdentifier, { method: normalizedMethod });
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
+      if (isInvalidCodeFailure(requestError)) {
+        returnToRequestStep(
+          t("admin.auth.errors.invalidCode"),
+          normalizedIdentifier,
+          normalizedMethod,
+        );
+      } else {
+        setError(requestError instanceof Error ? requestError.message : t("auth.errors.unableToVerifyCode"));
+      }
     } finally {
       setIsBusy(false);
     }
@@ -166,25 +320,29 @@ export function App() {
     setCodeSent(false);
     setCodeValue("");
     setError(null);
+    setOtpLength(6);
     setRequestedIdentifier("");
+    setRequestedMethod(null);
   }
 
   const currentYear = new Date().getFullYear();
   const authDescription = codeSent
     ? t("admin.auth.descriptionCode", { identifier: requestedIdentifier })
     : t("admin.auth.descriptionEnter");
+  const profileLoaderDescription = profileError ?? t("admin.loaders.profileDescription");
+  const workspaceUser = profile ? buildAdminWorkspaceUserSession(profile) : null;
 
   return (
     <AuthGuard
       authenticated={
-        profileReady ? (
+        profileReady && workspaceUser ? (
           <Routes>
             <Route element={<Navigate replace to="/dashboard" />} path="/sign-in" />
-            <Route element={<PrivateApp />} path="/*" />
+            <Route element={<PrivateApp userSession={workspaceUser} />} path="/*" />
           </Routes>
         ) : (
           <AdminBootstrapLoader
-            description={t("admin.loaders.profileDescription")}
+            description={profileLoaderDescription}
             label={t("admin.loaders.profileLabel")}
           />
         )
@@ -212,6 +370,7 @@ export function App() {
                     codeSent={codeSent}
                     codeValue={codeValue}
                     error={error}
+                    helper={codeSent ? t("auth.helper.codeLength", { count: otpLength }) : undefined}
                     inputValue={identifier}
                     isBusy={isBusy}
                     method={method}
@@ -229,6 +388,7 @@ export function App() {
                       setIdentifier("");
                       setError(null);
                       setRequestedIdentifier("");
+                      setRequestedMethod(null);
                     }}
                     onRequestCode={() => {
                       void handleRequestCode();
@@ -236,6 +396,7 @@ export function App() {
                     onVerifyCode={() => {
                       void handleVerifyCode();
                     }}
+                    otpLength={otpLength}
                     verifyLabel={t("admin.auth.verifyLabel")}
                   />
                 </PublicAuthShell>
@@ -249,3 +410,5 @@ export function App() {
     />
   );
 }
+
+export type { AdminRuntimeConfig, AdminWorkspaceUserSession };

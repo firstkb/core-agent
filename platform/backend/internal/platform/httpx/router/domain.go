@@ -14,18 +14,34 @@ func ExtractDomain(r *http.Request) string {
 		return "undefined"
 	}
 
-	for _, candidate := range []string{
-		strings.TrimSpace(r.Header.Get("X-Forwarded-Host")),
-		strings.TrimSpace(r.Host),
-	} {
-		if host := normalizeHost(candidate); host != "" {
-			return host
-		}
+	if host := normalizeHost(strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))); host != "" {
+		return host
 	}
 
-	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	requestHost := normalizeHost(strings.TrimSpace(r.Host))
+	originHost := extractOriginHost(r.Header.Get("Origin"))
+
+	// Local browser dev often calls backend on 127.0.0.1 while the tenant/admin
+	// identity lives in the frontend origin host. In that case prefer Origin.
+	if isLoopbackHost(requestHost) && originHost != "" {
+		return originHost
+	}
+
+	if requestHost != "" {
+		return requestHost
+	}
+
+	if originHost != "" {
+		return originHost
+	}
+
+	return "undefined"
+}
+
+func extractOriginHost(origin string) string {
+	origin = strings.TrimSpace(origin)
 	if origin == "" {
-		return "undefined"
+		return ""
 	}
 
 	if parsed, err := url.Parse(origin); err == nil && parsed.Host != "" {
@@ -56,6 +72,15 @@ func normalizeHost(value string) string {
 	}
 
 	return strings.ToLower(value)
+}
+
+func isLoopbackHost(host string) bool {
+	switch strings.TrimSpace(strings.ToLower(host)) {
+	case "127.0.0.1", "localhost", "::1":
+		return true
+	default:
+		return false
+	}
 }
 
 func errString(err error) string {

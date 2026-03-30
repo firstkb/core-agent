@@ -13,6 +13,7 @@ export const appShellSpanishMessages = {
     back: "Usar otro contacto",
     errors: {
       enterCode: "Introduce el codigo de autorizacion para continuar.",
+      enterCodeLength: "Introduce el codigo de autorizacion de {{count}} digitos para continuar.",
       enterEmail: "Introduce un correo electronico para continuar.",
       enterPhone: "Introduce un numero de telefono para continuar.",
       unableToSendCode: "No fue posible enviar el codigo.",
@@ -20,6 +21,9 @@ export const appShellSpanishMessages = {
     },
     footer: {
       copyright: "© {{year}} {{companyName}}. Todos los derechos reservados.",
+    },
+    helper: {
+      codeLength: "Este codigo de autorizacion tiene {{count}} digitos.",
     },
     labels: {
       code: "Codigo de autorizacion",

@@ -113,6 +113,51 @@ Current rule:
 - admin auth issues `scope=admin.api`
 - delegated tenant token exchange is a separate future flow
 
+## `auth_refresh_token`
+
+Purpose:
+
+- stores refresh-session rows as versioned members of a session family
+
+Columns:
+
+- `id uuid primary key`
+- `session_id uuid not null`
+- `tenant_id bigint not null`
+- `user_id uuid not null`
+- `surface text not null`
+- `token_hash text not null unique`
+- `token_family_id uuid not null`
+- `client_id text null`
+- `device_id text null`
+- `ip_address inet null`
+- `user_agent text null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+- `expires_at timestamptz not null`
+- `revoked_at timestamptz null`
+- `rotated_at timestamptz null`
+
+Working interpretation:
+
+- one row = one issued refresh token version
+- `session_id` = one app/browser session contour
+- `token_family_id` = rotation family for reuse detection and family revoke
+- `surface` = `tenant` or `admin`
+
+Current Phase 1 state:
+
+- schema is ready for session-family behavior
+- repository stores and loads the new fields
+- issuance now stamps `session_id`, `token_family_id`, `surface`, `ip_address`, and `user_agent`
+
+Current Phase 2 state:
+
+- refresh flow now loads raw token records before state evaluation
+- successful refresh rotates the current token version and inserts the successor inside one transaction
+- rotated-token reuse revokes the active family members
+- `session_id` and `token_family_id` continuity is now enforced by the refresh path
+
 ## Tenant User Table Requirements
 
 Direct tenant auth requires at minimum:

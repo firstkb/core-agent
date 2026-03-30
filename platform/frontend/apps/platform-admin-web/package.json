@@ -4,6 +4,7 @@
   "version": "3.0.2",
   "type": "module",
   "dependencies": {
+    "@platform/api-client": "workspace:*",
     "@platform/app-shell": "workspace:*",
     "@platform/auth-core": "workspace:*",
     "@platform/i18n": "workspace:*",

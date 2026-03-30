@@ -773,8 +773,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  width: min(100%, 30rem);
+  width: min(100%, 24rem);
   min-height: 2.625rem;
+  margin-inline: auto;
   padding: 0 var(--space-3) 0 0.875rem;
   border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
   border-radius: calc(var(--radius-lg) + 0.125rem);
@@ -1419,8 +1420,12 @@
 }
 
 .workspace-shell--rail .workspace-shell__header-left {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
+}
+
+.workspace-shell--rail .workspace-shell__header-actions {
+  flex: 1 1 0;
 }
 
 .workspace-shell--rail .workspace-shell__header-copy {

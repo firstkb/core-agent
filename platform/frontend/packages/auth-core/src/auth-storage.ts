@@ -1,12 +1,9 @@
 type AuthTokens = {
   accessToken: string;
-  idToken: string;
-  refreshToken: string;
+  expiresAt: number;
 };
 
-type StoredAuthSession = AuthTokens & {
-  userId: string;
-};
+type StoredAuthSession = AuthTokens;
 
 type AuthStorageNamespace = string;
 
@@ -34,11 +31,34 @@ function decodeJwtPayload<T extends Record<string, unknown>>(token: string): T |
   }
 }
 
-function extractUserIdFromToken(idToken: string) {
-  const payload = decodeJwtPayload<Record<string, unknown>>(idToken);
-  const userId = payload?.["custom:user_id"] ?? payload?.userId ?? payload?.uid;
+function extractUserIdFromToken(accessToken: string) {
+  const payload = decodeJwtPayload<Record<string, unknown>>(accessToken);
+  const userId =
+    payload?.sub ??
+    payload?.["custom:user_id"] ??
+    payload?.userId ??
+    payload?.uid;
 
   return typeof userId === "string" ? userId : "";
+}
+
+function extractExpiresAtFromToken(accessToken: string) {
+  const payload = decodeJwtPayload<Record<string, unknown>>(accessToken);
+  const exp = payload?.exp;
+
+  if (typeof exp !== "number" || !Number.isFinite(exp)) {
+    return null;
+  }
+
+  return exp * 1000;
+}
+
+function resolveExpiresAt(tokens: Pick<AuthTokens, "accessToken" | "expiresAt">) {
+  if (Number.isFinite(tokens.expiresAt) && tokens.expiresAt > 0) {
+    return tokens.expiresAt;
+  }
+
+  return extractExpiresAtFromToken(tokens.accessToken);
 }
 
 function readStoredAuthSession(namespace: AuthStorageNamespace = defaultAuthStorageNamespace): StoredAuthSession | null {
@@ -47,21 +67,23 @@ function readStoredAuthSession(namespace: AuthStorageNamespace = defaultAuthStor
   }
 
   const accessToken = window.localStorage.getItem(buildStorageKey(namespace, "accessToken"));
-  const idToken = window.localStorage.getItem(buildStorageKey(namespace, "idToken"));
-  const refreshToken = window.localStorage.getItem(buildStorageKey(namespace, "refreshToken"));
-  const userId =
-    window.localStorage.getItem(buildStorageKey(namespace, "userId")) ??
-    (idToken ? extractUserIdFromToken(idToken) : "");
+  const storedExpiresAt = Number(window.localStorage.getItem(buildStorageKey(namespace, "expiresAt")));
 
-  if (!accessToken || !idToken || !refreshToken) {
+  if (!accessToken) {
+    return null;
+  }
+
+  const expiresAt = Number.isFinite(storedExpiresAt) && storedExpiresAt > 0
+    ? storedExpiresAt
+    : extractExpiresAtFromToken(accessToken);
+
+  if (!expiresAt) {
     return null;
   }
 
   return {
     accessToken,
-    idToken,
-    refreshToken,
-    userId,
+    expiresAt,
   };
 }
 
@@ -69,18 +91,19 @@ function persistAuthTokens(
   namespace: AuthStorageNamespace = defaultAuthStorageNamespace,
   tokens: AuthTokens,
 ): StoredAuthSession {
-  const userId = extractUserIdFromToken(tokens.idToken);
+  const expiresAt = resolveExpiresAt(tokens);
+  if (!expiresAt) {
+    throw new Error("Unable to resolve access token expiry.");
+  }
 
   if (typeof window !== "undefined") {
     window.localStorage.setItem(buildStorageKey(namespace, "accessToken"), tokens.accessToken);
-    window.localStorage.setItem(buildStorageKey(namespace, "idToken"), tokens.idToken);
-    window.localStorage.setItem(buildStorageKey(namespace, "refreshToken"), tokens.refreshToken);
-    window.localStorage.setItem(buildStorageKey(namespace, "userId"), userId);
+    window.localStorage.setItem(buildStorageKey(namespace, "expiresAt"), String(expiresAt));
   }
 
   return {
-    ...tokens,
-    userId,
+    accessToken: tokens.accessToken,
+    expiresAt,
   };
 }
 
@@ -90,14 +113,19 @@ function clearStoredAuthSession(namespace: AuthStorageNamespace = defaultAuthSto
   }
 
   window.localStorage.removeItem(buildStorageKey(namespace, "accessToken"));
-  window.localStorage.removeItem(buildStorageKey(namespace, "idToken"));
+  window.localStorage.removeItem(buildStorageKey(namespace, "expiresAt"));
   window.localStorage.removeItem(buildStorageKey(namespace, "refreshToken"));
+
+  // Remove legacy keys from the previous browser-side session contract.
+  window.localStorage.removeItem(buildStorageKey(namespace, "idToken"));
   window.localStorage.removeItem(buildStorageKey(namespace, "userId"));
 }
 
 export {
   clearStoredAuthSession,
+  decodeJwtPayload,
   defaultAuthStorageNamespace,
+  extractExpiresAtFromToken,
   extractUserIdFromToken,
   persistAuthTokens,
   readStoredAuthSession,

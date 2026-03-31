@@ -69,6 +69,9 @@ Keys and indexes:
 Rules:
 
 - at least one of `dns` or `secret_name` must be present
+- if `secret_name` is set, runtime resolves the instance DSN from AWS Secrets Manager
+- if `secret_name` is empty, runtime uses `dns`
+- current secret value contract is a plain PostgreSQL DSN string
 - this is master-only infrastructure metadata
 
 Legacy MSSQL mapping:

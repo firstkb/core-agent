@@ -31,14 +31,9 @@ func (c *Client) LoadInstancesFromMaster(ctx context.Context) error {
 			continue
 		}
 
-		dsn := strings.TrimSpace(dns.String)
-		if dsn == "" && secretName.Valid && secretName.String != "" && c.instanceResolv != nil {
-			s, err := c.instanceResolv(code.String, secretName.String)
-			if err != nil {
-				c.logger.Error("instance secret resolve failed", "code", code.String, "error", err)
-			} else {
-				dsn = s
-			}
+		dsn, err := resolveInstanceDSN(code.String, dns.String, secretName.String, c.instanceResolv)
+		if err != nil {
+			c.logger.Error("instance dsn resolve failed", "code", code.String, "error", err)
 		}
 		if dsn == "" {
 			// if dns and secret are empty, skip, will fallback to baseParms
@@ -52,7 +47,11 @@ func (c *Client) LoadInstancesFromMaster(ctx context.Context) error {
 		}
 		// clear dbname — here it will be set by tenant_db
 		params.DBName = ""
-		tmp[code.String] = instanceCfg{params: params, updatedAt: updatedAt}
+		tmp[code.String] = instanceCfg{
+			params:    params,
+			source:    instanceSource(dns.String, secretName.String),
+			updatedAt: updatedAt,
+		}
 		c.logger.Info(fmt.Sprintf("instance loaded %s - %s", code.String, updatedAt.Format(time.DateTime)))
 	}
 	if err := rows.Err(); err != nil {
@@ -67,6 +66,30 @@ func (c *Client) LoadInstancesFromMaster(ctx context.Context) error {
 	return nil
 }
 
+func resolveInstanceDSN(code, dns, secretName string, resolver InstanceResolver) (string, error) {
+	dns = strings.TrimSpace(dns)
+	secretName = strings.TrimSpace(secretName)
+
+	if secretName != "" {
+		if resolver == nil {
+			return "", fmt.Errorf("instance resolver is not configured for secret_name")
+		}
+		return resolver(code, secretName)
+	}
+
+	return dns, nil
+}
+
+func instanceSource(dns, secretName string) string {
+	if strings.TrimSpace(secretName) != "" {
+		return "secret_name"
+	}
+	if strings.TrimSpace(dns) != "" {
+		return "dns"
+	}
+	return ""
+}
+
 func (c *Client) SeedBaseInstance(code string) {
 	code = strings.TrimSpace(code)
 	if code == "" {
@@ -79,5 +102,5 @@ func (c *Client) SeedBaseInstance(code string) {
 	}
 	p := c.baseParms
 	p.DBName = "" // db name is selected by tenant_db
-	c.instances[code] = instanceCfg{params: p, updatedAt: time.Now()}
+	c.instances[code] = instanceCfg{params: p, source: "base_env", updatedAt: time.Now()}
 }

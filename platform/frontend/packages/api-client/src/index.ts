@@ -329,7 +329,7 @@ function createAuthClient(baseUrl: string): AuthClient {
       await requestEnvelope(baseUrl, "/logout", {
         allowEmptySuccess: true,
         body: {
-          all_devices: input?.allDevices ?? true,
+          all_devices: input?.allDevices ?? false,
         },
         credentials: "include",
       });

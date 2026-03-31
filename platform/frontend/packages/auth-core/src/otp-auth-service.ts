@@ -74,7 +74,7 @@ function createOtpAuthService({
     },
     async signOut(options) {
       await authClient.logout({
-        allDevices: options?.allDevices ?? true,
+        allDevices: options?.allDevices ?? false,
       });
     },
     async verifyCode(code, login, options) {

@@ -14,6 +14,7 @@ Key local-development surfaces:
 - env templates: `env/*.env.example`
 - local runbook: `docs/local-backend-bootstrap.md`
 - auth key-source runbook: `docs/auth/auth-key-source-configuration.md`
+- db instance secret runbook: `docs/backend-db-instance-secret-resolution.md`
 - local seeds: `seeds/local/*.sql`
 - changelog: `CHANGELOG.md`
 

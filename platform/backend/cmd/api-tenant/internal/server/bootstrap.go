@@ -52,6 +52,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	tenantUserRepo := authsvc.NewTenantUserRepository(server.sqlClient)
 	profileService := profilesvc.NewService(tenantUserRepo)
 	server.profileHTTP = profilesvc.NewHandler(profileService)
+	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()
 	server.classifier = class
@@ -144,4 +145,29 @@ func splitAllowedOrigins(value string) []string {
 		origins = append(origins, part)
 	}
 	return origins
+}
+
+func (srv *Server) logStartupState(cfg *config.Config) {
+	if srv == nil || srv.logger == nil || srv.sqlClient == nil || srv.config == nil || cfg == nil {
+		return
+	}
+
+	var authCfg authConfigEnvelope
+	_ = cfg.Unmarshal("", &authCfg)
+	instances := srv.sqlClient.LoadedInstanceSummaries()
+
+	jwtAlg := "n/a"
+	jwtKeySource := "n/a"
+	if shouldValidateTokensLocally(srv.config.Token.Validate) {
+		jwtAlg = strings.ToLower(strings.TrimSpace(authCfg.Auth.JWTAlgorithm))
+		jwtKeySource = strings.TrimSpace(authCfg.Auth.JWTKeySource)
+	}
+
+	srv.logger.Info("tenant api startup configuration",
+		"token_validate", strings.TrimSpace(srv.config.Token.Validate),
+		"jwt_alg", jwtAlg,
+		"jwt_key_source", jwtKeySource,
+		"db_instance_count", len(instances),
+		"db_instances", instances,
+	)
 }

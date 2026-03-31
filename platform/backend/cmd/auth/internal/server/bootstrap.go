@@ -52,6 +52,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 
 	server.authService = authService
 	server.authHTTP = authsvc.NewHandler(authService)
+	server.logStartupState(cfg)
 
 	// Build routes
 
@@ -105,4 +106,30 @@ func splitAllowedOrigins(value string) []string {
 		origins = append(origins, part)
 	}
 	return origins
+}
+
+type authStartupEnvelope struct {
+	Auth authStartupConfig `json:"auth"`
+}
+
+type authStartupConfig struct {
+	JWTAlgorithm string `json:"jwtalg"`
+	JWTKeySource string `json:"keysource"`
+}
+
+func (srv *Server) logStartupState(cfg *config.Config) {
+	if srv == nil || srv.logger == nil || srv.sqlClient == nil || cfg == nil {
+		return
+	}
+
+	var c authStartupEnvelope
+	_ = cfg.Unmarshal("", &c)
+	instances := srv.sqlClient.LoadedInstanceSummaries()
+
+	srv.logger.Info("auth startup configuration",
+		"jwt_alg", strings.ToLower(strings.TrimSpace(c.Auth.JWTAlgorithm)),
+		"jwt_key_source", strings.TrimSpace(c.Auth.JWTKeySource),
+		"db_instance_count", len(instances),
+		"db_instances", instances,
+	)
 }

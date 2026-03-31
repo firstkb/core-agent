@@ -9,6 +9,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { ApiClientError, isUnauthorizedApiError } from "@platform/api-client";
 
 import {
   clearStoredAuthSession,
@@ -50,7 +51,7 @@ type AuthContextValue = {
     login?: string,
     options?: { method?: AuthMethod },
   ) => Promise<StoredAuthSession>;
-  signOut: () => Promise<void>;
+  signOut: (options?: { allDevices?: boolean }) => Promise<void>;
   status: AuthStatus;
   storageNamespace: AuthStorageNamespace;
   tokens: AuthTokens | null;
@@ -59,6 +60,160 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const authRefreshLeadTimeMs = 60_000;
+const authCrossTabRefreshLockTTLms = 15_000;
+const authCrossTabRefreshWaitMs = 10_000;
+const authCrossTabRefreshPollMs = 250;
+
+type RefreshLock = {
+  expiresAt: number;
+  owner: string;
+};
+
+function buildProviderStorageKey(namespace: AuthStorageNamespace, key: string) {
+  return `${namespace}:${key}`;
+}
+
+function refreshLockKey(namespace: AuthStorageNamespace) {
+  return buildProviderStorageKey(namespace, "refreshLock");
+}
+
+function createRefreshLock(owner: string): RefreshLock {
+  return {
+    owner,
+    expiresAt: Date.now() + authCrossTabRefreshLockTTLms,
+  };
+}
+
+function readRefreshLock(namespace: AuthStorageNamespace): RefreshLock | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawValue = window.localStorage.getItem(refreshLockKey(namespace));
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawValue) as Partial<RefreshLock>;
+    if (
+      typeof parsed.owner === "string" &&
+      typeof parsed.expiresAt === "number" &&
+      Number.isFinite(parsed.expiresAt)
+    ) {
+      return {
+        owner: parsed.owner,
+        expiresAt: parsed.expiresAt,
+      };
+    }
+  } catch {
+    // Ignore malformed lock payloads and let the caller replace them.
+  }
+
+  return null;
+}
+
+function tryAcquireRefreshLock(namespace: AuthStorageNamespace, owner: string) {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  const existingLock = readRefreshLock(namespace);
+  if (
+    existingLock &&
+    existingLock.owner !== owner &&
+    existingLock.expiresAt > Date.now()
+  ) {
+    return false;
+  }
+
+  window.localStorage.setItem(
+    refreshLockKey(namespace),
+    JSON.stringify(createRefreshLock(owner)),
+  );
+
+  return readRefreshLock(namespace)?.owner === owner;
+}
+
+function releaseRefreshLock(namespace: AuthStorageNamespace, owner: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const existingLock = readRefreshLock(namespace);
+  if (!existingLock || existingLock.owner !== owner) {
+    return;
+  }
+
+  window.localStorage.removeItem(refreshLockKey(namespace));
+}
+
+function waitForCrossTabSession(
+  namespace: AuthStorageNamespace,
+  expectedAccessToken: string | null,
+): Promise<StoredAuthSession | null> {
+  if (typeof window === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (value: StoredAuthSession | null) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+      window.removeEventListener("storage", handleStorage);
+      resolve(value);
+    };
+
+    const resolveSession = () => {
+      const sharedSession = readStoredAuthSession(namespace);
+      if (
+        sharedSession &&
+        sharedSession.accessToken &&
+        sharedSession.accessToken !== expectedAccessToken
+      ) {
+        finish(sharedSession);
+        return;
+      }
+
+      const currentLock = readRefreshLock(namespace);
+      if (!currentLock || currentLock.expiresAt <= Date.now()) {
+        finish(sharedSession);
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) {
+        return;
+      }
+
+      const key = event.key;
+      if (
+        key !== refreshLockKey(namespace) &&
+        key !== buildProviderStorageKey(namespace, "accessToken") &&
+        key !== buildProviderStorageKey(namespace, "expiresAt")
+      ) {
+        return;
+      }
+
+      resolveSession();
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      finish(readStoredAuthSession(namespace));
+    }, authCrossTabRefreshWaitMs);
+    const intervalId = window.setInterval(resolveSession, authCrossTabRefreshPollMs);
+
+    window.addEventListener("storage", handleStorage);
+    resolveSession();
+  });
+}
 
 function toAuthTokens(session: StoredAuthSession): AuthTokens {
   return {
@@ -69,6 +224,12 @@ function toAuthTokens(session: StoredAuthSession): AuthTokens {
 
 function shouldRefreshSession(session: StoredAuthSession, now = Date.now()) {
   return session.expiresAt - now <= authRefreshLeadTimeMs;
+}
+
+function isRefreshUnauthorizedError(error: unknown) {
+  return error instanceof ApiClientError &&
+    isUnauthorizedApiError(error) &&
+    error.statusCode === 401;
 }
 
 export function AuthProvider({
@@ -82,6 +243,7 @@ export function AuthProvider({
   const refreshPromiseRef = useRef<Promise<StoredAuthSession | null> | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
   const sessionRef = useRef<StoredAuthSession | null>(null);
+  const tabIdRef = useRef(`auth-tab-${Math.random().toString(36).slice(2)}-${Date.now()}`);
 
   const clearRefreshTimeout = useCallback(() => {
     if (refreshTimeoutRef.current !== null) {
@@ -100,6 +262,7 @@ export function AuthProvider({
     refreshNonceRef.current += 1;
     refreshPromiseRef.current = null;
     clearRefreshTimeout();
+    releaseRefreshLock(storageNamespace, tabIdRef.current);
     clearStoredAuthSession(storageNamespace);
     commitSession(null, "anonymous");
   }, [clearRefreshTimeout, commitSession, storageNamespace]);
@@ -122,7 +285,7 @@ export function AuthProvider({
 
     const refreshNonce = refreshNonceRef.current;
     const expectedAccessToken = currentSession?.accessToken ?? null;
-    const refreshPromise = service
+    const performRefresh = () => service
       .refreshAuthToken(currentSession ? toAuthTokens(currentSession) : null)
       .then(async (nextTokens) => {
         const activeSession = sessionRef.current;
@@ -140,21 +303,56 @@ export function AuthProvider({
       })
       .catch((error) => {
         if (refreshNonce === refreshNonceRef.current) {
-          clearSessionState();
+          return (async () => {
+            if (isRefreshUnauthorizedError(error)) {
+              try {
+                await service.signOut({ allDevices: false });
+              } catch {
+                // Ignore logout failures here: local auth state must still be cleared.
+              }
+            }
+
+            clearSessionState();
+            throw error;
+          })();
         }
 
         throw error;
-      })
-      .finally(() => {
-        if (refreshPromiseRef.current === refreshPromise) {
-          refreshPromiseRef.current = null;
-        }
       });
+
+    let refreshPromise: Promise<StoredAuthSession | null>;
+    refreshPromise = (async () => {
+      if (!tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
+        const sharedSession = await waitForCrossTabSession(storageNamespace, expectedAccessToken);
+
+        if (
+          sharedSession &&
+          sharedSession.accessToken &&
+          sharedSession.accessToken !== expectedAccessToken
+        ) {
+          if (refreshNonce === refreshNonceRef.current) {
+            commitSession(sharedSession, "authenticated");
+          }
+          return sharedSession;
+        }
+
+        if (!tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
+          return sharedSession ?? sessionRef.current;
+        }
+      }
+
+      return performRefresh();
+    })().finally(() => {
+      if (refreshPromiseRef.current === refreshPromise) {
+        refreshPromiseRef.current = null;
+      }
+      releaseRefreshLock(storageNamespace, tabIdRef.current);
+    });
 
     refreshPromiseRef.current = refreshPromise;
 
     return refreshPromise;
-  }, [clearSessionState, saveTokens, service]);
+  }, [clearSessionState, commitSession, saveTokens, service, storageNamespace]);
 
   const getTokens = useCallback(() => {
     return session ? toAuthTokens(session) : null;
@@ -207,9 +405,11 @@ export function AuthProvider({
     return saveTokens(nextTokens);
   }, [saveTokens, service]);
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (options?: { allDevices?: boolean }) => {
     try {
-      await service.signOut({ allDevices: true });
+      await service.signOut({
+        allDevices: options?.allDevices ?? false,
+      });
     } finally {
       clearSessionState();
     }
@@ -218,6 +418,68 @@ export function AuthProvider({
   useEffect(() => {
     void checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const releaseLock = () => {
+      releaseRefreshLock(storageNamespace, tabIdRef.current);
+    };
+
+    window.addEventListener("pagehide", releaseLock);
+    window.addEventListener("beforeunload", releaseLock);
+
+    return () => {
+      window.removeEventListener("pagehide", releaseLock);
+      window.removeEventListener("beforeunload", releaseLock);
+      releaseLock();
+    };
+  }, [storageNamespace]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const accessTokenKey = buildProviderStorageKey(storageNamespace, "accessToken");
+    const expiresAtKey = buildProviderStorageKey(storageNamespace, "expiresAt");
+
+    function handleStorage(event: StorageEvent) {
+      if (event.storageArea !== window.localStorage) {
+        return;
+      }
+      if (event.key !== accessTokenKey && event.key !== expiresAtKey) {
+        return;
+      }
+
+      const sharedSession = readStoredAuthSession(storageNamespace);
+      if (!sharedSession) {
+        refreshNonceRef.current += 1;
+        refreshPromiseRef.current = null;
+        clearRefreshTimeout();
+        commitSession(null, "anonymous");
+        return;
+      }
+
+      const activeSession = sessionRef.current;
+      if (
+        activeSession?.accessToken === sharedSession.accessToken &&
+        activeSession.expiresAt === sharedSession.expiresAt
+      ) {
+        return;
+      }
+
+      commitSession(sharedSession, "authenticated");
+    }
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [clearRefreshTimeout, commitSession, storageNamespace]);
 
   useEffect(() => {
     if (typeof window === "undefined") {

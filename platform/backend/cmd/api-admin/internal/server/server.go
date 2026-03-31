@@ -40,6 +40,7 @@ type DatabaseConfig struct {
 	Username   string     `json:"username"`
 	Password   string     `json:"password"`
 	MasterName string     `json:"mastername"`
+	AWSRegion  string     `json:"awsregion"`
 	SSLMode    string     `json:"sslmode"`
 	Debug      bool       `json:"debug"`
 	PoolConfig PoolConfig `json:"pool"`
@@ -143,6 +144,7 @@ func (srv *Server) initialize() error {
 	opts := []postgres.Option{
 		postgres.WithPoolConfig(poolMaxIdle, poolMaxOpen, poolLife, poolIdleTime),
 		postgres.WithDebug(srv.config.DB.Debug),
+		postgres.WithInstanceResolver(postgres.NewSecretsManagerInstanceResolver(srv.config.DB.AWSRegion)),
 	}
 	client, err := postgres.NewClient(conn, srv.logger, opts...)
 	if err != nil {

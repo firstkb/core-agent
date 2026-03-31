@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net"
 	"net/url"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -21,7 +22,14 @@ type poolKey struct {
 
 type instanceCfg struct {
 	params    dsnParams // host, port, user, password, sslmode (without dbname)
+	source    string
 	updatedAt time.Time
+}
+
+type LoadedInstance struct {
+	Code      string
+	Source    string
+	UpdatedAt time.Time
 }
 
 type InstanceResolver func(code, secretName string) (string, error) // returns full DSN
@@ -152,6 +160,38 @@ func (c *Client) Close() error {
 	c.poolsMu.Unlock()
 
 	return nil
+}
+
+func (c *Client) LoadedInstances() []LoadedInstance {
+	c.instancesMu.RLock()
+	instances := make([]LoadedInstance, 0, len(c.instances))
+	for code, cfg := range c.instances {
+		instances = append(instances, LoadedInstance{
+			Code:      code,
+			Source:    cfg.source,
+			UpdatedAt: cfg.updatedAt,
+		})
+	}
+	c.instancesMu.RUnlock()
+
+	sort.Slice(instances, func(i, j int) bool {
+		return instances[i].Code < instances[j].Code
+	})
+
+	return instances
+}
+
+func (c *Client) LoadedInstanceSummaries() []string {
+	instances := c.LoadedInstances()
+	summaries := make([]string, 0, len(instances))
+	for _, inst := range instances {
+		source := strings.TrimSpace(inst.Source)
+		if source == "" {
+			source = "unknown"
+		}
+		summaries = append(summaries, fmt.Sprintf("%s(%s)", inst.Code, source))
+	}
+	return summaries
 }
 
 func WithInstanceResolver(r InstanceResolver) Option {

@@ -28,6 +28,7 @@ type databaseConfig struct {
 	Username   string     `json:"username"`
 	Password   string     `json:"password"`
 	MasterName string     `json:"mastername"`
+	AWSRegion  string     `json:"awsregion"`
 	Debug      bool       `json:"debug"`
 	PoolConfig poolConfig `json:"pool"`
 }
@@ -86,6 +87,7 @@ func (r *Runner) Run(ctx context.Context, cfg *config.Config, logger *slog.Logge
 			parseDuration(rc.DB.PoolConfig.MaxIdleTime, 0),
 		),
 		postgres.WithDebug(rc.DB.Debug),
+		postgres.WithInstanceResolver(postgres.NewSecretsManagerInstanceResolver(rc.DB.AWSRegion)),
 	}
 
 	client, err := postgres.NewClient(conn, logger, opts...)

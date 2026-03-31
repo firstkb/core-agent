@@ -804,8 +804,38 @@ func (s *AuthService) Logout(ctx context.Context, r *http.Request, req LogoutReq
 				})
 				return ErrUnauthorized
 			}
-			logoutCtx = tenantCtx
+			logoutCtx = requestctx.WithUser(tenantCtx, requestctx.UserInfo{
+				ID: token.UserID.String(),
+			})
+			if s.tenantUsers != nil {
+				if user, uerr := s.tenantUsers.GetByID(tenantCtx, tenantInfo, token.UserID); uerr == nil && user != nil {
+					logoutCtx = requestctx.WithUser(tenantCtx, requestctx.UserInfo{
+						ID:         user.ID.String(),
+						BusinessID: user.BusinessID,
+						Email:      user.Email,
+						Level:      user.Level,
+						Role:       user.Role,
+					})
+				}
+			}
 		}
+	} else if s.adminUsers != nil {
+		if user, uerr := s.adminUsers.GetByID(ctx, token.UserID); uerr == nil && user != nil {
+			logoutCtx = requestctx.WithUser(ctx, requestctx.UserInfo{
+				ID:    user.ID.String(),
+				Email: user.Email,
+				Level: user.Level,
+				Role:  user.Role,
+			})
+		} else {
+			logoutCtx = requestctx.WithUser(ctx, requestctx.UserInfo{
+				ID: token.UserID.String(),
+			})
+		}
+	} else {
+		logoutCtx = requestctx.WithUser(ctx, requestctx.UserInfo{
+			ID: token.UserID.String(),
+		})
 	}
 
 	if req.AllDevices {
@@ -986,10 +1016,6 @@ func shouldLogAuthEvent(eventType eventsvc.EventType) bool {
 	switch eventType {
 	case eventsvc.EventTypeOTPRequest,
 		eventsvc.EventTypeLogin,
-		eventsvc.EventTypeLogout,
-		eventsvc.EventTypeSessionCreated,
-		eventsvc.EventTypeSessionRotated,
-		eventsvc.EventTypeSessionRevoked,
 		eventsvc.EventTypeSessionReuse,
 		eventsvc.EventTypeOTPRequestFail,
 		eventsvc.EventTypeOTPVerifyFail,
@@ -1110,6 +1136,14 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 		return nil, errResult
 	}
 
+	refreshCtx := requestctx.WithUser(tenantCtx, requestctx.UserInfo{
+		ID:         user.ID.String(),
+		BusinessID: user.BusinessID,
+		Email:      user.Email,
+		Level:      user.Level,
+		Role:       user.Role,
+	})
+
 	claims := auth.NewJWTClaims(s.issuer, s.audience, token.UserID, token.TenantID, user.Email, user.Phone, user.Level, user.Role, auth.AccessScopeTenantAPI)
 	claims.ExpiresAt = time.Now().Add(s.accessTTL).Unix()
 
@@ -1135,26 +1169,26 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 	}
 	if err := s.refreshRepo.RotateToken(ctx, currentTokenHash, refreshRecord); err != nil {
 		if errors.Is(err, sessions.ErrRefreshTokenRotated) {
-			s.revokeTokenFamilyQuietly(tenantCtx, token)
-			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeSessionReuse, sessionEventData(token, eventsvc.EventData{
+			s.revokeTokenFamilyQuietly(refreshCtx, token)
+			s.logAuthEvent(refreshCtx, r, eventsvc.EventTypeSessionReuse, sessionEventData(token, eventsvc.EventData{
 				"status": "failed",
 				"reason": "reuse_detected",
 			}))
-			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("reuse_detected", token))
+			s.logAuthEvent(refreshCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData("reuse_detected", token))
 			return nil, ErrUnauthorized
 		}
 		if errors.Is(err, sessions.ErrRefreshTokenRevoked) || errors.Is(err, sessions.ErrRefreshTokenExpired) || errors.Is(err, sessions.ErrRefreshTokenNotFound) {
-			s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData(refreshFailureReason(token, err), token))
+			s.logAuthEvent(refreshCtx, r, eventsvc.EventTypeTokenRefreshFail, refreshFailureEventData(refreshFailureReason(token, err), token))
 			return nil, ErrUnauthorized
 		}
 		return nil, err
 	}
 
-	s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeTokenRefresh, eventsvc.EventData{
+	s.logAuthEvent(refreshCtx, r, eventsvc.EventTypeTokenRefresh, eventsvc.EventData{
 		"status":  "success",
 		"user_id": user.ID.String(),
 	})
-	s.logAuthEvent(tenantCtx, r, eventsvc.EventTypeSessionRotated, sessionEventData(refreshRecord, eventsvc.EventData{
+	s.logAuthEvent(refreshCtx, r, eventsvc.EventTypeSessionRotated, sessionEventData(refreshRecord, eventsvc.EventData{
 		"status": "success",
 		"action": "refresh",
 	}))
@@ -1382,10 +1416,11 @@ func (s *AuthService) resolveTenantUserByContact(ctx context.Context, tenantInfo
 	}
 
 	tenantCtx := requestctx.WithUser(ctx, requestctx.UserInfo{
-		ID:    user.ID.String(),
-		Email: user.Email,
-		Level: user.Level,
-		Role:  user.Role,
+		ID:         user.ID.String(),
+		BusinessID: user.BusinessID,
+		Email:      user.Email,
+		Level:      user.Level,
+		Role:       user.Role,
 	})
 	return user, tenantCtx, nil
 }

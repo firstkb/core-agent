@@ -56,8 +56,9 @@ type ClaimsInfo struct {
 }
 
 type UserInfo struct {
-	ID    string
-	Email string
-	Level int
-	Role  string
+	ID         string
+	BusinessID int64
+	Email      string
+	Level      int
+	Role       string
 }

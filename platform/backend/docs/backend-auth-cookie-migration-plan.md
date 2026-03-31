@@ -412,13 +412,14 @@ Rule:
 Status notes:
 
 - completed
-- auth now emits dedicated session lifecycle events in addition to the existing auth success/failure events
-- `session_created` is written on successful tenant and admin OTP verify after refresh-session persistence succeeds
-- `session_rotated` is written on successful refresh rotation for both tenant and admin sessions
-- `session_revoked` is written on successful logout revoke
+- auth code paths detect and classify session lifecycle events for security handling
 - `session_reuse_detected` is written whenever a rotated refresh token is presented again and the token family is revoked
 - session audit payload includes session/family/user/tenant/surface metadata and expiry, but never includes raw token values or token hashes
-- session lifecycle events are now included in the auth event logging filter
+- tenant/admin `events` persistence still follows the reduced auth logging policy:
+  - errors
+  - positive `otp_request`
+  - positive `login`
+  - security anomaly `session_reuse_detected`
 
 Validation:
 

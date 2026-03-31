@@ -40,11 +40,12 @@ type EventData map[string]interface{}
 
 // Event represents a single event to be logged
 type Event struct {
-	UserID    *uuid.UUID // nullable
-	Module    string
-	EventType EventType
-	EventData EventData
-	IPAddress string
-	UserAgent string
-	CreatedAt time.Time
+	PrincipalID    *uuid.UUID // nullable canonical actor identity
+	UserBusinessID *int64     // nullable tenant users.users_id for legacy/internal joins
+	Module         string
+	EventType      EventType
+	EventData      EventData
+	IPAddress      string
+	UserAgent      string
+	CreatedAt      time.Time
 }

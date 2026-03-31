@@ -247,18 +247,27 @@ func TestRouteDomainMatchesTenantHost(t *testing.T) {
 	}
 }
 
-func TestShouldLogAuthEventIncludesSessionLifecycle(t *testing.T) {
-	if !shouldLogAuthEvent(eventsvc.EventTypeSessionCreated) {
-		t.Fatal("session_created should be logged")
+func TestShouldLogAuthEventPolicy(t *testing.T) {
+	if !shouldLogAuthEvent(eventsvc.EventTypeOTPRequest) {
+		t.Fatal("otp_request should be logged")
 	}
-	if !shouldLogAuthEvent(eventsvc.EventTypeSessionRotated) {
-		t.Fatal("session_rotated should be logged")
-	}
-	if !shouldLogAuthEvent(eventsvc.EventTypeSessionRevoked) {
-		t.Fatal("session_revoked should be logged")
+	if !shouldLogAuthEvent(eventsvc.EventTypeLogin) {
+		t.Fatal("login should be logged")
 	}
 	if !shouldLogAuthEvent(eventsvc.EventTypeSessionReuse) {
-		t.Fatal("session_reuse_detected should be logged")
+		t.Fatal("session_reuse_detected should be logged as security anomaly")
+	}
+	if shouldLogAuthEvent(eventsvc.EventTypeSessionCreated) {
+		t.Fatal("session_created should not be logged")
+	}
+	if shouldLogAuthEvent(eventsvc.EventTypeSessionRotated) {
+		t.Fatal("session_rotated should not be logged")
+	}
+	if shouldLogAuthEvent(eventsvc.EventTypeSessionRevoked) {
+		t.Fatal("session_revoked should not be logged")
+	}
+	if shouldLogAuthEvent(eventsvc.EventTypeLogout) {
+		t.Fatal("logout should not be logged")
 	}
 }
 

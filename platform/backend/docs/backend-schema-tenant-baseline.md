@@ -304,6 +304,7 @@ Purpose:
 Columns:
 
 - `events_id bigint not null`
+- `events_guid uuid not null`
 - `events_tenant_id bigint not null`
 - `events_date date null`
 - `events_event text not null`
@@ -314,7 +315,7 @@ Columns:
 - `events_time timestamptz null`
 - `events_timezone text null`
 - `events_users_id bigint null`
-- `events_actor_guid uuid null`
+- `events_principal_guid uuid null`
 - `events_users_ip inet null`
 - `events_to text null`
 - `events_subject text null`
@@ -329,8 +330,9 @@ Keys and indexes:
 
 - primary key: `(events_created_at, events_id)`
 - index: `ix_events_tenant_created (events_tenant_id, events_created_at desc)`
+- index: `ix_events_tenant_guid_created (events_tenant_id, events_guid, events_created_at desc)`
 - index: `ix_events_tenant_event_created (events_tenant_id, events_event, events_created_at desc)`
-- partial index: `ix_events_tenant_actor_created (events_tenant_id, events_actor_guid, events_created_at desc)`
+- partial index: `ix_events_tenant_principal_created (events_tenant_id, events_principal_guid, events_created_at desc)`
 - index: `ix_events_tenant_module_created (events_tenant_id, events_module, events_created_at desc)`
 
 Tenant rules:
@@ -353,8 +355,15 @@ Legacy MSSQL mapping:
   - `events_users_ip` -> `events_users_ip`
   - free-form event payload -> `events_data`
 - intentionally not mirrored 1:1:
-  - current PostgreSQL baseline adds `events_actor_guid` for auth/root actor identity
+  - current PostgreSQL baseline adds `events_guid` as stable UUID identity for event rows
+  - current PostgreSQL baseline adds `events_principal_guid` for canonical actor UUID identity
   - auth payload may include full email/phone and raw OTP in `events_data` by product requirement
+
+Actor identity rules:
+
+- tenant legacy event: `events_users_id` populated, `events_principal_guid` optional
+- admin or root event: `events_users_id = null`, `events_principal_guid = uuid`
+- migrated MSSQL event: `events_users_id` populated, `events_principal_guid = null`
 
 Decision:
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,15 +61,52 @@ func (s *EventService) Log(ctx context.Context, module string, eventType EventTy
 
 	if claims, ok := requestctx.Claims(ctx); ok && claims.UserID != "" {
 		if parsed, err := uuid.Parse(claims.UserID); err == nil {
-			event.UserID = &parsed
+			event.PrincipalID = &parsed
 		}
 	} else if user, ok := requestctx.User(ctx); ok && user.ID != "" {
 		if parsed, err := uuid.Parse(user.ID); err == nil {
-			event.UserID = &parsed
+			event.PrincipalID = &parsed
+		}
+		if user.BusinessID > 0 {
+			userBusinessID := user.BusinessID
+			event.UserBusinessID = &userBusinessID
 		}
 	} else if identity, ok := requestctx.Identity(ctx); ok && identity.ID != "" {
 		if parsed, err := uuid.Parse(identity.ID); err == nil {
-			event.UserID = &parsed
+			event.PrincipalID = &parsed
+		}
+	}
+
+	if event.PrincipalID == nil {
+		if userID, ok := event.EventData["user_id"].(string); ok {
+			if parsed, err := uuid.Parse(strings.TrimSpace(userID)); err == nil {
+				event.PrincipalID = &parsed
+			}
+		}
+	}
+
+	if event.UserBusinessID == nil {
+		switch userBusinessID := event.EventData["users_id"].(type) {
+		case int64:
+			if userBusinessID > 0 {
+				id := userBusinessID
+				event.UserBusinessID = &id
+			}
+		case int:
+			if userBusinessID > 0 {
+				id := int64(userBusinessID)
+				event.UserBusinessID = &id
+			}
+		case float64:
+			if userBusinessID > 0 {
+				id := int64(userBusinessID)
+				event.UserBusinessID = &id
+			}
+		case string:
+			if parsed, err := strconv.ParseInt(strings.TrimSpace(userBusinessID), 10, 64); err == nil && parsed > 0 {
+				id := parsed
+				event.UserBusinessID = &id
+			}
 		}
 	}
 

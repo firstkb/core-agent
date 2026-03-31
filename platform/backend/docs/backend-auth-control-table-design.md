@@ -186,10 +186,12 @@ Master-side use:
 
 Required fields for auth logging:
 
+- `events_guid`
 - `events_event`
 - `events_module`
 - `events_text`
-- `events_actor_guid`
+- `events_users_id`
+- `events_principal_guid`
 - `events_users_ip`
 - `events_to`
 - `events_data`
@@ -200,6 +202,8 @@ Auth logging requirements:
 - success and failure events are both written
 - raw OTP code must be written to `events_text`
 - full email or phone may be written to `events_data`
+- tenant user events should write `events_users_id` when tenant row id is known
+- admin or root events should leave `events_users_id` null and write `events_principal_guid`
 
 ## Partitioning
 

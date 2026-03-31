@@ -491,6 +491,54 @@ Legacy MSSQL mapping:
   - `users_etsadmin`
 - PostgreSQL baseline intentionally separates root admins from tenant users
 
+## `events`
+
+Purpose:
+
+- canonical master-side auth and control-plane audit log
+
+Columns:
+
+- `events_id bigint not null`
+- `events_guid uuid not null`
+- `events_tenant_id bigint null`
+- `events_date date null`
+- `events_event text not null`
+- `events_module text null`
+- `events_record bigint null`
+- `events_table text null`
+- `events_text text null`
+- `events_time timestamptz null`
+- `events_timezone text null`
+- `events_users_id bigint null`
+- `events_principal_guid uuid null`
+- `events_users_ip inet null`
+- `events_to text null`
+- `events_subject text null`
+- `events_body text null`
+- `events_data jsonb not null`
+- `events_files jsonb null`
+- `events_urls jsonb null`
+- `events_created_at timestamptz not null`
+- `events_updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `(events_created_at, events_id)`
+- index: `ix_events_tenant_created (events_tenant_id, events_created_at desc)`
+- index: `ix_events_guid_created (events_guid, events_created_at desc)`
+- index: `ix_events_tenant_event_created (events_tenant_id, events_event, events_created_at desc)`
+- partial index: `ix_events_principal_created (events_principal_guid, events_created_at desc)`
+- index: `ix_events_module_created (events_module, events_created_at desc)`
+
+Rules:
+
+- table is partitioned by `RANGE (events_created_at)`
+- quarterly partitions are the accepted baseline
+- `events_users_id` remains nullable and is normally unused in pure master/admin events
+- `events_principal_guid` is the canonical actor UUID for admin/root/control-plane events
+- future tenant-related control-plane events may set `events_tenant_id`
+
 ## `migration_runs`
 
 Purpose:

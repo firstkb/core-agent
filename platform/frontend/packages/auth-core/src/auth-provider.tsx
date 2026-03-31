@@ -15,7 +15,9 @@ import {
   clearStoredAuthSession,
   defaultAuthStorageNamespace,
   extractUserIdFromToken,
+  persistAuthSessionHint,
   persistAuthTokens,
+  readAuthSessionHint,
   readStoredAuthSession,
   type AuthStorageNamespace,
   type AuthTokens,
@@ -63,6 +65,7 @@ const authRefreshLeadTimeMs = 60_000;
 const authCrossTabRefreshLockTTLms = 15_000;
 const authCrossTabRefreshWaitMs = 10_000;
 const authCrossTabRefreshPollMs = 250;
+const authCrossTabRefreshLockSettleMs = 50;
 
 type RefreshLock = {
   expiresAt: number;
@@ -82,6 +85,12 @@ function createRefreshLock(owner: string): RefreshLock {
     owner,
     expiresAt: Date.now() + authCrossTabRefreshLockTTLms,
   };
+}
+
+function waitForDuration(durationMs: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, durationMs);
+  });
 }
 
 function readRefreshLock(namespace: AuthStorageNamespace): RefreshLock | null {
@@ -113,7 +122,7 @@ function readRefreshLock(namespace: AuthStorageNamespace): RefreshLock | null {
   return null;
 }
 
-function tryAcquireRefreshLock(namespace: AuthStorageNamespace, owner: string) {
+async function tryAcquireRefreshLock(namespace: AuthStorageNamespace, owner: string) {
   if (typeof window === "undefined") {
     return true;
   }
@@ -131,8 +140,15 @@ function tryAcquireRefreshLock(namespace: AuthStorageNamespace, owner: string) {
     refreshLockKey(namespace),
     JSON.stringify(createRefreshLock(owner)),
   );
+  await waitForDuration(authCrossTabRefreshLockSettleMs);
 
-  return readRefreshLock(namespace)?.owner === owner;
+  const confirmedLock = readRefreshLock(namespace);
+
+  return Boolean(
+    confirmedLock &&
+    confirmedLock.owner === owner &&
+    confirmedLock.expiresAt > Date.now(),
+  );
 }
 
 function releaseRefreshLock(namespace: AuthStorageNamespace, owner: string) {
@@ -269,6 +285,7 @@ export function AuthProvider({
 
   const saveTokens = useCallback(async (nextTokens: AuthTokens) => {
     refreshNonceRef.current += 1;
+    persistAuthSessionHint(storageNamespace);
     const storedSession = persistAuthTokens(storageNamespace, nextTokens);
 
     commitSession(storedSession, "authenticated");
@@ -322,8 +339,12 @@ export function AuthProvider({
 
     let refreshPromise: Promise<StoredAuthSession | null>;
     refreshPromise = (async () => {
-      if (!tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
+      if (!await tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
         const sharedSession = await waitForCrossTabSession(storageNamespace, expectedAccessToken);
+
+        if (refreshNonce !== refreshNonceRef.current) {
+          return sessionRef.current;
+        }
 
         if (
           sharedSession &&
@@ -336,9 +357,34 @@ export function AuthProvider({
           return sharedSession;
         }
 
-        if (!tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
+        if (!sharedSession && !sessionRef.current) {
+          return null;
+        }
+
+        if (!await tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
           return sharedSession ?? sessionRef.current;
         }
+      }
+
+      if (refreshNonce !== refreshNonceRef.current) {
+        return sessionRef.current;
+      }
+
+      const activeSession = sessionRef.current;
+      if (!currentSession && activeSession) {
+        return activeSession;
+      }
+
+      if (expectedAccessToken && !activeSession) {
+        return null;
+      }
+
+      if (
+        expectedAccessToken &&
+        activeSession &&
+        activeSession.accessToken !== expectedAccessToken
+      ) {
+        return activeSession;
       }
 
       return performRefresh();
@@ -366,6 +412,11 @@ export function AuthProvider({
     const storedSession = readStoredAuthSession(storageNamespace);
 
     if (!storedSession) {
+      if (!readAuthSessionHint(storageNamespace)) {
+        commitSession(null, "anonymous");
+        return false;
+      }
+
       try {
         const refreshedSession = await refreshSession(null);
         return Boolean(refreshedSession);
@@ -445,12 +496,17 @@ export function AuthProvider({
 
     const accessTokenKey = buildProviderStorageKey(storageNamespace, "accessToken");
     const expiresAtKey = buildProviderStorageKey(storageNamespace, "expiresAt");
+    const sessionHintKey = buildProviderStorageKey(storageNamespace, "sessionHint");
 
     function handleStorage(event: StorageEvent) {
       if (event.storageArea !== window.localStorage) {
         return;
       }
-      if (event.key !== accessTokenKey && event.key !== expiresAtKey) {
+      if (
+        event.key !== accessTokenKey &&
+        event.key !== expiresAtKey &&
+        event.key !== sessionHintKey
+      ) {
         return;
       }
 

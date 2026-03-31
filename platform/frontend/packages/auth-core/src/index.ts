@@ -13,7 +13,9 @@ export {
   defaultAuthStorageNamespace,
   extractExpiresAtFromToken,
   extractUserIdFromToken,
+  persistAuthSessionHint,
   persistAuthTokens,
+  readAuthSessionHint,
   readStoredAuthSession,
 } from "./auth-storage";
 export type { AuthStorageNamespace, AuthTokens, StoredAuthSession } from "./auth-storage";

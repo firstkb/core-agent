@@ -428,8 +428,8 @@ Partitioning note:
 
 Design note:
 
-- do not add `events_guid` in the first baseline
-- this is a high-volume history table and should optimize for tenant/time access patterns
+- `events_guid` is accepted as the stable UUID identity for event rows
+- keep optimization focused on tenant/time access patterns, not GUID-only lookup
 
 ## `mails`
 

@@ -462,10 +462,7 @@ SELECT status
  LIMIT 1`, version).Scan(&lastStatus)
 	switch {
 	case err == nil:
-		switch lastStatus {
-		case migrationStatusCompleted:
-			return 0, true, nil
-		case migrationStatusRunning:
+		if lastStatus == migrationStatusRunning {
 			return 0, false, fmt.Errorf("migrator: migrations for version %s are already running", version)
 		}
 	case !errors.Is(err, sql.ErrNoRows):

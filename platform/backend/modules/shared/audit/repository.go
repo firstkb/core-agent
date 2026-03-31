@@ -106,9 +106,14 @@ func (r *Repo) insert(ctx context.Context, event Event) error {
 		}
 	}
 
-	var userID interface{}
-	if event.UserID != nil && *event.UserID != uuid.Nil {
-		userID = *event.UserID
+	var principalID interface{}
+	if event.PrincipalID != nil && *event.PrincipalID != uuid.Nil {
+		principalID = *event.PrincipalID
+	}
+
+	var userBusinessID interface{}
+	if event.UserBusinessID != nil && *event.UserBusinessID > 0 {
+		userBusinessID = *event.UserBusinessID
 	}
 
 	eventDataJSON := []byte(`{}`)
@@ -132,14 +137,15 @@ INSERT INTO events (
   events_module,
   events_text,
   events_time,
-  events_actor_guid,
+  events_users_id,
+  events_principal_guid,
   events_users_ip,
   events_to,
   events_data,
   events_created_at,
   events_updated_at
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
@@ -165,7 +171,8 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 		event.Module,
 		eventText(event.EventType, event.EventData),
 		event.CreatedAt,
-		userID,
+		userBusinessID,
+		principalID,
 		ipAddr,
 		eventAddress(event.EventData),
 		eventDataJSON,

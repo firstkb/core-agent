@@ -143,7 +143,7 @@ export function Pagination({
     }
   }
 
-  if (safeTotalPages <= 1) {
+  if (safeTotalPages <= 0) {
     return null;
   }
 

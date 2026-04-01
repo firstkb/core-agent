@@ -40,12 +40,30 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 			}
 			return info, nil
 		}, srv.logger))
+	b.Handle("ADMIN_PROFILE_GET_APP", "GET", "/app/profile", router.TierSecure,
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (any, error) {
+			info, err := srv.adminProfileHT.GetProfile(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_PROFILE_GET_APP",
+					http.StatusInternalServerError, "cannot get admin profile", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger))
 
 	b.Handle("ADMIN_TENANT_CREATE", "POST", "/admin/tenants", router.TierSecure,
 		handler.HandleJson(func(ctx context.Context, r *http.Request, req tenantmanagement.OnboardTenantInput) (*tenantmanagement.OnboardTenantOutput, error) {
 			info, err := srv.tenantManagementHT.OnboardTenant(ctx, r, req)
 			if err != nil {
 				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_TENANT_CREATE",
+					http.StatusInternalServerError, "cannot onboard tenant", err, srv.FieldsForLog(ctx, r, req)...)
+			}
+			return info, nil
+		}, srv.logger))
+	b.Handle("ADMIN_TENANT_CREATE_APP", "POST", "/app/admin/tenants", router.TierSecure,
+		handler.HandleJson(func(ctx context.Context, r *http.Request, req tenantmanagement.OnboardTenantInput) (*tenantmanagement.OnboardTenantOutput, error) {
+			info, err := srv.tenantManagementHT.OnboardTenant(ctx, r, req)
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_TENANT_CREATE_APP",
 					http.StatusInternalServerError, "cannot onboard tenant", err, srv.FieldsForLog(ctx, r, req)...)
 			}
 			return info, nil

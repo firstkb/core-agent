@@ -380,7 +380,7 @@ function createAuthClient(baseUrl: string): AuthClient {
 function createTenantProfileClient(baseUrl: string): TenantProfileClient {
   return {
     async getProfile(accessToken: string) {
-      const envelope = await requestEnvelope<unknown>(baseUrl, "/profile", {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/profile", {
         accessToken,
         method: "GET",
       });
@@ -393,7 +393,7 @@ function createTenantProfileClient(baseUrl: string): TenantProfileClient {
 function createAdminProfileClient(baseUrl: string): AdminProfileClient {
   return {
     async getProfile(accessToken: string) {
-      const envelope = await requestEnvelope<unknown>(baseUrl, "/profile", {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/profile", {
         accessToken,
         method: "GET",
       });

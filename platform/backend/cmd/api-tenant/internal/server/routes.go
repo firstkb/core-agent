@@ -40,6 +40,15 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 			}
 			return info, nil
 		}, srv.logger))
+	b.Handle("PROFILE_GET_APP", "GET", "/app/profile", router.TierSecure,
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*profilesvc.Profile, error) {
+			info, err := srv.profileHTTP.GetProfile(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "PROFILE_GET_APP",
+					http.StatusInternalServerError, "cannot get profile", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger))
 
 	return b.Mux(), b.Classifier()
 }

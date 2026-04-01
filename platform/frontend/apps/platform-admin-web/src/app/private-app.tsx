@@ -1,6 +1,11 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Fragment, Suspense, lazy, useEffect, useState } from "react";
 import {
   BellIcon,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
   DashboardGridIcon,
   DocumentListIcon,
   Menu,
@@ -25,13 +30,13 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-
 import { AdminAuditLogPage } from "../pages/audit-log/page";
 import { AdminBillingPage } from "../pages/billing/page";
 import { AdminDashboardPage } from "../pages/dashboard/page";
+import { AdminModulesListPage } from "../pages/modules-list/page";
 import {
   AdminRailUtilitySheet,
   type AdminRailUtilityPanel,
 } from "../widgets/admin-rail-utility-sheet/admin-rail-utility-sheet";
 import {
   getActiveAdminRoute,
-  getAdminHeaderTitle,
   getAdminNavigation,
   getAdminRouteMeta,
 } from "../shared/navigation";
@@ -41,6 +46,7 @@ import "./app.css";
 type AdminThemeMode = "light" | "dark";
 
 const adminThemeStorageKey = "platform-admin-theme";
+const modulesListResetPath = "/modules/list?reset=1";
 const appBuild = getAppBuildMetadata();
 const AdminUiLabPage = lazy(async () => {
   const module = await import("../internal/ui-lab");
@@ -77,14 +83,58 @@ export function PrivateApp({
   const activeRouteMeta = getAdminRouteMeta(location.pathname, t);
   const quickActionMenuLabel = activeRoute === "billing"
     ? t("admin.shell.menu.billingActions")
+    : activeRoute === "modules-list"
+      ? t("admin.shell.menu.modulesActions")
     : activeRoute === "audit-log"
       ? t("admin.shell.menu.auditActions")
       : t("admin.shell.menu.dashboardActions");
   const notificationSummary = activeRoute === "billing"
     ? t("admin.shell.menu.billingReviewLive")
+    : activeRoute === "modules-list"
+      ? t("admin.shell.menu.modulesLive")
     : activeRoute === "audit-log"
       ? t("admin.shell.menu.auditLive")
       : t("admin.shell.menu.dashboardRefreshed");
+
+  function renderHeaderBreadcrumb() {
+    if (activeRoute !== "modules-list") {
+      return null;
+    }
+
+    const segments = [
+      { label: t("admin.navigation.modules.label") },
+      { current: true, label: activeRouteMeta.label },
+    ];
+
+    return (
+      <Breadcrumb className="admin-web__header-breadcrumb">
+        <BreadcrumbList>
+          {segments.map((segment, index) => {
+            const isLast = index === segments.length - 1;
+
+            return (
+              <Fragment key={`${segment.label}-${index}`}>
+                <BreadcrumbItem>
+                  {segment.current ? (
+                    <BreadcrumbPage>{segment.label}</BreadcrumbPage>
+                  ) : (
+                    <button
+                      className="ui-breadcrumb__link admin-web__breadcrumb-reset-link"
+                      onClick={() => navigate(modulesListResetPath)}
+                      type="button"
+                    >
+                      {segment.label}
+                    </button>
+                  )}
+                </BreadcrumbItem>
+                {!isLast ? <BreadcrumbSeparator>/</BreadcrumbSeparator> : null}
+              </Fragment>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
@@ -143,6 +193,14 @@ export function PrivateApp({
             <MenuItem onClick={() => navigate("/audit-log/events")}>{t("admin.shell.menu.openAuditEvents")}</MenuItem>
             <MenuItem onClick={() => navigate("/audit-log/access-changes")}>{t("admin.shell.menu.reviewAccessChanges")}</MenuItem>
             <MenuItem onClick={() => navigate("/audit-log/system-jobs")}>{t("admin.shell.menu.openSystemJobs")}</MenuItem>
+          </>
+        );
+      case "modules-list":
+        return (
+          <>
+            <MenuItem onClick={() => navigate(modulesListResetPath)}>{t("admin.shell.menu.openModulesList")}</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("admin.shell.menu.reviewFavorites")}</MenuItem>
+            <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.tasksCenter")}</MenuItem>
           </>
         );
       default:
@@ -286,7 +344,8 @@ export function PrivateApp({
           </div>
         }
         navigation={getAdminNavigation(location.pathname, t, (path) => navigate(path))}
-        headerTitle={getAdminHeaderTitle(location.pathname, t)}
+        headerMeta={renderHeaderBreadcrumb()}
+        headerTitle={activeRouteMeta.label}
         headerActions={
           <div className="admin-web__header-utility-bar">
             <Menu align="end">
@@ -330,6 +389,7 @@ export function PrivateApp({
         <Routes>
           <Route element={<Navigate replace to="/dashboard" />} path="/" />
           <Route element={<AdminDashboardPage />} path="/dashboard" />
+          <Route element={<AdminModulesListPage />} path="/modules/list" />
           <Route element={<Navigate replace to="/dashboard" />} path="/overview" />
           <Route element={<Navigate replace to="/dashboard" />} path="/tenants" />
           <Route element={<Navigate replace to="/dashboard" />} path="/signals" />

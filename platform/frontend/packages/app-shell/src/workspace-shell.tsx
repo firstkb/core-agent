@@ -24,6 +24,8 @@ const mobileViewportQuery = "(max-width: 960px)";
 
 type WorkspaceNavItem = {
   id?: string;
+  children?: WorkspaceNavItem[];
+  defaultOpen?: boolean;
   icon?: ReactNode;
   label: string;
   href?: string;
@@ -204,6 +206,58 @@ export function WorkspaceShell({
     return item.id ?? item.label.toLowerCase().replace(/\s+/g, "-");
   }
 
+  function mapWorkspaceNavigationItem(item: WorkspaceNavItem): SidebarNavItem {
+    return {
+      children: item.children?.map((childItem) => mapWorkspaceNavigationItem(childItem)),
+      defaultOpen: item.defaultOpen,
+      icon: item.icon,
+      id: getNavigationItemId(item),
+      label: item.label,
+      meta: item.badge,
+    };
+  }
+
+  function findNavigationItemById(
+    navigationItems: WorkspaceNavItem[],
+    itemId: string,
+  ): WorkspaceNavItem | undefined {
+    for (const item of navigationItems) {
+      if (getNavigationItemId(item) === itemId) {
+        return item;
+      }
+
+      if (item.children?.length) {
+        const nestedItem = findNavigationItemById(item.children, itemId);
+
+        if (nestedItem) {
+          return nestedItem;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  function findActiveNavigationItem(
+    navigationItems: WorkspaceNavItem[],
+  ): WorkspaceNavItem | undefined {
+    for (const item of navigationItems) {
+      if (item.active) {
+        return item;
+      }
+
+      if (item.children?.length) {
+        const nestedActiveItem = findActiveNavigationItem(item.children);
+
+        if (nestedActiveItem) {
+          return nestedActiveItem;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
   function activateNavigationItem(item: WorkspaceNavItem) {
     if (item.onNavigate) {
       item.onNavigate();
@@ -298,13 +352,10 @@ export function WorkspaceShell({
 
   function renderSidebarNavigation() {
     if (layout === "rail") {
-      const items: SidebarNavItem[] = navigation.map((item) => ({
-        icon: item.icon,
-        id: getNavigationItemId(item),
-        label: item.label,
-        meta: item.badge,
-      }));
-      const activeItem = navigation.find((item) => item.active);
+      const items: SidebarNavItem[] = navigation.map((item) =>
+        mapWorkspaceNavigationItem(item),
+      );
+      const activeItem = findActiveNavigationItem(navigation);
       const activeItemId = activeItem ? getNavigationItemId(activeItem) : undefined;
 
       return (
@@ -315,9 +366,7 @@ export function WorkspaceShell({
           compact
           items={items}
           onActiveItemChange={(itemId) => {
-            const targetItem = navigation.find(
-              (item) => getNavigationItemId(item) === itemId,
-            );
+            const targetItem = findNavigationItemById(navigation, itemId);
 
             if (targetItem) {
               activateNavigationItem(targetItem);

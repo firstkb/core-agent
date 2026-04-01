@@ -4,10 +4,11 @@ import type { WorkspaceNavItem } from "@platform/app-shell";
 import {
   DashboardGridIcon,
   DataTableIcon,
+  LayersIcon,
   WalletCardIcon,
 } from "@platform/ui-kit";
 
-export type AdminRouteKey = "dashboard" | "billing" | "audit-log";
+export type AdminRouteKey = "dashboard" | "billing" | "audit-log" | "modules-list";
 
 const adminRouteConfig = {
   dashboard: {
@@ -34,11 +35,23 @@ const adminRouteConfig = {
     noteKey: "admin.navigation.auditLog.note",
     path: "/audit-log/events",
   },
+  "modules-list": {
+    badgeKey: "admin.navigation.modulesList.badge",
+    headerTitleKey: "admin.navigation.modulesList.headerTitle",
+    icon: createElement(DataTableIcon),
+    labelKey: "admin.navigation.modulesList.label",
+    noteKey: "admin.navigation.modulesList.note",
+    path: "/modules/list?reset=1",
+  },
 } as const;
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
 export function getActiveAdminRoute(pathname: string): AdminRouteKey {
+  if (pathname.startsWith("/modules")) {
+    return "modules-list";
+  }
+
   if (pathname.startsWith("/billing")) {
     return "billing";
   }
@@ -73,17 +86,41 @@ export function getAdminNavigation(
   navigate?: (path: string) => void,
 ): WorkspaceNavItem[] {
   const activeRoute = getActiveAdminRoute(pathname);
-
-  return (Object.entries(adminRouteConfig) as Array<
+  const baseItems = (Object.entries(adminRouteConfig) as Array<
     [AdminRouteKey, (typeof adminRouteConfig)[AdminRouteKey]]
-  >).map(([key, route]) => ({
-    active: key === activeRoute,
-    badge: translate(route.badgeKey),
-    href: route.path,
-    icon: route.icon,
-    id: key,
-    label: translate(route.labelKey),
-    note: translate(route.noteKey),
-    onNavigate: navigate ? () => navigate(route.path) : undefined,
-  }));
+  >)
+    .filter(([key]) => key !== "modules-list")
+    .map(([key, route]) => ({
+      active: key === activeRoute,
+      badge: translate(route.badgeKey),
+      href: route.path,
+      icon: route.icon,
+      id: key,
+      label: translate(route.labelKey),
+      note: translate(route.noteKey),
+      onNavigate: navigate ? () => navigate(route.path) : undefined,
+    }));
+  const modulesListRoute = adminRouteConfig["modules-list"];
+
+  return [
+    ...baseItems,
+    {
+      children: [
+        {
+          active: activeRoute === "modules-list",
+          badge: translate(modulesListRoute.badgeKey),
+          href: modulesListRoute.path,
+          icon: modulesListRoute.icon,
+          id: "modules-list",
+          label: translate(modulesListRoute.labelKey),
+          note: translate(modulesListRoute.noteKey),
+          onNavigate: navigate ? () => navigate(modulesListRoute.path) : undefined,
+        },
+      ],
+      defaultOpen: activeRoute === "modules-list",
+      icon: createElement(LayersIcon),
+      id: "modules",
+      label: translate("admin.navigation.modules.label"),
+    },
+  ];
 }

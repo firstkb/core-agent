@@ -94,7 +94,7 @@ export function TableSortButton({
   return (
     <button
       {...props}
-      className={cx("ui-table-sort-button", className)}
+      className={cx("ui-table-sort-button", direction && "ui-table-sort-button--active", className)}
       type={type}
     >
       <span>{children}</span>

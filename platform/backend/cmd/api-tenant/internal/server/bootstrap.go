@@ -12,8 +12,6 @@ import (
 	appmw "dtriton.com/platform/backend/internal/platform/httpx/middleware"
 	"dtriton.com/platform/backend/internal/platform/httpx/mw"
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
-	authsvc "dtriton.com/platform/backend/modules/shared/authentication"
-	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
 )
 
 func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
@@ -49,9 +47,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		server.tokenValidator = tokenValidator
 	}
 
-	tenantUserRepo := authsvc.NewTenantUserRepository(server.sqlClient)
-	profileService := profilesvc.NewService(tenantUserRepo)
-	server.profileHTTP = profilesvc.NewHandler(profileService)
+	server.profileHTTP = buildTenantProfileModule(server.sqlClient)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()

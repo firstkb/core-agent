@@ -149,6 +149,58 @@ This document captures the accepted intermediate state, the current frontend con
   - no `select all filtered results across pages` behavior yet
 - rows may still expose an `Active` display column, but state changes happen through bulk actions, not inline checkbox mutation
 
+### Planned Next Capability: Bulk Edit
+
+This is not part of the accepted current runtime yet.
+
+Current intention for a later phase:
+
+- when backend metadata says bulk edit is supported, the bulk bar may expose `Edit`
+- initial future direction:
+  - current `Clear` action may be replaced or deprioritized when bulk edit is available
+  - clicking `Edit` should open a modal with:
+    - one bulk-edit form surface
+    - `Cancel`
+    - `Save`
+- the actual field editor UI is intentionally deferred until the universal form-builder/runtime exists
+
+Planned contract direction:
+
+- backend should explicitly enable bulk edit
+- backend should explicitly declare which fields are eligible for bulk edit
+- frontend must not infer bulk-editable fields from normal table columns automatically
+
+Planned metadata shape:
+
+```json
+{
+  "selection": {
+    "enabled": true,
+    "mode": "multi",
+    "columnPosition": "leading"
+  },
+  "bulkActions": [
+    { "id": "activate", "label": "Set active", "kind": "state-change" },
+    { "id": "deactivate", "label": "Set inactive", "kind": "state-change" }
+  ],
+  "bulkEdit": {
+    "enabled": true,
+    "label": "Edit",
+    "fields": [
+      { "id": "status", "label": "Status", "type": "enum" },
+      { "id": "reported", "label": "Reported", "type": "text" }
+    ]
+  }
+}
+```
+
+Planned interaction rule:
+
+- selection still happens first through row checkboxes
+- if `bulkEdit.enabled` is true, the bulk bar may show `Edit`
+- pressing `Edit` opens the modal shell only
+- final form schema, validation rules, and save payload are postponed until the universal form-builder contract is available
+
 ### Search And Filter Behavior
 
 - backend should not send one global `operators[]` list for the whole table
@@ -173,6 +225,21 @@ This document captures the accepted intermediate state, the current frontend con
 - current input-control rule:
   - `text` fields use the standard text input
   - `date` fields use the shared calendar picker
+- search suggestions are an optional capability for text-like suggestable fields
+- `date` fields stay on the calendar control and do not use suggestion dropdowns
+- accepted suggestion-loading rule:
+  - load grouped suggestions lazily on the first interaction with the search shell
+  - do not re-query backend for suggestions after that first load during the same session
+  - keep the loaded suggestion dictionary cached on frontend for the current table session
+- accepted suggestion-display rule:
+  - if the selected search field is `All`, suggestions are shown grouped by field
+  - if the selected search field is a concrete field, only that field's suggestions are shown
+  - frontend filters the already loaded grouped suggestions locally while the user types
+- accepted first interaction rule:
+  - clicking a suggestion immediately creates a token and applies the filter
+  - `Enter` applies the highlighted suggestion if one is highlighted
+  - otherwise `Enter` applies the raw typed value
+  - `Esc` closes the suggestion surface
 - search does not apply on every field/operator change
 - a text quick filter is created only when the user presses `Enter`
 - operators that do not require a value (`is empty`, `is not empty`) are also confirmed through `Enter`
@@ -333,35 +400,47 @@ Example:
 
 ## Current Frontend Contract
 
-The current shared file `apps/platform-admin-web/src/shared/collection-page.ts` is a frontend composition contract, not a backend DTO.
+Current app-local split in the proving surface:
 
-It is useful for local rendering, but it cannot be sent directly from the backend because it contains UI callbacks and render functions such as:
+- `apps/platform-admin-web/src/shared/collection-page.ts`
+  - render-time composition only
+  - still contains React render callbacks such as `renderCell`
+- `apps/platform-admin-web/src/shared/collection-table-contract.ts`
+  - backend-facing DTO and adapter contract
+- `apps/platform-admin-web/src/shared/collection-table-state.ts`
+  - normalized query state plus `sessionStorage` helpers
+
+`collection-page.ts` is useful for local rendering, but it cannot be sent directly from the backend because it contains UI callbacks and render functions such as:
 
 - `renderCell`
 - `getSortValue`
 - `onSelect`
 
-Current internal request shape:
+Current normalized app-local query shape:
 
 ```ts
-type CollectionPageRequest = {
+type CollectionTableQueryRequest = {
   filters: Record<string, string>;
   page: number;
   pageSize: number;
   presetId: string;
-  query: string;
-  sortColumnId: string | null;
-  sortDirection: "asc" | "desc";
+  quickFilters: Array<{
+    fieldId: string;
+    operator: CollectionTableSearchOperator;
+    value: string;
+  }>;
+  sort: {
+    columnId: string | null;
+    direction: "asc" | "desc";
+  };
 };
 ```
 
-This request is currently too small for the accepted toolbar behavior because the toolbar now also needs:
+This is now close to the accepted backend request. The remaining split is:
 
-- quick filter tokens
-- saved filter sets
-- optional create/export/reload capabilities
-- shared field metadata with `searchable` and `type`
-- column-layout metadata for secondary-row rendering
+- the render surface is still app-local
+- generic cell rendering is still mapped inside the admin proving page
+- toolbar composition still lives in app code and is not shared-ready yet
 
 ## Recommended Data Contract
 
@@ -385,15 +464,15 @@ Recommended response shape:
     "defaultFieldId": "all"
   },
   "fields": [
-    { "id": "location", "label": "Location", "type": "text", "sortable": true, "searchable": true },
-    { "id": "description", "label": "Description", "type": "text", "sortable": false, "searchable": true },
-    { "id": "location_summary_html", "label": "Location summary", "type": "html", "sortable": false, "searchable": false },
-    { "id": "reported", "label": "Reported", "type": "text", "sortable": true, "searchable": true },
-    { "id": "inspector", "label": "Inspector", "type": "text", "sortable": true, "searchable": true },
-    { "id": "date", "label": "Date", "type": "date", "sortable": true, "searchable": true },
-    { "id": "status", "label": "Status", "type": "badge", "sortable": true, "searchable": true },
-    { "id": "is_active", "label": "Active", "type": "badge", "sortable": true, "searchable": false },
-    { "id": "type", "label": "Type", "type": "text", "sortable": true, "searchable": true }
+    { "id": "location", "label": "Location", "type": "text", "sortable": true, "searchable": true, "suggestable": true },
+    { "id": "description", "label": "Description", "type": "text", "sortable": false, "searchable": true, "suggestable": false },
+    { "id": "location_summary_html", "label": "Location summary", "type": "html", "sortable": false, "searchable": false, "suggestable": false },
+    { "id": "reported", "label": "Reported", "type": "text", "sortable": true, "searchable": true, "suggestable": true },
+    { "id": "inspector", "label": "Inspector", "type": "text", "sortable": true, "searchable": true, "suggestable": true },
+    { "id": "date", "label": "Date", "type": "date", "sortable": true, "searchable": true, "suggestable": false },
+    { "id": "status", "label": "Status", "type": "badge", "sortable": true, "searchable": true, "suggestable": true },
+    { "id": "is_active", "label": "Active", "type": "badge", "sortable": true, "searchable": false, "suggestable": false },
+    { "id": "type", "label": "Type", "type": "text", "sortable": true, "searchable": true, "suggestable": true }
   ],
   "columns": [
     { "id": "actions", "label": "", "type": "actions", "width": "14rem" },
@@ -427,12 +506,16 @@ Recommended response shape:
     { "id": "activate", "label": "Set active", "kind": "state-change" },
     { "id": "deactivate", "label": "Set inactive", "kind": "state-change" }
   ],
+  "bulkEdit": {
+    "enabled": false,
+    "fields": []
+  },
   "pageSizeOptions": [25, 50, 100],
   "savedFilterSets": [
     {
       "id": "sf_1",
       "label": "Completed records",
-      "filters": [
+      "quickFilters": [
         { "fieldId": "status", "operator": "is_equal_to", "value": "Complete" }
       ]
     }
@@ -446,6 +529,7 @@ The current accepted rule is:
 
 - backend sends one shared `fields[]` catalog
 - each field declares whether it is `searchable`
+- each field may optionally declare whether it is `suggestable`
 - `search.defaultFieldId` may point to a searchable field id or to the frontend pseudo-option `all`
 - frontend builds the search dropdown from `fields[]` where `searchable: true`
 - frontend injects the special `All` option locally and should not require backend to send it as a normal field
@@ -453,6 +537,7 @@ The current accepted rule is:
   - allowed operators
   - matching input control
   - built-in operator labels
+  - whether suggestions are supported for the selected field
 
 Optional trusted html field example:
 
@@ -557,6 +642,7 @@ The shared table should depend on operations like these, not on URLs:
 type CollectionTableAdapter = {
   loadMeta: () => Promise<CollectionMetaResponse>;
   query: (request: CollectionQueryRequest) => Promise<CollectionQueryResponse>;
+  loadSearchSuggestions?: () => Promise<CollectionSearchSuggestionsResponse>;
   runBulkAction?: (input: CollectionBulkActionRequest) => Promise<void>;
   runRowAction?: (input: CollectionRowActionRequest) => Promise<void | CollectionRowActionResult>;
   downloadRowPdf?: (rowId: string) => Promise<void | { downloadUrl: string }>;
@@ -567,6 +653,28 @@ type CollectionTableAdapter = {
   exportXls?: (request: CollectionExportRequest) => Promise<void | { downloadUrl: string }>;
 };
 ```
+
+Optional suggestion payload shape:
+
+```ts
+type CollectionSearchSuggestionsResponse = {
+  groups: Array<{
+    fieldId: string;
+    label: string;
+    items: Array<{
+      value: string;
+      count?: number;
+    }>;
+  }>;
+};
+```
+
+Accepted rule:
+
+- this capability is page-owned and optional
+- the host page may call `loadSearchSuggestions` once on the first search-shell interaction
+- frontend may cache that response in `sessionStorage` by `tableId`
+- after the first successful load, frontend filters suggestions locally and should not re-query backend for that feature during the same session
 
 ### Accepted Ownership Rule
 
@@ -615,17 +723,17 @@ Example payload:
 
 ```json
 {
-  "collectionState": {
+  "queryState": {
     "page": 2,
     "pageSize": 25,
     "presetId": "all",
     "sortColumnId": "date",
     "sortDirection": "desc",
-    "filters": {}
+    "filters": {},
+    "quickFilters": [
+      { "fieldId": "status", "operator": "is_equal_to", "value": "Complete" }
+    ]
   },
-  "appliedQuickFilters": [
-    { "fieldId": "status", "operator": "is_equal_to", "query": "Complete" }
-  ],
   "draftSearchFieldId": "date",
   "draftSearchOperator": "is_less_than"
 }
@@ -675,6 +783,8 @@ Example payload:
 - final frontend route contract for `Edit` and `View`
 - whether row actions ever need row-level disabling in a later phase
 - whether export runs synchronously or returns a job/download URL
+- final bulk-edit modal contract once the universal form-builder/runtime exists
+- whether `Clear` remains visible alongside `Edit` or is replaced when `bulkEdit.enabled` is true
 
 ## Promotion Rule
 

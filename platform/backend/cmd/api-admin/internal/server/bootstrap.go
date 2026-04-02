@@ -11,8 +11,6 @@ import (
 	"dtriton.com/platform/backend/internal/platform/config"
 	appmw "dtriton.com/platform/backend/internal/platform/httpx/middleware"
 	"dtriton.com/platform/backend/internal/platform/httpx/mw"
-	adminprofilesvc "dtriton.com/platform/backend/modules/admin/profile"
-	tenantmanagement "dtriton.com/platform/backend/modules/admin/tenantmanagement"
 )
 
 func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
@@ -42,15 +40,12 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		server.tokenValidator = tokenValidator
 	}
 
-	tenantManagementService, err := tenantmanagement.NewService(server.sqlClient, cfg, logger)
+	tenantManagementHT, err := buildTenantManagementModule(server.sqlClient, cfg, logger)
 	if err != nil {
 		return nil, err
 	}
-	server.tenantManagementHT = tenantmanagement.NewHandler(tenantManagementService)
-
-	adminProfileRepo := adminprofilesvc.NewRepository(server.sqlClient)
-	adminProfileService := adminprofilesvc.NewService(adminProfileRepo)
-	server.adminProfileHT = adminprofilesvc.NewHandler(adminProfileService)
+	server.tenantManagementHT = tenantManagementHT
+	server.adminProfileHT = buildAdminProfileModule(server.sqlClient)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()

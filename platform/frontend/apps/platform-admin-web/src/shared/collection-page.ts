@@ -112,29 +112,12 @@ export type CollectionPageConfigOverrides<Row extends CollectionPageRow> = {
   title?: string;
 };
 
-export type CollectionPageRequest = {
-  filters: Record<string, string>;
-  page: number;
-  pageSize: number;
-  presetId: string;
-  query: string;
-  sortColumnId: string | null;
-  sortDirection: CollectionPageSortDirection;
-};
-
-export type CollectionPageResponse<Row extends CollectionPageRow> = {
-  config: CollectionPageConfig<Row>;
-  currentPage?: number;
-  totalItems?: number;
-};
-
 export type CollectionPageState = {
   density: TableDensity;
   filters: Record<string, string>;
   page: number;
   pageSize: number;
   presetId: string;
-  query: string;
   sortColumnId: string | null;
   sortDirection: CollectionPageSortDirection;
   visibleColumnIds: string[];
@@ -202,7 +185,6 @@ export function createCollectionPageState<Row extends CollectionPageRow>(
     page: 1,
     pageSize: config.pageSizeOptions?.[0] ?? 10,
     presetId,
-    query: preset?.defaultQuery ?? "",
     sortColumnId: config.columns.find((column) => column.sortable)?.id ?? config.columns[0]?.id ?? null,
     sortDirection: "asc",
     visibleColumnIds: config.columns
@@ -261,19 +243,10 @@ export function resolveLocalCollectionPage<Row extends CollectionPageRow>(
   state: CollectionPageState,
 ): CollectionPageResolvedResult<Row> {
   const activePreset = getCollectionPreset(config, state.presetId);
-  const searchQuery = state.query.trim().toLowerCase();
   const rows = config.rows
     .filter((row) => {
       if (activePreset?.matchRow && !activePreset.matchRow(row)) {
         return false;
-      }
-
-      if (searchQuery && config.getRowSearchText) {
-        const haystack = config.getRowSearchText(row).toLowerCase();
-
-        if (!haystack.includes(searchQuery)) {
-          return false;
-        }
       }
 
       return (config.filters ?? []).every((filter) => {

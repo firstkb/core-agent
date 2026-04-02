@@ -7,6 +7,7 @@ Entry point for the active frontend documentation set.
 - `ui-delivery-order.md`: canonical execution order for donor extraction, review, gap filling, and only then the main system template
 - `package-boundaries.md`: canonical package responsibilities and import rules
 - `collection-table-runtime-contract.md`: live working contract for the universal collection-table preset, backend split, and later shared-layer promotion rules
+- `collection-table-shared-readiness-plan.md`: execution plan for first real backend hookup and the later promotion of the collection table into a shared module
 - `app-surfaces.md`: app responsibilities and naming decisions
 - `tenant-model.md`: tenant runtime model and cross-app tenant concerns
 - `auth-runtime-followups.md`: tracked follow-up work for auth runtime bootstrap, profile gating, and later integration cleanup

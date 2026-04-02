@@ -7,9 +7,6 @@ import (
 	"strings"
 
 	"log/slog"
-
-	"dtriton.com/platform/backend/internal/platform/config"
-	"dtriton.com/platform/backend/internal/platform/postgres"
 )
 
 type Service struct {
@@ -19,19 +16,13 @@ type Service struct {
 	cfg         OnboardingConfig
 }
 
-func NewService(client *postgres.Client, cfg *config.Config, logger *slog.Logger) (*Service, error) {
-	var c Config
-	if cfg != nil {
-		_ = cfg.Unmarshal("", &c)
-	}
-	oc := c.Onboarding
-
+func NewService(repo *Repository, provisioner *Provisioner, logger *slog.Logger, cfg OnboardingConfig) *Service {
 	return &Service{
-		repo:        NewRepository(client, logger),
-		provisioner: NewProvisioner(client, oc, logger),
+		repo:        repo,
+		provisioner: provisioner,
 		logger:      logger,
-		cfg:         oc,
-	}, nil
+		cfg:         cfg,
+	}
 }
 
 func (s *Service) OnboardTenant(ctx context.Context, input OnboardTenantInput) (*OnboardTenantOutput, error) {

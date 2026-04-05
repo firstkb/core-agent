@@ -94,26 +94,28 @@ This is acceptable only if the team documents it clearly. It must not be treated
 
 ## Path handling rule
 
-The backend should continue to own its current route paths.
+The backend should own canonical application route families directly.
 
-Examples:
+Secure application routes should live under `/app/...`.
 
-- backend route stays `/profile`
-- backend route stays `/admin/tenants`
+Examples already aligned in `api-admin`:
 
-API Gateway integration should therefore forward the request in one of these ways:
+- backend route is `/app/profile`
+- backend route is `/app/admin/tenants`
 
-- strip the leading proxy-group prefix before sending to the backend
-- or inject a rewritten path that matches the backend route exactly
+If public application routes are introduced later, they should follow the same rule under `/open/...`.
+
+API Gateway integration should therefore preserve the canonical backend path instead of stripping the prefix away.
 
 Example:
 
 - public URL: `/app/profile`
-- backend receives: `/profile`
+- backend receives: `/app/profile`
 
-Do **not** make backend route definitions depend on `open/` or `app/`.
+- public URL: `/app/admin/tenants`
+- backend receives: `/app/admin/tenants`
 
-Those prefixes are an edge concern, not an application route concern.
+Only temporary migration bridges should rewrite between edge and backend paths.
 
 ## Validation policy
 

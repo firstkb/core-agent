@@ -491,6 +491,170 @@ Legacy MSSQL mapping:
   - `users_etsadmin`
 - PostgreSQL baseline intentionally separates root admins from tenant users
 
+## `admin_module`
+
+Purpose:
+
+- canonical registry of admin modules that exist in the control plane
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `module_key text not null`
+- `title text not null`
+- `description text null`
+- `icon text null`
+- `sort_order integer not null`
+- `status text not null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `admin_module_pkey (id)`
+- unique key: `admin_module_guid_key (guid)`
+- unique key: `admin_module_module_key_key (module_key)`
+- index: `ix_admin_module_status_sort (status, sort_order, title)`
+
+Rules:
+
+- this is a master control-plane registry table
+- `module_key` is stable, lowercase, and canonical
+- accepted baseline statuses are:
+  - `active`
+  - `planned`
+  - `archived`
+- root-only registry management should mutate this table
+
+## `admin_module_section`
+
+Purpose:
+
+- canonical registry of sections inside each admin module
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `module_id bigint not null`
+- `section_key text not null`
+- `title text not null`
+- `description text null`
+- `route_path text null`
+- `sort_order integer not null`
+- `status text not null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `admin_module_section_pkey (id)`
+- unique key: `admin_module_section_guid_key (guid)`
+- unique key: `admin_module_section_module_key_key (module_id, section_key)`
+- index: `ix_admin_module_section_module_sort (module_id, sort_order, title)`
+
+Rules:
+
+- section access is the future permission boundary for non-root admin users
+- `section_key` is stable, lowercase, and canonical within a module
+- `route_path` is the admin-app route projection, not an API endpoint
+- accepted baseline statuses are:
+  - `active`
+  - `planned`
+  - `archived`
+
+## `admin_collection_favorite`
+
+Purpose:
+
+- stores whether an admin user marked a collection surface as favorite
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `admin_user_id uuid not null`
+- `surface_id text not null`
+- `created_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `admin_collection_favorite_pkey (id)`
+- unique key: `admin_collection_favorite_guid_key (guid)`
+- unique key: `admin_collection_favorite_admin_surface_key (admin_user_id, surface_id)`
+- index: `ix_admin_collection_favorite_surface (surface_id, created_at desc)`
+
+Rules:
+
+- current first consumer is `module-registry.list`
+- `surface_id` should stay stable and frontend-facing at the table-surface level
+- `GET /app/me/navigation.favorites[]` is projected from collection favorites through backend surface bindings
+- collection favorites do not automatically include menu-only sections such as onboarding; those stay in normal navigation/topbar actions
+
+## `admin_collection_saved_filter`
+
+Purpose:
+
+- stores reusable quick-filter sets for admin collection surfaces
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `admin_user_id uuid not null`
+- `surface_id text not null`
+- `label text not null`
+- `quick_filters jsonb not null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `admin_collection_saved_filter_pkey (id)`
+- unique key: `admin_collection_saved_filter_guid_key (guid)`
+- index: `ix_admin_collection_saved_filter_user_surface (admin_user_id, surface_id, created_at desc)`
+
+Rules:
+
+- current first consumer is `module-registry.list`
+- `quick_filters` must remain a JSON array
+- this table is intentionally admin-side only; tenant collection preferences should be modeled separately if needed
+
+## `admin_section_grant`
+
+Purpose:
+
+- stores explicit non-root admin access grants at section level
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `admin_user_id uuid not null`
+- `section_id bigint not null`
+- `access_mode text not null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `admin_section_grant_pkey (id)`
+- unique key: `admin_section_grant_guid_key (guid)`
+- unique key: `admin_section_grant_user_section_key (admin_user_id, section_id)`
+- index: `ix_admin_section_grant_section (section_id, access_mode, updated_at desc)`
+- index: `ix_admin_section_grant_user (admin_user_id, updated_at desc)`
+
+Rules:
+
+- this is the persisted permission boundary for non-root admin users
+- grants are allow-only
+- `access_mode` must be one of:
+  - `read`
+  - `write`
+- `root` remains an implicit bypass principal and should not be stored here as an explicit grant target
+- module-level checkbox behavior should expand into section-level rows instead of introducing a separate module ACL entity
+
 ## `events`
 
 Purpose:

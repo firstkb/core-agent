@@ -17,6 +17,7 @@ Preferred placement:
 
 - `cmd/<app>/internal/server/bootstrap.go`
 - `cmd/<app>/internal/server/wiring_<module>.go`
+- `cmd/<app>/internal/server/routes_<module>.go`
 
 Preferred package:
 
@@ -30,14 +31,18 @@ Use this shape:
 
 - `cmd/api-admin/internal/server/bootstrap.go`
 - `cmd/api-admin/internal/server/wiring_admin_profile.go`
+- `cmd/api-admin/internal/server/routes_admin_profile.go`
 - `cmd/api-admin/internal/server/wiring_tenant_management.go`
+- `cmd/api-admin/internal/server/routes_tenant_management.go`
 
 - `cmd/api-tenant/internal/server/bootstrap.go`
 - `cmd/api-tenant/internal/server/wiring_profile.go`
+- `cmd/api-tenant/internal/server/routes_profile.go`
 
 If `auth` grows further, use the same pattern:
 
 - `cmd/auth/internal/server/wiring_<module>.go`
+- `cmd/auth/internal/server/routes_<module>.go`
 
 ## Naming rule
 
@@ -52,6 +57,20 @@ The helper should return the outermost application surface needed by the server,
 - `*Handler`
 
 If a module exposes multiple runtime surfaces, the helper may return a small bundle struct instead.
+
+Each route file should expose one route registration helper:
+
+- `registerAdminProfileRoutes(...)`
+- `registerTenantManagementRoutes(...)`
+- `registerModuleRegistryRoutes(...)`
+
+The helper should attach the full route family for that module, including any temporary alias routes that exist during migration windows.
+
+Route family policy:
+
+- secure canonical backend routes should use their accepted runtime prefix, for example `/app/...`
+- do not add legacy aliases by default
+- temporary aliases are allowed only as an explicit migration bridge and should be removed once the caller is aligned
 
 ## Composition rule
 
@@ -77,6 +96,16 @@ handler := module.NewHandler(svc)
 ```
 
 repeated many times directly inside `bootstrap.go`.
+
+`routes.go` should also remain readable and should delegate route-family registration to per-module helpers instead of holding every module endpoint inline.
+
+Preferred style:
+
+```go
+srv.registerAdminProfileRoutes(b)
+srv.registerTenantManagementRoutes(b)
+srv.registerModuleRegistryRoutes(b)
+```
 
 ## Constructor rule
 
@@ -176,6 +205,20 @@ Does not own:
 - SQL
 - transport behavior
 
+### `routes_<module>.go`
+
+Owns:
+
+- route registration for one module surface
+- explicitly approved temporary alias routes when needed
+- transport-to-handler connection for that module
+
+Does not own:
+
+- module dependency construction
+- business decisions
+- SQL
+
 ### `service.go`
 
 Owns:
@@ -214,5 +257,6 @@ When touching an existing backend application bootstrap:
 
 1. keep behavior unchanged
 2. move module assembly into `wiring_<module>.go`
-3. prefer dependency-based service constructors
-4. avoid broad constructor signatures unless the service truly uses those dependencies
+3. move route-family registration into `routes_<module>.go` when the module has a meaningful route surface
+4. prefer dependency-based service constructors
+5. avoid broad constructor signatures unless the service truly uses those dependencies

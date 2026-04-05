@@ -1,70 +1,81 @@
 # Platform
 
-`platform/` holds the product runtime surfaces.
+`platform/` holds the product runtime surfaces for Ramp Platform v108.
 
-## Current Layout
+## Read order for product work
+
+- `platform/AGENTS.md`
+- `platform/docs/ai/README.md`
+- `platform/docs/ai/current-state.md`
+- `platform/docs/ai/canonical-docs.md`
+- the relevant local `AGENTS.md` file under `backend/` or `frontend/`
+
+For cross-stack or multi-session work, invoke:
+
+- `$ramp-conductor` (display name: `Atlas`)
+
+## Current layout
 
 ```text
 platform/
+  AGENTS.md
   README.md
   CHANGELOG.md
 
+  docs/
+    ai/
+      prompts/
+      templates/
+      runs/
+      modules/
+    archive/
+
   backend/
+    AGENTS.md
     README.md
-    bin/
-    bundle/
-    cmd/
-    docker/
     docs/
+    env/
+    cmd/
     internal/
+    modules/
     migrations/
-    tools/
+    seeds/
+    scripts/
 
   frontend/
     AGENTS.md
     README.md
-    package.json
-    pnpm-workspace.yaml
-    turbo.json
-    tsconfig.base.json
-
     docs/
-      README.md
-      ui-delivery-order.md
-      package-boundaries.md
-      app-surfaces.md
-      tenant-model.md
-      offline-strategy.md
-      vendor/
-      metronic/
-
     apps/
-      platform-admin-web/
-      tenant-web/
-
     packages/
-      design-tokens/
-      ui-kit/
-      api-client/
-      auth-core/
-      tenant-core/
-      app-shell/
-      forms/
-
+    scripts/
     tooling/
-      eslint/
-      typescript/
-      vite/
 ```
 
-## Frontend Decisions
+## Product decisions
 
-- frontend lives under `platform/frontend`, not as top-level `platform/apps` and `platform/packages`
+- backend lives under `platform/backend` as a modular monolith with multiple runtimes
+- frontend lives under `platform/frontend` as separate product applications plus shared packages
+- shared durable project memory is maintained under `platform/docs/ai/`
+- stable prompt contracts live under `platform/docs/ai/prompts/`
+- workflow templates live under `platform/docs/ai/templates/`
+- coordinated task run artifacts live under `platform/docs/ai/runs/`
+- archived one-off prompt artifacts live under `platform/docs/archive/`
+- manual orchestration skill lives at `.agents/skills/ramp-conductor/`
+
+## Frontend decisions
+
 - admin surface is `platform-admin-web`
 - tenant surface is `tenant-web`
-- `tenant-pwa` is intentionally deferred until offline-first becomes a separate runtime
-- frontend shared packages are capability-based, not `shared-*` dumping grounds
+- `tenant-pwa` remains deferred
+- shared packages remain capability-based, not generic dumping grounds
 
-## Frontend Docs
+## Docs
 
-See `platform/frontend/docs/README.md` for the active frontend documentation set.
+- shared AI memory: `platform/docs/ai/README.md`
+- canonical docs registry: `platform/docs/ai/canonical-docs.md`
+- prompt registry: `platform/docs/ai/prompts/README.md`
+- template registry: `platform/docs/ai/templates/README.md`
+- run-artifact guide: `platform/docs/ai/runs/README.md`
+- backend docs index: `platform/backend/docs/README.md`
+- frontend docs index: `platform/frontend/docs/README.md`

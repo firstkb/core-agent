@@ -13,7 +13,7 @@ Provide a stable AWS API Gateway layout that:
 
 - avoids adding a new gateway route for every backend endpoint
 - validates access tokens at the edge for secure application traffic
-- keeps backend service route paths unchanged
+- keeps backend service route families explicit and canonical
 - supports trusted-header mode for `api-tenant` and `api-admin`
 
 ## Fixed gateway model
@@ -28,17 +28,14 @@ Meaning:
 - `/open/{proxy+}` = unauthenticated passthrough
 - `/app/{proxy+}` = JWT-gated passthrough
 
-These are edge-only prefixes.
+These are the accepted application API route families.
 
-Backend services should continue to own their real route paths such as:
+Backend services should own their real route paths inside those families, for example:
 
-- `/profile`
-- `/admin/tenants`
+- `/app/profile`
+- `/app/admin/tenants`
 
-API Gateway must therefore rewrite:
-
-- `/open/foo/bar` -> `/foo/bar`
-- `/app/foo/bar` -> `/foo/bar`
+For public application routes introduced later, the same rule should apply under `/open/...`.
 
 ## Route groups to create
 
@@ -74,22 +71,23 @@ JWT:
 - attach JWT authorizer only to `ANY /app/{proxy+}`
 - required route scope: `admin.api`
 
-## Integration path rewrite
+## Integration path handling
 
-For both `open` and `app` route groups, rewrite the upstream path so the backend receives the original service path without the edge prefix.
+For both `open` and `app` route groups, preserve the canonical backend path family.
 
 Target behavior:
 
 - public request: `/app/profile`
-- backend receives: `/profile`
+- backend receives: `/app/profile`
 
 - public request: `/app/admin/tenants`
-- backend receives: `/admin/tenants`
+- backend receives: `/app/admin/tenants`
 
 The exact API Gateway expression depends on the integration configuration style, but the operational requirement is fixed:
 
-- strip the first path segment (`open` or `app`)
+- preserve the application route family (`/app/...` or `/open/...`)
 - preserve the rest of the path verbatim
+- use rewriting only as a temporary migration bridge for legacy paths
 
 ## JWT authorizer settings
 

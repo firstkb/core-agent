@@ -1,9 +1,6 @@
 # Collection Table Shared Readiness Plan
 
-Working plan for the universal collection-table preset before:
-
-- first real backend integration
-- promotion into a shared frontend module
+Working plan for the universal collection-table preset after first real backend integration and before promotion into a shared frontend module.
 
 This document is execution-oriented. The live product/runtime contract remains:
 
@@ -28,22 +25,26 @@ What is already strong:
 - bulk selection and bulk action bar
 - dynamic smart search bar
 - full-width secondary row support
+- Module Registry list is connected to the real backend `meta/query/search-suggestions/favorite/saved-filters/bulk-actions/row-actions/export-xls` surface
+- backend transport stays app-local through `${adminApiUrl}/app/...`
 - app-local split between:
-  - render contract
+  - render/runtime helper layer
   - backend-facing DTO/adapter contract
   - reusable persistence/query-state helper
 - row-action split:
   - desktop inline buttons
   - mobile overflow menu
 - session-scoped table-state restore/reset
+- suggestion caching is signature-scoped by suggestable fields
+- critical runtime behavior now has focused tests for operators, quick-filter creation, persistence, and selection reconciliation
 - page-owned adapter direction is implemented in code
 
 What is still provisional:
 
-- adapter is still mock-backed inside the proving page, not connected to a real backend surface
-- meta -> render mapping and built-in cell renderers still live inside `modules-list/page.tsx`
 - `CollectionPageSurface` and its styling are still admin-app specific
 - toolbar composition and navigation reset are still admin-app specific
+- frontend-managed row actions such as `Edit`/`View` still need route-local handlers from the host page
+- the extractable runtime is still app-local, not yet a shared package
 - only one real proving surface exists
 
 ## Target End State
@@ -73,11 +74,11 @@ Before shared extraction, the system should be split into four clear layers:
 - route-specific action wiring
 - route-specific navigation and reset behavior
 
-## Phase 1: Prepare For First Real Backend
+## Phase 1: Lock First Real Backend
 
 Goal:
 
-- connect one real backend surface with minimal rework
+- keep one real backend surface stable while runtime boundaries are finalized
 
 ### 1. Finalize Data Contract
 
@@ -112,7 +113,7 @@ Acceptance:
 - one normalized search/filter state model exists
 - adapter can serialize current table state into one backend query payload without page-specific hacks
 
-### 3. Finish Host Page Adapter
+### 3. Keep Host Page Adapter Complete
 
 Required work:
 
@@ -125,7 +126,7 @@ Acceptance:
 - shared runtime calls adapter operations only
 - host page owns backend route knowledge
 
-### 4. Confirm Persistence Model
+### 4. Keep Persistence Model Stable
 
 Required work:
 
@@ -201,7 +202,7 @@ Goal:
 
 - validate the runtime in a second real surface before extraction
 
-### 8. Integrate First Real Backend Page
+### 8. Keep The First Real Backend Page Stable
 
 Preferred first target:
 
@@ -209,8 +210,7 @@ Preferred first target:
 
 Required work:
 
-- replace mock adapter responses with real backend calls
-- confirm real backend metadata can drive:
+- confirm real backend metadata continues to drive:
   - fields
   - columns
   - row actions
@@ -219,7 +219,7 @@ Required work:
 
 Acceptance:
 
-- no view-layer rewrite needed for first backend hookup
+- no view-layer rewrite is needed as runtime helpers move out of the page
 
 ### 9. Integrate Second Real Consumer
 
@@ -267,9 +267,9 @@ Acceptance:
 
 ## Recommended Work Order
 
-1. implement first real backend integration on top of the new adapter contract
-2. move meta -> render mapping out of the page and into a reusable app-local runtime layer
-3. add runtime tests
+1. keep the first real backend integration stable on top of the adapter contract
+2. move generic runtime/render mapping out of the page and into reusable app-local runtime modules
+3. add and expand runtime tests
 4. integrate second real consumer
 5. extract shared module
 
@@ -289,13 +289,15 @@ Do not promote into shared until all are true:
 
 These are the highest-value next steps from the current state:
 
-1. Replace the mock adapter implementation in `modules-list/page.tsx` with one real backend surface without changing the toolbar/search/selection runtime contract
+1. Keep the real backend adapter implementation in `modules-list/page.tsx` stable while the runtime/render code keeps moving out of the page
 
-2. Move the generic row/cell render mapping out of `modules-list/page.tsx` into an app-local runtime module so the page keeps only host composition concerns
+2. Move the generic row/cell render mapping and pure runtime helpers out of `modules-list/page.tsx` into app-local runtime modules so the page keeps only host composition concerns
 
-3. Reduce admin-specific assumptions inside `CollectionPageSurface` and its CSS so the extractable layer stops depending on `admin-web__*` styling
+3. Centralize selection/query-scope stability and suggestion compatibility so stale row ids or stale suggestion groups do not survive runtime changes
 
-4. Add runtime tests for:
+4. Reduce admin-specific assumptions inside `CollectionPageSurface` and its CSS so the extractable layer stops depending on `admin-web__*` styling
+
+5. Add or expand runtime tests for:
 - operator derivation
 - quick-filter creation/removal
 - persistence restore/reset

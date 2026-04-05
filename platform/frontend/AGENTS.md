@@ -2,105 +2,113 @@
 
 Scope: `platform/frontend` only.
 
-This workspace is the canonical home for frontend application and shared frontend package work.
+Read first:
 
-## Canonical App Surfaces
+1. `platform/AGENTS.md`
+2. `platform/docs/ai/README.md`
+3. `platform/docs/ai/current-state.md`
+4. relevant module docs under `platform/docs/ai/modules/`
+5. `platform/frontend/docs/README.md`
 
-- `platform-admin-web`: internal platform or backoffice interface
+## Lane orchestration rule
+
+- For cross-stack, multi-session, contract-sensitive, auth/bootstrap-sensitive, package-boundary, or collection-table extraction work, start with `$ramp-conductor`.
+- Use this lane directly only when the task is clearly frontend-local or when Control already issued a frontend packet.
+
+## Canonical app surfaces
+
+- `platform-admin-web`: internal platform/backoffice interface
 - `tenant-web`: tenant-scoped application surface
-- `tenant-pwa`: add only when offline-first becomes a distinct runtime or release track
+- `tenant-pwa`: deferred until offline becomes a distinct runtime concern
 
-## Package Rules
+## Package rules
 
-- Create a package only when the module is reused by at least two apps and the public API is stable.
-- Do not create `shared-utils` or `shared-types` dumping-ground packages.
-- Prefer domain or capability names such as `auth-core`, `tenant-core`, `api-client`, and `ui-kit`.
-- Keep app-specific features inside the app until reuse is proven.
+- create a package only when reuse is real and the API is stable
+- do not create `shared-utils` or `shared-types` dumping grounds
+- apps may import packages; packages must not import apps
+- use public entrypoints only
+- keep UI-free core packages separate from UI packages
+- `platform-builder-core` is typed contract code, not a UI package
 
-## Import Rules
+## Default ignore set
 
-- Apps may import packages.
-- Packages must not import apps.
-- Use public entrypoints only. Do not deep-import across package boundaries.
-- Avoid circular dependencies.
-- Keep UI-free core packages separate from UI packages.
+Do not read by default:
 
-## Docs
+- `**/node_modules/**`
+- `**/dist/**`
+- `**/.turbo/**`
+- `docs/vendor/**`
+- `docs/platform-builder-v2/old-code-reference/**`
+- archived prompts under `platform/docs/archive/**`
 
-- Workspace docs live under `platform/frontend/docs`.
-- Each app and package keeps a short `README.md` with purpose, public API, and boundaries.
+## High-risk areas
 
-## Offline
+Require extra care before finalizing changes that affect:
 
-- Keep offline support inside `tenant-web` until it becomes a distinct runtime concern.
-
-## Frontend focus
-This directory is for **foundation-stage frontend work**.
-
-Primary approved work:
-- UI kit tokens and primitives
-- Admin shell and Tenant shell
-- auth screen
-- protected routes
-- base table/form surfaces
-- first list/detail/create/edit pages
-- profile view / session-aware UI
-- route wiring and feature-level state
-
-## Do not do here without explicit approval
-- redesign the entire UI kit while implementing a small feature
-- create one-off page patterns when a shared pattern should be reused
-- move business logic deep into presentational components
-- silently add a new visual language, token system, or state model
-- couple UI behavior tightly to temporary backend assumptions
+- auth/session bootstrap
+- route guards
+- same-site auth/api path assumptions
+- admin vs tenant route separation
+- shared package boundaries
+- design token or shell-wide changes
 
 ## Working rules
-1. Start with the approved plan.
-2. Reuse existing tokens, primitives, layout rules, and table/form contracts.
-3. Keep page/container logic separate from presentational pieces.
-4. Handle required states:
-   - loading
-   - error
-   - empty
-   - ready
-   - disabled / readonly / pending when relevant
-5. For auth-sensitive work, verify:
-   - redirect behavior
-   - protected route behavior
-   - expired session handling
-   - logout behavior
-   - admin vs tenant context
 
-## Preferred implementation order
-1. identify route / page / feature entry point
-2. identify shared components to reuse
-3. identify API hook / query / mutation wiring
-4. implement smallest defensible UI change
-5. run checks
-6. run `verify-and-review`
+1. Start from the approved contract docs.
+2. Reuse existing tokens, primitives, and shell rules.
+3. Keep container/page logic separate from presentational pieces.
+4. Cover loading, error, empty, ready, and disabled/pending states when relevant.
+5. Do not hardcode backend URLs; use runtime config.
+6. Do not send tenant identity during login.
+7. Do not treat a proving surface contract as an automatic shared-package contract.
 
-## Frontend done criteria
-A frontend slice is ready only when:
-- it does not break the shell
-- it uses the approved design foundation
-- states are covered
-- route behavior is correct
-- checks pass
-- any new token or shared primitive is explicitly called out
+## Commands
 
-## Frontend commands
-Replace these placeholders with real repo commands:
-- FRONTEND_LINT = <replace me>
-- FRONTEND_TEST = <replace me>
-- FRONTEND_BUILD = <replace me>
-- FRONTEND_TYPECHECK = <replace me>
-- FRONTEND_SMOKE = <replace me>
+Workspace:
 
-## Frontend summary format
+- `pnpm lint`
+- `pnpm test`
+- `pnpm typecheck`
+- `pnpm build`
+
+Targeted apps:
+
+- `pnpm --filter @platform/platform-admin-web lint`
+- `pnpm --filter @platform/platform-admin-web test`
+- `pnpm --filter @platform/platform-admin-web typecheck`
+- `pnpm --filter @platform/platform-admin-web build:dev`
+- `pnpm --filter @platform/platform-admin-web build:prod`
+- `pnpm --filter @platform/tenant-web lint`
+- `pnpm --filter @platform/tenant-web test`
+- `pnpm --filter @platform/tenant-web typecheck`
+- `pnpm --filter @platform/tenant-web build:dev`
+- `pnpm --filter @platform/tenant-web build:prod`
+
+Local runtime helpers:
+
+- `pnpm dev`
+- `pnpm dev:https`
+- `pnpm dev:stack:https`
+- `pnpm dev:proxy`
+
+## Docs update rule
+
+Update docs when code changes any of these:
+
+- auth bootstrap or refresh behavior
+- collection-table runtime contract or package-promotion boundary
+- admin module-registry proving-surface contract
+- admin navigation contract
+- package boundary rules
+- Platform Builder V2 route or boundary model
+- shell/title/navigation behavior that affects more than one surface
+
+## Summary format
+
 - Goal
 - Route / feature
 - Changed files
-- Shared components reused
+- Shared packages reused
 - New shared primitives/tokens added
 - States covered
 - Commands run

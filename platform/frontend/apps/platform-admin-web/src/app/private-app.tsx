@@ -1,4 +1,5 @@
 import { Fragment, Suspense, lazy, useEffect, useState } from "react";
+import type { AdminNavigation } from "@platform/api-client";
 import {
   BellIcon,
   Breadcrumb,
@@ -27,16 +28,16 @@ import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
-import { AdminAuditLogPage } from "../pages/audit-log/page";
-import { AdminBillingPage } from "../pages/billing/page";
 import { AdminDashboardPage } from "../pages/dashboard/page";
+import { AdminModuleEditPage } from "../pages/modules-edit/page";
 import { AdminModulesListPage } from "../pages/modules-list/page";
+import { AdminRuntimeSectionPage } from "../pages/runtime-section/page";
 import {
   AdminRailUtilitySheet,
   type AdminRailUtilityPanel,
 } from "../widgets/admin-rail-utility-sheet/admin-rail-utility-sheet";
 import {
-  getActiveAdminRoute,
+  buildAdminFavoriteShortcuts,
   getAdminNavigation,
   getAdminRouteMeta,
 } from "../shared/navigation";
@@ -54,8 +55,12 @@ const AdminUiLabPage = lazy(async () => {
 });
 
 export function PrivateApp({
+  navigation,
+  onNavigationRefresh,
   userSession,
 }: {
+  navigation: AdminNavigation;
+  onNavigationRefresh: () => Promise<void>;
   userSession: AdminWorkspaceUserSession;
 }) {
   const { t } = useTranslation();
@@ -79,30 +84,22 @@ export function PrivateApp({
   });
   const isUiLabRoute = location.pathname.startsWith("/root/ui-lab");
   const activeThemeLabel = themeMode === "dark" ? t("common.themes.dark") : t("common.themes.light");
-  const activeRoute = getActiveAdminRoute(location.pathname);
-  const activeRouteMeta = getAdminRouteMeta(location.pathname, t);
-  const quickActionMenuLabel = activeRoute === "billing"
-    ? t("admin.shell.menu.billingActions")
-    : activeRoute === "modules-list"
-      ? t("admin.shell.menu.modulesActions")
-    : activeRoute === "audit-log"
-      ? t("admin.shell.menu.auditActions")
-      : t("admin.shell.menu.dashboardActions");
-  const notificationSummary = activeRoute === "billing"
-    ? t("admin.shell.menu.billingReviewLive")
-    : activeRoute === "modules-list"
-      ? t("admin.shell.menu.modulesLive")
-    : activeRoute === "audit-log"
-      ? t("admin.shell.menu.auditLive")
-      : t("admin.shell.menu.dashboardRefreshed");
+  const activeRouteMeta = getAdminRouteMeta(location.pathname, navigation, t);
+  const favoriteShortcuts = buildAdminFavoriteShortcuts(navigation.favorites);
+  const quickActionMenuLabel = activeRouteMeta.kind === "dashboard"
+    ? t("admin.shell.menu.dashboardActions")
+    : t("admin.shell.menu.sectionActions");
+  const notificationSummary = activeRouteMeta.kind === "dashboard"
+    ? t("admin.shell.menu.dashboardRefreshed")
+    : t("admin.shell.menu.sectionLive", { label: activeRouteMeta.label });
 
   function renderHeaderBreadcrumb() {
-    if (activeRoute !== "modules-list") {
+    if (!activeRouteMeta.parentLabel || !activeRouteMeta.parentPath) {
       return null;
     }
 
     const segments = [
-      { label: t("admin.navigation.modules.label") },
+      { label: activeRouteMeta.parentLabel, path: activeRouteMeta.parentPath },
       { current: true, label: activeRouteMeta.label },
     ];
 
@@ -120,7 +117,7 @@ export function PrivateApp({
                   ) : (
                     <button
                       className="ui-breadcrumb__link admin-web__breadcrumb-reset-link"
-                      onClick={() => navigate(modulesListResetPath)}
+                      onClick={() => navigate(segment.path ?? modulesListResetPath)}
                       type="button"
                     >
                       {segment.label}
@@ -178,40 +175,21 @@ export function PrivateApp({
   }
 
   function renderQuickActionMenuItems() {
-    switch (activeRoute) {
-      case "billing":
-        return (
-          <>
-            <MenuItem onClick={() => navigate("/billing/queue")}>{t("admin.shell.menu.openBillingQueue")}</MenuItem>
-            <MenuItem onClick={() => navigate("/billing/exceptions")}>{t("admin.shell.menu.openExceptionsLane")}</MenuItem>
-            <MenuItem onClick={() => navigate("/billing/plan-deltas")}>{t("admin.shell.menu.reviewPlanDeltas")}</MenuItem>
-          </>
-        );
-      case "audit-log":
-        return (
-          <>
-            <MenuItem onClick={() => navigate("/audit-log/events")}>{t("admin.shell.menu.openAuditEvents")}</MenuItem>
-            <MenuItem onClick={() => navigate("/audit-log/access-changes")}>{t("admin.shell.menu.reviewAccessChanges")}</MenuItem>
-            <MenuItem onClick={() => navigate("/audit-log/system-jobs")}>{t("admin.shell.menu.openSystemJobs")}</MenuItem>
-          </>
-        );
-      case "modules-list":
-        return (
-          <>
-            <MenuItem onClick={() => navigate(modulesListResetPath)}>{t("admin.shell.menu.openModulesList")}</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("admin.shell.menu.reviewFavorites")}</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.tasksCenter")}</MenuItem>
-          </>
-        );
-      default:
-        return (
-          <>
-            <MenuItem onClick={() => navigate("/dashboard")}>{t("admin.shell.menu.openDashboard")}</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.tasksCenter")}</MenuItem>
-            <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("admin.shell.menu.reviewFavorites")}</MenuItem>
-          </>
-        );
-    }
+    return (
+      <>
+        {activeRouteMeta.kind === "dashboard" ? (
+          <MenuItem onClick={() => navigate("/dashboard")}>{t("admin.shell.menu.openDashboard")}</MenuItem>
+        ) : activeRouteMeta.kind === "modules-create" || activeRouteMeta.kind === "modules-edit" ? (
+          <MenuItem onClick={() => navigate(modulesListResetPath)}>{t("admin.shell.menu.openModulesList")}</MenuItem>
+        ) : (
+          <MenuItem onClick={() => navigate(activeRouteMeta.path)}>
+            {t("admin.shell.menu.openCurrentSection", { label: activeRouteMeta.label })}
+          </MenuItem>
+        )}
+        <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("admin.shell.menu.reviewFavorites")}</MenuItem>
+        <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.tasksCenter")}</MenuItem>
+      </>
+    );
   }
 
   if (isUiLabRoute) {
@@ -278,12 +256,12 @@ export function PrivateApp({
         railMark={<DashboardGridIcon />}
         railUtilities={[
           {
-            badge: "3",
             icon: <DocumentListIcon />,
             label: t("admin.shell.menu.tasksCenter"),
             onSelect: () => setUtilityPanel("tasks"),
           },
           {
+            badge: favoriteShortcuts.length ? String(favoriteShortcuts.length) : undefined,
             icon: <StarIcon />,
             label: t("admin.shell.menu.favorites"),
             onSelect: () => setUtilityPanel("favorites"),
@@ -343,7 +321,7 @@ export function PrivateApp({
             />
           </div>
         }
-        navigation={getAdminNavigation(location.pathname, t, (path) => navigate(path))}
+        navigation={getAdminNavigation(location.pathname, navigation, t, (path) => navigate(path))}
         headerMeta={renderHeaderBreadcrumb()}
         headerTitle={activeRouteMeta.label}
         headerActions={
@@ -389,25 +367,18 @@ export function PrivateApp({
         <Routes>
           <Route element={<Navigate replace to="/dashboard" />} path="/" />
           <Route element={<AdminDashboardPage />} path="/dashboard" />
-          <Route element={<AdminModulesListPage />} path="/modules/list" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/overview" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/tenants" />
-          <Route element={<Navigate replace to="/dashboard" />} path="/signals" />
-          <Route element={<Navigate replace to="/billing/queue" />} path="/billing" />
-          <Route element={<AdminBillingPage section="queue" />} path="/billing/queue" />
-          <Route element={<AdminBillingPage section="exceptions" />} path="/billing/exceptions" />
-          <Route element={<AdminBillingPage section="plan-deltas" />} path="/billing/plan-deltas" />
-          <Route element={<Navigate replace to="/billing/queue" />} path="/billing/*" />
-          <Route element={<Navigate replace to="/audit-log/events" />} path="/audit-log" />
-          <Route element={<AdminAuditLogPage section="events" />} path="/audit-log/events" />
-          <Route element={<AdminAuditLogPage section="access-changes" />} path="/audit-log/access-changes" />
-          <Route element={<AdminAuditLogPage section="system-jobs" />} path="/audit-log/system-jobs" />
-          <Route element={<Navigate replace to="/audit-log/events" />} path="/audit-log/*" />
+          <Route
+            element={<AdminModulesListPage onNavigationRefresh={onNavigationRefresh} />}
+            path="/modules/list"
+          />
+          <Route element={<AdminModuleEditPage />} path="/modules/edit/:moduleId" />
+          <Route element={<AdminRuntimeSectionPage navigation={navigation} />} path="/admin/*" />
           <Route element={<Navigate replace to="/dashboard" />} path="*" />
         </Routes>
       </WorkspaceShell>
 
       <AdminRailUtilitySheet
+        favorites={favoriteShortcuts}
         onNavigate={(path) => navigate(path)}
         onOpenChange={(open) => {
           if (!open) {

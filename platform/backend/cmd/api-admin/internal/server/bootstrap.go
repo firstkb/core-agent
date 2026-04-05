@@ -11,6 +11,7 @@ import (
 	"dtriton.com/platform/backend/internal/platform/config"
 	appmw "dtriton.com/platform/backend/internal/platform/httpx/middleware"
 	"dtriton.com/platform/backend/internal/platform/httpx/mw"
+	adminaccesspolicy "dtriton.com/platform/backend/modules/admin/accesspolicy"
 )
 
 func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
@@ -40,12 +41,19 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		server.tokenValidator = tokenValidator
 	}
 
+	server.adminAccessPolicy = adminaccesspolicy.NewService(adminaccesspolicy.NewRepository(server.sqlClient))
+
 	tenantManagementHT, err := buildTenantManagementModule(server.sqlClient, cfg, logger)
 	if err != nil {
 		return nil, err
 	}
+	moduleRegistryManage := buildModuleRegistryManageModule(server.sqlClient)
 	server.tenantManagementHT = tenantManagementHT
+	server.adminNavigationHT = buildAdminNavigationModule(server.sqlClient)
 	server.adminProfileHT = buildAdminProfileModule(server.sqlClient)
+	server.moduleRegistryGrantHT = buildModuleRegistryGrantModule(server.sqlClient)
+	server.moduleRegistryManageHT = moduleRegistryManage.Handler
+	server.moduleRegistryListHT = buildModuleRegistryListModule(server.sqlClient, moduleRegistryManage.Service, logger)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()
@@ -62,13 +70,13 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 	handler = appmw.RequestID()(handler)
 	handler = appmw.Timeout(time.Duration(srv.config.Timeout) * time.Second)(handler)
 	handler = appmw.AccessLog(srv.logger, srv.config.MW.AccessLog)(handler)
+	handler = srv.adminAccessPolicyMiddleware(handler)
 	handler = appmw.RequireScope(srv.logger, authpkg.AccessScopeAdminAPI)(handler)
+	handler = appmw.Claims(srv.logger, claimSource)(handler)
 
 	if shouldValidateTokensLocally(srv.config.Token.Validate) && claimSource == appmw.ClaimSourceBearer && srv.tokenValidator != nil {
 		handler = appmw.ValidatedClaims(srv.logger, srv.tokenValidator)(handler)
 	}
-
-	handler = appmw.Claims(srv.logger, claimSource)(handler)
 
 	if srv.config.Origin != "" {
 		corsCfg := appmw.CORSConfig{

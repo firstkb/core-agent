@@ -84,7 +84,8 @@ export type CollectionTableRowActionDefinition = {
 export type CollectionTableBulkActionDefinition = {
   id: string;
   kind: "state-change" | "custom";
-  label?: string;
+  label: string;
+  tone?: CollectionTableBadgeTone;
 };
 
 export type CollectionTableSelectionMeta = {

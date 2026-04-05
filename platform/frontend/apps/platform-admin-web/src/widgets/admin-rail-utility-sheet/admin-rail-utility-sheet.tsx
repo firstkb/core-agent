@@ -1,4 +1,6 @@
+import type { AdminFavoriteShortcut } from "../../shared/navigation";
 import {
+  Badge,
   Button,
   Card,
   CardContent,
@@ -16,6 +18,7 @@ import {
 type AdminRailUtilityPanel = "favorites" | "help" | "tasks";
 
 type AdminRailUtilitySheetProps = {
+  favorites: AdminFavoriteShortcut[];
   onNavigate: (path: string) => void;
   onOpenChange: (open: boolean) => void;
   panel: AdminRailUtilityPanel | null;
@@ -29,7 +32,7 @@ const panelCopy: Record<
   }
 > = {
   favorites: {
-    description: "Pinned shortcuts now cover dashboard, seeded admin routes, and UI references without changing the shared shell.",
+    description: "",
     title: "Favorites",
   },
   help: {
@@ -37,12 +40,13 @@ const panelCopy: Record<
     title: "Help and support",
   },
   tasks: {
-    description: "Pinned review notes stay grouped in one operator utility while dashboard, billing, and audit skeletons settle into the runtime.",
+    description: "Operator notes stay focused on the current dashboard and backend-driven navigation rollout.",
     title: "Tasks",
   },
 };
 
 export function AdminRailUtilitySheet({
+  favorites,
   onNavigate,
   onOpenChange,
   panel,
@@ -51,6 +55,8 @@ export function AdminRailUtilitySheet({
     return null;
   }
 
+  const isFavoritesPanel = panel === "favorites";
+
   function handleRoute(path: string) {
     onNavigate(path);
     onOpenChange(false);
@@ -58,7 +64,7 @@ export function AdminRailUtilitySheet({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={panel !== null}>
-      <DialogContent className="admin-web__utility-sheet">
+      <DialogContent className={`admin-web__utility-sheet${isFavoritesPanel ? " admin-web__utility-sheet--favorites" : ""}`}>
         <DialogHeader>
           <div>
             <DialogTitle>{panelCopy[panel].title}</DialogTitle>
@@ -66,13 +72,13 @@ export function AdminRailUtilitySheet({
           </div>
         </DialogHeader>
 
-        <DialogBody className="admin-web__utility-sheet-body">
+        <DialogBody className={`admin-web__utility-sheet-body${isFavoritesPanel ? " admin-web__utility-sheet-body--favorites" : ""}`}>
           {panel === "tasks" ? (
             <>
               <Card>
                 <CardHeader>
                   <CardTitle>Dashboard review queue</CardTitle>
-                  <CardDescription>Use the dashboard surface as the primary shell-level mock while the denser admin routes focus on module-specific layout review.</CardDescription>
+                  <CardDescription>Use the dashboard surface as the primary shell-level review area while the rest of the admin runtime is driven by backend navigation coverage.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button onClick={() => handleRoute("/dashboard")} variant="outline">
@@ -83,24 +89,17 @@ export function AdminRailUtilitySheet({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Billing lane review</CardTitle>
-                  <CardDescription>Use the seeded billing routes to review list-detail rhythm, summary strips, and filter-rail density inside the frozen shell.</CardDescription>
+                  <CardTitle>Favorites coverage</CardTitle>
+                  <CardDescription>
+                    Review the current navigation shortcuts returned by `/app/me/navigation` and confirm they match the admin grants.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => handleRoute("/billing/queue")} variant="outline">
-                    Open billing queue
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audit stream pass</CardTitle>
-                  <CardDescription>Review the seeded audit routes when you need table-heavy governance layouts inside the same shell chrome.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleRoute("/audit-log/events")} variant="outline">
-                    Open audit log
+                  <Button
+                    onClick={() => handleRoute(favorites[0]?.path ?? "/dashboard")}
+                    variant="outline"
+                  >
+                    {favorites.length ? "Open first favorite" : "Open dashboard"}
                   </Button>
                 </CardContent>
               </Card>
@@ -109,41 +108,52 @@ export function AdminRailUtilitySheet({
 
           {panel === "favorites" ? (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Dashboard surface</CardTitle>
-                  <CardDescription>The dashboard remains the broadest shell review surface for cross-tenant status and placeholder composition.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleRoute("/dashboard")} variant="outline">
-                    Open dashboard
-                  </Button>
-                </CardContent>
-              </Card>
+              {favorites.length ? (
+                <div className="admin-web__favorites-grid" role="list">
+                  {favorites.map((favorite) => (
+                    <button
+                      className="admin-web__favorite-tile"
+                      key={favorite.id}
+                      onClick={() => handleRoute(favorite.path)}
+                      role="listitem"
+                      type="button"
+                    >
+                      <div className="admin-web__favorite-tile-head">
+                        <div className="admin-web__favorite-tile-badges">
+                          <Badge size="sm" variant="brand">{favorite.moduleTitle}</Badge>
+                          <Badge appearance="outline" size="sm" variant="neutral">{favorite.access}</Badge>
+                        </div>
+                      </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Billing queue</CardTitle>
-                  <CardDescription>Use the billing routes for summary-strip, filter, and list-detail review without leaving the admin runtime.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleRoute("/billing/queue")} variant="outline">
-                    Open billing queue
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audit event stream</CardTitle>
-                  <CardDescription>Open the seeded governance surface when you need the table-first review flow rather than the dashboard mock.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleRoute("/audit-log/events")} variant="outline">
-                    Open audit log
-                  </Button>
-                </CardContent>
-              </Card>
+                      <div className="admin-web__favorite-tile-body">
+                        {favorite.icon ? (
+                          <span aria-hidden="true" className="admin-web__favorite-tile-icon">
+                            {favorite.icon}
+                          </span>
+                        ) : null}
+                        <div className="admin-web__favorite-tile-copy">
+                          <h3 className="admin-web__favorite-tile-title">{favorite.title}</h3>
+                          <p className="admin-web__favorite-tile-description">{favorite.description}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>No favorites yet</CardTitle>
+                    <CardDescription>
+                      The backend did not return any favorite shortcuts for this admin user.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={() => handleRoute("/dashboard")} variant="outline">
+                      Open dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </>
           ) : null}
 

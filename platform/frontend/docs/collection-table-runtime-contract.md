@@ -140,7 +140,6 @@ This document captures the accepted intermediate state, the current frontend con
   - accepted first bulk actions:
     - `Set active`
     - `Set inactive`
-    - `Clear`
 - mobile:
   - selection still happens inside the leading checkbox column
   - bulk actions should use a compact bottom action bar rather than a third toolbar row
@@ -148,6 +147,17 @@ This document captures the accepted intermediate state, the current frontend con
   - selection applies only to visible row ids in the current page
   - no `select all filtered results across pages` behavior yet
 - rows may still expose an `Active` display column, but state changes happen through bulk actions, not inline checkbox mutation
+- current bulk-action presentation rule:
+  - backend may send `bulkActions[].tone`
+  - tone affects text color only
+  - current accepted tone values:
+    - `brand`
+    - `danger`
+    - `info`
+    - `neutral`
+    - `success`
+    - `warning`
+  - `neutral` uses the default outline button text color
 
 ### Planned Next Capability: Bulk Edit
 
@@ -157,7 +167,6 @@ Current intention for a later phase:
 
 - when backend metadata says bulk edit is supported, the bulk bar may expose `Edit`
 - initial future direction:
-  - current `Clear` action may be replaced or deprioritized when bulk edit is available
   - clicking `Edit` should open a modal with:
     - one bulk-edit form surface
     - `Cancel`
@@ -229,12 +238,13 @@ Planned interaction rule:
 - `date` fields stay on the calendar control and do not use suggestion dropdowns
 - accepted suggestion-loading rule:
   - load grouped suggestions lazily on the first interaction with the search shell
-  - do not re-query backend for suggestions after that first load during the same session
-  - keep the loaded suggestion dictionary cached on frontend for the current table session
+  - reuse compatible cached suggestions from `sessionStorage` immediately when available
+  - revalidate suggestions once for each fresh meta/page visit when the user first focuses or opens the search shell
+  - keep the latest compatible suggestion dictionary cached on frontend for the current table session
 - accepted suggestion-display rule:
   - if the selected search field is `All`, suggestions are shown grouped by field
   - if the selected search field is a concrete field, only that field's suggestions are shown
-  - frontend filters the already loaded grouped suggestions locally while the user types
+  - frontend filters the current grouped suggestions locally while the user types
 - accepted first interaction rule:
   - clicking a suggestion immediately creates a token and applies the filter
   - `Enter` applies the highlighted suggestion if one is highlighted
@@ -332,10 +342,6 @@ These labels can be kept in frontend locale files and rendered from built-in ids
   - `entries`
   - `No records found`
   - `selected`
-  - `Clear`
-- bulk-action labels only when the behavior is generic and standardized:
-  - `Set active`
-  - `Set inactive`
 - dialog labels:
   - `Set Filter Name`
   - `Save`
@@ -355,6 +361,7 @@ These labels should come from backend because they describe the business surface
 - column labels
 - search field labels
 - domain-specific action labels
+- bulk-action labels
 - saved filter names
 - badge/status labels rendered from data
 - row values and description text
@@ -503,8 +510,8 @@ Recommended response shape:
     "columnPosition": "leading"
   },
   "bulkActions": [
-    { "id": "activate", "label": "Set active", "kind": "state-change" },
-    { "id": "deactivate", "label": "Set inactive", "kind": "state-change" }
+    { "id": "activate", "label": "Active", "kind": "state-change", "tone": "success" },
+    { "id": "archive", "label": "Archive", "kind": "custom", "tone": "neutral" }
   ],
   "bulkEdit": {
     "enabled": false,
@@ -761,14 +768,18 @@ Example payload:
   - sort changes
   - quick filters change
   - a saved filter set is applied
+- after every successful `query`, reconcile selected row ids against the returned visible/selectable rows
 - clear current row selection when:
   - page changes
   - page size changes
   - sort changes
   - quick filters change
   - a saved filter set is applied
+- after a successful bulk action, frontend should re-run the current `query`
 - `Reload` should usually repeat `query`
 - `Reload` may also re-fetch `meta` only when schema invalidation is needed
+- current admin host route contract:
+  - `rowActions[{ id: "edit", execution: "frontend" }]` navigates to `/modules/edit/{row.id}`
 
 ## Current Open Items
 
@@ -780,11 +791,10 @@ Example payload:
   - `badge`
   - `stacked`
   - whether more cell layout types are needed
-- final frontend route contract for `Edit` and `View`
+- final frontend route contract for `View` and other future host-managed row actions
 - whether row actions ever need row-level disabling in a later phase
 - whether export runs synchronously or returns a job/download URL
 - final bulk-edit modal contract once the universal form-builder/runtime exists
-- whether `Clear` remains visible alongside `Edit` or is replaced when `bulkEdit.enabled` is true
 
 ## Promotion Rule
 

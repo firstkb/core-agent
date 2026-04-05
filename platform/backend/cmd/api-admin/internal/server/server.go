@@ -12,6 +12,11 @@ import (
 	"dtriton.com/platform/backend/internal/platform/config"
 	"dtriton.com/platform/backend/internal/platform/httpx/router"
 	"dtriton.com/platform/backend/internal/platform/postgres"
+	adminaccesspolicy "dtriton.com/platform/backend/modules/admin/accesspolicy"
+	moduleregistrygrants "dtriton.com/platform/backend/modules/admin/moduleregistrygrants"
+	moduleregistrylist "dtriton.com/platform/backend/modules/admin/moduleregistrylist"
+	moduleregistrymanage "dtriton.com/platform/backend/modules/admin/moduleregistrymanage"
+	adminnavigationsvc "dtriton.com/platform/backend/modules/admin/navigation"
 	adminprofilesvc "dtriton.com/platform/backend/modules/admin/profile"
 	tenantmanagement "dtriton.com/platform/backend/modules/admin/tenantmanagement"
 )
@@ -61,9 +66,14 @@ type Server struct {
 	sqlClient  *postgres.Client
 	classifier *router.Classifier
 
-	tokenValidator     authpkg.JWTIssuer
-	adminProfileHT     *adminprofilesvc.Handler
-	tenantManagementHT *tenantmanagement.Handler
+	tokenValidator         authpkg.JWTIssuer
+	adminAccessPolicy      *adminaccesspolicy.Service
+	adminNavigationHT      *adminnavigationsvc.Handler
+	adminProfileHT         *adminprofilesvc.Handler
+	moduleRegistryListHT   *moduleregistrylist.Handler
+	moduleRegistryGrantHT  *moduleregistrygrants.Handler
+	moduleRegistryManageHT *moduleregistrymanage.Handler
+	tenantManagementHT     *tenantmanagement.Handler
 }
 
 func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {

@@ -1,7 +1,8 @@
 import type { TableDensity } from "@platform/ui-kit";
 
-import type { CollectionPageConfig, CollectionPageRow } from "./collection-page";
 import type {
+  CollectionTableColumnDefinition,
+  CollectionTableFieldDefinition,
   CollectionTableQueryRequest,
   CollectionTableQuickFilter,
   CollectionTableSearchOperator,
@@ -11,6 +12,17 @@ import type {
 
 const COLLECTION_TABLE_STATE_STORAGE_PREFIX = "collection-table-state:";
 const COLLECTION_TABLE_SUGGESTIONS_STORAGE_PREFIX = "collection-table-suggestions:";
+const collectionTableSearchOperators = new Set<CollectionTableSearchOperator>([
+  "contains",
+  "is_empty",
+  "is_equal_to",
+  "is_greater_or_equal_to",
+  "is_greater_than",
+  "is_less_or_equal_to",
+  "is_less_than",
+  "is_not_empty",
+  "is_not_equal_to",
+]);
 
 export type CollectionTableQueryState = {
   filters: Record<string, string>;
@@ -34,10 +46,87 @@ export type PersistedCollectionTableState = {
   queryState: CollectionTableQueryState;
 };
 
-export function createCollectionTableState<Row extends CollectionPageRow>(
-  config: CollectionPageConfig<Row>,
+type PersistedCollectionTableSuggestions = {
+  fieldSignature: string;
+  groups: ReadonlyArray<CollectionTableSearchSuggestionGroup>;
+};
+
+export type CollectionTableStateConfig = {
+  columns: ReadonlyArray<Pick<CollectionTableColumnDefinition, "defaultVisible" | "id">>;
+  defaultSortColumnId?: string | null;
+  pageSizeOptions?: readonly number[];
+  presetId?: string;
+};
+
+function getNormalizedQuickFilterFieldId(candidate: Partial<CollectionTableQuickFilter>) {
+  if (typeof candidate.fieldId === "string" && candidate.fieldId.trim().length > 0) {
+    return candidate.fieldId.trim();
+  }
+
+  if (typeof candidate.id === "string") {
+    const [derivedFieldId] = candidate.id.split(":");
+
+    if (
+      derivedFieldId &&
+      derivedFieldId !== "undefined" &&
+      derivedFieldId !== "null"
+    ) {
+      return derivedFieldId;
+    }
+  }
+
+  return "all";
+}
+
+function normalizeCollectionTableQuickFilter(
+  candidate: unknown,
+): CollectionTableQuickFilter | null {
+  if (!candidate || typeof candidate !== "object") {
+    return null;
+  }
+
+  const rawFilter = candidate as Partial<CollectionTableQuickFilter>;
+  const fieldId = getNormalizedQuickFilterFieldId(rawFilter);
+  const operator =
+    typeof rawFilter.operator === "string" &&
+    collectionTableSearchOperators.has(rawFilter.operator as CollectionTableSearchOperator)
+      ? rawFilter.operator as CollectionTableSearchOperator
+      : "contains";
+  const normalizedOperator = fieldId === "all" ? "contains" : operator;
+  const value = typeof rawFilter.value === "string" ? rawFilter.value.trim() : "";
+
+  if (
+    normalizedOperator !== "is_empty" &&
+    normalizedOperator !== "is_not_empty" &&
+    value.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    fieldId,
+    id: `${fieldId}:${normalizedOperator}:${value.toLowerCase()}`,
+    operator: normalizedOperator,
+    value,
+  };
+}
+
+function normalizeCollectionTableQuickFilters(
+  quickFilters: unknown,
+): ReadonlyArray<CollectionTableQuickFilter> {
+  if (!Array.isArray(quickFilters)) {
+    return [];
+  }
+
+  return quickFilters
+    .map((quickFilter) => normalizeCollectionTableQuickFilter(quickFilter))
+    .filter((quickFilter): quickFilter is CollectionTableQuickFilter => quickFilter !== null);
+}
+
+export function createCollectionTableState(
+  config: CollectionTableStateConfig,
 ): CollectionTableState {
-  const presetId = config.presets?.[0]?.id ?? "all";
+  const presetId = config.presetId ?? "all";
 
   return {
     density: "comfortable",
@@ -47,7 +136,7 @@ export function createCollectionTableState<Row extends CollectionPageRow>(
       pageSize: config.pageSizeOptions?.[0] ?? 25,
       presetId,
       quickFilters: [],
-      sortColumnId: config.columns.find((column) => column.sortable)?.id ?? config.columns[0]?.id ?? null,
+      sortColumnId: config.defaultSortColumnId ?? config.columns[0]?.id ?? null,
       sortDirection: "asc",
     },
     visibleColumnIds: config.columns
@@ -78,7 +167,7 @@ export function toCollectionTableQueryRequest(
     page: state.query.page,
     pageSize: state.query.pageSize,
     presetId: state.query.presetId,
-    quickFilters: state.query.quickFilters,
+    quickFilters: normalizeCollectionTableQuickFilters(state.query.quickFilters),
     sort: {
       columnId: state.query.sortColumnId,
       direction: state.query.sortDirection,
@@ -92,6 +181,16 @@ export function getCollectionTableStateStorageKey(tableId: string) {
 
 export function getCollectionTableSuggestionsStorageKey(tableId: string) {
   return `${COLLECTION_TABLE_SUGGESTIONS_STORAGE_PREFIX}${tableId}`;
+}
+
+export function createCollectionTableSuggestionsFieldSignature(
+  fields: ReadonlyArray<CollectionTableFieldDefinition>,
+) {
+  return fields
+    .filter((field) => field.suggestable)
+    .map((field) => `${field.id}:${field.type}`)
+    .sort((left, right) => left.localeCompare(right))
+    .join("|");
 }
 
 export function readPersistedCollectionTableState(
@@ -139,10 +238,7 @@ export function readPersistedCollectionTableState(
           queryState && typeof queryState.presetId === "string"
             ? queryState.presetId
             : "all",
-        quickFilters:
-          queryState && Array.isArray(queryState.quickFilters)
-            ? queryState.quickFilters
-            : [],
+        quickFilters: normalizeCollectionTableQuickFilters(queryState?.quickFilters),
         sortColumnId:
           queryState &&
           (typeof queryState.sortColumnId === "string" ||
@@ -169,7 +265,16 @@ export function writePersistedCollectionTableState(
   }
 
   try {
-    window.sessionStorage.setItem(storageKey, JSON.stringify(value));
+    window.sessionStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        ...value,
+        queryState: {
+          ...value.queryState,
+          quickFilters: normalizeCollectionTableQuickFilters(value.queryState.quickFilters),
+        },
+      } satisfies PersistedCollectionTableState),
+    );
   } catch {}
 }
 
@@ -185,6 +290,7 @@ export function clearPersistedCollectionTableState(storageKey: string) {
 
 export function readPersistedCollectionTableSuggestions(
   storageKey: string,
+  fieldSignature?: string,
 ): ReadonlyArray<CollectionTableSearchSuggestionGroup> | null {
   if (typeof window === "undefined") {
     return null;
@@ -200,6 +306,32 @@ export function readPersistedCollectionTableSuggestions(
     const parsed = JSON.parse(rawValue) as unknown;
 
     if (!Array.isArray(parsed)) {
+      if (!parsed || typeof parsed !== "object") {
+        return null;
+      }
+
+      const suggestionState = parsed as Partial<PersistedCollectionTableSuggestions>;
+
+      if (!Array.isArray(suggestionState.groups)) {
+        return null;
+      }
+
+      if (
+        fieldSignature &&
+        typeof suggestionState.fieldSignature === "string" &&
+        suggestionState.fieldSignature !== fieldSignature
+      ) {
+        return null;
+      }
+
+      if (fieldSignature && typeof suggestionState.fieldSignature !== "string") {
+        return null;
+      }
+
+      return suggestionState.groups;
+    }
+
+    if (fieldSignature) {
       return null;
     }
 
@@ -212,12 +344,23 @@ export function readPersistedCollectionTableSuggestions(
 export function writePersistedCollectionTableSuggestions(
   storageKey: string,
   groups: ReadonlyArray<CollectionTableSearchSuggestionGroup>,
+  fieldSignature?: string,
 ) {
   if (typeof window === "undefined") {
     return;
   }
 
   try {
-    window.sessionStorage.setItem(storageKey, JSON.stringify(groups));
+    window.sessionStorage.setItem(
+      storageKey,
+      JSON.stringify(
+        fieldSignature
+          ? {
+            fieldSignature,
+            groups,
+          } satisfies PersistedCollectionTableSuggestions
+          : groups,
+      ),
+    );
   } catch {}
 }

@@ -57,6 +57,46 @@ type AdminProfile = {
   };
 };
 
+type AdminNavigationAccess = "read" | "write";
+
+type AdminNavigationFavorite = {
+  access: AdminNavigationAccess;
+  description?: string;
+  id: string;
+  module_icon?: string;
+  module_id: string;
+  module_key: string;
+  module_title: string;
+  route_path: string;
+  section_key: string;
+  title: string;
+};
+
+type AdminNavigationSection = {
+  access: AdminNavigationAccess;
+  description?: string;
+  icon?: string;
+  id: string;
+  route_path: string;
+  section_key: string;
+  title: string;
+};
+
+type AdminNavigationModule = {
+  description?: string;
+  icon?: string;
+  id: string;
+  module_key: string;
+  sections: AdminNavigationSection[];
+  title: string;
+};
+
+type AdminNavigation = {
+  favorites: AdminNavigationFavorite[];
+  is_root: boolean;
+  modules: AdminNavigationModule[];
+};
+
 type ApiClient = {
   getHealth: () => Promise<ApiHealth>;
 };
@@ -76,6 +116,10 @@ type TenantProfileClient = {
 
 type AdminProfileClient = {
   getProfile: (accessToken: string) => Promise<AdminProfile>;
+};
+
+type AdminNavigationClient = {
+  getNavigation: (accessToken: string) => Promise<AdminNavigation>;
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -299,6 +343,93 @@ function normalizeAdminProfile(payload: unknown): AdminProfile {
   };
 }
 
+function normalizeAdminNavigationAccess(value: unknown, fieldName: string): AdminNavigationAccess {
+  const access = assertString(value, fieldName);
+
+  if (access !== "read" && access !== "write") {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+
+  return access;
+}
+
+function normalizeAdminNavigationFavorite(payload: unknown): AdminNavigationFavorite {
+  if (!isRecord(payload)) {
+    throw new ApiClientError("Invalid admin navigation favorite payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    access: normalizeAdminNavigationAccess(payload.access, "favorites[].access"),
+    description: typeof payload.description === "string" ? payload.description : undefined,
+    id: assertString(payload.id, "favorites[].id"),
+    module_icon: typeof payload.module_icon === "string" ? payload.module_icon : undefined,
+    module_id: assertString(payload.module_id, "favorites[].module_id"),
+    module_key: assertString(payload.module_key, "favorites[].module_key"),
+    module_title: assertString(payload.module_title, "favorites[].module_title"),
+    route_path: assertString(payload.route_path, "favorites[].route_path"),
+    section_key: assertString(payload.section_key, "favorites[].section_key"),
+    title: assertString(payload.title, "favorites[].title"),
+  };
+}
+
+function normalizeAdminNavigationSection(payload: unknown): AdminNavigationSection {
+  if (!isRecord(payload)) {
+    throw new ApiClientError("Invalid admin navigation section payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    access: normalizeAdminNavigationAccess(payload.access, "modules[].sections[].access"),
+    description: typeof payload.description === "string" ? payload.description : undefined,
+    icon: typeof payload.icon === "string" ? payload.icon : undefined,
+    id: assertString(payload.id, "modules[].sections[].id"),
+    route_path: assertString(payload.route_path, "modules[].sections[].route_path"),
+    section_key: assertString(payload.section_key, "modules[].sections[].section_key"),
+    title: assertString(payload.title, "modules[].sections[].title"),
+  };
+}
+
+function normalizeAdminNavigationModule(payload: unknown): AdminNavigationModule {
+  if (!isRecord(payload) || !Array.isArray(payload.sections)) {
+    throw new ApiClientError("Invalid admin navigation module payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    description: typeof payload.description === "string" ? payload.description : undefined,
+    icon: typeof payload.icon === "string" ? payload.icon : undefined,
+    id: assertString(payload.id, "modules[].id"),
+    module_key: assertString(payload.module_key, "modules[].module_key"),
+    sections: payload.sections.map((section) => normalizeAdminNavigationSection(section)),
+    title: assertString(payload.title, "modules[].title"),
+  };
+}
+
+function normalizeAdminNavigation(payload: unknown): AdminNavigation {
+  if (!isRecord(payload) || !Array.isArray(payload.favorites) || !Array.isArray(payload.modules)) {
+    throw new ApiClientError("Invalid admin navigation payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    favorites: payload.favorites.map((favorite) => normalizeAdminNavigationFavorite(favorite)),
+    is_root: typeof payload.is_root === "boolean" ? payload.is_root : false,
+    modules: payload.modules.map((module) => normalizeAdminNavigationModule(module)),
+  };
+}
+
 function isUnauthorizedApiError(error: unknown) {
   return error instanceof ApiClientError &&
     (error.statusCode === 401 || error.statusCode === 403);
@@ -403,8 +534,22 @@ function createAdminProfileClient(baseUrl: string): AdminProfileClient {
   };
 }
 
+function createAdminNavigationClient(baseUrl: string): AdminNavigationClient {
+  return {
+    async getNavigation(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/me/navigation", {
+        accessToken,
+        method: "GET",
+      });
+
+      return normalizeAdminNavigation(envelope.data);
+    },
+  };
+}
+
 export {
   ApiClientError,
+  createAdminNavigationClient,
   createAdminProfileClient,
   createApiClient,
   createAuthClient,
@@ -412,6 +557,12 @@ export {
   isUnauthorizedApiError,
 };
 export type {
+  AdminNavigation,
+  AdminNavigationAccess,
+  AdminNavigationClient,
+  AdminNavigationFavorite,
+  AdminNavigationModule,
+  AdminNavigationSection,
   AdminProfile,
   AdminProfileClient,
   ApiClient,

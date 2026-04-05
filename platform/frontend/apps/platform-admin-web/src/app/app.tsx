@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  type AdminNavigation,
   type AdminProfile,
   ApiClientError,
+  createAdminNavigationClient,
   createAdminProfileClient,
   isUnauthorizedApiError,
 } from "@platform/api-client";
@@ -167,6 +169,10 @@ export function App({
     () => createAdminProfileClient(runtimeConfig.adminApiUrl),
     [runtimeConfig.adminApiUrl],
   );
+  const navigationClient = useMemo(
+    () => createAdminNavigationClient(runtimeConfig.adminApiUrl),
+    [runtimeConfig.adminApiUrl],
+  );
   const { isAuthenticated, requestCode, signIn, signOut, tokens, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
@@ -175,17 +181,49 @@ export function App({
   const [isBusy, setIsBusy] = useState(false);
   const [method, setMethod] = useState<AuthContactMethod>("email");
   const [otpLength, setOtpLength] = useState(6);
+  const [navigation, setNavigation] = useState<AdminNavigation | null>(null);
+  const [navigationError, setNavigationError] = useState<string | null>(null);
   const [profile, setProfile] = useState<AdminProfile | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileReady, setProfileReady] = useState(false);
   const [requestedIdentifier, setRequestedIdentifier] = useState("");
   const [requestedMethod, setRequestedMethod] = useState<AuthContactMethod | null>(null);
 
+  async function refreshAdminNavigation(options?: { reportError?: boolean }) {
+    const accessToken = tokens?.accessToken;
+
+    if (!accessToken) {
+      void signOut();
+      return;
+    }
+
+    try {
+      const nextNavigation = await navigationClient.getNavigation(accessToken);
+      setNavigation(nextNavigation);
+      setNavigationError(null);
+    } catch (navigationRequestError) {
+      if (isUnauthorizedApiError(navigationRequestError)) {
+        void signOut();
+        return;
+      }
+
+      if (options?.reportError !== false) {
+        setNavigationError(
+          navigationRequestError instanceof Error
+            ? navigationRequestError.message
+            : t("admin.loaders.navigationDescription"),
+        );
+      }
+    }
+  }
+
   useEffect(() => {
     if (!isAuthenticated) {
       setCodeSent(false);
       setCodeValue("");
       setError(null);
+      setNavigation(null);
+      setNavigationError(null);
       setOtpLength(6);
       setProfile(null);
       setProfileError(null);
@@ -202,19 +240,18 @@ export function App({
     }
 
     let isActive = true;
+    setNavigation(null);
+    setNavigationError(null);
     setProfile(null);
     setProfileError(null);
     setProfileReady(false);
 
-    void profileClient
-      .getProfile(accessToken)
-      .then((nextProfile) => {
-        if (isActive) {
-          setProfile(nextProfile);
-          setProfileReady(true);
-        }
-      })
-      .catch((profileRequestError: unknown) => {
+    void (async () => {
+      let nextProfile: AdminProfile;
+
+      try {
+        nextProfile = await profileClient.getProfile(accessToken);
+      } catch (profileRequestError) {
         if (!isActive) {
           return;
         }
@@ -229,12 +266,44 @@ export function App({
             ? profileRequestError.message
             : t("admin.loaders.profileDescription"),
         );
-      });
+        return;
+      }
+
+      if (isActive) {
+        setProfile(nextProfile);
+      }
+
+      try {
+        const nextNavigation = await navigationClient.getNavigation(accessToken);
+
+        if (!isActive) {
+          return;
+        }
+
+        setNavigation(nextNavigation);
+        setProfileReady(true);
+      } catch (navigationRequestError) {
+        if (!isActive) {
+          return;
+        }
+
+        if (isUnauthorizedApiError(navigationRequestError)) {
+          void signOut();
+          return;
+        }
+
+        setNavigationError(
+          navigationRequestError instanceof Error
+            ? navigationRequestError.message
+            : t("admin.loaders.navigationDescription"),
+        );
+      }
+    })();
 
     return () => {
       isActive = false;
     };
-  }, [isAuthenticated, profileClient, signOut, t, tokens?.accessToken, userId]);
+  }, [isAuthenticated, navigationClient, profileClient, signOut, t, tokens?.accessToken, userId]);
 
   async function handleRequestCode() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);
@@ -329,21 +398,33 @@ export function App({
   const authDescription = codeSent
     ? t("admin.auth.descriptionCode", { identifier: requestedIdentifier })
     : t("admin.auth.descriptionEnter");
-  const profileLoaderDescription = profileError ?? t("admin.loaders.profileDescription");
+  const isNavigationLoading = Boolean(profile) && !navigation && !navigationError;
+  const profileLoaderDescription = navigationError
+    ?? profileError
+    ?? (isNavigationLoading ? t("admin.loaders.navigationDescription") : t("admin.loaders.profileDescription"));
   const workspaceUser = profile ? buildAdminWorkspaceUserSession(profile) : null;
 
   return (
     <AuthGuard
       authenticated={
-        profileReady && workspaceUser ? (
+        profileReady && workspaceUser && navigation ? (
           <Routes>
             <Route element={<Navigate replace to="/dashboard" />} path="/sign-in" />
-            <Route element={<PrivateApp userSession={workspaceUser} />} path="/*" />
+            <Route
+              element={
+                <PrivateApp
+                  navigation={navigation}
+                  onNavigationRefresh={() => refreshAdminNavigation({ reportError: false })}
+                  userSession={workspaceUser}
+                />
+              }
+              path="/*"
+            />
           </Routes>
         ) : (
           <AdminBootstrapLoader
             description={profileLoaderDescription}
-            label={t("admin.loaders.profileLabel")}
+            label={isNavigationLoading || navigationError ? t("admin.loaders.navigationLabel") : t("admin.loaders.profileLabel")}
           />
         )
       }

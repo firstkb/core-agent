@@ -1,33 +1,28 @@
 ---
 name: ramp-conductor
-description: Use this skill to orchestrate non-trivial Ramp Platform v108 work: task intake, mode selection, task-id creation, run setup, FE/BE lane packet generation, report reconciliation, and final shared memory updates. Trigger for cross-stack, multi-session, contract-sensitive, auth/session, tenancy, package-boundary, or high-risk work. Do not use for tiny single-lane edits.
+description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should stay in one direct frontend/backend lane without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, reconciliation, and final shared memory updates.
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.0.0
+Skill version: 1.2.0
 Human display name: Atlas
 
 Purpose:
-This skill is the manual control-plane orchestrator for Ramp Platform v108.
-It owns intake, mode selection, run setup, lane packet generation, reconciliation, and final shared memory updates.
+Atlas is the universal product-task conductor for Ramp Platform v108.
+Use it to intake work, read the smallest sufficient memory slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
 - Use explicitly with `$ramp-conductor`.
 - In human-facing references, call this assistant `Atlas`.
 - Do not rely on implicit activation for this workflow.
 
-Use this skill when:
-- work is cross-stack
-- shared contract may change
-- auth/session or tenancy risk exists
-- package extraction or boundary work is involved
-- the task likely needs FE and BE lanes
-- the task is multi-session, checkpoint-heavy, or handoff-heavy
+## Universal intake rule
 
-Do not use this skill when:
-- the task is clearly local to one lane
-- the change is tiny and does not affect shared memory or shared contract
-- orchestration overhead would be higher than implementation cost
+During the v1 pilot, Atlas is the preferred first touch for new work under `platform/`.
+Atlas may still decide that the cheapest correct path is a direct one-lane task with no run artifacts.
+
+Direct lane bypass is still acceptable when the task is obviously tiny, clearly local, and you intentionally want to skip orchestration overhead.
+If routing is unclear, start with Atlas.
 
 ## Minimal shared reads
 
@@ -38,25 +33,68 @@ Read only the minimal shared memory first:
 4. `platform/docs/ai/canonical-docs.md`
 5. relevant `platform/docs/ai/modules/*.md`
 
+Read `platform/docs/ai/orchestration-boundaries.md` if there is confusion about `Atlas` vs repo-level orchestration.
+Read `platform/docs/ai/automation-manifest.json` when prompt/skill/template/script versions are needed.
 Read additional docs only when the task actually requires them.
 
-## Primary mode selection
+## Routing decision
 
-Choose one primary mode before creating lane packets:
+Atlas must decide both:
+- `run_required`: `yes | no`
+- the concrete route
+
+### No-run direct routes
+
+Use one of these when the task is small enough that orchestration cost would exceed its value.
+
+- `DIRECT_FRONTEND_NO_RUN`
+- `DIRECT_BACKEND_NO_RUN`
+
+For a direct no-run route, Atlas should still return:
+- locked invariants
+- required reads
+- chosen prompt (`full` or `compact`)
+- recommended chat count
+- next exact step
+
+No `task-id` or run folder is required for a no-run route.
+
+### Run-backed routes
+
+If `run_required = yes`, choose one primary mode:
 - `FE_ONLY`
 - `BE_ONLY`
 - `CROSS_STACK_PARALLEL`
 - `CROSS_STACK_SEQUENTIAL`
 - `RESEARCH_CONTRACT_LOCK`
 
-Mode rule:
+Mode rules:
 - Use `RESEARCH_CONTRACT_LOCK` before implementation when the contract is still unclear.
 - Use `CROSS_STACK_SEQUENTIAL` when one lane depends on the other.
 - Use `CROSS_STACK_PARALLEL` only after shared contract and scope split are locked.
+- Use `FE_ONLY` or `BE_ONLY` for local work that still benefits from a durable run because it is long, risky, multi-session, or likely to need handoff.
+
+## Prompt and chat selection
+
+Atlas chooses the minimum sufficient prompt set and chat topology.
+
+Prompt rules:
+- use `platform/docs/ai/prompts/control-chat-prompt-v1.md` for Atlas itself
+- use full lane prompts for new, risky, or run-backed lanes
+- use compact lane prompts for direct local work or continuation of an already-stable lane
+
+Chat topology rules:
+- direct local task -> `1` lane chat
+- `FE_ONLY` -> `1` control chat + `1` FE lane chat
+- `BE_ONLY` -> `1` control chat + `1` BE lane chat
+- `CROSS_STACK_PARALLEL` -> `1` control chat + `1` FE lane + `1` BE lane
+- `CROSS_STACK_SEQUENTIAL` -> `1` control chat + lanes opened in the required order
+- `RESEARCH_CONTRACT_LOCK` -> `1` control chat until the contract is locked
 
 ## Task-id rules
 
-Create `<task-id>` immediately after mode selection and before lane packets.
+Create `<task-id>` only when `run_required = yes`.
+Create it immediately after route/mode selection and before lane packets.
 
 Format:
 `YYYY-MM-DD_<scope>_<short-kebab-purpose>`
@@ -87,7 +125,7 @@ Lifecycle rule:
 
 ## Run artifacts
 
-For non-trivial work create or update:
+For run-backed work create or update:
 - `platform/docs/ai/runs/<task-id>/task.md`
 - `platform/docs/ai/runs/<task-id>/frontend.md` when FE lane exists
 - `platform/docs/ai/runs/<task-id>/backend.md` when BE lane exists
@@ -95,41 +133,49 @@ For non-trivial work create or update:
 
 File roles:
 - `task.md` = control contract + run state
-- `frontend.md` = FE lane packet snapshot + FE lane report
-- `backend.md` = BE lane packet snapshot + BE lane report
+- `frontend.md` = FE packet snapshot + FE lane report
+- `backend.md` = BE packet snapshot + BE lane report
 - `final.md` = reconciliation + closeout
 
 Do not create extra lane report files unless there is a strong reason.
 Prefer one lane file per lane to avoid file explosion.
 
-## Optional scaffolder
+## Scaffolder rule
 
-After Control has chosen the task id, mode, and active lanes, prefer the repo scaffolder when available:
+Preferred scaffolder:
 - `scripts/ai/new-run.sh`
 - `scripts/ai/new-run.py`
 
-Scaffolder rule:
-- the script only materializes files and stamps versions
-- it does not choose task id, mode, scope, or memory updates
-- Atlas / Control remains the decision-maker
+If `run_required = yes` and the environment allows command execution, Atlas should prefer running the scaffolder itself after it has fixed:
+- `task-id`
+- `primary mode`
+- `active lanes`
 
-## Required task.md header fields
+Scaffolder rule:
+- the script only materializes files and stamps versions from `platform/docs/ai/automation-manifest.json`
+- it does not choose task id, route, scope, prompt plan, or memory updates
+- Atlas remains the decision-maker
+
+## Required task.md fields
 
 Every `task.md` must record:
 - `task_id`
-- `status`: `draft | active | blocked | reconciled | closed | superseded`
+- `status`
 - `created_at`
 - `updated_at`
-- `mode`
+- `skill_name`
+- `skill_display_name`
+- `skill_version`
 - `control_prompt_version`
 - `frontend_prompt_version`
 - `backend_prompt_version`
-- `skill_version`
+- `run_required`
+- `primary_mode`
+- `recommended_chat_topology`
 - `goal`
 - `locked_invariants`
 - `confirmed_shared_contract`
 - `lane_plan`
-- `out_of_scope`
 - `memory_update_targets`
 - `next_control_step`
 
@@ -138,7 +184,9 @@ Every `task.md` must record:
 Use these repository files as stable base contracts:
 - `platform/docs/ai/prompts/control-chat-prompt-v1.md`
 - `platform/docs/ai/prompts/frontend-prompt-v1.md`
+- `platform/docs/ai/prompts/frontend-prompt-compact-v1.md`
 - `platform/docs/ai/prompts/backend-prompt-v1.md`
+- `platform/docs/ai/prompts/backend-prompt-compact-v1.md`
 - `platform/docs/ai/templates/control-task.md`
 - `platform/docs/ai/templates/lane-report.md`
 
@@ -148,7 +196,7 @@ Generate lane packets, not entirely new base prompts.
 
 Every lane packet must include:
 - `task_id`
-- `lane`: `frontend` or `backend`
+- `lane`
 - `goal`
 - `allowed_scope`
 - `likely_files_or_modules`
@@ -195,7 +243,7 @@ After receiving lane reports:
 
 ## Shared memory ownership
 
-Control owns final shared-memory updates:
+Atlas / Control owns final shared-memory updates:
 - `platform/docs/ai/current-state.md`
 - `platform/docs/ai/decisions-log.md`
 - `platform/docs/ai/modules/*.md`
@@ -213,6 +261,29 @@ A run may be closed only when:
 
 Closed runs are historical execution artifacts, not canonical memory.
 Move closed or superseded runs out of `platform/docs/ai/runs/` once they stop being part of active work.
+
+## Required intake output
+
+At intake, Atlas must return this structure:
+- route decision
+- run required
+- task id (if run)
+- locked invariants
+- confirmed shared contract
+- prompt plan
+- chat topology
+- scaffolder action
+- lane plan / packets if applicable
+- memory update targets
+- next exact step
+
+At reconciliation / closeout, Atlas must return:
+- reconciliation summary
+- contract drift check
+- checks summary
+- shared memory updates
+- final closeout
+- next exact step
 
 ## Special project guardrails
 

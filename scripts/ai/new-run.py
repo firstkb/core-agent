@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
-"""Scaffold a new coordinated run for Ramp Platform v108.
+"""Scaffold a new Atlas-coordinated run for Ramp Platform v108.
 
 This tool is mechanical only.
-Atlas / Control chooses the task id, primary mode, and active lanes.
-The script validates, stamps versions, and materializes the run files.
+Atlas / Control chooses whether a run is needed, the task id, the mode, and the active lanes.
+The script validates, reads versions from the automation manifest, and materializes the run files.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
-SCRIPT_VERSION = "1.0.0"
-SKILL_NAME = "ramp-conductor"
-SKILL_DISPLAY_NAME = "Atlas"
-SKILL_VERSION = "1.0.0"
-CONTROL_PROMPT_VERSION = "1.0.0"
-FRONTEND_PROMPT_VERSION = "1.0.0"
-BACKEND_PROMPT_VERSION = "1.0.0"
 TASK_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_[a-z0-9-]+_[a-z0-9]+(?:-[a-z0-9]+)*(?:-\d{2})?$")
-
-MODE_CHOICES = {
+RUN_MODE_CHOICES = {
     "FE_ONLY",
     "BE_ONLY",
     "CROSS_STACK_PARALLEL",
@@ -36,7 +30,7 @@ def parse_args() -> argparse.Namespace:
         description="Create a new run directory under platform/docs/ai/runs/<task-id>/"
     )
     parser.add_argument("--task-id", required=True, help="Task id chosen by Atlas / Control")
-    parser.add_argument("--mode", required=True, choices=sorted(MODE_CHOICES))
+    parser.add_argument("--mode", required=True, choices=sorted(RUN_MODE_CHOICES))
     parser.add_argument(
         "--lanes",
         default="",
@@ -44,7 +38,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--title", default="", help="Optional human-readable title")
     parser.add_argument("--goal", default="", help="Optional short goal")
-    parser.add_argument("--created-by", default="manual", help="Who initiated this run scaffolding")
+    parser.add_argument("--why-now", default="", help="Optional short why-now note")
+    parser.add_argument("--created-by", default="Atlas", help="Who initiated this run scaffolding")
     parser.add_argument("--force", action="store_true", help="Overwrite an existing run directory")
     parser.add_argument("--dry-run", action="store_true", help="Validate and print actions without writing files")
     return parser.parse_args()
@@ -53,7 +48,7 @@ def parse_args() -> argparse.Namespace:
 def normalize_lanes(raw: str) -> list[str]:
     if not raw.strip():
         return []
-    parts = []
+    parts: list[str] = []
     for item in raw.split(","):
         lane = item.strip().lower()
         if not lane:
@@ -112,87 +107,19 @@ def write_text(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def load_manifest(root: Path) -> dict:
+    manifest_path = root / "platform" / "docs" / "ai" / "automation-manifest.json"
+    if not manifest_path.exists():
+        raise SystemExit("automation-manifest.json not found. Apply the memory bundle first.")
+    return json.loads(read_text(manifest_path))
+
+
 def set_bullet_value(text: str, label: str, value: str) -> str:
     pattern = re.compile(rf"^(\-\s+{re.escape(label)}:)[^\n\r]*$", re.MULTILINE)
     new_text, count = pattern.subn(lambda m: f"{m.group(1)} {value}", text, count=1)
     if count == 0:
         raise ValueError(f"Could not find bullet field: {label}")
     return new_text
-
-
-def render_control_task(template: str, *, task_id: str, title: str, created_at: str, mode: str, lanes: list[str], created_by: str, goal: str) -> str:
-    rendered = template
-    rendered = set_bullet_value(rendered, "task_id", task_id)
-    rendered = set_bullet_value(rendered, "title", title)
-    rendered = set_bullet_value(rendered, "status", "draft")
-    rendered = set_bullet_value(rendered, "created_at", created_at)
-    rendered = set_bullet_value(rendered, "updated_at", created_at)
-    rendered = set_bullet_value(rendered, "created_by", created_by)
-    rendered = set_bullet_value(rendered, "task_id_source", "Atlas / Control")
-    rendered = set_bullet_value(rendered, "skill_name", SKILL_NAME)
-    rendered = set_bullet_value(rendered, "skill_display_name", SKILL_DISPLAY_NAME)
-    rendered = set_bullet_value(rendered, "skill_version", SKILL_VERSION)
-    rendered = set_bullet_value(rendered, "control_prompt_version", CONTROL_PROMPT_VERSION)
-    rendered = set_bullet_value(rendered, "frontend_prompt_version", FRONTEND_PROMPT_VERSION)
-    rendered = set_bullet_value(rendered, "backend_prompt_version", BACKEND_PROMPT_VERSION)
-    rendered = set_bullet_value(rendered, "primary_mode", mode)
-    rendered = set_bullet_value(rendered, "active_lanes", ", ".join(lanes) if lanes else "none")
-    execution_order = "frontend -> backend" if mode == "CROSS_STACK_SEQUENTIAL" else "parallel or control-defined"
-    if mode in {"FE_ONLY", "BE_ONLY"}:
-        execution_order = "single lane"
-    if mode == "RESEARCH_CONTRACT_LOCK":
-        execution_order = "research first"
-    rendered = set_bullet_value(rendered, "execution_order", execution_order)
-    rendered = set_bullet_value(rendered, "run_artifact_scope", f"platform/docs/ai/runs/{task_id}/")
-    rendered = set_bullet_value(rendered, "user_goal", goal)
-    for lane in lanes:
-        report_path = f"platform/docs/ai/runs/{task_id}/{lane}.md"
-        if lane == "frontend":
-            rendered = set_bullet_value(rendered, "report_path", report_path)
-            # replace only first FE report_path; BE below if present
-            # fields later are duplicated, so handle order via split marker.
-    # duplicate-field handling for FE/BE report_path etc
-    # do a more explicit second pass:
-    rendered = replace_second_occurrence(rendered, "report_path", f"platform/docs/ai/runs/{task_id}/backend.md") if "backend" in lanes else replace_second_occurrence(rendered, "report_path", "")
-    # first occurrence corresponds to FE
-    rendered = set_bullet_value(rendered, "report_path", f"platform/docs/ai/runs/{task_id}/frontend.md" if "frontend" in lanes else "")
-    rendered = set_bullet_value(rendered, "final_status", "draft")
-    rendered = set_bullet_value(rendered, "shared_memory_updates_applied", "not yet")
-    rendered = set_bullet_value(rendered, "archive_recommendation", "archive only after closeout and inactivity")
-    rendered = set_bullet_value(rendered, "next_exact_step", "Control to fill packets and launch active lanes")
-    return rendered
-
-
-def replace_second_occurrence(text: str, label: str, value: str) -> str:
-    pattern = re.compile(rf"^(\-\s+{re.escape(label)}:)[^\n\r]*$", re.MULTILINE)
-    matches = list(pattern.finditer(text))
-    if len(matches) < 2:
-        return text
-    match = matches[1]
-    start, end = match.span()
-    return text[:start] + f"- {label}: {value}" + text[end:]
-
-
-def render_lane_file(template: str, *, task_id: str, lane: str, created_at: str) -> str:
-    prompt_version = FRONTEND_PROMPT_VERSION if lane == "frontend" else BACKEND_PROMPT_VERSION
-    rendered = template
-    rendered = set_bullet_value(rendered, "task_id", task_id)
-    rendered = set_bullet_value(rendered, "lane", lane)
-    rendered = set_bullet_value(rendered, "status", "active")
-    rendered = set_bullet_value(rendered, "report_time", created_at)
-    rendered = set_bullet_value(rendered, "prompt_version", prompt_version)
-    rendered = set_bullet_value(rendered, "control_prompt_version", CONTROL_PROMPT_VERSION)
-    rendered = set_bullet_value(rendered, "author", "Control / Atlas")
-    rendered = set_bullet_value(rendered, "expected_report_path", f"platform/docs/ai/runs/{task_id}/{lane}.md")
-    rendered = set_bullet_value(rendered, "recommended_next_control_action", "Wait for lane work or clarify blockers")
-    rendered = set_bullet_value(rendered, "ready_for_reconciliation", "no")
-    rendered = set_bullet_value(rendered, "ready_for_closeout", "no")
-    rendered = set_bullet_value(rendered, "next_lane_step", "Control to fill packet snapshot before implementation begins")
-    return rendered
-
-
-def render_final_file(task_id: str, created_at: str) -> str:
-    return f"""# FINAL CLOSEOUT\n\n## Metadata\n- task_id: {task_id}\n- status: draft | reconciled | closed | superseded\n- created_at: {created_at}\n- updated_at: {created_at}\n- skill_name: {SKILL_NAME}\n- skill_display_name: {SKILL_DISPLAY_NAME}\n- skill_version: {SKILL_VERSION}\n- control_prompt_version: {CONTROL_PROMPT_VERSION}\n\n## Reconciliation\n- summary:\n- contract_drift_found:\n- checks_summary:\n- shared_memory_updates_applied:\n- unresolved_risks:\n- archive_recommendation:\n- next_exact_step:\n"""
 
 
 def title_from_task_id(task_id: str) -> str:
@@ -204,12 +131,99 @@ def title_from_task_id(task_id: str) -> str:
     return f"[{scope}] {pretty}"
 
 
+def chat_topology(mode: str) -> str:
+    return {
+        "FE_ONLY": "CONTROL_PLUS_FE",
+        "BE_ONLY": "CONTROL_PLUS_BE",
+        "CROSS_STACK_PARALLEL": "CONTROL_PLUS_FE_AND_BE",
+        "CROSS_STACK_SEQUENTIAL": "CONTROL_PLUS_FE_AND_BE",
+        "RESEARCH_CONTRACT_LOCK": "CONTROL_ONLY",
+    }[mode]
+
+
+def execution_order(mode: str) -> str:
+    return {
+        "FE_ONLY": "single lane",
+        "BE_ONLY": "single lane",
+        "CROSS_STACK_PARALLEL": "parallel",
+        "CROSS_STACK_SEQUENTIAL": "control-defined sequence",
+        "RESEARCH_CONTRACT_LOCK": "research first",
+    }[mode]
+
+
+def render_control_task(template: str, *, task_id: str, title: str, created_at: str, mode: str, lanes: list[str], created_by: str, goal: str, why_now: str, manifest: dict) -> str:
+    prompts = manifest["prompts"]
+    skill = manifest["skill"]
+
+    rendered = template
+    rendered = set_bullet_value(rendered, "task_id", task_id)
+    rendered = set_bullet_value(rendered, "title", title)
+    rendered = set_bullet_value(rendered, "status", "draft")
+    rendered = set_bullet_value(rendered, "created_at", created_at)
+    rendered = set_bullet_value(rendered, "updated_at", created_at)
+    rendered = set_bullet_value(rendered, "created_by", created_by)
+    rendered = set_bullet_value(rendered, "skill_name", skill["name"])
+    rendered = set_bullet_value(rendered, "skill_display_name", skill["display_name"])
+    rendered = set_bullet_value(rendered, "skill_version", skill["version"])
+    rendered = set_bullet_value(rendered, "control_prompt_version", prompts["control"]["version"])
+    rendered = set_bullet_value(rendered, "frontend_prompt_version", prompts["frontend"]["version"])
+    rendered = set_bullet_value(rendered, "backend_prompt_version", prompts["backend"]["version"])
+    rendered = set_bullet_value(rendered, "run_required", "yes")
+    rendered = set_bullet_value(rendered, "primary_mode", mode)
+    rendered = set_bullet_value(rendered, "recommended_chat_topology", chat_topology(mode))
+    rendered = set_bullet_value(rendered, "active_lanes", ", ".join(lanes) if lanes else "none")
+    rendered = set_bullet_value(rendered, "execution_order", execution_order(mode))
+    rendered = set_bullet_value(rendered, "scaffolder_action", f"created via new-run {manifest['scaffolder']['version']}")
+    rendered = set_bullet_value(rendered, "run_artifact_scope", f"platform/docs/ai/runs/{task_id}/")
+    rendered = set_bullet_value(rendered, "goal", goal)
+    rendered = set_bullet_value(rendered, "why_now", why_now)
+    rendered = set_bullet_value(rendered, "lane_plan", f"mode={mode}; lanes={', '.join(lanes) if lanes else 'none'}")
+    rendered = set_bullet_value(rendered, "memory_update_targets", "current-state.md | decisions-log.md | relevant modules/*.md | canonical-docs.md if authority changed")
+    rendered = set_bullet_value(rendered, "next_control_step", "Atlas to fill packets, launch the planned lane topology, and reconcile outputs")
+
+    if "frontend" in lanes:
+        rendered = set_bullet_value(rendered, "fe_expected_report_path", f"platform/docs/ai/runs/{task_id}/frontend.md")
+    if "backend" in lanes:
+        rendered = set_bullet_value(rendered, "be_expected_report_path", f"platform/docs/ai/runs/{task_id}/backend.md")
+
+    rendered = set_bullet_value(rendered, "final_status", "draft")
+    rendered = set_bullet_value(rendered, "shared_memory_updates_applied", "not yet")
+    rendered = set_bullet_value(rendered, "archive_recommendation", "archive only after closeout and inactivity")
+    return rendered
+
+
+def render_lane_file(template: str, *, task_id: str, lane: str, created_at: str, manifest: dict) -> str:
+    prompt_version = manifest["prompts"]["frontend" if lane == "frontend" else "backend"]["version"]
+    control_prompt_version = manifest["prompts"]["control"]["version"]
+    rendered = template
+    rendered = set_bullet_value(rendered, "task_id", task_id)
+    rendered = set_bullet_value(rendered, "lane", lane)
+    rendered = set_bullet_value(rendered, "status", "active")
+    rendered = set_bullet_value(rendered, "report_time", created_at)
+    rendered = set_bullet_value(rendered, "prompt_version", prompt_version)
+    rendered = set_bullet_value(rendered, "control_prompt_version", control_prompt_version)
+    rendered = set_bullet_value(rendered, "author", manifest["skill"]["display_name"])
+    rendered = set_bullet_value(rendered, "expected_report_path", f"platform/docs/ai/runs/{task_id}/{lane}.md")
+    rendered = set_bullet_value(rendered, "memory_delta_expectation", "propose shared-memory deltas only; Atlas finalizes")
+    rendered = set_bullet_value(rendered, "ready_for_reconciliation", "no")
+    rendered = set_bullet_value(rendered, "ready_for_closeout", "no")
+    rendered = set_bullet_value(rendered, "recommended_next_control_action", "Wait for lane work or clarify blockers")
+    return rendered
+
+
+def render_final_file(task_id: str, created_at: str, manifest: dict) -> str:
+    skill = manifest["skill"]
+    control_version = manifest["prompts"]["control"]["version"]
+    return f"""# FINAL CLOSEOUT\n\n## Metadata\n- task_id: {task_id}\n- status: draft | reconciled | closed | superseded\n- created_at: {created_at}\n- updated_at: {created_at}\n- skill_name: {skill['name']}\n- skill_display_name: {skill['display_name']}\n- skill_version: {skill['version']}\n- control_prompt_version: {control_version}\n\n## Reconciliation\n- summary:\n- contract_drift_found:\n- checks_summary:\n- shared_memory_updates_applied:\n- unresolved_risks:\n- archive_recommendation:\n- next_exact_step:\n"""
+
+
 def main() -> int:
     args = parse_args()
     lanes = validate_mode_and_lanes(args.mode, normalize_lanes(args.lanes))
     ensure_task_id(args.task_id)
 
     root = repo_root()
+    manifest = load_manifest(root)
     runs_dir = root / "platform" / "docs" / "ai" / "runs"
     run_dir = runs_dir / args.task_id
     task_template_path = root / "platform" / "docs" / "ai" / "templates" / "control-task.md"
@@ -224,6 +238,7 @@ def main() -> int:
     created_at = dt.datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %z")
     title = args.title.strip() or title_from_task_id(args.task_id)
     goal = args.goal.strip()
+    why_now = args.why_now.strip()
 
     task_md = render_control_task(
         read_text(task_template_path),
@@ -234,10 +249,18 @@ def main() -> int:
         lanes=lanes,
         created_by=args.created_by,
         goal=goal,
+        why_now=why_now,
+        manifest=manifest,
     )
-    final_md = render_final_file(args.task_id, created_at)
+    final_md = render_final_file(args.task_id, created_at, manifest)
     lane_files = {
-        f"{lane}.md": render_lane_file(read_text(lane_template_path), task_id=args.task_id, lane=lane, created_at=created_at)
+        f"{lane}.md": render_lane_file(
+            read_text(lane_template_path),
+            task_id=args.task_id,
+            lane=lane,
+            created_at=created_at,
+            manifest=manifest,
+        )
         for lane in lanes
     }
 
@@ -250,7 +273,6 @@ def main() -> int:
         return 0
 
     if run_dir.exists() and args.force:
-        import shutil
         shutil.rmtree(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -263,7 +285,8 @@ def main() -> int:
     print(f"- task_id: {args.task_id}")
     print(f"- mode: {args.mode}")
     print(f"- lanes: {', '.join(lanes) if lanes else 'none'}")
-    print("Next step: Atlas / Control should fill packets and launch the active lanes.")
+    print("- versions sourced from: platform/docs/ai/automation-manifest.json")
+    print("Next step: Atlas should fill packets and launch the active lane topology.")
     return 0
 
 

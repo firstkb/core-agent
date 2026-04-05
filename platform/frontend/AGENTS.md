@@ -12,8 +12,15 @@ Read first:
 
 ## Lane orchestration rule
 
-- For cross-stack, multi-session, contract-sensitive, auth/bootstrap-sensitive, package-boundary, or collection-table extraction work, start with `$ramp-conductor`.
-- Use this lane directly only when the task is clearly frontend-local or when Control already issued a frontend packet.
+During the v1 pilot, the preferred entrypoint for new frontend work is `Atlas` (`$ramp-conductor`).
+Atlas may route the task to:
+- direct frontend no-run work
+- `FE_ONLY` run-backed work
+- cross-stack coordinated work
+
+Use this lane directly only when:
+- the task is obviously tiny and frontend-local
+- or Atlas already issued a frontend packet
 
 ## Canonical app surfaces
 

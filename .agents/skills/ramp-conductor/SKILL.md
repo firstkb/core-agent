@@ -4,7 +4,7 @@ description: Use this skill as the default intake and routing layer for Ramp Pla
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.2.0
+Skill version: 1.3.0
 Human display name: Atlas
 
 Purpose:
@@ -18,11 +18,25 @@ Invocation:
 
 ## Universal intake rule
 
-During the v1 pilot, Atlas is the preferred first touch for new work under `platform/`.
+During the v1 pilot, Atlas is the default first touch for new work under `platform/`.
 Atlas may still decide that the cheapest correct path is a direct one-lane task with no run artifacts.
 
-Direct lane bypass is still acceptable when the task is obviously tiny, clearly local, and you intentionally want to skip orchestration overhead.
-If routing is unclear, start with Atlas.
+Direct lane bypass is still acceptable only as an intentional fast-path for obviously tiny local work.
+If routing, memory impact, or task duration is unclear, start with Atlas.
+
+## Preferred intake brief
+
+Atlas works best when the task is stated in this shape:
+- `Task` — what should be changed
+- `Context` — what exists today
+- `Desired outcome` — what success looks like
+- `Constraints / invariants` — what must not break
+- `Candidate V1` — optional proposed first implementation
+- `Open questions` — optional unknowns Atlas should lock before coding
+- `Out of scope` — what should not be touched
+- `Need from Atlas` — route, run/no-run, task-id, prompt plan, chat count, and next step
+
+Atlas should still accept messier briefs, but when details are present it should preserve them rather than rewriting them away.
 
 ## Minimal shared reads
 
@@ -191,6 +205,13 @@ Use these repository files as stable base contracts:
 - `platform/docs/ai/templates/lane-report.md`
 
 Generate lane packets, not entirely new base prompts.
+
+## Version synchronization rule
+
+Use `platform/docs/ai/automation-manifest.json` as the authoritative editable version source.
+Mirrored version fields in prompts, templates, and this skill file must stay synced through:
+- `python3 scripts/ai/automation_versions.py --check`
+- `python3 scripts/ai/automation_versions.py --write`
 
 ## Lane packet rules
 

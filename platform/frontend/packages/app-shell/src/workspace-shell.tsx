@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 
 import { useTranslation } from "@platform/i18n";
@@ -20,7 +20,14 @@ import {
   TooltipTrigger,
 } from "@platform/ui-kit";
 
+import {
+  getWorkspaceShellSidebarState,
+  type WorkspaceShellLayout,
+} from "./workspace-shell-sidebar-state";
+
 const mobileViewportQuery = "(max-width: 960px)";
+const collapsedRailHoverPreviewOpenDelayMs = 140;
+const collapsedRailHoverPreviewCloseDelayMs = 160;
 
 type WorkspaceNavItem = {
   id?: string;
@@ -46,7 +53,6 @@ type WorkspaceRailItem = {
   onSelect?: () => void;
 };
 
-type WorkspaceShellLayout = "classic" | "rail";
 type WorkspaceShellTheme = "light" | "dark";
 type WorkspaceSurfaceTone = "admin" | "workspace" | "neutral";
 
@@ -73,6 +79,8 @@ type WorkspaceShellProps = {
   railUtilities?: WorkspaceRailItem[];
   sidebarFooter?: ReactNode;
   sidebarHeader?: ReactNode;
+  // Temporarily expands the collapsed desktop rail on hover without changing pinned collapse state.
+  enableCollapsedRailHoverPreview?: boolean;
   showRailCollapse?: boolean;
   showRailThemeToggle?: boolean;
   themeStorageKey?: string;
@@ -102,14 +110,17 @@ export function WorkspaceShell({
   railUtilities = [],
   sidebarFooter,
   sidebarHeader,
+  enableCollapsedRailHoverPreview = false,
   showRailCollapse = false,
   showRailThemeToggle = false,
   themeStorageKey = "workspace-shell-theme",
   children,
 }: WorkspaceShellProps) {
   const { t } = useTranslation();
+  const collapsedRailHoverPreviewTimeoutRef = useRef<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCollapsedRailHoverPreviewOpen, setIsCollapsedRailHoverPreviewOpen] = useState(false);
   const [isHeaderElevated, setIsHeaderElevated] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() => {
     if (typeof window === "undefined") {
@@ -119,7 +130,50 @@ export function WorkspaceShell({
     return window.matchMedia(mobileViewportQuery).matches;
   });
   const [themeMode, setThemeMode] = useState<WorkspaceShellTheme>("light");
-  const shellIsSidebarCollapsed = layout === "rail" && !isMobileViewport && isSidebarCollapsed;
+  const {
+    isCollapsedRailHoverPreviewEnabled,
+    isCollapsedRailHoverPreviewVisible,
+    shellIsSidebarCollapsed,
+  } = getWorkspaceShellSidebarState({
+    enableCollapsedRailHoverPreview,
+    isCollapsedRailHoverPreviewOpen,
+    isMobileViewport,
+    isSidebarCollapsed,
+    layout,
+  });
+
+  function clearCollapsedRailHoverPreviewTimeout() {
+    if (collapsedRailHoverPreviewTimeoutRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(collapsedRailHoverPreviewTimeoutRef.current);
+    collapsedRailHoverPreviewTimeoutRef.current = null;
+  }
+
+  function closeSidebarSurfaces() {
+    clearCollapsedRailHoverPreviewTimeout();
+    setIsCollapsedRailHoverPreviewOpen(false);
+    setIsSidebarOpen(false);
+  }
+
+  function scheduleCollapsedRailHoverPreview(nextOpen: boolean) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    clearCollapsedRailHoverPreviewTimeout();
+
+    if (!isCollapsedRailHoverPreviewEnabled) {
+      setIsCollapsedRailHoverPreviewOpen(false);
+      return;
+    }
+
+    collapsedRailHoverPreviewTimeoutRef.current = window.setTimeout(() => {
+      setIsCollapsedRailHoverPreviewOpen(nextOpen);
+      collapsedRailHoverPreviewTimeoutRef.current = null;
+    }, nextOpen ? collapsedRailHoverPreviewOpenDelayMs : collapsedRailHoverPreviewCloseDelayMs);
+  }
 
   useEffect(() => {
     if (layout !== "rail") {
@@ -169,6 +223,21 @@ export function WorkspaceShell({
       }
     };
   }, [layout]);
+
+  useEffect(() => {
+    return () => {
+      clearCollapsedRailHoverPreviewTimeout();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isCollapsedRailHoverPreviewEnabled) {
+      return;
+    }
+
+    clearCollapsedRailHoverPreviewTimeout();
+    setIsCollapsedRailHoverPreviewOpen(false);
+  }, [isCollapsedRailHoverPreviewEnabled]);
 
   useEffect(() => {
     if (!showRailThemeToggle) {
@@ -265,7 +334,7 @@ export function WorkspaceShell({
       window.location.assign(item.href);
     }
 
-    setIsSidebarOpen(false);
+    closeSidebarSurfaces();
   }
 
   function handleNavigation(
@@ -278,7 +347,7 @@ export function WorkspaceShell({
       return;
     }
 
-    setIsSidebarOpen(false);
+    closeSidebarSurfaces();
   }
 
   function renderRailActionButton(
@@ -301,7 +370,6 @@ export function WorkspaceShell({
 
               item.onSelect?.();
             }}
-            title={item.label}
             type="button"
           >
             {item.icon ? (
@@ -432,7 +500,6 @@ export function WorkspaceShell({
                   aria-label={railBrandTitle}
                   className="workspace-shell__rail-brand workspace-shell__rail-brand--interactive"
                   onClick={railBrandOnSelect}
-                  title={railBrandTitle}
                   type="button"
                 >
                   {railBrandContent}
@@ -522,7 +589,7 @@ export function WorkspaceShell({
           <button
             aria-label={t("shell.aria.closeNavigation")}
             className="workspace-shell__sidebar-close"
-            onClick={() => setIsSidebarOpen(false)}
+            onClick={closeSidebarSurfaces}
             type="button"
           >
             <CloseIcon />
@@ -564,9 +631,17 @@ export function WorkspaceShell({
 
   return (
     <AppShell
-      className={`workspace-shell workspace-shell--${layout}${isMobileViewport ? " workspace-shell--mobile" : ""}${isSidebarOpen ? " workspace-shell--sidebar-open" : ""}${shellIsSidebarCollapsed ? " workspace-shell--sidebar-collapsed" : ""}`}
+      className={`workspace-shell workspace-shell--${layout}${isMobileViewport ? " workspace-shell--mobile" : ""}${isSidebarOpen ? " workspace-shell--sidebar-open" : ""}${shellIsSidebarCollapsed ? " workspace-shell--sidebar-collapsed" : ""}${isCollapsedRailHoverPreviewEnabled ? " workspace-shell--hover-preview-enabled" : ""}${isCollapsedRailHoverPreviewVisible ? " workspace-shell--sidebar-preview-open" : ""}`}
     >
-      <AppShellSidebar className="workspace-shell__sidebar">
+      <AppShellSidebar
+        className="workspace-shell__sidebar"
+        onMouseEnter={isCollapsedRailHoverPreviewEnabled
+          ? () => scheduleCollapsedRailHoverPreview(true)
+          : undefined}
+        onMouseLeave={isCollapsedRailHoverPreviewEnabled
+          ? () => scheduleCollapsedRailHoverPreview(false)
+          : undefined}
+      >
         {renderRailNavigation()}
         {renderSidebarPanel()}
       </AppShellSidebar>
@@ -574,7 +649,7 @@ export function WorkspaceShell({
       <button
         aria-label={t("shell.aria.closeNavigation")}
         className="workspace-shell__backdrop"
-        onClick={() => setIsSidebarOpen(false)}
+        onClick={closeSidebarSurfaces}
         type="button"
       />
 
@@ -585,6 +660,9 @@ export function WorkspaceShell({
               aria-label={t("shell.aria.openNavigation")}
               className="workspace-shell__sidebar-toggle"
               onClick={() => {
+                clearCollapsedRailHoverPreviewTimeout();
+                setIsCollapsedRailHoverPreviewOpen(false);
+
                 if (layout === "rail") {
                   setIsSidebarCollapsed(false);
                 }

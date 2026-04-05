@@ -11,6 +11,10 @@ platform/*
 !platform/frontend/**
 !platform/backend/**
 !platform/backend/
+!platform/backend/AGENTS.md
+!platform/backend/README.md
+!platform/backend/docs/
+!platform/backend/docs/**
 platform/backend/certs/*.pem
 platform/backend/certs/*.key
 platform/backend/certs/*.crt

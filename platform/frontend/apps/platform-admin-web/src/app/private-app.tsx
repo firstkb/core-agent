@@ -219,6 +219,7 @@ export function PrivateApp({
     <>
       <WorkspaceShell
         brand={t("admin.shell.brand")}
+        enableCollapsedRailHoverPreview
         layout="rail"
         showHeaderSurfaceMarker={false}
         showSidebarSurfaceMarker={false}

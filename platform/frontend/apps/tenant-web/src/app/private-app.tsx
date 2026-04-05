@@ -239,6 +239,7 @@ export function PrivateApp({
     <>
       <WorkspaceShell
         brand={shellBrand}
+        enableCollapsedRailHoverPreview
         headerActions={
           <div className="workspace-shell__header-utility-bar">
             <Menu align="end">

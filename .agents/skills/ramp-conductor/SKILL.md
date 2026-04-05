@@ -1,15 +1,15 @@
 ---
 name: ramp-conductor
-description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should stay in one direct frontend/backend lane without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, reconciliation, and final shared memory updates.
+description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should stay in one direct frontend/backend lane without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, ready-to-paste lane prompts, reconciliation, and final shared memory updates.
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.3.0
+Skill version: 1.4.0
 Human display name: Atlas
 
 Purpose:
 Atlas is the universal product-task conductor for Ramp Platform v108.
-Use it to intake work, read the smallest sufficient memory slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, reconcile lane reports, and finalize shared memory updates.
+Use it to intake work, read the smallest sufficient memory slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
 - Use explicitly with `$ramp-conductor`.
@@ -34,7 +34,7 @@ Atlas works best when the task is stated in this shape:
 - `Candidate V1` — optional proposed first implementation
 - `Open questions` — optional unknowns Atlas should lock before coding
 - `Out of scope` — what should not be touched
-- `Need from Atlas` — route, run/no-run, task-id, prompt plan, chat count, and next step
+- `Need from Atlas` — route, run/no-run, task-id, prompt plan, chat count, ready chat prompts, and next step
 
 Atlas should still accept messier briefs, but when details are present it should preserve them rather than rewriting them away.
 
@@ -64,11 +64,12 @@ Use one of these when the task is small enough that orchestration cost would exc
 - `DIRECT_FRONTEND_NO_RUN`
 - `DIRECT_BACKEND_NO_RUN`
 
-For a direct no-run route, Atlas should still return:
+For a direct no-run route, Atlas must still return:
 - locked invariants
 - required reads
 - chosen prompt (`full` or `compact`)
 - recommended chat count
+- a ready-to-paste direct lane launch prompt
 - next exact step
 
 No `task-id` or run folder is required for a no-run route.
@@ -104,6 +105,24 @@ Chat topology rules:
 - `CROSS_STACK_PARALLEL` -> `1` control chat + `1` FE lane + `1` BE lane
 - `CROSS_STACK_SEQUENTIAL` -> `1` control chat + lanes opened in the required order
 - `RESEARCH_CONTRACT_LOCK` -> `1` control chat until the contract is locked
+
+## Prompt delivery contract
+
+Whenever Atlas decides that one or more lane chats should be opened, Atlas must provide the ready-to-paste launch prompt(s) in the same response.
+Do not make the user ask a second time for the FE or BE prompt.
+
+For each required lane prompt, Atlas must:
+- choose the base prompt file and version
+- name the exact run file path when a run exists
+- state required reads in order
+- restate allowed scope and out-of-scope boundaries
+- state required checks
+- state the expected lane return shape
+- remind the lane that Atlas owns final shared-memory updates
+
+For run-backed lanes, Atlas must also write the same launch prompt into the corresponding lane file under `## Ready Chat Launch Prompt` and set `launch_prompt_status: ready`.
+
+For direct no-run routes, Atlas must return the direct launch prompt inline in the control response.
 
 ## Task-id rules
 
@@ -147,8 +166,8 @@ For run-backed work create or update:
 
 File roles:
 - `task.md` = control contract + run state
-- `frontend.md` = FE packet snapshot + FE lane report
-- `backend.md` = BE packet snapshot + BE lane report
+- `frontend.md` = FE launch prompt + FE packet snapshot + FE lane report
+- `backend.md` = BE launch prompt + BE packet snapshot + BE lane report
 - `final.md` = reconciliation + closeout
 
 Do not create extra lane report files unless there is a strong reason.
@@ -191,6 +210,7 @@ Every `task.md` must record:
 - `confirmed_shared_contract`
 - `lane_plan`
 - `memory_update_targets`
+- `prompt_delivery_status`
 - `next_control_step`
 
 ## Base prompt and template contracts
@@ -204,7 +224,7 @@ Use these repository files as stable base contracts:
 - `platform/docs/ai/templates/control-task.md`
 - `platform/docs/ai/templates/lane-report.md`
 
-Generate lane packets, not entirely new base prompts.
+Generate lane packets and launch prompts, not entirely new base prompts.
 
 ## Version synchronization rule
 
@@ -264,7 +284,7 @@ After receiving lane reports:
 
 ## Shared memory ownership
 
-Atlas / Control owns final shared-memory updates:
+Control owns final shared-memory updates:
 - `platform/docs/ai/current-state.md`
 - `platform/docs/ai/decisions-log.md`
 - `platform/docs/ai/modules/*.md`
@@ -281,24 +301,22 @@ A run may be closed only when:
 - the next exact step is written, or the task is marked complete
 
 Closed runs are historical execution artifacts, not canonical memory.
-Move closed or superseded runs out of `platform/docs/ai/runs/` once they stop being part of active work.
 
-## Required intake output
+## Required output
 
-At intake, Atlas must return this structure:
+At intake use this structure:
 - route decision
 - run required
-- task id (if run)
-- locked invariants
-- confirmed shared contract
+- task id
 - prompt plan
 - chat topology
 - scaffolder action
-- lane plan / packets if applicable
-- memory update targets
-- next exact step
+- lane plan / packets
+- ready-to-paste lane prompt(s)
+- memory targets
+- next control step
 
-At reconciliation / closeout, Atlas must return:
+At reconciliation / closeout use:
 - reconciliation summary
 - contract drift check
 - checks summary

@@ -1,6 +1,6 @@
 ---
 template_id: control-task
-template_version: 1.2.0
+template_version: 1.3.0
 status: active
 owner: ramp-platform-v108
 last_updated: 2026-04-05
@@ -68,6 +68,13 @@ last_updated: 2026-04-05
 - be_required_reads:
 - be_required_checks:
 - be_expected_report_path:
+
+## Prompt Delivery
+- prompt_delivery_status: pending | ready | delivered
+- frontend_launch_prompt_path:
+- backend_launch_prompt_path:
+- direct_launch_prompt_required:
+- prompt_delivery_notes:
 
 ## Memory and Risk
 - memory_sources_read:

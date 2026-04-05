@@ -24,6 +24,127 @@ These are operational behavior contracts, not canonical product memory.
 - ramp-conductor skill
 
 ### Version
+- 1.4.0
+
+### Status
+- active
+
+### Changed
+- made ready-to-paste lane launch prompts a first-class Atlas responsibility
+- required Atlas to return lane launch prompts in the same routing response
+- required Atlas to write the same launch prompts into run lane files
+- clarified that direct no-run routes must still return a ready direct lane prompt
+
+### Why
+- remove the extra user step of asking Atlas again for the FE/BE bootstrap prompt after routing is already decided
+
+### Migration impact
+- new Atlas intake responses should contain `Ready Chat Prompts`
+- run-backed lane files should move from launch-prompt stub to launch-prompt ready before the lane chat is opened
+
+---
+
+## 2026-04-05
+
+### Component
+- control-chat prompt
+
+### Version
+- 1.4.0
+
+### Status
+- active
+
+### Changed
+- added explicit ready launch prompt contract
+- updated output contract to include `Ready Chat Prompts`
+- required Atlas to copy launch prompts into lane files for run-backed work
+
+### Why
+- make Atlas routing responses directly actionable without a second control exchange
+
+### Migration impact
+- control responses now include copy-paste lane bootstrap prompts
+
+---
+
+## 2026-04-05
+
+### Component
+- control-task template
+
+### Version
+- 1.3.0
+
+### Status
+- active
+
+### Changed
+- added prompt delivery tracking fields
+- added launch prompt path fields
+
+### Why
+- let Atlas track whether lane launch prompts were generated and where they live
+
+### Migration impact
+- new runs should use the updated task schema
+
+---
+
+## 2026-04-05
+
+### Component
+- lane-report template
+
+### Version
+- 1.3.0
+
+### Status
+- active
+
+### Changed
+- added launch metadata section
+- added `Ready Chat Launch Prompt` block
+- kept packet snapshot and lane return report in the same file
+
+### Why
+- make each lane file the single handoff surface for launch + execution + return report
+
+### Migration impact
+- new lane files now start with launch-prompt metadata and a prompt block
+
+---
+
+## 2026-04-05
+
+### Component
+- new-run scaffolder
+
+### Version
+- 1.3.0
+
+### Status
+- active
+
+### Changed
+- stamps launch-metadata fields into new lane files
+- sets launch-prompt placeholders to pending instead of pretending the prompt is already rendered
+
+### Why
+- keep the scaffolder mechanical while still giving Atlas a predictable place to write the final launch prompt
+
+### Migration impact
+- Atlas should fill the lane prompt after scaffolding, not ask the user to do it manually
+
+---
+
+
+## 2026-04-05
+
+### Component
+- ramp-conductor skill
+
+### Version
 - 1.3.0
 
 ### Status

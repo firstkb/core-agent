@@ -1,6 +1,6 @@
 ---
 template_id: lane-report
-template_version: 1.2.0
+template_version: 1.3.0
 status: active
 owner: ramp-platform-v108
 last_updated: 2026-04-05
@@ -16,6 +16,17 @@ last_updated: 2026-04-05
 - prompt_version:
 - control_prompt_version:
 - author:
+
+## Launch Metadata
+- base_prompt_file:
+- base_prompt_version:
+- prompt_variant: full | compact
+- launch_prompt_status: pending | ready | used
+
+## Ready Chat Launch Prompt
+```text
+Atlas must replace this stub with a ready-to-paste lane launch prompt before the lane chat is opened.
+```
 
 ## Control Packet Snapshot
 - assigned_goal:

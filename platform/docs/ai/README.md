@@ -21,6 +21,7 @@ Atlas decides:
 - which prompt family is appropriate
 - how many chats should be opened
 - whether the scaffolder should materialize run files
+- the ready-to-paste launch prompt for each new lane chat
 
 Atlas may still decide that the best answer is a direct no-run frontend or backend lane.
 The point is not to force heavy orchestration for everything.
@@ -69,7 +70,7 @@ Read only the modules that matter for the task.
 
 These are stable base prompts.
 They are operational contracts, not project truth.
-Atlas generates routing decisions and packets on top of them.
+Atlas generates routing decisions, lane packets, and ready-to-paste lane launch prompts on top of them.
 
 ### Layer 5 — templates
 

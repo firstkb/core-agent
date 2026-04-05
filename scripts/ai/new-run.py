@@ -179,12 +179,16 @@ def render_control_task(template: str, *, task_id: str, title: str, created_at: 
     rendered = set_bullet_value(rendered, "why_now", why_now)
     rendered = set_bullet_value(rendered, "lane_plan", f"mode={mode}; lanes={', '.join(lanes) if lanes else 'none'}")
     rendered = set_bullet_value(rendered, "memory_update_targets", "current-state.md | decisions-log.md | relevant modules/*.md | canonical-docs.md if authority changed")
-    rendered = set_bullet_value(rendered, "next_control_step", "Atlas to fill packets, launch the planned lane topology, and reconcile outputs")
+    rendered = set_bullet_value(rendered, "prompt_delivery_status", "pending")
+    rendered = set_bullet_value(rendered, "direct_launch_prompt_required", "no")
+    rendered = set_bullet_value(rendered, "next_control_step", "Atlas to fill packets, render ready lane prompts, launch the planned lane topology, and reconcile outputs")
 
     if "frontend" in lanes:
         rendered = set_bullet_value(rendered, "fe_expected_report_path", f"platform/docs/ai/runs/{task_id}/frontend.md")
+        rendered = set_bullet_value(rendered, "frontend_launch_prompt_path", f"platform/docs/ai/runs/{task_id}/frontend.md#ready-chat-launch-prompt")
     if "backend" in lanes:
         rendered = set_bullet_value(rendered, "be_expected_report_path", f"platform/docs/ai/runs/{task_id}/backend.md")
+        rendered = set_bullet_value(rendered, "backend_launch_prompt_path", f"platform/docs/ai/runs/{task_id}/backend.md#ready-chat-launch-prompt")
 
     rendered = set_bullet_value(rendered, "final_status", "draft")
     rendered = set_bullet_value(rendered, "shared_memory_updates_applied", "not yet")
@@ -193,7 +197,9 @@ def render_control_task(template: str, *, task_id: str, title: str, created_at: 
 
 
 def render_lane_file(template: str, *, task_id: str, lane: str, created_at: str, manifest: dict) -> str:
-    prompt_version = manifest["prompts"]["frontend" if lane == "frontend" else "backend"]["version"]
+    prompt_key = "frontend" if lane == "frontend" else "backend"
+    prompt_version = manifest["prompts"][prompt_key]["version"]
+    prompt_file = manifest["prompts"][prompt_key]["file"]
     control_prompt_version = manifest["prompts"]["control"]["version"]
     rendered = template
     rendered = set_bullet_value(rendered, "task_id", task_id)
@@ -203,6 +209,10 @@ def render_lane_file(template: str, *, task_id: str, lane: str, created_at: str,
     rendered = set_bullet_value(rendered, "prompt_version", prompt_version)
     rendered = set_bullet_value(rendered, "control_prompt_version", control_prompt_version)
     rendered = set_bullet_value(rendered, "author", manifest["skill"]["display_name"])
+    rendered = set_bullet_value(rendered, "base_prompt_file", prompt_file)
+    rendered = set_bullet_value(rendered, "base_prompt_version", prompt_version)
+    rendered = set_bullet_value(rendered, "prompt_variant", "full")
+    rendered = set_bullet_value(rendered, "launch_prompt_status", "pending")
     rendered = set_bullet_value(rendered, "expected_report_path", f"platform/docs/ai/runs/{task_id}/{lane}.md")
     rendered = set_bullet_value(rendered, "memory_delta_expectation", "propose shared-memory deltas only; Atlas finalizes")
     rendered = set_bullet_value(rendered, "ready_for_reconciliation", "no")

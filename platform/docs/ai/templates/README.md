@@ -15,7 +15,7 @@ Use them only when the current workflow step needs a structured artifact.
 - `chat-start-backend.md` — backend addendum for chat bootstrap
 - `chat-start-frontend.md` — frontend addendum for chat bootstrap
 - `control-task.md` — Atlas-owned task contract and lane packet scaffold for run-backed work
-- `lane-report.md` — FE/BE lane file scaffold that combines packet snapshot and lane return report
+- `lane-report.md` — FE/BE lane file scaffold that combines launch prompt, packet snapshot, and lane return report
 
 ## Use rule
 

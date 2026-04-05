@@ -42,7 +42,7 @@ They are operational behavior contracts.
 
 ## Selection rules
 
-Atlas chooses the prompt plan.
+Atlas chooses the prompt plan and must emit the ready-to-paste lane launch prompt when a new lane chat is needed.
 Use these defaults:
 
 - new task and routing unclear -> start with Atlas
@@ -61,4 +61,4 @@ Prompt files may refer to either form, but technical automation should continue 
 
 ## Atlas intake note
 
-For new platform tasks, start with Atlas. Atlas decides run/no-run, task-id, prompt plan, and chat topology. The lane prompts are execution prompts, not intake prompts.
+For new platform tasks, start with Atlas. Atlas decides run/no-run, task-id, prompt plan, and chat topology. The lane prompts are execution prompts, not intake prompts. Atlas should not require a second user message just to produce the lane bootstrap text.

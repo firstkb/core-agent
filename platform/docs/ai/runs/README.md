@@ -53,8 +53,8 @@ The scaffolder only validates and materializes files.
 ## Standard files
 
 - `task.md` — control contract and run state
-- `frontend.md` — FE packet snapshot + FE report
-- `backend.md` — BE packet snapshot + BE report
+- `frontend.md` — FE launch prompt + FE packet snapshot + FE report
+- `backend.md` — BE launch prompt + BE packet snapshot + BE report
 - `final.md` — reconciliation and closeout
 
 ## Status lifecycle
@@ -87,6 +87,7 @@ The scaffolder:
 - creates lane files for requested lanes
 - creates `final.md`
 - stamps prompt and skill versions from the automation manifest
+- leaves launch-prompt placeholders that Atlas must replace before the lane chat is opened
 
 It does not:
 - decide task intent

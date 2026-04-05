@@ -1,16 +1,16 @@
 {
-  "bundle_version": "1.3.0",
+  "bundle_version": "1.4.0",
   "skill": {
     "name": "ramp-conductor",
     "display_name": "Atlas",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "invocation": "$ramp-conductor",
     "file": ".agents/skills/ramp-conductor/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "file": "platform/docs/ai/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {
@@ -36,16 +36,16 @@
   },
   "templates": {
     "control_task": {
-      "version": "1.2.0",
+      "version": "1.3.0",
       "file": "platform/docs/ai/templates/control-task.md"
     },
     "lane_report": {
-      "version": "1.2.0",
+      "version": "1.3.0",
       "file": "platform/docs/ai/templates/lane-report.md"
     }
   },
   "scaffolder": {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "python_file": "scripts/ai/new-run.py",
     "shell_file": "scripts/ai/new-run.sh"
   },

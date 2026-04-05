@@ -13,8 +13,14 @@ platform/*
 !platform/backend/
 !platform/backend/AGENTS.md
 !platform/backend/README.md
-!platform/backend/docs/
-!platform/backend/docs/**
+!platform/docs/
+!platform/docs/**
+!platform/docs/ai/**
+!platform/docs/ai/prompts/**
+!platform/docs/ai/templates/**
+!platform/docs/ai/runs/**
+!platform/docs/ai/modules/**
+!platform/docs/ai/modules/**
 platform/backend/certs/*.pem
 platform/backend/certs/*.key
 platform/backend/certs/*.crt

@@ -38,6 +38,7 @@ Local HTTPS is handled by Caddy and is intended for development only.
 - `pnpm dev:https:user`: run Vite apps plus a user-level Caddy proxy on `8443`
 - `pnpm dev:stack:https:user`: run frontend apps, backend APIs, and a user-level Caddy proxy on `8443`
 - `pnpm dev:proxy:user`: run only the user-level high-port proxy when the apps are already running
+- `pnpm dev:stop`: stop the local frontend/backend stack listeners used by this repo
 - `pnpm dev:proxy`: run only the legacy root-mode proxy when the apps are already running
 
 Configured local domains:

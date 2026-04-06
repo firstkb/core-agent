@@ -24,6 +24,7 @@
     "dev:proxy:launchd:restart": "./scripts/dev-proxy-launchd.sh restart",
     "dev:proxy:launchd:status": "./scripts/dev-proxy-launchd.sh status",
     "dev:proxy:launchd:uninstall": "./scripts/dev-proxy-launchd.sh uninstall",
+    "dev:stop": "./scripts/dev-stop-stack.sh",
     "dev:hosts": "./scripts/dev-hosts.sh",
     "dev:trust-caddy": "./scripts/dev-trust-caddy.sh",
     "dev:trust-caddy:user": "./scripts/dev-trust-caddy.sh --mode user",

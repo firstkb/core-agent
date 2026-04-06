@@ -152,6 +152,7 @@ Local runtime helpers:
 - `pnpm dev:https:user`
 - `pnpm dev:stack:https:user`
 - `pnpm dev:proxy:user`
+- `pnpm dev:stop`
 
 ## Docs update rule
 

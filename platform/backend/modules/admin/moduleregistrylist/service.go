@@ -73,9 +73,9 @@ func (s *Service) LoadMeta(ctx context.Context) (*MetaResponse, error) {
 			SecondaryRowFieldID: "description",
 		},
 		Actions: PageActions{
-			Create:    VisibilityAction{Visible: true},
-			Reload:    VisibilityAction{Visible: true},
-			ExportXLS: VisibilityAction{Visible: true},
+			Create: VisibilityAction{Visible: true},
+			Reload: VisibilityAction{Visible: true},
+			//ExportXLS: VisibilityAction{Visible: true},
 			Favorite: FavoriteAction{
 				Visible:    true,
 				IsFavorite: prefs.IsFavorite,
@@ -83,6 +83,7 @@ func (s *Service) LoadMeta(ctx context.Context) (*MetaResponse, error) {
 		},
 		RowActions: []RowActionDefinition{
 			{ID: "edit", Kind: "button", Execution: "frontend"},
+			//{ID: "pdf", Kind: "button", Execution: "backend"},
 		},
 		Selection: SelectionMeta{
 			Enabled:        true,

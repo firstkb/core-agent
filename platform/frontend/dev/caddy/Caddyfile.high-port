@@ -1,0 +1,129 @@
+{
+	admin 127.0.0.1:2020
+	servers {
+		protocols h1 h2
+	}
+}
+
+admin.platform.local:8443 {
+	tls internal
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8081 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5173 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+}
+
+demo.platform.local:8443 {
+	tls internal
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5174 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+}
+
+acme.platform.local:8443 {
+	tls internal
+
+	redir /api /api/v1/ 308
+	redir /api/ /api/v1/ 308
+	redir /auth /auth/v1/ 308
+	redir /auth/ /auth/v1/ 308
+
+	handle_path /api/v1/* {
+		reverse_proxy 127.0.0.1:8080 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	@auth path /auth/v1 /auth/v1/*
+	handle @auth {
+		uri replace /auth/v1 /auth
+		reverse_proxy 127.0.0.1:8082 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:5174 {
+			header_up Host {host}
+			transport http {
+				keepalive off
+				versions 1.1
+			}
+		}
+	}
+}

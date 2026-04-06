@@ -145,6 +145,13 @@ Local runtime helpers:
 - `pnpm dev:https`
 - `pnpm dev:stack:https`
 - `pnpm dev:proxy`
+- `pnpm dev:https:launchd`
+- `pnpm dev:stack:https:launchd`
+- `pnpm dev:proxy:launchd:install`
+- `pnpm dev:proxy:launchd:status`
+- `pnpm dev:https:user`
+- `pnpm dev:stack:https:user`
+- `pnpm dev:proxy:user`
 
 ## Docs update rule
 

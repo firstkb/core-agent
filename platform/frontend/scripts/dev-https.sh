@@ -3,21 +3,79 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="/opt/homebrew/bin:$PATH"
-export XDG_DATA_HOME="$ROOT_DIR/.local/share"
-export XDG_CONFIG_HOME="$ROOT_DIR/.local/config"
 ADMIN_APP_PORT=5173
 TENANT_APP_PORT=5174
+PROXY_MODE="root"
+KEEPAWAKE_ENABLED="${DEV_SESSION_KEEPAWAKE:-1}"
 
-mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+usage() {
+  cat <<'EOF'
+Usage: dev-https.sh [--proxy-mode root|user|launchd]
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --proxy-mode)
+      if [ "$#" -lt 2 ]; then
+        echo "--proxy-mode requires a value."
+        exit 1
+      fi
+      PROXY_MODE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      usage
+      exit 1
+      ;;
+  esac
+done
 
 port_is_listening() {
   lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
 }
 
+start_keepawake() {
+  if [ "$KEEPAWAKE_ENABLED" = "0" ] || ! command -v caffeinate >/dev/null 2>&1; then
+    return
+  fi
+
+  caffeinate -ims &
+  CAFFEINATE_PID=$!
+  echo "Holding a caffeinate assertion while this dev session is active."
+}
+
+wait_for_session() {
+  if [ -n "${DEV_PID:-}" ]; then
+    wait "$DEV_PID"
+    return
+  fi
+
+  echo "Reused existing frontend dev servers. Press Ctrl-C when you want to release caffeinate."
+  tail -f /dev/null &
+  HOLD_PID=$!
+  wait "$HOLD_PID"
+}
+
 cleanup() {
+  if [ -n "${HOLD_PID:-}" ] && kill -0 "$HOLD_PID" >/dev/null 2>&1; then
+    kill "$HOLD_PID" >/dev/null 2>&1 || true
+    wait "$HOLD_PID" >/dev/null 2>&1 || true
+  fi
+
   if [ -n "${DEV_PID:-}" ] && kill -0 "$DEV_PID" >/dev/null 2>&1; then
     kill "$DEV_PID" >/dev/null 2>&1 || true
     wait "$DEV_PID" >/dev/null 2>&1 || true
+  fi
+
+  if [ -n "${CAFFEINATE_PID:-}" ] && kill -0 "$CAFFEINATE_PID" >/dev/null 2>&1; then
+    kill "$CAFFEINATE_PID" >/dev/null 2>&1 || true
+    wait "$CAFFEINATE_PID" >/dev/null 2>&1 || true
   fi
 }
 
@@ -53,4 +111,19 @@ else
   exit 1
 fi
 
-"$ROOT_DIR/scripts/dev-proxy.sh"
+start_keepawake
+
+case "$PROXY_MODE" in
+  root|user)
+    "$ROOT_DIR/scripts/dev-proxy.sh" --mode "$PROXY_MODE"
+    ;;
+  launchd)
+    "$ROOT_DIR/scripts/dev-proxy-launchd.sh" ensure
+    wait_for_session
+    ;;
+  *)
+    echo "Unsupported proxy mode: $PROXY_MODE"
+    usage
+    exit 1
+    ;;
+esac

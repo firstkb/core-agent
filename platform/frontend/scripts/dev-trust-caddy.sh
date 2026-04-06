@@ -8,22 +8,74 @@ fi
 
 export PATH="/opt/homebrew/bin:$PATH"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-export XDG_DATA_HOME="$ROOT_DIR/.local/share"
-export XDG_CONFIG_HOME="$ROOT_DIR/.local/config"
-CONFIG_PATH="$ROOT_DIR/dev/caddy/Caddyfile"
-ADMIN_ADDRESS="127.0.0.1:2019"
+MODE="root"
+AS_ROOT=0
 STARTED_CADDY=0
-
-mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
 
 CADDY_BIN="$(command -v caddy)"
 
-if [ "${1:-}" != "--as-root" ] && [ "$(id -u)" -ne 0 ]; then
+usage() {
+  cat <<'EOF'
+Usage: dev-trust-caddy.sh [--mode root|user]
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --mode)
+      if [ "$#" -lt 2 ]; then
+        echo "--mode requires a value."
+        exit 1
+      fi
+      MODE="$2"
+      shift 2
+      ;;
+    --as-root)
+      AS_ROOT=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+case "$MODE" in
+  root)
+    export XDG_DATA_HOME="$ROOT_DIR/.local/root/share"
+    export XDG_CONFIG_HOME="$ROOT_DIR/.local/root/config"
+    CONFIG_PATH="$ROOT_DIR/dev/caddy/Caddyfile"
+    ADMIN_ADDRESS="127.0.0.1:2019"
+    REQUIRES_ROOT_FOR_RUNTIME=1
+    ;;
+  user)
+    export XDG_DATA_HOME="$ROOT_DIR/.local/user/share"
+    export XDG_CONFIG_HOME="$ROOT_DIR/.local/user/config"
+    CONFIG_PATH="$ROOT_DIR/dev/caddy/Caddyfile.high-port"
+    ADMIN_ADDRESS="127.0.0.1:2020"
+    REQUIRES_ROOT_FOR_RUNTIME=0
+    ;;
+  *)
+    echo "Unsupported mode: $MODE"
+    usage
+    exit 1
+    ;;
+esac
+
+mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"
+
+if [ "$REQUIRES_ROOT_FOR_RUNTIME" -eq 1 ] && [ "$AS_ROOT" -ne 1 ] && [ "$(id -u)" -ne 0 ]; then
   exec sudo env \
     PATH="$PATH" \
     XDG_DATA_HOME="$XDG_DATA_HOME" \
     XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
-    "$0" --as-root
+    "$0" --mode root --as-root
 fi
 
 cleanup() {
@@ -51,5 +103,10 @@ if ! curl -fsS "http://$ADMIN_ADDRESS/pki/ca/local/certificates" >/dev/null 2>&1
   exit 1
 fi
 
-"$CADDY_BIN" trust --address "$ADMIN_ADDRESS"
+if [ "$MODE" = "root" ]; then
+  "$CADDY_BIN" trust --address "$ADMIN_ADDRESS"
+else
+  sudo env PATH="$PATH" "$CADDY_BIN" trust --address "$ADMIN_ADDRESS"
+fi
+
 echo "Trusted local Caddy CA."

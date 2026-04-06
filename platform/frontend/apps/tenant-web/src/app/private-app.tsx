@@ -58,6 +58,7 @@ declare global {
 type TenantThemeMode = "light" | "dark";
 
 const tenantThemeStorageKey = "tenant-workspace-theme";
+const tenantSidebarCollapsedStorageKey = "tenant-workspace-sidebar-collapsed";
 const appBuild = getAppBuildMetadata();
 
 function isEditableTarget(target: EventTarget | null) {
@@ -381,6 +382,7 @@ export function PrivateApp({
         showHeaderSurfaceMarker={false}
         showRailCollapse
         showSidebarSurfaceMarker={false}
+        sidebarCollapsedStorageKey={tenantSidebarCollapsedStorageKey}
         sidebarNavigationLabel={(
           <TenantSidebarNavigation
             navigate={(path) => {

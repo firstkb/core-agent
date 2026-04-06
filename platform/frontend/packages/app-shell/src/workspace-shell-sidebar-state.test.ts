@@ -1,6 +1,17 @@
-import { describe, expect, it } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
-import { getWorkspaceShellSidebarState } from "./workspace-shell-sidebar-state";
+import {
+  getWorkspaceShellSidebarState,
+  readWorkspaceShellSidebarCollapsedPreference,
+  writeWorkspaceShellSidebarCollapsedPreference,
+} from "./workspace-shell-sidebar-state";
 
 describe("workspace shell sidebar state", () => {
   it("keeps classic layout out of collapsed rail preview mode", () => {
@@ -65,5 +76,79 @@ describe("workspace shell sidebar state", () => {
       isCollapsedRailHoverPreviewVisible: true,
       shellIsSidebarCollapsed: true,
     });
+  });
+});
+
+describe("workspace shell sidebar collapse persistence", () => {
+  const storage = new Map<string, string>();
+
+  beforeEach(() => {
+    storage.clear();
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem(key: string) {
+          return storage.has(key) ? storage.get(key) ?? null : null;
+        },
+        removeItem(key: string) {
+          storage.delete(key);
+        },
+        setItem(key: string, value: string) {
+          storage.set(key, value);
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("reads a saved collapsed preference from localStorage", () => {
+    storage.set("tenant-shell-sidebar-collapsed", "1");
+
+    expect(
+      readWorkspaceShellSidebarCollapsedPreference("tenant-shell-sidebar-collapsed"),
+    ).toBe(true);
+  });
+
+  it("stores collapsed preference and clears expanded preference", () => {
+    writeWorkspaceShellSidebarCollapsedPreference(
+      "tenant-shell-sidebar-collapsed",
+      true,
+    );
+    expect(storage.get("tenant-shell-sidebar-collapsed")).toBe("1");
+
+    writeWorkspaceShellSidebarCollapsedPreference(
+      "tenant-shell-sidebar-collapsed",
+      false,
+    );
+    expect(storage.has("tenant-shell-sidebar-collapsed")).toBe(false);
+  });
+
+  it("falls back to expanded state when localStorage access throws", () => {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem() {
+          throw new Error("localStorage blocked");
+        },
+        removeItem() {
+          throw new Error("localStorage blocked");
+        },
+        setItem() {
+          throw new Error("localStorage blocked");
+        },
+      },
+    });
+
+    expect(
+      readWorkspaceShellSidebarCollapsedPreference("tenant-shell-sidebar-collapsed"),
+    ).toBe(false);
+
+    expect(() => {
+      writeWorkspaceShellSidebarCollapsedPreference(
+        "tenant-shell-sidebar-collapsed",
+        true,
+      );
+    }).not.toThrow();
   });
 });

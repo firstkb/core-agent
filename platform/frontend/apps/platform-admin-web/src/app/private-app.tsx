@@ -47,6 +47,7 @@ import "./app.css";
 type AdminThemeMode = "light" | "dark";
 
 const adminThemeStorageKey = "platform-admin-theme";
+const adminSidebarCollapsedStorageKey = "platform-admin-sidebar-collapsed";
 const modulesListResetPath = "/modules/list?reset=1";
 const appBuild = getAppBuildMetadata();
 const AdminUiLabPage = lazy(async () => {
@@ -269,6 +270,7 @@ export function PrivateApp({
           },
         ]}
         showRailCollapse
+        sidebarCollapsedStorageKey={adminSidebarCollapsedStorageKey}
         sidebarNavigationLabel={
           <div className="admin-web__sidebar-section-heading">{t("admin.shell.sidebarSection")}</div>
         }

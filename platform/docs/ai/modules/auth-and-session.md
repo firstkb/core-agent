@@ -63,6 +63,7 @@ Confirmed in code:
 
 - `packages/api-client` already sends `credentials: "include"` for auth endpoints
 - `packages/auth-core` stores access token and expiry
+- bootstrap-critical auth/profile requests now time out instead of leaving the app in an indefinite session-check loader
 - `packages/auth-core` still clears a legacy `refreshToken` key during cleanup, but the active stored session shape is access-token only
 
 ## Important docs
@@ -77,6 +78,7 @@ Confirmed in code:
 
 - frontend expects `refresh_token` in response JSON
 - frontend does not send `credentials: "include"`
+- expired access token plus stalled `/auth/refresh` leaves the shell stuck in an indefinite pending state
 - `/profile` and `/app/me/navigation` responsibilities get mixed
 - tenant context is pushed from frontend instead of resolved on backend
 - admin and tenant auth contracts drift apart unnecessarily

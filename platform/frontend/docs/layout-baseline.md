@@ -44,6 +44,8 @@ Rules:
 - always use `minmax(0, 1fr)` for the content column
 - sidebars get explicit width, not content-sized width
 - shell columns must not react to child content width
+- desktop rail collapse preference should persist per app shell in local storage and survive reload or sign-in
+- mobile drawer open/close must not overwrite the saved desktop rail preference
 
 ### 2. Content Container
 

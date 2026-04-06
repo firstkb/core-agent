@@ -124,6 +124,9 @@ type AdminNavigationClient = {
 
 type JsonRecord = Record<string, unknown>;
 
+const authRequestTimeoutMs = 8_000;
+const profileBootstrapRequestTimeoutMs = 8_000;
+
 class ApiClientError extends Error {
   readonly code?: string;
   readonly payload?: unknown;
@@ -205,6 +208,7 @@ async function requestEnvelope<T>(
     body?: unknown;
     credentials?: RequestCredentials;
     method?: string;
+    timeoutMs?: number;
   },
 ): Promise<BackendEnvelope<T>> {
   const headers = new Headers({
@@ -222,16 +226,49 @@ async function requestEnvelope<T>(
   }
 
   let response: Response;
+  let didTimeout = false;
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  const controller = typeof AbortController !== "undefined"
+    ? new AbortController()
+    : null;
+
+  if (
+    controller &&
+    typeof options?.timeoutMs === "number" &&
+    Number.isFinite(options.timeoutMs) &&
+    options.timeoutMs > 0
+  ) {
+    timeoutId = globalThis.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, options.timeoutMs);
+  }
+
   try {
     response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
       body,
       credentials: options?.credentials,
       headers,
       method: options?.method ?? (body ? "POST" : "GET"),
+      signal: controller?.signal,
     });
   } catch (error) {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+
+    if (didTimeout) {
+      throw new ApiClientError("Request timed out.", {
+        code: "request_timeout",
+      });
+    }
+
     const message = error instanceof Error ? error.message : "Network request failed.";
     throw new ApiClientError(message, { code: "network_error" });
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
   }
 
   const payload = await parseJsonBody(response);
@@ -463,12 +500,14 @@ function createAuthClient(baseUrl: string): AuthClient {
           all_devices: input?.allDevices ?? false,
         },
         credentials: "include",
+        timeoutMs: authRequestTimeoutMs,
       });
     },
     async refresh() {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/refresh", {
         credentials: "include",
         method: "POST",
+        timeoutMs: authRequestTimeoutMs,
       });
 
       return normalizeAuthTokenData(envelope.data);
@@ -477,6 +516,7 @@ function createAuthClient(baseUrl: string): AuthClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/admin/otp/request", {
         body: identifier,
         credentials: "include",
+        timeoutMs: authRequestTimeoutMs,
       });
 
       return normalizeOtpRequestData(envelope.data);
@@ -485,6 +525,7 @@ function createAuthClient(baseUrl: string): AuthClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/otp/request", {
         body: identifier,
         credentials: "include",
+        timeoutMs: authRequestTimeoutMs,
       });
 
       return normalizeOtpRequestData(envelope.data);
@@ -493,6 +534,7 @@ function createAuthClient(baseUrl: string): AuthClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/admin/otp/verify", {
         body: input,
         credentials: "include",
+        timeoutMs: authRequestTimeoutMs,
       });
 
       return normalizeAuthTokenData(envelope.data);
@@ -501,6 +543,7 @@ function createAuthClient(baseUrl: string): AuthClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/otp/verify", {
         body: input,
         credentials: "include",
+        timeoutMs: authRequestTimeoutMs,
       });
 
       return normalizeAuthTokenData(envelope.data);
@@ -514,6 +557,7 @@ function createTenantProfileClient(baseUrl: string): TenantProfileClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/app/profile", {
         accessToken,
         method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
       });
 
       return normalizeTenantProfile(envelope.data);
@@ -527,6 +571,7 @@ function createAdminProfileClient(baseUrl: string): AdminProfileClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/app/profile", {
         accessToken,
         method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
       });
 
       return normalizeAdminProfile(envelope.data);
@@ -540,6 +585,7 @@ function createAdminNavigationClient(baseUrl: string): AdminNavigationClient {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/app/me/navigation", {
         accessToken,
         method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
       });
 
       return normalizeAdminNavigation(envelope.data);

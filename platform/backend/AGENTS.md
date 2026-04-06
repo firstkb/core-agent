@@ -38,10 +38,32 @@ Primary active runtime surfaces:
 - preserve transport -> service -> repository separation
 - do not put SQL in handlers
 - do not leak transport DTOs into repository logic
+- keep module wiring in `cmd/<app>/internal/server`
+- prefer `bootstrap.go`, `wiring_<module>.go`, and `routes_<module>.go` in `package server`
+- keep `bootstrap.go` and top-level `routes.go` readable by delegating to `build*Module(...)` and `register*Routes(...)`
+- do not create a separate `package wiring` by default
+- service constructors should take only the dependencies they actually use
+- repositories may take infrastructure dependencies such as `sqlClient` and `logger`
+- normalize app config in wiring and pass module-specific config into services
 - keep admin and tenant semantics explicit
 - keep tenancy and auth derivation in trusted runtime context
+- do not trust user-supplied tenant ids for auth or tenancy decisions
+- `api-admin` and `api-tenant` own canonical secure routes under `/app/...`
+- `auth` owns explicit `/auth/...` routes
+- do not add legacy route aliases unless an explicit migration bridge is approved
+- `GET /app/profile` stays profile-only; admin navigation is projected separately via `GET /app/me/navigation`
+- production target is gateway-first auth with trusted headers; local or compatibility mode may use bearer validation
+- do not reintroduce a master identity mirror for tenant login identities
+- `auth` resolves `tenant_host -> tenant_id -> tenant_db` in master and reads auth-facing user identity from tenant-local `users`
+- platform and infrastructure code belongs in `internal/platform/*`; business logic does not stay in root `internal/*`
+- non-root admin access must stay bound to explicit route-to-section policy in code
+- do not expose non-root admin sections in navigation unless secure route coverage exists
 - do not add privileged bypasses without explicit approval
 - `cmd/migrate` owns schema changes
+- master schema source of truth is `migrations/postgres/master/*.sql`
+- tenant schema source of truth is `bundle/tenant_schema_full.sql` plus `migrations/postgres/tenant/*.sql`
+- `docs/MSSQL/*` is mapping reference only, not active runtime DDL
+- master schema uses modern snake_case; tenant business tables target legacy-compatible prefixed naming when schema work touches that boundary
 - do not let module-registry page assumptions redefine the generic shared collection-table helpers
 
 ## Default ignore set

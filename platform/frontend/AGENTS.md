@@ -33,9 +33,31 @@ Use this lane directly only when:
 - create a package only when reuse is real and the API is stable
 - do not create `shared-utils` or `shared-types` dumping grounds
 - apps may import packages; packages must not import apps
-- use public entrypoints only
+- use public entrypoints only; no deep imports
+- packages must export through `src/index.ts` only
+- `design-tokens`: tokens only; no React code
+- `ui-kit`: reusable primitives and low-risk shared patterns
+- `api-client`: HTTP client, generated clients, request helpers, and transport contracts
+- `auth-core`: session model, auth state, sign-in and sign-out flows, auth guards
+- `tenant-core`: tenant identity, config, branding, permissions, and runtime context
+- `app-shell`: shared layout shell, navigation scaffolds, and app chrome
+- `forms`: shared form primitives and helpers
 - keep UI-free core packages separate from UI packages
+- UI-free packages should not import `ui-kit`
 - `platform-builder-core` is typed contract code, not a UI package
+
+## Shared UI boundary
+
+- `ui-kit` is not a staging area for every donor pattern
+- promote into `ui-kit` only when the contract is product-owned, generic, reusable, and stable
+- route-specific compositions, workflow wrappers, tenant-specific filters, and shell-specific chrome stay in app code until explicitly approved
+- stable-approved shared primitives are safe defaults; provisional primitives may be used for review but should not have their API expanded casually
+
+## Tenant boundary
+
+- `tenant-core` owns reusable tenant identity, config, branding, permissions, and runtime context
+- tenant-aware logic reused across apps belongs in `tenant-core`
+- route-level composition, screen-specific permissions decisions, and tenant workflows stay in app code until they become real shared contracts
 
 ## Default ignore set
 
@@ -59,15 +81,41 @@ Require extra care before finalizing changes that affect:
 - shared package boundaries
 - design token or shell-wide changes
 
+## Auth and transport rules
+
+- use runtime config only
+- use same-site `/auth/v1/*` and `/api/v1/*` paths
+- do not hardcode backend URLs in app code
+- do not send `tenantId` during login
+- do not store or read refresh tokens in JavaScript
+- auth endpoints must use `credentials: "include"`
+- keep only `accessToken` and `expiresAt` in browser auth storage
+- keep a single auth state owner; do not add a second auth context
+- bootstrap private app state from real `/profile`, not fake timers or duplicate profile state
+- derive OTP input length from backend `otp_length`; never hardcode it
+
+## Layout defaults
+
+- start from one-column layout
+- add a second column only when the screen clearly benefits
+- app shells use explicit sidebar width plus `minmax(0, 1fr)` content
+- shared surfaces should prefer `min-width: 0` and `width: 100%`
+- avoid `auto-fit` / `auto-fill` grids in shared shells or primitives without explicit review
+
+## Collection-table boundary
+
+- the current collection-table surface remains app-local until the contract is accepted and reused
+- the host page owns endpoint mapping; shared table runtime must not know literal backend URLs
+- row actions, selection, bulk actions, and search behavior come from explicit metadata, not column-name inference
+- use shared `date-picker` for date search/filter controls
+
 ## Working rules
 
 1. Start from the approved contract docs.
 2. Reuse existing tokens, primitives, and shell rules.
 3. Keep container/page logic separate from presentational pieces.
 4. Cover loading, error, empty, ready, and disabled/pending states when relevant.
-5. Do not hardcode backend URLs; use runtime config.
-6. Do not send tenant identity during login.
-7. Do not treat a proving surface contract as an automatic shared-package contract.
+5. Do not treat a proving surface contract as an automatic shared-package contract.
 
 ## Commands
 

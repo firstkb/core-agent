@@ -242,6 +242,16 @@ function shouldRefreshSession(session: StoredAuthSession, now = Date.now()) {
   return session.expiresAt - now <= authRefreshLeadTimeMs;
 }
 
+function resolveBootstrapSession(session: StoredAuthSession | null, now = Date.now()) {
+  if (!session) {
+    return null;
+  }
+
+  return shouldRefreshSession(session, now)
+    ? null
+    : session;
+}
+
 function isRefreshUnauthorizedError(error: unknown) {
   return error instanceof ApiClientError &&
     isUnauthorizedApiError(error) &&
@@ -409,6 +419,18 @@ export function AuthProvider({
   }, [session]);
 
   const checkAuth = useCallback(async () => {
+    function finalizeBootstrapSession(candidateSession: StoredAuthSession | null) {
+      const nextSession = resolveBootstrapSession(candidateSession);
+
+      if (!nextSession) {
+        clearSessionState();
+        return false;
+      }
+
+      commitSession(nextSession, "authenticated");
+      return true;
+    }
+
     const storedSession = readStoredAuthSession(storageNamespace);
 
     if (!storedSession) {
@@ -419,8 +441,9 @@ export function AuthProvider({
 
       try {
         const refreshedSession = await refreshSession(null);
-        return Boolean(refreshedSession);
+        return finalizeBootstrapSession(refreshedSession);
       } catch {
+        clearSessionState();
         return false;
       }
     }
@@ -428,8 +451,9 @@ export function AuthProvider({
     if (shouldRefreshSession(storedSession)) {
       try {
         const refreshedSession = await refreshSession(storedSession);
-        return Boolean(refreshedSession);
+        return finalizeBootstrapSession(refreshedSession);
       } catch {
+        clearSessionState();
         return false;
       }
     }
@@ -634,4 +658,5 @@ export function useAuth() {
   return context;
 }
 
+export { resolveBootstrapSession };
 export type { AuthContextValue, AuthProviderProps, AuthStatus };

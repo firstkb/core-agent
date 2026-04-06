@@ -22,6 +22,8 @@ import {
 
 import {
   getWorkspaceShellSidebarState,
+  readWorkspaceShellSidebarCollapsedPreference,
+  writeWorkspaceShellSidebarCollapsedPreference,
   type WorkspaceShellLayout,
 } from "./workspace-shell-sidebar-state";
 
@@ -82,6 +84,7 @@ type WorkspaceShellProps = {
   // Temporarily expands the collapsed desktop rail on hover without changing pinned collapse state.
   enableCollapsedRailHoverPreview?: boolean;
   showRailCollapse?: boolean;
+  sidebarCollapsedStorageKey?: string;
   showRailThemeToggle?: boolean;
   themeStorageKey?: string;
   children: ReactNode;
@@ -112,14 +115,23 @@ export function WorkspaceShell({
   sidebarHeader,
   enableCollapsedRailHoverPreview = false,
   showRailCollapse = false,
+  sidebarCollapsedStorageKey,
   showRailThemeToggle = false,
   themeStorageKey = "workspace-shell-theme",
   children,
 }: WorkspaceShellProps) {
   const { t } = useTranslation();
   const collapsedRailHoverPreviewTimeoutRef = useRef<number | null>(null);
+  const sidebarPersistenceConfigRef = useRef<{
+    showRailCollapse: boolean;
+    storageKey?: string;
+  } | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() =>
+    showRailCollapse
+      ? readWorkspaceShellSidebarCollapsedPreference(sidebarCollapsedStorageKey)
+      : false,
+  );
   const [isCollapsedRailHoverPreviewOpen, setIsCollapsedRailHoverPreviewOpen] = useState(false);
   const [isHeaderElevated, setIsHeaderElevated] = useState(false);
   const [isMobileViewport, setIsMobileViewport] = useState(() => {
@@ -176,6 +188,40 @@ export function WorkspaceShell({
   }
 
   useEffect(() => {
+    if (!showRailCollapse) {
+      setIsSidebarCollapsed(false);
+      return;
+    }
+
+    setIsSidebarCollapsed(readWorkspaceShellSidebarCollapsedPreference(sidebarCollapsedStorageKey));
+  }, [showRailCollapse, sidebarCollapsedStorageKey]);
+
+  useEffect(() => {
+    const previousConfig = sidebarPersistenceConfigRef.current;
+    const configChanged = !previousConfig
+      || previousConfig.showRailCollapse !== showRailCollapse
+      || previousConfig.storageKey !== sidebarCollapsedStorageKey;
+
+    sidebarPersistenceConfigRef.current = {
+      showRailCollapse,
+      storageKey: sidebarCollapsedStorageKey,
+    };
+
+    if (configChanged) {
+      return;
+    }
+
+    if (!showRailCollapse) {
+      return;
+    }
+
+    writeWorkspaceShellSidebarCollapsedPreference(
+      sidebarCollapsedStorageKey,
+      isSidebarCollapsed,
+    );
+  }, [showRailCollapse, sidebarCollapsedStorageKey, isSidebarCollapsed]);
+
+  useEffect(() => {
     if (layout !== "rail") {
       setIsHeaderElevated(false);
       return;
@@ -201,10 +247,6 @@ export function WorkspaceShell({
 
       setIsMobileViewport(nextIsMobileViewport);
       setIsSidebarOpen(false);
-
-      if (layout !== "rail" || nextIsMobileViewport) {
-        setIsSidebarCollapsed(false);
-      }
     }
 
     syncViewportMode();
@@ -662,10 +704,6 @@ export function WorkspaceShell({
               onClick={() => {
                 clearCollapsedRailHoverPreviewTimeout();
                 setIsCollapsedRailHoverPreviewOpen(false);
-
-                if (layout === "rail") {
-                  setIsSidebarCollapsed(false);
-                }
 
                 setIsSidebarOpen(true);
               }}

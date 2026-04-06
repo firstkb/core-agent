@@ -395,6 +395,7 @@ Required behavior:
 - keep access token in auth provider state
 - replace fake private-area timeout with real `/profile` bootstrap
 - refresh access token before expiry through cookie-backed `/auth/refresh`
+- time out stalled bootstrap-critical auth/profile requests so the shell does not stay on `Checking your session.` forever
 - on `/profile` failure caused by invalid session:
   - clear local access token state
   - redirect to sign-in

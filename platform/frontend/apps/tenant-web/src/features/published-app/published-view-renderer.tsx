@@ -9,10 +9,10 @@ import {
 } from "@platform/ui-kit";
 import type {
   ChildCollectionDefinition,
-  FieldDefinition,
+  ModelFieldDefinition,
   PublishedManifest,
   ResolvedViewNavigationTarget,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 
 type PublishedViewRendererProps = {
   manifest: PublishedManifest;
@@ -20,7 +20,7 @@ type PublishedViewRendererProps = {
 };
 
 type RuntimeFieldBinding = {
-  field: FieldDefinition | null;
+  field: ModelFieldDefinition | null;
   fieldId: string;
   required: boolean;
   widgetKey: string;

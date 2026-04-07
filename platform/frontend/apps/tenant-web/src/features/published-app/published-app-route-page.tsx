@@ -4,7 +4,7 @@ import type {
   PublishedManifest,
   PublishedManifestRuntimeError,
   PublishedManifestRuntimeErrorCode,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 import { useTranslation } from "@platform/i18n";
 import {
   Alert,

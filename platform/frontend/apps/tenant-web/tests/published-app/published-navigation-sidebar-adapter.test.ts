@@ -4,7 +4,7 @@ import type {
   NavigationNode,
   PublishedManifest,
   VisibilitySubjectContext,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 import type { SidebarNavItem } from "@platform/ui-kit";
 
 import {

@@ -1,8 +1,8 @@
 import {
-  getPlatformBuilderHeaderMeta,
-  getPlatformBuilderHeaderTitle,
-  isPlatformBuilderPath,
-} from "../features/platform-builder-v2/platform-builder-route-meta";
+  getPlatformStudioHeaderMeta,
+  getPlatformStudioHeaderTitle,
+  isPlatformStudioPath,
+} from "../features/platform-studio/platform-studio-route-meta";
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -48,7 +48,7 @@ function getPublishedRuntimeRouteKeyFromPathname(pathname: string) {
 }
 
 export function getTenantSidebarActiveItemId(pathname: string) {
-  if (isPlatformBuilderPath(pathname)) {
+  if (isPlatformStudioPath(pathname)) {
     return "";
   }
 
@@ -83,9 +83,9 @@ export function getTenantNavigationPath(itemId: string) {
 }
 
 export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname: string) {
-  const platformBuilderHeaderTitle = getPlatformBuilderHeaderTitle(translate, pathname);
-  if (platformBuilderHeaderTitle) {
-    return platformBuilderHeaderTitle;
+  const platformStudioHeaderTitle = getPlatformStudioHeaderTitle(translate, pathname);
+  if (platformStudioHeaderTitle) {
+    return platformStudioHeaderTitle;
   }
 
   if (pathname === "/app" || pathname.startsWith("/app/")) {
@@ -96,9 +96,9 @@ export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname
 }
 
 export function getTenantShellHeaderMeta(translate: TranslateFunction, pathname: string) {
-  const platformBuilderHeaderMeta = getPlatformBuilderHeaderMeta(translate, pathname);
-  if (platformBuilderHeaderMeta) {
-    return platformBuilderHeaderMeta;
+  const platformStudioHeaderMeta = getPlatformStudioHeaderMeta(translate, pathname);
+  if (platformStudioHeaderMeta) {
+    return platformStudioHeaderMeta;
   }
 
   return null;

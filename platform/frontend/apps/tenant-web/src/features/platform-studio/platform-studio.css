@@ -1,0 +1,982 @@
+.tenant-web__platform-studio-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: 0;
+}
+
+.tenant-web__platform-studio-shell--workspace {
+  --tenant-platform-studio-workspace-offset: 3.5rem;
+}
+
+.tenant-web__platform-studio-tabs {
+  width: 100%;
+}
+
+.tenant-web__platform-studio-tabs .ui-tabs__list--surface {
+  background: #e9eef6;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.tenant-web__platform-studio-master-detail,
+.tenant-web__platform-studio-workspace-grid {
+  display: grid;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-master-detail {
+  grid-template-columns: minmax(19rem, 0.92fr) minmax(0, 1.38fr);
+}
+
+.tenant-web__platform-studio-workspace-grid {
+  grid-template-columns: minmax(16rem, 0.82fr) minmax(0, 1.18fr);
+}
+
+.tenant-web__platform-studio-workspace-grid--compact {
+  grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+}
+
+.tenant-web__platform-studio-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.86fr) minmax(0, 1.36fr) minmax(18rem, 0.98fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split {
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0.7rem 0.85rem 1rem;
+}
+
+.tenant-web__platform-studio-panel-static {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 0 0.85rem;
+}
+
+.tenant-web__platform-studio-panel-static--compact-x {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split > .tenant-web__platform-studio-panel-scroll {
+  width: 100%;
+}
+
+.tenant-web__platform-studio-panel-content--split > .ui-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split > .ui-tabs > .tenant-web__platform-studio-panel-scroll {
+  flex: 1 1 auto;
+}
+
+.tenant-web__platform-studio-panel-body--compact {
+  padding-top: 1rem;
+}
+
+.tenant-web__platform-studio-panel-body--compact-x {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.tenant-web__platform-studio-panel-header,
+.tenant-web__platform-studio-row,
+.tenant-web__platform-studio-badge-row,
+.tenant-web__platform-studio-missing,
+.tenant-web__platform-studio-workspace-topline {
+  display: flex;
+}
+
+.tenant-web__platform-studio-panel-header,
+.tenant-web__platform-studio-screen-item,
+.tenant-web__platform-studio-workspace-topline {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-panel-header--stacked {
+  align-items: flex-start;
+}
+
+.tenant-web__platform-studio-row,
+.tenant-web__platform-studio-badge-row,
+.tenant-web__platform-studio-workspace-topline {
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-badge-row {
+  gap: var(--space-2);
+}
+
+.tenant-web__platform-studio-content-badges {
+  margin-bottom: var(--space-1);
+}
+
+.tenant-web__platform-studio-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-action-button {
+  white-space: nowrap;
+}
+
+.tenant-web__platform-studio-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.2rem;
+}
+
+.tenant-web__platform-studio-button-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tenant-web__platform-studio-back-icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-object-list,
+.tenant-web__platform-studio-screen-list,
+.tenant-web__platform-studio-missing,
+.tenant-web__platform-studio-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-scroll-area {
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport {
+  height: 100%;
+  padding-bottom: 1rem;
+  padding-right: 0.3rem;
+  scrollbar-color: transparent transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport > .tenant-web__platform-studio-object-list,
+.tenant-web__platform-studio-panel-scroll-viewport > .tenant-web__platform-studio-screen-list {
+  padding-top: 0.15rem;
+  padding-bottom: 0.35rem;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll:hover .tenant-web__platform-studio-panel-scroll-viewport,
+.tenant-web__platform-studio-panel-scroll:focus-within .tenant-web__platform-studio-panel-scroll-viewport {
+  scrollbar-color: rgba(126, 132, 147, 0.42) transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll:hover .tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb,
+.tenant-web__platform-studio-panel-scroll:focus-within .tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb {
+  background: rgba(126, 132, 147, 0.42);
+}
+
+.tenant-web__platform-studio-builder-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-builder-panel-body--scroll {
+  min-height: 100%;
+  padding-bottom: 1.75rem;
+}
+
+.tenant-web__platform-studio-builder-panel-body--workspace-scroll {
+  padding-left: 1rem;
+  padding-right: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--palette-scroll {
+  padding-bottom: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--palette-scroll::after {
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--scroll::after {
+  content: "";
+  display: block;
+  width: 100%;
+  min-height: 1.5rem;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-workspace-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.tenant-web__platform-studio-inspector-tabs {
+  display: flex;
+}
+
+.tenant-web__platform-studio-workspace-title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(1.28rem, 1.05rem + 0.7vw, 1.7rem);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.15;
+}
+
+.tenant-web__platform-studio-workspace-breadcrumbs {
+  color: var(--color-text-secondary);
+}
+
+.tenant-web__platform-studio-breadcrumb-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tenant-web__platform-studio-breadcrumb-button:hover {
+  color: var(--color-text-primary);
+}
+
+.tenant-web__platform-studio-object-item,
+.tenant-web__platform-studio-screen-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
+  border-radius: calc(var(--radius-lg) + 0.05rem);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 96%, white 4%) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas) 8%) 100%
+    );
+  color: inherit;
+  text-align: left;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.tenant-web__platform-studio-object-item {
+  cursor: pointer;
+}
+
+.tenant-web__platform-studio-object-item:hover,
+.tenant-web__platform-studio-screen-item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-accent-primary) 34%, var(--color-border-default));
+  box-shadow: 0 1rem 2.2rem -2rem rgba(15, 23, 42, 0.32);
+}
+
+.tenant-web__platform-studio-object-item--active {
+  border-color: color-mix(in srgb, var(--color-accent-primary) 60%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 58%, var(--color-bg-surface-elevated));
+}
+
+.tenant-web__platform-studio-object-copy,
+.tenant-web__platform-studio-screen-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-screen-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-object-title,
+.tenant-web__platform-studio-screen-title,
+.tenant-web__platform-studio-canvas-title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tenant-web__platform-studio-screen-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.tenant-web__platform-studio-view-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.tenant-web__platform-studio-view-status svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.tenant-web__platform-studio-view-status--active {
+  color: var(--color-accent-primary);
+}
+
+.tenant-web__platform-studio-view-status--inactive {
+  color: var(--color-text-muted);
+}
+
+.tenant-web__platform-studio-lock-badge {
+  min-width: 2rem;
+  justify-content: center;
+}
+
+.tenant-web__platform-studio-lock-badge > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tenant-web__platform-studio-lock-badge svg {
+  width: 0.98rem;
+  height: 0.98rem;
+}
+
+.tenant-web__platform-studio-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.tenant-web__platform-studio-menu-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-border-strong) 76%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 92%, transparent);
+  color: var(--color-text-primary);
+}
+
+.tenant-web__platform-studio-menu-trigger svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tenant-web__platform-studio-menu {
+  min-width: 12.5rem;
+}
+
+.tenant-web__platform-studio-field-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tenant-web__platform-studio-field-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 92%, transparent);
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.tenant-web__platform-studio-field-tag--locked {
+  border-color: color-mix(in srgb, var(--color-status-warning) 40%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-status-warning-soft) 72%, transparent);
+}
+
+.tenant-web__platform-studio-field-tag > span:last-child {
+  color: var(--color-text-secondary);
+}
+
+.tenant-web__platform-studio-canvas-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18rem;
+  height: 100%;
+  padding: clamp(1.25rem, 1rem + 0.8vw, 1.9rem);
+  border: 1px dashed color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  border-radius: calc(var(--radius-xl) - 0.125rem);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 95%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas) 8%) 100%
+    );
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.tenant-web__platform-studio-canvas-copy {
+  max-width: 24rem;
+}
+
+.tenant-web__platform-studio-canvas-copy > p {
+  margin: 0;
+}
+
+.tenant-web__platform-studio-empty-state {
+  min-height: 10rem;
+  border: 1px dashed color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  border-radius: calc(var(--radius-xl) - 0.125rem);
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, transparent);
+}
+
+.tenant-web__platform-studio-builder-empty {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.1rem;
+  color: var(--color-text-secondary);
+}
+
+.tenant-web__platform-studio-builder-empty > p {
+  margin: 0;
+}
+
+.tenant-web__platform-studio-empty-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.tenant-web__platform-studio-inline-note,
+.tenant-web__platform-studio-inline-help {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-status-warning-soft) 52%, var(--color-bg-surface-elevated));
+  color: var(--color-text-secondary);
+}
+
+.tenant-web__platform-studio-inline-note svg,
+.tenant-web__platform-studio-inline-help svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
+  color: var(--color-status-warning);
+}
+
+.tenant-web__platform-studio-inline-note > span,
+.tenant-web__platform-studio-inline-help > span,
+.tenant-web__platform-studio-inline-help {
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.tenant-web__platform-studio-inline-note {
+  white-space: nowrap;
+}
+
+.tenant-web__platform-studio-search,
+.tenant-web__platform-studio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tenant-web__platform-studio-search > label,
+.tenant-web__platform-studio-form-group > label {
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}
+
+.tenant-web__platform-studio-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.tenant-web__platform-studio-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.tenant-web__platform-studio-search-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tenant-web__platform-studio-search-input {
+  width: 100%;
+  padding-left: 2.45rem;
+}
+
+.tenant-web__platform-studio-palette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-palette-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.tenant-web__platform-studio-palette-heading {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tenant-web__platform-studio-palette-list,
+.tenant-web__platform-studio-canvas-list,
+.tenant-web__platform-studio-inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.tenant-web__platform-studio-canvas-list {
+  padding-top: 0.15rem;
+  padding-bottom: 0.35rem;
+}
+
+.tenant-web__platform-studio-palette-item,
+.tenant-web__platform-studio-canvas-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border-radius: calc(var(--radius-lg) + 0.05rem);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 97%, white 3%) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-canvas) 6%) 100%
+    );
+  text-align: left;
+  color: inherit;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.tenant-web__platform-studio-palette-item {
+  cursor: pointer;
+}
+
+.tenant-web__platform-studio-palette-item:hover,
+.tenant-web__platform-studio-canvas-item:hover {
+  border-color: color-mix(in srgb, var(--color-accent-primary) 32%, var(--color-border-default));
+  box-shadow: 0 1rem 2rem -2rem rgba(15, 23, 42, 0.38);
+  transform: translateY(-1px);
+}
+
+.tenant-web__platform-studio-palette-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+.tenant-web__platform-studio-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 55%, white 45%);
+  color: var(--color-accent-primary);
+}
+
+.tenant-web__platform-studio-item-icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.tenant-web__platform-studio-item-icon--canvas {
+  width: 2rem;
+  height: 2rem;
+}
+
+.tenant-web__platform-studio-palette-copy,
+.tenant-web__platform-studio-canvas-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-palette-title,
+.tenant-web__platform-studio-canvas-item-title,
+.tenant-web__platform-studio-inspector-title {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.tenant-web__platform-studio-palette-description,
+.tenant-web__platform-studio-canvas-item-summary,
+.tenant-web__platform-studio-inspector-meta {
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.tenant-web__platform-studio-canvas-item {
+  cursor: pointer;
+  justify-content: space-between;
+}
+
+.tenant-web__platform-studio-canvas-item[draggable="true"] {
+  cursor: grab;
+}
+
+.tenant-web__platform-studio-canvas-item--dragging {
+  opacity: 0.72;
+}
+
+.tenant-web__platform-studio-canvas-item--drop-target {
+  border-color: color-mix(in srgb, var(--color-accent-primary) 58%, var(--color-border-default));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-primary-soft) 72%, transparent);
+}
+
+.tenant-web__platform-studio-canvas-item--selected {
+  border-color: color-mix(in srgb, var(--color-accent-primary) 58%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 52%, var(--color-bg-surface-elevated));
+}
+
+.tenant-web__platform-studio-canvas-item-main,
+.tenant-web__platform-studio-inspector-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.tenant-web__platform-studio-drag-handle svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tenant-web__platform-studio-canvas-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tenant-web__platform-studio-builder-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-danger-zone {
+  padding-top: 0.35rem;
+}
+
+.tenant-web__platform-studio-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-breadcrumb {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tenant-web__platform-studio-breadcrumb::after {
+  content: "/";
+  margin-left: 0.45rem;
+  color: var(--color-text-muted);
+}
+
+.tenant-web__platform-studio-breadcrumb:last-child::after {
+  content: "";
+  margin-left: 0;
+}
+
+.tenant-web__platform-studio-breadcrumb--active {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tenant-web__platform-studio-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.tenant-web__platform-studio-field-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.tenant-web__platform-studio-field-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  padding: 0.78rem 0.82rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, transparent);
+}
+
+.tenant-web__platform-studio-field-meta-label {
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tenant-web__platform-studio-field-meta-value {
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.tenant-web__platform-studio-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-tabs .ui-tabs__list--surface {
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, black 10%);
+  border-color: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-tabs .ui-tabs__trigger--surface.ui-tabs__trigger--active {
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 90%, black 10%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px color-mix(in srgb, var(--color-border-default) 70%, transparent);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item,
+[data-theme="dark"] .tenant-web__platform-studio-screen-item,
+[data-theme="dark"] .tenant-web__platform-studio-palette-item,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-placeholder {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 92%, black 8%) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 88%, black 12%) 100%
+    );
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-screen-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-palette-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item:hover {
+  box-shadow: 0 1rem 2rem -1.8rem rgba(0, 0, 0, 0.52);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item--active,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item--selected {
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 22%, var(--color-bg-surface-elevated));
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-item-icon {
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 28%, var(--color-bg-surface-muted));
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-menu-trigger,
+[data-theme="dark"] .tenant-web__platform-studio-field-tag {
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, black 12%);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-field-meta-item {
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, black 12%);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-menu-trigger:hover {
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 86%, black 14%);
+}
+
+@media (min-width: 1025px) {
+  .tenant-web__platform-studio-shell--desktop-panels {
+    --tenant-platform-studio-visual-bottom-compensation: 1.5rem;
+    height: calc(
+      100dvh - var(--ui-shell-header-height) - var(--workspace-shell-content-padding-top, var(--space-6)) -
+        var(--workspace-shell-content-padding-bottom, var(--space-6)) +
+        var(--tenant-platform-studio-visual-bottom-compensation)
+    );
+    min-height: calc(
+      100dvh - var(--ui-shell-header-height) - var(--workspace-shell-content-padding-top, var(--space-6)) -
+        var(--workspace-shell-content-padding-bottom, var(--space-6)) +
+        var(--tenant-platform-studio-visual-bottom-compensation)
+    );
+    overflow: hidden;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel > .ui-card__header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel-header {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-master-detail,
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-workspace-grid,
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-builder-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  .tenant-web__platform-studio-shell--workspace {
+    height: calc(100dvh - var(--ui-shell-header-height) - var(--tenant-platform-studio-workspace-offset));
+    min-height: calc(100dvh - var(--ui-shell-header-height) - var(--tenant-platform-studio-workspace-offset));
+    overflow: hidden;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-builder-grid {
+    flex: 1 1 auto;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-panel {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-panel > .tenant-web__platform-studio-scroll-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tenant-web__platform-studio-master-detail,
+  .tenant-web__platform-studio-workspace-grid,
+  .tenant-web__platform-studio-builder-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tenant-web__platform-studio-panel {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .tenant-web__platform-studio-panel > .tenant-web__platform-studio-scroll-area {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .tenant-web__platform-studio-object-item,
+  .tenant-web__platform-studio-screen-item,
+  .tenant-web__platform-studio-panel-header,
+  .tenant-web__platform-studio-panel-actions,
+  .tenant-web__platform-studio-canvas-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tenant-web__platform-studio-canvas-actions {
+    justify-content: flex-start;
+  }
+}

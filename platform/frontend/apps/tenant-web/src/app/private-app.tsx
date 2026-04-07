@@ -32,9 +32,9 @@ import {
 } from "react-router-dom";
 
 import {
-  isPlatformBuilderPath,
-  platformBuilderPaths,
-} from "../features/platform-builder-v2";
+  isPlatformStudioPath,
+  platformStudioPaths,
+} from "../features/platform-studio";
 import { offlineSyncStatus } from "../offline/sync-status";
 import {
   getTenantShellHeaderMeta,
@@ -51,7 +51,7 @@ import "./app.css";
 
 declare global {
   interface Window {
-    __tenantPlatformBuilderLeaveGuard?: () => boolean | Promise<boolean>;
+    __tenantPlatformStudioLeaveGuard?: () => boolean | Promise<boolean>;
   }
 }
 
@@ -173,12 +173,12 @@ export function PrivateApp({
     };
   }, []);
 
-  async function canLeaveCurrentPlatformBuilderSurface() {
+  async function canLeaveCurrentPlatformStudioSurface() {
     if (typeof window === "undefined") {
       return true;
     }
 
-    const guard = window.__tenantPlatformBuilderLeaveGuard;
+    const guard = window.__tenantPlatformStudioLeaveGuard;
     if (!guard) {
       return true;
     }
@@ -188,7 +188,7 @@ export function PrivateApp({
   }
 
   async function guardedNavigate(nextPath: string | { hash?: string; pathname: string }) {
-    const canLeave = await canLeaveCurrentPlatformBuilderSurface();
+    const canLeave = await canLeaveCurrentPlatformStudioSurface();
     if (!canLeave) {
       return;
     }
@@ -357,10 +357,10 @@ export function PrivateApp({
         railMark={<DashboardGridIcon />}
         railUtilities={[
           {
-            active: isPlatformBuilderPath(location.pathname),
+            active: isPlatformStudioPath(location.pathname),
             icon: <LayersIcon />,
-            label: t("tenant.navigation.platformBuilder.label"),
-            onSelect: () => navigate(platformBuilderPaths.forms),
+            label: t("tenant.navigation.platformStudio.label"),
+            onSelect: () => navigate(platformStudioPaths.forms),
           },
           {
             badge: String(offlineSyncStatus.queuedActions),

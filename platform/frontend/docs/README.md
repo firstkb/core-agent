@@ -17,6 +17,8 @@ Entry point for the active frontend documentation set.
 - `foundation-rollout-plan.md`: closed rollout document for the foundation baseline and current rollout status
 - `layout-baseline.md`: lightweight layout and grid contract for stable width behavior without a heavy framework grid system
 - `install-helper-runtime.md`: current install/access layer contract built on `packages/install-helper`
+- `platform-studio/taxonomy-and-naming.md`: canonical Platform Studio naming matrix and anti-drift rules
+- `platform-studio/form-builder-first-contract.md`: locked first Form Builder integration contract before FE/BE parallelization
 - `phase-e-gap-review.md`: closed-cycle gap review for shared-layer expansion after the first full approval pass
 - `deferred-composed-surfaces.md`: backlog and boundary rules for larger workflow-shaped surfaces that should be revisited after the main interface baseline
 - `ui-lab-structure.md`: exact `UI Lab` section structure, purpose, and promotion boundary

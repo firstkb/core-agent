@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type {
   PublishedManifest,
   VisibilitySubjectContext,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 
 import { readPublishedManifest } from "../../src/features/published-app/published-manifest-loader";
 import { resolvePublishedAppRoutePageState } from "../../src/features/published-app/published-app-route-page-state";

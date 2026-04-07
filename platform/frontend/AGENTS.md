@@ -44,7 +44,7 @@ Use this lane directly only when:
 - `forms`: shared form primitives and helpers
 - keep UI-free core packages separate from UI packages
 - UI-free packages should not import `ui-kit`
-- `platform-builder-core` is typed contract code, not a UI package
+- `platform-studio-core` is typed contract code, not a UI package
 
 ## Shared UI boundary
 
@@ -67,7 +67,7 @@ Do not read by default:
 - `**/dist/**`
 - `**/.turbo/**`
 - `docs/vendor/**`
-- `docs/platform-builder-v2/old-code-reference/**`
+- `docs/platform-studio/old-code-reference/**`
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas
@@ -163,7 +163,7 @@ Update docs when code changes any of these:
 - admin module-registry proving-surface contract
 - admin navigation contract
 - package boundary rules
-- Platform Builder V2 route or boundary model
+- Platform Studio route or boundary model
 - shell/title/navigation behavior that affects more than one surface
 
 ## Summary format

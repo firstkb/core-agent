@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { PublishedManifest } from "@platform/platform-builder-core";
+import type { PublishedManifest } from "@platform/platform-studio-core";
 
 import {
   publishedManifestStorageKey,

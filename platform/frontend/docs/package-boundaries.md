@@ -11,12 +11,13 @@ Canonical package responsibilities for the frontend workspace.
 - `tenant-core`: tenant resolution, tenant context, branding resolution, tenant permissions wiring
 - `app-shell`: shared layout shell, navigation scaffolds, shared app chrome
 - `forms`: shared form primitives or schema-driven form helpers used across apps
-- `platform-builder-core`: typed Platform Builder metadata contracts, runtime validation schemas, and manifest validation helpers; no UI code
+- `platform-studio-core`: typed Platform Studio contracts, validation schemas, and manifest helpers shared across builder domains; no UI code
 
 ## Rules
 
 - No business feature package until the feature is shared by at least two apps.
-- `platform-builder-core` is the approved exception for the first shared Builder contract layer because both Builder state and runtime metadata resolve depend on the same non-UI contract.
+- `platform-studio-core` is the approved exception for the first shared Platform Studio contract layer because both builder authoring state and runtime metadata resolve depend on the same non-UI contract.
+- domain folders inside `platform-studio-core` may align to `form-builder`, `navigation-builder`, and `action-builder` concerns over time, but separate packages are deferred until reuse is real.
 - No deep imports across package boundaries.
 - Packages must export through `src/index.ts` only.
 - Packages must not depend on app code.

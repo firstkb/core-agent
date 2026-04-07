@@ -2,7 +2,7 @@ import {
   parsePublishedManifest,
   type PublishedManifest,
   type ViewDefinition,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 
 type StoredPublishedManifestRecord = {
   id: string;

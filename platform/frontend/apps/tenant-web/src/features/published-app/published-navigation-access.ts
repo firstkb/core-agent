@@ -5,11 +5,11 @@ import type {
   PublishedManifest,
   VisibilityEvaluation,
   VisibilitySubjectContext,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 import {
   evaluatePageVisibilityPolicy,
   isPageVisibilityPolicy,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 
 export type PublishedNavigationAccessConfigurationErrorCode =
   | "policy-not-found"

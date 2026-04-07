@@ -92,9 +92,9 @@ importers:
       '@platform/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
-      '@platform/platform-builder-core':
+      '@platform/platform-studio-core':
         specifier: workspace:*
-        version: link:../../packages/platform-builder-core
+        version: link:../../packages/platform-studio-core
       '@platform/tenant-core':
         specifier: workspace:*
         version: link:../../packages/tenant-core
@@ -198,7 +198,7 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
 
-  packages/platform-builder-core:
+  packages/platform-studio-core:
     dependencies:
       zod:
         specifier: ^3.25.67

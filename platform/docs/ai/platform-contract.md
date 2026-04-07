@@ -68,7 +68,7 @@ Confirmed shared packages:
 - `tenant-core`
 - `app-shell`
 - `forms`
-- `platform-builder-core`
+- `platform-studio-core`
 - `i18n`
 - `install-helper`
 
@@ -130,12 +130,12 @@ Current locked rules:
 - `GET /app/profile` must not become a navigation payload
 - non-root sections must come from backend grants, not frontend fabrication
 
-## 7. Platform Builder V2 contract
+## 7. Platform Studio contract
 
 Current direction:
 
 - V2 lives app-local in `tenant-web`
-- the shared layer is `platform-builder-core`, not a shared UI package
+- the shared layer is `platform-studio-core`, not a shared UI package
 - Forms and Navigation are the primary builder surfaces
 - `ezform` is a reference for interaction ideas, not code to copy
 - old builder code is reference-only

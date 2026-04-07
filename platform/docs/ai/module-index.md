@@ -45,12 +45,12 @@ Read for:
 - package-promotion readiness
 - host-page adapter boundaries
 
-### `modules/platform-builder-v2.md`
+### `modules/platform-studio.md`
 Read for:
 
 - tenant-web builder work
 - builder route model
-- `platform-builder-core`
+- `platform-studio-core`
 - forms/navigation builder scope
 - interaction-reference rules
 

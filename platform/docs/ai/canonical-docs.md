@@ -221,31 +221,33 @@ Use it together with:
 - `platform/frontend/docs/foundation-rollout-plan.md`
 - `platform/frontend/docs/phase-e-gap-review.md`
 
-### Platform Builder V2
+### Platform Studio
 
 #### Canonical
 
-- `platform/frontend/docs/platform-builder-v2/README.md`
-- `platform/frontend/docs/platform-builder-v2/v2-foundation-brief.md`
-- `platform/frontend/docs/platform-builder-v2/forms-foundation-a-technical-map.md`
-- `platform/frontend/docs/platform-builder-v2/data-schema-storage-rules.md`
-- `platform/frontend/docs/platform-builder-v2/ui-builder-backend-boundary.md`
-- `platform/frontend/docs/platform-builder-v2/form-builder-field-catalog.md`
+- `platform/frontend/docs/platform-studio/README.md`
+- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
+- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
+- `platform/frontend/docs/platform-studio/v2-foundation-brief.md`
+- `platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md`
+- `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
+- `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
+- `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`
 
 #### Supporting
 
-- `platform/frontend/docs/platform-builder-v2/ezform-analysis.md`
-- `platform/frontend/docs/platform-builder-v2/ezform/**`
+- `platform/frontend/docs/platform-studio/ezform-analysis.md`
+- `platform/frontend/docs/platform-studio/ezform/**`
 
 #### Working / historical
 
-- `platform/frontend/docs/platform-builder-v2/agent-prompts.md`
-- `platform/frontend/docs/platform-builder-v2/promt-continue.md`
-- `platform/frontend/docs/platform-builder-v2/promt-continue-short.md`
-- `platform/docs/archive/agent-prompts/platform-builder-v2-agent-prompts.md`
-- `platform/docs/archive/agent-prompts/platform-builder-v2-continue.md`
-- `platform/docs/archive/agent-prompts/platform-builder-v2-continue-short.md`
-- `platform/frontend/docs/platform-builder-v2/old-code-reference/**`
+- `platform/frontend/docs/platform-studio/agent-prompts.md`
+- `platform/frontend/docs/platform-studio/promt-continue.md`
+- `platform/frontend/docs/platform-studio/promt-continue-short.md`
+- `platform/docs/archive/agent-prompts/platform-studio-agent-prompts.md`
+- `platform/docs/archive/agent-prompts/platform-studio-continue.md`
+- `platform/docs/archive/agent-prompts/platform-studio-continue-short.md`
+- `platform/frontend/docs/platform-studio/old-code-reference/**`
 - `platform/frontend/docs/vendor/**`
 
 ## Fast domain picks
@@ -256,4 +258,4 @@ Use it together with:
 - Collection-table runtime / shared-package task -> frontend collection-table canonical set + frontend workspace/app-package canonical set
 - Migration / tenancy task -> backend schema and tenancy canonical set
 - Shared package / app-boundary task -> frontend workspace and app/package canonical set
-- Builder task -> Platform Builder V2 canonical set
+- Builder task -> Platform Studio canonical set

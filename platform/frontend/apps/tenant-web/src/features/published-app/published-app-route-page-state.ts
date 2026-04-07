@@ -4,12 +4,12 @@ import type {
   ResolvedSystemModuleNavigationTarget,
   ResolvedViewNavigationTarget,
   VisibilitySubjectContext,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 import {
   buildRouteMap,
   PublishedManifestRuntimeError,
   resolveNavigationTarget,
-} from "@platform/platform-builder-core";
+} from "@platform/platform-studio-core";
 
 import {
   resolvePublishedNavigationItemAccess,

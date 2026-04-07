@@ -132,7 +132,7 @@ The current highest-value clusters are:
 - frontend collection-table runtime and package-boundary docs
 - frontend admin module-registry proving-surface docs
 - frontend UI foundation docs
-- Platform Builder V2 docs
+- Platform Studio docs
 
 ## Docs that are explicitly not canonical today
 
@@ -148,9 +148,9 @@ Examples that should not be treated as sole truth sources:
 - `platform/frontend/docs/collection-table-shared-readiness-plan.md`
 - `platform/frontend/docs/foundation-rollout-plan.md`
 - `platform/frontend/docs/phase-e-gap-review.md`
-- `platform/frontend/docs/platform-builder-v2/agent-prompts.md`
-- `platform/frontend/docs/platform-builder-v2/promt-continue.md`
-- `platform/frontend/docs/platform-builder-v2/promt-continue-short.md`
+- `platform/frontend/docs/platform-studio/agent-prompts.md`
+- `platform/frontend/docs/platform-studio/promt-continue.md`
+- `platform/frontend/docs/platform-studio/promt-continue-short.md`
 - `platform/docs/archive/agent-prompts/**`
 - any closed run under `platform/docs/ai/runs/**`
 - anything under `platform/docs/archive/runs/**`

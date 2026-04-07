@@ -133,7 +133,7 @@ platform/frontend/
     forms/
     i18n/
     install-helper/
-    platform-builder-core/
+    platform-studio-core/
     tenant-core/
     ui-kit/
 ```
@@ -150,13 +150,13 @@ Deferred surface in docs, not present as an app:
 ### Important frontend feature zones
 
 - admin navigation and module registry list/edit flows in `platform-admin-web`
-- Platform Builder V2 scaffold in `tenant-web`
+- Platform Studio scaffold in `tenant-web`
 - published-app runtime in `tenant-web`
 - shared transport in `packages/api-client`
 - shared auth state in `packages/auth-core`
 - shared tenant context in `packages/tenant-core`
 - shared shell/layout in `packages/app-shell`
-- shared typed builder contracts in `packages/platform-builder-core`
+- shared typed builder contracts in `packages/platform-studio-core`
 
 ## High-noise directories to ignore by default
 
@@ -164,7 +164,7 @@ Deferred surface in docs, not present as an app:
 - `platform/frontend/**/dist/**`
 - `platform/frontend/**/.turbo/**`
 - `platform/frontend/docs/vendor/**`
-- `platform/frontend/docs/platform-builder-v2/old-code-reference/**`
+- `platform/frontend/docs/platform-studio/old-code-reference/**`
 - `platform/backend/docs/legacy/**`
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`

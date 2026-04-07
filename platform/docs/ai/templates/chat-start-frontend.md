@@ -11,7 +11,7 @@ Frontend-local addendum:
   - collection-table runtime and package-promotion path
   - admin module-registry proving surface
   - visual foundation/UI contracts
-  - Platform Builder V2
+  - Platform Studio
 - Keep generic collection-table work separate from module-registry page logic.
 - Require extra care for auth bootstrap, route guards, same-site `/auth/v1/*` and `/api/v1/*` assumptions, admin vs tenant route separation, and shared package boundaries.
 - Prefer app-local implementation unless reuse is already proven.

@@ -192,17 +192,49 @@ Primary sources:
 - `platform/docs/ai/platform-contract.md`
 - `platform/frontend/AGENTS.md`
 
-### 2026-03-30 — Platform Builder V2 stays app-local in `tenant-web`
+### 2026-03-30 — Platform Studio stays app-local in `tenant-web`
 
 Status: active  
 Decision:
 
-- shared builder layer is `platform-builder-core` for typed contracts only
+- shared builder layer is `platform-studio-core` for typed contracts only
 - builder UI stays app-local until reuse or backend maturity justifies more extraction
 
 Primary sources:
 
-- `platform/docs/ai/modules/platform-builder-v2.md`
+- `platform/docs/ai/modules/platform-studio.md`
+
+### 2026-04-07 — Platform Studio taxonomy and shared core naming are locked
+
+Status: active  
+Decision:
+
+- `Platform Studio` is the umbrella product surface
+- `Form Builder`, `Navigation Builder`, and `Action Builder` are tool names under that umbrella
+- the shared non-UI package is `@platform/platform-studio-core`
+- separate per-builder shared packages are deferred until reuse and API stability are real
+- active Form Builder UI language is `Model` and `View`
+- legacy `EntityDefinition` and `FieldDefinition` names may remain only as compatibility aliases during migration
+
+Primary sources:
+
+- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
+- `platform/docs/ai/modules/platform-studio.md`
+
+### 2026-04-07 — Form Builder locks its first integration contract before backend parallelization
+
+Status: active  
+Decision:
+
+- FE/BE parallelization starts only after the first Form Builder contract is locked
+- the first locked contract covers model list/detail, view list/detail, layout draft tree, locks, and save semantics
+- create/delete/clone/export/publish flows remain out of the first backend slice
+- canonical Form Builder route model is `/builder/forms`, `/builder/forms/:modelId`, `/builder/forms/:modelId/views/:viewId`
+
+Primary sources:
+
+- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
+- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 
 ### 2026-04-05 — Collection Table is a separate shared-runtime domain from Admin Module Registry
 

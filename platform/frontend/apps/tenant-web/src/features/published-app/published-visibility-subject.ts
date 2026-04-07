@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import { useAuth } from "@platform/auth-core";
-import type { VisibilitySubjectContext } from "@platform/platform-builder-core";
+import type { VisibilitySubjectContext } from "@platform/platform-studio-core";
 
 type PublishedVisibilitySubjectOverrideMode = "merge" | "replace";
 

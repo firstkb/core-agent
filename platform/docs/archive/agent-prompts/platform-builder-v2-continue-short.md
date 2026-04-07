@@ -1,4 +1,4 @@
-Продолжаем frontend development для Platform Builder V2.
+Продолжаем frontend development для Platform Studio.
 
 Отвечай мне по-русски.
 Markdown docs в репозитории пиши на английском.
@@ -8,13 +8,13 @@ Source of truth:
 - AGENTS.md
 - docs/README.md
 - docs/codex-native-repo.md
-- platform/frontend/docs/platform-builder-v2/README.md
-- platform/frontend/docs/platform-builder-v2/v2-foundation-brief.md
-- platform/frontend/docs/platform-builder-v2/forms-foundation-a-technical-map.md
-- platform/frontend/docs/platform-builder-v2/data-schema-storage-rules.md
-- platform/frontend/docs/platform-builder-v2/ezform-analysis.md
-- platform/frontend/docs/platform-builder-v2/ui-builder-backend-boundary.md
-- platform/frontend/docs/platform-builder-v2/form-builder-field-catalog.md
+- platform/frontend/docs/platform-studio/README.md
+- platform/frontend/docs/platform-studio/v2-foundation-brief.md
+- platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md
+- platform/frontend/docs/platform-studio/data-schema-storage-rules.md
+- platform/frontend/docs/platform-studio/ezform-analysis.md
+- platform/frontend/docs/platform-studio/ui-builder-backend-boundary.md
+- platform/frontend/docs/platform-studio/form-builder-field-catalog.md
 
 Reference rules:
 - EXTDB = legacy behavior reference only, no code copy
@@ -29,7 +29,7 @@ Approved direction:
 - canonical route: /builder/forms/:objectId/views/:viewId
 - keep implementation app-local in tenant-web
 - do not create a new shared package without proven reuse
-- keep platform-builder-core and published-app only as substrate/reference
+- keep platform-studio-core and published-app only as substrate/reference
 - frontend first, backend later
 
 Current Form Builder state:
@@ -45,17 +45,17 @@ Current Form Builder state:
 - reopen starts from root
 - unsaved-changes guard exists
 - app uses BrowserRouter, do not use useBlocker
-- dark theme already has local fixes in platform-builder-v2.css
+- dark theme already has local fixes in platform-studio.css
 
 Current key files:
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/platform-builder-v2.css
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/forms-builder-state.ts
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/forms-builder-icons.tsx
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/forms-placeholder-data.ts
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/pages/forms-index-page.tsx
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/forms/pages/forms-ui-schema-workspace-page.tsx
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/routes.tsx
-- platform/frontend/apps/tenant-web/src/features/platform-builder-v2/platform-builder-route-meta.ts
+- platform/frontend/apps/tenant-web/src/features/platform-studio/platform-studio.css
+- platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-state.ts
+- platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-icons.tsx
+- platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-placeholder-data.ts
+- platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-index-page.tsx
+- platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx
+- platform/frontend/apps/tenant-web/src/features/platform-studio/routes.tsx
+- platform/frontend/apps/tenant-web/src/features/platform-studio/platform-builder-route-meta.ts
 
 Field-catalog rules:
 - use form-builder-field-catalog.md as current final catalog

@@ -1,7 +1,7 @@
 # Current State
 
 Status: active snapshot
-Snapshot date: 2026-04-06
+Snapshot date: 2026-04-07
 
 Confidence classes:
 - `code-confirmed` = directly observed in code, config, imports, or repository tree
@@ -39,7 +39,7 @@ Confidence classes:
   - `forms`
   - `i18n`
   - `install-helper`
-  - `platform-builder-core`
+  - `platform-studio-core`
   - `tenant-core`
   - `ui-kit`
 
@@ -78,7 +78,10 @@ Confidence classes:
 ### Frontend foundation and builder
 
 - Shared frontend foundation docs are extensive and active.
-- Platform Builder V2 is the active reset direction for builder work.
+- Platform Studio is the active reset direction for builder work.
+- Platform Studio taxonomy is now locked around one umbrella plus multiple tools: Form Builder is active, Navigation Builder and Action Builder are planned.
+- `@platform/platform-studio-core` is the shared non-UI contract layer for Platform Studio builders.
+- The first Form Builder integration contract is now locked around model list/detail, view list/detail, layout draft tree, locks, and save semantics.
 - Collection Table is treated as its own reusable runtime/package domain; Module Registry is a proving surface, not the owner of the table contract.
 
 ## Inferred state
@@ -92,13 +95,14 @@ Confidence classes:
 - `tenant-pwa` is a deferred documentation concept only.
 - Cross-app Collection Table adoption is still a direction, but the frontend package extraction itself is now in place for admin-app consumers.
 - Collection Table still has deferred shared-capability work for FE/BE `XLS export`, `view`, and `pdf` support.
+- Navigation Builder and Action Builder remain planned Platform Studio tools; implementation has not started yet.
 
 ## Active workstreams
 
 1. Auth and session alignment
 2. Admin control plane hardening
 3. Schema and tenancy baseline
-4. Frontend foundation and Platform Builder V2
+4. Frontend foundation and Platform Studio
 5. Collection Table packaging direction
 6. Atlas-based control workflow pilot and run-artifact discipline
 
@@ -123,4 +127,4 @@ Confidence classes:
 - module registry task -> `modules/admin-module-registry.md`
 - collection-table runtime or package-promotion task -> `modules/collection-table.md`
 - migration, DB, or tenant isolation task -> `modules/schema-and-tenancy.md`
-- builder task -> `modules/platform-builder-v2.md`
+- builder task -> `modules/platform-studio.md`

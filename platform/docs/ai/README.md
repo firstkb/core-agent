@@ -55,7 +55,7 @@ These files describe what the platform is, which docs are authoritative, and whe
 - `modules/admin-control-plane.md`
 - `modules/admin-module-registry.md`
 - `modules/collection-table.md`
-- `modules/platform-builder-v2.md`
+- `modules/platform-studio.md`
 - `modules/schema-and-tenancy.md`
 
 Read only the modules that matter for the task.

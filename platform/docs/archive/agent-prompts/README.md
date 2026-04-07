@@ -13,6 +13,6 @@ Canonical memory now lives in:
 Archived prompt set currently stored here:
 
 - `backend-export-architecture-agent-prompt.md`
-- `platform-builder-v2-continue.md`
-- `platform-builder-v2-continue-short.md`
-- `platform-builder-v2-agent-prompts.md`
+- `platform-studio-continue.md`
+- `platform-studio-continue-short.md`
+- `platform-studio-agent-prompts.md`

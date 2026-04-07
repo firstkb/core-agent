@@ -111,6 +111,63 @@ func TestGetNavigationReturnsRootNavigation(t *testing.T) {
 	}
 }
 
+func TestGetNavigationMapsEmployeesCollectionFavorite(t *testing.T) {
+	userID := uuid.New()
+	moduleID := uuid.New()
+	sectionID := uuid.New()
+	repo := &fakeRepo{
+		user: &AdminUser{
+			ID:     userID,
+			Email:  "admin@platform.local",
+			Level:  100,
+			Status: "active",
+		},
+		rootModules: []ModuleRecord{
+			{
+				ID:        moduleID,
+				ModuleKey: "users",
+				Title:     "Employees",
+				Icon:      "users",
+				Sections: []SectionRecord{
+					{
+						ID:          sectionID,
+						SectionKey:  "list_of_users",
+						Title:       "List of Employees",
+						Description: "Platform admin employee directory.",
+						RoutePath:   "/admin/employees",
+						Access:      "write",
+					},
+				},
+			},
+		},
+		favoriteSurfaceIDs: []string{"employees.list"},
+	}
+
+	service := NewService(repo, func(moduleKey, sectionKey, _ string, isRoot bool) bool {
+		return isRoot && moduleKey == "users" && sectionKey == "list_of_users"
+	})
+	ctx := requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{
+		UserID: userID.String(),
+		Role:   "root",
+		Level:  100,
+		Scope:  "admin.api",
+	})
+
+	out, err := service.GetNavigation(ctx)
+	if err != nil {
+		t.Fatalf("GetNavigation returned error: %v", err)
+	}
+	if len(out.Favorites) != 1 {
+		t.Fatalf("expected one employees favorite, got %+v", out.Favorites)
+	}
+	if out.Favorites[0].ModuleKey != "users" || out.Favorites[0].SectionKey != "list_of_users" {
+		t.Fatalf("unexpected employees favorite %+v", out.Favorites[0])
+	}
+	if out.Favorites[0].RoutePath != "/admin/employees" {
+		t.Fatalf("expected employees route path, got %+v", out.Favorites[0])
+	}
+}
+
 func TestGetNavigationReturnsGrantedSectionsForNonRoot(t *testing.T) {
 	userID := uuid.New()
 	moduleID := uuid.New()

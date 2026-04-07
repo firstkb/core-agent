@@ -219,4 +219,73 @@ describe("admin navigation", () => {
     expect(routeMeta.kind).toBe("dashboard");
     expect(routeMeta.path).toBe("/dashboard");
   });
+
+  it("normalizes legacy users labels to employees labels before migration catches up", () => {
+    const usersNavigation: AdminNavigation = {
+      favorites: [],
+      is_root: true,
+      modules: [
+        {
+          description: "Admin user directory.",
+          icon: "users",
+          id: "module-users",
+          module_key: "users",
+          sections: [
+            {
+              access: "write",
+              description: "Admin user directory and future access assignment.",
+              id: "users-list",
+              route_path: "/admin/users",
+              section_key: "list_of_users",
+              title: "List of users",
+            },
+          ],
+          title: "Users",
+        },
+      ],
+    };
+
+    const navigation = getAdminNavigation("/admin/users", usersNavigation, translate);
+    const routeMeta = getAdminRouteMeta("/admin/users", usersNavigation, translate);
+    const backendSection = findAdminNavigationSection(usersNavigation, "/admin/users");
+
+    expect(navigation[1]?.label).toBe("Employees");
+    expect(navigation[1]?.children?.[0]?.label).toBe("List of Employees");
+    expect(routeMeta.label).toBe("List of Employees");
+    expect(routeMeta.parentLabel).toBe("Employees");
+    expect(backendSection?.moduleTitle).toBe("Employees");
+    expect(backendSection?.sectionTitle).toBe("List of Employees");
+  });
+
+  it("keeps employee edit pages attached to the employees parent route", () => {
+    const usersNavigation: AdminNavigation = {
+      favorites: [],
+      is_root: true,
+      modules: [
+        {
+          description: "Admin user directory.",
+          icon: "users",
+          id: "module-users",
+          module_key: "users",
+          sections: [
+            {
+              access: "write",
+              description: "Admin user directory and future access assignment.",
+              id: "users-list",
+              route_path: "/admin/users",
+              section_key: "list_of_users",
+              title: "List of users",
+            },
+          ],
+          title: "Users",
+        },
+      ],
+    };
+
+    const routeMeta = getAdminRouteMeta("/admin/users/edit/123", usersNavigation, translate);
+
+    expect(routeMeta.kind).toBe("employees-edit");
+    expect(routeMeta.parentLabel).toBe("Employees");
+    expect(routeMeta.parentPath).toBe("/admin/users");
+  });
 });

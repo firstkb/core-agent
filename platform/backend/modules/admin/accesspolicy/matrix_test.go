@@ -19,6 +19,22 @@ func TestRequirementForRouteMatchesExactAndPrefixBindings(t *testing.T) {
 		t.Fatalf("unexpected module registry requirement: %+v", requirement)
 	}
 
+	requirement = RequirementForRoute("ADMIN_EMPLOYEES_LIST_META_GET")
+	if requirement == nil {
+		t.Fatalf("expected employees list requirement")
+	}
+	if requirement.Kind != RequirementRootOnly || requirement.ModuleKey != "users" || requirement.SectionKey != "list_of_users" {
+		t.Fatalf("unexpected employees list requirement: %+v", requirement)
+	}
+
+	requirement = RequirementForRoute("ADMIN_EMPLOYEES_UPDATE")
+	if requirement == nil {
+		t.Fatalf("expected employees update requirement")
+	}
+	if requirement.Kind != RequirementRootOnly || requirement.ModuleKey != "users" || requirement.SectionKey != "list_of_users" {
+		t.Fatalf("unexpected employees update requirement: %+v", requirement)
+	}
+
 	if requirement := RequirementForRoute("ADMIN_UNKNOWN_GET"); requirement != nil {
 		t.Fatalf("expected nil requirement, got %+v", requirement)
 	}
@@ -30,6 +46,12 @@ func TestAllowsSectionNavigationHonorsCoverageAndAccess(t *testing.T) {
 	}
 	if AllowsSectionNavigation("module_registry", "modules_list", "write", false) {
 		t.Fatalf("expected root-only module registry section to stay hidden for non-root")
+	}
+	if !AllowsSectionNavigation("users", "list_of_users", "write", true) {
+		t.Fatalf("expected root employees section to be visible for root")
+	}
+	if AllowsSectionNavigation("users", "list_of_users", "write", false) {
+		t.Fatalf("expected root-only employees section to stay hidden for non-root")
 	}
 	if !AllowsSectionNavigation("tenant", "onboarding", "write", false) {
 		t.Fatalf("expected onboarding to be visible for non-root write grant")

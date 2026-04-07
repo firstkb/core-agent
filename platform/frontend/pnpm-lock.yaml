@@ -56,6 +56,9 @@ importers:
       '@platform/auth-core':
         specifier: workspace:*
         version: link:../../packages/auth-core
+      '@platform/collection-table':
+        specifier: workspace:*
+        version: link:../../packages/collection-table
       '@platform/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -142,6 +145,24 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
+
+  packages/collection-table:
+    dependencies:
+      '@platform/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@platform/ui-kit':
+        specifier: workspace:*
+        version: link:../ui-kit
+      react:
+        specifier: ^19.0.0
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.4(react@19.2.4)
+      react-router-dom:
+        specifier: ^7.3.0
+        version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
   packages/design-tokens: {}
 

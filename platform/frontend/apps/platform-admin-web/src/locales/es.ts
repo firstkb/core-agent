@@ -132,6 +132,12 @@ export const adminSpanishMessages = {
         label: "Editar",
         note: "Ruta del editor de modulos administrada por la app",
       },
+      employeesEdit: {
+        badge: "Activo",
+        headerTitle: "Editar empleado",
+        label: "Editar",
+        note: "Ruta del editor de empleados administrada por la app",
+      },
       modulesCreate: {
         badge: "Activo",
         headerTitle: "Crear modulo",
@@ -154,6 +160,7 @@ export const adminSpanishMessages = {
         notifications: "Notificaciones",
         openCurrentSection: "Abrir {{label}}",
         openDashboard: "Abrir panel",
+        openEmployeesList: "Abrir lista de empleados",
         openModulesList: "Abrir lista de modulos",
         operatorNotes: "{{count}} notas de operador siguen fijadas",
         reviewFavorites: "Revisar maquetas guardadas",

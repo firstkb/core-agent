@@ -1,7 +1,7 @@
 # Module Memory — Admin Control Plane
 
 Status: active
-Date: 2026-04-05
+Date: 2026-04-06
 
 ## Read this when
 
@@ -17,6 +17,7 @@ Date: 2026-04-05
 - `platform/backend/modules/admin/navigation`
 - `platform/backend/modules/admin/profile`
 - `platform/backend/modules/admin/tenantmanagement`
+- `platform/backend/modules/admin/employeeslist`
 - `platform/backend/modules/admin/accesspolicy`
 - `platform/backend/modules/admin/moduleregistrylist`
 - `platform/backend/modules/admin/moduleregistrymanage`
@@ -25,11 +26,13 @@ Date: 2026-04-05
 ## Confirmed frontend surfaces
 
 - `platform/frontend/apps/platform-admin-web/src/shared/navigation.ts`
+- `platform/frontend/apps/platform-admin-web/src/pages/employees-list/page.tsx`
 - admin shell bootstrap files under `platform-admin-web/src/app/*`
 
 ## Locked invariants
 
 - `Module registry` is root-only
+- `Employees` directory is root-only
 - non-root admin access is section-level only
 - access model is allow-only
 - current access values are `read` and `write`
@@ -43,6 +46,7 @@ Date: 2026-04-05
 Documented as completed in backend brief:
 
 - root-only module registry schema and list API
+- root-only employees directory API backed by platform admin users
 - module and section management API
 - section-level grant model
 - admin navigation projection
@@ -75,6 +79,7 @@ Documented as planned / cleanup phase:
 Update this file when:
 
 - a new admin section becomes part of the approved rollout slice
+- a new root-only admin section becomes first-class in navigation or API composition
 - grant semantics change
 - navigation response shape changes
 - root-only boundaries change

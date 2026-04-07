@@ -13,6 +13,7 @@ import (
 	"dtriton.com/platform/backend/internal/platform/httpx/router"
 	"dtriton.com/platform/backend/internal/platform/postgres"
 	adminaccesspolicy "dtriton.com/platform/backend/modules/admin/accesspolicy"
+	employeeslist "dtriton.com/platform/backend/modules/admin/employeeslist"
 	moduleregistrygrants "dtriton.com/platform/backend/modules/admin/moduleregistrygrants"
 	moduleregistrylist "dtriton.com/platform/backend/modules/admin/moduleregistrylist"
 	moduleregistrymanage "dtriton.com/platform/backend/modules/admin/moduleregistrymanage"
@@ -70,6 +71,7 @@ type Server struct {
 	adminAccessPolicy      *adminaccesspolicy.Service
 	adminNavigationHT      *adminnavigationsvc.Handler
 	adminProfileHT         *adminprofilesvc.Handler
+	employeesListHT        *employeeslist.Handler
 	moduleRegistryListHT   *moduleregistrylist.Handler
 	moduleRegistryGrantHT  *moduleregistrygrants.Handler
 	moduleRegistryManageHT *moduleregistrymanage.Handler

@@ -29,6 +29,7 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 
 	srv.registerAdminNavigationRoutes(b)
 	srv.registerAdminProfileRoutes(b)
+	srv.registerEmployeesListRoutes(b)
 	srv.registerTenantManagementRoutes(b)
 	srv.registerModuleRegistryListRoutes(b)
 	srv.registerModuleRegistryManageRoutes(b)

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import type {
   CollectionTableFieldDefinition,
   CollectionTableMetaResponse,
-} from "./collection-table-contract";
-import type { PersistedCollectionTableState } from "./collection-table-state";
+  PersistedCollectionTableState,
+} from "@platform/collection-table";
 import {
   buildAppliedQuickFilter,
   createDefaultCollectionState,
@@ -15,7 +15,7 @@ import {
   getRuntimeCollectionColumns,
   reconcileSelectedRowIds,
   resolveCollectionStateForMeta,
-} from "./collection-table-runtime";
+} from "@platform/collection-table";
 
 function createField(
   overrides: Partial<CollectionTableFieldDefinition> & Pick<CollectionTableFieldDefinition, "id" | "label" | "type">,

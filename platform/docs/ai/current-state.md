@@ -1,7 +1,7 @@
 # Current State
 
 Status: active snapshot
-Snapshot date: 2026-04-05
+Snapshot date: 2026-04-06
 
 Confidence classes:
 - `code-confirmed` = directly observed in code, config, imports, or repository tree
@@ -19,7 +19,7 @@ Confidence classes:
   - `cmd/api-tenant`
   - `cmd/auth`
   - `cmd/migrate`
-- Admin modules observed in code include navigation, profile, tenant management, module registry list, module registry management, module registry grants, and access policy.
+- Admin modules observed in code include navigation, profile, tenant management, employees list, module registry list, module registry management, module registry grants, and access policy.
 - Tenant module currently confirmed in code:
   - `tenant/profile`
 - Shared backend areas observed in code include authentication, sessions, collection-table helpers, collection preferences, audit, notifications, and forms.
@@ -34,6 +34,7 @@ Confidence classes:
   - `api-client`
   - `app-shell`
   - `auth-core`
+  - `collection-table`
   - `design-tokens`
   - `forms`
   - `i18n`
@@ -44,7 +45,8 @@ Confidence classes:
 
 ### Cross-stack
 
-- Collection Table is currently proven inside the admin app module-registry list page.
+- Collection Table now exists as a frontend workspace package under `platform/frontend/packages/collection-table` and is consumed by the admin app module-registry and Employees list pages.
+- Collection Table shared-capability backlog still includes FE/BE completion for optional `XLS export`, `view`, and `pdf` features; these are intended as opt-in table capabilities, not mandatory for every consumer.
 - FE/BE coordinated work now has an installed Atlas-based control workflow under `.agents/skills/ramp-conductor/` plus `platform/docs/ai/prompts/*`, `templates/*`, and `runs/*`.
 
 ## Doc-confirmed active contracts
@@ -54,6 +56,8 @@ Confidence classes:
 - The active auth contract is cookie-refresh based.
 - `packages/api-client` uses `credentials: "include"` for auth endpoints.
 - `packages/auth-core` persists access token and expiry, not an active refresh token.
+- `packages/auth-core` now scales its refresh lead window from the token lifetime, so short-lived access tokens do not trigger an immediate post-login refresh loop.
+- Non-401 refresh failures in `packages/auth-core` now preserve the session hint and avoid clearing a still-valid access token during bootstrap or scheduled refresh retries.
 - Frontend auth follow-up docs remain a live cleanup surface, not a closed topic.
 
 ### Admin control plane
@@ -61,6 +65,7 @@ Confidence classes:
 - Module Registry backend phases 1–5 are documented as completed.
 - Admin navigation exists as a first-class backend contract and remains separate from profile bootstrap.
 - Current non-root rollout slice is tenant onboarding.
+- Root-only admin list surfaces now include Module Registry and Employees.
 
 ### Schema and tenancy baseline
 
@@ -83,7 +88,8 @@ Confidence classes:
 
 - `cmd/worker` is described in backend target docs as a runtime surface, but is not present in code yet.
 - `tenant-pwa` is a deferred documentation concept only.
-- Collection Table package promotion is still a direction, not a completed extraction.
+- Cross-app Collection Table adoption is still a direction, but the frontend package extraction itself is now in place for admin-app consumers.
+- Collection Table still has deferred shared-capability work for FE/BE `XLS export`, `view`, and `pdf` support.
 
 ## Active workstreams
 

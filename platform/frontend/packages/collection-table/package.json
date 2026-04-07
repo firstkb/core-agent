@@ -1,0 +1,22 @@
+{
+  "name": "@platform/collection-table",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@platform/i18n": "workspace:*",
+    "@platform/ui-kit": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.3.0"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

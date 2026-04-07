@@ -778,6 +778,8 @@ Example payload:
 - after a successful bulk action, frontend should re-run the current `query`
 - `Reload` should usually repeat `query`
 - `Reload` may also re-fetch `meta` only when schema invalidation is needed
+- after a successful favorite toggle, shared runtime should update the local favorite state first
+- any shell or app-level follow-up after favorite toggle should happen through a host-owned callback, not package-specific navigation knowledge
 - current admin host route contract:
   - `rowActions[{ id: "edit", execution: "frontend" }]` navigates to `/modules/edit/{row.id}`
 

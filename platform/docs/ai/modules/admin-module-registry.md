@@ -1,7 +1,7 @@
 # Module Memory — Admin Module Registry
 
 Status: active
-Date: 2026-04-05
+Date: 2026-04-06
 
 ## Read this when
 
@@ -27,7 +27,8 @@ It currently uses collection-table for the list surface, but it does not own the
 
 - `platform/frontend/apps/platform-admin-web/src/pages/modules-list/page.tsx`
 - `platform/frontend/apps/platform-admin-web/src/pages/modules-edit/page.tsx`
-- `platform/frontend/apps/platform-admin-web/src/shared/admin-module-registry-client.ts`
+- `platform/frontend/apps/platform-admin-web/src/shared/admin-collection-table-client.ts`
+- `platform/frontend/packages/collection-table`
 
 ## Locked invariants
 
@@ -38,6 +39,7 @@ It currently uses collection-table for the list surface, but it does not own the
 - navigation stays separate from profile bootstrap
 - the list surface id stays stable as `module-registry.list`
 - collection-table is the current list runtime, but module registry page logic must not redefine the universal table contract
+- module registry is now one of multiple admin-app collection-table consumers
 
 ## Canonical endpoint families
 

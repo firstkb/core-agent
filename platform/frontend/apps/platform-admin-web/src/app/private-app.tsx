@@ -29,6 +29,8 @@ import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { AdminDashboardPage } from "../pages/dashboard/page";
+import { AdminEmployeeEditPage } from "../pages/employees-edit/page";
+import { AdminEmployeesListPage } from "../pages/employees-list/page";
 import { AdminModuleEditPage } from "../pages/modules-edit/page";
 import { AdminModulesListPage } from "../pages/modules-list/page";
 import { AdminRuntimeSectionPage } from "../pages/runtime-section/page";
@@ -41,6 +43,7 @@ import {
   getAdminNavigation,
   getAdminRouteMeta,
 } from "../shared/navigation";
+import { AdminNavigationRefreshProvider } from "../shared/admin-navigation-refresh";
 import type { AdminWorkspaceUserSession } from "./app";
 import "./app.css";
 
@@ -56,10 +59,12 @@ const AdminUiLabPage = lazy(async () => {
 });
 
 export function PrivateApp({
+  adminApiUrl,
   navigation,
   onNavigationRefresh,
   userSession,
 }: {
+  adminApiUrl: string;
   navigation: AdminNavigation;
   onNavigationRefresh: () => Promise<void>;
   userSession: AdminWorkspaceUserSession;
@@ -182,6 +187,8 @@ export function PrivateApp({
           <MenuItem onClick={() => navigate("/dashboard")}>{t("admin.shell.menu.openDashboard")}</MenuItem>
         ) : activeRouteMeta.kind === "modules-create" || activeRouteMeta.kind === "modules-edit" ? (
           <MenuItem onClick={() => navigate(modulesListResetPath)}>{t("admin.shell.menu.openModulesList")}</MenuItem>
+        ) : activeRouteMeta.kind === "employees-edit" ? (
+          <MenuItem onClick={() => navigate(activeRouteMeta.parentPath ?? "/admin/users")}>{t("admin.shell.menu.openEmployeesList")}</MenuItem>
         ) : (
           <MenuItem onClick={() => navigate(activeRouteMeta.path)}>
             {t("admin.shell.menu.openCurrentSection", { label: activeRouteMeta.label })}
@@ -195,201 +202,206 @@ export function PrivateApp({
 
   if (isUiLabRoute) {
     return (
-      <Suspense
-        fallback={
-          <main className="admin-web__ui-lab-loading-shell">
-            <div className="admin-web__ui-lab-loading-card">
-              <p className="admin-web__ui-lab-loading-eyebrow">{t("admin.loaders.uiLabEyebrow")}</p>
-              <h1 className="admin-web__ui-lab-loading-title">{t("admin.loaders.uiLabTitle")}</h1>
-              <p className="admin-web__ui-lab-loading-copy">
-                {t("admin.loaders.uiLabCopy")}
-              </p>
-            </div>
-          </main>
-        }
-      >
-        <Routes>
-          <Route element={<AdminUiLabPage />} path="/root/ui-lab" />
-          <Route element={<Navigate replace to="/root/ui-lab" />} path="*" />
-        </Routes>
-      </Suspense>
+      <AdminNavigationRefreshProvider onNavigationRefresh={onNavigationRefresh}>
+        <Suspense
+          fallback={
+            <main className="admin-web__ui-lab-loading-shell">
+              <div className="admin-web__ui-lab-loading-card">
+                <p className="admin-web__ui-lab-loading-eyebrow">{t("admin.loaders.uiLabEyebrow")}</p>
+                <h1 className="admin-web__ui-lab-loading-title">{t("admin.loaders.uiLabTitle")}</h1>
+                <p className="admin-web__ui-lab-loading-copy">
+                  {t("admin.loaders.uiLabCopy")}
+                </p>
+              </div>
+            </main>
+          }
+        >
+          <Routes>
+            <Route element={<AdminUiLabPage />} path="/root/ui-lab" />
+            <Route element={<Navigate replace to="/root/ui-lab" />} path="*" />
+          </Routes>
+        </Suspense>
+      </AdminNavigationRefreshProvider>
     );
   }
 
   return (
-    <>
-      <WorkspaceShell
-        brand={t("admin.shell.brand")}
-        enableCollapsedRailHoverPreview
-        layout="rail"
-        showHeaderSurfaceMarker={false}
-        showSidebarSurfaceMarker={false}
-        surfaceIcon={<ShieldKeyIcon />}
-        surfaceLabel={t("admin.shell.surfaceLabel")}
-        surfaceTone="admin"
-        railBottom={
-          <div className="admin-web__rail-bottom-block">
-            <div className="admin-web__rail-environment">
-              <span className="admin-web__rail-environment-label">{appBuild.env}</span>
-              <span className="admin-web__rail-environment-version">v{appBuild.version}</span>
+    <AdminNavigationRefreshProvider onNavigationRefresh={onNavigationRefresh}>
+      <>
+        <WorkspaceShell
+          brand={t("admin.shell.brand")}
+          enableCollapsedRailHoverPreview
+          layout="rail"
+          showHeaderSurfaceMarker={false}
+          showSidebarSurfaceMarker={false}
+          surfaceIcon={<ShieldKeyIcon />}
+          surfaceLabel={t("admin.shell.surfaceLabel")}
+          surfaceTone="admin"
+          railBottom={
+            <div className="admin-web__rail-bottom-block">
+              <div className="admin-web__rail-environment">
+                <span className="admin-web__rail-environment-label">{appBuild.env}</span>
+                <span className="admin-web__rail-environment-version">v{appBuild.version}</span>
+              </div>
             </div>
-          </div>
-        }
-        railBottomCollapsed={
-          <Menu align="end">
-            <MenuTrigger>
-              <button
-                aria-label={t("admin.shell.aria.openUserMenu")}
-                className="admin-web__header-profile-trigger admin-web__rail-user-trigger"
-                type="button"
-              >
-                <span className="admin-web__header-profile-initial">
-                  {userSession.initial}
-                </span>
-              </button>
-            </MenuTrigger>
-            <MenuContent className="admin-web__header-menu admin-web__header-menu--profile">
-              {renderProfileMenuItems()}
-            </MenuContent>
-          </Menu>
-        }
-        railBrandLabel={t("admin.navigation.dashboard.label")}
-        railBrandOnSelect={() => navigate("/dashboard")}
-        railMark={<DashboardGridIcon />}
-        railUtilities={[
-          {
-            icon: <DocumentListIcon />,
-            label: t("admin.shell.menu.tasksCenter"),
-            onSelect: () => setUtilityPanel("tasks"),
-          },
-          {
-            badge: favoriteShortcuts.length ? String(favoriteShortcuts.length) : undefined,
-            icon: <StarIcon />,
-            label: t("admin.shell.menu.favorites"),
-            onSelect: () => setUtilityPanel("favorites"),
-          },
-        ]}
-        showRailCollapse
-        sidebarCollapsedStorageKey={adminSidebarCollapsedStorageKey}
-        sidebarNavigationLabel={
-          <div className="admin-web__sidebar-section-heading">{t("admin.shell.sidebarSection")}</div>
-        }
-        sidebarFooter={
-          <Menu align="end">
-            <MenuTrigger>
-              <button
-                aria-label={t("admin.shell.aria.openUserMenu")}
-                className="admin-web__sidebar-user"
-                type="button"
-              >
-                <div aria-hidden="true" className="admin-web__sidebar-user-avatar">
-                  {userSession.initial}
-                </div>
-                <div className="admin-web__sidebar-user-copy">
-                  <span className="admin-web__sidebar-user-name">{userSession.displayName}</span>
-                  <span className="admin-web__sidebar-user-email">{userSession.secondaryLabel}</span>
-                </div>
-              </button>
-            </MenuTrigger>
-            <MenuContent className="admin-web__header-menu admin-web__header-menu--profile">
-              {renderProfileMenuItems()}
-            </MenuContent>
-          </Menu>
-        }
-        mobileHeaderBrand={
-          <div className="admin-web__mobile-logo-lockup">
-            <img
-              alt="FirstKB Admin"
-              className="admin-web__mobile-logo admin-web__mobile-logo--dark"
-              src="/assets/logo-dark.svg"
-            />
-            <img
-              alt="FirstKB Admin"
-              className="admin-web__mobile-logo admin-web__mobile-logo--light"
-              src="/assets/logo-light.svg"
-            />
-          </div>
-        }
-        sidebarHeader={
-          <div className="admin-web__sidebar-logo-lockup">
-            <img
-              alt="FirstKB Admin"
-              className="admin-web__sidebar-logo admin-web__sidebar-logo--dark"
-              src="/assets/logo-dark.svg"
-            />
-            <img
-              alt="FirstKB Admin"
-              className="admin-web__sidebar-logo admin-web__sidebar-logo--light"
-              src="/assets/logo-light.svg"
-            />
-          </div>
-        }
-        navigation={getAdminNavigation(location.pathname, navigation, t, (path) => navigate(path))}
-        headerMeta={renderHeaderBreadcrumb()}
-        headerTitle={activeRouteMeta.label}
-        headerActions={
-          <div className="admin-web__header-utility-bar">
-            <Menu align="end">
-              <MenuTrigger>
-                <button
-                  aria-label={t("admin.shell.aria.openQuickCreateMenu")}
-                  className="admin-web__header-icon-button"
-                  type="button"
-                >
-                  <PlusIcon />
-                </button>
-              </MenuTrigger>
-              <MenuContent className="admin-web__header-menu">
-                <MenuLabel>{quickActionMenuLabel}</MenuLabel>
-                {renderQuickActionMenuItems()}
-              </MenuContent>
-            </Menu>
-
-            <Menu align="end">
-              <MenuTrigger>
-                <button
-                  aria-label={t("admin.shell.aria.openNotifications")}
-                  className="admin-web__header-icon-button"
-                  type="button"
-                >
-                  <BellIcon />
-                  <span className="admin-web__header-icon-badge">3</span>
-                </button>
-              </MenuTrigger>
-              <MenuContent className="admin-web__header-menu">
-                <MenuLabel>{t("admin.shell.menu.notifications")}</MenuLabel>
-                <MenuItem onClick={() => navigate(activeRouteMeta.path)}>{notificationSummary}</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("help")}>{t("admin.shell.menu.loadingGuidance")}</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.operatorNotes", { count: 3 })}</MenuItem>
-              </MenuContent>
-            </Menu>
-
-          </div>
-        }
-      >
-        <Routes>
-          <Route element={<Navigate replace to="/dashboard" />} path="/" />
-          <Route element={<AdminDashboardPage />} path="/dashboard" />
-          <Route
-            element={<AdminModulesListPage onNavigationRefresh={onNavigationRefresh} />}
-            path="/modules/list"
-          />
-          <Route element={<AdminModuleEditPage />} path="/modules/edit/:moduleId" />
-          <Route element={<AdminRuntimeSectionPage navigation={navigation} />} path="/admin/*" />
-          <Route element={<Navigate replace to="/dashboard" />} path="*" />
-        </Routes>
-      </WorkspaceShell>
-
-      <AdminRailUtilitySheet
-        favorites={favoriteShortcuts}
-        onNavigate={(path) => navigate(path)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setUtilityPanel(null);
           }
-        }}
-        panel={utilityPanel}
-      />
-    </>
+          railBottomCollapsed={
+            <Menu align="end">
+              <MenuTrigger>
+                <button
+                  aria-label={t("admin.shell.aria.openUserMenu")}
+                  className="admin-web__header-profile-trigger admin-web__rail-user-trigger"
+                  type="button"
+                >
+                  <span className="admin-web__header-profile-initial">
+                    {userSession.initial}
+                  </span>
+                </button>
+              </MenuTrigger>
+              <MenuContent className="admin-web__header-menu admin-web__header-menu--profile">
+                {renderProfileMenuItems()}
+              </MenuContent>
+            </Menu>
+          }
+          railBrandLabel={t("admin.navigation.dashboard.label")}
+          railBrandOnSelect={() => navigate("/dashboard")}
+          railMark={<DashboardGridIcon />}
+          railUtilities={[
+            {
+              icon: <DocumentListIcon />,
+              label: t("admin.shell.menu.tasksCenter"),
+              onSelect: () => setUtilityPanel("tasks"),
+            },
+            {
+              badge: favoriteShortcuts.length ? String(favoriteShortcuts.length) : undefined,
+              icon: <StarIcon />,
+              label: t("admin.shell.menu.favorites"),
+              onSelect: () => setUtilityPanel("favorites"),
+            },
+          ]}
+          showRailCollapse
+          sidebarCollapsedStorageKey={adminSidebarCollapsedStorageKey}
+          sidebarNavigationLabel={
+            <div className="admin-web__sidebar-section-heading">{t("admin.shell.sidebarSection")}</div>
+          }
+          sidebarFooter={
+            <Menu align="end">
+              <MenuTrigger>
+                <button
+                  aria-label={t("admin.shell.aria.openUserMenu")}
+                  className="admin-web__sidebar-user"
+                  type="button"
+                >
+                  <div aria-hidden="true" className="admin-web__sidebar-user-avatar">
+                    {userSession.initial}
+                  </div>
+                  <div className="admin-web__sidebar-user-copy">
+                    <span className="admin-web__sidebar-user-name">{userSession.displayName}</span>
+                    <span className="admin-web__sidebar-user-email">{userSession.secondaryLabel}</span>
+                  </div>
+                </button>
+              </MenuTrigger>
+              <MenuContent className="admin-web__header-menu admin-web__header-menu--profile">
+                {renderProfileMenuItems()}
+              </MenuContent>
+            </Menu>
+          }
+          mobileHeaderBrand={
+            <div className="admin-web__mobile-logo-lockup">
+              <img
+                alt="FirstKB Admin"
+                className="admin-web__mobile-logo admin-web__mobile-logo--dark"
+                src="/assets/logo-dark.svg"
+              />
+              <img
+                alt="FirstKB Admin"
+                className="admin-web__mobile-logo admin-web__mobile-logo--light"
+                src="/assets/logo-light.svg"
+              />
+            </div>
+          }
+          sidebarHeader={
+            <div className="admin-web__sidebar-logo-lockup">
+              <img
+                alt="FirstKB Admin"
+                className="admin-web__sidebar-logo admin-web__sidebar-logo--dark"
+                src="/assets/logo-dark.svg"
+              />
+              <img
+                alt="FirstKB Admin"
+                className="admin-web__sidebar-logo admin-web__sidebar-logo--light"
+                src="/assets/logo-light.svg"
+              />
+            </div>
+          }
+          navigation={getAdminNavigation(location.pathname, navigation, t, (path) => navigate(path))}
+          headerMeta={renderHeaderBreadcrumb()}
+          headerTitle={activeRouteMeta.label}
+          headerActions={
+            <div className="admin-web__header-utility-bar">
+              <Menu align="end">
+                <MenuTrigger>
+                  <button
+                    aria-label={t("admin.shell.aria.openQuickCreateMenu")}
+                    className="admin-web__header-icon-button"
+                    type="button"
+                  >
+                    <PlusIcon />
+                  </button>
+                </MenuTrigger>
+                <MenuContent className="admin-web__header-menu">
+                  <MenuLabel>{quickActionMenuLabel}</MenuLabel>
+                  {renderQuickActionMenuItems()}
+                </MenuContent>
+              </Menu>
+
+              <Menu align="end">
+                <MenuTrigger>
+                  <button
+                    aria-label={t("admin.shell.aria.openNotifications")}
+                    className="admin-web__header-icon-button"
+                    type="button"
+                  >
+                    <BellIcon />
+                    <span className="admin-web__header-icon-badge">3</span>
+                  </button>
+                </MenuTrigger>
+                <MenuContent className="admin-web__header-menu">
+                  <MenuLabel>{t("admin.shell.menu.notifications")}</MenuLabel>
+                  <MenuItem onClick={() => navigate(activeRouteMeta.path)}>{notificationSummary}</MenuItem>
+                  <MenuItem onClick={() => setUtilityPanel("help")}>{t("admin.shell.menu.loadingGuidance")}</MenuItem>
+                  <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("admin.shell.menu.operatorNotes", { count: 3 })}</MenuItem>
+                </MenuContent>
+              </Menu>
+
+            </div>
+          }
+        >
+          <Routes>
+            <Route element={<Navigate replace to="/dashboard" />} path="/" />
+            <Route element={<AdminDashboardPage />} path="/dashboard" />
+            <Route element={<AdminModulesListPage />} path="/modules/list" />
+            <Route element={<AdminEmployeesListPage />} path="/admin/employees" />
+            <Route element={<AdminEmployeesListPage />} path="/admin/users" />
+            <Route element={<AdminEmployeeEditPage adminApiUrl={adminApiUrl} />} path="/admin/users/edit/:userId" />
+            <Route element={<AdminEmployeeEditPage adminApiUrl={adminApiUrl} />} path="/admin/employees/edit/:userId" />
+            <Route element={<AdminModuleEditPage />} path="/modules/edit/:moduleId" />
+            <Route element={<AdminRuntimeSectionPage navigation={navigation} />} path="/admin/*" />
+            <Route element={<Navigate replace to="/dashboard" />} path="*" />
+          </Routes>
+        </WorkspaceShell>
+
+        <AdminRailUtilitySheet
+          favorites={favoriteShortcuts}
+          onNavigate={(path) => navigate(path)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setUtilityPanel(null);
+            }
+          }}
+          panel={utilityPanel}
+        />
+      </>
+    </AdminNavigationRefreshProvider>
   );
 }

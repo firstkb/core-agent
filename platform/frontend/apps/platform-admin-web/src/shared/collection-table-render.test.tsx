@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { CollectionTableMetaResponse } from "./collection-table-contract";
-import { createCollectionRenderConfig } from "./collection-table-render";
+import {
+  createCollectionRenderConfig,
+  type CollectionTableMetaResponse,
+} from "@platform/collection-table";
 
 function createMeta(
   overrides: Partial<CollectionTableMetaResponse> = {},

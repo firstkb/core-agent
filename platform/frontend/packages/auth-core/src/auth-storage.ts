@@ -57,6 +57,17 @@ function extractExpiresAtFromToken(accessToken: string) {
   return exp * 1000;
 }
 
+function extractIssuedAtFromToken(accessToken: string) {
+  const payload = decodeJwtPayload<Record<string, unknown>>(accessToken);
+  const iat = payload?.iat;
+
+  if (typeof iat !== "number" || !Number.isFinite(iat)) {
+    return null;
+  }
+
+  return iat * 1000;
+}
+
 function resolveExpiresAt(tokens: Pick<AuthTokens, "accessToken" | "expiresAt">) {
   if (Number.isFinite(tokens.expiresAt) && tokens.expiresAt > 0) {
     return tokens.expiresAt;
@@ -127,7 +138,10 @@ function readAuthSessionHint(namespace: AuthStorageNamespace = defaultAuthStorag
   return window.localStorage.getItem(sessionHintStorageKey(namespace)) === "1";
 }
 
-function clearStoredAuthSession(namespace: AuthStorageNamespace = defaultAuthStorageNamespace) {
+function clearStoredAuthSession(
+  namespace: AuthStorageNamespace = defaultAuthStorageNamespace,
+  options?: { preserveSessionHint?: boolean },
+) {
   if (typeof window === "undefined") {
     return;
   }
@@ -139,7 +153,9 @@ function clearStoredAuthSession(namespace: AuthStorageNamespace = defaultAuthSto
   // Remove legacy keys from the previous browser-side session contract.
   window.localStorage.removeItem(buildStorageKey(namespace, "idToken"));
   window.localStorage.removeItem(buildStorageKey(namespace, "userId"));
-  window.localStorage.removeItem(sessionHintStorageKey(namespace));
+  if (!options?.preserveSessionHint) {
+    window.localStorage.removeItem(sessionHintStorageKey(namespace));
+  }
 }
 
 export {
@@ -147,6 +163,7 @@ export {
   decodeJwtPayload,
   defaultAuthStorageNamespace,
   extractExpiresAtFromToken,
+  extractIssuedAtFromToken,
   extractUserIdFromToken,
   persistAuthSessionHint,
   persistAuthTokens,

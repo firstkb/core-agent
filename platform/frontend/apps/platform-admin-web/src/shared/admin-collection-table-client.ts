@@ -1,16 +1,20 @@
 import { ApiClientError } from "@platform/api-client";
+import { isUnauthorizedApiError } from "@platform/api-client";
 
 import type {
+  CollectionTableAdapter,
   CollectionTableBulkActionRequest,
+  CollectionTableFavoriteToggleResult,
   CollectionTableMetaResponse,
   CollectionTableQueryRequest,
   CollectionTableQueryResponse,
+  CollectionTableRowActionRequest,
   CollectionTableSavedFilterSet,
   CollectionTableSavedFilterSetCreateInput,
   CollectionTableSearchSuggestionGroup,
   CollectionTableSearchSuggestionItem,
   CollectionTableSearchSuggestionsResponse,
-} from "./collection-table-contract";
+} from "@platform/collection-table";
 
 type BackendEnvelope<T> = {
   code?: string;
@@ -19,42 +23,42 @@ type BackendEnvelope<T> = {
   status?: string;
 };
 
-type AdminModuleRegistryActionResult = {
+type AdminCollectionTableActionResult = {
   downloadUrl?: string;
   ok?: boolean;
 };
 
-type AdminModuleRegistryClient = {
+type AdminCollectionTableSessionClient = {
   createSavedFilterSet: (
     accessToken: string,
     input: CollectionTableSavedFilterSetCreateInput,
   ) => Promise<CollectionTableSavedFilterSet>;
-  exportXls: (
+  exportXls?: (
     accessToken: string,
     input: { query: CollectionTableQueryRequest },
-  ) => Promise<AdminModuleRegistryActionResult | void>;
+  ) => Promise<AdminCollectionTableActionResult | void>;
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
   query: (
     accessToken: string,
     request: CollectionTableQueryRequest,
   ) => Promise<CollectionTableQueryResponse>;
-  runBulkAction: (
+  runBulkAction?: (
     accessToken: string,
     input: CollectionTableBulkActionRequest,
   ) => Promise<void>;
-  runRowAction: (
+  runRowAction?: (
     accessToken: string,
-    input: { actionId: string; rowId: string },
-  ) => Promise<AdminModuleRegistryActionResult | void>;
+    input: CollectionTableRowActionRequest,
+  ) => Promise<AdminCollectionTableActionResult | void>;
   toggleFavorite: (
     accessToken: string,
-  ) => Promise<{ isFavorite: boolean }>;
+  ) => Promise<CollectionTableFavoriteToggleResult>;
 };
 
 const runtimeConfigStorageKey = "platform.admin.config";
 const adminApiUrlStorageKey = "adminApiUrl";
-const moduleRegistryListPathPrefix = "/app/admin/module-registry/list";
+const MISSING_ADMIN_SESSION_ERROR_CODE = "admin_session_missing";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -62,6 +66,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.replace(/\/+$/, "");
+}
+
+function normalizePathPrefix(pathPrefix: string) {
+  return `/${pathPrefix.trim().replace(/^\/+|\/+$/g, "")}`;
 }
 
 function readAdminApiUrlFromStorage() {
@@ -160,7 +168,7 @@ function normalizeSearchSuggestionsResponse(
   };
 }
 
-async function requestAdminModuleRegistry<T>(
+async function requestAdminCollectionTable<T>(
   path: string,
   options: {
     accessToken: string;
@@ -233,11 +241,89 @@ async function requestAdminModuleRegistry<T>(
   return payload as T;
 }
 
-export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
+function openDownloadUrl(downloadUrl?: string) {
+  if (!downloadUrl || typeof window === "undefined") {
+    return;
+  }
+
+  window.open(downloadUrl, "_blank", "noopener,noreferrer");
+}
+
+export function createAdminCollectionTableAdapter(options: {
+  client: AdminCollectionTableSessionClient;
+  getAccessToken: () => string | null | undefined;
+  onUnauthorized: () => void | Promise<void>;
+}): CollectionTableAdapter {
+  async function runWithAdminSession<T>(
+    operation: (accessToken: string) => Promise<T>,
+  ) {
+    const accessToken = options.getAccessToken();
+
+    if (!accessToken) {
+      void options.onUnauthorized();
+      throw new ApiClientError("Admin session is unavailable.", {
+        code: MISSING_ADMIN_SESSION_ERROR_CODE,
+        statusCode: 401,
+      });
+    }
+
+    try {
+      return await operation(accessToken);
+    } catch (requestError) {
+      if (isUnauthorizedApiError(requestError)) {
+        void options.onUnauthorized();
+      }
+
+      throw requestError;
+    }
+  }
+
+  return {
+    createSavedFilterSet: async (input) =>
+      runWithAdminSession((accessToken) => options.client.createSavedFilterSet(accessToken, input)),
+    exportXls: options.client.exportXls
+      ? async (request) => {
+        const result = await runWithAdminSession((accessToken) =>
+          options.client.exportXls!(accessToken, request),
+        );
+        openDownloadUrl(result?.downloadUrl);
+      }
+      : undefined,
+    loadMeta: async () =>
+      runWithAdminSession((accessToken) => options.client.loadMeta(accessToken)),
+    loadSearchSuggestions: async () =>
+      runWithAdminSession((accessToken) => options.client.loadSearchSuggestions(accessToken)),
+    query: async (request) =>
+      runWithAdminSession((accessToken) => options.client.query(accessToken, request)),
+    runBulkAction: options.client.runBulkAction
+      ? async (input) =>
+        runWithAdminSession((accessToken) => options.client.runBulkAction!(accessToken, input))
+      : undefined,
+    runRowAction: options.client.runRowAction
+      ? async (input) => {
+        const result = await runWithAdminSession((accessToken) =>
+          options.client.runRowAction!(accessToken, input),
+        );
+        openDownloadUrl(result?.downloadUrl);
+      }
+      : undefined,
+    toggleFavorite: async () =>
+      runWithAdminSession((accessToken) => options.client.toggleFavorite(accessToken)),
+  };
+}
+
+export function createAdminCollectionTableClient(options: {
+  pathPrefix: string;
+  supportsBulkActions?: boolean;
+  supportsExportXls?: boolean;
+  supportsRowActions?: boolean;
+}): AdminCollectionTableSessionClient {
+  const pathPrefix = normalizePathPrefix(options.pathPrefix);
+
   return {
     async createSavedFilterSet(accessToken, input) {
-      return requestAdminModuleRegistry<CollectionTableSavedFilterSet>(
-        `${moduleRegistryListPathPrefix}/saved-filters`,
+      return requestAdminCollectionTable<CollectionTableSavedFilterSet>(
+        `${pathPrefix}/saved-filters`,
         {
           accessToken,
           body: input,
@@ -246,8 +332,12 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async exportXls(accessToken, input) {
-      return requestAdminModuleRegistry<AdminModuleRegistryActionResult | void>(
-        `${moduleRegistryListPathPrefix}/export-xls`,
+      if (!options.supportsExportXls) {
+        return undefined;
+      }
+
+      return requestAdminCollectionTable<AdminCollectionTableActionResult | void>(
+        `${pathPrefix}/export-xls`,
         {
           accessToken,
           allowEmptySuccess: true,
@@ -257,8 +347,8 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async loadMeta(accessToken) {
-      return requestAdminModuleRegistry<CollectionTableMetaResponse>(
-        `${moduleRegistryListPathPrefix}/meta`,
+      return requestAdminCollectionTable<CollectionTableMetaResponse>(
+        `${pathPrefix}/meta`,
         {
           accessToken,
           method: "GET",
@@ -266,8 +356,8 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async loadSearchSuggestions(accessToken) {
-      const response = await requestAdminModuleRegistry<CollectionTableSearchSuggestionsResponse>(
-        `${moduleRegistryListPathPrefix}/search-suggestions`,
+      const response = await requestAdminCollectionTable<CollectionTableSearchSuggestionsResponse>(
+        `${pathPrefix}/search-suggestions`,
         {
           accessToken,
           method: "GET",
@@ -277,8 +367,8 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       return normalizeSearchSuggestionsResponse(response);
     },
     async query(accessToken, request) {
-      return requestAdminModuleRegistry<CollectionTableQueryResponse>(
-        `${moduleRegistryListPathPrefix}/query`,
+      return requestAdminCollectionTable<CollectionTableQueryResponse>(
+        `${pathPrefix}/query`,
         {
           accessToken,
           body: request,
@@ -287,8 +377,12 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async runBulkAction(accessToken, input) {
-      await requestAdminModuleRegistry<void>(
-        `${moduleRegistryListPathPrefix}/bulk-actions/${encodeURIComponent(input.actionId)}`,
+      if (!options.supportsBulkActions) {
+        return;
+      }
+
+      await requestAdminCollectionTable<void>(
+        `${pathPrefix}/bulk-actions/${encodeURIComponent(input.actionId)}`,
         {
           accessToken,
           allowEmptySuccess: true,
@@ -301,8 +395,12 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async runRowAction(accessToken, input) {
-      return requestAdminModuleRegistry<AdminModuleRegistryActionResult | void>(
-        `${moduleRegistryListPathPrefix}/row-actions/${encodeURIComponent(input.actionId)}`,
+      if (!options.supportsRowActions) {
+        return undefined;
+      }
+
+      return requestAdminCollectionTable<AdminCollectionTableActionResult | void>(
+        `${pathPrefix}/row-actions/${encodeURIComponent(input.actionId)}`,
         {
           accessToken,
           allowEmptySuccess: true,
@@ -312,8 +410,8 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
       );
     },
     async toggleFavorite(accessToken) {
-      return requestAdminModuleRegistry<{ isFavorite: boolean }>(
-        `${moduleRegistryListPathPrefix}/favorite/toggle`,
+      return requestAdminCollectionTable<CollectionTableFavoriteToggleResult>(
+        `${pathPrefix}/favorite/toggle`,
         {
           accessToken,
           method: "POST",
@@ -323,4 +421,7 @@ export function createAdminModuleRegistryClient(): AdminModuleRegistryClient {
   };
 }
 
-export type { AdminModuleRegistryClient };
+export type {
+  AdminCollectionTableActionResult,
+  AdminCollectionTableSessionClient,
+};

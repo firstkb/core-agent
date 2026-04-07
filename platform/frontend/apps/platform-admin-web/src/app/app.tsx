@@ -413,6 +413,7 @@ export function App({
             <Route
               element={
                 <PrivateApp
+                  adminApiUrl={runtimeConfig.adminApiUrl}
                   navigation={navigation}
                   onNavigationRefresh={() => refreshAdminNavigation({ reportError: false })}
                   userSession={workspaceUser}

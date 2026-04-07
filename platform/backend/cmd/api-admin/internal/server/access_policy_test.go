@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	jwtlegacy "github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 
 	authpkg "dtriton.com/platform/backend/internal/platform/auth"
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
@@ -67,6 +67,16 @@ func TestRoutePolicyForAdminAPI(t *testing.T) {
 	moduleRegistry := routePolicyForAdminAPI("ADMIN_MODULE_REGISTRY_META_GET")
 	if moduleRegistry == nil || moduleRegistry.requirement == nil || moduleRegistry.requirement.Kind != adminaccesspolicy.RequirementRootOnly {
 		t.Fatalf("expected root-only policy for module registry route")
+	}
+
+	employeesList := routePolicyForAdminAPI("ADMIN_EMPLOYEES_LIST_META_GET")
+	if employeesList == nil || employeesList.requirement == nil || employeesList.requirement.Kind != adminaccesspolicy.RequirementRootOnly {
+		t.Fatalf("expected root-only policy for employees list route")
+	}
+
+	employeesUpdate := routePolicyForAdminAPI("ADMIN_EMPLOYEES_UPDATE")
+	if employeesUpdate == nil || employeesUpdate.requirement == nil || employeesUpdate.requirement.Kind != adminaccesspolicy.RequirementRootOnly {
+		t.Fatalf("expected root-only policy for employees update route")
 	}
 
 	if policy := routePolicyForAdminAPI("UNKNOWN_SECURE_ROUTE"); policy != nil {

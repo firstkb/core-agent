@@ -23,7 +23,7 @@ import type {
   CollectionPageConfig,
   CollectionPageRow,
   CollectionPageState,
-} from "../../shared/collection-page";
+} from "./collection-page";
 
 type CollectionPageSelection<Row extends CollectionPageRow> = {
   selectedRowIds: ReadonlyArray<string>;

@@ -39,6 +39,15 @@ var adminRouteBindings = []RouteBinding{
 			Access:     "write",
 		},
 	},
+	{
+		PrefixRouteID: "ADMIN_EMPLOYEES_",
+		Requirement: Requirement{
+			Kind:       RequirementRootOnly,
+			ModuleKey:  "users",
+			SectionKey: "list_of_users",
+			Access:     "write",
+		},
+	},
 }
 
 func RequirementForRoute(routeID string) *Requirement {

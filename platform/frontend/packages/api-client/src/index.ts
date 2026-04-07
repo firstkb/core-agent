@@ -57,6 +57,29 @@ type AdminProfile = {
   };
 };
 
+type AdminEmployee = {
+  createdAt?: string;
+  email?: string;
+  id: string;
+  isCurrentUser?: boolean;
+  level?: number;
+  name?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+  [key: string]: unknown;
+};
+
+type AdminEmployeeDetail = {
+  user: AdminEmployee;
+};
+
+type AdminEmployeeUpdateInput = {
+  name: string;
+  phone: string;
+  status: string;
+};
+
 type AdminNavigationAccess = "read" | "write";
 
 type AdminNavigationFavorite = {
@@ -120,6 +143,15 @@ type AdminProfileClient = {
 
 type AdminNavigationClient = {
   getNavigation: (accessToken: string) => Promise<AdminNavigation>;
+};
+
+type AdminEmployeesClient = {
+  getEmployee: (accessToken: string, employeeId: string) => Promise<AdminEmployeeDetail>;
+  updateEmployee: (
+    accessToken: string,
+    employeeId: string,
+    input: AdminEmployeeUpdateInput,
+  ) => Promise<AdminEmployeeDetail>;
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -380,6 +412,26 @@ function normalizeAdminProfile(payload: unknown): AdminProfile {
   };
 }
 
+function normalizeAdminEmployeeDetail(payload: unknown): AdminEmployeeDetail {
+  if (!isRecord(payload) || !isRecord(payload.user)) {
+    throw new ApiClientError("Invalid admin employee payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    user: {
+      ...payload.user,
+      createdAt: typeof payload.user.createdAt === "string" ? payload.user.createdAt : undefined,
+      id: assertString(payload.user.id, "user.id"),
+      isCurrentUser: typeof payload.user.isCurrentUser === "boolean"
+        ? payload.user.isCurrentUser
+        : false,
+    },
+  };
+}
+
 function normalizeAdminNavigationAccess(value: unknown, fieldName: string): AdminNavigationAccess {
   const access = assertString(value, fieldName);
 
@@ -593,8 +645,41 @@ function createAdminNavigationClient(baseUrl: string): AdminNavigationClient {
   };
 }
 
+function createAdminEmployeesClient(baseUrl: string): AdminEmployeesClient {
+  return {
+    async getEmployee(accessToken: string, employeeId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/admin/employees/${encodeURIComponent(employeeId)}`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeAdminEmployeeDetail(envelope.data);
+    },
+    async updateEmployee(accessToken: string, employeeId: string, input: AdminEmployeeUpdateInput) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/admin/employees/${encodeURIComponent(employeeId)}`,
+        {
+          accessToken,
+          body: input,
+          method: "PUT",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeAdminEmployeeDetail(envelope.data);
+    },
+  };
+}
+
 export {
   ApiClientError,
+  createAdminEmployeesClient,
   createAdminNavigationClient,
   createAdminProfileClient,
   createApiClient,
@@ -603,6 +688,10 @@ export {
   isUnauthorizedApiError,
 };
 export type {
+  AdminEmployee,
+  AdminEmployeeDetail,
+  AdminEmployeeUpdateInput,
+  AdminEmployeesClient,
   AdminNavigation,
   AdminNavigationAccess,
   AdminNavigationClient,

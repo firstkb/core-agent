@@ -187,6 +187,11 @@ export type CollectionTableFavoriteToggleResult = {
   isFavorite: boolean;
 };
 
+export type CollectionTableFavoriteToggleEvent = CollectionTableFavoriteToggleResult & {
+  surfaceId: string;
+  tableId: string;
+};
+
 export type CollectionTableExportRequest = {
   query: CollectionTableQueryRequest;
 };

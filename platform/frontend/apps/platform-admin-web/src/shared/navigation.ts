@@ -26,7 +26,13 @@ import {
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
-type AdminResolvedRouteKind = "backend-section" | "dashboard" | "modules-create" | "modules-edit" | "modules-list";
+type AdminResolvedRouteKind =
+  | "backend-section"
+  | "dashboard"
+  | "employees-edit"
+  | "modules-create"
+  | "modules-edit"
+  | "modules-list";
 
 type AdminResolvedRouteMeta = {
   badge?: string;
@@ -93,6 +99,22 @@ function capitalizeLabel(value: string) {
   return value[0]!.toUpperCase() + value.slice(1);
 }
 
+function resolveAdminModuleTitle(moduleKey: string, title: string) {
+  if (moduleKey === "users") {
+    return "Employees";
+  }
+
+  return title;
+}
+
+function resolveAdminSectionTitle(moduleKey: string, sectionKey: string, title: string) {
+  if (moduleKey === "users" && sectionKey === "list_of_users") {
+    return "List of Employees";
+  }
+
+  return title;
+}
+
 function flattenAdminNavigationSections(navigation: AdminNavigation): AdminNavigationSectionRoute[] {
   return navigation.modules.flatMap((module) =>
     module.sections.map((section) => ({
@@ -102,13 +124,13 @@ function flattenAdminNavigationSections(navigation: AdminNavigation): AdminNavig
       moduleIcon: module.icon,
       moduleId: module.id,
       moduleKey: module.module_key,
-      moduleTitle: module.title,
+      moduleTitle: resolveAdminModuleTitle(module.module_key, module.title),
       path: section.route_path,
       sectionDescription: section.description?.trim() ?? "",
       sectionIcon: section.icon,
       sectionId: section.id,
       sectionKey: section.section_key,
-      sectionTitle: section.title,
+      sectionTitle: resolveAdminSectionTitle(module.module_key, section.section_key, section.title),
     })),
   );
 }
@@ -219,6 +241,25 @@ function resolveModulesListParentMeta(
   };
 }
 
+function resolveEmployeesListParentMeta(
+  navigation: AdminNavigation,
+  _translate: TranslateFunction,
+) {
+  const employeesRoute = flattenAdminNavigationSections(navigation).find((section) =>
+    normalizePath(section.path) === "/admin/users" ||
+    normalizePath(section.path) === "/admin/employees" ||
+    (section.moduleKey === "users" && section.sectionKey === "list_of_users"),
+  );
+
+  return {
+    icon: employeesRoute
+      ? resolveAdminNavigationIcon(employeesRoute.moduleIcon)
+      : createElement(UsersIcon),
+    label: employeesRoute?.moduleTitle ?? "Employees",
+    path: employeesRoute?.path ?? "/admin/users",
+  };
+}
+
 export function getAdminNavigation(
   pathname: string,
   navigation: AdminNavigation,
@@ -248,7 +289,7 @@ export function getAdminNavigation(
             href: section.route_path,
             icon: section.icon ? resolveAdminNavigationIcon(section.icon) : undefined,
             id: `${module.module_key}:${section.section_key}`,
-            label: section.title,
+            label: resolveAdminSectionTitle(module.module_key, section.section_key, section.title),
             note: section.description?.trim() || module.description?.trim() || undefined,
             onNavigate: navigate ? () => navigate(section.route_path) : undefined,
           } satisfies WorkspaceNavItem;
@@ -259,7 +300,7 @@ export function getAdminNavigation(
           defaultOpen: children.some((child) => child.active),
           icon: resolveAdminNavigationIcon(module.icon),
           id: module.module_key,
-          label: module.title,
+          label: resolveAdminModuleTitle(module.module_key, module.title),
           note: module.description?.trim() || undefined,
         } satisfies WorkspaceNavItem;
       })
@@ -275,9 +316,9 @@ export function buildAdminFavoriteShortcuts(
     description: favorite.description?.trim() || `${favorite.module_title} section shortcut.`,
     icon: resolveAdminNavigationIcon(favorite.module_icon),
     id: favorite.id,
-    moduleTitle: favorite.module_title,
+    moduleTitle: resolveAdminModuleTitle(favorite.module_key, favorite.module_title),
     path: favorite.route_path,
-    title: favorite.title,
+    title: resolveAdminSectionTitle(favorite.module_key, favorite.section_key, favorite.title),
   }));
 }
 
@@ -333,6 +374,22 @@ export function getAdminRouteMeta(
       kind: "modules-edit",
       label: translate("admin.navigation.modulesEdit.label"),
       note: translate("admin.navigation.modulesEdit.note"),
+      parentLabel: parentMeta.label,
+      parentPath: parentMeta.path,
+      path: parentMeta.path,
+    };
+  }
+
+  if (normalizedPath.startsWith("/admin/users/edit/") || normalizedPath.startsWith("/admin/employees/edit/")) {
+    const parentMeta = resolveEmployeesListParentMeta(navigation, translate);
+
+    return {
+      badge: translate("admin.navigation.employeesEdit.badge"),
+      headerTitle: translate("admin.navigation.employeesEdit.headerTitle"),
+      icon: parentMeta.icon,
+      kind: "employees-edit",
+      label: translate("admin.navigation.employeesEdit.label"),
+      note: translate("admin.navigation.employeesEdit.note"),
       parentLabel: parentMeta.label,
       parentPath: parentMeta.path,
       path: parentMeta.path,

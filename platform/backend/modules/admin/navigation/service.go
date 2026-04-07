@@ -156,6 +156,11 @@ var collectionFavoriteBindings = []collectionFavoriteBinding{
 		ModuleKey:  "module_registry",
 		SectionKey: "modules_list",
 	},
+	{
+		SurfaceID:  "employees.list",
+		ModuleKey:  "users",
+		SectionKey: "list_of_users",
+	},
 }
 
 func buildFavoritesFromModules(modules []ModuleRecord, surfaceIDs []string) []NavigationFavorite {

@@ -218,6 +218,51 @@ Primary sources:
 - `platform/docs/ai/modules/collection-table.md`
 - `platform/docs/ai/modules/admin-module-registry.md`
 
+### 2026-04-06 — Employees keeps technical module key `users`
+
+Status: active  
+Decision:
+
+- the control-plane module keeps technical key `users`
+- the user-facing module title is `Employees`
+- the root-only section title is `List of Employees`
+- this section is backed by platform `admin_user` data, not tenant users
+
+Primary sources:
+
+- `platform/backend/migrations/postgres/master/110_admin_employees_rollout.sql`
+- `platform/backend/modules/admin/employeeslist`
+
+### 2026-04-06 — Collection Table frontend package is extracted for admin-app consumers
+
+Status: active  
+Decision:
+
+- `Employees / List of Employees` is the second real admin-app consumer for collection-table
+- the shared frontend runtime/page host now lives in `@platform/collection-table`
+- admin app pages stay thin and host-owned for auth/session, API prefix, and route-specific actions
+- this extraction does not by itself complete admin/tenant cross-app adoption
+
+Primary sources:
+
+- `platform/docs/ai/modules/collection-table.md`
+- `platform/frontend/packages/collection-table`
+
+### 2026-04-06 — Collection Table keeps an explicit shared capability backlog
+
+Status: active  
+Decision:
+
+- package extraction does not mean the full optional capability set is complete
+- shared FE/BE support for `XLS export`, row action `view`, and row action `pdf` remains required backlog
+- these capabilities are opt-in by table surface, not mandatory on every consumer
+- they must be implemented as shared collection-table capabilities rather than screen-local hacks
+
+Primary sources:
+
+- `platform/docs/ai/modules/collection-table.md`
+- `platform/docs/ai/current-state.md`
+
 ### 2026-04-05 — Canonical docs registry governs markdown truth surfaces
 
 Status: active  

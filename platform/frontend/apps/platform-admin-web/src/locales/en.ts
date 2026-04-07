@@ -132,6 +132,12 @@ export const adminEnglishMessages = {
         label: "Edit",
         note: "Host-managed module editor route",
       },
+      employeesEdit: {
+        badge: "Live",
+        headerTitle: "Edit Employee",
+        label: "Edit",
+        note: "Host-managed employee editor route",
+      },
       modulesCreate: {
         badge: "Live",
         headerTitle: "Create Module",
@@ -154,6 +160,7 @@ export const adminEnglishMessages = {
         notifications: "Notifications",
         openCurrentSection: "Open {{label}}",
         openDashboard: "Open dashboard",
+        openEmployeesList: "Open employees list",
         openModulesList: "Open modules list",
         operatorNotes: "{{count}} operator notes still pinned",
         reviewFavorites: "Review saved mockups",

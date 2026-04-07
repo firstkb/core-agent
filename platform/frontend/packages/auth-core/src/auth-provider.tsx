@@ -15,6 +15,7 @@ import {
   clearStoredAuthSession,
   defaultAuthStorageNamespace,
   extractUserIdFromToken,
+  extractIssuedAtFromToken,
   persistAuthSessionHint,
   persistAuthTokens,
   readAuthSessionHint,
@@ -61,7 +62,9 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const authRefreshLeadTimeMs = 60_000;
+const authDefaultRefreshLeadTimeMs = 60_000;
+const authMinimumRefreshLeadTimeMs = 1_000;
+const authRefreshLeadTimeFactor = 0.2;
 const authCrossTabRefreshLockTTLms = 15_000;
 const authCrossTabRefreshWaitMs = 10_000;
 const authCrossTabRefreshPollMs = 250;
@@ -238,12 +241,37 @@ function toAuthTokens(session: StoredAuthSession): AuthTokens {
   };
 }
 
+function isSessionActive(session: StoredAuthSession | null, now = Date.now()) {
+  return Boolean(
+    session &&
+    Number.isFinite(session.expiresAt) &&
+    session.expiresAt > now,
+  );
+}
+
+function resolveRefreshLeadTimeMs(session: StoredAuthSession) {
+  const issuedAt = extractIssuedAtFromToken(session.accessToken);
+  if (!issuedAt) {
+    return authDefaultRefreshLeadTimeMs;
+  }
+
+  const lifetimeMs = session.expiresAt - issuedAt;
+  if (!Number.isFinite(lifetimeMs) || lifetimeMs <= 0) {
+    return authDefaultRefreshLeadTimeMs;
+  }
+
+  return Math.min(
+    authDefaultRefreshLeadTimeMs,
+    Math.max(authMinimumRefreshLeadTimeMs, Math.floor(lifetimeMs * authRefreshLeadTimeFactor)),
+  );
+}
+
 function shouldRefreshSession(session: StoredAuthSession, now = Date.now()) {
-  return session.expiresAt - now <= authRefreshLeadTimeMs;
+  return session.expiresAt - now <= resolveRefreshLeadTimeMs(session);
 }
 
 function resolveBootstrapSession(session: StoredAuthSession | null, now = Date.now()) {
-  if (!session) {
+  if (!session || !isSessionActive(session, now)) {
     return null;
   }
 
@@ -284,12 +312,12 @@ export function AuthProvider({
     setStatus(nextStatus);
   }, []);
 
-  const clearSessionState = useCallback(() => {
+  const clearSessionState = useCallback((options?: { preserveSessionHint?: boolean }) => {
     refreshNonceRef.current += 1;
     refreshPromiseRef.current = null;
     clearRefreshTimeout();
     releaseRefreshLock(storageNamespace, tabIdRef.current);
-    clearStoredAuthSession(storageNamespace);
+    clearStoredAuthSession(storageNamespace, options);
     commitSession(null, "anonymous");
   }, [clearRefreshTimeout, commitSession, storageNamespace]);
 
@@ -339,7 +367,12 @@ export function AuthProvider({
               }
             }
 
-            clearSessionState();
+            if (isRefreshUnauthorizedError(error)) {
+              clearSessionState();
+            } else if (!isSessionActive(currentSession)) {
+              clearSessionState({ preserveSessionHint: true });
+            }
+
             throw error;
           })();
         }
@@ -443,7 +476,7 @@ export function AuthProvider({
         const refreshedSession = await refreshSession(null);
         return finalizeBootstrapSession(refreshedSession);
       } catch {
-        clearSessionState();
+        commitSession(null, "anonymous");
         return false;
       }
     }
@@ -452,8 +485,13 @@ export function AuthProvider({
       try {
         const refreshedSession = await refreshSession(storedSession);
         return finalizeBootstrapSession(refreshedSession);
-      } catch {
-        clearSessionState();
+      } catch (error) {
+        if (!isRefreshUnauthorizedError(error) && isSessionActive(storedSession)) {
+          commitSession(storedSession, "authenticated");
+          return true;
+        }
+
+        commitSession(null, "anonymous");
         return false;
       }
     }
@@ -572,7 +610,7 @@ export function AuthProvider({
       return;
     }
 
-    const refreshDelay = Math.max(session.expiresAt - Date.now() - authRefreshLeadTimeMs, 0);
+    const refreshDelay = Math.max(session.expiresAt - Date.now() - resolveRefreshLeadTimeMs(session), 0);
 
     if (refreshDelay === 0) {
       void refreshSession(session).catch(() => undefined);
@@ -659,4 +697,5 @@ export function useAuth() {
 }
 
 export { resolveBootstrapSession };
+export { resolveRefreshLeadTimeMs };
 export type { AuthContextValue, AuthProviderProps, AuthStatus };

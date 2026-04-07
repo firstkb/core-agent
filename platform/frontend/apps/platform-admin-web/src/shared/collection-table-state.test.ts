@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CollectionTableFieldDefinition } from "./collection-table-contract";
+import type { CollectionTableFieldDefinition } from "@platform/collection-table";
 import {
   clearPersistedCollectionTableState,
   createCollectionTableState,
@@ -11,7 +11,7 @@ import {
   toCollectionTableQueryRequest,
   writePersistedCollectionTableState,
   writePersistedCollectionTableSuggestions,
-} from "./collection-table-state";
+} from "@platform/collection-table";
 
 function createField(
   overrides: Partial<CollectionTableFieldDefinition> & Pick<CollectionTableFieldDefinition, "id" | "label" | "type">,

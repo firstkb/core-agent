@@ -64,6 +64,8 @@ Confirmed in code:
 - `packages/api-client` already sends `credentials: "include"` for auth endpoints
 - `packages/auth-core` stores access token and expiry
 - bootstrap-critical auth/profile requests now time out instead of leaving the app in an indefinite session-check loader
+- `packages/auth-core` derives its refresh lead window from access-token lifetime so short-lived tokens do not refresh immediately after login/bootstrap
+- non-401 refresh failures keep the session hint and avoid clearing a still-valid access token during bootstrap retries
 - `packages/auth-core` still clears a legacy `refreshToken` key during cleanup, but the active stored session shape is access-token only
 
 ## Important docs

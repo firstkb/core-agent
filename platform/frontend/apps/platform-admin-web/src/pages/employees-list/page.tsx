@@ -12,7 +12,7 @@ import {
   createAdminCollectionTableClient,
 } from "../../shared/admin-collection-table-client";
 
-const MODULE_REGISTRY_TABLE_ID = "module-registry.list";
+const EMPLOYEES_LIST_TABLE_ID = "employees.list";
 
 const resolveFrontendRowActionPath: CollectionTablePageRowActionPathResolver = (
   action,
@@ -20,24 +20,18 @@ const resolveFrontendRowActionPath: CollectionTablePageRowActionPathResolver = (
 ) => {
   switch (action.id) {
     case "edit":
-      return `/modules/edit/${encodeURIComponent(row.id)}`;
+      return `/admin/users/edit/${encodeURIComponent(row.id)}`;
     default:
       return null;
   }
 };
 
-function getCreateModulePath() {
-  return "/modules/edit/new";
-}
-
-export function AdminModulesListPage() {
+export function AdminEmployeesListPage() {
   const { getAccessToken, signOut } = useAuth();
   const client = useMemo(
     () => createAdminCollectionTableClient({
-      pathPrefix: "/app/admin/module-registry/list",
+      pathPrefix: "/app/admin/employees/list",
       supportsBulkActions: true,
-      supportsExportXls: true,
-      supportsRowActions: true,
     }),
     [],
   );
@@ -55,10 +49,9 @@ export function AdminModulesListPage() {
   return (
     <AdminCollectionTablePage
       adapter={adapter}
-      getCreatePath={getCreateModulePath}
       isIgnorableError={isUnauthorizedApiError}
       resolveFrontendRowActionPath={resolveFrontendRowActionPath}
-      tableId={MODULE_REGISTRY_TABLE_ID}
+      tableId={EMPLOYEES_LIST_TABLE_ID}
     />
   );
 }

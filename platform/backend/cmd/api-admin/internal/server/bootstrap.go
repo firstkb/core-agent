@@ -51,6 +51,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	server.tenantManagementHT = tenantManagementHT
 	server.adminNavigationHT = buildAdminNavigationModule(server.sqlClient)
 	server.adminProfileHT = buildAdminProfileModule(server.sqlClient)
+	server.employeesListHT = buildEmployeesListModule(server.sqlClient)
 	server.moduleRegistryGrantHT = buildModuleRegistryGrantModule(server.sqlClient)
 	server.moduleRegistryManageHT = moduleRegistryManage.Handler
 	server.moduleRegistryListHT = buildModuleRegistryListModule(server.sqlClient, moduleRegistryManage.Service, logger)

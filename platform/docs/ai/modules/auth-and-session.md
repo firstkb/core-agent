@@ -66,6 +66,9 @@ Confirmed in code:
 - bootstrap-critical auth/profile requests now time out instead of leaving the app in an indefinite session-check loader
 - `packages/auth-core` derives its refresh lead window from access-token lifetime so short-lived tokens do not refresh immediately after login/bootstrap
 - non-401 refresh failures keep the session hint and avoid clearing a still-valid access token during bootstrap retries
+- temporary refresh failures after access-token expiry now move `packages/auth-core` into a retrying recovery state instead of forcing an immediate sign-out
+- expired-session refresh failures with `401` or `403` now clear frontend auth state instead of looping on an invalid browser context
+- cross-tab refresh followers now wait beyond the lock TTL before abandoning the owner refresh attempt
 - `packages/auth-core` still clears a legacy `refreshToken` key during cleanup, but the active stored session shape is access-token only
 
 ## Important docs

@@ -65,8 +65,9 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const authDefaultRefreshLeadTimeMs = 60_000;
 const authMinimumRefreshLeadTimeMs = 1_000;
 const authRefreshLeadTimeFactor = 0.2;
+const authRecoveryRetryBaseMs = 1_000;
+const authRecoveryRetryMaxMs = 30_000;
 const authCrossTabRefreshLockTTLms = 15_000;
-const authCrossTabRefreshWaitMs = 10_000;
 const authCrossTabRefreshPollMs = 250;
 const authCrossTabRefreshLockSettleMs = 50;
 
@@ -74,6 +75,27 @@ type RefreshLock = {
   expiresAt: number;
   owner: string;
 };
+
+function resolveCrossTabRefreshWaitMs(
+  lockTTLms = authCrossTabRefreshLockTTLms,
+  pollMs = authCrossTabRefreshPollMs,
+  settleMs = authCrossTabRefreshLockSettleMs,
+) {
+  return lockTTLms + pollMs + settleMs + 250;
+}
+
+function resolveRecoveryRetryDelayMs(attempt: number) {
+  const normalizedAttempt = Number.isFinite(attempt) && attempt > 0
+    ? Math.floor(attempt)
+    : 0;
+
+  return Math.min(
+    authRecoveryRetryMaxMs,
+    authRecoveryRetryBaseMs * (2 ** normalizedAttempt),
+  );
+}
+
+const authCrossTabRefreshWaitMs = resolveCrossTabRefreshWaitMs();
 
 function buildProviderStorageKey(namespace: AuthStorageNamespace, key: string) {
   return `${namespace}:${key}`;
@@ -286,6 +308,31 @@ function isRefreshUnauthorizedError(error: unknown) {
     error.statusCode === 401;
 }
 
+function isRefreshForbiddenError(error: unknown) {
+  return error instanceof ApiClientError &&
+    isUnauthorizedApiError(error) &&
+    error.statusCode === 403;
+}
+
+function resolveMissingSessionStatus(hasSessionHint: boolean): AuthStatus {
+  return hasSessionHint ? "unknown" : "anonymous";
+}
+
+function resolveRefreshFailureDisposition(
+  error: unknown,
+  session: StoredAuthSession | null | undefined,
+) {
+  if (isRefreshUnauthorizedError(error)) {
+    return "clear" as const;
+  }
+
+  if (isRefreshForbiddenError(error)) {
+    return isSessionActive(session ?? null) ? "retain" as const : "clear" as const;
+  }
+
+  return isSessionActive(session ?? null) ? "retain" as const : "recover" as const;
+}
+
 export function AuthProvider({
   children,
   service = localAuthService,
@@ -293,9 +340,12 @@ export function AuthProvider({
 }: AuthProviderProps) {
   const [status, setStatus] = useState<AuthStatus>("unknown");
   const [session, setSession] = useState<StoredAuthSession | null>(null);
+  const recoveryAttemptRef = useRef(0);
+  const recoveryTimeoutRef = useRef<number | null>(null);
   const refreshNonceRef = useRef(0);
   const refreshPromiseRef = useRef<Promise<StoredAuthSession | null> | null>(null);
   const refreshTimeoutRef = useRef<number | null>(null);
+  const scheduleRecoveryRetryRef = useRef<() => void>(() => undefined);
   const sessionRef = useRef<StoredAuthSession | null>(null);
   const tabIdRef = useRef(`auth-tab-${Math.random().toString(36).slice(2)}-${Date.now()}`);
 
@@ -306,30 +356,72 @@ export function AuthProvider({
     }
   }, []);
 
+  const clearRecoveryTimeout = useCallback(() => {
+    if (recoveryTimeoutRef.current !== null) {
+      globalThis.clearTimeout(recoveryTimeoutRef.current);
+      recoveryTimeoutRef.current = null;
+    }
+  }, []);
+
   const commitSession = useCallback((nextSession: StoredAuthSession | null, nextStatus: AuthStatus) => {
     sessionRef.current = nextSession;
     setSession(nextSession);
     setStatus(nextStatus);
   }, []);
 
+  const enterRecoveryState = useCallback((options?: { preserveAttempt?: boolean }) => {
+    refreshNonceRef.current += 1;
+    refreshPromiseRef.current = null;
+    clearRefreshTimeout();
+    clearRecoveryTimeout();
+    releaseRefreshLock(storageNamespace, tabIdRef.current);
+    clearStoredAuthSession(storageNamespace, { preserveSessionHint: true });
+    if (!options?.preserveAttempt) {
+      recoveryAttemptRef.current = 0;
+    }
+    commitSession(null, "unknown");
+  }, [clearRecoveryTimeout, clearRefreshTimeout, commitSession, storageNamespace]);
+
+  const syncMissingSessionState = useCallback(() => {
+    refreshNonceRef.current += 1;
+    refreshPromiseRef.current = null;
+    clearRefreshTimeout();
+    clearRecoveryTimeout();
+
+    const hasSessionHint = readAuthSessionHint(storageNamespace);
+    if (hasSessionHint) {
+      recoveryAttemptRef.current = 0;
+      commitSession(null, "unknown");
+      scheduleRecoveryRetryRef.current();
+      return;
+    }
+
+    recoveryAttemptRef.current = 0;
+    commitSession(null, "anonymous");
+  }, [clearRecoveryTimeout, clearRefreshTimeout, commitSession, storageNamespace]);
+
   const clearSessionState = useCallback((options?: { preserveSessionHint?: boolean }) => {
     refreshNonceRef.current += 1;
     refreshPromiseRef.current = null;
     clearRefreshTimeout();
+    clearRecoveryTimeout();
+    recoveryAttemptRef.current = 0;
     releaseRefreshLock(storageNamespace, tabIdRef.current);
     clearStoredAuthSession(storageNamespace, options);
     commitSession(null, "anonymous");
-  }, [clearRefreshTimeout, commitSession, storageNamespace]);
+  }, [clearRecoveryTimeout, clearRefreshTimeout, commitSession, storageNamespace]);
 
   const saveTokens = useCallback(async (nextTokens: AuthTokens) => {
     refreshNonceRef.current += 1;
+    recoveryAttemptRef.current = 0;
+    clearRecoveryTimeout();
     persistAuthSessionHint(storageNamespace);
     const storedSession = persistAuthTokens(storageNamespace, nextTokens);
 
     commitSession(storedSession, "authenticated");
 
     return storedSession;
-  }, [commitSession, storageNamespace]);
+  }, [clearRecoveryTimeout, commitSession, storageNamespace]);
 
   const refreshSession = useCallback(async (candidateSession?: StoredAuthSession | null) => {
     const currentSession = candidateSession ?? sessionRef.current;
@@ -359,7 +451,9 @@ export function AuthProvider({
       .catch((error) => {
         if (refreshNonce === refreshNonceRef.current) {
           return (async () => {
-            if (isRefreshUnauthorizedError(error)) {
+            const failureDisposition = resolveRefreshFailureDisposition(error, currentSession);
+
+            if (failureDisposition === "clear" && isRefreshUnauthorizedError(error)) {
               try {
                 await service.signOut({ allDevices: false });
               } catch {
@@ -367,10 +461,11 @@ export function AuthProvider({
               }
             }
 
-            if (isRefreshUnauthorizedError(error)) {
+            if (failureDisposition === "clear") {
               clearSessionState();
-            } else if (!isSessionActive(currentSession)) {
-              clearSessionState({ preserveSessionHint: true });
+            } else if (failureDisposition === "recover") {
+              enterRecoveryState();
+              scheduleRecoveryRetryRef.current();
             }
 
             throw error;
@@ -380,8 +475,7 @@ export function AuthProvider({
         throw error;
       });
 
-    let refreshPromise: Promise<StoredAuthSession | null>;
-    refreshPromise = (async () => {
+    const refreshPromise: Promise<StoredAuthSession | null> = (async () => {
       if (!await tryAcquireRefreshLock(storageNamespace, tabIdRef.current)) {
         const sharedSession = await waitForCrossTabSession(storageNamespace, expectedAccessToken);
 
@@ -395,6 +489,8 @@ export function AuthProvider({
           sharedSession.accessToken !== expectedAccessToken
         ) {
           if (refreshNonce === refreshNonceRef.current) {
+            recoveryAttemptRef.current = 0;
+            clearRecoveryTimeout();
             commitSession(sharedSession, "authenticated");
           }
           return sharedSession;
@@ -441,7 +537,54 @@ export function AuthProvider({
     refreshPromiseRef.current = refreshPromise;
 
     return refreshPromise;
-  }, [clearSessionState, commitSession, saveTokens, service, storageNamespace]);
+  }, [clearSessionState, commitSession, enterRecoveryState, saveTokens, service, storageNamespace]);
+
+  const scheduleRecoveryRetry = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (sessionRef.current || !readAuthSessionHint(storageNamespace)) {
+      return;
+    }
+
+    clearRecoveryTimeout();
+    recoveryTimeoutRef.current = window.setTimeout(() => {
+      void refreshSession(null)
+        .then((candidateSession) => {
+          const nextSession = resolveBootstrapSession(candidateSession);
+          if (!nextSession) {
+            if (!readAuthSessionHint(storageNamespace)) {
+              recoveryAttemptRef.current = 0;
+              commitSession(null, "anonymous");
+              return;
+            }
+
+            recoveryAttemptRef.current += 1;
+            scheduleRecoveryRetryRef.current();
+            return;
+          }
+
+          recoveryAttemptRef.current = 0;
+          clearRecoveryTimeout();
+          commitSession(nextSession, "authenticated");
+        })
+        .catch((error) => {
+          if (resolveRefreshFailureDisposition(error, null) === "clear" ||
+            !readAuthSessionHint(storageNamespace)
+          ) {
+            recoveryAttemptRef.current = 0;
+            clearRecoveryTimeout();
+            return;
+          }
+
+          recoveryAttemptRef.current += 1;
+          scheduleRecoveryRetryRef.current();
+        });
+    }, resolveRecoveryRetryDelayMs(recoveryAttemptRef.current));
+  }, [clearRecoveryTimeout, commitSession, refreshSession, storageNamespace]);
+
+  scheduleRecoveryRetryRef.current = scheduleRecoveryRetry;
 
   const getTokens = useCallback(() => {
     return session ? toAuthTokens(session) : null;
@@ -456,10 +599,18 @@ export function AuthProvider({
       const nextSession = resolveBootstrapSession(candidateSession);
 
       if (!nextSession) {
+        if (readAuthSessionHint(storageNamespace)) {
+          commitSession(null, "unknown");
+          scheduleRecoveryRetry();
+          return false;
+        }
+
         clearSessionState();
         return false;
       }
 
+      recoveryAttemptRef.current = 0;
+      clearRecoveryTimeout();
       commitSession(nextSession, "authenticated");
       return true;
     }
@@ -476,7 +627,10 @@ export function AuthProvider({
         const refreshedSession = await refreshSession(null);
         return finalizeBootstrapSession(refreshedSession);
       } catch {
-        commitSession(null, "anonymous");
+        commitSession(
+          null,
+          resolveMissingSessionStatus(readAuthSessionHint(storageNamespace)),
+        );
         return false;
       }
     }
@@ -486,12 +640,15 @@ export function AuthProvider({
         const refreshedSession = await refreshSession(storedSession);
         return finalizeBootstrapSession(refreshedSession);
       } catch (error) {
-        if (!isRefreshUnauthorizedError(error) && isSessionActive(storedSession)) {
+        if (resolveRefreshFailureDisposition(error, storedSession) === "retain") {
           commitSession(storedSession, "authenticated");
           return true;
         }
 
-        commitSession(null, "anonymous");
+        commitSession(
+          null,
+          resolveMissingSessionStatus(readAuthSessionHint(storageNamespace)),
+        );
         return false;
       }
     }
@@ -499,7 +656,14 @@ export function AuthProvider({
     commitSession(storedSession, "authenticated");
 
     return true;
-  }, [clearSessionState, commitSession, refreshSession, storageNamespace]);
+  }, [
+    clearRecoveryTimeout,
+    clearSessionState,
+    commitSession,
+    refreshSession,
+    scheduleRecoveryRetry,
+    storageNamespace,
+  ]);
 
   const requestCode = useCallback((
     login: string,
@@ -538,6 +702,7 @@ export function AuthProvider({
     }
 
     const releaseLock = () => {
+      clearRecoveryTimeout();
       releaseRefreshLock(storageNamespace, tabIdRef.current);
     };
 
@@ -549,7 +714,7 @@ export function AuthProvider({
       window.removeEventListener("beforeunload", releaseLock);
       releaseLock();
     };
-  }, [storageNamespace]);
+  }, [clearRecoveryTimeout, storageNamespace]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -574,10 +739,7 @@ export function AuthProvider({
 
       const sharedSession = readStoredAuthSession(storageNamespace);
       if (!sharedSession) {
-        refreshNonceRef.current += 1;
-        refreshPromiseRef.current = null;
-        clearRefreshTimeout();
-        commitSession(null, "anonymous");
+        syncMissingSessionState();
         return;
       }
 
@@ -589,6 +751,8 @@ export function AuthProvider({
         return;
       }
 
+      recoveryAttemptRef.current = 0;
+      clearRecoveryTimeout();
       commitSession(sharedSession, "authenticated");
     }
 
@@ -597,7 +761,7 @@ export function AuthProvider({
     return () => {
       window.removeEventListener("storage", handleStorage);
     };
-  }, [clearRefreshTimeout, commitSession, storageNamespace]);
+  }, [clearRecoveryTimeout, commitSession, storageNamespace, syncMissingSessionState]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -652,6 +816,37 @@ export function AuthProvider({
     };
   }, [refreshSession, status]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || status !== "unknown") {
+      return;
+    }
+
+    if (!readAuthSessionHint(storageNamespace)) {
+      return;
+    }
+
+    scheduleRecoveryRetry();
+
+    function retryRecovery() {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+
+      recoveryAttemptRef.current = 0;
+      scheduleRecoveryRetryRef.current();
+    }
+
+    window.addEventListener("focus", retryRecovery);
+    window.addEventListener("online", retryRecovery);
+    document.addEventListener("visibilitychange", retryRecovery);
+
+    return () => {
+      window.removeEventListener("focus", retryRecovery);
+      window.removeEventListener("online", retryRecovery);
+      document.removeEventListener("visibilitychange", retryRecovery);
+    };
+  }, [scheduleRecoveryRetry, status, storageNamespace]);
+
   const tokens = session ? toAuthTokens(session) : null;
   const userId = session ? extractUserIdFromToken(session.accessToken) : "";
   const value = useMemo<AuthContextValue>(() => ({
@@ -697,5 +892,9 @@ export function useAuth() {
 }
 
 export { resolveBootstrapSession };
+export { resolveCrossTabRefreshWaitMs };
+export { resolveMissingSessionStatus };
+export { resolveRecoveryRetryDelayMs };
+export { resolveRefreshFailureDisposition };
 export { resolveRefreshLeadTimeMs };
 export type { AuthContextValue, AuthProviderProps, AuthStatus };

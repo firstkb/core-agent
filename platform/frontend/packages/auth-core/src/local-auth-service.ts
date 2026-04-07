@@ -58,8 +58,9 @@ function normalizeUserId(login?: string) {
 class LocalAuthService implements AuthService {
   async requestCode(
     login: string,
-    _options?: { method?: AuthMethod },
+    options?: { method?: AuthMethod },
   ): Promise<AuthCodeRequest> {
+    void options;
     const normalizedLogin = login.trim();
 
     if (!normalizedLogin) {
@@ -78,8 +79,9 @@ class LocalAuthService implements AuthService {
   async verifyCode(
     code: string,
     login?: string,
-    _options?: { method?: AuthMethod },
+    options?: { method?: AuthMethod },
   ): Promise<AuthTokens> {
+    void options;
     const normalizedCode = code.trim();
 
     if (!/^[0-9]{4,8}$/i.test(normalizedCode)) {
@@ -121,7 +123,8 @@ class LocalAuthService implements AuthService {
     };
   }
 
-  async signOut(_options?: { allDevices?: boolean }) {
+  async signOut(options?: { allDevices?: boolean }) {
+    void options;
     await sleep(200);
   }
 }

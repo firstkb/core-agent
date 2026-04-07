@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { ApiClientError } from "@platform/api-client";
 
 import {
   resolveBootstrapSession,
+  resolveCrossTabRefreshWaitMs,
+  resolveMissingSessionStatus,
+  resolveRecoveryRetryDelayMs,
+  resolveRefreshFailureDisposition,
   resolveRefreshLeadTimeMs,
 } from "./auth-provider";
 import type { StoredAuthSession } from "./auth-storage";
@@ -31,6 +36,12 @@ function createSession(expiresAt: number, options?: { issuedAt?: number }): Stor
     accessToken: createAccessToken(expiresAt, options?.issuedAt),
     expiresAt,
   };
+}
+
+function createApiError(statusCode: number) {
+  return new ApiClientError(`Request failed with status ${statusCode}.`, {
+    statusCode,
+  });
 }
 
 describe("resolveBootstrapSession", () => {
@@ -89,5 +100,61 @@ describe("resolveRefreshLeadTimeMs", () => {
     });
 
     expect(resolveRefreshLeadTimeMs(session)).toBe(12_000);
+  });
+});
+
+describe("resolveCrossTabRefreshWaitMs", () => {
+  it("waits longer than the refresh lock ttl so a stalled owner does not force followers out", () => {
+    expect(resolveCrossTabRefreshWaitMs()).toBe(15_550);
+  });
+});
+
+describe("resolveMissingSessionStatus", () => {
+  it("keeps auth in recovery mode while a session hint still exists", () => {
+    expect(resolveMissingSessionStatus(true)).toBe("unknown");
+  });
+
+  it("falls back to anonymous when there is no recoverable session hint", () => {
+    expect(resolveMissingSessionStatus(false)).toBe("anonymous");
+  });
+});
+
+describe("resolveRecoveryRetryDelayMs", () => {
+  it("starts retries quickly and backs off between attempts", () => {
+    expect(resolveRecoveryRetryDelayMs(0)).toBe(1_000);
+    expect(resolveRecoveryRetryDelayMs(1)).toBe(2_000);
+    expect(resolveRecoveryRetryDelayMs(2)).toBe(4_000);
+  });
+
+  it("caps recovery delay growth so retries do not disappear for minutes", () => {
+    expect(resolveRecoveryRetryDelayMs(8)).toBe(30_000);
+  });
+});
+
+describe("resolveRefreshFailureDisposition", () => {
+  it("clears the session after a hard unauthorized refresh failure", () => {
+    const session = createSession(Date.now() - 1_000);
+
+    expect(resolveRefreshFailureDisposition(createApiError(401), session)).toBe("clear");
+  });
+
+  it("keeps an active session when refresh fails with a temporary transport error", () => {
+    const session = createSession(Date.now() + 60_000);
+
+    expect(resolveRefreshFailureDisposition(new Error("network error"), session)).toBe("retain");
+  });
+
+  it("enters recovery when an expired session hits a temporary refresh failure", () => {
+    const session = createSession(Date.now() - 1_000);
+
+    expect(resolveRefreshFailureDisposition(new Error("network error"), session)).toBe("recover");
+  });
+
+  it("treats forbidden refresh as terminal only after the access token can no longer be trusted", () => {
+    const activeSession = createSession(Date.now() + 60_000);
+    const expiredSession = createSession(Date.now() - 1_000);
+
+    expect(resolveRefreshFailureDisposition(createApiError(403), activeSession)).toBe("retain");
+    expect(resolveRefreshFailureDisposition(createApiError(403), expiredSession)).toBe("clear");
   });
 });

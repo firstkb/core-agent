@@ -18,6 +18,59 @@ These are operational behavior contracts, not canonical product memory.
 
 ---
 
+## 2026-04-07
+
+### Component
+- ramp-conductor skill
+
+### Version
+- 1.4.1
+
+### Status
+- active
+
+### Changed
+- sharpened direct no-run vs run-backed routing heuristics
+- added continuation triage for reuse vs replacement of existing `task-id` runs
+- clarified clarifying-question policy to prefer conservative routing when user clarification is not worth the stop
+- added an anti-ceremony guardrail against creating runs solely for ritual completeness
+
+### Why
+- make Atlas more deterministic in daily use without adding new workflow surfaces
+
+### Migration impact
+- no schema or scaffolder changes
+- Atlas may choose direct no-run more confidently and may avoid blindly continuing stale runs
+
+---
+
+## 2026-04-07
+
+### Component
+- control-chat prompt
+
+### Version
+- 1.4.1
+
+### Status
+- active
+
+### Changed
+- aligned intake handling with conservative clarifying-question behavior
+- added section-first read discipline and explicit failure handling
+- synchronized routing guidance with sharper no-run vs run-backed heuristics
+- added continuation triage and compact direct/no-run response guidance
+- clarified manifest-backed version reading and explicit scaffolder trigger wording
+
+### Why
+- keep the control prompt behavior aligned with the refined Atlas skill contract
+
+### Migration impact
+- no template or environment changes required
+- control responses for simple no-run tasks may be shorter and more decisive
+
+---
+
 ## 2026-04-05
 
 ### Component

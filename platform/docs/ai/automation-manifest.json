@@ -1,16 +1,16 @@
 {
-  "bundle_version": "1.4.0",
+  "bundle_version": "1.4.1",
   "skill": {
     "name": "ramp-conductor",
     "display_name": "Atlas",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "invocation": "$ramp-conductor",
     "file": ".agents/skills/ramp-conductor/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.4.0",
+      "version": "1.4.1",
       "file": "platform/docs/ai/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {

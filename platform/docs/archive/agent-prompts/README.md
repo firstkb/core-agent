@@ -16,3 +16,4 @@ Archived prompt set currently stored here:
 - `platform-studio-continue.md`
 - `platform-studio-continue-short.md`
 - `platform-studio-agent-prompts.md`
+- `ramp-conductor-skill-v1.4.0.md`

@@ -101,10 +101,12 @@ Recommended shape:
 - `key`
 - `displayName`
 - `description`
-- `dataType`
+- `baseType`
+- optional `fieldPreset`
 - `isRequired`
 - `isNullable`
 - `defaultValue`
+- optional `validation`
 - `relation`
 - `storage`
 - `lockState`
@@ -126,7 +128,9 @@ Recommended shape:
 - `isDefault`
 - `status`
 - `layout`
+- `systemFields`
 - `viewSettings`
+- `filterDefinitions`
 - `permissions`
 - `version`
 - `metadata`
@@ -163,6 +167,7 @@ Each node should support:
 - `settings`
 - `visibility`
 - optional `binding`
+- optional `runtimePreset`
 
 ### 5. LockPolicy
 
@@ -303,6 +308,7 @@ The backend should derive or validate:
 Reference:
 
 - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
+- `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
 ## Recommended Persistence Shapes
 
@@ -324,7 +330,9 @@ Recommended persisted concerns:
 
 - view record
 - layout document
+- system field bindings
 - view settings
+- filter definitions
 - view-level permissions
 - view version
 

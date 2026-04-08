@@ -1,0 +1,97 @@
+<style>
+  .settings-list {
+    background-color: var(--tr-line1);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .settings-list li {
+    padding: 24px 18px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .settings-list li:last-child {
+    border-bottom: none;
+  }
+
+  .settings-title {
+    font-weight: bold;
+    font-size: 1rem;
+  }
+
+  .settings-subtitle {
+    font-size: 0.85rem;
+    color: #777;
+  }
+</style>
+<h2 class="fw-bold mb-0">Settings</h2>
+<ul class="settings-list mt-15">
+  <li class="d-flex justify-content-between align-items-center"
+    style="background-color: var(--tr-line1); border-radius: 5px;">
+    <div>
+      <div class="settings-title">Pre‑fill "EzForm" form data</div>
+      <div class="settings-subtitle">Automatically copy and pre-fill top level field values</div>
+    </div>
+    <div>
+      <label class="form-check form-switch form-check-custom m-0">
+        <input class="form-check-input" type="checkbox" id="autoFieldSwitch">
+      </label>
+    </div>
+  </li>
+  <li class="d-flex justify-content-between align-items-center">
+    <div>
+      <div class="settings-title">Items per page</div>
+      <div class="settings-subtitle">Number of rows in the table</div>
+    </div>
+    <div>
+      <select id="pageSize" class="form-control form-select">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="500">500</option>
+      </select>
+    </div>
+  </li>
+</ul>
+
+
+<script>
+  var page = {
+    config: {},
+    init: function () {
+      $(".breadcrumb-item:nth-child(3)").html("Settings");
+
+      var storedValue = localStorage.getItem("setting_autoField");
+      var autoField = (storedValue === "true");
+      $("#autoFieldSwitch").prop("checked", autoField);
+
+      $("#autoFieldSwitch").off('change').on("change", function () {
+        var newValue = $(this).is(":checked");
+        localStorage.setItem("setting_autoField", newValue.toString());
+      });
+
+      var pageSizeStore = localStorage.getItem("setting_pageSize");
+      var pageSize = (pageSizeStore === null) ? 50 : pageSizeStore;
+      $("#pageSize").val(pageSize);
+
+      $("#pageSize").off('change').on('change', function () {
+        var inputVal = parseInt($(this).val(), 10);
+        if (!isNaN(inputVal) && inputVal >= 1 && inputVal <= 501) {
+          localStorage.setItem("setting_pageSize", inputVal.toString());
+        } else {
+          localStorage.setItem("setting_pageSize", "50");
+        }
+      });
+
+    },
+    unload: function () {
+      $("#autoFieldSwitch").off("change");
+    }
+  };
+
+</script>

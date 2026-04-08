@@ -1,0 +1,15 @@
+<% 
+var modifiedTitle = false;
+if (title.startsWith('*')) {
+    modifiedTitle = title.slice(1);
+} 
+
+if (modifiedTitle) {
+    title = modifiedTitle;
+}
+
+%>
+<div class="row mb-md-4 <% if (req == "Yes") { %>field-required<% } %>">
+    <label class="<% if (!modifiedTitle) { %>col-sm-4<% } else { %>col-sm-12<% } %> fs-6 fw-bold form-label mt-4" <% if (modifiedTitle) { %>style="background-color: #3498db; color: #FFF; padding: 10px;"<% } %>><%- title%>:</label>
+    <% if (!modifiedTitle) { %><div class="col-sm-8"><input type="text" class="form-control <% if (subform === false) { %>fld<% } %>" name="<%- field %>" value="<%- value %>" title="<%- title%>" <% if (req == "Yes") { %>required<% } %>></div><% } %>
+</div>

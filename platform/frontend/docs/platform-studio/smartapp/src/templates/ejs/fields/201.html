@@ -1,0 +1,14 @@
+<div class="row mb-md-4 <% if (req == "Yes") { %>field-required<% } %>">
+    <label class="col-sm-4 fs-6 fw-bold form-label mt-4"><%- title %>:</label>
+    <div class="col-sm-8">
+        <% if (title.includes('Signature')) { %>
+            <div class="signature-block mt-5">
+                <canvas class="signature-pad"></canvas>
+                <button class="clear btn btn-secondary btn-sm mt-3">Clear</button>
+                <textarea class="signature-data form-control <% if (subform === false) { %>fld<% } %>" style="display: none;" name="<%- field %>" mt-3" rows="5"><%- value %></textarea>
+            </div>
+        <% } else { %>
+            <textarea class="form-control <% if (subform === false) { %>fld<% } %>" name="<%- field %>" title="<%- title %>" <% if (req == "Yes") { %>required<% } %>><%- value %></textarea>
+        <% } %>
+    </div>
+</div>

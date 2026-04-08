@@ -1,0 +1,1479 @@
+<div id="report-root" class="card">
+    <div class="card-header align-items-center">
+        <div>
+            <h2 class="card-title mb-0" id="rpt-title">Report</h2>
+            <div class="fs-7 text-muted" id="rpt-subtitle"></div>
+        </div>
+        <div class="card-toolbar gap-2">
+            <button id="rpt-reset" class="btn btn-sm btn-secondary">Reset filter</button>
+            <button id="rpt-refresh" class="btn btn-sm btn-primary" style="display: none;">Refresh</button>
+            <div class="btn-group">
+                <button id="rpt-pdf-btn" type="button" style="margin-right: 0px;" class="btn btn-sm btn-secondary">
+                    PDF
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item no-ajax" href="javascript:;" data-format="Portrait">Portrait</a></li>
+                    <li><a class="dropdown-item no-ajax" href="javascript:;" data-format="Landscape">Landscape</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Active filters -->
+        <div id="rpt-filters" class="row g-3 mb-5"></div>
+
+        <!-- Group bar -->
+        <!-- Group bar -->
+        <div id="rpt-groupbar" class="d-flex flex-wrap align-items-center gap-2 mb-5">
+            <!-- селект группировки -->
+            <div id="rpt-group-select" class="input-group input-group-sm d-none" style="min-width:220px;">
+                <span class="input-group-text">Group by</span>
+                <select id="rpt-groupby" class="form-select form-select-sm">
+                    <option value="">None</option>
+                </select>
+            </div>
+
+            <!-- кнопки группового бара (если есть) -->
+            <div id="rpt-group-buttons" class="d-flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Notice / errors -->
+        <div id="rpt-notice" class="alert d-none"></div>
+
+        <!-- Result: TABLE / CHART / BOTH / CUSTOM HTML -->
+        <div id="rpt-result" class="d-flex flex-column gap-6">
+
+            <div id="rpt-chart-wrap" class="d-none">
+                <div id="rpt-chart" style="height:300px;"></div>
+            </div>
+
+            <div id="rpt-table-wrap" class="d-none">
+                <div class="table-responsive">
+                    <table id="rpt-table" class="table table-row-dashed align-middle table-bordered">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="rpt-custom-wrap" class="d-none"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Group subtotal row */
+    #rpt-table .group-row th {
+        border-bottom: 1px solid #000;
+        font-weight: 700;
+        background: #fafafa;
+    }
+
+    /* Overall total row in <tfoot> already styled by JS */
+    #rpt-table tfoot tr th,
+    #rpt-table tfoot tr td {
+        border-top: 1px solid #000 !important;
+    }
+
+    /* Soft inline bar inside numeric cells (like ASP innerChart) */
+    #rpt-table td.innerChart {
+        background-image: linear-gradient(to right, rgba(255, 193, 7, .35) 0 100%);
+        background-repeat: no-repeat;
+        background-position: left top;
+    }
+
+    #rpt-table thead th {
+        background: rgb(244, 244, 244);
+        padding-left: 5px;
+    }
+
+    #rpt-table .rpt-group-row th,
+    #rpt-table .group-row th {
+        background: rgb(244, 244, 244);
+        padding-left: 5px;
+    }
+
+    #rpt-table tbody tr td {
+        padding-left: 5px;
+    }
+
+    [data-bs-theme="dark"] #rpt-table thead th {
+        background: var(--tbl-bg-2);
+        color: var(--tbl-fg);
+        border-bottom: 1px solid var(--tbl-border);
+        font-weight: 600;
+    }
+
+    [data-bs-theme="dark"] #rpt-table .rpt-group-row th,
+    [data-bs-theme="dark"] #rpt-table .group-row th {
+        background: rgb(144, 144, 144);
+        padding-left: 5px;
+    }
+
+    [data-bs-theme="dark"] #rpt-table tbody tr td {
+        color: #FFF;
+    }
+</style>
+<script>
+    /* global app, ejs, KTMenu, NProgress, Chart */
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Report View v2 — один вызов при входе. Поддерживает SIMPLE/PIVOT/SCORECARD(S)/SPECIAL/CUSTOM.
+    // Требуемый backend: POST /reports/render  (или /api/reports/render) — возвращает {meta,data,chart,ui,debug}.
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    var page = (function () {
+        let state = {
+            // Из URL
+            place: null, type: null, source: null, title: null,
+            parts: 'All',          // All | TABLE | CHART | CUSTOM
+            filter: '',            // REPORT_FILTER; можно прокинуть как есть
+            actfilter: '',         // active filters строкой
+            groups: '',            // group switcher
+            drilldown: null,       // drilldown payload если пришёл из URL
+            filters: {}
+        };
+        let resp = null;         // ответ сервера (meta,data,chart,ui,debug)
+        let chart = null;        // ссылка на Chart.js инстанс
+        let aspUrl = "";
+        let aspKey = "";
+
+        function parseQS() {
+            const p = new URLSearchParams(location.search);
+            state.place = p.get('place') || p.get('report_place') || p.get('reports') || 'MAIN';
+            state.type = p.get('type') || p.get('report_type') || 'SIMPLE';
+            state.source = p.get('source') || p.get('report_source') || '';
+            state.title = p.get('title') || p.get('report_title') || '';
+            state.parts = (p.get('parts') || 'All').toUpperCase();
+            state.filter = p.get('filter') || '';
+            state.actfilter = p.get('actfilter') || '';
+            state.groups = p.get('groups') || '';
+            // drilldown (совместимость со старым)
+            state.drilldown = {
+                drilldown: p.get('drilldown') || undefined,
+                drilldownFld: p.get('drilldownFld') || undefined,
+                drilldownVal: p.get('drilldownVal') || undefined
+            };
+        }
+
+        function payload() {
+            // весь контекст — в один запрос
+            const qs = new URLSearchParams(location.search);
+            const rec = qs.get('rec') || qs.get('guid');
+
+            const actfilterLegacy = Object.entries(state.filters).map(([k, v]) => {
+                if (v == null || v === '' || (Array.isArray(v) && !v.length)) return null;
+                if (typeof v === 'object' && v.from) {
+                    if (v.to && v.to !== v.from) return `${k}=${v.from}|${v.to}`;
+                    return `${k}=${v.from}`;
+                }
+                if (Array.isArray(v)) return `${k}=${v.join('|')}`;
+                return `${k}=${v}`;
+            }).filter(Boolean).join(' AND ');
+
+            return {
+                place: state.place,
+                type: state.type,
+                source: state.source,
+                title: state.title,
+                parts: state.parts,              // 'All'|'TABLE'|'CHART'|'CUSTOM'
+                filter: state.filter,            // исходный REPORT_FILTER (если есть)
+                actfilter: actfilterLegacy,
+                groups: state.groups,            // группировка
+                ...state.drilldown,              // drilldown*
+                // важное: просим отдать всё «на вход» UI, чтобы не делать дополнительных вызовов
+                optionsMode: 'bundle',           // сервер вернёт готовые options для select/mselect/date
+                resolveAccess: true,             // сервер сам применит access DSL
+                formatResolved: true,            // сервер пришлёт формат/align/color по колонкам
+                rec: rec,
+                filters: state.filters
+            };
+        }
+
+        // ── UI helpers
+        function qs(sel) { return document.querySelector(sel); }
+        function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+        function show(el) { el.classList.remove('d-none'); }
+        function hide(el) { el.classList.add('d-none'); }
+        function setNotice(type, msg, html = false) {
+            const el = qs('#rpt-notice');
+            el.className = `alert alert-${type}`;
+            if (html) {
+                el.innerHTML = msg;
+            } else {
+                el.textContent = msg;
+            }
+            show(el);
+        }
+        function clearNotice() { hide(qs('#rpt-notice')); }
+
+        // ── render: заголовок/сабтайтл
+        function renderHead(meta) {
+            qs('#rpt-title').textContent = meta?.title || state.title || 'Report';
+            const st = [];
+            if (meta?.module) st.push(meta.module);
+            if (meta?.description) st.push(meta.description);
+            qs('#rpt-subtitle').textContent = st.join(' • ');
+        }
+
+        // ── render: фильтры (без последующих запросов — options уже в resp.ui.filters)
+        function renderFilters(ui) {
+            const box = qs('#rpt-filters');
+            box.innerHTML = '';
+            if (!ui?.filters || !ui.filters.length) return;
+
+            ui.filters.forEach(f => {
+                const col = document.createElement('div');
+                col.className = 'col-sm-6 col-lg-4';
+
+                // значение берём из ответа сервера; если пусто — из state (сохраняем выбранное)
+                const current = (Object.prototype.hasOwnProperty.call(state.filters, f.name)
+                    ? state.filters[f.name]
+                    : f.value);
+
+
+                let control = '';
+                if (f.kind === 'DATE') {
+                    const { from, to } = normalizeRange(current, f.value);
+                    control = `
+    <label class="form-label">${f.label}</label>
+    <input
+      type="text"
+      class="form-control flatpickr"
+      data-kind="DATE"
+      data-field="${f.name}"
+      data-from="${from}"
+      data-to="${to}"
+      placeholder="mm/dd/yyyy - mm/dd/yyyy"
+    >
+  `;
+                } else if (f.kind === 'TEXT') {
+                    control = `
+        <label class="form-label">${f.label}</label>
+        <input type="text" class="form-control" data-kind="TEXT" data-field="${f.name}" value="${current || ''}">
+      `;
+                } else {
+                    const multiple = f.kind === 'MSELECT' ? 'multiple' : '';
+                    const values = Array.isArray(current) ? current.map(String) : [String(current || '')];
+
+                    control = `
+        <label class="form-label">${f.label}</label>
+        <select class="form-select" data-kind="${f.kind}" data-field="${f.name}" ${multiple}>
+          ${f.kind !== 'MSELECT' ? `<option value=""></option>` : '<option value=""></option>'}
+          ${(f.options || []).map(o => {
+                        const sel = values.includes(String(o.id)) ? 'selected' : '';
+                        return `<option value="${o.id}" ${sel}>${o.text}</option>`;
+                    }).join('')}
+        </select>
+      `;
+                }
+
+                col.innerHTML = control;
+                box.appendChild(col);
+            });
+
+            // инициализация
+            $('.flatpickr').each(function () {
+                const $el = $(this);
+                const name = $el.attr('data-field');
+                const from = $el.data('from');
+                const to = $el.data('to');
+
+                const fp = $el.flatpickr({
+                    mode: 'range',
+                    dateFormat: 'm/d/Y',
+                    allowInput: true,
+                    locale: { rangeSeparator: ' - ' }, // ВАЖНО: через locale
+                    defaultDate: (from || to) ? [from, to || from] : null,
+
+                    // Не отправляем запрос на первой дате; шлём только когда две
+                    onChange(selectedDates, _dateStr, instance) {
+                        if (selectedDates.length === 2) {
+                            const f = instance.formatDate(selectedDates[0], 'm/d/Y');
+                            const t = instance.formatDate(selectedDates[1], 'm/d/Y');
+                            if (setFilterIfChanged(name, { from: f, to: t })) requestAndRender();
+                        }
+                    }
+                });
+            });
+
+            app.createSelect2();
+
+            // Считываем значения без строкового actfilter
+            $('#rpt-filters .form-select, #rpt-filters .form-control[data-kind="TEXT"]')
+                .off('change').on('change', () => {
+                    state.filters = readFiltersObjectFromUI(ui);
+                    requestAndRender();
+                });
+        }
+
+        function readFiltersObjectFromUI(ui) {
+            const out = {};
+            ui.filters.forEach(f => {
+                const $el = $(`[data-field="${f.name}"]`);
+                const kind = $el.attr('data-kind');
+
+                if (kind === 'MSELECT') {
+                    const vals = $el.val() || [];
+                    if (vals.length) out[f.name] = vals;
+                    return;
+                }
+
+                if (kind === 'DATE') {
+                    const v = $el.val();
+                    if (v) {
+                        const norm = v.replace(/\s+to\s+/i, ' - ');
+                        const parts = norm.split(' - ').map(s => s.trim()).filter(Boolean);
+                        if (parts.length === 1) out[f.name] = { from: parts[0], to: parts[0] };
+                        if (parts.length >= 2) out[f.name] = { from: parts[0], to: parts[1] };
+                    }
+                    return;
+                }
+
+                const v = $el.val();
+                if (v) out[f.name] = v;
+            });
+            return out;
+        }
+
+        function doRefreshFromUI(ui) {
+            state.actfilter = readFiltersFromUI(ui);
+            requestAndRender();
+        }
+
+        function setFilterIfChanged(name, newVal) {
+            const prev = JSON.stringify(state.filters[name] ?? null);
+            const next = JSON.stringify(newVal ?? null);
+            if (prev === next) return false;
+            if (newVal == null) delete state.filters[name];
+            else state.filters[name] = newVal;
+            return true;
+        }
+
+        function normalizeRange(current, fallbackStr) {
+            // если это уже объект с from/to — просто вернуть
+            if (current && typeof current === 'object' && (current.from || current.to)) {
+                const from = current.from || current.to || '';
+                const to = current.to || current.from || '';
+                return { from, to };
+            }
+
+            // иначе берём строку (current как строка или fallback из f.value)
+            const raw = (typeof current === 'string' && current) ? current : (fallbackStr || '');
+            if (!raw) return { from: '', to: '' };
+
+            // поддерживаем оба разделителя: " - " и " to "
+            const norm = raw.replace(/\s+to\s+/i, ' - ');
+            const parts = norm.split(' - ').map(s => s.trim()).filter(Boolean);
+
+            if (parts.length >= 2) return { from: parts[0], to: parts[1] };
+            if (parts.length === 1) return { from: parts[0], to: parts[0] };
+            return { from: '', to: '' };
+        }
+
+        // ── render: group bar
+        function renderGroupBar(ui) {
+            const box = qs('#rpt-group-buttons');
+            box.innerHTML = '';
+            if (!ui?.groupBar || !ui.groupBar.length) return;
+            ui.groupBar.forEach(g => {
+                const btn = document.createElement('button');
+                btn.className = `btn btn-sm ${g.active ? 'btn-warning' : 'btn-secondary'}`;
+                btn.textContent = g.title;
+                btn.onclick = () => {
+                    state.groups = g.key;
+                    requestAndRender();
+                };
+                box.appendChild(btn);
+            });
+        }
+
+        // ── table renderer
+        function renderTable(meta, data) {
+            const wrap = qs('#rpt-table-wrap');
+            const table = qs('#rpt-table');
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (!data?.rows?.length || !meta?.columns?.length) {
+                hide(wrap);
+                return;
+            }
+
+            // порядок отображения колонок: orderBy/groupBy → первая
+            const displayOrder = getDisplayOrder(meta);
+
+            // head
+            const trh = document.createElement('tr');
+            trh.className = 'fw-semibold fs-6 border-bottom-1 border-top-1 border-gray-300';
+            displayOrder.forEach(i => {
+                const c = meta.columns[i];
+                const th = document.createElement('th');
+                th.textContent = c.name || c.field || c.key;
+                th.className = 'fw-bold text-dark';
+                th.style.whiteSpace = 'nowrap';
+                trh.appendChild(th);
+            });
+            thead.appendChild(trh);
+
+            const aggSrcIdxs = meta.columns.map((c, i) => c.agg ? i : -1).filter(i => i >= 0);
+            const hasAgg = aggSrcIdxs.length > 0;
+            const doGroups = !!meta.groupBy && hasAgg;
+
+            if (doGroups) {
+                renderTableGrouped(meta, data, tbody, aggSrcIdxs, displayOrder);
+            } else {
+                renderTableFlat(meta, data, tbody, aggSrcIdxs, displayOrder);
+            }
+
+            const showOverallTotal = !Boolean(meta?.disableTotal);
+            if (showOverallTotal) {
+                appendFooterTotals(table, meta, data, aggSrcIdxs, displayOrder);
+            } else {
+                const old = table.querySelector('tfoot');
+                if (old) old.remove();
+            }
+
+            show(wrap);
+        }
+
+        // плоская отрисовка строк
+        function renderTableFlat(meta, data, tbody, aggSrcIdxs, displayOrder) {
+            const fmt = (val, col) => {
+                if (val == null) return '';
+                if (col.format === 'date') return formatDateCell(val);
+                if (col.format === 'datetime') return formatDateTimeUTC(val);
+                return String(val);
+            };
+
+            const firstAggSrcIdx = aggSrcIdxs[0] ?? -1;
+            let globalMax = 0;
+            if (firstAggSrcIdx >= 0) {
+                data.rows.forEach(r => {
+                    const v = Number(Array.isArray(r) ? r[firstAggSrcIdx] : r[meta.columns[firstAggSrcIdx].field] ?? r[meta.columns[firstAggSrcIdx].key]);
+                    if (!Number.isNaN(v)) globalMax = Math.max(globalMax, v);
+                });
+            }
+
+            data.rows.forEach(r => {
+                const tr = document.createElement('tr');
+                displayOrder.forEach(srcIdx => {
+                    const c = meta.columns[srcIdx];
+                    const td = document.createElement('td');
+                    const raw = Array.isArray(r) ? r[srcIdx] : r[c.field] ?? r[c.key];
+                    td.innerHTML = fmt(raw, c);
+
+                    if (c.agg && firstAggSrcIdx >= 0 && globalMax > 0) {
+                        const v = Number(raw) || 0;
+                        const pct = Math.max(0, Math.min(100, Math.round((v / globalMax) * 100)));
+                        td.classList.add('innerChart');
+                        td.style.backgroundSize = pct + '% 100%';
+                        td.style.textAlign = c.align || 'center';
+                    } else if (c.align) {
+                        td.style.textAlign = c.align;
+                    }
+
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTableGrouped(meta, data, tbody, aggSrcIdxs, displayOrder) {
+            const groupKey = meta.groupBy || (meta.columns.find(c => !c.agg)?.key);
+            const groupSrcIdx = meta.columns.findIndex(c => (c.key || c.field) === groupKey);
+            if (groupSrcIdx < 0) { renderTableFlat(meta, data, tbody, aggSrcIdxs, displayOrder); return; }
+
+            const firstAggSrcIdx = (aggSrcIdxs && aggSrcIdxs.length) ? aggSrcIdxs[0] : -1;
+
+            let globalMax = 0;
+            if (firstAggSrcIdx >= 0) {
+                data.rows.forEach(r => {
+                    const v = Number(Array.isArray(r) ? r[firstAggSrcIdx] : (r[meta.columns[firstAggSrcIdx].field] ?? r[meta.columns[firstAggSrcIdx].key]));
+                    if (!Number.isNaN(v)) globalMax = Math.max(globalMax, v);
+                });
+            }
+
+            const fmt = (val, col) => {
+                if (val == null) return '';
+                if (col.format === 'date') return formatDateCell(val);
+                if (col.format === 'datetime') return formatDateTimeUTC(val);
+                return String(val);
+            };
+
+            let cursor = 0;
+            while (cursor < data.rows.length) {
+                const start = cursor;
+                const gval = Array.isArray(data.rows[start]) ? data.rows[start][groupSrcIdx] : (data.rows[start][meta.columns[groupSrcIdx].field] ?? data.rows[start][meta.columns[groupSrcIdx].key]);
+
+                while (
+                    cursor < data.rows.length &&
+                    (Array.isArray(data.rows[cursor]) ? data.rows[cursor][groupSrcIdx] : (data.rows[cursor][meta.columns[groupSrcIdx].field] ?? data.rows[cursor][meta.columns[groupSrcIdx].key])) === gval
+                ) {
+                    cursor++;
+                }
+                const end = cursor; // [start, end)
+
+                // суммы по группе по агрегатным исходным индексам
+                const groupSums = {};
+                (aggSrcIdxs || []).forEach(ai => { groupSums[ai] = 0; });
+                for (let i = start; i < end; i++) {
+                    (aggSrcIdxs || []).forEach(ai => {
+                        const col = meta.columns[ai];
+                        const raw = Array.isArray(data.rows[i]) ? data.rows[i][ai] : (data.rows[i][col.field] ?? data.rows[i][col.key]);
+                        groupSums[ai] += Number(raw) || 0;
+                    });
+                }
+
+                // строки группы
+                for (let i = start; i < end; i++) {
+                    const tr = document.createElement('tr');
+
+                    displayOrder.forEach(srcIdx => {
+                        const c = meta.columns[srcIdx];
+                        const td = document.createElement('td');
+                        const raw = Array.isArray(data.rows[i]) ? data.rows[i][srcIdx] : (data.rows[i][c.field] ?? data.rows[i][c.key]);
+
+                        if (srcIdx === groupSrcIdx) {
+                            td.innerHTML = (i === start) ? `<b>${fmt(raw, c)}</b>` : `<b></b>`;
+                        } else {
+                            td.innerHTML = fmt(raw, c);
+                        }
+
+                        if (c.agg && firstAggSrcIdx >= 0 && globalMax > 0) {
+                            const v = Number(raw) || 0;
+                            const pct = Math.max(0, Math.min(100, Math.round((v / globalMax) * 100)));
+                            td.classList.add('innerChart');
+                            td.style.backgroundSize = pct + '% 100%';
+                            td.style.textAlign = c.align || 'center';
+                        } else if (c.align) {
+                            td.style.textAlign = c.align;
+                        }
+
+                        tr.appendChild(td);
+                    });
+
+                    tbody.appendChild(tr);
+                }
+
+                // строка "Group:" с рамкой — в порядке показа колонок
+                const gtr = document.createElement('tr');
+                gtr.className = 'rpt-group-row';
+
+                displayOrder.forEach(srcIdx => {
+                    const c = meta.columns[srcIdx];
+                    const th = document.createElement('th');
+                    th.style.borderBottom = '1px solid rgba(0,0,0,.6)';
+
+                    if (srcIdx === displayOrder[0]) {            // первая видимая колонка
+                        th.className = 'text-end';
+                        th.innerHTML = '<b>Group:</b>';
+                    } else if ((aggSrcIdxs || []).includes(srcIdx)) {
+                        th.className = 'text-center';
+                        th.innerHTML = `<b>${(groupSums[srcIdx] ?? 0).toLocaleString()}</b>`;
+                    } else {
+                        th.innerHTML = '<b></b>';
+                    }
+                    gtr.appendChild(th);
+                });
+
+                tbody.appendChild(gtr);
+            }
+        }
+
+        function renderGroupSelect(meta) {
+            const box = qs('#rpt-group-select');
+            const sel = qs('#rpt-groupby');
+
+            // если фича недоступна — скрываем и сбрасываем локальный выбор
+            if (!meta?.groupsOn || !Array.isArray(meta.groupFields) || meta.groupFields.length === 0) {
+                box.classList.add('d-none');
+                // важно: если ранее была группировка, не тащим её на другие отчёты
+                state.groups = '';
+                // и перерисуем таблицу без групп (ниже в renderAll)
+                return;
+            }
+
+            // построить опции
+            const current = meta.groupBy || state.groups || '';
+            const opts = ["<option value='none'>None</option>"].concat(
+                meta.groupFields.map(g => `<option value="${g.key}" ${current === g.key ? 'selected' : ''}>${g.name || g.key}</option>`)
+            );
+            sel.innerHTML = opts.join('');
+            box.classList.remove('d-none');
+
+            // обработчик
+            sel.onchange = (e) => {
+                state.groups = e.target.value || '';     // сохраняем выбор
+                requestAndRender();                      // шлём на сервер (он вернёт meta.groupBy, order и т.п.)
+            };
+        }
+
+        function getDisplayOrder(meta) {
+            const cols = meta?.columns || [];
+            const base = cols.map((_, i) => i);
+            const key = meta?.orderBy || meta?.groupBy || null;
+            if (!key) return base;
+
+            const idx = cols.findIndex(c => (c.key || c.field) === key);
+            if (idx <= 0) return base;              // уже первая или не найдена
+            return [idx, ...base.filter(i => i !== idx)];
+        }
+
+        // Build <tfoot> with overall totals (rows count + sums of aggregate columns)
+        function appendFooterTotals(table, meta, data, aggSrcIdxs, displayOrder) {
+            if (meta?.disableTotal) return;
+            const old = table.querySelector('tfoot');
+            if (old) old.remove();
+
+            const tfoot = document.createElement('tfoot');
+            const tr = document.createElement('tr');
+
+            const visibleRows = Array.isArray(data?.rows) ? data.rows.length : 0;
+
+            // суммы по исходным индексам
+            const totals = {};
+            (aggSrcIdxs || []).forEach(ai => { totals[ai] = 0; });
+            (data?.rows || []).forEach(r => {
+                (aggSrcIdxs || []).forEach(ai => {
+                    const col = meta.columns[ai];
+                    const raw = Array.isArray(r) ? r[ai] : (r[col.field] ?? r[col.key]);
+                    totals[ai] += Number(raw) || 0;
+                });
+            });
+
+            // выводим в порядке отображения
+            displayOrder.forEach((srcIdx, pos) => {
+                const c = meta.columns[srcIdx];
+                const td = document.createElement('td');
+
+                if (pos === 0) {
+                    td.className = 'text-start fw-bold';
+                    td.textContent = `Total: ${visibleRows.toLocaleString()}`;
+                } else if ((aggSrcIdxs || []).includes(srcIdx)) {
+                    td.className = 'text-center fw-bold';
+                    td.textContent = (totals[srcIdx] ?? 0).toLocaleString();
+                } else {
+                    td.textContent = '';
+                }
+
+                tr.appendChild(td);
+            });
+
+            tfoot.appendChild(tr);
+            table.appendChild(tfoot);
+        }
+        // ───────────────────────────────────────────────
+        // 1) Поиск колонки по alias: key | name | output
+        function resolveColIndex(meta, token) {
+            if (!meta?.columns || !token) return -1;
+            const t = String(token).trim().toLowerCase();
+            return meta.columns.findIndex(c => {
+                const key = String(c.key || '').toLowerCase();
+                const name = String(c.name || '').toLowerCase();
+                const out = String(c.output || '').toLowerCase();
+                return key === t || name === t || out === t;
+            });
+        }
+
+        // Безопасно прочитать значение из строки (array или object)
+        function readCell(row, meta, idx, fallbackTokens = []) {
+            if (idx >= 0 && Array.isArray(row)) return row[idx];
+            if (idx >= 0 && row && !Array.isArray(row)) {
+                const col = meta.columns[idx];
+                const k = col?.key, f = col?.field, n = col?.name, o = col?.output;
+                return row[k] ?? row[f] ?? row[n] ?? row[o];
+            }
+            // если индекс не найден — пробуем по именам
+            if (row && !Array.isArray(row)) {
+                for (const tok of fallbackTokens) {
+                    if (tok && row.hasOwnProperty(tok)) return row[tok];
+                }
+            }
+            return undefined;
+        }
+
+        // ───────────────────────────────────────────────
+        // 2) Общая агрегация: sum(value) по category
+        function buildAggByCategory(meta, rows, categoryToken, valueToken) {
+            const catIdx = resolveColIndex(meta, categoryToken);
+            const valIdx = resolveColIndex(meta, valueToken);
+
+            const catFallbacks = [];
+            if (catIdx >= 0) {
+                const cc = meta.columns[catIdx];
+                catFallbacks.push(cc.key, cc.field, cc.name, cc.output);
+            } else {
+                catFallbacks.push(categoryToken);
+            }
+
+            const valFallbacks = [];
+            if (valIdx >= 0) {
+                const vc = meta.columns[valIdx];
+                valFallbacks.push(vc.key, vc.field, vc.name, vc.output);
+            } else {
+                valFallbacks.push(valueToken);
+            }
+
+            // Читаем имя серии (метрики) из колонки или токена
+            const seriesName =
+                (valIdx >= 0 && (meta.columns[valIdx].name || meta.columns[valIdx].output ||
+                    meta.columns[valIdx].key || meta.columns[valIdx].field)) ||
+                String(valueToken);
+
+            const map = new Map();
+            (rows || []).forEach(r => {
+                let cat = readCell(r, meta, catIdx, catFallbacks);
+                let v = readCell(r, meta, valIdx, valFallbacks);
+                cat = (cat == null || String(cat).trim() === '') ? '(blank)' : String(cat).trim();
+                v = Number(v) || 0;
+                map.set(cat, (map.get(cat) || 0) + v);
+            });
+
+            const categories = Array.from(map.keys());
+            const data = Array.from(map.values());
+            return { categories, series: [{ name: seriesName, data }] };
+        }
+
+        // ───────────────────────────────────────────────
+        // 3) Нормализация типа из meta.chart / XML
+        function normalizeChartType(meta) {
+            const raw = String(
+                meta?.chart?.kind || meta?.chart?.type || meta?.chartType || ''
+            ).trim().toLowerCase();
+            // В XML: Bar | Column | Line | Pie
+            // В ApexCharts: 'bar' может быть горизонтальным/вертикальным
+            let type = 'bar';
+            let horizontal = false;
+
+            switch (raw) {
+                case 'bar':      // XML Bar → горизонтальный
+                    type = 'bar'; horizontal = true; break;
+                case 'column':   // XML Column → вертикальный
+                    type = 'bar'; horizontal = false; break;
+                case 'line':
+                    type = 'line'; horizontal = false; break;
+                case 'pie':
+                    type = 'pie'; horizontal = false; break;
+                default:
+                    // Если бэк отдаёт просто "bar" — пусть будет вертикально по умолчанию
+                    type = (raw === 'bar' || raw === 'column' || raw === 'line' || raw === 'pie') ? (raw === 'line' ? 'line' : raw === 'pie' ? 'pie' : 'bar') : 'bar';
+                    horizontal = false;
+            }
+            return { type, horizontal };
+        }
+
+        // ───────────────────────────────────────────────
+        // 4) Сборка данных под Apex из meta + rows
+        function buildApexData(meta, rows) {
+            // Источники из meta.chart + поддержка XML-слов
+            const chartCfg = meta?.chart || {};
+            const categoryToken = chartCfg.category || meta?.chartCategory;
+            const valueToken = (chartCfg.series && chartCfg.series[0]) || meta?.chartValues;
+
+            const agg = buildAggByCategory(meta, rows, categoryToken, valueToken);
+            const norm = normalizeChartType(meta);
+
+            return { ...agg, ...norm };
+        }
+
+        // ───────────────────────────────────────────────
+        // 5) Рендер ApexCharts с ориентацией и типом
+        const __RPT_DEBUG = false;
+        function rptLog(...a) { if (__RPT_DEBUG && window.console) console.log(...a); }
+        function rptGroup(title, fn) {
+            if (!__RPT_DEBUG) return;
+            console.groupCollapsed(title);
+            try { fn(); } finally { console.groupEnd(); }
+        }
+
+        // -- place INSIDE the IIFE, above renderChart / sanitizeChartData --
+        // Parse a label into a UTC timestamp if it looks like a date; otherwise NaN.
+        function __parseDateKey(label) {
+            if (label == null) return NaN;
+            const sRaw = String(label).trim();
+            const s = sRaw.replace('ё', 'е'); // RU normalize
+
+            // YYYY
+            let m = s.match(/^(\d{4})$/);
+            if (m) return Date.UTC(+m[1], 0, 1);
+
+            // YYYY-MM or YYYY/MM
+            m = s.match(/^(\d{4})[-/](\d{1,2})$/);
+            if (m) return Date.UTC(+m[1], (+m[2] - 1), 1);
+
+            // YYYY-MM-DD / YYYY.MM.DD / YYYY/MM/DD
+            m = s.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+            if (m) return Date.UTC(+m[1], (+m[2] - 1), +m[3]);
+
+            // MM/DD/YYYY
+            m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) return Date.UTC(+m[3], (+m[1] - 1), +m[2]);
+
+            // DD.MM.YYYY
+            m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+            if (m) return Date.UTC(+m[3], (+m[2] - 1), +m[1]);
+
+            // Month YYYY (EN/RU)
+            const monthIdx = (mon) => {
+                const k = mon.toLowerCase().slice(0, 3);
+                const en = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+                const ru = { янв: 0, фев: 1, мар: 2, апр: 3, май: 4, мая: 4, июн: 5, июл: 6, авг: 7, сен: 8, сент: 8, окт: 9, ноя: 10, дек: 11 };
+                if (k in en) return en[k];
+                if (k in ru) return ru[k];
+                return -1;
+            };
+            m = s.match(/^([A-Za-zА-Яа-яё]{3,})\s+(\d{4})$/);
+            if (m) {
+                const mm = monthIdx(m[1]);
+                if (mm >= 0) return Date.UTC(+m[2], mm, 1);
+            }
+
+            const t = Date.parse(sRaw);
+            return Number.isFinite(t) ? t : NaN;
+        }
+
+        // Heuristic: decide if category axis is date-like.
+        // Priority: column format from meta → else sample labels.
+        function __isDateCategory(meta, cd) {
+            const catToken = (meta?.chart?.category || meta?.chartCategory);
+            // try column format first
+            if (catToken) {
+                const idx = (function resolveColIndexLocal(meta, token) {
+                    if (!meta?.columns || !token) return -1;
+                    const t = String(token).trim().toLowerCase();
+                    return meta.columns.findIndex(c => {
+                        const key = String(c.key || '').toLowerCase();
+                        const name = String(c.name || '').toLowerCase();
+                        const out = String(c.output || '').toLowerCase();
+                        return key === t || name === t || out === t;
+                    });
+                })(meta, catToken);
+                if (idx >= 0) {
+                    const fmt = (meta.columns[idx].format || '').toLowerCase();
+                    if (fmt === 'date' || fmt === 'datetime') return true;
+                }
+            }
+
+            const cats = cd?.categories || [];
+            if (!cats.length) return false;
+            const n = Math.min(cats.length, 20);
+            let ok = 0;
+            for (let i = 0; i < n; i++) {
+                if (Number.isFinite(__parseDateKey(cats[i]))) ok++;
+            }
+            return (ok / n) >= 0.7;
+        }
+
+        let apexChart = null;
+        function renderChart(meta, chartDataMaybe) {
+            const wrap = qs('#rpt-chart-wrap');
+            const host = qs('#rpt-chart');
+
+            // сносим старый
+            if (apexChart && apexChart.destroy) {
+                try { apexChart.destroy(); } catch (e) { console.warn('Apex destroy warn:', e); }
+                apexChart = null;
+            }
+
+            // если бэк не прислал готовое — строим из rows согласно XML-логике
+            let cd = (chartDataMaybe && chartDataMaybe.series && chartDataMaybe.categories)
+                ? chartDataMaybe
+                : buildApexData(meta, resp?.data?.rows || []);
+
+            if (!cd || !cd.series || !cd.series.length) { hide(wrap); return; }
+
+            // ▼ СОРТИРУЕМ И ФИЛЬТРУЕМ (убираем пустые/blank, нули в Pie)
+            //cd = sanitizeChartData(cd, { excludeBlank: true, dropZeroForPie: true, sortDesc: true });
+            // If category looks like a date, sort by date asc; otherwise sort by values.
+            const isDateCat = __isDateCategory(meta, cd);
+            const sortMode = isDateCat ? 'label-date' : 'value';
+            // For value-based bars: horizontal → 'asc' looks better; for dates we always do asc
+            const sortDir = isDateCat ? 'asc' : ((cd.type === 'bar' && cd.horizontal === true) ? 'asc' : 'desc');
+
+            cd = sanitizeChartData(cd, {
+                meta,
+                excludeBlank: true,
+                dropZeroForPie: true,
+                sortMode,
+                sortDir
+            });
+
+            // если после фильтра нечего рисовать — скрываем
+            if (!cd.categories.length || !(cd.series[0].data || []).length) { hide(wrap); return; }
+
+
+            // первичное логирование входов
+            rptGroup('[Report] renderChart() input', () => {
+                rptLog('meta.chart:', meta?.chart);
+                rptLog('chartDataMaybe:', chartDataMaybe);
+                rptLog('rows.length:', Array.isArray(resp?.data?.rows) ? resp.data.rows.length : 0);
+                rptLog('cd (computed):', cd);
+                rptLog('buildApexData version:', window.__rpt_buildApexData || '(unknown)'); // если помечали в buildApexData
+            });
+
+            // быстрый выход — нет данных
+            if (!cd || !cd.series || !cd.series.length || !cd.categories || !cd.categories.length) {
+                rptLog('Chart hidden: no series or categories.');
+                hide(wrap);
+                return;
+            }
+
+            if (!window.ApexCharts) {
+                setNotice('danger', 'ApexCharts не загружен. Проверь подключение src/assets/plugins/apexcharts.js');
+                console.error('ApexCharts is missing on window.');
+                return;
+            }
+
+            show(wrap);
+
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+            // базовые цвета из Bootstrap
+            const cText = cssVar('--bs-gray-300') || '#e1e1e1';
+            const cGrid = cssVar('--bs-gray-700') || '#3a3a3a';
+            const cGridLt = cssVar('--bs-gray-600') || '#4a4a4a';
+
+            let options = {
+                chart: { type: cd.type, height: 300, toolbar: { show: false } },
+                series: cd.series,
+                dataLabels: { enabled: false },
+                tooltip: { shared: true, intersect: false, theme: isDark ? 'dark' : 'light' },
+                legend: { show: true },
+                theme: { mode: isDark ? 'dark' : 'light', monochrome: false, foreColor: cText },
+                grid: { borderColor: cGrid, strokeDashArray: 3 },
+                xaxis: { labels: { style: { colors: cText } }, axisBorder: { color: cGrid }, axisTicks: { color: cGridLt } },
+                yaxis: { labels: { style: { colors: cText } }, axisBorder: { color: cGrid }, axisTicks: { color: cGridLt } }
+            };
+
+            // Типографика / оси под разные типы
+            const metricLabel =
+                meta?.chart?.yTitle || meta?.chart?.valueTitle ||
+                cd.series?.[0]?.name || null;
+
+            if (cd.type === 'bar') {
+                const horizontal = !!cd.horizontal;
+                options = {
+                    ...options,
+                    plotOptions: { bar: { horizontal } },
+                    xaxis: {
+                        categories: cd.categories,
+                        labels: { rotate: horizontal ? 0 : -45 },
+                        ...(horizontal && metricLabel ? { title: { text: metricLabel } } : {})
+                    },
+                    yaxis: (!horizontal && metricLabel) ? { title: { text: metricLabel } } : {}
+                };
+            } else if (cd.type === 'line') {
+                options = {
+                    ...options,
+                    stroke: { width: 2 },
+                    xaxis: { categories: cd.categories, labels: { rotate: -45 } },
+                    ...(metricLabel ? { yaxis: { title: { text: metricLabel } } } : {})
+                };
+            } else if (cd.type === 'pie') {
+                // В pie series должен быть массив чисел
+                const pieSeries = (cd.series?.[0]?.data || []).map(v => {
+                    if (typeof v === 'string') v = v.replace(/,/g, ''); // "1,234" → "1234"
+                    v = Number(v);
+                    return Number.isFinite(v) ? v : 0;
+                });
+
+                options = {
+                    ...options,
+                    labels: cd.categories,
+                    tooltip: { y: { formatter: (v) => Number(v).toLocaleString() }, shared: false, intersect: false },
+                    series: pieSeries,
+
+                };
+            }
+
+            // sanity-checks перед рендером
+            rptGroup('[Report] Apex options sanity check', () => {
+                const rect = host.getBoundingClientRect();
+                rptLog('host rect:', rect);
+                rptLog('chart.type:', options.chart?.type);
+                if (options.chart?.type === 'pie') {
+                    rptLog('labels:', options.labels);
+                    rptLog('series (numbers):', options.series);
+                    const nanCount = (options.series || []).filter(x => !Number.isFinite(x)).length;
+                    const sum = (options.series || []).reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+                    if ((options.labels?.length || 0) !== (options.series?.length || 0)) {
+                        console.warn('PIE mismatch: labels vs series length:',
+                            options.labels?.length, options.series?.length);
+                    }
+                    if (nanCount > 0) console.warn('PIE has NaN values in series.');
+                    if (sum === 0) console.warn('PIE sum is 0 — круг может не отрисоваться заметно.');
+                } else {
+                    rptLog('categories:', cd.categories);
+                    rptLog('series (raw):', options.series);
+                }
+            });
+
+            // пробуем создать/отрисовать
+            try {
+                apexChart = new ApexCharts(host, options);
+                apexChart.render()
+                    .then(() => rptLog('Apex rendered OK.'))
+                    .catch(err => {
+                        console.error('Apex render() rejected:', err, { options, cd, meta });
+                        setNotice('danger', 'Chart render error (see console).');
+                    });
+            } catch (e) {
+                console.error('Apex init error:', e, { options, cd, meta });
+                setNotice('danger', 'Chart init error (see console).');
+            }
+        }
+
+        function sanitizeChartData(cd, {
+            meta = null,
+            excludeBlank = true,
+            dropZeroForPie = true,
+            sortMode = 'value',     // 'value' | 'label-date' | 'label-lex' | 'none'
+            sortDir,                // 'asc' | 'desc' (ignored for 'label-date' – always asc)
+            sortDesc                // legacy
+        } = {}) {
+            if (!cd || !cd.series || !cd.series[0]) return cd;
+
+            // Determine final direction if needed
+            let dir = 'desc';
+            if (typeof sortDir === 'string') {
+                dir = (/^asc$/i.test(sortDir)) ? 'asc' : 'desc';
+            } else if (typeof sortDesc === 'boolean') {
+                dir = sortDesc ? 'desc' : 'asc';
+            }
+
+            const name = cd.series[0].name;
+            const cats = (cd.categories || []).slice();
+            const vals = (cd.series[0].data || []).map(v => Number(v) || 0);
+
+            let pairs = cats.map((lab, i) => ({
+                lab: String(lab ?? '').trim(),
+                val: vals[i] ?? 0
+            }));
+
+            if (excludeBlank) {
+                pairs = pairs.filter(p => p.lab && p.lab.toLowerCase() !== '(blank)');
+            }
+            if (cd.type === 'pie' && dropZeroForPie) {
+                pairs = pairs.filter(p => p.val > 0);
+            }
+
+            // Decide sorting mode automatically if needed
+            if (sortMode === 'auto') {
+                sortMode = __isDateCategory(meta, cd) ? 'label-date' : 'value';
+            }
+
+            // Apply sorting
+            if (sortMode === 'label-date') {
+                // chronological ASC regardless of orientation
+                pairs.sort((a, b) => {
+                    const ta = __parseDateKey(a.lab), tb = __parseDateKey(b.lab);
+                    if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+                    if (Number.isNaN(ta)) return 1;
+                    if (Number.isNaN(tb)) return -1;
+                    return ta - tb;
+                });
+            } else if (sortMode === 'label-lex') {
+                pairs.sort((a, b) => a.lab.localeCompare(b.lab, undefined, { numeric: true }));
+                if (dir === 'desc') pairs.reverse();
+            } else if (sortMode === 'value') {
+                pairs.sort((a, b) => (dir === 'asc') ? (a.val - b.val) : (b.val - a.val));
+            } else {
+                // 'none' → keep incoming order
+            }
+
+            return {
+                ...cd,
+                categories: pairs.map(p => p.lab),
+                series: [{ name, data: pairs.map(p => p.val) }]
+            };
+        }
+
+        // Heuristic: decide if category axis is date-like.
+        // Priority: column format from meta → else sample labels and see if ≥70% parse as date.
+        function __isDateCategory(meta, cd) {
+            // Prefer explicit metadata from columns (format: 'date'|'datetime')
+            const catToken = (meta?.chart?.category || meta?.chartCategory);
+            const catIdx = resolveColIndex(meta, catToken);
+            if (catIdx >= 0) {
+                const fmt = (meta.columns[catIdx].format || '').toLowerCase();
+                if (fmt === 'date' || fmt === 'datetime') return true;
+            }
+
+            // Heuristic by labels
+            const cats = cd?.categories || [];
+            if (!cats.length) return false;
+            const n = Math.min(cats.length, 20);
+            let ok = 0;
+            for (let i = 0; i < n; i++) {
+                if (Number.isFinite(__parseDateKey(cats[i]))) ok++;
+            }
+            return (ok / n) >= 0.7; // 70% look like dates → treat as date axis
+        }
+
+        function sortChartData(cd, { dir = 'desc', by = 'first', blanksLast = true } = {}) {
+            if (!cd || !Array.isArray(cd.categories) || !Array.isArray(cd.series) || !cd.series.length) return cd;
+
+            const n = cd.categories.length;
+            const idx = Array.from({ length: n }, (_, i) => i);
+
+            const keyAt = (i) => {
+                // value to sort by
+                const val = (by === 'sum')
+                    ? cd.series.reduce((s, ser) => s + (Number(ser?.data?.[i]) || 0), 0)
+                    : Number(cd.series[0]?.data?.[i]) || 0;
+
+                const cat = cd.categories[i];
+                const isBlank = cat == null || cat === '' || String(cat).toLowerCase() === '(blank)';
+                return { val, isBlank };
+            };
+
+            idx.sort((a, b) => {
+                const A = keyAt(a), B = keyAt(b);
+                if (blanksLast && A.isBlank !== B.isBlank) return A.isBlank ? 1 : -1;
+                return (dir === 'asc') ? (A.val - B.val) : (B.val - A.val);
+            });
+
+            // reorder categories and every series' data
+            const categories = idx.map(i => cd.categories[i]);
+            const series = cd.series.map(s => ({
+                ...s,
+                data: idx.map(i => Number(s?.data?.[i]) || 0)
+            }));
+
+            return { ...cd, categories, series };
+        }
+
+        // ── scorecards
+        function renderScorecards(meta, data) {
+            // Если сервер вернул блок карточек, показываем вместо таблицы/графика
+            if (!data?.cards || !data.cards.length) return false;
+            const host = qs('#rpt-custom-wrap');
+            host.innerHTML = `
+      <div class="row g-4">
+        ${data.cards.map(c => `
+          <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="fs-7 text-muted">${c.title || ''}</div>
+                <div class="fs-1 fw-bold">${c.value || '-'}</div>
+                ${c.delta != null ? `<div class="${c.delta >= 0 ? 'text-success' : 'text-danger'}"> ${c.delta >= 0 ? '+' : ''}${c.delta}%</div>` : ''}
+                ${c.goal != null ? `<div class="fs-8 text-muted">goal: ${c.goal}</div>` : ''}
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+            show(host);
+            hide(qs('#rpt-table-wrap')); hide(qs('#rpt-chart-wrap'));
+            return true;
+        }
+
+        // ── CUSTOM / SPECIAL HTML
+        function renderCustom(html) {
+            const host = qs('#rpt-custom-wrap');
+            host.innerHTML = html || '<div class="text-muted">No content</div>';
+            show(host);
+            hide(qs('#rpt-table-wrap')); hide(qs('#rpt-chart-wrap'));
+        }
+
+        // ── главный рендер-свитч
+        function renderAll() {
+            clearNotice();
+            if (!resp) return;
+
+            renderHead(resp.meta);
+            renderFilters(resp.ui);
+            renderGroupBar(resp.ui);
+            renderGroupSelect(resp.meta);
+
+            // Прячем всё перед рисованием
+            hide(qs('#rpt-table-wrap'));
+            hide(qs('#rpt-chart-wrap'));
+            hide(qs('#rpt-custom-wrap'));
+
+            // Требуются фильтры?
+            if (resp.ui?.requireActive && isEmptyFilters(state.filters)) {
+                setNotice('warning', 'Select required filters to run this report.');
+                return;
+            }
+
+            // CUSTOM (сервер сам собрал html)
+            if ((resp.meta?.type || '').toUpperCase() === 'CUSTOM' || resp.meta?.customHtml) {
+                renderCustom(resp.meta.customHtml);
+                return;
+            }
+
+            // SCORECARD(S)
+            if ((resp.meta?.type || '').toUpperCase().startsWith('SCORECARD')) {
+                if (!renderScorecards(resp.meta, resp.data)) {
+                    setNotice('info', 'No cards to show.');
+                }
+                return;
+            }
+
+            // PIVOT в виде таблицы и, опционально, чарта
+            // SIMPLE — таблица; если server прислал chart — покажем тоже
+            if (state.parts === 'TABLE') {
+                const useGroups = !!(resp.meta?.groupBy);
+                if (useGroups) {
+                    renderTableGrouped(resp.meta, resp.data);  // твоя функция
+                } else {
+                    renderTable(resp.meta, resp.data);         // обычная плоская
+                }
+            } else if (state.parts === 'CHART') {
+                renderChart(resp.meta, resp.chart);
+            } else { // All
+                renderTable(resp.meta, resp.data);
+                renderChart(resp.meta, resp.chart);
+                if (!resp.data?.rows?.length && !resp.chart?.series?.length) {
+                    setNotice('info', 'No data for selected criteria.');
+                }
+            }
+        }
+
+        // ── запрос
+        function requestAndRender() {
+            const body = payload();
+            // Progress + обнулить предупреждения
+            clearNotice();
+            if (window.NProgress) { NProgress.start(); }
+            app.apiPOST(`/ezdata/report`, body, function (data) {
+                resp = data;     // ожидаем {meta,data,chart,ui,debug}
+                if (!resp || (!resp.data && !resp.chart && !resp.meta?.customHtml)) {
+                    setNotice('danger', 'Server returned empty response.');
+                }
+                renderAll();
+                //setTimeout(updateStickyMode);
+            }, function (err) {
+                setNotice('danger', 'Error loading report.');
+                console.error(err);
+            });
+        }
+
+        // ── Toolbar
+        function bindToolbar() {
+            qs('#rpt-refresh').onclick = () => requestAndRender();
+            qs('#rpt-reset').onclick = () => { state.filters = {}; state.actfilter = ''; state.groups = ''; state.drilldown = null; requestAndRender(); };
+
+            const pdfMain = qs('#rpt-pdf-btn');
+            if (pdfMain) pdfMain.onclick = () => exportPDF('Portrait');
+
+            const dd = document.querySelector('#report-root .dropdown-menu');
+            if (dd) {
+                dd.onclick = (e) => {
+                    const a = e.target.closest('[data-format]');
+                    if (!a) return;
+                    e.preventDefault();
+                    exportPDF(a.getAttribute('data-format') || 'Portrait');
+                };
+            }
+        }
+
+        function isEmptyFilters(obj) {
+            if (!obj) return true;
+            return Object.values(obj).every(v =>
+                v == null ||
+                v === '' ||
+                (Array.isArray(v) && v.length === 0) ||
+                (typeof v === 'object' && !Array.isArray(v) && !v.from && !v.to)
+            );
+        }
+
+        function formatDateCell(val) {
+            const s = String(val);
+
+            // Если пришло 'YYYY-MM-DD' — отрисуем как MM/DD/YYYY без создания Date
+            const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (m) return `${m[2]}/${m[3]}/${m[1]}`;
+
+            // Если ISO с 'Z' — форматируем, зафиксировав timeZone = 'UTC'
+            const d = new Date(s);
+            if (!isNaN(d)) {
+                return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(d);
+            }
+            return s;
+        }
+
+        function formatDateTimeUTC(val) {
+            const d = new Date(val);
+            if (isNaN(d)) return String(val);
+            // Например: 02/20/2025, 13:45 (UTC)
+            return new Intl.DateTimeFormat('en-US', {
+                timeZone: 'UTC',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit'
+            }).format(d);
+        }
+
+        function escapeSqlString(s) {
+            return String(s).replace(/'/g, "''");
+        }
+
+        function buildLegacyFilterFromState(filters) {
+            if (!filters || typeof filters !== 'object') return '';
+
+            const arr = [];
+
+            // Date: {from, to}
+            if (filters.Date && typeof filters.Date === 'object') {
+                const from = (filters.Date.from || '').trim();
+                const to = (filters.Date.to || '').trim();
+                if (from) arr.push(`[Date] >= '${from}'`);
+                if (to) arr.push(`[Date] <= '${to}'`);
+            }
+
+            for (const [k, v] of Object.entries(filters)) {
+                if (k === 'Date') continue;
+                if (v == null) continue;
+                const s = String(v).trim();
+                if (!s) continue;
+
+                arr.push(`dbo.FindKeyword([${k}],'${s}')>0`);
+            }
+
+            for (let i = 0; i < arr.length; i++) {
+                arr[i] = arr[i].replace(/ /g, String.fromCharCode(160));
+            }
+
+            return escape(arr.join('####'));
+        }
+
+        function exportPDF(format) {
+            if (!resp) return;
+
+            const payload = {
+                format: (format === 'Landscape') ? 'Landscape' : 'Portrait',
+                type: (resp?.meta?.type || 'SIMPLE'),
+                title: (resp?.meta?.title || state.title || 'Report'),
+                parts: 'All',
+                filter: buildLegacyFilterFromState(state.filters),
+                place: (resp?.meta?.place || state.place || 'MAIN'),
+                source: (resp?.meta?.source || ''),
+                groups: (resp?.meta?.groupBy || state.groups || ''),
+                aspKey: aspKey,
+            };
+
+            if (payload.groups === 'none') {
+                payload.groups = '';
+            }
+
+            const qs = Object.entries(payload)
+                .filter(([, v]) => v !== undefined && v !== null && v !== '')
+                .map(([k, v]) => {
+                    if (k === 'filter') return `${encodeURIComponent(k)}=${v}`;
+                    return `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`;
+                })
+                .join('&');
+
+            // уведомление
+            setNotice('info', `Generating PDF (${payload.format})...`);
+            $.get(aspUrl + '/Modules/ReportBuilder/PdfSmart.asp', qs, function (data) {
+                if (typeof data === 'string' && data.indexOf('.pdf') > -1) {
+                    clearNotice();
+                    setNotice('success', 'PDF generated successfully: <a href="' + data + '?' + Date.now() + '" class="no-ajax" target="_blank">Open</a>', true);
+                    //window.open(data + '?' + Date.now(), '_blank');
+                } else {
+                    setNotice('danger', 'PDF generation error.');
+                }
+            }).fail(function () {
+                setNotice('danger', 'PDF request failed.');
+            });
+        }
+
+        // Собираем apex-данные из meta + rows
+        function buildApexData(meta, rows) {
+            window.__rpt_buildApexData = 'v2/fix-alias';
+
+            const chartCfg = meta?.chart || {};
+            // Поддерживаем XML-формы
+            const categoryToken = chartCfg.category || meta?.chartCategory;
+            const valueToken = (chartCfg.series && chartCfg.series[0]) || meta?.chartValues;
+
+            // Агрегация sum(valueToken) по categoryToken
+            const agg = buildAggByCategory(meta, rows, categoryToken, valueToken);
+
+            // Тип + ориентация (Bar = горизонтально, Column = вертикально, Line/Pie и т.д.)
+            const norm = normalizeChartType(meta);
+
+            return { ...agg, ...norm };  // { categories, series:[{name,data}] , type, horizontal? }
+        }
+
+
+        const DESKTOP_Q = '(min-width: 992px)';
+        function isDesktop() { return window.matchMedia(DESKTOP_Q).matches; }
+
+        function updateStickyMode() {
+            const scroller = document.querySelector('#rpt-table-wrap .table-responsive');
+            if (!scroller) return;
+
+            if (isDesktop()) {
+                // на десктопе даём внутренний скролл и пересчитываем высоту
+                scroller.style.overflow = 'auto';
+                autosizeTable();
+            } else {
+                // на мобиле — высоту и скролл убираем
+                scroller.style.maxHeight = '';
+                scroller.style.overflow = 'visible';
+            }
+        }
+
+        function autosizeTable() {
+            if (!isDesktop()) return;
+            const scroller = document.querySelector('#rpt-table-wrap .table-responsive');
+            if (!scroller) return;
+            const top = scroller.getBoundingClientRect().top;
+            const maxH = window.innerHeight - top - 80;
+            scroller.style.maxHeight = `${Math.max(240, maxH)}px`;
+        }
+
+        //window.addEventListener('resize', updateStickyMode);
+
+        // ── public API
+        return {
+            init() {
+                aspUrl = app.local['aspUrl'];
+                aspKey = app.local['aspKey'];
+                parseQS();
+                bindToolbar();
+                requestAndRender();   // ← авто-RUN: один запрос при входе
+                // прокинем хлебные крошки (как в твоём шаблоне)
+                if (app.config && app.config.menu) {
+                    $("#breadcrumb-header").html(
+                        ejs.render(
+                            document.getElementById("breadcrumb-header-tpl").innerHTML,
+                            { menu: app.config.menu, part: app.part, act: app.act }
+                        )
+                    );
+                }
+                const _themeObs = new MutationObserver(() => {
+                    if (!resp) return;
+                    renderChart(resp.meta, resp.chart);
+                });
+                _themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+            },
+            unload() {
+                if (apexChart && apexChart.destroy) { try { apexChart.destroy(); } catch (e) { } apexChart = null; }
+
+                $('#rpt-filters .form-select, #rpt-filters .form-control[data-kind="TEXT"]').off('change');
+
+                try { $('#rpt-filters .form-select').each(function () { if ($(this).data('select2')) $(this).select2('destroy'); }); } catch (e) { }
+
+                try { document.querySelectorAll('#rpt-filters .flatpickr').forEach(el => el._flatpickr && el._flatpickr.destroy()); } catch (e) { }
+
+                try { _themeObs && _themeObs.disconnect(); } catch (e) { }
+
+            }
+        };
+    })();
+</script>

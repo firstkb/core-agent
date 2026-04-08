@@ -1,0 +1,43 @@
+<div class="card card-back-button">
+    <div class="card-header d-block d-lg-none card-header-back-button js-sticky-back" data-top="60">
+        <button onclick="page.backToList()" class="btn btn-sm" style="padding: 6px 5px 6px 0px;">
+            <img src="/web/assets/media/back.svg" height="20" class="mb-0">
+        </button>
+    </div>
+    <div class="card-body" style="min-height: 500px;">
+        <div class="row display-desctop">
+            <div class="col-sm-2">
+                <button type="button" onclick="page.backToList()" class="btn btn-secondary">Back to List</button>
+            </div>
+        </div>
+
+        <div id="inspection-content">
+
+        </div>
+
+    </div>
+</div>
+<script>
+    var page = {
+        config: {},
+        rec: encode("0"),
+        init: function () {
+
+        },
+        unload: function () {
+
+        },
+        backToList: function (url = '/web/?act=list&part=' + app.part) {
+            if (typeof page.config.table !== "undefined" && ($("[name=" + page.config.table.field_status + "]").val() === "" || $("[name=" + page.config.table.field_status + "]").val() === null || $("[name=" + page.config.table.field_status + "]").val() === "Removed")) {
+                page.backToListDialog(url);
+            } else {
+                app.loadAjaxContent(url);
+            }
+        },
+        backToHeader: function (table_id, rec) {
+            page.backToList('/web/?act=edit&part=E' + table_id + '&rec=' + rec);
+        }
+    };
+    page.init();
+
+</script>

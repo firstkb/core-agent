@@ -87,10 +87,13 @@ Current active builder direction:
 - `platform-studio/data-schema-storage-rules.md`
 - `platform-studio/form-builder-backend-boundary.md`
 - `platform-studio/form-builder-field-catalog.md`
+- `platform-studio/form-builder-v2-field-contract.md`
+- `platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
 Supporting builder docs:
 
 - `platform-studio/ezform-analysis.md`
+- `platform-studio/form-builder-page-and-filter-notes.md`
 - `platform-studio/ezform/**`
 
 Historical or archive-only builder docs:

@@ -233,10 +233,13 @@ Use it together with:
 - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
 - `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`
+- `platform/frontend/docs/platform-studio/form-builder-v2-field-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
 #### Supporting
 
 - `platform/frontend/docs/platform-studio/ezform-analysis.md`
+- `platform/frontend/docs/platform-studio/form-builder-page-and-filter-notes.md`
 - `platform/frontend/docs/platform-studio/ezform/**`
 
 #### Working / historical

@@ -1,0 +1,12 @@
+<%
+var modifiedTitle = false;
+if (title.startsWith('*')) {
+    modifiedTitle = title.slice(1);
+} 
+if (modifiedTitle) {
+    title = modifiedTitle;
+}
+%>
+<div class="row mb-md-4 mt-4 mt-md-0 title-line <% if (modifiedTitle) { %>title-line-accordion<% } %> <% if (req == "Yes") { %>field-required<% } %>">
+    <div id="title_<%- field %>" class="col-sm-12 col-sm-12 fs-3 fw-bold p-3 text-center" style="background-color: var(--bs-secondary) !important;border-bottom: 1px solid var(--bs-gray-300);"><%- title%></div>
+</div>

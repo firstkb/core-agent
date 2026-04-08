@@ -1,0 +1,4 @@
+<div class="row mb-md-4 <% if (req == "Yes") { %>field-required<% } %>">
+    <label class="col-sm-4 fs-6 fw-bold form-label mt-4"><%- title %>:</label>
+    <div class="col-sm-8"><% if (last_type != "201") { %><input type="text" class="form-control form-readonly" name="<%- field %>" value="<%- value_name %>" id="<%- field %>" readonly><% } else { %><textarea class="form-control form-readonly" name="<%- field %>" id="<%- field %>" readonly><%- value_name %></textarea><% } %></div>
+</div>

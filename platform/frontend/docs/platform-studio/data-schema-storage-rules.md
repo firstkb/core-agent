@@ -6,7 +6,7 @@ This document captures early rules for how Platform Studio should think about:
 
 - data schema naming
 - physical storage naming
-- generated system fields
+- generated system columns
 - indexes and relationships
 - external locked tables
 

@@ -1,0 +1,26 @@
+<% 
+var modifiedTitle = false;
+if (title.startsWith('*')) {
+    modifiedTitle = title.slice(1);
+} 
+
+if (modifiedTitle) {
+    title = modifiedTitle;
+}
+var class_arr = ['btn-success', 'btn-warning', 'btn-secondary', 'btn-info', 'btn-info', 'btn-info', 'btn-info']
+%>
+<div id="q_<%- field %>" class="row mb-md-4 <% if (req == "Yes") { %>field-required<% } %>">
+    <label class="col-sm-4 fs-6 fw-bold form-label mt-4 <% if (modifiedTitle) { %>ps-10<% } %>"><%- title%>:</label>
+    <div class="col-sm-8">
+        <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+            <% var items = param.split('|'); %>
+            <% for(var _key in items){ %>
+                <% var item = items[_key] %>
+                <% var class_name = class_arr[_key] %>
+                <% var checked = '' %>
+                <% if (item == value) { checked = 'checked="checked"' } %>
+            <label class="btn btn-sm <%-class_name%> <% if (checked != '') { %>active<% } %>"> <input type="radio" name="<%- field %>" title="<%- title %>" class="<% if (subform === false) { %>fldch<% } %>" <%- checked %> autocomplete="off" value="<%- item %>" <% if (req == "Yes" && _key == 0) { %>required<% } %>> <%- item %> </label>
+            <% } %>
+        </div>
+    </div>
+</div>

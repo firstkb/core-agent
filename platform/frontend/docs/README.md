@@ -19,6 +19,10 @@ Entry point for the active frontend documentation set.
 - `install-helper-runtime.md`: current install/access layer contract built on `packages/install-helper`
 - `platform-studio/taxonomy-and-naming.md`: canonical Platform Studio naming matrix and anti-drift rules
 - `platform-studio/form-builder-first-contract.md`: locked first Form Builder integration contract before FE/BE parallelization
+- `platform-studio/form-builder-field-catalog.md`: canonical field, layout, and preset catalog for Form Builder
+- `platform-studio/form-builder-v2-field-contract.md`: canonical separation of base field types, presets, System Fields, page settings, and filter definitions
+- `platform-studio/form-builder-slice-1-inspector-and-view-schema.md`: canonical slice-1 inspector structure and exact JSON schema for `systemFields` and `filterDefinitions`
+- `platform-studio/form-builder-page-and-filter-notes.md`: supporting notes for legacy EzData Page settings and filter surfaces that should stay separate from the field palette
 - `phase-e-gap-review.md`: closed-cycle gap review for shared-layer expansion after the first full approval pass
 - `deferred-composed-surfaces.md`: backlog and boundary rules for larger workflow-shaped surfaces that should be revisited after the main interface baseline
 - `ui-lab-structure.md`: exact `UI Lab` section structure, purpose, and promotion boundary

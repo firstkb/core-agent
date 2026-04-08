@@ -24,9 +24,27 @@ The Form Builder palette should be organized into distinct categories:
 - core data field types
 - relation and lookup field types
 - advanced or specialized field types
+- System Fields
 - presets and variants
 
 Not every visible choice in the UI should become a new backend field type.
+
+## Source Framing
+
+This catalog is grounded in three different reference layers:
+
+- `EXTDB`
+  - canonical source for legacy field ids, legacy names, and EzData Page metadata
+- `smartapp`
+  - canonical source for current runtime widget behavior, field overloads, and visual conventions
+- `ezform`
+  - authoring-shell and schema-split reference only
+
+Use them with strict roles:
+
+- legacy ids and runtime templates are migration inputs, not V2 naming
+- `ezform` does not define the final business field taxonomy
+- page metadata, access overlays, form-type overlays, and string markers must not be promoted into base field types
 
 ## Final V2 Catalog
 
@@ -104,9 +122,17 @@ These should exist in the catalog, but some may be implemented later.
 - `Computed field`
 - `Readonly text`
 - `Readonly numeric`
-- `Status`
 - `Survey element`
 - `SQL field`
+
+### 6. System Fields
+
+These are palette-level authored shortcuts for page semantics.
+They are not new base field primitives.
+
+- `Reported By`
+- `Reported Date`
+- `Status`
 
 ## What Should Be Presets Instead Of Separate Base Types
 
@@ -126,6 +152,9 @@ The following should not become separate core field types:
   - use `Short text` or `Computed field` with readonly mode when possible
 - `Readonly numeric`
   - use `Integer`, `Decimal`, `Currency`, or `Computed field` with readonly mode when possible
+- `Status`
+  - use `Single select` with a `status` preset for generic status data
+  - use the `Status` System Field when the field also carries page workflow semantics
 - `Project`
   - relation template with a preset target model
 - `Contact`
@@ -138,18 +167,61 @@ The following should not become separate core field types:
 These should still be visible as separate choices in the UI if that improves usability.
 They are separate create options, not necessarily separate backend primitives.
 
+`System Fields` are a separate palette group again:
+
+- they are not base field types
+- they emit a field plus an explicit semantic binding
+
+## What Is Not A Base Field Type
+
+The source review confirmed that these concerns must stay out of the base field catalog:
+
+- EzData Page / View settings
+  - `Icon`
+  - `CA page`
+- page-level filter and prefilter definitions
+- per-page field access overlays
+  - `Default`
+  - `View Only`
+  - `Edit Field`
+  - `Hidden`
+- runtime-only form-type overlays
+  - `SOR`
+  - `CHECKLIST`
+  - `CA`
+- control tokens or display aliases
+  - `80 TABS`
+  - `view`
+  - `hidden`
+  - `301`
+  - `302`
+- brittle title and label markers in the current runtime
+  - `*` title prefix
+  - exact `GPS coordinates`
+  - substring `Signature`
+  - exact `Verification Req.`
+
+These should become explicit V2 view settings, visibility rules, presets, or runtime behaviors.
+They should not appear as first-class model field primitives.
+
+Field-backed legacy settings should surface through `System Fields` instead of raw page-setting dropdowns:
+
+- `Field By` -> `Reported By`
+- `Field Date` -> `Reported Date`
+- `Field Status` plus draft/finish variants -> `Status`
+
 ## Legacy Mapping
 
 This is the recommended mapping from the old builder catalog into the V2 catalog.
 
 - `200 TEXT (any symbol)` -> `Short text`
-- `202 TEXT-SELECT (text as SelectBox)` -> `Single select`
+- `202 TEXT-SELECT (text as SelectBox)` -> `Short text` or `Single select`, depending on whether the real runtime behavior is free text or constrained selection
 - `204 READONLY-TEXT` -> `Readonly text` preset
 - `205 READONLY-NUMERIC` -> `Readonly numeric` preset
 - `2030 COMBOBOX (custom selections)` -> `Single select`
-- `2031 COMBOBOX (Yes/No)` -> `Boolean` preset
+- `2031 COMBOBOX (Yes/No)` -> `Boolean` preset only when the option set is truly yes/no; otherwise `Single select` with radio or chips
 - `2032 COMBOBOX Related` -> `Relation` or `DB lookup`
-- `201 MEMO (big text)` -> `Long text`
+- `201 MEMO (big text)` -> `Long text`, or `Signature` preset when the runtime uses the title-based signature behavior
 - `2011 MEMO (with Updates)` -> `Long text` with `historicalUpdates`
 - `2012 EDITOR (Rich Text Editor)` -> `Rich text`
 - `135 DATE (date type)` -> `Date`
@@ -167,6 +239,45 @@ This is the recommended mapping from the old builder catalog into the V2 catalog
 - `32 DB FIELD (Contact)` -> `Contact` relation template
 - `33 DB FIELD (Company)` -> `Company` relation template
 - `71 SQL Field` -> `SQL field`
+
+## Runtime Overlay Notes From Smartapp
+
+The current smartapp runtime adds several important overlays on top of the legacy ids:
+
+- `view`
+  - readonly display alias driven by page access, not a real field type
+- `hidden`
+  - hidden access alias driven by page access, not a real field type
+- `form_type = SOR`
+  - overrides the normal subform behavior into a specialized SOR report widget
+- `form_type = CHECKLIST`
+  - overrides the normal subform behavior into a checklist widget with nested answers, files, and optional corrective action flows
+- `form_type = CA`
+  - special corrective-action modal behavior, not a standalone primitive
+- `301` and `302`
+  - readonly relation-summary cards; these are better treated as display presets for relation outputs than as separate model field types
+- `20301`
+  - static single-select variant with explicit `id:label` options
+
+V2 should model these as runtime presets or view-layer widgets, not as new model primitives.
+
+## Source Conflicts That V2 Must Resolve Explicitly
+
+The source review exposed a few mismatches that should be resolved intentionally instead of copied forward:
+
+- `202`
+  - legacy EXTDB treats this as a select-style field
+  - current smartapp renders it as a text input
+  - V2 should classify it by actual desired source behavior, not by legacy id alone
+- `2031`
+  - legacy naming suggests yes/no
+  - current smartapp runtime supports arbitrary pipe-delimited radio-chip options
+  - V2 should not hardcode this to boolean unless the option set is actually boolean
+- `204`, `205`, `71`, `view`, `301`, `302`
+  - current runtime shows these as a small readonly-display family
+  - V2 should collapse them into fewer readonly presets where backend semantics do not require separate primitives
+- `80`
+  - this is a control token consumed by tab grouping, not a standalone rendered widget
 
 ## Shared Parameters For Most Fields
 
@@ -593,16 +704,6 @@ Parameters:
 - `format`
 - `fallbackValue`
 
-### Status
-
-Parameters:
-
-- `options`
-- `displayAs`
-  - `select`
-  - `badge`
-- `colorMapping`
-
 ### Survey element
 
 Parameters:
@@ -621,14 +722,55 @@ Parameters:
 
 This should remain an advanced capability.
 
+## System Field Parameters
+
+### Reported By
+
+Parameters:
+
+- `defaultLabel`
+- `defaultFieldPreset`
+  - `contact_relation`
+- `required`
+
+This inserts a normal relation field and binds it to the view semantic role `reportedBy`.
+
+### Reported Date
+
+Parameters:
+
+- `defaultLabel`
+- `required`
+- `defaultNow`
+
+This inserts a normal date field and binds it to the view semantic role `reportedDate`.
+
+### Status
+
+Parameters:
+
+- `options`
+- `initialValue`
+- `finalValue`
+- `displayAs`
+  - `select`
+  - `radio_chips`
+  - `badge`
+- `colorMapping`
+
+This inserts a `Single select` field with a `status` preset and binds it to the view workflow role.
+
 ## What Should Happen Next
 
 Before implementation expands, V2 should do the following:
 
 1. approve this catalog
-2. create a builder palette taxonomy from it
-3. define icon mapping for every visible item
-4. define which items are in slice 1 versus later
-5. define the right-panel inspector schema for each item family
+2. approve the V2 field contract with the `System Fields` layer
+3. lock the migration rules for legacy ids with overloaded runtime behavior such as `202`, `2031`, `201`, and `90`
+4. create a builder palette taxonomy from it
+5. define icon mapping for every visible item
+6. define which items are in slice 1 versus later
+7. implement the right-panel inspector from `form-builder-slice-1-inspector-and-view-schema.md`
+8. keep page settings and filters in a separate view-settings document rather than pushing them back into the field palette
 
 This sequence should happen before a broad rebuild of the right-side inspector.

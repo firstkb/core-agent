@@ -1,0 +1,1094 @@
+<style>
+    tr.row2nd {
+        background-color: var(--tr-line1) !important;
+    }
+
+    tr.line1,
+    tr.line1 td {
+        background-color: var(--tr-line1) !important;
+    }
+
+    tr.line2,
+    tr.line2 td {
+        background-color: var(--tr-line2) !important;
+    }
+
+    tr.rowspace {
+        height: 10px !important;
+    }
+
+    .sticky-header {
+        width: 100% !important;
+    }
+
+    .table:not(.table-bordered) tr,
+    .table:not(.table-bordered) th,
+    .table:not(.table-bordered) td {
+        color: var(--tr-color-line);
+    }
+
+    .total-records {
+        display: block;
+        float: right;
+        gap: 0.5rem;
+        line-height: 35px;
+        padding-right: 10px;
+    }
+
+    .total-records>span {
+        display: inline-block;
+        line-height: normal;
+        padding: 3px 4px;
+        background-color: var(--bs-secondary) !important;
+        border-radius: 3px;
+    }
+
+    .reload-btn {
+        float: right;
+        border: none;
+        background: transparent;
+        color: var(--tr-color-line);
+        line-height: 30px;
+        height: 34px;
+        width: 35px;
+        padding: 0 8px;
+        margin-right: 8px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .reload-btn .reload-icon {
+        width: 20px;
+        height: 20px;
+        display: block;
+    }
+
+    .reload-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .reload-btn.is-loading .reload-icon {
+        animation: reload-spin 0.8s linear infinite;
+    }
+
+    @keyframes reload-spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .card-body-table {
+        padding: 0px !important;
+    }
+
+    .btn-new-desktop,
+    .btn-new-mobile {
+        display: none;
+    }
+
+
+    .btn-new-desktop.new-enabled {
+        display: none;
+    }
+
+    @media (max-width: 991px) {
+        .btn-new-desktop.new-enabled {
+            display: none;
+        }
+
+        .btn-new-mobile.new-enabled {
+            display: flex;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .btn-new-desktop.new-enabled {
+            display: inline-block;
+        }
+
+        .card-body-table {
+            padding-bottom: 48px !important;
+        }
+
+        .table-responsive {
+            position: relative;
+            overflow-y: auto;
+            overflow-x: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        #list-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0px;
+        }
+
+        #list-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: var(--bs-body-bg) !important;
+            transition: border 0.2s;
+        }
+
+        #list-table thead th.scrolled {
+            border-top: 1px solid var(--bs-secondary);
+            border-bottom: 1px solid var(--bs-secondary);
+            box-shadow: var(--bs-card-box-shadow);
+        }
+
+        .card-body-table {
+            position: relative;
+        }
+
+        .pagination-footer {
+            position: absolute;
+            bottom: -13px;
+            left: 0;
+            right: 0;
+            height: 3.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bs-body-bg);
+            z-index: 5;
+            border-end-end-radius: 11px;
+            border-end-start-radius: 10px;
+            border-top: 1px solid var(--bs-secondary);
+            ;
+        }
+
+        .pagination-footer.scrolled {
+            box-shadow: 0 -3px 4px rgba(0, 0, 0, 0.03);
+        }
+    }
+
+    .table-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        flex-wrap: nowrap;
+    }
+
+    /* 1. Start NEW */
+    .btn-new {
+        display: none;
+        background: #f0a000;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    @media (min-width: 992px) {
+        .btn-new {
+            display: inline-block;
+        }
+    }
+
+    .filter-search-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .filter-select {
+        flex: 0 0 auto;
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        background: #fff;
+        cursor: pointer;
+    }
+
+
+    .btn-xls {
+        flex: 0 0 auto;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .btn-xls svg {
+        display: block;
+        width: 2.75rem;
+        height: auto;
+        fill: #1d6f42;
+    }
+
+    #fieldHeader th.sorted-asc::after,
+    #fieldHeader th.sorted-desc::after {
+        content: '';
+        display: inline-block;
+        margin-left: .35rem;
+        border: 5px solid transparent;
+        vertical-align: baseline;
+    }
+
+    #fieldHeader th.sorted-asc::after {
+        border-bottom-color: currentColor;
+        vertical-align: top;
+    }
+
+    #fieldHeader th.sorted-desc::after {
+        border-top-color: currentColor;
+        vertical-align: middle;
+    }
+
+    .autocomplete-menu {
+        --scroller-color: 0, 0%;
+        --scroller-color-lightness: 80%;
+        --scroller-bg-lightness: 90%;
+        --scroller-hover-factor: 0.8;
+        --scroller-thumb: hsl(var(--scroller-color), var(--scroller-color-lightness));
+        /* Replicate hover for webkit */
+        --scroller-thumb-hover: hsl(var(--scroller-color), calc(var(--scroller-color-lightness) * var(--scroller-hover-factor)));
+        --scroller-background: hsl(var(--scroller-color), calc(var(--scroller-bg-lightness)));
+        scrollbar-color: var(--scroller-thumb) var(--scroller-background);
+        scrollbar-width: thin;
+    }
+
+    .autocomplete-menu::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .autocomplete-menu::-webkit-scrollbar-track {
+        background: var(--scroller-background);
+    }
+
+    .autocomplete-menu::-webkit-scrollbar-thumb {
+        background: var(--scroller-thumb);
+    }
+
+    .autocomplete-menu::-webkit-scrollbar-thumb:hover {
+        background: var(--scroller-thumb-hover);
+    }
+
+    .autocomplete-menu {
+        position: absolute;
+        top: 51px;
+    }
+
+    .mark-search {
+        font-weight: 800;
+        background-color: unset;
+        color: unset;
+        padding: 0;
+    }
+</style>
+
+<div class="row" id="list-message"></div>
+<script>function startNew(el) { $(el).html('...in process...').prop('disabled', true); page.new(); }</script>
+
+<div class="row js-add-button btn-new-mobile">
+    <div class="col-12 text-center mb-6">
+        <button type="button" onclick="startNew(this)" class="btn btn-warning"><i class="fa fa-plus"></i> start
+            new</button>
+        <span id="ai-report-sor-wrap"></span>
+    </div>
+</div>
+
+<div class="card  mb-5">
+    <div class="table-toolbar">
+        <button class="btn-new-desktop btn btn-warning js-add-button" onclick="startNew()"><i class="fa fa-plus"></i>
+            start
+            new</button>
+        <div class="filter-search-wrapper search-wrap" style="position: relative;">
+            <input type="search" inputmode="search" class="form-control form-control-lg form-control-solid px-15"
+                id="search" style="padding-left: 13rem !important;" placeholder="Search..." />
+            <i class="fa fa-search fs-2 fs-lg-1 text-gray-500 position-absolute top-50 translate-middle-y"
+                style="margin-left: 10.25rem !important;"><span class="path1"></span><span class="path2"></span></i>
+            <select class="form-select form-control search-select position-absolute top-50 translate-middle-y w-125px"
+                style="border: transparent;background-color: transparent;" name="search-col" id="search-col">
+                <option value="">All</option>
+            </select>
+        </div>
+
+        <button class="btn-xls" onclick="page.toXLS()" aria-label="Export to XLS">
+            <svg id="Layer_1" style="enable-background:new 0 0 512 512; max-height: 40px; min-height: 35px;"
+                version="1.1" viewBox="0 0 512 512" xml:space="preserve" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink">
+                <style type="text/css">
+                    .st0 {
+                        fill: #1D6F42;
+                    }
+                </style>
+                <g id="XMLID_927_">
+                    <path class="st0"
+                        d="M365.6,285.9H40.3v133.9h276.3L365.6,285.9z M144.9,387l-14.8-25.6L115.4,387h-13.5l21.4-34.3   L102.4,319h13.4l14.2,25.1l14.3-25.1h13.5l-20.9,33.7l21.7,34.3H144.9z M213.6,387h-43.2v-68h11.4v59h31.9V387z M266.6,383   c-4.4,3.4-10.2,5-17.4,5c-6.9,0-12.9-1.8-18.1-5.5c-5.1-3.7-7.6-8.9-7.5-15.6l0.1-0.3h10.9c0,4.1,1.4,7.2,4.2,9.2   c2.8,2.1,6.3,3.1,10.3,3.1c4,0,7.1-0.8,9.4-2.5c2.2-1.7,3.3-4,3.3-6.9c0-2.8-1-5.2-3-7c-2-1.8-5.6-3.4-10.7-4.9   c-7.3-2-13-4.7-16.9-8c-4-3.3-6-7.6-6-12.9c0-5.5,2.2-10,6.5-13.6c4.4-3.6,10-5.3,16.8-5.3c7.4,0,13.2,2,17.6,5.9   c4.4,3.9,6.5,8.8,6.4,14.6l-0.1,0.3h-10.9c0-3.6-1.2-6.4-3.6-8.6c-2.4-2.1-5.6-3.2-9.5-3.2c-3.8,0-6.8,0.9-8.9,2.7   c-2.1,1.8-3.1,4.1-3.1,7c0,2.6,1.1,4.8,3.4,6.5c2.3,1.7,6,3.3,11.3,4.8c7.1,2,12.6,4.7,16.3,8.2c3.7,3.4,5.6,7.8,5.6,13.2   C273.3,375.1,271.1,379.6,266.6,383z"
+                        id="XMLID_931_" />
+                    <path class="st0"
+                        d="M352.9,6L352.9,6H107.4c-7.3,0-13.3,6-13.3,13.3v256.8h26.6V32.6h232.2v92.2h92.2v354.6H120.7   v-49.8H94.1v63.1c0,7.3,6,13.3,13.3,13.3h351c7.3,0,13.3-6,13.3-13.3V124.8L352.9,6z"
+                        id="XMLID_930_" />
+                    <rect class="st0" height="19.6" id="XMLID_929_" width="253.4" x="156.2" y="171.4" />
+                    <rect class="st0" height="19.6" id="XMLID_928_" width="213.3" x="156.2" y="209.5" />
+                </g>
+            </svg>
+        </button>
+    </div>
+    <div class="card-body card-body-table" style="min-height: 500px;">
+        <div class="table-responsive">
+            <table id="list-table" class="table table-striped gs-7 gy-5 table table-row-bordered table-row-gray-300">
+                <thead id="fieldHeader">
+                </thead>
+                <tbody id="listBody">
+                    <tr>
+                        <td colspan="20" align="center" style="background-color: var(--tr-line1) !important;">
+                            <div class="edit-loader">
+                                <svg version="1.1" id="L7" xmlns="http://www.w3.org/2000/svg"
+                                    style="width: 120px; height: 120px;" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                    x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 100 100"
+                                    xml:space="preserve">
+                                    <path fill="#22314b4f" d="M31.6,3.5C5.9,13.6-6.6,42.7,3.5,68.4c10.1,25.7,39.2,38.3,64.9,28.1l-3.1-7.9c-21.3,8.4-45.4-2-53.8-23.3
+                                    c-8.4-21.3,2-45.4,23.3-53.8L31.6,3.5z">
+                                        <animateTransform attributeName="transform" attributeType="XML" type="rotate"
+                                            dur="2s" from="0 50 50" to="360 50 50" repeatCount="indefinite" />
+                                    </path>
+                                    <path fill="#22314b4f" d="M42.3,39.6c5.7-4.3,13.9-3.1,18.1,2.7c4.3,5.7,3.1,13.9-2.7,18.1l4.1,5.5c8.8-6.5,10.6-19,4.1-27.7
+                                    c-6.5-8.8-19-10.6-27.7-4.1L42.3,39.6z">
+                                        <animateTransform attributeName="transform" attributeType="XML" type="rotate"
+                                            dur="1s" from="0 50 50" to="-360 50 50" repeatCount="indefinite" />
+                                    </path>
+                                    <path fill="#22314b4f" d="M82,35.7C74.1,18,53.4,10.1,35.7,18S10.1,46.6,18,64.3l7.6-3.4c-6-13.5,0-29.3,13.5-35.3s29.3,0,35.3,13.5
+                                    L82,35.7z">
+                                        <animateTransform attributeName="transform" attributeType="XML" type="rotate"
+                                            dur="2s" from="0 50 50" to="360 50 50" repeatCount="indefinite" />
+                                    </path>
+                                </svg>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="pagination" class="pagination-footer mt-10 mb-5 ps-2 pe-2" style="display: none;"></div>
+    </div>
+</div>
+<script id="ai-report-sor" type="text/x-template">
+    <!--<a href="/web/?act=aisor&part=<%-_part %>" class="btn btn-info ms-9">AI Monthly Report</a>-->
+</script>
+<script id="no-reccord" type="text/x-template">
+    <tr>
+        <td colspan="20" align="center" style="background-color: var(--bs-secondary) !important;">
+            No records found
+        </td>
+    </tr>
+</script>
+<script>
+    function onTableScroll() {
+        var $hdr = $('#list-table thead th'),
+            scrolled = $('.table-responsive').scrollTop() > 0;
+        var $pfooter = $('.pagination-footer');
+        $hdr.toggleClass('scrolled', scrolled);
+        $pfooter.toggleClass('scrolled', scrolled);
+    }
+
+    function adjustTableHeight() {
+        var $tbl = $('.table-responsive');
+        if (window.innerWidth < 992) {
+            $tbl.css('max-height', '');
+            return;
+        }
+        var topY = $('.search-wrap')[0].getBoundingClientRect().bottom,
+            available = window.innerHeight - topY - 120;
+        $tbl.css('max-height', available + 'px');
+    }
+
+    var page = {
+        currentPage: 1,
+        pageSize: 50,
+        totalPages: 1,
+        totalRecords: 0,
+        config: {},
+        searchText: '',
+        searchCol: '',
+        sortField: null,
+        sortOrder: 'ASC',
+        isReloading: false,
+        _handlers: {
+            resize: 'adjustTableHeight',
+            load: 'adjustTableHeight',
+            scroll: 'onTableScroll'
+        },
+        'init': function () {
+
+            const urlParams = new URLSearchParams(location.search);
+            if (urlParams.get('state') === 'clear') {
+                app.clearPartState();
+                app.backLink = {};
+            }
+
+            const st = app.getPartState();
+            //if (st.pageSize) page.pageSize = st.pageSize;
+            if (st.page) { page.currentPage = st.page; }
+            if (st.sortField) { page.sortField = st.sortField; page.sortOrder = st.sortOrder; }
+
+            if (st.search) { $('#search').val(st.search); page.searchText = st.search; }
+            if (st.searchCol) { $('#search-col').val(st.searchCol); page.searchCol = st.searchCol; }
+
+            var pageSizeStore = localStorage.getItem("setting_pageSize");
+            var pageSize = (pageSizeStore === null) ? 50 : pageSizeStore;
+            var inputVal = parseInt(pageSize, 10);
+            if (!isNaN(inputVal) && inputVal >= 1 && inputVal <= 501) {
+                page.pageSize = inputVal;
+            }
+
+            page.getListConfig();
+            remmeber.init();
+
+            $(window)
+                .on('load.' + page._handlers.load, adjustTableHeight)
+                .on('resize.' + page._handlers.resize, adjustTableHeight);
+            $('.table-responsive')
+                .off('scroll.' + page._handlers.scroll) // на всякий случай от старых
+                .on('scroll.' + page._handlers.scroll, onTableScroll);
+
+            adjustTableHeight();
+            onTableScroll();
+        },
+        getListConfig: function (options = {}) {
+            options = options || {};
+            const redirectOnError = options.redirectOnError !== false;
+            const searchVal = $.trim($('#search').val()).length >= 2 ? $.trim($('#search').val()) : '';
+            const searchCol = page.searchCol;
+
+            /*let queryParams = {
+                part: app.part,
+                page: page.currentPage,
+                pageSize: page.pageSize
+            };
+            if (searchVal) queryParams.search = searchVal;
+            if (searchCol) queryParams["search-col"] = searchCol;*/
+
+            app.apiGET(page.buildQuery(searchVal, searchCol), function (data) {
+
+                page.config = data;
+
+                if (typeof page.config['table']['add'] !== "undefined" && page.config['table']['add'] === "True") {
+                    $(".js-add-button").addClass("new-enabled");
+                }
+
+                if (typeof page.config['table']['message'] !== "undefined") {
+                    $("#list-message").html(page.config['table']['message']);
+                }
+
+                if (data.sort && data.sort.field && data.sort.field !== "") {
+                    page.sortField = data.sort.field;
+                    page.sortOrder = (data.sort.order || 'ASC').toUpperCase();
+                } else {
+                    page.sortField = null;
+                }
+
+                page.setTableHeader(data.results);
+                page.updateSortUI();
+                const totalPages = parseInt(data.totalPages, 10);
+                const totalRecords = parseInt(data.totalRecords, 10);
+                const hasRows = Array.isArray(data.results) && data.results.length > 0;
+                if (!isNaN(totalPages) && totalPages > 0) {
+                    page.totalPages = totalPages;
+                    page.totalRecords = isNaN(totalRecords) ? data.totalRecords : totalRecords;
+                    page.currentPage = parseInt(data.currentPage, 10) || 1;
+                    page.renderPagination();
+                } else if (totalPages === 0 || !hasRows || totalRecords === 0) {
+                    page.totalPages = 0;
+                    page.totalRecords = 0;
+                    page.currentPage = 1;
+                    page.renderPagination();
+                }
+
+                page.setSearch();
+                if (page.isReloading) {
+                    page.isReloading = false;
+                    page.renderPagination();
+                }
+
+            }, function (data) {
+                if (page.isReloading) {
+                    page.isReloading = false;
+                    page.renderPagination();
+                }
+                if (redirectOnError) {
+                    app.loadAjaxContent('/web/?act=dashboard');
+                }
+            });
+        },
+        renderPagination: function () {
+            var pagination = $('#pagination');
+            pagination.empty();
+
+            if (page.totalPages > 0) {
+                if (page.currentPage > 1) {
+                    pagination.append('<button class="page-btn btn btn-sm" data-page="' + (page.currentPage - 1) + '">&laquo;</button>');
+                } else {
+                    pagination.append('<button class="page-btn btn btn-sm" disabled>&laquo;</button>');
+                }
+
+                if (page.totalPages === 1) {
+                    pagination.append('<input type="text" class="page-input form-control" value="1" style="width: 40px; text-align: center;display: inline-block;padding: 5px;" />');
+                } else {
+                    if (page.currentPage === 1) {
+                        pagination.append('<input type="text" class="page-input form-control" value="1" style="width: 40px; text-align: center;display: inline-block;padding: 5px;" />');
+                    } else {
+                        pagination.append('<button class="page-btn btn btn-sm" data-page="1">1</button>');
+                    }
+
+                    if (page.currentPage > 2) {
+                        pagination.append('<span class="mx-1">...</span>');
+                    }
+
+                    if (page.currentPage !== 1 && page.currentPage !== page.totalPages) {
+                        pagination.append('<input type="text" class="page-input active-page form-control" value="' + page.currentPage + '" form-control" style="width: 40px; text-align: center;display: inline-block;padding: 5px;" />');
+                    }
+
+                    if (page.currentPage < page.totalPages - 1) {
+                        pagination.append('<span class="mx-1">...</span>');
+                    }
+
+                    if (page.currentPage === page.totalPages) {
+                        pagination.append('<input type="text" class="page-input form-control" value="' + page.totalPages + '" style="width: 40px; text-align: center;display: inline-block;padding: 5px;" />');
+                    } else {
+                        pagination.append('<button class="page-btn btn btn-sm" data-page="' + page.totalPages + '">' + page.totalPages + '</button>');
+                    }
+                }
+
+                if (page.currentPage < page.totalPages) {
+                    pagination.append('<button class="page-btn btn btn-sm" data-page="' + (page.currentPage + 1) + '">&raquo;</button>');
+                } else {
+                    pagination.append('<button class="page-btn btn btn-sm" disabled>&raquo;</button>');
+                }
+            }
+
+            var reloadDisabled = page.isReloading ? ' disabled' : '';
+            var reloadClass = page.isReloading ? ' is-loading' : '';
+            pagination.append('<span class="total-records"><span>' + page.totalRecords + '</span> entries</span>');
+            pagination.append(
+                '<button type="button" class="reload-btn' + reloadClass + '" title="Reload" aria-label="Reload table"' + reloadDisabled + '>' +
+                '<svg class="reload-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+                '<path fill="currentColor" d="M12 5a7 7 0 0 1 6.32 4H16v2h5V6h-2v1.54A9 9 0 1 0 21 12h-2a7 7 0 1 1-7-7z"></path>' +
+                '</svg>' +
+                '</button>'
+            );
+
+            $('.page-btn').off('click').on('click', function () {
+                var selectedPage = parseInt($(this).data('page'), 10);
+                if (selectedPage !== page.currentPage) {
+                    page.currentPage = selectedPage;
+                    page.getListConfig();
+                    $(document).scrollTop(0);
+                }
+            });
+
+            $('.page-input').off('keyup').on('keyup', function (e) {
+                if (e.key === "Enter") {
+                    var inputVal = parseInt($(this).val(), 10);
+                    if (!isNaN(inputVal) && inputVal >= 1 && inputVal <= page.totalPages) {
+                        if (inputVal !== page.currentPage) {
+                            page.currentPage = inputVal;
+                            page.getListConfig();
+                            $(document).scrollTop(0);
+                        }
+                    } else {
+                        $(this).val(page.currentPage);
+                    }
+                }
+            });
+
+            $('.reload-btn').off('click').on('click', function () {
+                page.reloadTable();
+            });
+            $('#pagination').show();
+            adjustTableHeight();
+        },
+        reloadTable: function () {
+            if (page.isReloading) {
+                return;
+            }
+            page.isReloading = true;
+            page.renderPagination();
+            page.getListConfig({
+                redirectOnError: false
+            });
+        },
+        buildQuery: function (searchVal, searchCol) {
+            const qs = [
+                'part=' + encodeURIComponent(app.part),
+                'page=' + page.currentPage,
+                'pageSize=' + page.pageSize
+            ];
+
+            if (searchVal) qs.push('search=' + encodeURIComponent(searchVal));
+            if (searchCol) qs.push('search-col=' + encodeURIComponent(searchCol));
+            if (page.sortField) {
+                qs.push('sort=' + encodeURIComponent(page.sortField));
+                qs.push('order=' + page.sortOrder);
+            }
+
+            app.setPartState({
+                page: page.currentPage,
+                pageSize: page.pageSize,
+                search: searchVal,
+                searchCol: searchCol,
+                sortField: page.sortField,
+                sortOrder: page.sortOrder
+            });
+            return '/ezdata/list?' + qs.join('&');
+        },
+        applySort: function (field) {
+            if (page.sortField == null) {
+                return;
+            }
+            if (page.sortField === field) {
+                page.sortOrder = (page.sortOrder === 'ASC') ? 'DESC' : 'ASC';
+            } else {
+                page.sortField = field;
+                page.sortOrder = 'ASC';
+            }
+            page.currentPage = 1;
+            page.getListConfig();
+        },
+        updateSortUI: function () {
+            $('#fieldHeader th[data-field]')
+                .removeClass('sorted-asc sorted-desc');
+            if (!page.sortField) return;
+            const cls = (page.sortOrder === 'ASC') ? 'sorted-asc' : 'sorted-desc';
+            $('#fieldHeader th[data-field="' + page.sortField + '"]').addClass(cls);
+        },
+        searchInit: false,
+        setSearch: function () {
+            if (page.searchInit) {
+                return;
+            }
+            page.searchInit = true;
+            let colFields = "";
+
+            const fields = page.config.fields;
+            $('#search-col option').remove();
+            $('#search-col').append($('<option>', {
+                value: "",
+                text: "All"
+            }));
+            fields.forEach(field => {
+                if (field.field && field.title && field.type != "135") {
+                    colFields += field.field + ","
+                    $('#search-col').append($('<option>', {
+                        value: field.field,
+                        text: field.title
+                    }));
+                }
+            });
+            if (page.searchCol != "") {
+                $('#search-col').val(page.searchCol).trigger("change");
+            }
+            $('#search').attr("autocomplete", "off");
+            if (app.part && typeof app.part === 'string' && app.part.charAt(0) === 'U') {
+                $('#search-col').off("change").on("change", function () {
+                    var columnIndex = $('#search-col').val();
+                    page.searchCol = columnIndex;
+                    var value = $.trim($('#search').val().toLowerCase()).replace(/[^a-z0-9\/\s.,()#]/gi, '');
+                    if (value.length < 2) {
+                        return;
+                    }
+                    page.getListJson(page.config.results, value, columnIndex);
+                });
+                $('#search').off("keyup search").on("keyup search", function (e) {
+                    if (e.keyCode === 13) {
+                        var columnIndex = $('#search-col').val();
+                        var value = $.trim($(this).val());
+                        if (value.length < 2 && value === "") {
+                            return;
+                        }
+                        page.getListJson(page.config.results, value, columnIndex);
+                    } else {
+                        var value = $.trim($(this).val().toLowerCase()).replace(/[^a-z0-9\/\s.,()#]/gi, '');
+                        if (value === "") {
+                            page.getListJson(page.config.results);
+                        }
+                    }
+                });
+            } else {
+                $('#search-col').off("change").on("change", function () {
+                    var columnIndex = $('#search-col').val();
+                    page.searchCol = columnIndex;
+                    var value = $.trim($('#search').val());
+                    if (value != "") {
+                        page.searchText = value;
+                        page.currentPage = 1;
+                        page.getListConfig();
+                    }
+                });
+
+                $('#search').off("keyup search").on("keyup search", function (e) {
+                    if (e.keyCode === 13) {
+                        var columnIndex = $('#search-col').val();
+                        var value = $.trim($(this).val());
+                        if (value.length < 2 && value === "") {
+                            return;
+                        }
+                        page.searchText = value;
+                        page.currentPage = 1;
+                        page.getListConfig();
+                    } else {
+                        var value = $.trim($(this).val());
+                        if (value === "" && page.searchText != "") {
+                            page.searchText = "";
+                            page.currentPage = 1;
+                            page.getListConfig();
+                        }
+                    }
+                });
+                suggest.init(colFields);
+            }
+        },
+        escapeRegExp: function (string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        },
+        unload: function () {
+            $('#search').off('keyup');
+            $('#search-col').off("change");
+            $(window)
+                .off('load.' + page._handlers.load)
+                .off('resize.' + page._handlers.resize);
+            $('.table-responsive')
+                .off('scroll.' + page._handlers.scroll)
+                .css('max-height', '');
+            $('#list-table thead th').removeClass('scrolled');
+            suggest.unload();
+        },
+        getListJson: function (results, search = false, key = false) {
+            results = JSON.parse(results);
+
+            let searchVal = $.trim($('#search').val());
+            let searchCol = $('#search-col').val();
+
+            if (searchVal.length < 2) {
+                searchVal = "";
+            }
+
+            if (searchVal != "" && !search) {
+                search = searchVal;
+                key = searchCol;
+            }
+
+            if (search) {
+                const searchableFields = page.config.fields.filter(f => f.type !== "135").map(f => f.field);
+                const searchTerm = search.toLowerCase();
+                const regex = new RegExp(page.escapeRegExp(searchTerm), 'gi');
+
+                if (key) {
+                    results = results.filter(row => {
+                        if (row[key] !== null && row[key] !== undefined) {
+                            const fieldValue = row[key].toString();
+                            const match = fieldValue.toLowerCase().includes(searchTerm);
+                            if (match) {
+                                row[key] = fieldValue.replace(regex, '<strong>$&</strong>');
+                            }
+                            return match;
+                        }
+                        return false;
+                    });
+                } else {
+                    results = results.filter(row =>
+                        searchableFields.some(field => {
+                            if (row[field] !== null && row[field] !== undefined) {
+                                const fieldValue = row[field].toString();
+                                const match = fieldValue.toLowerCase().includes(searchTerm);
+                                if (match) {
+                                    row[field] = fieldValue.replace(regex, '<strong>$&</strong>');
+                                }
+                                return match;
+                            }
+                            return false;
+                        })
+                    );
+                }
+            }
+
+            let tpl_id = "tpl_row";
+            if (page.config.table.type === "SOR") {
+                tpl_id = "sor_tpl_row";
+            }
+
+            var pdfUrl = app.local["aspUrl"] + "/smart/web/?part=" + app.part + "&system_id=" + app.system_id + "&rec_guid="
+            const el = document.getElementById('listBody');
+            el.innerHTML = "";
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (results.length === 0) {
+                el.innerHTML = ejs.render(document.getElementById("no-reccord").innerHTML, {});
+            } else {
+                el.innerHTML = ejs.render(document.getElementById(tpl_id).innerHTML, { rows: results, config: page.config, _part: app.part, encode: encode, admin: app.config.user['users_admin'], pdf_url: pdfUrl });
+            }
+            /*app.jsonGET("/web/api/?act=list_json&part=" + app.part, function(data) {
+                if (typeof data.error === "undefined") {
+                    document.getElementById('listBody').innerHTML = ejs.render(document.getElementById("tpl_row").innerHTML, {rows:results, config:page.config, _part: app.part});
+                }
+            });*/
+
+        },
+        setTableHeader: function (results) {
+            if (!page.config.fields) return true;
+
+            $('#fieldHeader').html(
+                ejs.render($('#tpl_header').html(), { config: page.config })
+            );
+
+            if (page.sortField != null) {
+                page.updateSortUI();
+            }
+
+            page.getListJson(results);
+        },
+        new: function () {
+            app.rec_new = "";
+            if (page.config.table.static) {
+                app.rec = "new";
+                app.loadAjaxContent("/web/?act=edit&part=" + app.part + "&rec=new");
+                return;
+            }
+            arr = {};
+            var fields = remmeber.getTopFieldsObj();
+            if (fields) {
+                arr['fields'] = fields;
+            }
+            arr['part'] = app.part;
+            app.apiPOST("/ezdata/new-rec", arr, function (data) {
+                app.rec = data.rec;
+                app.loadAjaxContent("/web/?act=edit&part=" + app.part + "&rec=" + app.rec);
+            });
+        },
+        toXLS: function () {
+            var table = document.getElementById('list-table');
+            var data = [];
+            var headers = [];
+
+            $(table).find('thead tr th').each(function (index, th) {
+                if (index !== 0) {
+                    headers.push($(th).text());
+                }
+            });
+            data.push(headers);
+
+            var rows = $(table).find('tbody tr');
+            rows.each(function (i, tr) {
+                if ($(tr).hasClass('processed')) return;
+
+                var $tr = $(tr);
+                var row = [];
+
+                $tr.find('td').each(function (colIndex, td) {
+                    if (colIndex !== 0) {
+                        row.push($(td).text().trim());
+                    }
+                });
+
+                var $nextTr = $tr.next('tr');
+                if ($nextTr.length) {
+                    var hasRowspan2 = $tr.find('td[rowspan="2"]').length > 0;
+                    var nextHasLine = $nextTr.hasClass('line1') || $nextTr.hasClass('line2');
+
+                    if (hasRowspan2 || nextHasLine) {
+                        var nextRowCells = [];
+                        $nextTr.find('td').each(function (idx, nextTd) {
+                            nextRowCells.push($(nextTd).find("span").text().trim());
+                        });
+
+                        var combinedText = nextRowCells.join(' ');
+                        row.push(combinedText);
+                        $nextTr.addClass('processed');
+                    }
+                }
+
+                data.push(row);
+            });
+
+            $(table).find('tbody tr').removeClass('processed');
+
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.aoa_to_sheet(data);
+
+            ws['!cols'] = data[0].map(function (col, idx) {
+                var maxLength = data.reduce(function (max, row) {
+                    return row[idx] ? Math.max(max, row[idx].toString().length) : max;
+                }, 10);
+                return { wch: maxLength + 2 };
+            });
+
+            var range = XLSX.utils.decode_range(ws['!ref']);
+            for (var R = range.s.r; R <= range.e.r; ++R) {
+                for (var C = range.s.c; C <= range.e.c; ++C) {
+                    var cell_address = { c: C, r: R };
+                    var cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!ws[cell_ref]) continue;
+
+                    if (!ws[cell_ref].s) ws[cell_ref].s = {};
+                    ws[cell_ref].s.border = {
+                        top: { style: "thin", color: { auto: 1 } },
+                        bottom: { style: "thin", color: { auto: 1 } },
+                        left: { style: "thin", color: { auto: 1 } },
+                        right: { style: "thin", color: { auto: 1 } }
+                    };
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, "list");
+
+            var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+            function s2ab(s) {
+                var buf = new ArrayBuffer(s.length);
+                var view = new Uint8Array(buf);
+                for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+
+            var blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+            saveAs(blob, 'list.xlsx');
+        },
+        resizeAllCanvases: function () {
+            $('.signature-block').each(function () {
+                const canvas = $(this).find('.signature-pad')[0];
+                const signaturePad = $(canvas).data('signaturePad');
+                const dataURL = signaturePad.toDataURL();
+                page.resizeCanvas(canvas);
+                signaturePad.clear();
+                signaturePad.fromDataURL(dataURL);
+            });
+        }
+    }
+
+    var remmeber = {
+        formSelector: null,
+        storageKey: null,
+        storageKeyNew: null,
+        excludeKeys: ['id', 'guid'],
+        init() {
+            remmeber.formSelector = '#actFrm';
+            remmeber.storageKey = 'lastTopFields_' + app.part + '_' + app.config.user.users_id;
+            remmeber.storageKeyNew = 'newTopFields_' + app.part + '_' + app.config.user.users_id;
+            remmeber.excludeKeys = ['id', 'guid'];
+        },
+        getTopFieldsObj: function () {
+            var storedValue = localStorage.getItem("setting_autoField");
+            var autoField = (storedValue === "true");
+            if (!autoField) {
+                return false;
+            }
+
+            if (!autoField) {
+                return false;
+            }
+
+            var storedData = localStorage.getItem(remmeber.storageKey);
+            if (storedData) {
+                return JSON.parse(storedData);
+            }
+            return false;
+        }
+    };
+
+    var SUGGEST_MAX = 1000;
+    var suggest = {
+        cache: null,      // { all:[], fields:{} }
+        instance: null,
+        inputSel: '#search',
+        colVal: '',
+        colFields: '',
+        async load() {
+            if (this.cache) return this.cache;
+
+            return this.cache = await new Promise((resolve, reject) => {
+                app.apiGET(`/ezdata/dictionary?table=extdb&part=${app.part}&sortf=${page.sortField}&sorto=${page.sortOrder}&cols=${this.colFields}`, data => {
+                    const res = { all: [], fields: {} };
+
+                    if (data && data.suggest) {
+                        const src = data.suggest;
+
+                        if (Array.isArray(src.all))
+                            res.all = dedup(src.all).slice(0, SUGGEST_MAX);
+
+                        const fldObj = src.fields || src.fileds || {};
+                        Object.keys(fldObj).forEach(fld => {
+                            res.fields[fld] = dedup(fldObj[fld]).slice(0, SUGGEST_MAX);
+                        });
+                    }
+                    resolve(res);
+                }, reject);
+            });
+
+            function dedup(arr) {
+                return [...new Set(arr.filter(v => v && v.trim()))];
+            }
+
+        },
+        async itemsForCurrentCol() {
+            const data = await this.load();
+            const col = $('#search-col').val();
+            this.colVal = col;
+            return (data.fields[col] || data.all);
+        },
+        async buildInstance(input) {
+            const items = await this.itemsForCurrentCol();
+
+            return new Autocomplete(input, {
+                items,
+                fullWidth: true,
+                maximumItems: 15,
+                highlightTyped: true,
+                highlightClass: 'mark-search',
+                itemClass: 'no-ajax',
+                //threshold: 0,
+                onSelectItem({ label }) {
+                    page.searchText = label;
+                    input.value = label;
+                    page.currentPage = 1;
+                    page.getListConfig();
+                    return false;
+                }
+            });
+        },
+        init(colFields) {
+            this.colFields = colFields;
+            const input = document.querySelector(this.inputSel);
+            if (!input) return;
+
+            input.addEventListener('focus', async () => {
+                if (!this.instance) {
+                    this.instance = await this.buildInstance(input);
+                } else {
+                    if ($('#search-col').val() != this.colVal) {
+                        this.refresh(input);
+                    }
+                }
+            }); //, { once: true }
+
+        },
+        async refresh(inputEl) {
+            if (!this.instance) return;
+            this.instance.dispose();
+            this.instance = await this.buildInstance(inputEl);
+        },
+        unload() {
+            if (this.instance) {
+                this.instance.dispose();
+                this.instance = null;
+            }
+            this.cache = null;
+
+            const input = document.querySelector(this.inputSel);
+            if (!input) return;
+            input.removeEventListener('focus', null);
+        }
+    };
+
+</script>

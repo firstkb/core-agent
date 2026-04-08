@@ -1,0 +1,985 @@
+<style>
+    /* Карточка-обёртка всего отчёта */
+    #report-root {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 260px);
+        /* подстрой при необходимости */
+        min-height: 480px;
+    }
+
+    #report-root>.card-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* ======= DataQuery AI ======= */
+    .dq-page {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 12px;
+        background: transparent;
+    }
+
+    .dq-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 12px;
+    }
+
+    .dq-card-title {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .dq-breadcrumb {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9ca3af;
+    }
+
+    .dq-card-title h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 0;
+        color: #111827;
+    }
+
+    .dq-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .dq-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #f3f4f6;
+        font-size: 12px;
+        color: #4b5563;
+        white-space: nowrap;
+    }
+
+    .dq-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #22c55e;
+    }
+
+    /* Основной layout */
+    .dq-layout {
+        position: relative;
+        display: flex;
+        flex: 1 1 auto;
+        min-height: 0;
+        gap: 16px;
+    }
+
+    /* ==== левая колонка ==== */
+    .dq-sidebar {
+        width: 280px;
+        max-width: 100%;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        padding: 10px 10px 8px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .dq-sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 2px;
+    }
+
+    .dq-chat-list {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .dq-chat-list-empty {
+        font-size: 12px;
+        color: #6b7280;
+        padding: 8px 4px;
+    }
+
+    .dq-chat-item {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        border-radius: 10px;
+        padding: 7px 8px;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.08s ease;
+    }
+
+    .dq-chat-item:hover {
+        background: #e5edff;
+        transform: translateY(-1px);
+    }
+
+    .dq-chat-item--active {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+
+    .dq-chat-item-title {
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dq-chat-item-meta {
+        font-size: 11px;
+        opacity: 0.75;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ==== правая колонка (чат) ==== */
+    .dq-chat {
+        flex: 1 1 auto;
+        min-width: 0;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        background: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .dq-chat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .dq-chat-header-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dq-chat-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #eff6ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1d4ed8;
+    }
+
+    .dq-chat-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .dq-chat-desc {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .dq-chat-header-titles {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .dq-chat-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .dq-burger {
+        display: none;
+        border: none;
+        background: #f3f4f6;
+        border-radius: 999px;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .dq-burger span {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    /* Сообщения / контент */
+    .dq-main-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .dq-messages {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 14px 16px 8px;
+        background: #f9fafb;
+    }
+
+    .dq-input {
+        display: flex;
+        gap: 10px;
+        padding: 10px 16px 14px;
+        background: #ffffff;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .dq-textarea {
+        flex: 1;
+        resize: none;
+        border-radius: 12px;
+        border: 1px solid #d1d5db;
+        padding: 10px 12px;
+        font-size: 13px;
+        min-height: 48px;
+        max-height: 140px;
+        outline: none;
+    }
+
+    .dq-textarea:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Пустое состояние справа */
+    .dq-empty-state {
+        flex: 1 1 auto;
+        padding: 32px 20px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: #f9fafb;
+    }
+
+    .dq-empty-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .dq-empty-text {
+        font-size: 13px;
+        color: #6b7280;
+        max-width: 360px;
+    }
+
+    .dq-empty-input-wrap {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+    }
+
+    .dq-empty-input-wrap textarea {
+        flex: 1;
+    }
+
+    /* Кнопки */
+    .dq-btn-primary,
+    .dq-btn-ghost {
+        border-radius: 999px;
+        border: none;
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
+        white-space: nowrap;
+    }
+
+    .dq-btn-primary {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+
+    .dq-btn-primary:hover {
+        background: #1e40af;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .dq-btn-ghost {
+        background: transparent;
+        color: #4b5563;
+        border: 1px solid #d1d5db;
+    }
+
+    .dq-btn-ghost:hover {
+        background: #f3f4f6;
+    }
+
+    .dq-send-btn .dq-send-icon {
+        font-size: 11px;
+        transform: translateY(1px);
+    }
+
+    /* ==== Сообщения (пузыри) ==== */
+    .chat-message {
+        margin-bottom: 10px;
+    }
+
+    .chat-message-inner {
+        max-width: 80%;
+        padding: 7px 10px;
+        border-radius: 14px;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .chat-message-user {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .chat-message-user .chat-message-inner {
+        background: #1d4ed8;
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+    }
+
+    .chat-message-assistant {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .chat-message-assistant .chat-message-inner {
+        background: #e5e7eb;
+        color: #111827;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-message-meta {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 2px;
+    }
+
+    /* Бэкдроп и мобильный сайдбар */
+    .dq-sidebar-backdrop {
+        display: none;
+    }
+
+    @media (max-width: 991.98px) {
+        .dq-sidebar {
+            position: absolute;
+            inset: 8px auto auto 8px;
+            right: 8px;
+            max-height: 70vh;
+            z-index: 1050;
+            box-shadow: 0 22px 45px rgba(15, 23, 42, .35);
+            transform: translateX(-120%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform .18s ease, opacity .18s ease;
+        }
+
+        .dq-sidebar.is-open {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dq-sidebar-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, .35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .18s ease;
+            display: block;
+            z-index: 1040;
+        }
+
+        .dq-sidebar-backdrop.is-active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dq-burger {
+            display: inline-flex;
+        }
+
+        .dq-layout {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .dq-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .dq-status {
+            margin-top: 4px;
+        }
+    }
+</style>
+<div id="report-root" class="card">
+    <div class="card-body">
+        <div class="dq-page">
+            <!-- Шапка DataQuery AI -->
+            <div class="dq-card-header">
+                <h2 class="card-title mb-0" id="rptai-title">DataQuery AI</h2>
+                <!--<div class="dq-card-title">
+                    DataQuery AI
+                    <p class="dq-subtitle">
+                        Ask a question about your EzData reports, tables or anything else.
+                    </p>
+                </div>-->
+                <div class="dq-status">
+                    <span class="dq-status-dot"></span>
+                    <span>Assistant is ready</span>
+                </div>
+            </div>
+
+            <!-- Основной layout -->
+            <div id="chat-layout" class="dq-layout">
+                <!-- Бэкдроп для мобильного сайдбара -->
+                <div id="chat-sidebar-backdrop" class="dq-sidebar-backdrop"></div>
+
+                <!-- Левая колонка -->
+                <aside id="chat-sidebar" class="dq-sidebar">
+                    <div class="dq-sidebar-header">
+                        <span>Chats</span>
+                        <button id="chat-new-chat" type="button" class="dq-btn-primary">
+                            + New chat
+                        </button>
+                    </div>
+                    <div id="chat-list" class="dq-chat-list">
+                        <div class="dq-chat-list-empty">
+                            Loading chats…
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Правая колонка -->
+                <section id="chat-main" class="dq-chat">
+                    <div class="dq-chat-header">
+                        <div class="dq-chat-header-main">
+                            <button id="chat-sidebar-toggle" type="button" class="dq-burger">
+                                <span>☰</span>
+                            </button>
+                            <div class="dq-chat-avatar">AI</div>
+                            <div class="dq-chat-header-titles">
+                                <div id="chat-current-title" class="dq-chat-name">New conversation</div>
+                                <div id="chat-current-subtitle" class="dq-chat-desc">
+                                    Try asking: “Show SOR count by status for this month”.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dq-chat-actions">
+                            <button id="chat-main-new" type="button" class="dq-btn-ghost d-none d-md-inline-flex">
+                                + New chat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Пустое состояние -->
+                    <div id="chat-empty" class="dq-empty-state">
+                        <div>
+                            <div class="dq-empty-title">Start a conversation with DataQuery AI</div>
+                            <div class="dq-empty-text">
+                                Ask about SOR, inspections, incidents, EzData reports, or anything else.
+                            </div>
+                        </div>
+                        <div class="dq-empty-input-wrap">
+                            <textarea id="chat-empty-input" class="dq-textarea"
+                                placeholder="Example: Show SOR count by status for this month"></textarea>
+                            <button id="chat-empty-send" type="button" class="dq-btn-primary">
+                                <span class="dq-send-icon">➤</span>
+                                <span>Send</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Основной контент чата -->
+                    <div id="chat-main-content" class="dq-main-content d-none">
+                        <div id="chat-messages" class="dq-messages"></div>
+
+                        <form class="dq-input" onsubmit="return false;">
+                            <textarea id="chat-input" class="dq-textarea"
+                                placeholder="Type your question here..."></textarea>
+                            <button id="chat-send" type="button" class="dq-btn-primary dq-send-btn">
+                                <span class="dq-send-icon">➤</span>
+                                <span>Send</span>
+                            </button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var page = (function () {
+        let state = {
+            chats: [],
+            currentChatId: null,
+            messages: [],
+            isSending: false
+        };
+
+        let dom = {};
+
+        function $(selector) {
+            return window.jQuery(selector);
+        }
+
+        // ========= DOM cache =========
+        function cacheDom() {
+            dom.$root = $('#report-root');
+            dom.$layout = $('#chat-layout');
+            dom.$sidebar = $('#chat-sidebar');
+            dom.$sidebarToggle = $('#chat-sidebar-toggle');
+            dom.$sidebarBackdrop = $('#chat-sidebar-backdrop');
+            dom.$chatList = $('#chat-list');
+
+            dom.$newChatBtn = $('#chat-new-chat');
+            dom.$mainNewBtn = $('#chat-main-new');
+
+            dom.$main = $('#chat-main');
+            dom.$emptyState = $('#chat-empty');
+            dom.$emptyInput = $('#chat-empty-input');
+            dom.$emptySend = $('#chat-empty-send');
+
+            dom.$mainContent = $('#chat-main-content');
+            dom.$messages = $('#chat-messages');
+            dom.$input = $('#chat-input');
+            dom.$sendBtn = $('#chat-send');
+            dom.$currentTitle = $('#chat-current-title');
+            dom.$currentSubtitle = $('#chat-current-subtitle');
+        }
+
+        // ========= helpers =========
+        function bindEvents() {
+            $(window).on('resize.report_ai', resizeLayout);
+
+            dom.$sidebarToggle.on('click', toggleSidebarMobile);
+            dom.$sidebarBackdrop.on('click', closeSidebarMobile);
+
+            dom.$chatList.on('click', '.js-chat-item', onChatClick);
+
+            dom.$newChatBtn.on('click', resetToNewChat);
+            dom.$mainNewBtn.on('click', resetToNewChat);
+
+            dom.$emptySend.on('click', function () {
+                let text = dom.$emptyInput.val().trim();
+                if (!text) return;
+                startNewChatWithFirstMessage(text);
+            });
+
+            dom.$emptyInput.on('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    dom.$emptySend.click();
+                }
+            });
+
+            dom.$sendBtn.on('click', onSendMessage);
+            dom.$input.on('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    onSendMessage();
+                }
+            });
+        }
+
+        function unbindEvents() {
+            $(window).off('resize.report_ai');
+        }
+
+        function resizeLayout() {
+            if (!dom.$root || !dom.$root.length) return;
+            const rect = dom.$root[0].getBoundingClientRect();
+            const viewportH = window.innerHeight || document.documentElement.clientHeight;
+            const targetH = Math.max(420, viewportH - rect.top - 16);
+            dom.$root.css('height', targetH + 'px');
+        }
+
+        function toggleSidebarMobile() {
+            dom.$sidebar.toggleClass('is-open');
+            dom.$sidebarBackdrop.toggleClass('is-active');
+        }
+
+        function closeSidebarMobile() {
+            dom.$sidebar.removeClass('is-open');
+            dom.$sidebarBackdrop.removeClass('is-active');
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // аккуратно достаём массив из разных вариантов ответа
+        function pickArray(resp) {
+            if (!resp) return [];
+
+            // {status:"ok", data:{sessions:[...]}}
+            if (resp.data) {
+                if (Array.isArray(resp.data.sessions)) return resp.data.sessions;
+                if (Array.isArray(resp.data.messages)) return resp.data.messages;
+                if (Array.isArray(resp.data)) return resp.data;
+            }
+
+            if (Array.isArray(resp.sessions)) return resp.sessions;
+            if (Array.isArray(resp.messages)) return resp.messages;
+            if (Array.isArray(resp.items)) return resp.items;
+            if (Array.isArray(resp)) return resp;
+
+            return [];
+        }
+
+        // ========= API =========
+        function fetchChats() {
+            if (!window.app || !app.apiGET) return;
+
+            app.apiGET('/ezdata/chat/chats', function (resp) {
+                state.chats = pickArray(resp);
+                renderChatList();
+
+                if (state.chats.length) {
+                    const first = state.chats[0];
+                    const id = first.id || first.chatId || first.uid;
+                    if (id) {
+                        setActiveChat(id);
+                    }
+                } else {
+                    resetToNewChat();
+                }
+            }, function () {
+                app.alert('Cannot load chat sessions.');
+                state.chats = [];
+                renderChatList();
+                resetToNewChat();
+            });
+        }
+
+        function fetchMessages(chatId) {
+            if (!window.app || !app.apiGET || !chatId) return;
+
+            app.apiGET('/ezdata/chat/chats/' + chatId + '/messages', function (resp) {
+                state.messages = pickArray(resp);
+                renderMessages();
+                scrollMessagesToBottom();
+            }, function () {
+                app.alert('Cannot load chat messages.');
+            });
+        }
+
+        function createChat(initialText, cb) {
+            if (!window.app || !app.apiPOST) return;
+
+            const title = (initialText || 'New chat').trim().substring(0, 80);
+            const payload = { title: title };
+
+            app.apiPOST('/ezdata/chat/chats', payload, function (chat) {
+                if (!chat) return;
+                const id = chat.id || chat.chatId || chat.uid;
+                if (!id) return;
+
+                state.chats.unshift(chat);
+                renderChatList();
+                if (typeof cb === 'function') cb(chat);
+            }, function () {
+                app.alert('Cannot create chat session.');
+            });
+        }
+
+        function sendMessage(chatId, text, cb) {
+            if (!window.app || !app.apiPOST || !chatId) return;
+
+            state.isSending = true;
+            toggleInputDisabled(true);
+
+            app.apiPOST('/ezdata/chat/chats/' + chatId + '/messages',
+                { content: text },
+                function () {
+                    fetchMessages(chatId);
+                    state.isSending = false;
+                    toggleInputDisabled(false);
+                    if (typeof cb === 'function') cb();
+                },
+                function () {
+                    state.isSending = false;
+                    toggleInputDisabled(false);
+                    app.alert('Cannot send message.');
+                });
+        }
+
+        // ========= render =========
+        function renderChatList() {
+            const $list = dom.$chatList;
+            $list.empty();
+
+            if (!state.chats.length) {
+                $list.append(
+                    '<div class="dq-chat-list-empty">No chats yet. Start a new conversation.</div>'
+                );
+                return;
+            }
+
+            state.chats.forEach(function (chat) {
+                const id = chat.id || chat.chatId || chat.uid;
+                const name = chat.title || chat.name || ('Chat #' + id);
+                const last = escapeHtml(chat.lastMessagePreview || chat.summary || '');
+
+                const isActive = String(id) === String(state.currentChatId);
+
+                const html = [
+                    '<button type="button" class="dq-chat-item js-chat-item',
+                    (isActive ? ' dq-chat-item--active' : ''),
+                    '" data-id="', escapeHtml(id), '">',
+                    '<div class="dq-chat-item-title">', escapeHtml(name), '</div>',
+                    last ? '<div class="dq-chat-item-meta">' + last + '</div>' : '',
+                    '</button>'
+                ].join('');
+
+                $list.append(html);
+            });
+        }
+
+        function renderMessages() {
+            const $box = dom.$messages;
+            $box.empty();
+
+            if (!state.messages.length) {
+                $box.append(
+                    '<div class="text-muted small text-center mt-5">' +
+                    'No messages yet. Say hi 👋' +
+                    '</div>'
+                );
+                return;
+            }
+
+            state.messages.forEach(function (m) {
+                const roleRaw = (m.role || m.sender || '').toString().toLowerCase();
+                const isUser = roleRaw === 'user' || roleRaw === 'human';
+                const roleClass = isUser ? 'chat-message-user' : 'chat-message-assistant';
+                const content = escapeHtml(m.content || m.text || '');
+                const created = m.createdAt || m.created_at || '';
+
+                const html =
+                    '<div class="chat-message ' + roleClass + '">' +
+                    '<div>' +
+                    '<div class="chat-message-inner">' + content + '</div>' +
+                    (created
+                        ? '<div class="chat-message-meta">' + escapeHtml(created) + '</div>'
+                        : ''
+                    ) +
+                    '</div>' +
+                    '</div>';
+
+                $box.append(html);
+            });
+        }
+
+        function scrollMessagesToBottom() {
+            const el = dom.$messages && dom.$messages[0];
+            if (!el) return;
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function showEmptyState() {
+            dom.$emptyState.removeClass('d-none');
+            dom.$mainContent.addClass('d-none');
+            dom.$emptyInput.focus();
+        }
+
+        function showMainContent() {
+            dom.$emptyState.addClass('d-none');
+            dom.$mainContent.removeClass('d-none');
+            dom.$input.focus();
+        }
+
+        function updateCurrentChatHeader() {
+            const chat = state.chats.find(function (c) {
+                const id = c.id || c.chatId || c.uid;
+                return String(id) === String(state.currentChatId);
+            });
+
+            if (!chat) {
+                dom.$currentTitle.text('New conversation');
+                dom.$currentSubtitle.text(
+                    'Try asking: “Show SOR count by status for this month”.'
+                );
+                return;
+            }
+
+            dom.$currentTitle.text(
+                chat.title || chat.name || ('Chat #' + (chat.id || chat.chatId || chat.uid))
+            );
+            dom.$currentSubtitle.text(chat.description || '');
+        }
+
+        function toggleInputDisabled(disabled) {
+            dom.$input.prop('disabled', disabled);
+            dom.$sendBtn.prop('disabled', disabled);
+            dom.$emptyInput.prop('disabled', disabled);
+            dom.$emptySend.prop('disabled', disabled);
+        }
+
+        // ========= handlers =========
+        function onChatClick() {
+            const id = $(this).data('id');
+            if (!id || String(id) === String(state.currentChatId)) {
+                closeSidebarMobile();
+                return;
+            }
+            setActiveChat(id);
+            closeSidebarMobile();
+        }
+
+        function setActiveChat(chatId) {
+            state.currentChatId = chatId;
+
+            dom.$chatList
+                .find('.js-chat-item')
+                .removeClass('dq-chat-item--active')
+                .filter('[data-id="' + chatId + '"]')
+                .addClass('dq-chat-item--active');
+
+            updateCurrentChatHeader();
+            showMainContent();
+            dom.$input.val('');
+            fetchMessages(chatId);
+        }
+
+        function resetToNewChat() {
+            state.currentChatId = null;
+            state.messages = [];
+            dom.$input.val('');
+            dom.$emptyInput.val('');
+            updateCurrentChatHeader();
+            showEmptyState();
+            renderMessages(); // очистить окно
+        }
+
+        function startNewChatWithFirstMessage(text) {
+            if (!text || state.isSending) return;
+
+            createChat(text, function (chat) {
+                const id = chat.id || chat.chatId || chat.uid;
+                state.currentChatId = id;
+
+                renderChatList();
+                updateCurrentChatHeader();
+                showMainContent();
+
+                dom.$input.val('');
+                dom.$emptyInput.val('');
+
+                state.messages = [{
+                    role: 'user',
+                    content: text
+                }];
+                renderMessages();
+                scrollMessagesToBottom();
+
+                sendMessage(id, text, function () {
+                    dom.$input.focus();
+                });
+            });
+        }
+
+        function onSendMessage() {
+            if (!state.currentChatId) {
+                const textNew = dom.$input.val().trim();
+                if (!textNew) return;
+                startNewChatWithFirstMessage(textNew);
+                return;
+            }
+
+            const text = dom.$input.val().trim();
+            if (!text || state.isSending) return;
+
+            dom.$input.val('');
+
+            state.messages.push({
+                role: 'user',
+                content: text
+            });
+            renderMessages();
+            scrollMessagesToBottom();
+
+            sendMessage(state.currentChatId, text);
+        }
+
+        // ========= public API =========
+        return {
+            init() {
+                if (!window.jQuery) {
+                    console.error('jQuery is required for DataQuery AI page.');
+                    return;
+                }
+                cacheDom();
+                bindEvents();
+                resizeLayout();
+                fetchChats();
+            },
+            unload() {
+                unbindEvents();
+            }
+        };
+    })();
+
+    // запуск
+    jQuery(function () {
+        if (window.page && page.init) {
+            page.init();
+        }
+    });
+</script>

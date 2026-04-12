@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ApiClientError,
   createTenantProfileClient,
   isUnauthorizedApiError,
+  requestWithUnauthorizedRetry,
   type TenantProfile,
 } from "@platform/api-client";
 import {
@@ -179,7 +180,7 @@ export function App({
     () => createTenantProfileClient(runtimeConfig.tenantApiUrl),
     [runtimeConfig.tenantApiUrl],
   );
-  const { isAuthenticated, requestCode, signIn, signOut, tokens, userId } = useAuth();
+  const { checkAuth, getAccessToken, isAuthenticated, requestCode, signIn, signOut, userId } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +193,16 @@ export function App({
   const [profileReady, setProfileReady] = useState(false);
   const [requestedIdentifier, setRequestedIdentifier] = useState("");
   const [requestedMethod, setRequestedMethod] = useState<AuthContactMethod | null>(null);
+  const profileRef = useRef<TenantProfile | null>(null);
+  const profileReadyRef = useRef(false);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  useEffect(() => {
+    profileReadyRef.current = profileReady;
+  }, [profileReady]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -207,22 +218,47 @@ export function App({
       return;
     }
 
-    const accessToken = tokens?.accessToken;
+    const accessToken = getAccessToken();
     if (!accessToken) {
       void signOut();
       return;
     }
 
     let isActive = true;
-    setProfile(null);
-    setProfileError(null);
-    setProfileReady(false);
+    const shouldPreserveProfile = Boolean(
+      profileReadyRef.current &&
+      profileRef.current &&
+      profileRef.current.user.id === userId,
+    );
 
-    void profileClient
-      .getProfile(accessToken)
+    if (!shouldPreserveProfile) {
+      setProfile(null);
+      setProfileError(null);
+      setProfileReady(false);
+    } else {
+      setProfileError(null);
+    }
+
+    async function recoverUnauthorizedAccessToken() {
+      const recovered = await checkAuth();
+      if (!recovered) {
+        return null;
+      }
+
+      return getAccessToken();
+    }
+
+    void requestWithUnauthorizedRetry(
+      (bearerToken) => profileClient.getProfile(bearerToken),
+      {
+        accessToken,
+        onUnauthorized: recoverUnauthorizedAccessToken,
+      },
+    )
       .then((nextProfile) => {
         if (isActive) {
           setProfile(nextProfile);
+          setProfileError(null);
           setProfileReady(true);
         }
       })
@@ -236,17 +272,19 @@ export function App({
           return;
         }
 
-        setProfileError(
-          profileRequestError instanceof Error
-            ? profileRequestError.message
-            : t("tenant.loaders.profileDescription"),
-        );
+        if (!shouldPreserveProfile) {
+          setProfileError(
+            profileRequestError instanceof Error
+              ? profileRequestError.message
+              : t("tenant.loaders.profileDescription"),
+          );
+        }
       });
 
     return () => {
       isActive = false;
     };
-  }, [isAuthenticated, profileClient, signOut, t, tokens?.accessToken, userId]);
+  }, [checkAuth, getAccessToken, isAuthenticated, profileClient, signOut, t, userId]);
 
   async function handleRequestCode() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);

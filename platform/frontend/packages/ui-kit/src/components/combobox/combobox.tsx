@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -6,6 +7,7 @@ import {
   useState,
   type HTMLAttributes,
   type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type UIEvent as ReactUiEvent,
 } from "react";
@@ -54,6 +56,25 @@ function ComboboxCheckIcon() {
   );
 }
 
+function ComboboxTagRemoveIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="ui-combobox__trigger-tag-remove-icon"
+      fill="none"
+      viewBox="0 0 16 16"
+    >
+      <path
+        d="m5 5 6 6M11 5l-6 6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
 export type ComboboxOption = {
   description?: ReactNode;
   disabled?: boolean;
@@ -64,10 +85,10 @@ export type ComboboxOption = {
 };
 
 export type ComboboxFilterMode = "local" | "none";
+export type ComboboxSelectionMode = "multiple" | "single";
 
-export type ComboboxProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "onChange"> & {
+type ComboboxBaseProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "onChange"> & {
   defaultSearchValue?: string;
-  defaultValue?: string | null;
   disabled?: boolean;
   emptyLabel?: ReactNode;
   filterMode?: ComboboxFilterMode;
@@ -79,17 +100,34 @@ export type ComboboxProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "d
   loadingLabel?: ReactNode;
   loadMoreStep?: number;
   name?: string;
-  onSearchValueChange?: (value: string) => void;
-  onValueChange?: (value: string | null) => void;
   options: readonly ComboboxOption[];
   placeholder?: ReactNode;
   searchInputAriaLabel?: string;
   searchPlaceholder?: string;
   searchValue?: string;
+  selectionMode?: ComboboxSelectionMode;
   size?: InputSize;
   triggerAriaLabel?: string;
+};
+
+type ComboboxSingleProps = ComboboxBaseProps & {
+  defaultValue?: string | null;
+  onSearchValueChange?: (value: string) => void;
+  onValueChange?: (value: string | null) => void;
+  selectionMode?: "single";
   value?: string | null;
 };
+
+type ComboboxMultipleProps = ComboboxBaseProps & {
+  defaultValue?: readonly string[];
+  onSearchValueChange?: (value: string) => void;
+  onValueChange?: (value: string[]) => void;
+  selectionMode: "multiple";
+  value?: readonly string[];
+};
+
+export type ComboboxProps = ComboboxSingleProps | ComboboxMultipleProps;
+type ComboboxStateValue = readonly string[] | string | null;
 
 function getOptionSearchText(option: ComboboxOption) {
   const labelText = typeof option.label === "string" ? option.label : "";
@@ -103,47 +141,52 @@ function getOptionSearchText(option: ComboboxOption) {
 }
 
 export function Combobox({
-  className,
-  defaultSearchValue = "",
-  defaultValue = null,
-  disabled = false,
-  emptyLabel = "No matching options",
-  filterMode = "local",
-  id,
-  initialVisibleCount,
-  invalid = false,
-  label = "Select an option",
-  loading = false,
-  loadingLabel = "Searching…",
-  loadMoreStep,
-  name,
-  onSearchValueChange,
-  onValueChange,
-  options,
-  placeholder = "Select an option",
-  searchInputAriaLabel = "Search options",
-  searchPlaceholder = "Search options…",
-  searchValue,
-  size = "md",
-  triggerAriaLabel,
-  value,
   ...props
 }: ComboboxProps) {
+  const {
+    className,
+    defaultSearchValue = "",
+    defaultValue: _defaultValue,
+    disabled = false,
+    emptyLabel = "No matching options",
+    filterMode = "local",
+    id,
+    initialVisibleCount,
+    invalid = false,
+    label = "Select an option",
+    loading = false,
+    loadingLabel = "Searching…",
+    loadMoreStep,
+    name,
+    onSearchValueChange: _onSearchValueChange,
+    onValueChange: _onValueChange,
+    options,
+    placeholder = "Select an option",
+    searchInputAriaLabel = "Search options",
+    searchPlaceholder = "Search options…",
+    searchValue,
+    selectionMode: _selectionMode,
+    size = "md",
+    triggerAriaLabel,
+    value: _value,
+    ...domProps
+  } = props;
   const generatedId = useId().replace(/:/g, "");
   const baseId = id ?? `ui-combobox-${generatedId}`;
-  const titleId = `${baseId}-title`;
   const listId = `${baseId}-listbox`;
   const triggerId = baseId;
   const searchInputId = `${baseId}-search`;
+  const selectionMode = props.selectionMode ?? "single";
+  const multiple = selectionMode === "multiple";
   const [open, setOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useControllableState<string | null>({
-    defaultValue,
-    onChange: onValueChange,
-    value: value === undefined ? undefined : value,
+  const [selectedState, setSelectedState] = useControllableState<ComboboxStateValue>({
+    defaultValue: multiple ? (props.defaultValue ?? []) : (props.defaultValue ?? null),
+    onChange: props.onValueChange as ((value: ComboboxStateValue) => void) | undefined,
+    value: props.value === undefined ? undefined : props.value,
   });
   const [query, setQuery] = useControllableState<string>({
     defaultValue: defaultSearchValue,
-    onChange: onSearchValueChange,
+    onChange: props.onSearchValueChange,
     value: searchValue,
   });
   const progressiveLoadEnabled = typeof initialVisibleCount === "number" && initialVisibleCount > 0;
@@ -154,6 +197,40 @@ export function Combobox({
   const optionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const isSearchControlled = searchValue !== undefined;
+
+  const focusSearchInput = useCallback(() => {
+    const node = searchInputRef.current;
+
+    if (!node || disabled) {
+      return;
+    }
+
+    node.focus();
+    node.select();
+  }, [disabled]);
+
+  const handleSearchInputRef = useCallback((node: HTMLInputElement | null) => {
+    searchInputRef.current = node;
+
+    if (!node || !open || disabled) {
+      return;
+    }
+
+    if (typeof window === "undefined") {
+      node.focus();
+      node.select();
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      if (searchInputRef.current !== node) {
+        return;
+      }
+
+      node.focus();
+      node.select();
+    });
+  }, [disabled, open]);
 
   const filteredOptions = useMemo(() => {
     if (filterMode === "none") {
@@ -173,25 +250,85 @@ export function Combobox({
     () => filteredOptions.filter((option) => !option.disabled),
     [filteredOptions],
   );
+  const selectedValues = useMemo(
+    () => multiple && Array.isArray(selectedState) ? selectedState : [],
+    [multiple, selectedState],
+  );
+  const selectedValue = multiple
+    ? null
+    : typeof selectedState === "string"
+      ? selectedState
+      : null;
+  const selectedValueSet = useMemo(
+    () => new Set(selectedValues),
+    [selectedValues],
+  );
 
   const selectedOption = useMemo(
     () => options.find((option) => option.value === selectedValue) ?? null,
     [options, selectedValue],
+  );
+  const selectedOptions = useMemo(
+    () => options.filter((option) => selectedValueSet.has(option.value)),
+    [options, selectedValueSet],
   );
   const renderedOptions = useMemo(
     () => (progressiveLoadEnabled ? filteredOptions.slice(0, visibleCount) : filteredOptions),
     [filteredOptions, progressiveLoadEnabled, visibleCount],
   );
   const hasMoreVisibleOptions = progressiveLoadEnabled && renderedOptions.length < filteredOptions.length;
+  const triggerValue = useMemo<ReactNode>(() => {
+    if (!multiple) {
+      return selectedOption ? selectedOption.label : placeholder;
+    }
+
+    if (selectedOptions.length === 0) {
+      return placeholder;
+    }
+
+    return (
+      <span className="ui-combobox__trigger-tag-list">
+        {selectedOptions.map((option) => (
+          <span className="ui-combobox__trigger-tag" key={option.value}>
+            <span className="ui-combobox__trigger-tag-label">{option.label}</span>
+            {!disabled ? (
+              <span
+                aria-hidden="true"
+                className="ui-combobox__trigger-tag-remove"
+                onClick={(event) => handleTagRemoveClick(event, option.value)}
+                onMouseDown={(event) => handleTagRemoveClick(event, option.value)}
+              >
+                <ComboboxTagRemoveIcon />
+              </span>
+            ) : null}
+          </span>
+        ))}
+      </span>
+    );
+  }, [disabled, multiple, placeholder, selectedOption, selectedOptions]);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    searchInputRef.current?.focus();
-    searchInputRef.current?.select();
-  }, [open]);
+    if (typeof window === "undefined") {
+      focusSearchInput();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      focusSearchInput();
+    }, 0);
+    const frameId = window.requestAnimationFrame(() => {
+      focusSearchInput();
+    });
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [focusSearchInput, open]);
 
   useEffect(() => {
     if (!open) {
@@ -208,10 +345,10 @@ export function Combobox({
     }
 
     const preferredOption =
-      enabledOptions.find((option) => option.value === selectedValue) ?? enabledOptions[0];
+      enabledOptions.find((option) => (multiple ? selectedValueSet.has(option.value) : option.value === selectedValue)) ?? enabledOptions[0];
 
     setActiveValue(preferredOption?.value ?? null);
-  }, [activeValue, enabledOptions, open, selectedValue]);
+  }, [activeValue, enabledOptions, multiple, open, selectedValue, selectedValueSet]);
 
   useEffect(() => {
     if (!progressiveLoadEnabled) {
@@ -266,8 +403,35 @@ export function Combobox({
   }
 
   function selectValue(nextValue: string) {
-    setSelectedValue(nextValue);
+    if (multiple) {
+      setSelectedState((currentValue) => {
+        const currentValues = Array.isArray(currentValue) ? currentValue : [];
+        return currentValues.includes(nextValue)
+          ? currentValues.filter((value) => value !== nextValue)
+          : [...currentValues, nextValue];
+      });
+      return;
+    }
+
+    setSelectedState(nextValue);
     handleOpenChange(false);
+  }
+
+  function removeSelectedValue(nextValue: string) {
+    if (!multiple) {
+      return;
+    }
+
+    setSelectedState((currentValue) => {
+      const currentValues = Array.isArray(currentValue) ? currentValue : [];
+      return currentValues.filter((value) => value !== nextValue);
+    });
+  }
+
+  function handleTagRemoveClick(event: ReactMouseEvent<HTMLElement>, nextValue: string) {
+    event.preventDefault();
+    event.stopPropagation();
+    removeSelectedValue(nextValue);
   }
 
   function handleListScroll(event: ReactUiEvent<HTMLDivElement>) {
@@ -344,20 +508,28 @@ export function Combobox({
 
   return (
     <div
-      {...props}
+      {...(domProps as HTMLAttributes<HTMLDivElement>)}
       className={cx(
         "ui-combobox",
         `ui-combobox--${size}`,
+        multiple && "ui-combobox--multiple",
         invalid && "ui-combobox--invalid",
         disabled && "ui-combobox--disabled",
         className,
       )}
     >
-      {name ? <input name={name} type="hidden" value={selectedValue ?? ""} /> : null}
+      {name
+        ? multiple
+          ? selectedValues.map((entry) => <input key={`${name}-${entry}`} name={name} type="hidden" value={entry} />)
+          : <input name={name} type="hidden" value={selectedValue ?? ""} />
+        : null}
       <Popover align="start" onOpenChange={handleOpenChange} open={open}>
         <PopoverTrigger>
           <button
             aria-label={triggerAriaLabel}
+            aria-controls={listId}
+            aria-expanded={open}
+            aria-haspopup="listbox"
             className="ui-combobox__trigger"
             disabled={disabled}
             id={triggerId}
@@ -367,25 +539,22 @@ export function Combobox({
             <span
               className={cx(
                 "ui-combobox__trigger-value",
-                !selectedOption && "ui-combobox__trigger-value--placeholder",
+                multiple && selectedOptions.length > 0 && "ui-combobox__trigger-value--multiple",
+                (!multiple ? !selectedOption : selectedOptions.length === 0) && "ui-combobox__trigger-value--placeholder",
               )}
             >
-              {selectedOption ? selectedOption.label : placeholder}
+              {triggerValue}
             </span>
             <ComboboxChevronIcon />
           </button>
         </PopoverTrigger>
         <PopoverContent
-          aria-labelledby={titleId}
+          aria-label={typeof label === "string" ? label : "Options"}
           className="ui-combobox__content"
         >
-          <div className="ui-combobox__header">
-            <span className="ui-combobox__title" id={titleId}>
-              {label}
-            </span>
-          </div>
           <div className="ui-combobox__search">
             <Input
+              autoFocus={open}
               aria-controls={listId}
               aria-label={searchInputAriaLabel}
               className="ui-combobox__search-input"
@@ -393,13 +562,14 @@ export function Combobox({
               onChange={(event) => setQuery(event.currentTarget.value)}
               onKeyDown={handleSearchKeyDown}
               placeholder={searchPlaceholder}
-              ref={searchInputRef}
+              ref={handleSearchInputRef}
               size="sm"
               value={query}
             />
           </div>
           <div
-            aria-labelledby={titleId}
+            aria-label={typeof label === "string" ? label : "Options"}
+            aria-multiselectable={multiple || undefined}
             className="ui-combobox__list"
             id={listId}
             onScroll={handleListScroll}
@@ -409,7 +579,9 @@ export function Combobox({
               <div className="ui-combobox__empty">{loadingLabel}</div>
             ) : renderedOptions.length > 0 ? (
               renderedOptions.map((option) => {
-                const selected = option.value === selectedValue;
+                const selected = multiple
+                  ? selectedValueSet.has(option.value)
+                  : option.value === selectedValue;
 
                 return (
                   <button

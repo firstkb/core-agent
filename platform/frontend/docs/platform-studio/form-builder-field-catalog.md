@@ -4,6 +4,14 @@
 
 This document defines the proposed final field and layout catalog for Platform Studio Form Builder.
 
+For the final accepted implementation gate, use:
+
+- `form-builder-accepted-registry.md`
+
+For one complete review tree across all sections and all items, use:
+
+- `form-builder-section-tree.md`
+
 It exists to prevent the old builder problem where one dropdown mixed together:
 
 - data types
@@ -17,17 +25,52 @@ V2 should keep these concerns separate.
 
 ## Core Principle
 
-The Form Builder palette should be organized into distinct categories:
+The Form Builder palette should be organized into user-friendly sections:
 
-- layout elements
-- content elements
-- core data field types
-- relation and lookup field types
-- advanced or specialized field types
+- basic fields
+- choice fields
+- relationships
 - System Fields
-- presets and variants
+- ready-made fields
+- advanced fields
+- layout
+- content
 
 Not every visible choice in the UI should become a new backend field type.
+
+## Field Palette Section Structure
+
+The builder palette should use these sections, in this order:
+
+1. `Basic fields`
+   - foundational model fields such as text, long text, rich text, numeric, boolean, date, date-time, signature, geo, and attachment
+2. `Choice fields`
+   - option-backed value fields such as `Single select` and `Multi select`
+3. `Relationships`
+   - `DB lookup`, `DB lookup multi`, and relationship-oriented shortcuts such as `Contact`, `Contacts`, `Company`, `Companies`, `Project`, `Projects`
+4. `System Fields`
+   - `Reported By`, `Reported Date`, `Status`
+5. `Ready-made fields`
+   - authoring shortcuts such as `Email`, `Phone`, `URL`, `Tags`, `Date today`, `Radio group`, and `Checkbox group`
+6. `Advanced fields`
+   - computed, readonly, survey, SQL, and other non-default data authoring cases
+7. `Layout`
+   - structure and composition nodes such as sections, groups, tabs, grids, subforms, and spacers
+8. `Content`
+   - static informational nodes such as headings, text blocks, and rich text blocks
+
+Section rules:
+
+- `DB lookup` belongs to `Relationships`, not to `Choice fields`
+- generic non-workflow status cases should be modeled through `Single select` or `Radio group`
+- `Status` belongs to `System Fields` only when it binds workflow semantics for the view
+- palette section assignment must not depend only on legacy `family`
+- palette section assignment should be derived from field semantics such as `baseType`, relation source, or preset intent
+
+Current slice note:
+
+- the current frontend placeholder model still stores a coarse `family`
+- the workspace palette should classify items with an explicit section resolver, not by rendering `family` directly
 
 ## Source Framing
 
@@ -48,46 +91,9 @@ Use them with strict roles:
 
 ## Final V2 Catalog
 
-### 1. Layout Elements
+### 1. Basic Fields
 
-These are structural UI elements.
-They are not model fields.
-
-- `Section`
-  - top-level layout block inside a view
-- `Group`
-  - groups related items into one visual unit
-- `Tabs`
-  - tabbed container
-- `Tab`
-  - one tab inside a `Tabs` container
-- `Subform`
-  - nested form based on a related model or repeated child structure
-- `Repeater`
-  - repeatable group of child items
-- `Grid layout`
-  - multi-column layout container
-- `Column`
-  - child column inside `Grid layout`
-- `Divider`
-  - visual separator
-- `Spacer`
-  - controlled vertical or horizontal spacing
-
-### 2. Content Elements
-
-These are non-data authoring elements.
-
-- `Title / Heading`
-  - static heading for sectioning or emphasis
-- `Text block`
-  - plain static copy
-- `Rich text block`
-  - formatted content block
-
-### 3. Core Data Field Types
-
-These are model-backed field types.
+These are model-backed foundational field types.
 
 - `Short text`
 - `Long text`
@@ -102,30 +108,39 @@ These are model-backed field types.
 - `Geo point`
 - `Attachment`
 
-### 4. Choice, Lookup, and Relation Fields
+Detailed per-field functionality and settings for this section are locked in:
 
-These fields need explicit source, display, and filtering behavior.
+- `form-builder-core-data-fields.md`
+
+### 2. Choice Fields
+
+These fields represent option-backed value selection.
 
 - `Single select`
 - `Multi select`
+
+Detailed functionality and settings for this section are locked in:
+
+- `form-builder-choice-fields.md`
+
+### 3. Relationships
+
+These fields need explicit source, display, and relation behavior.
+
 - `DB lookup`
-- `Relation`
-- `User`
-- `Project`
+- `DB lookup multi`
 - `Contact`
+- `Contacts`
 - `Company`
+- `Companies`
+- `Project`
+- `Projects`
 
-### 5. Advanced or Specialized Fields
+Detailed functionality and settings for this section are tracked in:
 
-These should exist in the catalog, but some may be implemented later.
+- `form-builder-relationships.md`
 
-- `Computed field`
-- `Readonly text`
-- `Readonly numeric`
-- `Survey element`
-- `SQL field`
-
-### 6. System Fields
+### 4. System Fields
 
 These are palette-level authored shortcuts for page semantics.
 They are not new base field primitives.
@@ -134,12 +149,101 @@ They are not new base field primitives.
 - `Reported Date`
 - `Status`
 
+Detailed functionality and settings for this section are locked in:
+
+- `form-builder-system-fields.md`
+
+### 5. Ready-made Fields
+
+These are user-friendly authored shortcuts layered on top of underlying base field types.
+
+- `Email`
+- `Phone`
+- `URL`
+- `Tags`
+- `Date today`
+- `Radio group`
+- `Checkbox group`
+
+Detailed functionality and settings for this section are locked in:
+
+- `form-builder-ready-made-fields.md`
+
+### 6. Advanced Fields
+
+This section is accepted as a reserved extension area in the library.
+No specific advanced field is accepted yet.
+
+Current deferred backlog:
+
+- `Computed field`
+- `Readonly text`
+- `Readonly numeric`
+- `Survey element`
+- `SQL field`
+
+The section-level contract is locked in:
+
+- `form-builder-advanced-fields.md`
+
+### 7. Layout
+
+These are structural UI elements.
+They are not model fields.
+
+- `Section`
+  - top-level major surface inside a view
+  - recommended to render as a card-like container
+- `Group`
+  - groups related items into one visual unit
+- `Tabs`
+  - tabbed container
+- `Tab item`
+  - one tab inside a `Tabs` container
+- `Subform`
+  - repeated child-record form backed by a dedicated child table
+- `Checklist subform`
+  - user-facing shortcut over `Subform`
+  - compiles to `Subform` with `subformType = CHECKLIST`
+- `Grid layout`
+  - multi-column layout container
+- `Column`
+  - child column inside `Grid layout`
+- `Divider`
+  - visual separator
+- `Spacer`
+  - controlled vertical or horizontal spacing
+
+### 8. Content
+
+These are non-data authoring elements.
+
+- `Heading`
+  - static heading for sectioning or emphasis
+- `Text block`
+  - plain static copy
+- `Rich text block`
+  - formatted content block
+
+Detailed functionality and settings for this section are locked in:
+
+- `form-builder-content-nodes.md`
+
 ## What Should Be Presets Instead Of Separate Base Types
 
 The following should not become separate core field types:
 
-- `Yes / No`
-  - use `Boolean` with a yes/no preset or widget
+- `Radio group`
+  - use `Single select` with `controlType = radio`
+  - allow `renderStyle = native | buttons`
+  - allow `orientation = vertical | horizontal`
+  - allow per-option button colors when rendered as buttons
+- `Checkbox group`
+  - use `Multi select` with `controlType = checkbox`
+  - allow `renderStyle = native | buttons`
+  - allow `orientation = vertical | horizontal`
+  - support `minSelections`
+  - allow per-option button colors when rendered as buttons
 - `Email`
   - use `Short text` with email format and validation
 - `Phone`
@@ -152,17 +256,12 @@ The following should not become separate core field types:
   - use `Short text` or `Computed field` with readonly mode when possible
 - `Readonly numeric`
   - use `Integer`, `Decimal`, `Currency`, or `Computed field` with readonly mode when possible
-- `Status`
-  - use `Single select` with a `status` preset for generic status data
-  - use the `Status` System Field when the field also carries page workflow semantics
 - `Project`
-  - relation template with a preset target model
+  - lookup template with a preset target model
 - `Contact`
-  - relation template with a preset target model
+  - lookup template with a preset target model
 - `Company`
-  - relation template with a preset target model
-- `User`
-  - relation template with a preset target model
+  - lookup template with a preset target model
 
 These should still be visible as separate choices in the UI if that improves usability.
 They are separate create options, not necessarily separate backend primitives.
@@ -216,11 +315,11 @@ This is the recommended mapping from the old builder catalog into the V2 catalog
 
 - `200 TEXT (any symbol)` -> `Short text`
 - `202 TEXT-SELECT (text as SelectBox)` -> `Short text` or `Single select`, depending on whether the real runtime behavior is free text or constrained selection
-- `204 READONLY-TEXT` -> `Readonly text` preset
-- `205 READONLY-NUMERIC` -> `Readonly numeric` preset
+- `204 READONLY-TEXT` -> deferred advanced review candidate, likely readonly presentation over another field type
+- `205 READONLY-NUMERIC` -> deferred advanced review candidate, likely readonly presentation over another field type
 - `2030 COMBOBOX (custom selections)` -> `Single select`
-- `2031 COMBOBOX (Yes/No)` -> `Boolean` preset only when the option set is truly yes/no; otherwise `Single select` with radio or chips
-- `2032 COMBOBOX Related` -> `Relation` or `DB lookup`
+- `2031 COMBOBOX (Yes/No)` -> `Radio group` preset with default `Yes/No` options and optional button-style rendering
+- `2032 COMBOBOX Related` -> `DB lookup`
 - `201 MEMO (big text)` -> `Long text`, or `Signature` preset when the runtime uses the title-based signature behavior
 - `2011 MEMO (with Updates)` -> `Long text` with `historicalUpdates`
 - `2012 EDITOR (Rich Text Editor)` -> `Rich text`
@@ -229,16 +328,16 @@ This is the recommended mapping from the old builder catalog into the V2 catalog
 - `3 NUMERIC` -> `Integer`
 - `131 FLOAT` -> `Decimal`
 - `6 MONEY` -> `Currency`
-- `60 SURVEY Element` -> `Survey element`
-- `70 TITLE (text w/o field)` -> `Title / Heading`
+- `60 SURVEY Element` -> deferred advanced review candidate
+- `70 TITLE (text w/o field)` -> `Heading`
 - `72 HTML (any text)` -> `Text block` or `Rich text block`
 - `80 TABS (Groups for fields)` -> `Tabs`
 - `90 SUBFORM (Form 2d level)` -> `Subform`
 - `30 DB LOOKUP (ext. Form)` -> `DB lookup`
-- `31 DB FIELD (Project)` -> `Project` relation template
-- `32 DB FIELD (Contact)` -> `Contact` relation template
-- `33 DB FIELD (Company)` -> `Company` relation template
-- `71 SQL Field` -> `SQL field`
+- `31 DB FIELD (Project)` -> `Project` lookup template
+- `32 DB FIELD (Contact)` -> `Contact` lookup template
+- `33 DB FIELD (Company)` -> `Company` lookup template
+- `71 SQL Field` -> deferred advanced review candidate
 
 ## Runtime Overlay Notes From Smartapp
 
@@ -251,11 +350,12 @@ The current smartapp runtime adds several important overlays on top of the legac
 - `form_type = SOR`
   - overrides the normal subform behavior into a specialized SOR report widget
 - `form_type = CHECKLIST`
-  - overrides the normal subform behavior into a checklist widget with nested answers, files, and optional corrective action flows
+  - should normalize to `Subform.subformType = CHECKLIST`
+  - checklist mode renders a checklist widget with nested answers, notes, and files
 - `form_type = CA`
-  - special corrective-action modal behavior, not a standalone primitive
+  - special corrective-action behavior attached at the view level, not part of checklist field composition
 - `301` and `302`
-  - readonly relation-summary cards; these are better treated as display presets for relation outputs than as separate model field types
+  - readonly lookup-summary cards; these are better treated as display presets for lookup outputs than as separate model field types
 - `20301`
   - static single-select variant with explicit `id:label` options
 
@@ -271,8 +371,9 @@ The source review exposed a few mismatches that should be resolved intentionally
   - V2 should classify it by actual desired source behavior, not by legacy id alone
 - `2031`
   - legacy naming suggests yes/no
-  - current smartapp runtime supports arbitrary pipe-delimited radio-chip options
-  - V2 should not hardcode this to boolean unless the option set is actually boolean
+  - current smartapp runtime supports arbitrary pipe-delimited option variants
+  - V2 should not hardcode this to boolean or to exactly two options
+  - treat it as a `Radio group` preset over `Single select`, with editable options and optional button-style rendering
 - `204`, `205`, `71`, `view`, `301`, `302`
   - current runtime shows these as a small readonly-display family
   - V2 should collapse them into fewer readonly presets where backend semantics do not require separate primitives
@@ -289,6 +390,9 @@ Recommended common parameters:
 - `description`
 - `helperText`
 - `placeholder`
+- `autocomplete`
+- `inputMode`
+- `displayFormat`
 - `required`
 - `readonly`
 - `hidden`
@@ -311,6 +415,15 @@ Not every parameter needs to be visible in the basic UX at first.
 - `collapsible`
 - `defaultExpanded`
 - `visibilityRules`
+
+Runtime note:
+
+- `Section` should map naturally to a `Card`-style surface from the UI kit
+- `Section` is allowed only at the root of the current form scope
+- accepted form scopes are:
+  - the root scope of the main form
+  - the root scope of one subform
+- if a scope has no explicit `Section`, the whole scope should render inside one default card surface
 
 ### Group
 
@@ -336,22 +449,58 @@ Not every parameter needs to be visible in the basic UX at first.
 
 - `title`
 - `description`
+- `subformType`
+  - `DEFAULT`
+  - `CHECKLIST`
 - `targetModel`
-- `cardinality`
 - `allowAdd`
+- `allowEdit`
 - `allowDelete`
 - `allowReorder`
 - `defaultExpanded`
+- checklist-only settings:
+  - `lookupFieldId`
+    - must reference a child `DB lookup` field
+  - `resultFieldId`
+    - must reference a child `Single select` field
+    - recommended authoring path is `Radio group` over `Single select`
+    - checklist runtime may render it as button-style radio choices
 
-### Repeater
+Storage note:
 
-- `title`
-- `description`
-- `minItems`
-- `maxItems`
-- `allowAdd`
-- `allowDelete`
-- `allowReorder`
+- each managed `Subform` creates its own child table in the database
+- the backend should treat it as a parent-child collection boundary
+- each managed `Subform` also owns its own schema scope with dedicated `dataSchema` and `uiSchema`
+
+Runtime note for `DEFAULT` subform:
+
+- a non-checklist subform should render as a child table inside the main form
+- row actions are controlled by `allowAdd`, `allowEdit`, and `allowDelete`
+- when the user clicks `Add` or `Edit`, the app should navigate to a dedicated child page
+- that child page should render the same subform schema as a first-level form
+
+### Checklist subform
+
+This is not a second layout node.
+It is a palette shortcut over `Subform`.
+
+Compile rule:
+
+- `LayoutNode.type = subform`
+- `subformType = CHECKLIST`
+
+Required checklist bindings:
+
+- `lookupFieldId`
+  - must reference a child `DB lookup` field
+- `resultFieldId`
+  - must reference a child `Single select` field
+  - recommended authoring path is `Radio group`
+  - runtime may render the choices as button-style radio options
+
+Storage note:
+
+- checklist subforms follow the same child-table rule as normal subforms
 
 ### Grid layout
 
@@ -378,25 +527,30 @@ Not every parameter needs to be visible in the basic UX at first.
 
 ## Content Element Parameters
 
-### Title / Heading
+### Heading
 
 - `text`
 - `level`
-- `align`
+- `alignment`
+- `styleVariant`
+- `visibilityRules`
 
 ### Text block
 
 - `text`
+- `alignment`
 - `styleVariant`
-- `align`
+- `visibilityRules`
 
 ### Rich text block
 
 - `content`
-- `sanitizeMode`
+- `editorMode`
+- `alignment`
 - `styleVariant`
+- `visibilityRules`
 
-## Core Data Field Parameters
+## Basic Field Parameters
 
 ### Short text
 
@@ -404,6 +558,7 @@ Use for plain input fields.
 
 Parameters:
 
+- `placeholder`
 - `minLength`
 - `maxLength`
 - `format`
@@ -421,6 +576,7 @@ Use for large editable text areas.
 
 Parameters:
 
+- `placeholder`
 - `minLength`
 - `maxLength`
 - `rows`
@@ -477,10 +633,10 @@ Parameters:
 - `widget`
   - `checkbox`
   - `toggle`
-  - `yes_no_select`
-  - `yes_no_radio`
 - `trueLabel`
 - `falseLabel`
+
+Binary labeled choice renderers should be modeled through the `Radio group` ready-made preset over `Single select`, not as a separate boolean widget family.
 
 ### Date
 
@@ -553,15 +709,27 @@ Parameters:
 - `options`
 - `allowEmpty`
 - `allowCustomValues`
-- `widget`
+- `controlType`
   - `select`
   - `radio`
+- `renderStyle`
+  - `native`
+  - `buttons`
   - `chips`
+- `orientation`
+  - `vertical`
+  - `horizontal`
+- `optionStyles`
+  - per-option button color configuration when `controlType = radio` and `renderStyle = buttons`
 - `displayLabelField`
 - `storedValueField`
 - `sortMode`
 
 Single select should support inline static options for the common case.
+
+`Radio group` should be a preset over `Single select`.
+Legacy `COMBOBOX (Yes/No)` should normalize to `Radio group` with default `Yes/No` options.
+Those default options remain editable and the option count may grow beyond two.
 
 ### Multi select
 
@@ -575,32 +743,41 @@ Parameters:
   - `tags`
 - `options`
 - `allowCustomValues`
+- `minSelections`
 - `maxSelections`
-- `widget`
+- `controlType`
   - `multi_select`
+  - `checkbox`
+- `renderStyle`
+  - `native`
+  - `buttons`
   - `chips`
-  - `tag_input`
+- `orientation`
+  - `vertical`
+  - `horizontal`
+- `optionStyles`
+  - per-option button color configuration when `controlType = checkbox` and `renderStyle = buttons`
 - `displayLabelField`
 - `storedValueField`
 - `sortMode`
+
+`Checkbox group` should be a preset over `Multi select`.
+`required = true` may be treated as a shortcut for `minSelections = 1` in checkbox-style flows.
 
 #### Multi select open design questions
 
 This field still needs explicit backend design.
 
-The unresolved questions are:
+The remaining product questions are:
 
-- how values should be stored
-- whether static multi-select values should be stored as arrays or normalized rows
-- whether dynamic-source multi-select must always use a link table
 - whether the field allows creation of new values or only selection from existing values
-- how filtering and reporting should work across selected values
+- how runtime controls should differ between static options and lookup-backed multiple selection
 
 #### Recommended current position
 
-- if the source is `dynamic_source`, prefer a normalized link table
-- if the source is `static_options`, backend storage must still be explicitly designed before implementation
-- do not treat storage as solved yet
+- use one multivalue bridge-table family per scope
+- reuse the same storage family for static options, tags, and future lookup-multiple entries
+- treat storage as locked by `form-builder-multivalue-storage-contract.md`
 
 #### Tags
 
@@ -614,7 +791,7 @@ Recommended tags behavior:
   - `allowCreateNewTags`
   - `allowSelectExistingTags`
   - `maxTags`
-- backend storage is still an open design question
+- backend storage follows the shared multivalue bridge-table contract
 
 ### DB lookup
 
@@ -622,18 +799,22 @@ Use when a field references another model and specific fields are chosen for dis
 
 Parameters:
 
-- `targetModel`
-- `lookupMode`
-  - `single`
-  - `search_dialog`
-  - `autocomplete`
+- `sourceModel`
 - `storedValueField`
 - `displayFields`
+- `displayTemplate`
 - `searchFields`
 - `sourceFilter`
 - `dependentFilters`
 - `allowEmpty`
+- `displayMode`
+  - `search_select`
+  - `catalog_modal`
+- `groupByField`
+- `itemLabelFields`
 - `sortMode`
+- compile metadata:
+  - `selectionMode = single`
 
 This field must explicitly support scenarios such as:
 
@@ -642,40 +823,75 @@ This field must explicitly support scenarios such as:
 - display `first_name + last_name`
 - store only the target record id
 
-### Relation
+Current working runtime rule:
 
-Base relation field.
+- for new authored fields, the builder should require explicit `displayMode`
+- `search_select` means searchable ajax select behavior backed by dictionary requests to the backend
+- `catalog_modal` means grouped modal dictionary behavior
+- legacy import may infer the display mode when older lookup params do not store it explicitly
+- V2 should store grouping and item-label intent explicitly instead of relying only on legacy field order
 
-Parameters:
+Checklist composition note:
 
-- `targetModel`
-- `relationCardinality`
-- `storedValueField`
-- `displayField`
-- `sourceFilter`
-- `dependentFilters`
+- a `Subform` in checklist mode may reuse a child `DB lookup` field as the source dictionary field
+- the checklist `Result Field` should normalize to child `Single select` data, not a legacy standalone `COMBOBOX` type
+- that checklist behavior is not a second `DB lookup` field type; it is a composition pattern between `Subform`, `DB lookup`, and sibling result fields
 
-### User / Project / Contact / Company
+### Contact / Contacts / Company / Companies / Project / Projects
 
 These should be first-class create options in the UI.
 
-They are relation templates with presets such as:
+They are lookup templates with presets such as:
 
 - target model
 - default display fields
+- default display template
 - default search fields
+- default display mode
 - optional default filters
+- backend ajax dictionary source
 
 They must still support custom filter rules.
 
-Example:
+Authoring rule:
 
-- `User`
-  - target model: `users`
-  - display fields: `full_name`
-  - filter: `company_id = current company`
+- single and multiple lookup presets must be separate create options
+- the builder should not ask the user to toggle storage shape after creation
 
-## Advanced or Specialized Parameters
+Examples:
+
+- `Contact`
+  - source model: shared contact and user source
+  - default display template: `users_firstname + ' ' + users_lastname`
+  - default search fields: `users_firstname`, `users_lastname`
+  - default display mode: `search_select`
+  - compile metadata: `selectionMode = single`
+- `Contacts`
+  - same preset defaults as `Contact`
+  - compile metadata: `selectionMode = multiple`
+- `Company`
+  - source model: companies
+  - default display template: `company_name`
+  - default search fields: `company_name`
+  - default display mode: `search_select`
+  - compile metadata: `selectionMode = single`
+- `Companies`
+  - same preset defaults as `Company`
+  - compile metadata: `selectionMode = multiple`
+- `Project`
+  - source model: projects
+  - default display template: `projects_num + ', ' + projects_name`
+  - common alternative display template: `projects_name`
+  - default search fields: `projects_num`, `projects_name`
+  - default display mode: `search_select`
+  - compile metadata: `selectionMode = single`
+- `Projects`
+  - same preset defaults as `Project`
+  - compile metadata: `selectionMode = multiple`
+
+## Advanced or Specialized Review Backlog Notes
+
+These notes are intentionally non-canonical until individual advanced fields are accepted.
 
 ### Computed field
 
@@ -720,7 +936,7 @@ Parameters:
 - `resultType`
 - `readonly`
 
-This should remain an advanced capability.
+This should remain a deferred advanced capability until a dedicated contract is approved.
 
 ## System Field Parameters
 
@@ -730,10 +946,10 @@ Parameters:
 
 - `defaultLabel`
 - `defaultFieldPreset`
-  - `contact_relation`
+  - `contact_lookup`
 - `required`
 
-This inserts a normal relation field and binds it to the view semantic role `reportedBy`.
+This inserts a normal lookup-backed field and binds it to the view semantic role `reportedBy`.
 
 ### Reported Date
 
@@ -749,6 +965,10 @@ This inserts a normal date field and binds it to the view semantic role `reporte
 
 Parameters:
 
+- `statusVariantMode`
+  - `template`
+  - `custom`
+- `statusTemplateKey`
 - `options`
 - `initialValue`
 - `finalValue`
@@ -759,6 +979,7 @@ Parameters:
 - `colorMapping`
 
 This inserts a `Single select` field with a `status` preset and binds it to the view workflow role.
+The field may start from a status template or from a custom option set, different forms may use different status variant sets, and template-provided options remain editable.
 
 ## What Should Happen Next
 

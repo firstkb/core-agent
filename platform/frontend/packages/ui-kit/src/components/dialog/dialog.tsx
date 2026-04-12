@@ -147,16 +147,23 @@ export type DialogProps = {
   onOpenChange: (open: boolean) => void;
   closeOnOverlay?: boolean;
   closeOnEscape?: boolean;
+  surfaceClassName?: string;
 };
 
-export function Dialog({ children, open, onOpenChange, ...props }: DialogProps) {
+export function Dialog({
+  children,
+  open,
+  onOpenChange,
+  surfaceClassName,
+  ...props
+}: DialogProps) {
   return (
     <OverlaySurface
       {...props}
       onOpenChange={onOpenChange}
       open={open}
       positionClassName="ui-overlay-positioner--center"
-      surfaceClassName="ui-dialog"
+      surfaceClassName={cx("ui-dialog", surfaceClassName)}
     >
       {children}
     </OverlaySurface>

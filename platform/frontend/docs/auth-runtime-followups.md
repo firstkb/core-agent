@@ -13,6 +13,12 @@ Tracks the remaining frontend rollout work now that backend cookie-based refresh
 - `POST /auth/v1/logout` is cookie-backed and clears the refresh cookie
 - `POST /auth/v1/refresh` and `POST /auth/v1/logout` require allowed `Origin`
 
+## Current Frontend Runtime Behavior
+
+- same-user silent access-token refresh keeps the mounted private shell in place without re-running app bootstrap on every access-token rotation
+- private `/app/profile` and admin `/app/me/navigation` revalidation now happens on initial same-user entry, explicit refresh paths, and unauthorized recovery instead of every silent token rotation
+- profile and admin-navigation bootstrap calls can retry once after `401` or `403` by asking `auth-core` to recover the access token before forcing sign-out
+
 ## Current Frontend Gap
 
 Frontend still needs to align with the backend cookie contract.

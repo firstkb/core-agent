@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   type AdminNavigation,
@@ -7,6 +7,7 @@ import {
   createAdminNavigationClient,
   createAdminProfileClient,
   isUnauthorizedApiError,
+  requestWithUnauthorizedRetry,
 } from "@platform/api-client";
 import {
   AuthGuard,
@@ -173,7 +174,15 @@ export function App({
     () => createAdminNavigationClient(runtimeConfig.adminApiUrl),
     [runtimeConfig.adminApiUrl],
   );
-  const { isAuthenticated, requestCode, signIn, signOut, tokens, userId } = useAuth();
+  const {
+    checkAuth,
+    getAccessToken,
+    isAuthenticated,
+    requestCode,
+    signIn,
+    signOut,
+    userId,
+  } = useAuth();
   const [codeSent, setCodeSent] = useState(false);
   const [codeValue, setCodeValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -188,9 +197,33 @@ export function App({
   const [profileReady, setProfileReady] = useState(false);
   const [requestedIdentifier, setRequestedIdentifier] = useState("");
   const [requestedMethod, setRequestedMethod] = useState<AuthContactMethod | null>(null);
+  const navigationRef = useRef<AdminNavigation | null>(null);
+  const profileRef = useRef<AdminProfile | null>(null);
+  const profileReadyRef = useRef(false);
+
+  useEffect(() => {
+    navigationRef.current = navigation;
+  }, [navigation]);
+
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  useEffect(() => {
+    profileReadyRef.current = profileReady;
+  }, [profileReady]);
+
+  const recoverUnauthorizedAccessToken = useCallback(async () => {
+    const recovered = await checkAuth();
+    if (!recovered) {
+      return null;
+    }
+
+    return getAccessToken();
+  }, [checkAuth, getAccessToken]);
 
   async function refreshAdminNavigation(options?: { reportError?: boolean }) {
-    const accessToken = tokens?.accessToken;
+    const accessToken = getAccessToken();
 
     if (!accessToken) {
       void signOut();
@@ -198,7 +231,13 @@ export function App({
     }
 
     try {
-      const nextNavigation = await navigationClient.getNavigation(accessToken);
+      const nextNavigation = await requestWithUnauthorizedRetry(
+        (bearerToken) => navigationClient.getNavigation(bearerToken),
+        {
+          accessToken,
+          onUnauthorized: recoverUnauthorizedAccessToken,
+        },
+      );
       setNavigation(nextNavigation);
       setNavigationError(null);
     } catch (navigationRequestError) {
@@ -233,24 +272,42 @@ export function App({
       return;
     }
 
-    const accessToken = tokens?.accessToken;
+    const accessToken = getAccessToken();
     if (!accessToken) {
       void signOut();
       return;
     }
 
     let isActive = true;
-    setNavigation(null);
-    setNavigationError(null);
-    setProfile(null);
-    setProfileError(null);
-    setProfileReady(false);
+    const shouldPreserveShell = Boolean(
+      profileReadyRef.current &&
+      navigationRef.current &&
+      profileRef.current &&
+      profileRef.current.user.id === userId,
+    );
+
+    if (!shouldPreserveShell) {
+      setNavigation(null);
+      setNavigationError(null);
+      setProfile(null);
+      setProfileError(null);
+      setProfileReady(false);
+    } else {
+      setNavigationError(null);
+      setProfileError(null);
+    }
 
     void (async () => {
       let nextProfile: AdminProfile;
 
       try {
-        nextProfile = await profileClient.getProfile(accessToken);
+        nextProfile = await requestWithUnauthorizedRetry(
+          (bearerToken) => profileClient.getProfile(bearerToken),
+          {
+            accessToken,
+            onUnauthorized: recoverUnauthorizedAccessToken,
+          },
+        );
       } catch (profileRequestError) {
         if (!isActive) {
           return;
@@ -261,26 +318,36 @@ export function App({
           return;
         }
 
-        setProfileError(
-          profileRequestError instanceof Error
-            ? profileRequestError.message
-            : t("admin.loaders.profileDescription"),
-        );
+        if (!shouldPreserveShell) {
+          setProfileError(
+            profileRequestError instanceof Error
+              ? profileRequestError.message
+              : t("admin.loaders.profileDescription"),
+          );
+        }
         return;
       }
 
       if (isActive) {
         setProfile(nextProfile);
+        setProfileError(null);
       }
 
       try {
-        const nextNavigation = await navigationClient.getNavigation(accessToken);
+        const nextNavigation = await requestWithUnauthorizedRetry(
+          (bearerToken) => navigationClient.getNavigation(bearerToken),
+          {
+            accessToken,
+            onUnauthorized: recoverUnauthorizedAccessToken,
+          },
+        );
 
         if (!isActive) {
           return;
         }
 
         setNavigation(nextNavigation);
+        setNavigationError(null);
         setProfileReady(true);
       } catch (navigationRequestError) {
         if (!isActive) {
@@ -292,18 +359,28 @@ export function App({
           return;
         }
 
-        setNavigationError(
-          navigationRequestError instanceof Error
-            ? navigationRequestError.message
-            : t("admin.loaders.navigationDescription"),
-        );
+        if (!shouldPreserveShell) {
+          setNavigationError(
+            navigationRequestError instanceof Error
+              ? navigationRequestError.message
+              : t("admin.loaders.navigationDescription"),
+          );
+        }
       }
     })();
 
     return () => {
       isActive = false;
     };
-  }, [isAuthenticated, navigationClient, profileClient, signOut, t, tokens?.accessToken, userId]);
+  }, [
+    isAuthenticated,
+    navigationClient,
+    profileClient,
+    recoverUnauthorizedAccessToken,
+    signOut,
+    t,
+    userId,
+  ]);
 
   async function handleRequestCode() {
     const normalizedIdentifier = normalizeAuthIdentifier(identifier, method);

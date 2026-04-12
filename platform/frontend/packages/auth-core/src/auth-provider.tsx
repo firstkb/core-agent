@@ -587,12 +587,14 @@ export function AuthProvider({
   scheduleRecoveryRetryRef.current = scheduleRecoveryRetry;
 
   const getTokens = useCallback(() => {
-    return session ? toAuthTokens(session) : null;
-  }, [session]);
+    const activeSession = sessionRef.current;
+
+    return activeSession ? toAuthTokens(activeSession) : null;
+  }, []);
 
   const getAccessToken = useCallback(() => {
-    return session?.accessToken ?? null;
-  }, [session]);
+    return sessionRef.current?.accessToken ?? null;
+  }, []);
 
   const checkAuth = useCallback(async () => {
     function finalizeBootstrapSession(candidateSession: StoredAuthSession | null) {

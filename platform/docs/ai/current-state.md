@@ -60,6 +60,9 @@ Confidence classes:
 - Non-401 refresh failures in `packages/auth-core` now preserve the session hint and avoid clearing a still-valid access token during bootstrap or scheduled refresh retries.
 - `packages/auth-core` now keeps expired sessions in a retrying recovery state after temporary refresh failures instead of dropping straight to sign-in, while expired-session `401` and `403` refresh failures still clear local auth state.
 - `packages/auth-core` now waits longer than the cross-tab refresh lock TTL before giving up on a sibling refresh owner, so a stalled owner is less likely to force follower tabs into a false logout.
+- admin and tenant apps now preserve mounted private-shell profile/navigation state during same-user silent access-token refresh instead of dropping back to a fullscreen bootstrap loader.
+- admin and tenant app bootstrap revalidation is no longer tied to every same-user access-token rotation.
+- frontend profile and admin-navigation bootstrap calls can now retry once after `401`/`403` by recovering the access token through `auth-core` before forcing sign-out.
 - Frontend auth follow-up docs remain a live cleanup surface, not a closed topic.
 
 ### Admin control plane

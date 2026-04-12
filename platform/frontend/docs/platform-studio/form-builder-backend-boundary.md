@@ -48,6 +48,7 @@ Recommended backend terms:
 - `LayoutNode`
 - `LockPolicy`
 - `StorageBinding`
+- `BackendFormBuilderPayload`
 
 ## Core Principle
 
@@ -69,6 +70,12 @@ The backend should own:
 - system columns
 - persistence validation
 - concurrency handling
+
+Metadata persistence recommendation:
+
+- persist logical model definitions in `ps_model`
+- persist authored UI view definitions in `ps_view`
+- keep generated business tables separate from these metadata tables
 
 ## Recommended Domain Split
 
@@ -135,6 +142,20 @@ Recommended shape:
 - `version`
 - `metadata`
 
+Recommended minimum `viewSettings` concerns:
+
+- `iconDataUrl`
+- `correctiveAction.enabled`
+- `correctiveAction.sourceType`
+- `correctiveAction.modelKey`
+- `actions.canAdd`
+- `actions.canView`
+- `actions.canEdit`
+- `actions.canDelete`
+- `list.sorting.fieldId`
+- `list.sorting.direction`
+- `list.columns[]`
+
 ### 4. LayoutNode
 
 Represents authored UI structure.
@@ -166,8 +187,32 @@ Each node should support:
 - `order`
 - `settings`
 - `visibility`
+- optional `rules`
 - optional `binding`
 - optional `runtimePreset`
+
+### Subform Child Collection Rule
+
+Current accepted rule:
+
+- each `subform` node represents a managed child collection
+- each managed subform creates its own child table in storage
+- the backend should generate the parent-child relation and supporting indexes
+- each managed subform owns its own embedded schema scope with dedicated `dataSchema` and `uiSchema`
+- accepted `subformType` values are:
+  - `DEFAULT`
+  - `CHECKLIST`
+- `CHECKLIST` changes runtime orchestration, but it does not remove the child-table boundary
+
+### Schema Scope Rule
+
+Current accepted rule:
+
+- one builder document owns the root scope and all subform scopes together
+- the root scope owns root `systemFields`, `viewSettings`, and `filterDefinitions`
+- subform scopes must not own root-only view concerns such as `System Fields`, `Corrective Action`, root actions, or root list filters
+- `DEFAULT` subform scopes may still own local child-table grid columns inside their own `viewSettings.list.columns`
+- child fields and child layout should remain inside the subform scope instead of being flattened into the root scope
 
 ### 5. LockPolicy
 
@@ -192,9 +237,21 @@ Recommended shape:
   - `external`
 - `tableName`
 - `tablePrefix`
+- `dataViewName`
+- optional `gridViewNamePattern`
 - `namingPolicy`
 - `fieldStorageOverrides`
+- optional `lookupOutputs`
 - `externalSource`
+
+Companion contracts:
+
+- `form-builder-storage-and-sql-view-contract.md`
+- `form-builder-backend-scope-payload-contract.md`
+- `form-builder-backend-api-contract.md`
+- `form-builder-backend-validation-matrix.md`
+- `form-builder-backend-object-generation-matrix.md`
+- `form-builder-backend-migration-policy.md`
 
 ## Model Source Types
 

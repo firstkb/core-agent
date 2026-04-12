@@ -12,16 +12,53 @@ It exists to keep these layers separate:
 - base field types
 - field presets
 - runtime presets
+- conditional rules
 - System Fields
+- grid-column definitions
+- layout shortcuts
 - page or view settings
 - filter definitions
 
 This document is the contract companion to:
 
+- `form-builder-accepted-registry.md`
 - `form-builder-field-catalog.md`
+- `form-builder-section-tree.md`
+- `form-builder-core-data-fields.md`
+- `form-builder-field-rules-contract.md`
+- `form-builder-grid-columns-contract.md`
+- `form-builder-system-fields.md`
+- `form-builder-schema-scope-contract.md`
+- `form-builder-view-settings-contract.md`
 - `form-builder-page-and-filter-notes.md`
 - `form-builder-backend-boundary.md`
 - `form-builder-slice-1-inspector-and-view-schema.md`
+- `form-builder-subform-checklist-contract.md`
+
+## Review Projection Note
+
+`form-builder-section-tree.md` is the palette-oriented review projection.
+
+This document remains the stricter contract layer.
+
+Recommended rule:
+
+- use `form-builder-accepted-registry.md` as the implementation gate summary
+- use the section tree to review what the user sees in the builder palette
+- use this document to decide what registry layer a node actually belongs to
+- palette shortcuts may also exist for layout authoring, even when the canonical persisted node stays the same
+
+## Canonical Registries
+
+The V2 model should treat these as separate registries:
+
+- `Field Types Registry`
+- `Field Presets Registry`
+- `Semantic/System Bindings Registry`
+- `Layout Nodes Registry`
+- `Content Nodes Registry`
+
+The builder palette may project items from more than one registry into one user-facing section.
 
 ## Naming Note
 
@@ -56,7 +93,6 @@ Examples:
 - `date`
 - `single_select`
 - `multi_select`
-- `relation`
 - `db_lookup`
 
 Base field type must not encode:
@@ -77,7 +113,7 @@ It may set:
 - validation mode
 - input mask or format
 - default option source
-- default relation target
+- default lookup target
 - default runtime preset
 
 Examples:
@@ -87,13 +123,11 @@ Examples:
 - `url`
 - `date_today`
 - `tags`
-- `readonly_text`
-- `readonly_numeric`
-- `user_relation`
-- `contact_relation`
-- `company_relation`
-- `project_relation`
-- `status`
+- `radio_group`
+- `checkbox_group`
+- `contact_lookup`
+- `company_lookup`
+- `project_lookup`
 
 Field presets improve authoring UX, but they are not new backend primitives.
 
@@ -111,12 +145,28 @@ Examples:
 - `badge`
 - `signature_pad`
 - `geo_capture`
-- `relation_summary_card`
+- `lookup_summary_card`
 - `readonly_card`
 
 The same field may use different runtime presets in different views when the business meaning stays the same.
 
-### 4. System Field
+### 4. Conditional rule
+
+A conditional rule is an authored UI rule attached to the current node in `uiSchema`.
+
+It covers concerns such as:
+
+- show or hide
+- required or optional
+
+It must stay separate from:
+
+- base field types
+- field presets
+- page filters
+- Action Builder workflows
+
+### 5. System Field
 
 A System Field is a dedicated palette item in the `System Fields` section.
 
@@ -129,7 +179,20 @@ It is an authoring shortcut that creates or reuses:
 
 The authoritative page semantics must be stored as structured view data, not inferred from the label.
 
-### 5. Page or view setting
+### 6. Grid-column definition
+
+A grid-column definition is a view-level description of:
+
+- which fields appear in a grid
+- in what order they appear
+
+It must stay separate from:
+
+- base field definitions
+- layout grid containers
+- page filters
+
+### 7. Page or view setting
 
 Page or view settings are not fields.
 
@@ -147,7 +210,7 @@ They cover concerns such as:
 Some legacy field-backed settings should now be modeled through `System Fields`.
 Non-field settings remain in `ViewDefinition.viewSettings`.
 
-### 6. Filter definition
+### 8. Filter definition
 
 A filter definition is a structured condition object.
 
@@ -169,7 +232,14 @@ The same filter-definition shape may be reused in:
 - Every authored field must have exactly one `baseType`.
 - A field may have zero or one `fieldPreset`.
 - A view binding may have zero or one `runtimePreset`.
+- conditional UI rules belong on the current `uiSchema` node, not on `ModelFieldDefinition`
 - A System Field must write an explicit semantic binding into the view contract.
+- `view.systemFields` exists only once per form view.
+- System Fields are allowed only on the root level of the main form view.
+- System Fields must not be authored inside subforms, repeaters, or nested scopes.
+- `Section` is allowed only at the root of the current form scope.
+- each managed `Subform` owns its own schema scope with dedicated `dataSchema` and `uiSchema`.
+- grid-column definitions belong to the current scope view, not to the field definition
 - One `SystemFieldRole` may bind only one field per view.
 - A System Field may bind an existing field only when its base type is compatible with the role.
 - Never infer business semantics from `displayName`, `title`, or legacy numeric ids.
@@ -192,7 +262,6 @@ Recommended field-facing shape:
 - optional `defaultValue`
 - optional `validation`
 - optional `options`
-- optional `relation`
 - optional `source`
 - optional `storage`
 - optional `lockState`
@@ -218,7 +287,7 @@ This is the correct place for renderer choices such as:
 - `badge`
 - `radio_chips`
 - `signature_pad`
-- `relation_summary_card`
+- `lookup_summary_card`
 
 ### ViewDefinition additions
 
@@ -250,18 +319,30 @@ interface ViewSystemFields {
 }
 
 interface ViewFilterDefinitions {
-  version: 1;
-  defaultFilters: {
-    logic: "and";
-    conditions: unknown[];
+  version: 2;
+  pageFilters: unknown[];
+  quickFilters: unknown[];
+}
+
+interface ViewSettings {
+  iconDataUrl?: string;
+  correctiveAction?: {
+    enabled: boolean;
+    sourceType: "platform_static";
+    modelKey: "corrective_action";
   };
-  quickFilters: Array<{
-    id: string;
-    label: string;
-    logic: "and";
-    conditions: unknown[];
-    color?: string;
-  }>;
+  actions?: {
+    canAdd?: boolean;
+    canView?: boolean;
+    canEdit?: boolean;
+    canDelete?: boolean;
+  };
+  list?: {
+    sorting?: {
+      fieldId?: string;
+      direction?: "asc" | "desc";
+    };
+  };
 }
 ```
 
@@ -269,6 +350,7 @@ Recommended rule:
 
 - the semantic binding lives in `ViewDefinition.systemFields`
 - the actual field definition still lives in `ModelDefinition.fields`
+- final root-level view settings and compact filter UX are owned by `form-builder-view-settings-contract.md`
 
 ## Locked Initial System Fields
 
@@ -283,8 +365,8 @@ The first V2 System Fields set should be:
 Recommended contract:
 
 - palette section: `System Fields`
-- created field base type: `relation`
-- created field preset: `contact_relation`
+- created field base type: `db_lookup`
+- created field preset: `contact_lookup`
 - default label: `Reported By`
 - view semantic binding: `systemFields.reportedBy.fieldId`
 
@@ -310,7 +392,13 @@ Recommended contract:
 - created field base type: `single_select`
 - created field preset: `status`
 - default label: `Status`
+- accepted creation modes:
+  - `template`
+  - `custom`
+- optional template seed:
+  - `statusTemplateKey`
 - field-owned data: `options`
+- optional field-owned display data: `colorMapping`
 - view semantic binding: `systemFields.workflowStatus.fieldId`
 - workflow semantics:
   - `initialValue`
@@ -321,6 +409,12 @@ Recommended runtime presets:
 - `select`
 - `radio_chips`
 - `badge`
+
+Important authoring rule:
+
+- `Status` must allow creating different status variants
+- different forms may use different status variant sets
+- template-created variants remain editable after creation
 
 Important rule:
 
@@ -343,13 +437,22 @@ The legacy EzData Page settings should translate as follows:
 - `Field Status - Finish variant`
   - `view.systemFields.workflowStatus.finalValue`
 - `Icon`
-  - `view.viewSettings.icon`
+  - `view.viewSettings.iconDataUrl`
 - `CA page`
-  - `view.viewSettings.correctiveActionViewId`
+  - `view.viewSettings.correctiveAction.enabled`
+  - uses the platform-owned static corrective action table instead of arbitrary per-view page routing
+- action toggles
+  - `view.viewSettings.actions.canAdd`
+  - `view.viewSettings.actions.canView`
+  - `view.viewSettings.actions.canEdit`
+  - `view.viewSettings.actions.canDelete`
+- `ExtDBpg_order1`, `ExtDBpg_order2`
+  - `view.viewSettings.list.sorting.fieldId`
+  - `view.viewSettings.list.sorting.direction`
 - page field access overrides such as `View Only` and `Hidden`
   - `view.fieldOverrides`
 - `ExtDBpg_filter`
-  - `view.filterDefinitions.defaultFilters`
+  - `view.filterDefinitions.pageFilters`
 - `ExtDBpg_prefilter`
   - `view.filterDefinitions.quickFilters`
 
@@ -364,8 +467,8 @@ The legacy EzData Page settings should translate as follows:
         "id": "reported_by",
         "key": "reported_by",
         "displayName": "Reported By",
-        "baseType": "relation",
-        "fieldPreset": "contact_relation"
+        "baseType": "db_lookup",
+        "fieldPreset": "contact_lookup"
       },
       {
         "id": "reported_date",
@@ -399,14 +502,28 @@ The legacy EzData Page settings should translate as follows:
       }
     },
     "viewSettings": {
-      "icon": "clipboard"
+      "iconDataUrl": "data:image/png;base64,...",
+      "correctiveAction": {
+        "enabled": true,
+        "sourceType": "platform_static",
+        "modelKey": "corrective_action"
+      },
+      "actions": {
+        "canAdd": true,
+        "canView": true,
+        "canEdit": true,
+        "canDelete": true
+      },
+      "list": {
+        "sorting": {
+          "fieldId": "reported_date",
+          "direction": "desc"
+        }
+      }
     },
     "filterDefinitions": {
-      "version": 1,
-      "defaultFilters": {
-        "logic": "and",
-        "conditions": []
-      },
+      "version": 2,
+      "pageFilters": [],
       "quickFilters": []
     }
   }
@@ -427,7 +544,8 @@ V2 should reject these legacy habits:
 
 Before implementation expands, V2 should do the following:
 
-1. keep the implementation aligned with `form-builder-slice-1-inspector-and-view-schema.md`
-2. lock the exact save payload shape for view drafts that include `layout`, `systemFields`, and `filterDefinitions`
-3. decide whether slice 2 adds nested filter groups, `or` logic, and field-reference value sources
-4. lock any remaining runtime-preset gaps for readonly display, relation summary, signature, and geo capture
+1. keep the implementation aligned with `form-builder-slice-1-inspector-and-view-schema.md` only where it does not conflict with the newer root `View settings` contract
+2. lock the dedicated `View settings` contract for compact page filters, quick filters, sorting, actions, icon, and corrective action
+3. lock the exact save payload shape for view drafts that include `layout`, `systemFields`, `viewSettings`, and `filterDefinitions`
+4. decide whether later filter phases add nested groups, `or` logic, and field-reference value sources
+5. lock any remaining runtime-preset gaps for readonly display, lookup summary, signature, and geo capture

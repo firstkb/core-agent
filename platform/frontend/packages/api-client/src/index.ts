@@ -519,9 +519,32 @@ function normalizeAdminNavigation(payload: unknown): AdminNavigation {
   };
 }
 
-function isUnauthorizedApiError(error: unknown) {
+function isUnauthorizedApiError(error: unknown): error is ApiClientError {
   return error instanceof ApiClientError &&
     (error.statusCode === 401 || error.statusCode === 403);
+}
+
+async function requestWithUnauthorizedRetry<T>(
+  request: (accessToken: string) => Promise<T>,
+  options: {
+    accessToken: string;
+    onUnauthorized?: (error: ApiClientError) => Promise<string | null | undefined>;
+  },
+) {
+  try {
+    return await request(options.accessToken);
+  } catch (error) {
+    if (!isUnauthorizedApiError(error) || !options.onUnauthorized) {
+      throw error;
+    }
+
+    const nextAccessToken = await options.onUnauthorized(error);
+    if (!nextAccessToken || nextAccessToken === options.accessToken) {
+      throw error;
+    }
+
+    return request(nextAccessToken);
+  }
 }
 
 function createApiClient(baseUrl: string): ApiClient {
@@ -686,6 +709,7 @@ export {
   createAuthClient,
   createTenantProfileClient,
   isUnauthorizedApiError,
+  requestWithUnauthorizedRetry,
 };
 export type {
   AdminEmployee,

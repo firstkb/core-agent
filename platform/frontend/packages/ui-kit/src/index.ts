@@ -163,7 +163,7 @@ export { Select } from "./components/select";
 export type { SelectProps } from "./components/select";
 
 export { Combobox } from "./components/combobox";
-export type { ComboboxFilterMode, ComboboxOption, ComboboxProps } from "./components/combobox";
+export type { ComboboxFilterMode, ComboboxOption, ComboboxProps, ComboboxSelectionMode } from "./components/combobox";
 
 export { Textarea } from "./components/textarea";
 export type { TextareaProps } from "./components/textarea";

@@ -345,6 +345,58 @@ function ComboboxAsyncPreview() {
   );
 }
 
+function ComboboxMultiCompanyPreview() {
+  const [value, setValue] = useState<string[]>(["aurora-components", "helio-systems"]);
+  const selectedOptions = comboboxCompanyOptions.filter((option) => value.includes(option.value));
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        id="ui-lab-combobox-preview-company-multi"
+        label="Companies"
+        onValueChange={setValue}
+        options={comboboxCompanyOptions}
+        placeholder="Select companies"
+        searchInputAriaLabel="Search companies"
+        searchPlaceholder="Search companies..."
+        selectionMode="multiple"
+        triggerAriaLabel="Companies"
+        value={value}
+      />
+      <p className="ui-lab-page__muted">
+        Multi-select lookup mode keeps canonical selections inside the combobox surface:{" "}
+        {selectedOptions.length > 0 ? selectedOptions.map((option) => option.label).join(", ") : "No companies selected"}.
+      </p>
+    </div>
+  );
+}
+
+function ComboboxMultiLargeDirectoryPreview() {
+  const [value, setValue] = useState<string[]>(["company-0004", "company-0012", "company-0090"]);
+
+  return (
+    <div className="ui-lab-page__stack">
+      <Combobox
+        id="ui-lab-combobox-preview-large-directory-multi"
+        initialVisibleCount={10}
+        label="Company directory"
+        loadMoreStep={10}
+        onValueChange={setValue}
+        options={comboboxLargeCompanyDirectory}
+        placeholder="Search and select companies"
+        searchInputAriaLabel="Search large company directory"
+        searchPlaceholder="Search by company name or type..."
+        selectionMode="multiple"
+        triggerAriaLabel="Large company directory"
+        value={value}
+      />
+      <p className="ui-lab-page__muted">
+        Large local directory still reveals a bounded visible slice while preserving multiple selected companies: {value.length} selected.
+      </p>
+    </div>
+  );
+}
+
 function TagInputPreview() {
   const [tags, setTags] = useState(["enterprise", "priority-support"]);
 
@@ -1530,7 +1582,7 @@ export function renderComboboxDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Template variants</CardTitle>
-          <CardDescription>Combobox should support both plain value lists and stacked company rows without inventing separate components.</CardDescription>
+          <CardDescription>Combobox should support plain values, stacked lookup rows, and canonical multi-selection without inventing separate components.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="Simple values" stacked>
@@ -1538,6 +1590,9 @@ export function renderComboboxDocs() {
           </ShowcaseRow>
           <ShowcaseRow label="Company list" stacked>
             <ComboboxCompanyPreview />
+          </ShowcaseRow>
+          <ShowcaseRow label="Company multi-select" stacked>
+            <ComboboxMultiCompanyPreview />
           </ShowcaseRow>
         </CardContent>
       </Card>
@@ -1550,6 +1605,9 @@ export function renderComboboxDocs() {
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="1000 companies" stacked>
             <ComboboxLargeCompanyPreview />
+          </ShowcaseRow>
+          <ShowcaseRow label="1000 companies multi-select" stacked>
+            <ComboboxMultiLargeDirectoryPreview />
           </ShowcaseRow>
         </CardContent>
       </Card>
@@ -1569,7 +1627,7 @@ export function renderComboboxDocs() {
       <Card>
         <CardHeader>
           <CardTitle>Field-level validation matrix</CardTitle>
-          <CardDescription>Combobox should read like the same form family as input and select, even while the interaction model stays richer.</CardDescription>
+          <CardDescription>Combobox should read like the same form family as input and select, even while single and multiple search flows stay richer.</CardDescription>
         </CardHeader>
         <CardContent className="ui-lab-page__showcase-list">
           <ShowcaseRow label="Matrix" stacked>
@@ -1625,6 +1683,33 @@ export function renderComboboxDocs() {
                 />
                 <FieldHint>Search still works across company name and company type while the list reveals rows progressively on scroll.</FieldHint>
               </Field>
+              <Field>
+                <FieldLabel htmlFor="ui-lab-combobox-multi-default">Multi-select</FieldLabel>
+                <Combobox
+                  defaultValue={["northstar-freight", "helio-systems"]}
+                  id="ui-lab-combobox-multi-default"
+                  label="Companies"
+                  options={comboboxCompanyOptions}
+                  placeholder="Choose companies"
+                  selectionMode="multiple"
+                  triggerAriaLabel="Companies"
+                />
+                <FieldHint>Use multi-select for canonical lookup lists when tags would hide the real source of truth.</FieldHint>
+              </Field>
+              <Field invalid>
+                <FieldLabel htmlFor="ui-lab-combobox-multi-invalid">Multi-select invalid</FieldLabel>
+                <Combobox
+                  defaultValue={[]}
+                  id="ui-lab-combobox-multi-invalid"
+                  invalid
+                  label="Project reviewers"
+                  options={comboboxCompanyOptions}
+                  placeholder="Choose reviewers"
+                  selectionMode="multiple"
+                  triggerAriaLabel="Project reviewers"
+                />
+                <FieldError>Select at least one reviewer before continuing.</FieldError>
+              </Field>
             </FormGrid>
           </ShowcaseRow>
         </CardContent>
@@ -1634,17 +1719,19 @@ export function renderComboboxDocs() {
         "Combobox is the review-stage answer for searchable option lists that outgrow native select without requiring a full data-grid runtime.",
         [
           "Use combobox when the option set benefits from inline search or richer option copy such as company name plus company type.",
+          "Use `selectionMode=\"multiple\"` when the user must choose several canonical records from the same searchable lookup surface.",
           "Use `filterMode=\"none\"` when app code owns remote search and only passes current results into the list.",
           "Use the stable native `Select` when the option set is short, fixed, and does not need search.",
         ],
         [
           "Keep fetch, debounce, and query caching in app code; the shared helper should only render search state and options.",
           "Use label-only rows for plain enums and label-plus-description rows for richer company-style templates.",
+          "Keep multi-select canonical: selected values should remain option-backed, not free-form strings.",
           "Reuse the same field shell, labels, and validation language as other form controls.",
           "Use `initialVisibleCount` and `loadMoreStep` when large local datasets should open with a smaller visible slice.",
         ],
         [
-          "Do not fold tags, bulk multi-select, or arbitrary free-form creation into the same combobox contract.",
+          "Do not fold arbitrary free-form creation into the combobox contract.",
           "Do not hide route-specific fetch rules or domain wording inside the shared helper.",
           "Do not replace every stable native select with combobox by default.",
         ],
@@ -1652,7 +1739,8 @@ export function renderComboboxDocs() {
 
       {renderPropsApiCard("Review-stage searchable select contract for local data and caller-owned async search.", [
         { name: "options", type: "Array<{ value, label, description?, meta?, disabled?, searchText? }>", notes: "Provides the rendered option list while keeping filtering and fetch ownership outside the primitive when needed." },
-        { name: "value / onValueChange", type: "string | null", notes: "Keeps selected value controlled by the caller, matching the rest of the shared form layer." },
+        { name: "selectionMode", type: "\"single\" | \"multiple\"", notes: "Keeps the same searchable combobox shell while letting callers choose one or many canonical options." },
+        { name: "value / onValueChange", type: "string | null or string[]", notes: "Keeps selected value caller-owned for both single-select and multi-select flows." },
         { name: "searchValue / onSearchValueChange", type: "string", notes: "Lets app code own the search string for remote or debounced queries instead of hardwiring Ajax into `ui-kit`." },
         { name: "filterMode", type: "\"local\" | \"none\"", notes: "Uses lightweight built-in local filtering by default or skips it when the option list already comes from caller-owned async search." },
         { name: "initialVisibleCount / loadMoreStep", type: "number", notes: "Lets large local lists start with a bounded visible slice and reveal more options as the user scrolls." },
@@ -1666,10 +1754,10 @@ export function renderComboboxDocs() {
           "The core structure is trigger button, popover surface, search field, and bounded option list.",
           "Options may render as label-only rows or as stacked rows with description, while staying list-shaped and lightweight.",
           "Large local lists may open with a smaller visible slice and reveal more rows on scroll without changing the selection model.",
-          "The current review surface is single-select only; tags and free-form entry live in companion patterns.",
+          "Multi-select stays in the same combobox family when the source remains canonical and searchable; tags and free-form entry still live in companion patterns.",
         ],
         [
-          "`options`, `value`, and `onValueChange` form the base selection contract.",
+          "`selectionMode`, `options`, `value`, and `onValueChange` form the base selection contract.",
           "`searchValue`, `onSearchValueChange`, `loading`, and `filterMode` are the review-stage hooks for remote search without embedding fetch logic.",
           "Use `searchText` when the visible template is custom JSX or when search must include extra words beyond the visible label and description.",
           "Use `placeholder`, `emptyLabel`, `size`, `invalid`, and `disabled` to align the control with field-shell needs.",

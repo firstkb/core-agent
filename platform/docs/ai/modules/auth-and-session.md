@@ -69,6 +69,9 @@ Confirmed in code:
 - temporary refresh failures after access-token expiry now move `packages/auth-core` into a retrying recovery state instead of forcing an immediate sign-out
 - expired-session refresh failures with `401` or `403` now clear frontend auth state instead of looping on an invalid browser context
 - cross-tab refresh followers now wait beyond the lock TTL before abandoning the owner refresh attempt
+- admin and tenant private shells now keep mounted profile/navigation state during same-user silent access-token refresh instead of clearing back to a fullscreen bootstrap loader
+- admin and tenant app bootstrap revalidation no longer runs on every same-user access-token rotation; it now keys off private-entry lifecycle and explicit recovery paths
+- frontend profile/bootstrap revalidation can now retry once after a `401`/`403` by asking `packages/auth-core` to recover the access token before falling back to sign-out
 - `packages/auth-core` still clears a legacy `refreshToken` key during cleanup, but the active stored session shape is access-token only
 
 ## Important docs

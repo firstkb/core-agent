@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createAdminEmployeesClient, createAuthClient } from "./index";
+import {
+  ApiClientError,
+  createAdminEmployeesClient,
+  createAuthClient,
+  requestWithUnauthorizedRetry,
+} from "./index";
 
 describe("api-client auth bootstrap timeouts", () => {
   afterEach(() => {
@@ -127,5 +132,31 @@ describe("api-client admin employees", () => {
         method: "PUT",
       }),
     );
+  });
+});
+
+describe("api-client unauthorized recovery", () => {
+  it("retries once with a recovered access token", async () => {
+    const request = vi.fn(async (accessToken: string) => {
+      if (accessToken === "stale-token") {
+        throw new ApiClientError("Request failed with status 401.", {
+          statusCode: 401,
+        });
+      }
+
+      return { accessToken };
+    });
+    const recoverUnauthorized = vi.fn(async () => "fresh-token");
+
+    await expect(
+      requestWithUnauthorizedRetry(request, {
+        accessToken: "stale-token",
+        onUnauthorized: recoverUnauthorized,
+      }),
+    ).resolves.toEqual({ accessToken: "fresh-token" });
+
+    expect(recoverUnauthorized).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenNthCalledWith(1, "stale-token");
+    expect(request).toHaveBeenNthCalledWith(2, "fresh-token");
   });
 });

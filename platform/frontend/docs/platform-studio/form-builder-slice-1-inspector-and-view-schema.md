@@ -14,6 +14,10 @@ It is the detailed companion to:
 
 - `form-builder-v2-field-contract.md`
 - `form-builder-field-catalog.md`
+- `form-builder-core-data-fields.md`
+- `form-builder-field-rules-contract.md`
+- `form-builder-grid-columns-contract.md`
+- `form-builder-system-fields.md`
 - `form-builder-page-and-filter-notes.md`
 - `form-builder-backend-boundary.md`
 
@@ -25,10 +29,21 @@ It does not define:
 
 - model structure editing
 - backend transport envelopes
+- conditional node rules
+- grid-column authoring
 - nested boolean filter groups
 - `or` filter logic
 - field-to-field comparison values
 - runtime publish contracts
+
+Model-side preset inspector settings for `Radio group` and `Checkbox group` are locked separately in:
+
+- `form-builder-choice-preset-inspector-schema.md`
+
+Accepted target contracts that go beyond the current slice-1 implementation are locked separately in:
+
+- `form-builder-field-rules-contract.md`
+- `form-builder-grid-columns-contract.md`
 
 ## Inspector Shape
 
@@ -36,6 +51,10 @@ The slice-1 inspector keeps two tabs:
 
 - `selection`
 - `view`
+
+Accepted future target:
+
+- add a dedicated top-level `grid` tab for authored grid columns
 
 ### Selection Tab
 
@@ -73,7 +92,9 @@ Section `Access`
 Slice-1 rule:
 
 - the field node inspector does not edit model field structure
-- requiredness, options, relation targets, and validation stay outside the view workspace for now
+- requiredness, options, lookup targets, and validation stay outside the view workspace for now
+- `Radio group` and `Checkbox group` preset settings stay in the model field editor, not in this slice-1 workspace inspector
+- the accepted future target adds a dedicated `Rules` section for conditional `Visibility rules` and `Requirement rules`
 
 #### Heading node schema
 
@@ -91,7 +112,7 @@ Section `Content`
 - `text`
   - optional string
 
-#### Section, group, tab, subform, and repeater schema
+#### Section, group, tab, and subform schema
 
 Section `Container`
 
@@ -100,7 +121,7 @@ Section `Container`
 
 Slice-1 rule:
 
-- subform and repeater advanced configuration is deferred
+- subform advanced configuration is deferred
 
 #### Grid, column, divider, and spacer schema
 
@@ -115,19 +136,17 @@ Slice-1 `runtimePreset` choices are:
 - `badge`
 - `signature_pad`
 - `geo_capture`
-- `relation_summary_card`
+- `lookup_summary_card`
 - `readonly_card`
 
 Allowed combinations:
 
-- `single_select` with `fieldPreset = status`
+- `single_select` when used as workflow status
   - `select`
   - `radio_chips`
   - `badge`
-- `relation`
-  - `relation_summary_card`
 - `db_lookup`
-  - `relation_summary_card`
+  - `lookup_summary_card`
 - `signature`
   - `signature_pad`
 - `geo_point`
@@ -283,13 +302,22 @@ Each condition row uses:
 
 Semantic validation rules beyond JSON Schema:
 
-- `reportedBy.fieldId` must reference a compatible `relation` or `db_lookup` field that resolves to a person/contact-style record
+- `reportedBy.fieldId` must reference a compatible `db_lookup` field that resolves to a person/contact-style record
 - `reportedDate.fieldId` must reference a compatible `date` or `date_time` field
 - `workflowStatus.fieldId` must reference a compatible `single_select` field
 - `workflowStatus.initialValue` and `workflowStatus.finalValue` must exist in the bound field option set when present
 - the same `fieldId` must not be reused across multiple System Field roles in one view
+- `systemFields` is a root-view document slice and must not be stored on subforms, repeaters, or nested layout nodes
 
 ### `filterDefinitions`
+
+Status note:
+
+- the JSON schema below reflects the current slice-1 technical draft only
+- the final compact root-view filter UX is defined by `form-builder-view-settings-contract.md`
+- the exact target inspector UX is defined by `form-builder-view-settings-inspector-contract.md`
+- the canonical target payload is `version: 2` with `pageFilters` and `quickFilters`
+- implementation should move toward the compact `Page Filter` and `Quick Filters` workflow from that contract instead of expanding the current flat editor
 
 ```json
 {
@@ -643,4 +671,5 @@ These stay intentionally out of the first locked schema:
 - formula-based filter expressions
 - transport of raw SQL fragments
 - role-specific workflow transition rules beyond `initialValue` and `finalValue`
-- page action toggles and icon routing in the same inspector section as System Fields
+- view action toggles, corrective-action toggle, and icon routing in the same inspector section as System Fields
+- the final compact modal-driven page-filter UX defined in `form-builder-view-settings-contract.md`

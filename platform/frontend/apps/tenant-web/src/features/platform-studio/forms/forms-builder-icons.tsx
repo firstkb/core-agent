@@ -261,6 +261,32 @@ export function FormBuilderElementIcon({
           />
         </svg>
       );
+    case "view_only_field":
+      return (
+        <svg
+          fill="none"
+          viewBox="0 0 24 24"
+          {...props}
+        >
+          <rect
+            x="4.5"
+            y="5"
+            width="15"
+            height="14"
+            rx="2.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M7.5 12c1.2-2 2.96-3 4.5-3s3.3 1 4.5 3c-1.2 2-2.96 3-4.5 3s-3.3-1-4.5-3Z"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          />
+          <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+        </svg>
+      );
     case "rich_text":
       return (
         <svg

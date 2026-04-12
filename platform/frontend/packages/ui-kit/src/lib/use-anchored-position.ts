@@ -174,6 +174,7 @@ export function useAnchoredPosition({
 
       setStyle({
         left: nextPosition.left,
+        minWidth: anchorRect.width,
         position: "fixed",
         top: nextPosition.top,
       });

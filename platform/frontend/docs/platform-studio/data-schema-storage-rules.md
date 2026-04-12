@@ -26,7 +26,7 @@ Example:
 
 - visible name: `Customer Profile`
 - internal model key: `customer_profile`
-- physical table name: `pb_customer_profile`
+- physical table name: `ps_customer_profile`
 
 This separation is important because a good builder UI should use human-readable names, while the backend should use stable storage-safe identifiers.
 
@@ -39,17 +39,17 @@ The physical table name should use:
 
 Recommended prefix:
 
-- `pb_`
+- `ps_`
 
 Recommended table-name pattern:
 
-- `pb_<model_storage_key>`
+- `ps_<model_storage_key>`
 
 Examples:
 
-- `pb_customer_profile`
-- `pb_site_audit`
-- `pb_incident`
+- `ps_customer_profile`
+- `ps_site_audit`
+- `ps_incident`
 
 ## Why Not Use The Legacy `ExtDB1{id}` Pattern
 
@@ -82,7 +82,7 @@ Pattern:
 
 - `<field_storage_key>`
 
-Examples inside `pb_customer_profile`:
+Examples inside `ps_customer_profile`:
 
 - `first_name`
 - `last_name`
@@ -96,7 +96,7 @@ If compatibility with older integration expectations is required, use:
 
 - `<table_storage_key>_<field_storage_key>`
 
-Examples inside `pb_customer_profile`:
+Examples inside `ps_customer_profile`:
 
 - `customer_profile_first_name`
 - `customer_profile_last_name`
@@ -202,6 +202,21 @@ When a relation is modeled, the backend should generate:
 
 The builder should treat relation authoring as a schema concern, not as a screen-layout concern.
 
+## Subform Child Tables
+
+Current accepted V2 rule:
+
+- each managed `Subform` creates its own managed child table
+- the child table should carry a parent relation back to the owning root record
+- checklist-style subforms still follow this child-table rule
+- `CHECKLIST` changes runtime behavior, not the storage boundary
+
+Schema-scope rule:
+
+- one builder document owns the root scope and all subform scopes together
+- each managed `Subform` owns its own embedded `dataSchema` and `uiSchema`
+- child fields should not be flattened into the root schema
+
 ## External Or Static Tables
 
 V2 should support creating a data schema from an existing static or system-owned table such as:
@@ -253,9 +268,13 @@ The V2 model should explicitly separate:
 
 The early recommended default is:
 
-- table prefix: `pb_`
+- table prefix: `ps_`
 - readable table names
 - short field names unless compatibility mode is required
 - generated system columns owned by the backend write layer
 - automatic index and relationship support
 - support for external locked tables with editable UI schemas on top
+
+Companion naming and SQL view contract:
+
+- `form-builder-storage-and-sql-view-contract.md`

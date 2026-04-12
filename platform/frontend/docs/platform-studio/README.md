@@ -86,12 +86,39 @@ Current active builder direction:
 - `platform-studio/forms-foundation-a-technical-map.md`
 - `platform-studio/data-schema-storage-rules.md`
 - `platform-studio/form-builder-backend-boundary.md`
+- `platform-studio/form-builder-storage-and-sql-view-contract.md`
+- `platform-studio/form-builder-backend-scope-payload-contract.md`
+- `platform-studio/form-builder-backend-api-contract.md`
+- `platform-studio/form-builder-backend-validation-matrix.md`
+- `platform-studio/form-builder-backend-object-generation-matrix.md`
+- `platform-studio/form-builder-backend-migration-policy.md`
+- `platform-studio/form-builder-backend-first-slice-handoff.md`
+- `platform-studio/form-builder-backend-technical-task-list.md`
+- `platform-studio/form-builder-accepted-registry.md`
 - `platform-studio/form-builder-field-catalog.md`
+- `platform-studio/form-builder-section-tree.md`
+- `platform-studio/form-builder-core-data-fields.md`
+- `platform-studio/form-builder-choice-fields.md`
+- `platform-studio/form-builder-multivalue-storage-contract.md`
+- `platform-studio/form-builder-choice-preset-inspector-schema.md`
+- `platform-studio/form-builder-advanced-fields.md`
+- `platform-studio/form-builder-content-nodes.md`
+- `platform-studio/form-builder-field-rules-contract.md`
+- `platform-studio/form-builder-grid-columns-contract.md`
+- `platform-studio/form-builder-ready-made-fields.md`
+- `platform-studio/form-builder-relationships.md`
+- `platform-studio/form-builder-schema-scope-contract.md`
+- `platform-studio/form-builder-subform-checklist-contract.md`
+- `platform-studio/form-builder-system-fields.md`
+- `platform-studio/form-builder-view-settings-contract.md`
+- `platform-studio/form-builder-view-settings-inspector-contract.md`
 - `platform-studio/form-builder-v2-field-contract.md`
 - `platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
 Supporting builder docs:
 
+- `platform-studio/form-builder-implementation-backlog.md`
+- `platform-studio/form-builder-approved-frontend-workstream-plan.md`
 - `platform-studio/ezform-analysis.md`
 - `platform-studio/form-builder-page-and-filter-notes.md`
 - `platform-studio/ezform/**`

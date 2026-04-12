@@ -18,6 +18,10 @@ It exists to keep page-level and filter-level metadata separate from the Form Bu
 This document is supporting analysis.
 It should not redefine the base field catalog.
 
+The normalized root-view contract now lives in:
+
+- `form-builder-view-settings-contract.md`
+
 ## EzData Page Settings Inventory
 
 Observed in `platform/frontend/docs/platform-studio/EXTDB/Template/ExtDBpg_edit.htm` and related `default.asp` helpers.
@@ -47,9 +51,18 @@ Observed in `platform/frontend/docs/platform-studio/EXTDB/Template/ExtDBpg_edit.
 
 ### Action Settings
 
+Observed legacy toggles:
+
 - `Enable Edit`
 - `Enable Delete`
 - `Enable AddNew`
+
+Recommended V2 normalized toggles:
+
+- `Enable Add`
+- `Enable View`
+- `Enable Edit`
+- `Enable Delete`
 
 ### Grid Settings
 
@@ -71,6 +84,10 @@ These are page overlays, not model field definitions:
 - `field_ingrid`
   - `Show`
   - `Hide`
+
+Current V2 note:
+
+- `field_ingrid` should normalize into structured grid-column visibility under the dedicated `Grid` tab contract
 
 ### Additional Actions / View Links
 
@@ -200,10 +217,27 @@ Recommended V2 homes:
   - `System Fields` bindings
 - `Field Status - Draft variant`, `Field Status - Finish variant`
   - `System Field` workflow config
-- `Icon`, `CA page`
-  - `View workflow settings`
+- `Icon`
+  - `view.viewSettings.iconDataUrl`
+- `CA page`
+  - normalize to `view.viewSettings.correctiveAction.enabled`
+  - when enabled, corrective action should use a platform-owned static table rather than a per-view selected CA page
+- action toggles
+  - `view.viewSettings.actions`
+  - `canAdd`, `canView`, `canEdit`, `canDelete`
+- grid sorting
+  - `view.viewSettings.list.sorting.fieldId`
+  - `view.viewSettings.list.sorting.direction`
+- `field_ingrid`
+  - `view.viewSettings.list.columns[]`
+  - exact behavior is locked in `form-builder-grid-columns-contract.md`
+- `ExtDBpg_filter`
+  - `view.filterDefinitions.pageFilters`
+- `ExtDBpg_prefilter`
+  - `view.filterDefinitions.quickFilters`
 - sort and saved prefilters
-  - `View list settings`
+  - compact `View list settings`
+  - final UX should follow the compact modal-driven contract in `form-builder-view-settings-contract.md`
 - per-page access and hidden/view-only behavior
   - `View field overrides`
 
@@ -221,6 +255,7 @@ Prefer:
 - explicit operators
 - explicit dynamic tokens such as `currentUser.companyId`
 - explicit saved-filter metadata
+- compact summary rows plus modal editors instead of large inline builders or textareas
 
 ## Known Risks
 

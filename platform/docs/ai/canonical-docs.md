@@ -259,6 +259,7 @@ Use it together with:
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-v2-field-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
+- `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md`
 
 #### Supporting
 

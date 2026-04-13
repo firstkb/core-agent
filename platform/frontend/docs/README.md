@@ -70,3 +70,8 @@ Entry point for the active frontend documentation set.
 - runtime route: `/root/ui-lab`
 - implementation module: `apps/platform-admin-web/src/internal/ui-lab`
 - route wiring: `apps/platform-admin-web/src/app/app.tsx`
+
+## Platform Studio Builder Workstreams
+
+- `platform-studio/form-builder-approved-frontend-workstream-plan.md`: active frontend execution order for the current Form Builder pass
+- `platform-studio/form-builder-rich-text-editor-workstream-contract.md`: approved `Rich text` editor foundation and `ui-kit` / `ui-lab` scope

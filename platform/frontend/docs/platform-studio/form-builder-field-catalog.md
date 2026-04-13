@@ -97,6 +97,7 @@ These are model-backed foundational field types.
 
 - `Short text`
 - `Long text`
+- `Long text historical`
 - `Rich text`
 - `Integer`
 - `Decimal`
@@ -128,6 +129,7 @@ Detailed functionality and settings for this section are locked in:
 These fields need explicit source, display, and relation behavior.
 
 - `DB lookup`
+- `DB lookup value`
 - `DB lookup multi`
 - `Contact`
 - `Contacts`
@@ -586,6 +588,17 @@ Parameters:
 - `allowManualEditOfHistory`
   - likely `false` by default
 
+### Long text historical
+
+Use for append-only note streams where each new user entry should be added with author/date context instead of overwriting the prior value.
+
+Parameters:
+
+- compiles to `Long text`
+- `historicalUpdates = true`
+- `allowManualEditOfHistory`
+  - likely `false` by default
+
 ### Rich text
 
 Parameters:
@@ -595,6 +608,15 @@ Parameters:
 - `allowImages`
 - `allowLinks`
 - `maxLength`
+
+Recommended editor foundation:
+
+- `Tiptap OSS`
+
+Notes:
+
+- do not use plain textarea as a fake rich-text surface
+- no reusable WYSIWYG donor foundation was identified in `frontend/docs/metronic`
 
 ### Integer
 
@@ -836,6 +858,33 @@ Checklist composition note:
 - a `Subform` in checklist mode may reuse a child `DB lookup` field as the source dictionary field
 - the checklist `Result Field` should normalize to child `Single select` data, not a legacy standalone `COMBOBOX` type
 - that checklist behavior is not a second `DB lookup` field type; it is a composition pattern between `Subform`, `DB lookup`, and sibling result fields
+
+### DB lookup value
+
+This is a separate create option for cases where the builder must save a string value from the selected source record instead of a relation key.
+
+Behavior:
+
+- uses the same source-selection flow as generic `DB lookup`
+- stores the selected source field value as text
+- does not behave like a relation-backed helper-output field
+- does not generate lookup-derived output columns for `Grid`, `Filters`, or `view-only field`
+
+Compile direction:
+
+- `baseType = db_lookup`
+- `fieldPreset = db_lookup_value`
+- `selectionMode = single`
+
+Use it when:
+
+- the owner wants to copy and store a source value
+- the saved value itself is what should later display in forms, grids, and filters
+
+Do not use it when:
+
+- the field should preserve a durable relation key to the source table
+- lookup-derived output columns are required
 
 ### Contact / Contacts / Company / Companies / Project / Projects
 

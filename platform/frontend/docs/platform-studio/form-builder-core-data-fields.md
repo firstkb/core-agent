@@ -205,6 +205,13 @@ Current builder status:
 - already represented in the placeholder runtime as `long_text`
 - legacy `memo with updates` should map to `long_text` plus `metadata.historicalUpdates`
 
+Authoring shortcut:
+
+- `Long text historical`
+  - compiles to `long_text`
+  - sets `metadata.historicalUpdates = true`
+  - runtime/backend should treat writes as append-history entries, not plain destructive overwrite
+
 ### `rich_text`
 
 Functional role:
@@ -244,7 +251,10 @@ Expected filter operators:
 
 Current builder status:
 
-- not yet represented in the current placeholder field-kind list
+- already represented as `rich_text` in the placeholder field-kind list
+- editor foundation is not implemented yet
+- recommended shared editor foundation: `Tiptap OSS`
+- implementation should start in `ui-kit` and `ui-lab`, not directly inside Form Builder
 - must stay separate from the non-data `Rich text block` content element
 
 ### `integer`

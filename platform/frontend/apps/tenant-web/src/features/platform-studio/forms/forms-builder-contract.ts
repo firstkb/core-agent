@@ -63,7 +63,11 @@ export type FormsPlaceholderReadyMadePreset =
   | "tags"
   | "url";
 
-export type FormsPlaceholderRelationshipPreset = "company_lookup" | "contact_lookup" | "project_lookup";
+export type FormsPlaceholderRelationshipPreset =
+  | "company_lookup"
+  | "contact_lookup"
+  | "db_lookup_value"
+  | "project_lookup";
 
 export type FormsPlaceholderFieldPreset =
   | FormsPlaceholderReadyMadePreset
@@ -82,6 +86,7 @@ export const formsPlaceholderReadyMadePresets: ReadonlySet<FormsPlaceholderReady
 export const formsPlaceholderRelationshipPresets: ReadonlySet<FormsPlaceholderRelationshipPreset> = new Set([
   "company_lookup",
   "contact_lookup",
+  "db_lookup_value",
   "project_lookup",
 ]);
 

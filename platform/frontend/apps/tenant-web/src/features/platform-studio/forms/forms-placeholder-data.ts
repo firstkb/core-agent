@@ -41,7 +41,9 @@ export type FormsPlaceholderLookupConfig = {
   itemLabelFields?: ReadonlyArray<string>;
   searchBehavior?: FormsPlaceholderLookupSearchBehavior;
   searchFields?: ReadonlyArray<string>;
+  sortField?: string;
   sourceModel?: string;
+  storedTextFields?: ReadonlyArray<string>;
   storedValueField?: string;
 };
 
@@ -115,6 +117,8 @@ function cloneField(field: FormsPlaceholderField): FormsPlaceholderField {
           ...field.lookupConfig,
           itemLabelFields: field.lookupConfig.itemLabelFields ? [...field.lookupConfig.itemLabelFields] : undefined,
           searchFields: field.lookupConfig.searchFields ? [...field.lookupConfig.searchFields] : undefined,
+          sortField: field.lookupConfig.sortField,
+          storedTextFields: field.lookupConfig.storedTextFields ? [...field.lookupConfig.storedTextFields] : undefined,
         }
       : undefined,
     options: field.options ? [...field.options] : undefined,
@@ -317,6 +321,7 @@ function isFieldKind(value: unknown): value is FormsPlaceholderFieldKind {
 function isFieldPreset(value: unknown): value is FormsPlaceholderFieldPreset {
   return (
     value === "checkbox_group" ||
+    value === "db_lookup_value" ||
     value === "company_lookup" ||
     value === "contact_lookup" ||
     value === "date_today" ||
@@ -450,6 +455,7 @@ function normalizeLookupConfig(
           ...fallback,
           itemLabelFields: fallback.itemLabelFields ? [...fallback.itemLabelFields] : undefined,
           searchFields: fallback.searchFields ? [...fallback.searchFields] : undefined,
+          storedTextFields: fallback.storedTextFields ? [...fallback.storedTextFields] : undefined,
         }
       : undefined;
   }
@@ -462,7 +468,9 @@ function normalizeLookupConfig(
     itemLabelFields: normalizeStringList(candidate.itemLabelFields, fallback?.itemLabelFields),
     searchBehavior: isLookupSearchBehavior(candidate.searchBehavior) ? candidate.searchBehavior : fallback?.searchBehavior,
     searchFields: normalizeStringList(candidate.searchFields, fallback?.searchFields),
+    sortField: normalizeOptionalString(candidate.sortField, fallback?.sortField),
     sourceModel: normalizeOptionalString(candidate.sourceModel, fallback?.sourceModel),
+    storedTextFields: normalizeStringList(candidate.storedTextFields, fallback?.storedTextFields),
     storedValueField: normalizeOptionalString(candidate.storedValueField, fallback?.storedValueField),
   };
 }
@@ -683,8 +691,10 @@ export function getFormsPlaceholderFieldSearchText(field: FormsPlaceholderField)
     field.lookupConfig?.displayTemplate,
     field.lookupConfig?.searchBehavior,
     field.lookupConfig?.searchFields?.join(" "),
+    field.lookupConfig?.sortField,
     field.lookupConfig?.itemLabelFields?.join(" "),
     field.lookupConfig?.groupByField,
+    field.lookupConfig?.storedTextFields?.join(" "),
     field.lookupConfig?.storedValueField,
     field.placeholder,
     field.inputMode,

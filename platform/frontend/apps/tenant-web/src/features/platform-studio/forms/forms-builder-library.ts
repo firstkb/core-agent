@@ -252,6 +252,15 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     template: createFieldTemplate("core", "long_text", "Long text"),
   },
   {
+    idBase: "long-text-historical",
+    labelKey: "tenant.platformStudio.forms.builder.fieldType.long_text_historical",
+    searchTerms: ["long text historical", "memo with updates", "history", "append notes"],
+    section: "basicFields",
+    template: createFieldTemplate("core", "long_text", "Long text historical", {
+      historicalUpdates: true,
+    }),
+  },
+  {
     idBase: "rich-text",
     labelKey: "tenant.platformStudio.forms.builder.fieldType.rich_text",
     searchTerms: ["rich text", "html", "wysiwyg"],
@@ -360,6 +369,21 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
         displayMode: "search_select",
         searchBehavior: "ajax",
       },
+      selectionMode: "single",
+      sourceLabel: "Lookup source",
+    }),
+  },
+  {
+    idBase: "db-lookup-value",
+    labelKey: "tenant.platformStudio.forms.builder.fieldPreset.db_lookup_value",
+    searchTerms: ["db lookup value", "lookup value", "lookup text", "dictionary value"],
+    section: "relationships",
+    template: createFieldTemplate("preset", "db_lookup", "DB lookup value", {
+      lookupConfig: {
+        displayMode: "search_select",
+        searchBehavior: "ajax",
+      },
+      preset: "db_lookup_value",
       selectionMode: "single",
       sourceLabel: "Lookup source",
     }),

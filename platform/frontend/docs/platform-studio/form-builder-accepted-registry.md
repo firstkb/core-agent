@@ -70,6 +70,10 @@ Accepted base field types:
 - `multi_select`
 - `db_lookup`
 
+Accepted authoring shortcuts over base field types:
+
+- `Long text historical` -> `long_text` plus `historicalUpdates = true`
+
 ### Field Presets Registry
 
 Accepted ready-made presets:
@@ -160,6 +164,7 @@ Accepted content nodes:
 ### `Relationships`
 
 - `DB lookup`
+- `DB lookup value`
 - `DB lookup multi`
 - `Contact`
 - `Contacts`

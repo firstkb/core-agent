@@ -40,6 +40,7 @@ import {
   MenuContent,
   MenuItem,
   MenuTrigger,
+  RichTextEditor,
   SearchIcon,
   Select,
   Switch,
@@ -124,7 +125,6 @@ import {
   type FormsPlaceholderFieldValidation,
   type FormsPlaceholderLookupConfig,
   type FormsPlaceholderLookupDisplayMode,
-  type FormsPlaceholderLookupSearchBehavior,
   type FormsPlaceholderModel,
   type FormsPlaceholderTagMode,
   type FormsPlaceholderView,
@@ -146,13 +146,21 @@ function getNodeTypeKey(nodeType: FormBuilderNode["type"]) {
   return `tenant.platformStudio.forms.builder.nodeType.${nodeType}`;
 }
 
-function getFieldTypeKey(field: Pick<FormsPlaceholderField, "kind">) {
+function getFieldTypeKey(field: Pick<FormsPlaceholderField, "historicalUpdates" | "kind">) {
+  if (field.kind === "long_text" && field.historicalUpdates) {
+    return "tenant.platformStudio.forms.builder.fieldType.long_text_historical";
+  }
+
   return `tenant.platformStudio.forms.builder.fieldType.${field.kind}`;
 }
 
 function getLookupPresetLabelKey(field: Pick<FormsPlaceholderField, "kind" | "preset" | "selectionMode">) {
   if (field.kind !== "db_lookup") {
     return null;
+  }
+
+  if (field.preset === "db_lookup_value") {
+    return "tenant.platformStudio.forms.builder.fieldPreset.db_lookup_value";
   }
 
   if (field.preset === "contact_lookup") {
@@ -287,6 +295,7 @@ type GenericLookupSourceFieldMock = {
 
 type GenericLookupSourceModelMock = {
   defaultDisplayFields: ReadonlyArray<string>;
+  defaultSortField: string;
   defaultSearchFields: ReadonlyArray<string>;
   fields: ReadonlyArray<GenericLookupSourceFieldMock>;
   id: string;
@@ -312,6 +321,7 @@ type ViewOnlyBindingOption = {
 const genericLookupSourceMocks: ReadonlyArray<GenericLookupSourceModelMock> = [
   {
     defaultDisplayFields: ["item"],
+    defaultSortField: "item",
     defaultSearchFields: ["item", "category"],
     fields: [
       { key: "doc_id", label: "Doc.#" },
@@ -325,6 +335,7 @@ const genericLookupSourceMocks: ReadonlyArray<GenericLookupSourceModelMock> = [
   },
   {
     defaultDisplayFields: ["doc_id", "status"],
+    defaultSortField: "date",
     defaultSearchFields: ["doc_id", "status", "observer_name", "location"],
     fields: [
       { key: "doc_id", label: "Doc.#" },
@@ -340,6 +351,7 @@ const genericLookupSourceMocks: ReadonlyArray<GenericLookupSourceModelMock> = [
   },
   {
     defaultDisplayFields: ["doc_id", "type"],
+    defaultSortField: "date",
     defaultSearchFields: ["doc_id", "type", "status"],
     fields: [
       { key: "doc_id", label: "Doc.#" },
@@ -502,11 +514,6 @@ function isPresetLookupField(field: FormsPlaceholderField) {
   );
 }
 
-type LookupDerivedOutputPreview = {
-  columnName: string;
-  label: string;
-};
-
 function toStorageKey(value: string) {
   const normalized = value
     .trim()
@@ -558,10 +565,54 @@ function getLookupSourceSummary(
   };
 }
 
+function getLookupStoredValueSummary(
+  field: FormsPlaceholderField,
+  sourceModel: GenericLookupSourceModelMock | null,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  if (field.preset === "db_lookup_value") {
+    const storedTextFields = field.lookupConfig?.storedTextFields?.length
+      ? field.lookupConfig.storedTextFields
+      : field.displayFields;
+
+    return {
+      label: t("tenant.platformStudio.forms.builder.fieldSettings.storedValue"),
+      summary: storedTextFields?.length
+        ? getLookupModelFieldLabels(sourceModel, storedTextFields).join(", ")
+        : t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending"),
+    };
+  }
+
+  return {
+    label: t("tenant.platformStudio.forms.builder.fieldSettings.displayFields"),
+    summary: field.displayFields?.length
+      ? getLookupModelFieldLabels(sourceModel, field.displayFields).join(", ")
+      : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields"),
+  };
+}
+
+function getLookupSortFieldSummary(
+  field: FormsPlaceholderField,
+  sourceModel: GenericLookupSourceModelMock | null,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  const sortField = field.lookupConfig?.sortField || sourceModel?.defaultSortField;
+
+  return {
+    label: t("tenant.platformStudio.forms.builder.fieldSettings.sortBy"),
+    summary: getLookupModelFieldLabel(sourceModel, sortField)
+      || t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending"),
+  };
+}
+
 function getLookupDerivedOutputDefinitions(
   field: FormsPlaceholderField,
   t: ReturnType<typeof useTranslation>["t"],
 ): ReadonlyArray<LookupDerivedOutputDefinition> {
+  if (field.preset === "db_lookup_value") {
+    return [];
+  }
+
   const fieldStorageKey = toStorageKey(field.id);
   const preset = getLookupPresetFromField(field);
   const selectionMode = field.selectionMode ?? "single";
@@ -700,16 +751,6 @@ function getLookupDerivedOutputDefinitions(
       outputKey: "label",
     },
   ];
-}
-
-function getLookupDerivedOutputPreview(
-  field: FormsPlaceholderField,
-  t: ReturnType<typeof useTranslation>["t"],
-): ReadonlyArray<LookupDerivedOutputPreview> {
-  return getLookupDerivedOutputDefinitions(field, t).map((entry) => ({
-    columnName: entry.columnName,
-    label: entry.label,
-  }));
 }
 
 function getLookupDerivedOutputBindingOptionsForField(
@@ -2414,6 +2455,29 @@ function getSummaryText(
     });
   }
 
+  if ((node.type === "text" || node.type === "rich_text") && node.text?.trim()) {
+    const fallbackText = node.text
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const nextText = typeof globalThis.document !== "undefined"
+      ? (() => {
+          const temporaryElement = globalThis.document.createElement("div");
+          temporaryElement.innerHTML = node.text ?? "";
+          return temporaryElement.textContent?.replace(/\s+/g, " ").trim() ?? fallbackText;
+        })()
+      : fallbackText;
+
+    if (nextText.length > 0) {
+      return nextText.length > 88 ? `${nextText.slice(0, 85).trimEnd()}...` : nextText;
+    }
+  }
+
   return t(summaryKey);
 }
 
@@ -2987,6 +3051,7 @@ export function FormsViewWorkspacePage() {
     fieldId: string;
     modelId: string;
     selectedFieldKeys: ReadonlyArray<string>;
+    sortFieldKey: string;
   } | null>(null);
 
   const access = getFormsAuthoringAccess(currentActor, currentModel);
@@ -3064,15 +3129,13 @@ export function FormsViewWorkspacePage() {
   const selectedFieldIsChoice = selectedField?.kind === "single_select" || selectedField?.kind === "multi_select";
   const selectedFieldIsLookup = selectedField?.kind === "db_lookup";
   const selectedFieldIsPresetLookup = selectedField ? isPresetLookupField(selectedField) : false;
-  const selectedLookupSelectionMode = selectedField?.kind === "db_lookup"
-    ? (selectedField.selectionMode ?? "single")
-    : null;
+  const selectedFieldIsLookupValue = selectedField?.preset === "db_lookup_value";
+  const selectedFieldShowsLookupDisplayMode = selectedFieldIsLookup
+    && !selectedFieldIsPresetLookup
+    && !selectedFieldIsLookupValue
+    && (selectedField?.selectionMode ?? "single") === "single";
   const selectedLookupSourceSummary = useMemo(
     () => selectedField && selectedField.kind === "db_lookup" ? getLookupSourceSummary(selectedField, t) : null,
-    [selectedField, t],
-  );
-  const selectedLookupDerivedOutputs = useMemo(
-    () => selectedField && selectedField.kind === "db_lookup" ? getLookupDerivedOutputPreview(selectedField, t) : [],
     [selectedField, t],
   );
   const selectedNodeScopeSubformId = selectedNode
@@ -3100,6 +3163,18 @@ export function FormsViewWorkspacePage() {
       ? getGenericLookupSourceModelById(selectedField.lookupConfig?.sourceModel)
       : null,
     [selectedField],
+  );
+  const selectedLookupStoredValueSummary = useMemo(
+    () => selectedField && selectedField.kind === "db_lookup"
+      ? getLookupStoredValueSummary(selectedField, selectedGenericLookupSourceModel, t)
+      : null,
+    [selectedField, selectedGenericLookupSourceModel, t],
+  );
+  const selectedLookupSortFieldSummary = useMemo(
+    () => selectedField && selectedField.kind === "db_lookup"
+      ? getLookupSortFieldSummary(selectedField, selectedGenericLookupSourceModel, t)
+      : null,
+    [selectedField, selectedGenericLookupSourceModel, t],
   );
   const lookupSourcePickerModel = useMemo(
     () => getGenericLookupSourceModelById(lookupSourcePicker?.modelId),
@@ -3473,6 +3548,7 @@ export function FormsViewWorkspacePage() {
       selectedFieldKeys: selectedField.displayFields?.length
         ? [...selectedField.displayFields]
         : [...selectedModel.defaultDisplayFields],
+      sortFieldKey: selectedField.lookupConfig?.sortField || selectedModel.defaultSortField,
     });
   }
 
@@ -3501,15 +3577,21 @@ export function FormsViewWorkspacePage() {
       displayFields: effectiveDisplayFields,
       lookupConfig: {
         ...field.lookupConfig,
-        groupByField: field.lookupConfig?.displayMode === "catalog_modal"
-          ? nextGroupByField
-          : undefined,
-        itemLabelFields: field.lookupConfig?.displayMode === "catalog_modal" && nextItemLabelFields.length > 0
-          ? nextItemLabelFields
-          : undefined,
+        groupByField: field.preset === "db_lookup_value"
+          ? undefined
+          : field.lookupConfig?.displayMode === "catalog_modal"
+            ? nextGroupByField
+            : undefined,
+        itemLabelFields: field.preset === "db_lookup_value"
+          ? undefined
+          : field.lookupConfig?.displayMode === "catalog_modal" && nextItemLabelFields.length > 0
+            ? nextItemLabelFields
+            : undefined,
         searchFields: [...effectiveDisplayFields],
+        sortField: lookupSourcePicker.sortFieldKey || lookupSourcePickerModel.defaultSortField,
         sourceModel: lookupSourcePickerModel.id,
-        storedValueField: lookupSourcePickerModel.storedValueField,
+        storedTextFields: field.preset === "db_lookup_value" ? [...effectiveDisplayFields] : undefined,
+        storedValueField: field.preset === "db_lookup_value" ? undefined : lookupSourcePickerModel.storedValueField,
       },
       sourceLabel: lookupSourcePickerModel.label,
     }));
@@ -4721,10 +4803,6 @@ export function FormsViewWorkspacePage() {
                                         <span>{t(getFieldTypeKey(selectedField))}</span>
                                       </div>
 
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.source")}</span>
-                                      </div>
-
                                       {selectedFieldIsPresetLookup && selectedLookupSourceSummary ? (
                                         <div className="tenant-web__platform-studio-compact-row">
                                           <div className="tenant-web__platform-studio-compact-row-main">
@@ -4752,16 +4830,31 @@ export function FormsViewWorkspacePage() {
                                               </div>
                                             </div>
 
+                                            {!selectedFieldIsLookupValue ? (
+                                              <div className="tenant-web__platform-studio-compact-row">
+                                                <div className="tenant-web__platform-studio-compact-row-main">
+                                                  <span className="tenant-web__platform-studio-compact-row-label">
+                                                    {t("tenant.platformStudio.forms.builder.fieldSettings.storedValueField")}
+                                                  </span>
+                                                  <span className="tenant-web__platform-studio-compact-row-summary">
+                                                    {getLookupModelFieldLabel(
+                                                      selectedGenericLookupSourceModel,
+                                                      selectedField.lookupConfig?.storedValueField,
+                                                    ) || t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            ) : null}
+
                                             <div className="tenant-web__platform-studio-compact-row">
                                               <div className="tenant-web__platform-studio-compact-row-main">
                                                 <span className="tenant-web__platform-studio-compact-row-label">
-                                                  {t("tenant.platformStudio.forms.builder.fieldSettings.storedValueField")}
+                                                  {selectedLookupStoredValueSummary?.label
+                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.displayFields")}
                                                 </span>
                                                 <span className="tenant-web__platform-studio-compact-row-summary">
-                                                  {getLookupModelFieldLabel(
-                                                    selectedGenericLookupSourceModel,
-                                                    selectedField.lookupConfig?.storedValueField,
-                                                  ) || t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
+                                                  {selectedLookupStoredValueSummary?.summary
+                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
                                                 </span>
                                               </div>
                                             </div>
@@ -4769,15 +4862,12 @@ export function FormsViewWorkspacePage() {
                                             <div className="tenant-web__platform-studio-compact-row">
                                               <div className="tenant-web__platform-studio-compact-row-main">
                                                 <span className="tenant-web__platform-studio-compact-row-label">
-                                                  {t("tenant.platformStudio.forms.builder.fieldSettings.displayFields")}
+                                                  {selectedLookupSortFieldSummary?.label
+                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.sortBy")}
                                                 </span>
                                                 <span className="tenant-web__platform-studio-compact-row-summary">
-                                                  {selectedField.displayFields?.length
-                                                    ? getLookupModelFieldLabels(
-                                                      selectedGenericLookupSourceModel,
-                                                      selectedField.displayFields,
-                                                    ).join(", ")
-                                                    : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
+                                                  {selectedLookupSortFieldSummary?.summary
+                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
                                                 </span>
                                               </div>
                                             </div>
@@ -4796,231 +4886,30 @@ export function FormsViewWorkspacePage() {
                                         </>
                                       )}
 
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.display")}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-lookup-display-mode">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.displayMode")}
-                                          </Label>
-                                          <Select
-                                            id="tenant-platform-studio-lookup-display-mode"
-                                            onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                              ...lookupConfig,
-                                              displayMode: event.target.value as FormsPlaceholderLookupDisplayMode,
-                                            }))}
-                                            value={selectedField.lookupConfig?.displayMode ?? "search_select"}
-                                          >
-                                            <option value="search_select">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect")}</option>
-                                            <option value="catalog_modal">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeCatalogModal")}</option>
-                                          </Select>
-                                        </div>
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-lookup-display-template">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.displayTemplate")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-lookup-display-template"
-                                            onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                              ...lookupConfig,
-                                              displayTemplate: event.target.value || undefined,
-                                            }))}
-                                            value={selectedField.lookupConfig?.displayTemplate ?? ""}
-                                          />
-                                        </div>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-form-group">
-                                        <Label>
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.displayFields")}
-                                        </Label>
-                                        <EditableStringList
-                                          addLabel={t("tenant.platformStudio.forms.builder.fieldSettings.addDisplayField")}
-                                          disabled={!workspaceAccess.canEditSettings}
-                                          emptyLabel={t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
-                                          idPrefix="tenant-platform-studio-lookup-display-field"
-                                          newItemLabel={t("tenant.platformStudio.forms.builder.fieldSettings.newDisplayField")}
-                                          onChange={(nextValues) => updateSelectedField((field) => ({
-                                            ...field,
-                                            displayFields: nextValues.length > 0 ? nextValues : undefined,
-                                          }))}
-                                          t={t}
-                                          values={selectedField.displayFields ?? []}
-                                        />
-                                      </div>
-
-                                      {selectedField.lookupConfig?.displayMode === "catalog_modal" ? (
+                                      {selectedFieldShowsLookupDisplayMode ? (
                                         <>
-                                          <div className="tenant-web__platform-studio-sort-row">
-                                            <div className="tenant-web__platform-studio-form-group">
-                                              <Label htmlFor="tenant-platform-studio-lookup-group-by-field">
-                                                {t("tenant.platformStudio.forms.builder.fieldSettings.groupByField")}
-                                              </Label>
-                                              <Input
-                                                id="tenant-platform-studio-lookup-group-by-field"
-                                                onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                                  ...lookupConfig,
-                                                  groupByField: event.target.value || undefined,
-                                                }))}
-                                                value={selectedField.lookupConfig?.groupByField ?? ""}
-                                              />
-                                            </div>
+                                          <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
+                                            <span>{t("tenant.platformStudio.forms.builder.fieldSettings.display")}</span>
                                           </div>
 
                                           <div className="tenant-web__platform-studio-form-group">
-                                            <Label>
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.itemLabelFields")}
+                                            <Label htmlFor="tenant-platform-studio-lookup-display-mode">
+                                              {t("tenant.platformStudio.forms.builder.fieldSettings.displayMode")}
                                             </Label>
-                                            <EditableStringList
-                                              addLabel={t("tenant.platformStudio.forms.builder.fieldSettings.addItemLabelField")}
-                                              disabled={!workspaceAccess.canEditSettings}
-                                              emptyLabel={t("tenant.platformStudio.forms.builder.fieldSettings.emptyItemLabelFields")}
-                                              idPrefix="tenant-platform-studio-lookup-item-label-field"
-                                              newItemLabel={t("tenant.platformStudio.forms.builder.fieldSettings.newItemLabelField")}
-                                              onChange={(nextValues) => updateSelectedFieldLookupConfig((lookupConfig) => ({
+                                            <Select
+                                              id="tenant-platform-studio-lookup-display-mode"
+                                              onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
                                                 ...lookupConfig,
-                                                itemLabelFields: nextValues.length > 0 ? nextValues : undefined,
+                                                displayMode: event.target.value as FormsPlaceholderLookupDisplayMode,
                                               }))}
-                                              t={t}
-                                              values={selectedField.lookupConfig?.itemLabelFields ?? []}
-                                            />
+                                              value={selectedField.lookupConfig?.displayMode ?? "search_select"}
+                                            >
+                                              <option value="search_select">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect")}</option>
+                                              <option value="catalog_modal">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeCatalogModal")}</option>
+                                            </Select>
                                           </div>
                                         </>
                                       ) : null}
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.search")}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-lookup-search-behavior">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.searchBehavior")}
-                                          </Label>
-                                          <Select
-                                            id="tenant-platform-studio-lookup-search-behavior"
-                                            onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                              ...lookupConfig,
-                                              searchBehavior: event.target.value as FormsPlaceholderLookupSearchBehavior,
-                                            }))}
-                                            value={selectedField.lookupConfig?.searchBehavior ?? "ajax"}
-                                          >
-                                            <option value="ajax">{t("tenant.platformStudio.forms.builder.fieldSettings.searchBehaviorAjax")}</option>
-                                            <option value="prefetch">{t("tenant.platformStudio.forms.builder.fieldSettings.searchBehaviorPrefetch")}</option>
-                                          </Select>
-                                        </div>
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-lookup-placeholder">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.placeholder")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-lookup-placeholder"
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              placeholder: event.target.value || undefined,
-                                            }))}
-                                            value={selectedField.placeholder ?? ""}
-                                          />
-                                        </div>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-form-group">
-                                        <Label>
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.searchFields")}
-                                        </Label>
-                                        <EditableStringList
-                                          addLabel={t("tenant.platformStudio.forms.builder.fieldSettings.addSearchField")}
-                                          disabled={!workspaceAccess.canEditSettings}
-                                          emptyLabel={t("tenant.platformStudio.forms.builder.fieldSettings.emptySearchFields")}
-                                          idPrefix="tenant-platform-studio-lookup-search-field"
-                                          newItemLabel={t("tenant.platformStudio.forms.builder.fieldSettings.newSearchField")}
-                                          onChange={(nextValues) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                            ...lookupConfig,
-                                            searchFields: nextValues.length > 0 ? nextValues : undefined,
-                                          }))}
-                                          t={t}
-                                          values={selectedField.lookupConfig?.searchFields ?? []}
-                                        />
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.selection")}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-compact-row">
-                                        <div className="tenant-web__platform-studio-compact-row-main">
-                                          <span className="tenant-web__platform-studio-compact-row-label">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.selectionMode")}
-                                          </span>
-                                          <span className="tenant-web__platform-studio-compact-row-summary">
-                                            {selectedLookupSelectionMode === "multiple"
-                                              ? t("tenant.platformStudio.forms.builder.fieldSettings.selectionModeMultiple")
-                                              : t("tenant.platformStudio.forms.builder.fieldSettings.selectionModeSingle")}
-                                          </span>
-                                        </div>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.filters")}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-form-group">
-                                        <Label>
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.sourceFilters")}
-                                        </Label>
-                                        <EditableStringList
-                                          addLabel={t("tenant.platformStudio.forms.builder.fieldSettings.addSourceFilter")}
-                                          disabled={!workspaceAccess.canEditSettings}
-                                          emptyLabel={t("tenant.platformStudio.forms.builder.fieldSettings.emptySourceFilters")}
-                                          idPrefix="tenant-platform-studio-lookup-source-filter"
-                                          newItemLabel={t("tenant.platformStudio.forms.builder.fieldSettings.newSourceFilter")}
-                                          onChange={(nextValues) => updateSelectedField((field) => ({
-                                            ...field,
-                                            sourceFilters: nextValues.length > 0 ? nextValues : undefined,
-                                          }))}
-                                          t={t}
-                                          values={selectedField.sourceFilters ?? []}
-                                        />
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-form-group">
-                                        <Label htmlFor="tenant-platform-studio-lookup-dependent-filter">
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.dependentFilter")}
-                                        </Label>
-                                        <Input
-                                          id="tenant-platform-studio-lookup-dependent-filter"
-                                          onChange={(event) => updateSelectedField((field) => ({
-                                            ...field,
-                                            dependentFilter: event.target.value || undefined,
-                                          }))}
-                                          value={selectedField.dependentFilter ?? ""}
-                                        />
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.derivedOutputs")}</span>
-                                      </div>
-
-                                      <p className="tenant-web__platform-studio-inline-help">
-                                        {t("tenant.platformStudio.forms.builder.fieldSettings.derivedOutputsDescription")}
-                                      </p>
-
-                                      <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                        {selectedLookupDerivedOutputs.map((output) => (
-                                          <div className="tenant-web__platform-studio-compact-row" key={output.columnName}>
-                                            <div className="tenant-web__platform-studio-compact-row-main">
-                                              <span className="tenant-web__platform-studio-compact-row-label">
-                                                {output.label}
-                                              </span>
-                                              <span className="tenant-web__platform-studio-compact-row-summary">
-                                                {output.columnName}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
                                     </div>
                                   ) : null}
 
@@ -5248,7 +5137,7 @@ export function FormsViewWorkspacePage() {
                                     ) : null}
                                   </div>
                                 </>
-                              ) : selectedNode.type === "text" || selectedNode.type === "rich_text" ? (
+                              ) : selectedNode.type === "text" ? (
                                 <>
                                   <div className="tenant-web__platform-studio-form-group">
                                     <Label htmlFor="tenant-platform-studio-node-title">
@@ -5272,6 +5161,34 @@ export function FormsViewWorkspacePage() {
                                         updateFormBuilderNode(currentDocument, selectedNode.id, { text: event.target.value })
                                       )}
                                       rows={5}
+                                      value={selectedNode.text ?? ""}
+                                    />
+                                  </div>
+                                </>
+                              ) : selectedNode.type === "rich_text" ? (
+                                <>
+                                  <div className="tenant-web__platform-studio-form-group">
+                                    <Label htmlFor="tenant-platform-studio-node-title">
+                                      {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
+                                    </Label>
+                                    <Input
+                                      id="tenant-platform-studio-node-title"
+                                      onChange={(event) => updateDocument((currentDocument) =>
+                                        updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
+                                      )}
+                                      value={selectedNode.title ?? ""}
+                                    />
+                                  </div>
+                                  <div className="tenant-web__platform-studio-form-group">
+                                    <Label htmlFor="tenant-platform-studio-node-rich-text">
+                                      {t("tenant.platformStudio.forms.builder.nodeTextLabel")}
+                                    </Label>
+                                    <RichTextEditor
+                                      aria-label={t("tenant.platformStudio.forms.builder.nodeTextLabel")}
+                                      id="tenant-platform-studio-node-rich-text"
+                                      onChange={(value) => updateDocument((currentDocument) =>
+                                        updateFormBuilderNode(currentDocument, selectedNode.id, { text: value })
+                                      )}
                                       value={selectedNode.text ?? ""}
                                     />
                                   </div>
@@ -6307,6 +6224,7 @@ export function FormsViewWorkspacePage() {
                                       ...currentValue,
                                       modelId: modelOption.id,
                                       selectedFieldKeys: [...modelOption.defaultDisplayFields],
+                                      sortFieldKey: modelOption.defaultSortField,
                                     }
                                   : currentValue
                               )}
@@ -6378,19 +6296,46 @@ export function FormsViewWorkspacePage() {
                 </div>
 
                 {lookupSourcePickerModel ? (
-                  <div className="tenant-web__platform-studio-compact-row">
-                    <div className="tenant-web__platform-studio-compact-row-main">
-                      <span className="tenant-web__platform-studio-compact-row-label">
-                        {t("tenant.platformStudio.forms.builder.fieldSettings.selectedFields")}
-                      </span>
-                      <span className="tenant-web__platform-studio-compact-row-summary">
-                        {lookupSourcePicker.selectedFieldKeys.length > 0
-                          ? getLookupModelFieldLabels(
-                            lookupSourcePickerModel,
-                            lookupSourcePicker.selectedFieldKeys,
-                          ).join(", ")
-                          : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
-                      </span>
+                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
+                    <div className="tenant-web__platform-studio-compact-row">
+                      <div className="tenant-web__platform-studio-compact-row-main">
+                        <span className="tenant-web__platform-studio-compact-row-label">
+                          {t("tenant.platformStudio.forms.builder.fieldSettings.selectedFields")}
+                        </span>
+                        <span className="tenant-web__platform-studio-compact-row-summary">
+                          {lookupSourcePicker.selectedFieldKeys.length > 0
+                            ? getLookupModelFieldLabels(
+                              lookupSourcePickerModel,
+                              lookupSourcePicker.selectedFieldKeys,
+                            ).join(", ")
+                            : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="tenant-web__platform-studio-form-group">
+                      <Label htmlFor="tenant-platform-studio-lookup-sort-field">
+                        {t("tenant.platformStudio.forms.builder.fieldSettings.sortBy")}
+                      </Label>
+                      <Select
+                        disabled={!workspaceAccess.canEditSettings}
+                        id="tenant-platform-studio-lookup-sort-field"
+                        onChange={(event) => setLookupSourcePicker((currentValue) =>
+                          currentValue
+                            ? {
+                                ...currentValue,
+                                sortFieldKey: event.target.value || lookupSourcePickerModel.defaultSortField,
+                              }
+                            : currentValue
+                        )}
+                        value={lookupSourcePicker.sortFieldKey}
+                      >
+                        {lookupSourcePickerModel.fields.map((fieldOption) => (
+                          <option key={`${lookupSourcePickerModel.id}-sort-${fieldOption.key}`} value={fieldOption.key}>
+                            {fieldOption.label}
+                          </option>
+                        ))}
+                      </Select>
                     </div>
                   </div>
                 ) : null}

@@ -168,6 +168,9 @@ export type { ComboboxFilterMode, ComboboxOption, ComboboxProps, ComboboxSelecti
 export { Textarea } from "./components/textarea";
 export type { TextareaProps } from "./components/textarea";
 
+export { RichTextContent, RichTextEditor } from "./components/rich-text-editor";
+export type { RichTextContentProps, RichTextEditorProps, RichTextToolbarPreset } from "./components/rich-text-editor";
+
 export { TagInput } from "./components/tag-input";
 export type { TagInputMode, TagInputProps } from "./components/tag-input";
 

@@ -65,6 +65,7 @@ The current approved order is:
 6. `DEFAULT subform` child-view settings
 7. `View -> Filters` pass for lookup-heavy fields
 8. remaining field-by-field inspector completion
+9. `Rich text` editor foundation in `ui-kit` and `ui-lab`
 
 ## Workstream 1. Multivalue Storage And Reporting Contract
 
@@ -338,6 +339,38 @@ Exit criteria:
 
 - every accepted field has a coherent inspector model
 - field-specific settings match the approved contracts
+
+## Workstream 9. Rich Text Editor Foundation
+
+Goal:
+
+- lock one approved shared editor foundation for `Rich text` before wiring runtime and Form Builder editor UX
+
+Locked direction:
+
+- use `Tiptap OSS`
+- do not use `metronic` as the editor foundation
+- do not ship a fake WYSIWYG through plain textarea or raw HTML input
+
+First-slice scope:
+
+- `ui-kit` shared editor primitive
+- `ui-lab` proof surfaces
+- minimal toolbar:
+  - bold
+  - italic
+  - underline
+  - bullet list
+  - ordered list
+  - link
+  - undo
+  - redo
+
+Exit criteria:
+
+- one approved `ui-kit` editor primitive exists
+- one `ui-lab` validation surface exists
+- `Rich text` field and `Rich text block` can target the same shared editor foundation later
 
 ## Immediate Next Step
 

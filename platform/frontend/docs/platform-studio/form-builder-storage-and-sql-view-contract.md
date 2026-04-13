@@ -92,6 +92,11 @@ Purpose:
   - `tags`
   - dedicated lookup-multiple entries such as `DB lookup multi`, `Contacts`, `Companies`, and `Projects`
 
+Non-applicable case:
+
+- `DB lookup value` does not use relation-style helper outputs
+- it stores the chosen scalar source value directly in the main scope table
+
 ### Scope Keys
 
 Every generated storage object should derive from stable keys, not labels.
@@ -245,6 +250,11 @@ Reason:
 `DB lookup` fields should continue storing only the foreign key in the base table.
 
 Human-readable and helper columns should be generated in SQL views as derived outputs.
+
+Exception:
+
+- `DB lookup value` stores the selected scalar source value directly
+- therefore it does not require lookup-derived output columns for normal display, grid use, or filters
 
 ### Output Naming
 

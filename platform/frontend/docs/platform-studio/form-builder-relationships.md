@@ -47,19 +47,22 @@ It does not define:
 The `Relationships` section should include these create options, in this order:
 
 1. `db_lookup`
-2. `db_lookup_multi`
-3. `contact_lookup`
-4. `contacts_lookup`
-5. `company_lookup`
-6. `companies_lookup`
-7. `project_lookup`
-8. `projects_lookup`
+2. `db_lookup_value`
+3. `db_lookup_multi`
+4. `contact_lookup`
+5. `contacts_lookup`
+6. `company_lookup`
+7. `companies_lookup`
+8. `project_lookup`
+9. `projects_lookup`
 
 Registry meaning:
 
 - `db_lookup`
   - base field type
 - `db_lookup_multi`
+  - authoring shortcut over `db_lookup`
+- `db_lookup_value`
   - authoring shortcut over `db_lookup`
 - the six relationship `*_lookup` entries
   - presets over `db_lookup`
@@ -168,6 +171,32 @@ For newly authored fields:
 
 - `displayMode` should be required
 - the builder should not hide this decision behind legacy heuristics
+
+## `db_lookup_value`
+
+Functional role:
+
+- select one source record through the generic lookup flow
+- save one chosen string value from the source record
+- reuse the same source picker and display/search UX as generic `db_lookup`
+
+Required boundary:
+
+- this field is not a relation-key field
+- this field stores the selected source value itself
+- this field does not generate lookup-derived output columns
+- `Grid`, `Filters`, and form display should use the stored scalar value directly
+
+Compile direction:
+
+- `baseType = db_lookup`
+- `fieldPreset = db_lookup_value`
+- `selectionMode = single`
+
+Authoring note:
+
+- this is a separate create option so the user does not toggle storage shape later
+- use generic `db_lookup` when a real relation key must be preserved
 
 ## `db_lookup` Checklist Composition
 

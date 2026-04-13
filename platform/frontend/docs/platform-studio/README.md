@@ -119,6 +119,7 @@ Supporting builder docs:
 
 - `platform-studio/form-builder-implementation-backlog.md`
 - `platform-studio/form-builder-approved-frontend-workstream-plan.md`
+- `platform-studio/form-builder-rich-text-editor-workstream-contract.md`
 - `platform-studio/ezform-analysis.md`
 - `platform-studio/form-builder-page-and-filter-notes.md`
 - `platform-studio/ezform/**`

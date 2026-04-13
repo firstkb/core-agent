@@ -106,6 +106,11 @@ The registries are for contracts, compiler rules, and persistence behavior.
     - function: multi-line textual value for notes, comments, and narrative answers
     - compiles to: `baseType = long_text`
     - status: `locked`
+  - `Long text historical`
+    - type: authoring entry over `Long text`
+    - function: append-only memo stream for notes with user/date history
+    - compiles to: `baseType = long_text` plus `historicalUpdates = true`
+    - status: `locked`
   - `Rich text`
     - type: base field type
     - function: stored formatted content as model data
@@ -182,7 +187,7 @@ The registries are for contracts, compiler rules, and persistence behavior.
   - source basis: `EXTDB` + `smartapp` + `ezform`
   - canonical registry: mixed
     - field types: `DB lookup`
-    - field presets: `DB lookup multi`, `Contact`, `Contacts`, `Company`, `Companies`, `Project`, `Projects`
+    - field presets: `DB lookup value`, `DB lookup multi`, `Contact`, `Contacts`, `Company`, `Companies`, `Project`, `Projects`
   - compile model:
     - field types compile to `ModelFieldDefinition.baseType`
     - presets compile to `baseType = db_lookup` plus target/source preset metadata
@@ -196,6 +201,11 @@ The registries are for contracts, compiler rules, and persistence behavior.
     - type: lookup preset
     - function: generic multiselect lookup shortcut over `DB lookup`
     - compiles to: `baseType = db_lookup`, `selectionMode = multiple`
+    - status: `locked`
+  - `DB lookup value`
+    - type: lookup preset
+    - function: generic lookup shortcut that stores one selected source string value directly
+    - compiles to: `fieldPreset = db_lookup_value` over `db_lookup`, `selectionMode = single`
     - status: `locked`
   - `Contact`
     - type: lookup preset

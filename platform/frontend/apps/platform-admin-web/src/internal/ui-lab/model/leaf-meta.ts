@@ -77,6 +77,7 @@ export type UiLabLeafId =
   | "top-loader-doc"
   | "radio-group-doc"
   | "rating-doc"
+  | "rich-text-editor-doc"
   | "scroll-area-doc"
   | "status-doc"
   | "menu-doc"
@@ -1334,6 +1335,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     panelId: "form-controls",
     title: "Textarea",
   },
+  "rich-text-editor-doc": {
+    breadcrumb: ["Form Controls", "Rich Text Editor"],
+    description: "Rich text editor page documents the approved first-slice WYSIWYG foundation for shared formatted entry and readonly rendering.",
+    heroDescription:
+      "Rich text editor is reviewed here as a shared `ui-kit` surface so formatted narrative fields can reuse one editor foundation instead of inventing product-local HTML tooling.",
+    heroTitle: "Rich Text Editor",
+    id: "rich-text-editor-doc",
+    label: "Rich Text Editor",
+    panelId: "form-controls",
+    title: "Rich Text Editor",
+  },
   "view-preset-bar-doc": {
     breadcrumb: ["Inventory Snapshot", "View Preset Bar"],
     description: "View preset bar remains provisional while we validate its fit across dense admin surfaces.",
@@ -1382,6 +1394,7 @@ export const formControlLeaves = [
   "select-doc",
   "combobox-doc",
   "textarea-doc",
+  "rich-text-editor-doc",
   "tag-input-doc",
   "checkbox-doc",
   "radio-group-doc",

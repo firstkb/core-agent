@@ -85,6 +85,7 @@ import {
   renderInputOtpDocs,
   renderLabelDocs,
   renderRadioGroupDocs,
+  renderRichTextEditorDocs,
   renderScrollAreaDocs,
   renderSelectDocs,
   renderSliderDocs,
@@ -222,6 +223,10 @@ export function renderPanel(
 
       if (activeItem.id === "textarea-doc") {
         return renderTextareaDocs();
+      }
+
+      if (activeItem.id === "rich-text-editor-doc") {
+        return renderRichTextEditorDocs();
       }
 
       if (activeItem.id === "tag-input-doc") {

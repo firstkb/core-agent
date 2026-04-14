@@ -28,6 +28,7 @@ type Repository interface {
 	CreateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord) (*ViewRecord, error)
 	UpdateModel(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, expectedVersion *int64) (*ModelRecord, error)
 	UpdateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord, expectedVersion *int64) (*ViewRecord, error)
+	DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error
 	DeleteView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) error
 }
 
@@ -341,6 +342,44 @@ UPDATE ps_view
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("form builder: commit delete view tx: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("form builder: begin delete model tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	modelRecord, err := loadModelTx(ctx, tx, modelID)
+	if err != nil {
+		return err
+	}
+	if modelRecord == nil {
+		return ErrModelNotFound
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+DELETE FROM ps_view
+ WHERE model_id = $1`, modelID); err != nil {
+		return fmt.Errorf("form builder: delete model views: %w", err)
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+DELETE FROM ps_model
+ WHERE model_id = $1`, modelID); err != nil {
+		return fmt.Errorf("form builder: delete model: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("form builder: commit delete model tx: %w", err)
 	}
 	return nil
 }

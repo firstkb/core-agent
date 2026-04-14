@@ -90,6 +90,20 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_BUILDER_MODEL_DELETE",
+		http.MethodDelete,
+		"/app/platform-studio/forms/models/{modelId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.DeleteModelResponse, error) {
+			info, err := srv.platformStudioFormBuilderHTTP.DeleteModel(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "FORM_BUILDER_MODEL_DELETE",
+					http.StatusInternalServerError, "cannot delete form builder model", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
 		"FORM_BUILDER_VIEW_LIST",
 		http.MethodGet,
 		"/app/platform-studio/forms/models/{modelId}/views",

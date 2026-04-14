@@ -140,9 +140,15 @@ type AuthoringDialogState =
     };
 
 type DeleteIntent = {
+  kind: "view";
   modelId: string;
   title: string;
   viewId: string;
+};
+
+type DeleteModelIntent = {
+  modelId: string;
+  title: string;
 };
 
 export function FormsPage() {
@@ -153,6 +159,7 @@ export function FormsPage() {
     copyView,
     createModel,
     createView,
+    deleteModel,
     deleteView,
     ensureModel,
     isLoadingModels,
@@ -164,8 +171,10 @@ export function FormsPage() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [isSubmittingDialog, setIsSubmittingDialog] = useState(false);
   const [deleteIntent, setDeleteIntent] = useState<DeleteIntent | null>(null);
+  const [deleteModelIntent, setDeleteModelIntent] = useState<DeleteModelIntent | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeletingView, setIsDeletingView] = useState(false);
+  const [isDeletingModel, setIsDeletingModel] = useState(false);
   const [isLoadingSelectedModel, setIsLoadingSelectedModel] = useState(false);
   const [selectedModelError, setSelectedModelError] = useState<string | null>(null);
   const selectedModel = getFormsPlaceholderModel(params.modelId, models);
@@ -238,6 +247,17 @@ export function FormsPage() {
       setDeleteError(null);
     }
   }, [deleteIntent, selectedModel]);
+
+  useEffect(() => {
+    if (!deleteModelIntent || !selectedModel) {
+      return;
+    }
+
+    if (deleteModelIntent.modelId !== selectedModel.id) {
+      setDeleteModelIntent(null);
+      setDeleteError(null);
+    }
+  }, [deleteModelIntent, selectedModel]);
 
   function openCreateModelDialog() {
     setDialogError(null);
@@ -346,9 +366,22 @@ export function FormsPage() {
 
     setDeleteError(null);
     setDeleteIntent({
+      kind: "view",
       modelId: getFormsPlaceholderModelRouteId(model),
       title: view.title,
       viewId: getFormsPlaceholderViewRouteId(view),
+    });
+  }
+
+  function handleDeleteModelIntent(model: FormsPlaceholderModel) {
+    if (!getFormsAuthoringAccess(currentActor, model).canDeleteModel) {
+      return;
+    }
+
+    setDeleteError(null);
+    setDeleteModelIntent({
+      modelId: getFormsPlaceholderModelRouteId(model),
+      title: model.title,
     });
   }
 
@@ -371,6 +404,29 @@ export function FormsPage() {
       );
     } finally {
       setIsDeletingView(false);
+    }
+  }
+
+  async function handleConfirmDeleteModel() {
+    if (!deleteModelIntent) {
+      return;
+    }
+
+    setIsDeletingModel(true);
+    setDeleteError(null);
+
+    try {
+      await deleteModel(deleteModelIntent.modelId);
+      setDeleteModelIntent(null);
+      navigate(platformStudioPaths.forms, { replace: true });
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.mutationError"),
+      );
+    } finally {
+      setIsDeletingModel(false);
     }
   }
 
@@ -500,8 +556,9 @@ export function FormsPage() {
                         </MenuItem>
                         <MenuSeparator />
                         <MenuItem
-                          disabled
-                          title={t("tenant.platformStudio.forms.modelDeleteDeferred")}
+                          disabled={!selectedModelAccess.canDeleteModel || isDeletingModel}
+                          onClick={() => handleDeleteModelIntent(selectedModel)}
+                          title={selectedModelAccess.canDeleteModel ? undefined : t(selectedModelAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure")}
                           tone="danger"
                         >
                           {t("tenant.platformStudio.forms.deleteModel")}
@@ -619,31 +676,35 @@ export function FormsPage() {
                                   <ScreenActionsIcon />
                                 </button>
                               </MenuTrigger>
-                              <MenuContent className="tenant-web__platform-studio-menu">
-                                <MenuItem
-                                  disabled
-                                  title={t("tenant.platformStudio.forms.placeholderActionTitle")}
-                                >
-                                  {t("tenant.platformStudio.forms.exportView")}
-                                </MenuItem>
-                                <MenuItem
-                                  disabled={!viewAccess.canCopyView || isSubmittingDialog}
-                                  onClick={() => openCopyViewDialog(selectedModel, view)}
-                                  title={viewAccess.canCopyView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                                >
-                                  {t("tenant.platformStudio.forms.copyView")}
-                                </MenuItem>
-                                <MenuSeparator />
-                                <MenuItem
-                                  disabled={!viewAccess.canDeleteView || isDeletingView}
-                                  onClick={() => handleDeleteViewIntent(selectedModel, view)}
-                                  title={viewAccess.canDeleteView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                                  tone="danger"
-                                >
-                                  {t("tenant.platformStudio.forms.deleteView")}
-                                </MenuItem>
-                              </MenuContent>
-                            </Menu>
+                            <MenuContent className="tenant-web__platform-studio-menu">
+                              <MenuItem
+                                disabled
+                                title={t("tenant.platformStudio.forms.placeholderActionTitle")}
+                              >
+                                {t("tenant.platformStudio.forms.exportView")}
+                              </MenuItem>
+                              <MenuItem
+                                disabled={!viewAccess.canCopyView || isSubmittingDialog}
+                                onClick={() => openCopyViewDialog(selectedModel, view)}
+                                title={viewAccess.canCopyView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
+                              >
+                                {t("tenant.platformStudio.forms.copyView")}
+                              </MenuItem>
+                              {!view.isDefault ? (
+                                <>
+                                  <MenuSeparator />
+                                  <MenuItem
+                                    disabled={!viewAccess.canDeleteView || isDeletingView}
+                                    onClick={() => handleDeleteViewIntent(selectedModel, view)}
+                                    title={viewAccess.canDeleteView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
+                                    tone="danger"
+                                  >
+                                    {t("tenant.platformStudio.forms.deleteView")}
+                                  </MenuItem>
+                                </>
+                              ) : null}
+                            </MenuContent>
+                          </Menu>
                           </div>
                         </div>
                       );
@@ -803,6 +864,45 @@ export function FormsPage() {
               {isDeletingView
                 ? t("tenant.platformStudio.forms.deletingAction")
                 : t("tenant.platformStudio.forms.deleteView")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open && !isDeletingModel) {
+            setDeleteModelIntent(null);
+            setDeleteError(null);
+          }
+        }}
+        open={Boolean(deleteModelIntent)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("tenant.platformStudio.forms.confirmDeleteModel", { title: deleteModelIntent?.title ?? "" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteError
+                ? deleteError
+                : t("tenant.platformStudio.forms.confirmDeleteModelDescription", { title: deleteModelIntent?.title ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingModel}>
+              {t("tenant.platformStudio.forms.cancelDelete")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingModel}
+              onClick={() => {
+                void handleConfirmDeleteModel();
+              }}
+              variant="danger"
+            >
+              {isDeletingModel
+                ? t("tenant.platformStudio.forms.deletingAction")
+                : t("tenant.platformStudio.forms.deleteModel")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

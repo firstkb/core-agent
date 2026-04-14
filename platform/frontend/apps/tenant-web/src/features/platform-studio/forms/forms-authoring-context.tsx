@@ -52,6 +52,7 @@ type FormBuilderAuthoringContextValue = {
   ) => Promise<FormBuilderModelMutationResult>;
   createModel: (input: FormBuilderCreateModelInput) => Promise<FormBuilderModelMutationResult>;
   createView: (modelId: string, input: FormBuilderCreateViewInput) => Promise<FormBuilderModelMutationResult>;
+  deleteModel: (modelId: string) => Promise<void>;
   deleteView: (modelId: string, viewId: string) => Promise<FormBuilderModelMutationResult>;
   ensureModel: (modelId: string) => Promise<FormsPlaceholderModel | null>;
   isLoadingModels: boolean;
@@ -360,6 +361,16 @@ export function FormBuilderAuthoringProvider({
     return commitMutation((accessToken) => authoringClient.copyView(accessToken, modelId, viewId, input));
   }, [authoringClient, commitMutation]);
 
+  const deleteModel = useCallback(async (modelId: string) => {
+    const trimmedModelId = modelId.trim();
+    if (!trimmedModelId) {
+      throw new Error("Model id is required.");
+    }
+
+    await requestWithSession((accessToken) => authoringClient.deleteModel(accessToken, trimmedModelId));
+    commitModels(removeModel(modelsRef.current, trimmedModelId));
+  }, [authoringClient, commitModels, requestWithSession]);
+
   const deleteView = useCallback(async (modelId: string, viewId: string) => {
     return commitMutation((accessToken) => authoringClient.deleteView(accessToken, modelId, viewId));
   }, [authoringClient, commitMutation]);
@@ -374,6 +385,7 @@ export function FormBuilderAuthoringProvider({
         copyView,
         createModel,
         createView,
+        deleteModel,
         deleteView,
         ensureModel,
         isLoadingModels,

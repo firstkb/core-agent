@@ -33,6 +33,14 @@ func (h *Handler) CreateModel(ctx context.Context, _ *http.Request, req CreateMo
 	return out, nil
 }
 
+func (h *Handler) DeleteModel(ctx context.Context, r *http.Request, _ struct{}) (*DeleteModelResponse, error) {
+	out, err := h.service.DeleteModel(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) GetModel(ctx context.Context, r *http.Request, _ struct{}) (*ModelDetailResponse, error) {
 	out, err := h.service.GetModel(ctx, strings.TrimSpace(r.PathValue("modelId")))
 	if err != nil {

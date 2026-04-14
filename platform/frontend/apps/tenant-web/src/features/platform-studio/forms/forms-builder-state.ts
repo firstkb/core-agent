@@ -2975,6 +2975,9 @@ export function reconcileFormBuilderDocumentWithModel(
   document: FormBuilderDocument,
   object: FormsPlaceholderObject,
   layoutBlueprint?: unknown,
+  options?: {
+    enforceCanonicalFieldPlacements?: boolean;
+  },
 ) {
   const fieldById = new Map(object.fields.map((field) => [field.id, field]));
   let nextDocument = document;
@@ -3128,11 +3131,28 @@ export function reconcileFormBuilderDocumentWithModel(
             })
             .sort((left, right) => left.order - right.order)
         : [];
+      const blueprintUnplacedFieldIds = Array.isArray(blueprintScope.unplacedFieldIds)
+        ? blueprintScope.unplacedFieldIds.filter((value): value is string =>
+          typeof value === "string" && availableFieldIdSet.has(value))
+        : [];
       const scopeRootPlacementFieldIds = new Set(
         placements
           .filter((placement) => isFormBuilderScopeRootPlacementKey(placement.containerKey))
           .map((placement) => placement.fieldId),
       );
+      const expectedParentIdByFieldId = new Map<string, string | null>(
+        placements.flatMap((placement) => {
+          const expectedParentId = isFormBuilderScopeRootPlacementKey(placement.containerKey)
+            ? null
+            : (containerNodeIdsByKey.get(placement.containerKey) ?? null);
+          if (!isFormBuilderScopeRootPlacementKey(placement.containerKey) && !expectedParentId) {
+            return [];
+          }
+
+          return [[placement.fieldId, expectedParentId] as const];
+        }),
+      );
+      const blueprintUnplacedFieldIdSet = new Set(blueprintUnplacedFieldIds);
       const invalidFieldIds = dedupeFieldIds(
         getScopeNodes(nextDocument, scopeId)
           .filter((node): node is FormBuilderNode & { fieldId: string } =>
@@ -3141,17 +3161,27 @@ export function reconcileFormBuilderDocumentWithModel(
             && (
               (node.parentId === null && !scopeRootPlacementFieldIds.has(node.fieldId))
               || (node.parentId !== null && !validContainerNodeIds.has(node.parentId))
+              || (
+                options?.enforceCanonicalFieldPlacements === true
+                && (
+                  blueprintUnplacedFieldIdSet.has(node.fieldId)
+                  || (
+                    expectedParentIdByFieldId.has(node.fieldId)
+                    && node.parentId !== (expectedParentIdByFieldId.get(node.fieldId) ?? null)
+                  )
+                )
+              )
             ))
           .map((node) => node.fieldId),
       );
       if (invalidFieldIds.length > 0) {
+        const invalidFieldIdSet = new Set(invalidFieldIds);
         nextDocument = updateScopeUiSchema(nextDocument, scopeId, (uiSchema) => ({
           ...appendScopeUnplacedFieldIds(uiSchema, invalidFieldIds),
           nodes: uiSchema.nodes.filter((node) =>
             node.type !== "field"
             || typeof node.fieldId !== "string"
-            || !invalidFieldIds.includes(node.fieldId)
-            || (node.parentId !== null && validContainerNodeIds.has(node.parentId))
+            || !invalidFieldIdSet.has(node.fieldId)
           ),
         }), { extraFieldIds: invalidFieldIds });
       }
@@ -3186,11 +3216,6 @@ export function reconcileFormBuilderDocumentWithModel(
         );
         boundFieldIds.add(placement.fieldId);
       });
-
-      const blueprintUnplacedFieldIds = Array.isArray(blueprintScope.unplacedFieldIds)
-        ? blueprintScope.unplacedFieldIds.filter((value): value is string =>
-          typeof value === "string" && availableFieldIdSet.has(value))
-        : [];
 
       const nextBoundFieldIds = new Set(
         getScopeNodes(nextDocument, scopeId)

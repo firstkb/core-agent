@@ -134,6 +134,7 @@ import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
   cloneFormsPlaceholderModel,
   createFormsPlaceholderStorageKey,
+  createUniqueFormsPlaceholderStorageKey,
   findFormsPlaceholderScreenById,
   getFormsPlaceholderFieldDisplayName,
   getFormsPlaceholderFieldIconKey,
@@ -804,16 +805,16 @@ type LookupClauseDefinition = {
   valueMode: FormBuilderLookupFilterClause["valueMode"];
 };
 
-type GenericLookupSourceFieldMock = {
+type LookupSourceFieldOption = {
   key: string;
   label: string;
 };
 
-type GenericLookupSourceModelMock = {
+type LookupSourceModelOption = {
   defaultDisplayFields: ReadonlyArray<string>;
   defaultSortField: string;
   defaultSearchFields: ReadonlyArray<string>;
-  fields: ReadonlyArray<GenericLookupSourceFieldMock>;
+  fields: ReadonlyArray<LookupSourceFieldOption>;
   id: string;
   label: string;
   storedValueField: string;
@@ -834,52 +835,10 @@ type ViewOnlyBindingOption = {
   label: string;
 };
 
-const genericLookupSourceMocks: ReadonlyArray<GenericLookupSourceModelMock> = [
-  {
-    defaultDisplayFields: ["item"],
-    defaultSortField: "item",
-    defaultSearchFields: ["item", "category"],
-    fields: [
-      { key: "doc_id", label: "Doc.#" },
-      { key: "category", label: "Category" },
-      { key: "item", label: "Item" },
-      { key: "active", label: "Active" },
-    ],
-    id: "inspection_option",
-    label: "Inspection Option",
-    storedValueField: "doc_id",
-  },
-  {
-    defaultDisplayFields: ["doc_id", "status"],
-    defaultSortField: "date",
-    defaultSearchFields: ["doc_id", "status", "observer_name", "location"],
-    fields: [
-      { key: "doc_id", label: "Doc.#" },
-      { key: "date", label: "Date" },
-      { key: "observer_name", label: "Observer Name" },
-      { key: "location", label: "Location" },
-      { key: "status", label: "Status" },
-      { key: "task_activity", label: "Task/Activity" },
-    ],
-    id: "safety_observation",
-    label: "Safety Observation",
-    storedValueField: "doc_id",
-  },
-  {
-    defaultDisplayFields: ["doc_id", "type"],
-    defaultSortField: "date",
-    defaultSearchFields: ["doc_id", "type", "status"],
-    fields: [
-      { key: "doc_id", label: "Doc.#" },
-      { key: "type", label: "Type" },
-      { key: "date", label: "Date" },
-      { key: "status", label: "Status" },
-    ],
-    id: "jobsite_audit",
-    label: "Jobsite Audit",
-    storedValueField: "doc_id",
-  },
-];
+const rootRecordLookupSourceField = {
+  key: "doc_id",
+  label: "Doc.id",
+} as const satisfies LookupSourceFieldOption;
 
 const mockContactJobTypeOptions = [
   { label: "Inspector", value: "inspector" },
@@ -902,16 +861,130 @@ const mockBusinessUnitOptions = [
   { label: "Operations", value: "operations" },
 ] as const;
 
-function getGenericLookupSourceModelById(modelId: string | null | undefined) {
+function buildLookupSourceFieldOptions(
+  fields: ReadonlyArray<{
+    displayName?: string;
+    id?: string;
+    label?: string;
+    storageKey?: string;
+  }>,
+) {
+  const seen = new Set<string>();
+  const out: LookupSourceFieldOption[] = [];
+
+  const appendField = (key: string | undefined, label: string | undefined) => {
+    const normalizedKey = key?.trim();
+    if (!normalizedKey || seen.has(normalizedKey)) {
+      return;
+    }
+
+    seen.add(normalizedKey);
+    out.push({
+      key: normalizedKey,
+      label: label?.trim() || normalizedKey,
+    });
+  };
+
+  appendField(rootRecordLookupSourceField.key, rootRecordLookupSourceField.label);
+  fields.forEach((field) => {
+    appendField(field.storageKey ?? field.id, field.displayName ?? field.label ?? field.storageKey ?? field.id);
+  });
+
+  return out;
+}
+
+function buildLookupSourceModelOption(
+  modelId: string,
+  modelLabel: string,
+  fields: ReadonlyArray<{
+    displayName?: string;
+    id?: string;
+    label?: string;
+    storageKey?: string;
+  }>,
+): LookupSourceModelOption {
+  const normalizedFields = buildLookupSourceFieldOptions(fields);
+  const dataFields = normalizedFields.filter((field) => field.key !== rootRecordLookupSourceField.key);
+  const defaultDisplayFields = dataFields.length > 0
+    ? [dataFields[0].key]
+    : [rootRecordLookupSourceField.key];
+  const defaultSortField = dataFields[0]?.key ?? rootRecordLookupSourceField.key;
+
+  return {
+    defaultDisplayFields,
+    defaultSearchFields: normalizedFields.map((field) => field.key),
+    defaultSortField,
+    fields: normalizedFields,
+    id: modelId,
+    label: modelLabel.trim() || modelId,
+    storedValueField: rootRecordLookupSourceField.key,
+  };
+}
+
+function buildLookupSourceModelFromPlaceholderModel(
+  model: Pick<FormsPlaceholderModel, "displayName" | "fields" | "id" | "title">,
+) {
+  return buildLookupSourceModelOption(
+    model.id,
+    model.displayName?.trim() || model.title,
+    model.fields.map((field) => ({
+      displayName: field.displayName,
+      id: field.id,
+      label: field.label,
+      storageKey: field.storageKey,
+    })),
+  );
+}
+
+function buildLookupSourceModelFromDraft(
+  model: Pick<FormsPlaceholderModel, "displayName" | "fields" | "id" | "title">,
+  draftModel: Record<string, unknown>,
+) {
+  const dataSchema = isRecord(draftModel.dataSchema) ? draftModel.dataSchema : null;
+  const rootScope = dataSchema && isRecord(dataSchema.rootScope) ? dataSchema.rootScope : null;
+  const rootFields = Array.isArray(rootScope?.fields)
+    ? rootScope.fields.flatMap((entry) => {
+      if (!isRecord(entry)) {
+        return [];
+      }
+
+      return [{
+        displayName: typeof entry.displayName === "string" ? entry.displayName : undefined,
+        id: typeof entry.fieldId === "string"
+          ? entry.fieldId
+          : typeof entry.id === "string"
+            ? entry.id
+            : undefined,
+        label: typeof entry.label === "string" ? entry.label : undefined,
+        storageKey: typeof entry.storageKey === "string" ? entry.storageKey : undefined,
+      }];
+    })
+    : [];
+
+  if (rootFields.length === 0) {
+    return buildLookupSourceModelFromPlaceholderModel(model);
+  }
+
+  return buildLookupSourceModelOption(
+    model.id,
+    model.displayName?.trim() || model.title,
+    rootFields,
+  );
+}
+
+function getLookupSourceModelById(
+  sourceModels: ReadonlyArray<LookupSourceModelOption>,
+  modelId: string | null | undefined,
+) {
   if (!modelId) {
     return null;
   }
 
-  return genericLookupSourceMocks.find((model) => model.id === modelId) ?? null;
+  return sourceModels.find((model) => model.id === modelId) ?? null;
 }
 
 function getLookupModelFieldLabel(
-  model: GenericLookupSourceModelMock | null,
+  model: LookupSourceModelOption | null,
   fieldKey: string | null | undefined,
 ) {
   if (!model || !fieldKey) {
@@ -922,7 +995,7 @@ function getLookupModelFieldLabel(
 }
 
 function getLookupModelFieldLabels(
-  model: GenericLookupSourceModelMock | null,
+  model: LookupSourceModelOption | null,
   fieldKeys: ReadonlyArray<string> | undefined,
 ) {
   return (fieldKeys ?? []).map((fieldKey) => getLookupModelFieldLabel(model, fieldKey));
@@ -1083,7 +1156,7 @@ function getLookupSourceSummary(
 
 function getLookupStoredValueSummary(
   field: FormsPlaceholderField,
-  sourceModel: GenericLookupSourceModelMock | null,
+  sourceModel: LookupSourceModelOption | null,
   t: ReturnType<typeof useTranslation>["t"],
 ) {
   if (field.preset === "db_lookup_value") {
@@ -1109,7 +1182,7 @@ function getLookupStoredValueSummary(
 
 function getLookupSortFieldSummary(
   field: FormsPlaceholderField,
-  sourceModel: GenericLookupSourceModelMock | null,
+  sourceModel: LookupSourceModelOption | null,
   t: ReturnType<typeof useTranslation>["t"],
 ) {
   const sortField = field.lookupConfig?.sortField || sourceModel?.defaultSortField;
@@ -3706,8 +3779,11 @@ export function FormsViewWorkspacePage() {
     fieldId: string;
     modelId: string;
     selectedFieldKeys: ReadonlyArray<string>;
-      sortFieldKey: string;
+    sortFieldKey: string;
   } | null>(null);
+  const [lookupSourceModelsById, setLookupSourceModelsById] = useState<Record<string, LookupSourceModelOption>>({});
+  const [isLookupSourcePickerLoading, setIsLookupSourcePickerLoading] = useState(false);
+  const [lookupSourcePickerError, setLookupSourcePickerError] = useState<string | null>(null);
 
   const access = getFormsAuthoringAccess(currentActor, currentModel, currentView);
   const workspaceAccess = getFormsWorkspaceAccess(access, currentModel, currentView);
@@ -3823,6 +3899,12 @@ export function FormsViewWorkspacePage() {
     () => selectedField && selectedField.kind === "db_lookup" ? getLookupSourceSummary(selectedField, t) : null,
     [selectedField, t],
   );
+  const availableLookupSourceModels = useMemo(
+    () => models
+      .filter((entry) => entry.id !== currentModel.id)
+      .map((entry) => lookupSourceModelsById[entry.id] ?? buildLookupSourceModelFromPlaceholderModel(entry)),
+    [currentModel.id, lookupSourceModelsById, models],
+  );
   const selectedNodeScopeSubformId = selectedNode
     ? getFormBuilderNodeScopeId(document, selectedNode.id)
     : "root";
@@ -3845,9 +3927,9 @@ export function FormsViewWorkspacePage() {
   );
   const selectedGenericLookupSourceModel = useMemo(
     () => selectedField && selectedField.kind === "db_lookup"
-      ? getGenericLookupSourceModelById(selectedField.lookupConfig?.sourceModel)
+      ? getLookupSourceModelById(availableLookupSourceModels, selectedField.lookupConfig?.sourceModel)
       : null,
-    [selectedField],
+    [availableLookupSourceModels, selectedField],
   );
   const selectedLookupStoredValueSummary = useMemo(
     () => selectedField && selectedField.kind === "db_lookup"
@@ -3862,8 +3944,8 @@ export function FormsViewWorkspacePage() {
     [selectedField, selectedGenericLookupSourceModel, t],
   );
   const lookupSourcePickerModel = useMemo(
-    () => getGenericLookupSourceModelById(lookupSourcePicker?.modelId),
-    [lookupSourcePicker?.modelId],
+    () => getLookupSourceModelById(availableLookupSourceModels, lookupSourcePicker?.modelId),
+    [availableLookupSourceModels, lookupSourcePicker?.modelId],
   );
   const selectedFieldSupportsTextInputSettings = selectedField?.kind === "short_text";
   const selectedFieldSupportsTextPreset =
@@ -3939,17 +4021,16 @@ export function FormsViewWorkspacePage() {
   const canCreateFieldAtCurrentLevel = canPlaceFieldAtCurrentLevel;
   const fieldPlacementAccess = structureEditingAccess;
   const fieldItems = getFieldPaletteItems(document, fieldPlacementAccess, paletteQuery);
-  const canPlaceUnplacedFields = canPlaceFieldAtCurrentLevel
-    && (isDefaultView ? structureEditingAccess.canAddFieldItems : workspaceAccess.canEditSettings);
-  const unplacedFieldsHintKey = !canPlaceFieldAtCurrentLevel
-    ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
-    : (isDefaultView
-      ? (!structureEditingAccess.canAddFieldItems
+  const canPlaceUnplacedFields = isDefaultView
+    && canPlaceFieldAtCurrentLevel
+    && structureEditingAccess.canAddFieldItems;
+  const unplacedFieldsHintKey = !isDefaultView
+    ? "tenant.platformStudio.forms.builder.unplacedFieldsDefaultOnlyHint"
+    : !canPlaceFieldAtCurrentLevel
+      ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
+      : (!structureEditingAccess.canAddFieldItems
         ? (structureEditingAccess.structureLockReasonKey ?? structureEditingAccess.lockReasonKey)
-        : null)
-      : (!workspaceAccess.canEditSettings
-        ? (workspaceAccess.lockReasonKey ?? workspaceAccess.structureLockReasonKey)
-        : null));
+        : null);
   const pendingNavigationPathRef = useRef<string | null>(null);
   const pendingLeaveResolverRef = useRef<((value: boolean) => void) | null>(null);
   const selectionPanelTopRef = useRef<HTMLDivElement | null>(null);
@@ -4048,7 +4129,24 @@ export function FormsViewWorkspacePage() {
         const shouldMarkModelAsDirty =
           JSON.stringify(nextModelWithScopes.schemaScopes ?? [])
           !== JSON.stringify(nextModel.schemaScopes ?? []);
-        const reconciledDocument = reconcileFormBuilderDocumentWithModel(nextDocument, nextModelWithScopes, nextLayoutBlueprint);
+        const alignedStructureVersions = [
+          resolvedView.lastAlignedModelStructureVersion,
+          hydratedView.lastAlignedModelStructureVersion,
+          nextView.lastAlignedModelStructureVersion,
+        ].filter((value): value is number => typeof value === "number");
+        const lastKnownAlignedStructureVersion = alignedStructureVersions.length > 0
+          ? Math.min(...alignedStructureVersions)
+          : (nextModelWithScopes.modelStructureVersion ?? 1);
+        const shouldEnforceCanonicalFieldPlacements =
+          (nextModelWithScopes.modelStructureVersion ?? 1) > lastKnownAlignedStructureVersion;
+        const reconciledDocument = reconcileFormBuilderDocumentWithModel(
+          nextDocument,
+          nextModelWithScopes,
+          nextLayoutBlueprint,
+          {
+            enforceCanonicalFieldPlacements: shouldEnforceCanonicalFieldPlacements,
+          },
+        );
         const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextDocument);
 
         setHydratedDraftSignature(draftSignature);
@@ -4247,7 +4345,7 @@ export function FormsViewWorkspacePage() {
   function updateCurrentModel(
     updater: (currentModelDraft: FormsPlaceholderModel) => FormsPlaceholderModel,
   ) {
-    setModelDraft((currentValue) => updater(currentValue));
+    setModelDraft((currentValue) => cloneFormsPlaceholderModel(updater(currentValue)));
   }
 
   function updateFieldById(
@@ -4370,10 +4468,11 @@ export function FormsViewWorkspacePage() {
       return;
     }
 
-    const nextField = {
-      ...createFormBuilderFieldFromDefinition(definition, currentModel.fields),
-      schemaScopeKey: getScopeSchemaScopeKey(activeScope),
-    };
+    const nextField = createFormBuilderFieldFromDefinition(
+      definition,
+      currentModel.fields,
+      getScopeSchemaScopeKey(activeScope),
+    );
 
     updateCurrentModel((currentModelDraft) => ({
       ...currentModelDraft,
@@ -4489,28 +4588,106 @@ export function FormsViewWorkspacePage() {
     }));
   }
 
+  async function loadLookupSourceModel(modelId: string) {
+    const trimmedModelId = modelId.trim();
+    if (!trimmedModelId) {
+      return null;
+    }
+
+    const cachedModel = lookupSourceModelsById[trimmedModelId];
+    if (cachedModel) {
+      return cachedModel;
+    }
+
+    const sourceModel = await ensureModel(trimmedModelId);
+    if (!sourceModel) {
+      return null;
+    }
+
+    const fallbackSourceModel = buildLookupSourceModelFromPlaceholderModel(sourceModel);
+    const defaultView = sourceModel.screens.find((entry) => entry.isDefault) ?? sourceModel.screens[0] ?? null;
+    if (!defaultView) {
+      setLookupSourceModelsById((currentValue) => ({
+        ...currentValue,
+        [trimmedModelId]: currentValue[trimmedModelId] ?? fallbackSourceModel,
+      }));
+      return fallbackSourceModel;
+    }
+
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      setLookupSourceModelsById((currentValue) => ({
+        ...currentValue,
+        [trimmedModelId]: currentValue[trimmedModelId] ?? fallbackSourceModel,
+      }));
+      return fallbackSourceModel;
+    }
+
+    async function recoverUnauthorizedAccessToken() {
+      const recovered = await checkAuth();
+      if (!recovered) {
+        return null;
+      }
+
+      return getAccessToken();
+    }
+
+    try {
+      const response = await requestWithUnauthorizedRetry(
+        (bearerToken) => draftClient.loadDraft(bearerToken, sourceModel.id, defaultView.id),
+        {
+          accessToken,
+          onUnauthorized: recoverUnauthorizedAccessToken,
+        },
+      );
+      const nextSourceModel = buildLookupSourceModelFromDraft(sourceModel, response.draft.model);
+
+      setLookupSourceModelsById((currentValue) => ({
+        ...currentValue,
+        [trimmedModelId]: currentValue[trimmedModelId] ?? nextSourceModel,
+      }));
+
+      return nextSourceModel;
+    } catch (error) {
+      setLookupSourceModelsById((currentValue) => ({
+        ...currentValue,
+        [trimmedModelId]: currentValue[trimmedModelId] ?? fallbackSourceModel,
+      }));
+
+      if (isUnauthorizedApiError(error)) {
+        await signOut();
+      }
+
+      throw error;
+    }
+  }
+
   function openLookupSourcePicker() {
     if (!selectedField || selectedField.kind !== "db_lookup" || selectedFieldIsPresetLookup) {
       return;
     }
 
-    const selectedModel = getGenericLookupSourceModelById(selectedField.lookupConfig?.sourceModel) ?? genericLookupSourceMocks[0] ?? null;
-    if (!selectedModel) {
-      return;
-    }
+    const requestedModelId = selectedField.lookupConfig?.sourceModel?.trim();
+    const initialModelId = requestedModelId && availableLookupSourceModels.some((entry) => entry.id === requestedModelId)
+      ? requestedModelId
+      : availableLookupSourceModels[0]?.id ?? "";
 
+    setLookupSourcePickerError(null);
     setLookupSourcePicker({
       fieldId: selectedField.id,
-      modelId: selectedModel.id,
+      modelId: initialModelId,
       selectedFieldKeys: selectedField.displayFields?.length
         ? [...selectedField.displayFields]
-        : [...selectedModel.defaultDisplayFields],
-      sortFieldKey: selectedField.lookupConfig?.sortField || selectedModel.defaultSortField,
+        : [],
+      sortFieldKey: selectedField.lookupConfig?.sortField ?? "",
     });
   }
 
   function saveLookupSourcePicker() {
     if (!selectedField || selectedField.kind !== "db_lookup" || !lookupSourcePickerModel || !lookupSourcePicker) {
+      return;
+    }
+    if (lookupSourcePickerModel.id === currentModel.id) {
       return;
     }
 
@@ -4555,6 +4732,96 @@ export function FormsViewWorkspacePage() {
 
     setLookupSourcePicker(null);
   }
+
+  useEffect(() => {
+    const sourceModelId =
+      selectedField?.kind === "db_lookup" && !selectedFieldIsPresetLookup
+        ? selectedField.lookupConfig?.sourceModel?.trim()
+        : "";
+    if (!sourceModelId || lookupSourceModelsById[sourceModelId]) {
+      return;
+    }
+
+    void loadLookupSourceModel(sourceModelId).catch(() => {});
+  }, [
+    lookupSourceModelsById,
+    selectedField?.id,
+    selectedField?.kind,
+    selectedField?.lookupConfig?.sourceModel,
+    selectedFieldIsPresetLookup,
+  ]);
+
+  useEffect(() => {
+    const targetModelId = lookupSourcePicker?.modelId?.trim();
+    if (!targetModelId) {
+      setIsLookupSourcePickerLoading(false);
+      setLookupSourcePickerError(null);
+      return;
+    }
+
+    if (lookupSourceModelsById[targetModelId]) {
+      setIsLookupSourcePickerLoading(false);
+      setLookupSourcePickerError(null);
+      return;
+    }
+
+    let isActive = true;
+    setIsLookupSourcePickerLoading(true);
+    setLookupSourcePickerError(null);
+
+    void loadLookupSourceModel(targetModelId)
+      .then(() => {
+        if (!isActive) {
+          return;
+        }
+
+        setIsLookupSourcePickerLoading(false);
+      })
+      .catch((error) => {
+        if (!isActive) {
+          return;
+        }
+
+        setLookupSourcePickerError(
+          error instanceof Error
+            ? error.message
+            : t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerLoadError"),
+        );
+        setIsLookupSourcePickerLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [
+    lookupSourceModelsById,
+    lookupSourcePicker?.modelId,
+    t,
+  ]);
+
+  useEffect(() => {
+    if (!lookupSourcePicker || !lookupSourcePickerModel) {
+      return;
+    }
+
+    if (lookupSourcePicker.selectedFieldKeys.length > 0 && lookupSourcePicker.sortFieldKey.trim()) {
+      return;
+    }
+
+    setLookupSourcePicker((currentValue) => {
+      if (!currentValue || currentValue.modelId !== lookupSourcePickerModel.id) {
+        return currentValue;
+      }
+
+      return {
+        ...currentValue,
+        selectedFieldKeys: currentValue.selectedFieldKeys.length > 0
+          ? currentValue.selectedFieldKeys
+          : [...lookupSourcePickerModel.defaultDisplayFields],
+        sortFieldKey: currentValue.sortFieldKey.trim() || lookupSourcePickerModel.defaultSortField,
+      };
+    });
+  }, [lookupSourcePicker, lookupSourcePickerModel]);
 
   function updateSystemFieldBinding(
     role: SystemFieldRole,
@@ -5822,7 +6089,15 @@ export function FormsViewWorkspacePage() {
                                               ...field,
                                               displayName: nextModelLabel,
                                               label: nextModelLabel,
-                                              storageKey: createFormsPlaceholderStorageKey(nextModelLabel, field.id),
+                                              storageKey: createUniqueFormsPlaceholderStorageKey(
+                                                nextModelLabel,
+                                                field.id,
+                                                currentModel.fields,
+                                                {
+                                                  excludeFieldId: field.id,
+                                                  schemaScopeKey: field.schemaScopeKey,
+                                                },
+                                              ),
                                             };
                                           });
                                         }
@@ -7576,6 +7851,8 @@ export function FormsViewWorkspacePage() {
         onOpenChange={(open) => {
           if (!open) {
             setLookupSourcePicker(null);
+            setLookupSourcePickerError(null);
+            setIsLookupSourcePickerLoading(false);
           }
         }}
         open={Boolean(lookupSourcePicker)}
@@ -7600,44 +7877,55 @@ export function FormsViewWorkspacePage() {
                     <p className="tenant-web__platform-studio-filter-group-title">
                       {t("tenant.platformStudio.forms.builder.fieldSettings.availableModels")}
                     </p>
-                    <div className="tenant-web__platform-studio-lookup-picker-list">
-                      {genericLookupSourceMocks.map((modelOption) => {
-                        const checked = lookupSourcePicker.modelId === modelOption.id;
+                    {availableLookupSourceModels.length > 0 ? (
+                      <div className="tenant-web__platform-studio-lookup-picker-list">
+                        {availableLookupSourceModels.map((modelOption) => {
+                          const checked = lookupSourcePicker.modelId === modelOption.id;
+                          const loadedModelOption = lookupSourceModelsById[modelOption.id];
 
-                        return (
-                          <label
-                            className={`tenant-web__platform-studio-lookup-picker-option${checked ? " tenant-web__platform-studio-lookup-picker-option--selected" : ""}`}
-                            key={modelOption.id}
-                          >
-                            <input
-                              checked={checked}
-                              disabled={!workspaceAccess.canEditSettings}
-                              name="tenant-platform-studio-lookup-source-model"
-                              onChange={() => setLookupSourcePicker((currentValue) =>
-                                currentValue
-                                  ? {
-                                      ...currentValue,
-                                      modelId: modelOption.id,
-                                      selectedFieldKeys: [...modelOption.defaultDisplayFields],
-                                      sortFieldKey: modelOption.defaultSortField,
-                                    }
-                                  : currentValue
-                              )}
-                              type="radio"
-                              value={modelOption.id}
-                            />
-                            <div className="tenant-web__platform-studio-compact-row-main">
-                              <span className="tenant-web__platform-studio-compact-row-label">
-                                {modelOption.label}
-                              </span>
-                              <span className="tenant-web__platform-studio-compact-row-summary">
-                                {`${modelOption.fields.length} ${t("tenant.platformStudio.forms.builder.fieldSettings.availableFieldsCount")}`}
-                              </span>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
+                          return (
+                            <label
+                              className={`tenant-web__platform-studio-lookup-picker-option${checked ? " tenant-web__platform-studio-lookup-picker-option--selected" : ""}`}
+                              key={modelOption.id}
+                            >
+                              <input
+                                checked={checked}
+                                disabled={!workspaceAccess.canEditSettings}
+                                name="tenant-platform-studio-lookup-source-model"
+                                onChange={() => setLookupSourcePicker((currentValue) =>
+                                  currentValue
+                                    ? {
+                                        ...currentValue,
+                                        modelId: modelOption.id,
+                                        selectedFieldKeys: loadedModelOption
+                                          ? [...loadedModelOption.defaultDisplayFields]
+                                          : [],
+                                        sortFieldKey: loadedModelOption?.defaultSortField ?? "",
+                                      }
+                                    : currentValue
+                                )}
+                                type="radio"
+                                value={modelOption.id}
+                              />
+                              <div className="tenant-web__platform-studio-compact-row-main">
+                                <span className="tenant-web__platform-studio-compact-row-label">
+                                  {modelOption.label}
+                                </span>
+                                {loadedModelOption ? (
+                                  <span className="tenant-web__platform-studio-compact-row-summary">
+                                    {`${loadedModelOption.fields.length} ${t("tenant.platformStudio.forms.builder.fieldSettings.availableFieldsCount")}`}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="tenant-web__platform-studio-inline-help">
+                        {t("tenant.platformStudio.forms.builder.fieldSettings.noAvailableModels")}
+                      </p>
+                    )}
                   </div>
 
                   <div className="tenant-web__platform-studio-lookup-picker-column">
@@ -7645,7 +7933,15 @@ export function FormsViewWorkspacePage() {
                       {t("tenant.platformStudio.forms.builder.fieldSettings.availableFields")}
                     </p>
 
-                    {lookupSourcePickerModel ? (
+                    {isLookupSourcePickerLoading ? (
+                      <p className="tenant-web__platform-studio-inline-help">
+                        {t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerLoading")}
+                      </p>
+                    ) : lookupSourcePickerError ? (
+                      <p className="tenant-web__platform-studio-inline-help">
+                        {lookupSourcePickerError}
+                      </p>
+                    ) : lookupSourcePickerModel ? (
                       <div className="tenant-web__platform-studio-lookup-picker-list">
                         {lookupSourcePickerModel.fields.map((fieldOption) => {
                           const checked = lookupSourcePicker.selectedFieldKeys.includes(fieldOption.key);

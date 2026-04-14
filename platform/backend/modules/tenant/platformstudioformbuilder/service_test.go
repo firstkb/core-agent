@@ -161,6 +161,15 @@ func (r *memoryRepository) DeleteView(_ context.Context, _ requestctx.TenantInfo
 	return nil
 }
 
+func (r *memoryRepository) DeleteModel(_ context.Context, _ requestctx.TenantInfo, modelID string) error {
+	if _, ok := r.models[modelID]; !ok {
+		return ErrModelNotFound
+	}
+	delete(r.models, modelID)
+	delete(r.views, modelID)
+	return nil
+}
+
 func cloneModelRecord(record *ModelRecord) ModelRecord {
 	if record == nil {
 		return ModelRecord{}
@@ -971,6 +980,92 @@ func TestSaveDraftAcceptsExplicitScopeRootPlacements(t *testing.T) {
 	}
 }
 
+func TestSaveDraftNormalizesDuplicateFieldStorageKeysPerScope(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Site Name Copy",
+		"id":            "site-name-copy",
+		"key":           "site-name-copy",
+		"label":         "Site Name Copy",
+		"schemaScopeId": "root",
+		"storageKey":    "site_name",
+	})
+	subformScopes := asSlice(dataSchema["subformScopes"])
+	if len(subformScopes) == 0 {
+		t.Fatalf("expected canonical subform scope in data schema")
+	}
+	infoScope := asMap(subformScopes[0])
+	infoFields := asSlice(infoScope["fields"])
+	if len(infoFields) == 0 {
+		t.Fatalf("expected canonical subform field in data schema")
+	}
+	infoField := asMap(infoFields[0])
+	infoField["storageKey"] = "site_name"
+	modelPayload["dataSchema"] = dataSchema
+
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "site-name-copy",
+		"order":        1,
+	})
+	modelPayload["layoutBlueprint"] = layoutBlueprint
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "site-name-copy",
+		"id":         "field-site-name-copy",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "Site Name Copy",
+		"type":       "field",
+		"visibility": "visible",
+	})
+	viewPayload["uiSchema"] = uiSchema
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	savedModel := mustDecodeJSONMap(t, out.Draft.Model)
+	savedDataSchema := asMap(savedModel["dataSchema"])
+	savedRootFields := asSlice(asMap(savedDataSchema["rootScope"])["fields"])
+	if storageKey := normalizeString(findDataSchemaFieldByID(savedRootFields, "site-name")["storageKey"]); storageKey != "site_name" {
+		t.Fatalf("root site-name storage key = %q, want %q", storageKey, "site_name")
+	}
+	if storageKey := normalizeString(findDataSchemaFieldByID(savedRootFields, "site-name-copy")["storageKey"]); storageKey != "site_name_2" {
+		t.Fatalf("root site-name-copy storage key = %q, want %q", storageKey, "site_name_2")
+	}
+
+	savedSubformScopes := asSlice(savedDataSchema["subformScopes"])
+	if len(savedSubformScopes) == 0 {
+		t.Fatalf("expected saved subform scopes")
+	}
+	savedInfoFields := asSlice(asMap(savedSubformScopes[0])["fields"])
+	if storageKey := normalizeString(findDataSchemaFieldByID(savedInfoFields, "info-date")["storageKey"]); storageKey != "site_name" {
+		t.Fatalf("subform info-date storage key = %q, want %q", storageKey, "site_name")
+	}
+}
+
 func TestSaveDraftOnlyBumpsViewVersionWhenViewChanges(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{
@@ -1399,6 +1494,65 @@ func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	}
 }
 
+func TestDeleteModelRemovesModelAndViews(t *testing.T) {
+	repo := newMemoryRepository()
+	model := &ModelRecord{
+		ModelID:          "site-audit",
+		ModelKey:         "site-audit",
+		DisplayName:      "Site Audit",
+		Version:          2,
+		StructureVersion: 2,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":                    "site-audit",
+			"key":                   "site-audit",
+			"title":                 "Site Audit",
+			"displayName":           "Site Audit",
+			"modelStructureVersion": 2,
+			"version":               2,
+		}),
+	}
+	view := &ViewRecord{
+		ModelID:                          "site-audit",
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      "Site Audit",
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        true,
+		Version:                          2,
+		LastAlignedModelStructureVersion: 2,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":                               "view-default",
+			"isActive":                         true,
+			"isDefault":                        true,
+			"kind":                             "form",
+			"lastAlignedModelStructureVersion": 2,
+			"modelId":                          "site-audit",
+			"title":                            "Site Audit",
+			"viewVersion":                      2,
+		}),
+	}
+	repo.models[model.ModelID] = model
+	repo.views[model.ModelID] = map[string]*ViewRecord{
+		view.ViewID: view,
+	}
+	svc := NewService(repo)
+
+	out, err := svc.DeleteModel(testContext(), "site-audit")
+	if err != nil {
+		t.Fatalf("DeleteModel returned error: %v", err)
+	}
+	if out.DeletedModelID != "site-audit" {
+		t.Fatalf("deleted model id = %q, want site-audit", out.DeletedModelID)
+	}
+	if _, ok := repo.models["site-audit"]; ok {
+		t.Fatalf("model was not removed from repository")
+	}
+	if _, ok := repo.views["site-audit"]; ok {
+		t.Fatalf("views were not removed with deleted model")
+	}
+}
+
 func int64Ptr(v int64) *int64 {
 	return &v
 }
@@ -1561,6 +1715,16 @@ func findFieldNodeByID(nodes []any, fieldID string) map[string]any {
 		node := asMap(rawNode)
 		if normalizeString(node["type"]) == "field" && normalizeString(node["fieldId"]) == fieldID {
 			return node
+		}
+	}
+	return nil
+}
+
+func findDataSchemaFieldByID(fields []any, fieldID string) map[string]any {
+	for _, rawField := range fields {
+		field := asMap(rawField)
+		if normalizeString(field["id"]) == fieldID || normalizeString(field["fieldId"]) == fieldID {
+			return field
 		}
 	}
 	return nil

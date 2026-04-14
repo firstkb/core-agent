@@ -173,6 +173,56 @@ export function createFormsPlaceholderStorageKey(
   return normalizedFallbackId || "field";
 }
 
+function getFormsPlaceholderFieldStorageScopeKey(
+  field: Pick<FormsPlaceholderField, "schemaScopeKey">,
+) {
+  return normalizeOptionalString(field.schemaScopeKey, undefined) ?? "root";
+}
+
+function createUniqueStorageKeyCandidate(baseKey: string, usedKeys: ReadonlySet<string>) {
+  if (!usedKeys.has(baseKey)) {
+    return baseKey;
+  }
+
+  let suffix = 2;
+  let nextKey = `${baseKey}_${suffix}`;
+  while (usedKeys.has(nextKey)) {
+    suffix += 1;
+    nextKey = `${baseKey}_${suffix}`;
+  }
+
+  return nextKey;
+}
+
+export function createUniqueFormsPlaceholderStorageKey(
+  label: string | undefined,
+  fallbackId: string | undefined,
+  fields: ReadonlyArray<Pick<FormsPlaceholderField, "id" | "schemaScopeKey" | "storageKey">>,
+  options?: {
+    excludeFieldId?: string;
+    schemaScopeKey?: string;
+  },
+) {
+  const scopeKey = normalizeOptionalString(options?.schemaScopeKey, undefined) ?? "root";
+  const usedKeys = new Set(
+    fields.flatMap((field) => {
+      if (getFormsPlaceholderFieldStorageScopeKey(field) !== scopeKey) {
+        return [];
+      }
+      if (options?.excludeFieldId && field.id === options.excludeFieldId) {
+        return [];
+      }
+
+      return [createFormsPlaceholderStorageKey(field.storageKey, field.id)];
+    }),
+  );
+
+  return createUniqueStorageKeyCandidate(
+    createFormsPlaceholderStorageKey(label, fallbackId),
+    usedKeys,
+  );
+}
+
 function humanizeSchemaScopeKey(value: string) {
   return value
     .replace(/^pb_/, "")
@@ -183,6 +233,36 @@ function humanizeSchemaScopeKey(value: string) {
 
 export function getFormsPlaceholderFieldDisplayName(field: FormsPlaceholderField) {
   return field.displayName?.trim() || field.label;
+}
+
+function dedupeFormsPlaceholderFieldStorageKeys(
+  fields: ReadonlyArray<FormsPlaceholderField>,
+) {
+  const usedKeysByScope = new Map<string, Set<string>>();
+
+  return fields.map((field) => {
+    const scopeKey = getFormsPlaceholderFieldStorageScopeKey(field);
+    const usedKeys = usedKeysByScope.get(scopeKey) ?? new Set<string>();
+    const nextStorageKey = createUniqueStorageKeyCandidate(
+      createFormsPlaceholderStorageKey(
+        field.storageKey ?? getFormsPlaceholderFieldDisplayName(field),
+        field.id,
+      ),
+      usedKeys,
+    );
+
+    usedKeys.add(nextStorageKey);
+    usedKeysByScope.set(scopeKey, usedKeys);
+
+    if (field.storageKey === nextStorageKey) {
+      return field;
+    }
+
+    return {
+      ...field,
+      storageKey: nextStorageKey,
+    };
+  });
 }
 
 function cloneFormsPlaceholderSchemaScope(scope: FormsPlaceholderSchemaScope): FormsPlaceholderSchemaScope {
@@ -467,7 +547,7 @@ export function cloneFormsPlaceholderModel(model: FormsPlaceholderObject): Forms
 
   return {
     ...baseModel,
-    fields: model.fields.map(cloneFormsPlaceholderField),
+    fields: dedupeFormsPlaceholderFieldStorageKeys(model.fields.map(cloneFormsPlaceholderField)),
     schemaScopes: normalizeSchemaScopes(model.schemaScopes, model.schemaScopes),
     screens: model.screens.map((screen) => cloneFormsPlaceholderView(screen, baseModel)),
   };
@@ -854,7 +934,7 @@ function normalizeStoredObjects(value: unknown) {
             ? candidate.displayName
             : (fallback.displayName?.trim() || fallback.title),
         fields: Array.isArray(rawFields)
-          ? rawFields.map((field, fieldIndex) => {
+          ? dedupeFormsPlaceholderFieldStorageKeys(rawFields.map((field, fieldIndex) => {
               const nextField =
                 typeof field === "object" && field
                   ? field as Partial<FormsPlaceholderField>
@@ -939,7 +1019,7 @@ function normalizeStoredObjects(value: unknown) {
                 tagMode: isTagMode(nextField.tagMode) ? nextField.tagMode : fallbackField.tagMode,
                 validation: isFieldValidation(nextField.validation) ? nextField.validation : fallbackField.validation,
               };
-            })
+            }))
           : fallback.fields,
         modelStructureVersion: normalizedModelStructureVersion,
         owner: typeof candidate.owner === "string" && candidate.owner.trim() ? candidate.owner : fallback.owner,

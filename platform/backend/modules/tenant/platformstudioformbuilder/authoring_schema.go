@@ -997,9 +997,30 @@ func normalizeLegacyFlatFields(entries []any) []map[string]any {
 	return out
 }
 
+func uniqueFieldStorageKey(base string, used map[string]struct{}) string {
+	base = toStorageKey(base)
+	if base == "" {
+		base = "field"
+	}
+	if _, ok := used[base]; !ok {
+		used[base] = struct{}{}
+		return base
+	}
+
+	for suffix := 2; ; suffix++ {
+		candidate := fmt.Sprintf("%s_%d", base, suffix)
+		if _, ok := used[candidate]; ok {
+			continue
+		}
+		used[candidate] = struct{}{}
+		return candidate
+	}
+}
+
 func normalizeDataSchemaFields(entries []any, scopeID string) []any {
 	out := make([]any, 0)
 	seen := make(map[string]struct{})
+	seenStorageKeys := make(map[string]struct{})
 	for _, raw := range entries {
 		field := asMap(raw)
 		fieldID := normalizeString(field["id"])
@@ -1019,7 +1040,19 @@ func normalizeDataSchemaFields(entries []any, scopeID string) []any {
 		normalized["label"] = chooseString(normalizeString(normalized["label"]), normalized["displayName"].(string))
 		normalized["schemaScopeId"] = scopeID
 		normalized["status"] = normalizeString(normalized["status"])
-		normalized["storageKey"] = normalizeString(normalized["storageKey"])
+		normalized["storageKey"] = uniqueFieldStorageKey(
+			chooseString(
+				normalizeString(normalized["storageKey"]),
+				chooseString(
+					normalizeString(normalized["label"]),
+					chooseString(
+						normalized["displayName"].(string),
+						fieldID,
+					),
+				),
+			),
+			seenStorageKeys,
+		)
 		delete(normalized, "schemaScopeKey")
 		out = append(out, normalized)
 	}

@@ -285,6 +285,7 @@ type TenantFormBuilderAuthoringClient = {
     modelId: string,
     input: FormBuilderCreateViewInput,
   ) => Promise<FormBuilderModelDetail>;
+  deleteModel: (accessToken: string, modelId: string) => Promise<{ deletedModelId: string }>;
   deleteView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderModelDetail>;
   getModel: (accessToken: string, modelId: string) => Promise<FormBuilderModelDetail>;
   getView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderViewDetail>;
@@ -1077,6 +1078,21 @@ function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuil
       );
 
       return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async deleteModel(accessToken: string, modelId: string) {
+      const envelope = await requestEnvelope<{ deletedModelId?: string }>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}`,
+        {
+          accessToken,
+          method: "DELETE",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return {
+        deletedModelId: typeof envelope.data?.deletedModelId === "string" ? envelope.data.deletedModelId : modelId,
+      };
     },
     async deleteView(accessToken: string, modelId: string, viewId: string) {
       const envelope = await requestEnvelope<unknown>(

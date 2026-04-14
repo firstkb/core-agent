@@ -176,6 +176,32 @@ func (s *Service) CreateModel(ctx context.Context, req CreateModelRequest) (*Mod
 	return buildModelDetailResponse(persistedModel, views, persistedView.ViewID), nil
 }
 
+func (s *Service) DeleteModel(ctx context.Context, modelID string) (*DeleteModelResponse, error) {
+	tenant, _, err := s.requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	modelID = strings.TrimSpace(modelID)
+	if modelID == "" {
+		return nil, ErrInvalidDraft
+	}
+
+	model, err := s.repo.GetModel(ctx, tenant, modelID)
+	if err != nil {
+		return nil, err
+	}
+	if model == nil {
+		return nil, ErrModelNotFound
+	}
+
+	if err := s.repo.DeleteModel(ctx, tenant, model.ModelID); err != nil {
+		return nil, err
+	}
+
+	return &DeleteModelResponse{DeletedModelID: model.ModelID}, nil
+}
+
 func (s *Service) ListViews(ctx context.Context, modelID string) (*ListViewsResponse, error) {
 	tenant, _, err := s.requireAuthoringContext(ctx)
 	if err != nil {

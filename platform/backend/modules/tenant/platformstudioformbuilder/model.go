@@ -93,6 +93,10 @@ type CopyViewRequest struct {
 
 type DeleteViewResponse = ModelDetailResponse
 
+type DeleteModelResponse struct {
+	DeletedModelID string `json:"deletedModelId"`
+}
+
 type ModelSummary struct {
 	ID                    string `json:"id"`
 	GUID                  string `json:"guid,omitempty"`

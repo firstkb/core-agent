@@ -14,7 +14,7 @@ import type {
   FormsPlaceholderField,
   FormsPlaceholderFieldFamily,
 } from "./forms-placeholder-data";
-import { createFormsPlaceholderStorageKey } from "./forms-placeholder-data";
+import { createUniqueFormsPlaceholderStorageKey } from "./forms-placeholder-data";
 
 type FieldLike = {
   family?: string;
@@ -661,6 +661,7 @@ function createUniqueFieldId(baseId: string, fields: ReadonlyArray<Pick<FormsPla
 export function createFormBuilderFieldFromDefinition(
   definition: FormBuilderLibraryFieldDefinition,
   fields: ReadonlyArray<FormsPlaceholderField>,
+  schemaScopeKey?: string,
 ): FormsPlaceholderField {
   const displayName = definition.template.displayName?.trim() || definition.template.label;
   const id = createUniqueFieldId(definition.idBase, fields);
@@ -672,8 +673,16 @@ export function createFormBuilderFieldFromDefinition(
     id,
     isPersisted: false,
     options: definition.template.options ? [...definition.template.options] : undefined,
+    schemaScopeKey,
     status: "draft",
-    storageKey: createFormsPlaceholderStorageKey(definition.template.storageKey ?? displayName, id),
+    storageKey: createUniqueFormsPlaceholderStorageKey(
+      definition.template.storageKey ?? displayName,
+      id,
+      fields,
+      {
+        schemaScopeKey,
+      },
+    ),
     sourceFilters: definition.template.sourceFilters ? [...definition.template.sourceFilters] : undefined,
   };
 }

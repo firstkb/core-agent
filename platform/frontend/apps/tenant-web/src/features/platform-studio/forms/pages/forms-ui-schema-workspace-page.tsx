@@ -3037,6 +3037,70 @@ function compileDebugSchemas(
   };
 }
 
+function getAllFormBuilderDocumentNodes(document: ReturnType<typeof createPersistedFormBuilderDocument>) {
+  return [
+    ...document.rootScope.uiSchema.nodes,
+    ...document.subformScopes.flatMap((scope) => scope.uiSchema.nodes),
+  ];
+}
+
+function getCanvasAttentionNodeIds(
+  currentDocument: ReturnType<typeof createPersistedFormBuilderDocument>,
+  savedDocument: ReturnType<typeof createPersistedFormBuilderDocument>,
+  currentModel: FormsPlaceholderModel,
+  savedModel: FormsPlaceholderModel,
+) {
+  const currentNodes = getAllFormBuilderDocumentNodes(currentDocument);
+  const savedNodes = getAllFormBuilderDocumentNodes(savedDocument);
+  const currentNodeById = new Map(currentNodes.map((node) => [node.id, node]));
+  const savedNodeById = new Map(savedNodes.map((node) => [node.id, node]));
+  const directlyChangedNodeIds = new Set<string>();
+
+  new Set([...currentNodeById.keys(), ...savedNodeById.keys()]).forEach((nodeId) => {
+    const currentNode = currentNodeById.get(nodeId);
+    const previousNode = savedNodeById.get(nodeId);
+    if (!currentNode || !previousNode || JSON.stringify(currentNode) !== JSON.stringify(previousNode)) {
+      directlyChangedNodeIds.add(nodeId);
+    }
+  });
+
+  const currentFieldById = new Map(currentModel.fields.map((field) => [field.id, field]));
+  const savedFieldById = new Map(savedModel.fields.map((field) => [field.id, field]));
+  new Set([...currentFieldById.keys(), ...savedFieldById.keys()]).forEach((fieldId) => {
+    const currentField = currentFieldById.get(fieldId);
+    const previousField = savedFieldById.get(fieldId);
+    if (!currentField || !previousField || JSON.stringify(currentField) !== JSON.stringify(previousField)) {
+      currentNodes.forEach((node) => {
+        if (node.type === "field" && node.fieldId === fieldId) {
+          directlyChangedNodeIds.add(node.id);
+        }
+      });
+    }
+  });
+
+  const attentionNodeIds = new Set<string>();
+  const appendAncestorChain = (
+    nodeMap: ReadonlyMap<string, FormBuilderNode>,
+    startNodeId: string,
+  ) => {
+    let cursor: string | null = startNodeId;
+    while (cursor) {
+      if (currentNodeById.has(cursor)) {
+        attentionNodeIds.add(cursor);
+      }
+
+      cursor = nodeMap.get(cursor)?.parentId ?? null;
+    }
+  };
+
+  directlyChangedNodeIds.forEach((nodeId) => {
+    appendAncestorChain(currentNodeById, nodeId);
+    appendAncestorChain(savedNodeById, nodeId);
+  });
+
+  return attentionNodeIds;
+}
+
 function BackArrowIcon() {
   return (
     <svg
@@ -3141,6 +3205,7 @@ function CanvasNodeRow({
   document,
   dragOverNodeId,
   draggedNodeId,
+  hasAttention,
   object,
   onDragEnd,
   onDragOverNode,
@@ -3160,6 +3225,7 @@ function CanvasNodeRow({
   document: Parameters<typeof getFormBuilderNodeSummary>[1];
   dragOverNodeId: string | null;
   draggedNodeId: string | null;
+  hasAttention: boolean;
   node: FormBuilderNode;
   object: NonNullable<ReturnType<typeof getFormsPlaceholderModel>>;
   onDragEnd: () => void;
@@ -3201,7 +3267,7 @@ function CanvasNodeRow({
 
   return (
     <div
-      className={`tenant-web__platform-studio-canvas-item${isSelected ? " tenant-web__platform-studio-canvas-item--selected" : ""}${isDragging ? " tenant-web__platform-studio-canvas-item--dragging" : ""}${isDropTarget ? " tenant-web__platform-studio-canvas-item--drop-target" : ""}`}
+      className={`tenant-web__platform-studio-canvas-item${isSelected ? " tenant-web__platform-studio-canvas-item--selected" : ""}${isDragging ? " tenant-web__platform-studio-canvas-item--dragging" : ""}${isDropTarget ? " tenant-web__platform-studio-canvas-item--drop-target" : ""}${hasAttention ? " tenant-web__platform-studio-canvas-item--attention" : ""}`}
       draggable={canMoveItems}
       role="button"
       onDragEnd={onDragEnd}
@@ -3649,6 +3715,7 @@ export function FormsViewWorkspacePage() {
     document,
     hydrateDocument,
     isDirty: hasUnsavedDocumentChanges,
+    savedDocument,
     setDocument,
   } = useFormBuilderDocument(currentModel, currentView);
   const hydrateDocumentRef = useRef(hydrateDocument);
@@ -3676,6 +3743,14 @@ export function FormsViewWorkspacePage() {
   const currentScopeParentId = getCurrentFormBuilderParentId(document);
   const currentScopeSelectedNodeId = getCurrentFormBuilderSelectedNodeId(document);
   const currentNodes = getCurrentFormBuilderChildren(document);
+  const persistedDocument = useMemo(
+    () => createPersistedFormBuilderDocument(document),
+    [document],
+  );
+  const attentionNodeIds = useMemo(
+    () => getCanvasAttentionNodeIds(persistedDocument, savedDocument, currentModel, savedModelDraft),
+    [currentModel, persistedDocument, savedDocument, savedModelDraft],
+  );
   const selectedNode = getFormBuilderNode(document, currentScopeSelectedNodeId);
   const selectedField =
     selectedNode?.type === "field"
@@ -5559,6 +5634,7 @@ export function FormsViewWorkspacePage() {
                         document={document}
                         dragOverNodeId={dragOverNodeId}
                         draggedNodeId={draggedNodeId}
+                        hasAttention={attentionNodeIds.has(node.id)}
                         key={node.id}
                         node={node}
                         object={currentModel}

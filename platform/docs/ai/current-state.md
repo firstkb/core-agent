@@ -119,6 +119,7 @@ Confidence classes:
 - Cross-app Collection Table adoption is still a direction, but the frontend package extraction itself is now in place for admin-app consumers.
 - Collection Table still has deferred shared-capability work for FE/BE `XLS export`, `view`, and `pdf` support.
 - Navigation Builder and Action Builder remain planned Platform Studio tools; implementation has not started yet.
+- Form Builder still needs a follow-up access-policy hardening slice for `level: 100 root` lock behavior: only `root` should be able to toggle model/view locks; once `lock model` is enabled, non-root users should stay limited to creating/managing views while `root` retains builder access and default-view control; once `lock view` is enabled for a view, non-root users should not be able to enter that Form Builder workspace, while `root` must retain access and control.
 
 ## Active workstreams
 

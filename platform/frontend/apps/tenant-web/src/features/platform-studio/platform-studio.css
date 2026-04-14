@@ -1217,6 +1217,15 @@
   opacity: 0.72;
 }
 
+.tenant-web__platform-studio-canvas-item--attention {
+  border-color: #eab308;
+  box-shadow: 0 0 0 1px color-mix(in srgb, #eab308 22%, transparent);
+}
+
+.tenant-web__platform-studio-canvas-item--attention:hover {
+  border-color: #ca8a04;
+}
+
 .tenant-web__platform-studio-canvas-item--drop-target {
   border-color: color-mix(in srgb, var(--color-accent-primary) 58%, var(--color-border-default));
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-primary-soft) 72%, transparent);
@@ -1225,6 +1234,10 @@
 .tenant-web__platform-studio-canvas-item--selected {
   border-color: color-mix(in srgb, var(--color-accent-primary) 58%, var(--color-border-default));
   background: color-mix(in srgb, var(--color-accent-primary-soft) 52%, var(--color-bg-surface-elevated));
+}
+
+.tenant-web__platform-studio-canvas-item--attention.tenant-web__platform-studio-canvas-item--selected {
+  border-color: #eab308;
 }
 
 .tenant-web__platform-studio-canvas-item-main,

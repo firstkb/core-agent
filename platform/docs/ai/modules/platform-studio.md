@@ -101,17 +101,19 @@ Current implemented backend-ready slice:
 - opening the first view for a brand-new model with no fields must not auto-insert authored layout nodes
 - backend authoring persistence is now canonicalized around model-owned `dataSchema + layoutBlueprint` in `ps_model.definition_json` and view-owned `uiSchema` in `ps_view.definition_json`
 - canonical `/authoring` load/save now uses the explicit three-schema split while keeping lazy compatibility mirrors for older drafts during the rollout
-- `Create View` now seeds a fresh `uiSchema` from the current `dataSchema + layoutBlueprint`, including blueprint containers and subform anchors, instead of creating an empty shell or a root-only field drop
+- `Create View` now clones the aligned default-view `uiSchema` baseline, including canonical view-only nodes such as `Doc.id`; if the default view is stale against the current `modelStructureVersion`, backend falls back to a fresh `uiSchema` from the current `dataSchema + layoutBlueprint`
 - `Copy View` now clones the source `uiSchema` exactly while aligning the copied view to the current `modelStructureVersion`
 - opening any view must reconcile missing model fields and blueprint containers against backend-issued canonical `containerKey` values, route unresolved fields into explicit per-scope `Unplaced fields`, and keep `Save` active until that reconciliation is persisted
 - authored scope-root fields are now a first-class three-schema case through the reserved `layoutBlueprint.fieldPlacements[].containerKey = "__scope_root__"` key; unresolved fields still go to `Unplaced fields` instead of silently falling back to root
 - authoring draft model JSON now carries a lightweight per-field `schemaScopeKey` hint so root-vs-subform field intent can survive save/reload before the broader model-scope contract lands
 - authoring draft model JSON now also carries model-level `schemaScopes`, and new views use that registry to materialize missing subform anchors instead of treating subform topology as view-local only
+- toggling model structure lock is an administrative authoring change only; it must not advance `modelStructureVersion` or manufacture view-drift warnings when schema/layout are unchanged
 - `tenant-web` now consumes the backend authoring endpoints through a route-scoped authoring provider instead of relying on placeholder-only model/view list mutations
 - `tenant-web` no longer injects bundled mock model/view records when the backend-backed authoring cache is empty
 - `tenant-web` private shell now mounts the shared `ui-kit` `TopLoader` and drives it from `@platform/api-client` inflight request activity, so Form Builder transport requests show viewport-level progress while local content states remain explicit
 - `tenant-web` workspace now hydrates and saves the explicit three-schema payload, shows a three-pane debug modal for `Data Schema`, `Layout Blueprint`, and `UI Schema`, and treats backend-issued `containerKey` values as canonical during reconcile
-- the first stable three-schema rollout now makes the `default` view the only blueprint editor; non-default views remain `uiSchema`-only authoring surfaces
+- the first stable three-schema rollout now makes the `default` view the only blueprint editor; non-default views remain `uiSchema`-only authoring surfaces, but that still includes local UI composition and presentation changes such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields
+- deleting a non-default view removes only that view; deleting a default view promotes a remaining view to `default + active`; deleting the last remaining view is rejected
 - publish-time storage generation is still deferred
 
 ## Important docs to treat as reference-only

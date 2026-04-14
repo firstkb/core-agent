@@ -426,10 +426,21 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 		return nil, err
 	}
 	defaultView := findDefaultView(views)
-
-	modelPayload, err := normalizeModelPayloadForStorage(incomingModel, model, defaultView)
+	existingModelPayload, err := buildCanonicalModelPayload(model, views)
 	if err != nil {
 		return nil, err
+	}
+	existingViewPayload, err := buildCanonicalViewPayload(model, currentView, views, existingModelPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	modelPayload := existingModelPayload
+	if currentView.IsDefault {
+		modelPayload, err = normalizeModelPayloadForStorage(incomingModel, model, defaultView)
+		if err != nil {
+			return nil, err
+		}
 	}
 	viewPayload, err := normalizeViewPayloadForStorage(
 		incomingView,
@@ -441,25 +452,20 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	if err != nil {
 		return nil, err
 	}
-	existingModelPayload, err := buildCanonicalModelPayload(model, views)
-	if err != nil {
-		return nil, err
-	}
-	existingViewPayload, err := buildCanonicalViewPayload(model, currentView, views, existingModelPayload)
-	if err != nil {
-		return nil, err
-	}
 
-	modelChanged, err := payloadChanged(mustCanonicalJSON(existingModelPayload), modelPayload, []string{"version", "modelStructureVersion", "screens", "modelLocked", "isStructureLocked"})
-	if err != nil {
-		return nil, err
+	modelChanged := false
+	modelStructureChanged := false
+	if currentView.IsDefault {
+		modelChanged, err = payloadChanged(mustCanonicalJSON(existingModelPayload), modelPayload, []string{"version", "modelStructureVersion", "screens", "modelLocked", "isStructureLocked"})
+		if err != nil {
+			return nil, err
+		}
+		modelStructureChanged, err = structureChanged(mustCanonicalJSON(existingModelPayload), modelPayload)
+		if err != nil {
+			return nil, err
+		}
 	}
 	viewChanged, err := payloadChanged(mustCanonicalJSON(existingViewPayload), viewPayload, []string{"version", "viewVersion", "lastAlignedModelStructureVersion"})
-	if err != nil {
-		return nil, err
-	}
-
-	modelStructureChanged, err := structureChanged(mustCanonicalJSON(existingModelPayload), modelPayload)
 	if err != nil {
 		return nil, err
 	}
@@ -579,23 +585,37 @@ func (s *Service) createViewRecord(
 		return nil, err
 	}
 
-	viewPayload := map[string]any{
-		"description":                      strings.TrimSpace(req.Description),
-		"displayName":                      title,
-		"id":                               viewID,
-		"isActive":                         chooseBool(req.IsActive, true),
-		"isDefault":                        isDefault,
-		"isViewLocked":                     false,
-		"key":                              key,
-		"kind":                             normalizeViewKind(req.Kind),
-		"lastAlignedModelStructureVersion": model.StructureVersion,
-		"modelId":                          model.ModelID,
-		"name":                             title,
-		"title":                            title,
-		"uiSchema":                         buildFreshUISchema(asMap(modelPayload["dataSchema"]), asMap(modelPayload["layoutBlueprint"])),
-		"viewVersion":                      int64(1),
-		"version":                          int64(1),
+	viewPayload := map[string]any{}
+	if !isDefault {
+		if defaultView := findDefaultView(views); defaultView != nil {
+			if defaultView.LastAlignedModelStructureVersion == model.StructureVersion {
+				defaultPayload, err := buildCanonicalViewPayload(model, defaultView, views, modelPayload)
+				if err != nil {
+					return nil, err
+				}
+				viewPayload = cloneJSONToMap(mustCanonicalJSON(defaultPayload))
+			}
+		}
 	}
+	if len(viewPayload) == 0 {
+		viewPayload = map[string]any{
+			"uiSchema": buildFreshUISchema(asMap(modelPayload["dataSchema"]), asMap(modelPayload["layoutBlueprint"])),
+		}
+	}
+	viewPayload["description"] = strings.TrimSpace(req.Description)
+	viewPayload["displayName"] = title
+	viewPayload["id"] = viewID
+	viewPayload["isActive"] = chooseBool(req.IsActive, true)
+	viewPayload["isDefault"] = isDefault
+	viewPayload["isViewLocked"] = false
+	viewPayload["key"] = key
+	viewPayload["kind"] = normalizeViewKind(req.Kind)
+	viewPayload["lastAlignedModelStructureVersion"] = model.StructureVersion
+	viewPayload["modelId"] = model.ModelID
+	viewPayload["name"] = title
+	viewPayload["title"] = title
+	viewPayload["viewVersion"] = int64(1)
+	viewPayload["version"] = int64(1)
 
 	viewRecord := buildViewRecordFromPayload(model.ModelID, viewID, viewPayload)
 	viewPayload, err = normalizeViewPayloadForStorage(
@@ -728,16 +748,23 @@ func (s *Service) generateUniqueViewKey(ctx context.Context, tenant requestctx.T
 		base = "view"
 	}
 
+	views, err := s.repo.ListViews(ctx, tenant, modelID)
+	if err != nil {
+		return "", err
+	}
+	existingKeys := make(map[string]struct{}, len(views))
+	for _, view := range views {
+		if key := normalizeStableKey(view.ViewKey); key != "" {
+			existingKeys[key] = struct{}{}
+		}
+	}
+
 	for candidateIndex := 0; candidateIndex < 100; candidateIndex++ {
 		candidate := base
 		if candidateIndex > 0 {
 			candidate = fmt.Sprintf("%s-%d", base, candidateIndex+1)
 		}
-		existing, err := s.repo.GetView(ctx, tenant, modelID, candidate)
-		if err != nil {
-			return "", err
-		}
-		if existing == nil {
+		if _, exists := existingKeys[candidate]; !exists {
 			return candidate, nil
 		}
 	}
@@ -751,16 +778,23 @@ func (s *Service) generateUniqueViewID(ctx context.Context, tenant requestctx.Te
 		base = "view"
 	}
 
+	views, err := s.repo.ListViews(ctx, tenant, modelID)
+	if err != nil {
+		return "", err
+	}
+	existingIDs := make(map[string]struct{}, len(views))
+	for _, view := range views {
+		if id := normalizeStableKey(view.ViewID); id != "" {
+			existingIDs[id] = struct{}{}
+		}
+	}
+
 	for candidateIndex := 0; candidateIndex < 100; candidateIndex++ {
 		candidate := base
 		if candidateIndex > 0 {
 			candidate = fmt.Sprintf("%s-%d", base, candidateIndex+1)
 		}
-		existing, err := s.repo.GetView(ctx, tenant, modelID, candidate)
-		if err != nil {
-			return "", err
-		}
-		if existing == nil {
+		if _, exists := existingIDs[candidate]; !exists {
 			return candidate, nil
 		}
 	}
@@ -1033,6 +1067,7 @@ func buildScreenPayload(view *ViewRecord) map[string]any {
 		"guid":                             view.GUID,
 		"id":                               view.ViewID,
 		"isActive":                         view.IsActive,
+		"isDefault":                        view.IsDefault,
 		"isViewLocked":                     view.IsViewLocked,
 		"key":                              view.ViewKey,
 		"kind":                             view.ViewType,
@@ -1280,6 +1315,7 @@ func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, 
 		"guid",
 		"status",
 		"screens",
+		"canEditViewsOnly",
 		"modelLocked",
 		"isStructureLocked",
 		"description",
@@ -1293,6 +1329,7 @@ func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, 
 		"guid",
 		"status",
 		"screens",
+		"canEditViewsOnly",
 		"modelLocked",
 		"isStructureLocked",
 		"description",

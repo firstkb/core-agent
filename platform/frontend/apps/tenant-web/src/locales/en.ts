@@ -91,6 +91,7 @@ export const tenantEnglishMessages = {
         modelDetailLoadError: "Unable to load the selected model.",
         modelsTitle: "Models",
         mutationError: "Unable to update the Form Builder authoring state.",
+        mutationSelectedViewMissing: "Form Builder completed the mutation, but the response did not include a valid selected view. Refresh the model and open the target view manually.",
         openWorkspace: "Open",
         permission: {
           lockedModelOwnerOnly: "Only the model owner can delete a locked model.",
@@ -187,7 +188,7 @@ export const tenantEnglishMessages = {
           moveUp: "Move up",
           noAdvancedSettings: "This element does not expose extra settings in this slice.",
           noPaletteResults: "Nothing matches the current level or search filter.",
-          openLevel: "Open level",
+          openLevel: "Open",
           palette: {
             accordion: "Accordion",
             accordionDescription: "Expandable container with accordion items.",
@@ -429,10 +430,10 @@ export const tenantEnglishMessages = {
           runtimePresetLabel: "Runtime preset",
           saveAction: "Save",
           debugAction: "Debug",
-          debugDataSchemaDescription: "Compiled current scope-aware data schema payload.",
-          debugDataSchemaTitle: "Data Schema",
-          debugDialogDescription: "Inspect the current draft payload for the model data schema, layout blueprint, and view UI schema.",
+          debugDialogDescription: "Inspect the current draft payload for the model-owned schema bundle and the view UI schema.",
           debugDialogTitle: "Schema debug",
+          debugModelSchemaDescription: "Compiled current model-owned schema bundle with data schema and layout blueprint.",
+          debugModelSchemaTitle: "Model Schema",
           debugLayoutBlueprintDescription: "Compiled current model-owned layout blueprint payload.",
           debugLayoutBlueprintTitle: "Layout Blueprint",
           debugUiSchemaDescription: "Compiled current scope-aware UI schema payload for root and subform scopes.",
@@ -487,7 +488,7 @@ export const tenantEnglishMessages = {
             workflowStatus: "Status",
           },
           viewMode: {
-            default: "Default blueprint editor",
+            default: "Default",
             override: "View override",
           },
           filter: {

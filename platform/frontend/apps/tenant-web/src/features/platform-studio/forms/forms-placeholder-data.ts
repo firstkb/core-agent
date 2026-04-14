@@ -97,6 +97,7 @@ export type FormsPlaceholderScreen = {
   guid?: string;
   id: string;
   isActive: boolean;
+  isDefault: boolean;
   isViewLocked?: boolean;
   key: string;
   kind: "detail" | "form";
@@ -438,6 +439,7 @@ export function cloneFormsPlaceholderView(
     ...screen,
     displayName: screen.displayName?.trim() || screen.title,
     guid: normalizeOptionalGuid(screen.guid),
+    isDefault: screen.isDefault ?? false,
     isViewLocked: screen.isViewLocked ?? false,
     key: normalizeStableKey(screen.key, screen.id),
     lastAlignedModelStructureVersion: getDefaultAlignedVersion(object ?? { modelStructureVersion: 1 }, screen),
@@ -522,6 +524,7 @@ function createFallbackScreen(candidate: Partial<FormsPlaceholderScreen>, index:
     guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined),
     id,
     isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : index === 0,
+    isDefault: typeof candidate.isDefault === "boolean" ? candidate.isDefault : false,
     isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : false,
     key: normalizeStableKey(typeof candidate.key === "string" ? candidate.key : undefined, id),
     kind: candidate.kind === "detail" ? "detail" : "form",
@@ -798,6 +801,7 @@ function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<F
             : (fallback.displayName?.trim() || fallback.title),
         guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined, fallback.guid),
         isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : fallback.isActive,
+        isDefault: typeof candidate.isDefault === "boolean" ? candidate.isDefault : (fallback.isDefault ?? false),
         isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : (fallback.isViewLocked ?? false),
         key: normalizeStableKey(
           typeof candidate.key === "string" ? candidate.key : undefined,
@@ -979,6 +983,15 @@ export function normalizeFormsPlaceholderModel(
   });
 }
 
+export function normalizeFormsPlaceholderView(
+  candidate: unknown,
+  fallbackView: FormsPlaceholderScreen,
+  object?: Pick<FormsPlaceholderObject, "modelStructureVersion">,
+) {
+  const normalized = normalizeStoredScreens([candidate], [fallbackView])[0] ?? fallbackView;
+  return cloneFormsPlaceholderView(normalized, object);
+}
+
 function readStoredFormsPlaceholderObjects() {
   if (typeof window === "undefined") {
     return [] as FormsPlaceholderObject[];
@@ -1079,15 +1092,13 @@ export function useFormsPlaceholderObjects() {
 export const getFormsPlaceholderModels = getFormsPlaceholderObjects;
 export const useFormsPlaceholderModels = useFormsPlaceholderObjects;
 
-function matchesFormsPlaceholderIdentity(
-  candidate: Pick<FormsPlaceholderObject | FormsPlaceholderScreen, "guid" | "id" | "key">,
+function matchesFormsPlaceholderId(
+  candidate: Pick<FormsPlaceholderObject | FormsPlaceholderScreen, "id">,
   value: string,
 ) {
   const normalizedValue = value.trim();
 
-  return candidate.key === normalizedValue
-    || candidate.id === normalizedValue
-    || candidate.guid === normalizedValue;
+  return normalizedValue.length > 0 && candidate.id === normalizedValue;
 }
 
 export function getFormsPlaceholderModelKey(model: Pick<FormsPlaceholderObject, "id" | "key">) {
@@ -1106,7 +1117,7 @@ export function getFormsPlaceholderObject(
     return null;
   }
 
-  return objects.find((object) => matchesFormsPlaceholderIdentity(object, objectId)) ?? null;
+  return objects.find((object) => matchesFormsPlaceholderId(object, objectId)) ?? null;
 }
 
 export function getFormsPlaceholderModel(
@@ -1121,13 +1132,7 @@ export function getFormsPlaceholderScreen(
   screenId: string | undefined,
   objects: ReadonlyArray<FormsPlaceholderObject> = getFormsPlaceholderObjects(),
 ) {
-  if (!screenId) {
-    return null;
-  }
-
-  return getFormsPlaceholderObject(objectId, objects)?.screens.find((screen) =>
-    matchesFormsPlaceholderIdentity(screen, screenId)
-  ) ?? null;
+  return findFormsPlaceholderScreenById(getFormsPlaceholderObject(objectId, objects)?.screens ?? [], screenId);
 }
 
 export function getFormsPlaceholderView(
@@ -1136,6 +1141,22 @@ export function getFormsPlaceholderView(
   models: ReadonlyArray<FormsPlaceholderModel> = getFormsPlaceholderModels(),
 ) {
   return getFormsPlaceholderScreen(modelId, viewId, models);
+}
+
+export function findFormsPlaceholderScreenById(
+  screens: ReadonlyArray<FormsPlaceholderScreen>,
+  screenId: string | undefined,
+) {
+  if (!screenId) {
+    return null;
+  }
+
+  const normalizedScreenId = screenId.trim();
+  if (!normalizedScreenId) {
+    return null;
+  }
+
+  return screens.find((screen) => matchesFormsPlaceholderId(screen, normalizedScreenId)) ?? null;
 }
 
 export function getFormsPlaceholderFieldIconKey(field: FormsPlaceholderField) {

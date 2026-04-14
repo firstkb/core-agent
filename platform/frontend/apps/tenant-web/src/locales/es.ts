@@ -91,6 +91,7 @@ export const tenantSpanishMessages = {
         modelDetailLoadError: "No se pudo cargar el modelo seleccionado.",
         modelsTitle: "Modelos",
         mutationError: "No se pudo actualizar el estado de authoring de Form Builder.",
+        mutationSelectedViewMissing: "Form Builder completo la mutacion, pero la respuesta no incluyo una vista seleccionada valida. Actualiza el modelo y abre manualmente la vista objetivo.",
         openWorkspace: "Abrir",
         permission: {
           lockedModelOwnerOnly: "Solo el owner del modelo puede eliminar un modelo bloqueado.",
@@ -187,7 +188,7 @@ export const tenantSpanishMessages = {
           moveUp: "Mover arriba",
           noAdvancedSettings: "Este elemento no expone ajustes extra en este slice.",
           noPaletteResults: "Nada coincide con el nivel actual o con el filtro de busqueda.",
-          openLevel: "Abrir nivel",
+          openLevel: "Abrir",
           palette: {
             accordion: "Accordion",
             accordionDescription: "Contenedor expandible con accordion items.",
@@ -429,10 +430,10 @@ export const tenantSpanishMessages = {
           runtimePresetLabel: "Runtime preset",
           saveAction: "Guardar",
           debugAction: "Debug",
-          debugDataSchemaDescription: "Payload compilado del data schema actual con separacion por scopes.",
-          debugDataSchemaTitle: "Data Schema",
-          debugDialogDescription: "Inspecciona el payload draft actual para el data schema del modelo, el layout blueprint y el UI schema de la vista.",
+          debugDialogDescription: "Inspecciona el payload draft actual para el bundle schema owned por el modelo y el UI schema de la vista.",
           debugDialogTitle: "Schema debug",
+          debugModelSchemaDescription: "Payload compilado del bundle schema actual owned por el modelo con data schema y layout blueprint.",
+          debugModelSchemaTitle: "Model Schema",
           debugLayoutBlueprintDescription: "Payload compilado del layout blueprint actual owned por el modelo.",
           debugLayoutBlueprintTitle: "Layout Blueprint",
           debugUiSchemaDescription: "Payload compilado del UI schema actual para root y subform scopes.",
@@ -487,7 +488,7 @@ export const tenantSpanishMessages = {
             workflowStatus: "Status",
           },
           viewMode: {
-            default: "Editor default del blueprint",
+            default: "Default",
             override: "Override de vista",
           },
           filter: {

@@ -59,11 +59,9 @@ func (r *memoryRepository) ListViews(_ context.Context, _ requestctx.TenantInfo,
 
 func (r *memoryRepository) GetView(_ context.Context, _ requestctx.TenantInfo, modelID, viewID string) (*ViewRecord, error) {
 	entries := r.views[modelID]
-	for _, record := range entries {
-		if record.ViewID == viewID || record.ViewKey == viewID {
-			clone := cloneViewRecord(record)
-			return &clone, nil
-		}
+	if record := entries[viewID]; record != nil {
+		clone := cloneViewRecord(record)
+		return &clone, nil
 	}
 	return nil, nil
 }
@@ -125,18 +123,8 @@ func (r *memoryRepository) UpdateView(_ context.Context, _ requestctx.TenantInfo
 	if entries == nil {
 		return nil, ErrViewNotFound
 	}
-	existing, ok := entries[view.ViewID]
-	if !ok {
-		for key, record := range entries {
-			if record.ViewKey == view.ViewID {
-				existing = record
-				ok = true
-				delete(entries, key)
-				break
-			}
-		}
-	}
-	if !ok {
+	existing := entries[view.ViewID]
+	if existing == nil {
 		return nil, ErrViewNotFound
 	}
 	if expectedVersion != nil && existing.Version != *expectedVersion {
@@ -152,20 +140,14 @@ func (r *memoryRepository) DeleteView(_ context.Context, _ requestctx.TenantInfo
 	if entries == nil {
 		return ErrViewNotFound
 	}
-	var target *ViewRecord
-	for key, record := range entries {
-		if record.ViewID == viewID || record.ViewKey == viewID {
-			target = record
-			delete(entries, key)
-			break
-		}
-	}
+	target := entries[viewID]
 	if target == nil {
 		return ErrViewNotFound
 	}
-	if len(entries) == 0 {
+	if len(entries) == 1 {
 		return ErrCannotDeleteLastView
 	}
+	delete(entries, viewID)
 	if target.IsDefault {
 		var promoted *ViewRecord
 		for _, record := range entries {
@@ -245,6 +227,9 @@ func TestCreateModelSeedsFirstView(t *testing.T) {
 	if out.Views[0].Key != "default" {
 		t.Fatalf("seeded view key = %q, want %q", out.Views[0].Key, "default")
 	}
+	if out.Views[0].ID == out.Views[0].Key {
+		t.Fatalf("seeded view id and key must differ, got %#v", out.Views[0])
+	}
 }
 
 func TestLoadDraftReturnsThreeSchemaSplitForSeededModel(t *testing.T) {
@@ -267,6 +252,17 @@ func TestLoadDraftReturnsThreeSchemaSplitForSeededModel(t *testing.T) {
 	}
 	if _, ok := modelDraft["layoutBlueprint"].(map[string]any); !ok {
 		t.Fatalf("draft.model.layoutBlueprint missing: %#v", modelDraft)
+	}
+	screens := asSlice(modelDraft["screens"])
+	if len(screens) != 1 {
+		t.Fatalf("draft.model.screens = %#v, want one screen", screens)
+	}
+	screen := asMap(screens[0])
+	if normalizeString(screen["id"]) != "view-default" || normalizeString(screen["key"]) != "default" {
+		t.Fatalf("draft.model.screens should preserve distinct id/key, got %#v", screen)
+	}
+	if !getBoolValue(screen, "isDefault", false) {
+		t.Fatalf("draft.model.screens should expose default-view metadata, got %#v", screen)
 	}
 
 	viewDraft := mustDecodeJSONMap(t, draft.Draft.View)
@@ -326,7 +322,7 @@ func TestCreateViewSeedsFreshUISchemaFromBlueprint(t *testing.T) {
 
 func TestCreateViewSeedsFreshUISchemaFromScopeRootPlacement(t *testing.T) {
 	repo := newMemoryRepository()
-	model, _ := seedCanonicalModelAndDefaultView(t, repo)
+	model, defaultView := seedCanonicalModelAndDefaultView(t, repo)
 	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
 	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
 	rootBlueprint := asMap(layoutBlueprint["rootScope"])
@@ -338,8 +334,14 @@ func TestCreateViewSeedsFreshUISchemaFromScopeRootPlacement(t *testing.T) {
 	}
 	rootBlueprint["unplacedFieldIds"] = []string{}
 	modelPayload["layoutBlueprint"] = layoutBlueprint
+	modelPayload["modelStructureVersion"] = int64(5)
+	modelPayload["version"] = int64(5)
 	model.DefinitionJSON = mustJSON(t, modelPayload)
+	model.StructureVersion = 5
+	model.Version = 5
 	repo.models[model.ModelID] = model
+	defaultView.LastAlignedModelStructureVersion = 4
+	repo.views[model.ModelID][defaultView.ViewID] = defaultView
 
 	svc := NewService(repo)
 	out, err := svc.CreateView(testContext(), model.ModelID, CreateViewRequest{Title: "Operations"})
@@ -367,6 +369,62 @@ func TestCreateViewSeedsFreshUISchemaFromScopeRootPlacement(t *testing.T) {
 	}
 	if rootFieldNode["parentId"] != nil {
 		t.Fatalf("expected scope-root site-name parentId to stay nil, got %#v", rootFieldNode["parentId"])
+	}
+}
+
+func TestCreateViewClonesDefaultViewUISchemaIncludingViewOnlyNodes(t *testing.T) {
+	repo := newMemoryRepository()
+	model, defaultView := seedCanonicalModelAndDefaultView(t, repo)
+
+	defaultPayload := mustDecodeJSONMap(t, defaultView.DefinitionJSON)
+	uiSchema := asMap(defaultPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	rootScope["nodes"] = append([]any{
+		map[string]any{
+			"helperText": "",
+			"id":         "view-only-doc-id",
+			"order":      -1,
+			"parentId":   nil,
+			"required":   false,
+			"title":      "Doc.id",
+			"type":       "view_only_field",
+			"viewOnlyBinding": map[string]any{
+				"kind": "root_record_id",
+			},
+			"visibility": "visible",
+		},
+	}, asSlice(rootScope["nodes"])...)
+	defaultPayload["uiSchema"] = uiSchema
+	defaultView.DefinitionJSON = mustJSON(t, defaultPayload)
+	repo.views[model.ModelID][defaultView.ViewID] = defaultView
+
+	svc := NewService(repo)
+	out, err := svc.CreateView(testContext(), model.ModelID, CreateViewRequest{Title: "Operations"})
+	if err != nil {
+		t.Fatalf("CreateView returned error: %v", err)
+	}
+
+	createdView := repo.views[model.ModelID][out.SelectedViewID]
+	if createdView == nil {
+		t.Fatalf("expected created view %q to be persisted", out.SelectedViewID)
+	}
+
+	viewPayload := mustDecodeJSONMap(t, createdView.DefinitionJSON)
+	createdRootNodes := asSlice(asMap(asMap(viewPayload["uiSchema"])["rootScope"])["nodes"])
+	foundViewOnlyNode := false
+	for _, rawNode := range createdRootNodes {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "view_only_field" {
+			continue
+		}
+		if normalizeString(asMap(node["viewOnlyBinding"])["kind"]) != "root_record_id" {
+			continue
+		}
+		foundViewOnlyNode = true
+		break
+	}
+	if !foundViewOnlyNode {
+		t.Fatalf("expected created view to keep default view-only nodes, got %#v", createdRootNodes)
 	}
 }
 
@@ -402,10 +460,175 @@ func TestCopyViewClonesSourceUISchemaExactly(t *testing.T) {
 	if copiedView.ViewKey != "copied" {
 		t.Fatalf("copied view key = %q, want %q", copiedView.ViewKey, "copied")
 	}
+	if copiedView.ViewID == sourceView.ViewID || copiedView.ViewID == copiedView.ViewKey {
+		t.Fatalf("copied view should get a fresh id distinct from source and key: source=%q copied=%#v", sourceView.ViewID, copiedView)
+	}
 
 	copiedPayload := mustDecodeJSONMap(t, copiedView.DefinitionJSON)
 	if !reflect.DeepEqual(asMap(copiedPayload["uiSchema"]), asMap(sourcePayload["uiSchema"])) {
 		t.Fatalf("copied uiSchema does not match source:\nsource=%#v\ncopied=%#v", asMap(sourcePayload["uiSchema"]), asMap(copiedPayload["uiSchema"]))
+	}
+}
+
+func TestLoadDraftRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	_, err := svc.LoadDraft(testContext(), model.ModelID, view.ViewKey)
+	if !errors.Is(err, ErrViewNotFound) {
+		t.Fatalf("expected ErrViewNotFound when loading by view key, got %v", err)
+	}
+}
+
+func TestGetViewRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	_, err := svc.GetView(testContext(), model.ModelID, view.ViewKey)
+	if !errors.Is(err, ErrViewNotFound) {
+		t.Fatalf("expected ErrViewNotFound when opening by view key, got %v", err)
+	}
+}
+
+func TestSaveDraftRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["id"] = view.ViewKey
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewKey, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrViewNotFound) {
+		t.Fatalf("expected ErrViewNotFound when saving by view key, got %v", err)
+	}
+}
+
+func TestSaveDraftForNonDefaultViewPreservesCanonicalModelSchemas(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	copied, err := svc.CopyView(testContext(), model.ModelID, view.ViewID, CopyViewRequest{Title: "Inspection Copy"})
+	if err != nil {
+		t.Fatalf("CopyView returned error: %v", err)
+	}
+
+	loadOut, err := svc.LoadDraft(testContext(), model.ModelID, copied.SelectedViewID)
+	if err != nil {
+		t.Fatalf("LoadDraft returned error: %v", err)
+	}
+
+	modelDraft := mustDecodeJSONMap(t, loadOut.Draft.Model)
+	modelDraft["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"containers":       []any{},
+			"fieldPlacements":  []any{},
+			"schemaScopeId":    "root",
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{
+			map[string]any{
+				"containers":       []any{},
+				"fieldPlacements":  []any{},
+				"schemaScopeId":    "pb_info",
+				"unplacedFieldIds": []any{},
+			},
+		},
+	}
+
+	viewDraft := mustDecodeJSONMap(t, loadOut.Draft.View)
+	uiSchema := asMap(viewDraft["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	rootNodes := asSlice(rootScope["nodes"])
+	asMap(rootNodes[0])["visibility"] = "hidden"
+	viewDraft["uiSchema"] = uiSchema
+
+	saveOut, err := svc.SaveDraft(testContext(), model.ModelID, copied.SelectedViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelDraft),
+			View:  mustJSON(t, viewDraft),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(1),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	savedModel := mustDecodeJSONMap(t, saveOut.Draft.Model)
+	layoutBlueprint := asMap(savedModel["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	if !hasContainerWithType(asSlice(rootBlueprint["containers"]), "section") {
+		t.Fatalf("non-default save must preserve canonical section container, got %#v", rootBlueprint["containers"])
+	}
+	if len(asSlice(rootBlueprint["fieldPlacements"])) == 0 {
+		t.Fatalf("non-default save must preserve root field placement, got %#v", rootBlueprint["fieldPlacements"])
+	}
+	if containsString(normalizeStringList(rootBlueprint["unplacedFieldIds"]), "site-name") {
+		t.Fatalf("non-default save must not dump root fields into unplaced, got %#v", rootBlueprint["unplacedFieldIds"])
+	}
+
+	savedView := mustDecodeJSONMap(t, saveOut.Draft.View)
+	savedUISchema := asMap(savedView["uiSchema"])
+	savedRootScope := asMap(savedUISchema["rootScope"])
+	savedRootNodes := asSlice(savedRootScope["nodes"])
+	if normalizeString(asMap(savedRootNodes[0])["visibility"]) != "hidden" {
+		t.Fatalf("expected non-default view override to persist, got %#v", asMap(savedRootNodes[0]))
+	}
+}
+
+func TestDeleteViewRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	repo.views[model.ModelID]["inspection-summary"] = &ViewRecord{
+		ModelID:                          model.ModelID,
+		ViewID:                           "inspection-summary",
+		ViewKey:                          "inspection-summary",
+		DisplayName:                      "Inspection Summary",
+		ViewType:                         "detail",
+		IsActive:                         false,
+		IsDefault:                        false,
+		Version:                          2,
+		LastAlignedModelStructureVersion: model.StructureVersion,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":                               "inspection-summary",
+			"isActive":                         false,
+			"isDefault":                        false,
+			"key":                              "inspection-summary",
+			"kind":                             "detail",
+			"lastAlignedModelStructureVersion": model.StructureVersion,
+			"modelId":                          model.ModelID,
+			"title":                            "Inspection Summary",
+			"viewVersion":                      2,
+		}),
+		PublishedArtifactsJSON: mustJSON(t, map[string]any{}),
+	}
+	svc := NewService(repo)
+
+	_, err := svc.DeleteView(testContext(), model.ModelID, view.ViewKey)
+	if !errors.Is(err, ErrViewNotFound) {
+		t.Fatalf("expected ErrViewNotFound when deleting by view key, got %v", err)
+	}
+	if repo.views[model.ModelID][view.ViewID] == nil {
+		t.Fatalf("delete by view key should not remove the canonical default view")
+	}
+	if len(repo.views[model.ModelID]) != 2 {
+		t.Fatalf("delete by view key should leave both views intact, got %#v", repo.views[model.ModelID])
 	}
 }
 
@@ -441,7 +664,7 @@ func TestLoadDraftDerivesThreeSchemaFromLegacyDraft(t *testing.T) {
 	}
 	view := &ViewRecord{
 		ModelID:                          "site-audit",
-		ViewID:                           "default",
+		ViewID:                           "view-default",
 		ViewKey:                          "default",
 		DisplayName:                      "Default",
 		ViewType:                         "form",
@@ -560,7 +783,7 @@ func TestLoadDraftDerivesScopeRootPlacementFromLegacyRootField(t *testing.T) {
 	}
 	view := &ViewRecord{
 		ModelID:                          "site-audit",
-		ViewID:                           "default",
+		ViewID:                           "view-default",
 		ViewKey:                          "default",
 		DisplayName:                      "Default",
 		ViewType:                         "form",
@@ -950,6 +1173,154 @@ func TestSaveDraftBlocksLockedModelStructureChange(t *testing.T) {
 	}
 }
 
+func TestSaveDraftLockingModelDoesNotAdvanceStructureVersion(t *testing.T) {
+	repo := newMemoryRepository()
+	model := &ModelRecord{
+		ModelID:           "site-audit",
+		ModelKey:          "site-audit",
+		StorageKey:        "site_audit",
+		DisplayName:       "Site Audit",
+		SourceType:        "managed",
+		Status:            "draft",
+		Version:           7,
+		StructureVersion:  4,
+		IsStructureLocked: false,
+		CanEditViewsOnly:  false,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"canEditViewsOnly":      false,
+			"displayName":           "Site Audit",
+			"fields":                []any{map[string]any{"id": "site-name", "label": "Site name"}},
+			"id":                    "site-audit",
+			"isStructureLocked":     false,
+			"key":                   "site-audit",
+			"modelLocked":           false,
+			"modelStructureVersion": 4,
+			"sourceType":            "managed",
+			"storageKey":            "site_audit",
+			"title":                 "Site Audit",
+			"version":               7,
+		}),
+	}
+	defaultView := &ViewRecord{
+		ModelID:                          "site-audit",
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      "Site Audit",
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        true,
+		Status:                           "draft",
+		Version:                          3,
+		LastAlignedModelStructureVersion: 4,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"displayName":                      "Site Audit",
+			"id":                               "view-default",
+			"isActive":                         true,
+			"isDefault":                        true,
+			"isViewLocked":                     false,
+			"key":                              "default",
+			"kind":                             "form",
+			"lastAlignedModelStructureVersion": 4,
+			"modelId":                          "site-audit",
+			"title":                            "Site Audit",
+			"viewVersion":                      3,
+			"version":                          3,
+		}),
+		PublishedArtifactsJSON: mustJSON(t, map[string]any{}),
+	}
+	otherView := &ViewRecord{
+		ModelID:                          "site-audit",
+		ViewID:                           "inspection-summary",
+		ViewKey:                          "inspection-summary",
+		DisplayName:                      "Inspection Summary",
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        false,
+		Status:                           "draft",
+		Version:                          2,
+		LastAlignedModelStructureVersion: 4,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"displayName":                      "Inspection Summary",
+			"id":                               "inspection-summary",
+			"isActive":                         true,
+			"isDefault":                        false,
+			"isViewLocked":                     false,
+			"key":                              "inspection-summary",
+			"kind":                             "form",
+			"lastAlignedModelStructureVersion": 4,
+			"modelId":                          "site-audit",
+			"title":                            "Inspection Summary",
+			"viewVersion":                      2,
+			"version":                          2,
+		}),
+		PublishedArtifactsJSON: mustJSON(t, map[string]any{}),
+	}
+	repo.models[model.ModelID] = model
+	repo.views[model.ModelID] = map[string]*ViewRecord{
+		defaultView.ViewID: defaultView,
+		otherView.ViewID:   otherView,
+	}
+	svc := NewService(repo)
+
+	out, err := svc.SaveDraft(testContext(), "site-audit", "view-default", SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, map[string]any{
+				"canEditViewsOnly":      false,
+				"displayName":           "Site Audit",
+				"fields":                []any{map[string]any{"id": "site-name", "label": "Site name"}},
+				"id":                    "site-audit",
+				"isStructureLocked":     true,
+				"key":                   "site-audit",
+				"modelStructureVersion": 4,
+				"sourceType":            "managed",
+				"storageKey":            "site_audit",
+				"title":                 "Site Audit",
+				"version":               7,
+			}),
+			View: mustJSON(t, map[string]any{
+				"displayName":                      "Site Audit",
+				"id":                               "view-default",
+				"isActive":                         true,
+				"isDefault":                        true,
+				"isViewLocked":                     false,
+				"key":                              "default",
+				"kind":                             "form",
+				"lastAlignedModelStructureVersion": 4,
+				"modelId":                          "site-audit",
+				"title":                            "Site Audit",
+				"viewVersion":                      3,
+				"version":                          3,
+			}),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(7),
+			View:  int64Ptr(3),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.models["site-audit"].IsStructureLocked != true {
+		t.Fatalf("model lock should persist")
+	}
+	if repo.models["site-audit"].CanEditViewsOnly != true {
+		t.Fatalf("canEditViewsOnly should mirror locked structure")
+	}
+	if repo.models["site-audit"].StructureVersion != 4 {
+		t.Fatalf("structure version = %d, want 4", repo.models["site-audit"].StructureVersion)
+	}
+	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	if getInt64Value(savedModelPayload, "modelStructureVersion", 0) != 4 {
+		t.Fatalf("draft model structure version = %d, want 4", getInt64Value(savedModelPayload, "modelStructureVersion", 0))
+	}
+	if repo.views["site-audit"]["inspection-summary"].LastAlignedModelStructureVersion != 4 {
+		t.Fatalf("other view alignment should stay 4, got %d", repo.views["site-audit"]["inspection-summary"].LastAlignedModelStructureVersion)
+	}
+	if out.PublishState.ModelVersion != 8 {
+		t.Fatalf("model version = %d, want 8", out.PublishState.ModelVersion)
+	}
+}
+
 func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{
@@ -963,22 +1334,23 @@ func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	}
 	first := &ViewRecord{
 		ModelID:                          "site-audit",
-		ViewID:                           "field-checklist",
-		ViewKey:                          "field-checklist",
-		DisplayName:                      "Field Checklist",
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      "Default",
 		ViewType:                         "form",
 		IsActive:                         true,
 		IsDefault:                        true,
 		Version:                          5,
 		LastAlignedModelStructureVersion: 2,
 		DefinitionJSON: mustJSON(t, map[string]any{
-			"id":                               "field-checklist",
+			"id":                               "view-default",
 			"isActive":                         true,
 			"isDefault":                        true,
+			"key":                              "default",
 			"kind":                             "form",
 			"lastAlignedModelStructureVersion": 2,
 			"modelId":                          "site-audit",
-			"title":                            "Field Checklist",
+			"title":                            "Default",
 			"viewVersion":                      5,
 		}),
 		PublishedArtifactsJSON: mustJSON(t, map[string]any{}),
@@ -1012,7 +1384,7 @@ func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	}
 	svc := NewService(repo)
 
-	out, err := svc.DeleteView(testContext(), "site-audit", "field-checklist")
+	out, err := svc.DeleteView(testContext(), "site-audit", "view-default")
 	if err != nil {
 		t.Fatalf("DeleteView returned error: %v", err)
 	}
@@ -1118,10 +1490,11 @@ func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*Mo
 	viewPayload := map[string]any{
 		"description":                      "Default view",
 		"displayName":                      "Default",
-		"id":                               "default",
+		"id":                               "view-default",
 		"isActive":                         true,
 		"isDefault":                        true,
 		"isViewLocked":                     false,
+		"key":                              "default",
 		"kind":                             "form",
 		"lastAlignedModelStructureVersion": 4,
 		"modelId":                          "site-audit",
@@ -1149,7 +1522,7 @@ func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*Mo
 	}
 	view := &ViewRecord{
 		ModelID:                          "site-audit",
-		ViewID:                           "default",
+		ViewID:                           "view-default",
 		ViewKey:                          "default",
 		DisplayName:                      "Default",
 		Description:                      "Default view",

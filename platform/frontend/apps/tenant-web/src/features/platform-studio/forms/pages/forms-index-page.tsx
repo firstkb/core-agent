@@ -37,6 +37,7 @@ import {
   MenuSeparator,
   MenuTrigger,
   PlusIcon,
+  StarIcon,
 } from "@platform/ui-kit";
 import {
   useNavigate,
@@ -50,12 +51,14 @@ import {
 import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
   getFormsPlaceholderModel,
-  getFormsPlaceholderModelKey,
-  getFormsPlaceholderViewKey,
   sortFormsPlaceholderViews,
   type FormsPlaceholderModel,
   type FormsPlaceholderView,
 } from "../forms-placeholder-data";
+import {
+  getFormsPlaceholderModelRouteId,
+  getFormsPlaceholderViewRouteId,
+} from "../forms-route-helpers";
 import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
@@ -106,21 +109,17 @@ function getViewStatusKey(isActive: boolean) {
     : "tenant.platformStudio.forms.viewInactive";
 }
 
-function getSelectedViewRouteId(
-  model: FormsPlaceholderModel,
+function resolveMutationSelectedViewRouteId(
+  model: Pick<FormsPlaceholderModel, "screens">,
   selectedViewId: string | null,
 ) {
-  if (selectedViewId) {
-    const selectedView = model.screens.find((screen) =>
-      screen.id === selectedViewId || screen.key === selectedViewId
-    );
-
-    if (selectedView) {
-      return selectedView.id.trim() || getFormsPlaceholderViewKey(selectedView);
-    }
+  const normalizedSelectedViewId = selectedViewId?.trim() ?? "";
+  if (!normalizedSelectedViewId) {
+    return null;
   }
 
-  return model.screens[0] ? (model.screens[0].id.trim() || getFormsPlaceholderViewKey(model.screens[0])) : null;
+  const selectedView = model.screens.find((screen) => screen.id === normalizedSelectedViewId);
+  return selectedView ? getFormsPlaceholderViewRouteId(selectedView) : null;
 }
 
 type AuthoringDialogState =
@@ -229,19 +228,12 @@ export function FormsPage() {
     }
 
     if (deleteIntent.modelId !== selectedModel.id) {
-      const selectedModelKey = getFormsPlaceholderModelKey(selectedModel);
-      if (deleteIntent.modelId === selectedModelKey) {
-        return;
-      }
-
       setDeleteIntent(null);
       setDeleteError(null);
       return;
     }
 
-    if (!selectedModel.screens.some((screen) =>
-      screen.id === deleteIntent.viewId || screen.key === deleteIntent.viewId
-    )) {
+    if (!selectedModel.screens.some((screen) => screen.id === deleteIntent.viewId)) {
       setDeleteIntent(null);
       setDeleteError(null);
     }
@@ -259,7 +251,7 @@ export function FormsPage() {
     setDialogError(null);
     setDialogState({
       kind: "create-view",
-      modelId: getFormsPlaceholderModelKey(model),
+      modelId: getFormsPlaceholderModelRouteId(model),
       title: "",
     });
   }
@@ -268,9 +260,9 @@ export function FormsPage() {
     setDialogError(null);
     setDialogState({
       kind: "copy-view",
-      modelId: getFormsPlaceholderModelKey(model),
+      modelId: getFormsPlaceholderModelRouteId(model),
       title: createCopiedViewTitle(view.title, model.screens.map((screen) => screen.title)),
-      viewId: view.id.trim() || getFormsPlaceholderViewKey(view),
+      viewId: getFormsPlaceholderViewRouteId(view),
     });
   }
 
@@ -306,42 +298,36 @@ export function FormsPage() {
     try {
       if (dialogState.kind === "create-model") {
         const result = await createModel({ title });
-        const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
-        setDialogState(null);
-
-        if (selectedViewKey) {
-          navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
-          return;
+        const selectedViewId = resolveMutationSelectedViewRouteId(result.model, result.selectedViewId);
+        if (!selectedViewId) {
+          throw new Error(t("tenant.platformStudio.forms.mutationSelectedViewMissing"));
         }
 
-        navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+        setDialogState(null);
+        navigate(platformStudioPaths.view(getFormsPlaceholderModelRouteId(result.model), selectedViewId));
         return;
       }
 
       if (dialogState.kind === "create-view") {
         const result = await createView(dialogState.modelId, { title });
-        const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
-        setDialogState(null);
-
-        if (selectedViewKey) {
-          navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
-          return;
+        const selectedViewId = resolveMutationSelectedViewRouteId(result.model, result.selectedViewId);
+        if (!selectedViewId) {
+          throw new Error(t("tenant.platformStudio.forms.mutationSelectedViewMissing"));
         }
 
-        navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+        setDialogState(null);
+        navigate(platformStudioPaths.view(getFormsPlaceholderModelRouteId(result.model), selectedViewId));
         return;
       }
 
       const result = await copyView(dialogState.modelId, dialogState.viewId, { title });
-      const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
-      setDialogState(null);
-
-      if (selectedViewKey) {
-        navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
-        return;
+      const selectedViewId = resolveMutationSelectedViewRouteId(result.model, result.selectedViewId);
+      if (!selectedViewId) {
+        throw new Error(t("tenant.platformStudio.forms.mutationSelectedViewMissing"));
       }
 
-      navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+      setDialogState(null);
+      navigate(platformStudioPaths.view(getFormsPlaceholderModelRouteId(result.model), selectedViewId));
     } catch (error) {
       setDialogError(
         error instanceof Error
@@ -360,9 +346,9 @@ export function FormsPage() {
 
     setDeleteError(null);
     setDeleteIntent({
-      modelId: getFormsPlaceholderModelKey(model),
+      modelId: getFormsPlaceholderModelRouteId(model),
       title: view.title,
-      viewId: view.id.trim() || getFormsPlaceholderViewKey(view),
+      viewId: getFormsPlaceholderViewRouteId(view),
     });
   }
 
@@ -448,7 +434,7 @@ export function FormsPage() {
                     <button
                       className={`tenant-web__platform-studio-object-item${isActive ? " tenant-web__platform-studio-object-item--active" : ""}`}
                       key={model.id}
-                      onClick={() => navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(model)))}
+                      onClick={() => navigate(platformStudioPaths.model(getFormsPlaceholderModelRouteId(model)))}
                       type="button"
                     >
                       <span className="tenant-web__platform-studio-object-copy">
@@ -569,7 +555,20 @@ export function FormsPage() {
                       return (
                         <div className="tenant-web__platform-studio-screen-item" key={view.id}>
                           <div className="tenant-web__platform-studio-screen-copy">
-                            <span className="tenant-web__platform-studio-screen-title">{view.title}</span>
+                            <div className="tenant-web__platform-studio-screen-title-row">
+                              <span className="tenant-web__platform-studio-screen-title">{view.title}</span>
+                              {view.isDefault ? (
+                                <Badge appearance="soft" size="sm" variant="brand">
+                                  <span className="tenant-web__platform-studio-badge-label">
+                                    <StarIcon
+                                      aria-hidden="true"
+                                      className="tenant-web__platform-studio-badge-icon"
+                                    />
+                                    {t("tenant.platformStudio.forms.builder.viewMode.default")}
+                                  </span>
+                                </Badge>
+                              ) : null}
+                            </div>
                             <span className="tenant-web__platform-studio-screen-description">
                               {view.description || t(`tenant.platformStudio.forms.screenKind.${view.kind}`)}
                             </span>
@@ -602,8 +601,8 @@ export function FormsPage() {
                             </span>
                             <Button
                               onClick={() => navigate(platformStudioPaths.view(
-                                getFormsPlaceholderModelKey(selectedModel),
-                                view.id.trim() || getFormsPlaceholderViewKey(view),
+                                getFormsPlaceholderModelRouteId(selectedModel),
+                                getFormsPlaceholderViewRouteId(view),
                               ))}
                               size="sm"
                               variant="secondary"

@@ -82,24 +82,51 @@ function mergeFieldSummaries(
   existingFields: ReadonlyArray<FormsPlaceholderField>,
   fieldSummaries: ReadonlyArray<FormBuilderModelFieldSummary>,
 ) {
-  if (existingFields.length === 0 || fieldSummaries.length === 0) {
+  if (fieldSummaries.length === 0) {
     return existingFields;
   }
 
-  return existingFields.map((field) => {
-    const summary = fieldSummaries.find((entry) => entry.id === field.id || entry.key === field.id || entry.key === field.storageKey);
-    if (!summary) {
-      return field;
-    }
+  return fieldSummaries.map((summary) => {
+    const field = existingFields.find((entry) =>
+      entry.id === summary.id
+      || entry.id === summary.key
+      || entry.storageKey === summary.key
+      || (summary.storageKey && entry.storageKey === summary.storageKey)
+    );
+    const fallbackStatus = summary.isPersisted ? "persisted" : "draft";
 
     return {
-      ...field,
+      autocomplete: field?.autocomplete,
+      choiceDisplay: field?.choiceDisplay,
+      defaultValueMode: field?.defaultValueMode,
+      dependentFilter: field?.dependentFilter,
       displayName: summary.displayName,
+      displayFormat: field?.displayFormat,
+      displayFields: field?.displayFields,
+      family: field?.family ?? "core",
+      historicalUpdates: field?.historicalUpdates,
+      id: field?.id ?? summary.id,
+      inputMode: field?.inputMode,
       isLocked: summary.isLocked,
-      isPersisted: summary.isPersisted,
+      kind: field?.kind ?? "short_text",
       label: summary.label,
-      status: normalizeFieldStatus(summary.status, field.status),
-      storageKey: summary.storageKey ?? field.storageKey,
+      lookupConfig: field?.lookupConfig,
+      mask: field?.mask,
+      maxTags: field?.maxTags,
+      options: field?.options,
+      placeholder: field?.placeholder,
+      preset: field?.preset,
+      readonly: field?.readonly,
+      schemaScopeKey: field?.schemaScopeKey,
+      selectionMode: field?.selectionMode,
+      semanticRole: field?.semanticRole,
+      sourceFilters: field?.sourceFilters,
+      sourceLabel: field?.sourceLabel,
+      isPersisted: summary.isPersisted,
+      status: normalizeFieldStatus(summary.status, field?.status ?? fallbackStatus),
+      storageKey: summary.storageKey ?? field?.storageKey ?? summary.key ?? summary.id,
+      tagMode: field?.tagMode,
+      validation: field?.validation,
     };
   });
 }
@@ -115,6 +142,7 @@ function mapViewSummaryToPlaceholder(
       guid: summary.guid,
       id: summary.id,
       isActive: summary.isActive,
+      isDefault: summary.isDefault,
       isViewLocked: summary.isViewLocked,
       key: summary.key,
       kind: normalizeViewKind(summary.kind),

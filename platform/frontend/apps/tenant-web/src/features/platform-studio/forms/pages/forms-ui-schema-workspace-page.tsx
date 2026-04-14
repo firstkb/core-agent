@@ -41,6 +41,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  EyeIcon,
   Input,
   Label,
   Menu,
@@ -56,6 +57,7 @@ import {
   TabsPanel,
   TabsTrigger,
   Textarea,
+  StarIcon,
 } from "@platform/ui-kit";
 import {
   useNavigate,
@@ -132,10 +134,11 @@ import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
   cloneFormsPlaceholderModel,
   createFormsPlaceholderStorageKey,
+  findFormsPlaceholderScreenById,
   getFormsPlaceholderFieldDisplayName,
   getFormsPlaceholderFieldIconKey,
-  getFormsPlaceholderModelKey,
   normalizeFormsPlaceholderModel,
+  normalizeFormsPlaceholderView,
   type FormsPlaceholderChoiceDisplay,
   type FormsPlaceholderChoiceOrientation,
   type FormsPlaceholderFieldKind,
@@ -151,6 +154,12 @@ import {
   type FormsPlaceholderField,
   getFormsPlaceholderView,
 } from "../forms-placeholder-data";
+import {
+  createRouteBootstrapFallbackModel,
+  createRouteBootstrapFallbackView,
+  getFormsPlaceholderModelRouteId,
+  isDefaultFormsPlaceholderView,
+} from "../forms-route-helpers";
 import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
 
 type InspectorTab = "grid" | "selection" | "view";
@@ -636,47 +645,17 @@ function buildWorkspaceDocumentFromCanonicalSchemas(
   }, model, view);
 }
 
-function createRouteBootstrapFallbackView(viewId?: string): FormsPlaceholderView {
-  const normalizedViewId = viewId?.trim() || "__route-bootstrap-view__";
-
-  return {
-    description: "",
-    displayName: normalizedViewId,
-    id: normalizedViewId,
-    isActive: true,
-    isViewLocked: false,
-    key: normalizedViewId,
-    kind: "form",
-    lastAlignedModelStructureVersion: 1,
-    title: normalizedViewId,
-    viewVersion: 1,
-  };
-}
-
-function createRouteBootstrapFallbackModel(
-  modelId: string | undefined,
-  fallbackView: FormsPlaceholderView,
-): FormsPlaceholderModel {
-  const normalizedModelId = modelId?.trim() || "__route-bootstrap-model__";
-
-  return {
-    canEditViewsOnly: false,
-    description: "",
-    displayName: normalizedModelId,
-    fields: [],
-    id: normalizedModelId,
-    isStructureLocked: false,
-    key: normalizedModelId,
-    modelStructureVersion: 1,
-    owner: "",
-    screens: [fallbackView],
-    title: normalizedModelId,
-    version: 1,
-  };
-}
-
-function isDefaultBlueprintView(view: Pick<FormsPlaceholderView, "id" | "key">) {
-  return view.id === "default" || view.key === "default";
+function replaceModelViewById(
+  model: FormsPlaceholderModel,
+  nextView: FormsPlaceholderView,
+) {
+  const hasExistingView = model.screens.some((screen) => screen.id === nextView.id);
+  return cloneFormsPlaceholderModel({
+    ...model,
+    screens: hasExistingView
+      ? model.screens.map((screen) => (screen.id === nextView.id ? nextView : screen))
+      : [...model.screens, nextView],
+  });
 }
 
 function getNodeTypeKey(nodeType: FormBuilderNode["type"]) {
@@ -3044,9 +3023,13 @@ function compileDebugSchemas(
   layoutBlueprint: Record<string, unknown>,
 ) {
   return {
-    dataSchema: buildCanonicalDataSchema(model),
-    layoutBlueprint,
+    modelSchema: {
+      dataSchema: buildCanonicalDataSchema(model),
+      layoutBlueprint,
+    },
     uiSchema: {
+      isDefault: view.isDefault,
+      isActive: view.isActive,
       viewId: view.id,
       viewKey: view.key,
       ...buildCanonicalUiSchema(document),
@@ -3152,6 +3135,7 @@ function PaletteItem({
 }
 
 function CanvasNodeRow({
+  canEditVisibility,
   canMoveItems,
   currentLevelId,
   document,
@@ -3163,12 +3147,14 @@ function CanvasNodeRow({
   onDragStartNode,
   onDropNode,
   onOpenLevel,
+  onToggleVisibility,
   onSelect,
   selectedNodeId,
   t,
   workspaceDocumentChildrenCount,
   node,
 }: {
+  canEditVisibility: boolean;
   canMoveItems: boolean;
   currentLevelId: string | null;
   document: Parameters<typeof getFormBuilderNodeSummary>[1];
@@ -3181,6 +3167,7 @@ function CanvasNodeRow({
   onDragStartNode: () => void;
   onDropNode: () => void;
   onOpenLevel: () => void;
+  onToggleVisibility: () => void;
   onSelect: () => void;
   selectedNodeId: string | null;
   t: ReturnType<typeof useTranslation>["t"];
@@ -3205,6 +3192,12 @@ function CanvasNodeRow({
     t,
     workspaceDocumentChildrenCount,
   );
+  const visibilityToneClass =
+    node.visibility === "readonly"
+      ? " tenant-web__platform-studio-canvas-visibility-button--readonly"
+      : node.visibility === "hidden"
+        ? " tenant-web__platform-studio-canvas-visibility-button--hidden"
+        : " tenant-web__platform-studio-canvas-visibility-button--visible";
 
   return (
     <div
@@ -3274,6 +3267,19 @@ function CanvasNodeRow({
       </div>
 
       <div className="tenant-web__platform-studio-canvas-actions">
+        <button
+          aria-label={t(`tenant.platformStudio.forms.builder.visibility.${node.visibility}`)}
+          className={`tenant-web__platform-studio-canvas-visibility-button${visibilityToneClass}`}
+          disabled={!canEditVisibility}
+          onClick={(event) => {
+            event.stopPropagation();
+            onToggleVisibility();
+          }}
+          title={t(`tenant.platformStudio.forms.builder.visibility.${node.visibility}`)}
+          type="button"
+        >
+          <EyeIcon />
+        </button>
         {isContainer ? (
           <>
             {isCurrentLevel ? (
@@ -3289,7 +3295,7 @@ function CanvasNodeRow({
                 size="sm"
                 variant="secondary"
               >
-                {t("tenant.platformStudio.forms.builder.openLevel")}
+                {t("tenant.platformStudio.forms.openWorkspace")}
               </Button>
             )}
           </>
@@ -3531,10 +3537,9 @@ export function FormsViewWorkspacePage() {
   const hasResolvedWorkspace = Boolean(model && view);
   const resolvedModel = model ?? fallbackModel;
   const resolvedView = view
-    ?? resolvedModel.screens.find((screen) =>
-      screen.id === fallbackView.id || screen.key === fallbackView.key
-    )
+    ?? findFormsPlaceholderScreenById(resolvedModel.screens, fallbackView.id)
     ?? fallbackView;
+  const routeDraftSignature = hasResolvedWorkspace ? `${resolvedModel.id}:${resolvedView.id}` : null;
   const [routeBootstrapError, setRouteBootstrapError] = useState<string | null>(null);
   const [isBootstrappingRoute, setIsBootstrappingRoute] = useState(Boolean(params.modelId && params.viewId));
   const [paletteQuery, setPaletteQuery] = useState("");
@@ -3551,7 +3556,9 @@ export function FormsViewWorkspacePage() {
   const [debugOpen, setDebugOpen] = useState(false);
   const [draftSyncError, setDraftSyncError] = useState<string | null>(null);
   const [isDraftSyncing, setIsDraftSyncing] = useState(false);
+  const [hydratedDraftSignature, setHydratedDraftSignature] = useState<string | null>(null);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const hasHydratedCurrentDraft = routeDraftSignature !== null && hydratedDraftSignature === routeDraftSignature;
 
   useEffect(() => {
     if (!params.modelId || !params.viewId) {
@@ -3607,11 +3614,9 @@ export function FormsViewWorkspacePage() {
     createEmptyLayoutBlueprint(resolvedModel),
   );
   const currentModel = modelDraft;
-  const currentView = currentModel.screens.find((screen) =>
-    screen.id === resolvedView.id || screen.key === resolvedView.key
-  ) ?? resolvedView;
-  const isDefaultView = isDefaultBlueprintView(currentView);
-  const currentModelKey = getFormsPlaceholderModelKey(currentModel);
+  const currentView = findFormsPlaceholderScreenById(currentModel.screens, resolvedView.id) ?? resolvedView;
+  const isDefaultView = isDefaultFormsPlaceholderView(currentView);
+  const currentModelRouteId = getFormsPlaceholderModelRouteId(currentModel);
   const [pendingDefaultFilterFieldId, setPendingDefaultFilterFieldId] = useState(
     () => currentModel.fields[0]?.id ?? "",
   );
@@ -3647,7 +3652,6 @@ export function FormsViewWorkspacePage() {
     setDocument,
   } = useFormBuilderDocument(currentModel, currentView);
   const hydrateDocumentRef = useRef(hydrateDocument);
-  const loadedDraftSignatureRef = useRef<string | null>(null);
   const hasUnsavedModelChanges = useMemo(
     () => JSON.stringify(modelDraft) !== JSON.stringify(savedModelDraft),
     [modelDraft, savedModelDraft],
@@ -3860,15 +3864,16 @@ export function FormsViewWorkspacePage() {
   const canCreateFieldAtCurrentLevel = canPlaceFieldAtCurrentLevel;
   const fieldPlacementAccess = structureEditingAccess;
   const fieldItems = getFieldPaletteItems(document, fieldPlacementAccess, paletteQuery);
-  const canPlaceUnplacedFields = isDefaultView
-    && structureEditingAccess.canAddFieldItems
-    && canPlaceFieldAtCurrentLevel;
-  const unplacedFieldsHintKey = !isDefaultView
-    ? "tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice"
-    : (!structureEditingAccess.canAddFieldItems
-      ? (structureEditingAccess.structureLockReasonKey ?? structureEditingAccess.lockReasonKey)
-      : (!canPlaceFieldAtCurrentLevel
-        ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
+  const canPlaceUnplacedFields = canPlaceFieldAtCurrentLevel
+    && (isDefaultView ? structureEditingAccess.canAddFieldItems : workspaceAccess.canEditSettings);
+  const unplacedFieldsHintKey = !canPlaceFieldAtCurrentLevel
+    ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
+    : (isDefaultView
+      ? (!structureEditingAccess.canAddFieldItems
+        ? (structureEditingAccess.structureLockReasonKey ?? structureEditingAccess.lockReasonKey)
+        : null)
+      : (!workspaceAccess.canEditSettings
+        ? (workspaceAccess.lockReasonKey ?? workspaceAccess.structureLockReasonKey)
         : null));
   const pendingNavigationPathRef = useRef<string | null>(null);
   const pendingLeaveResolverRef = useRef<((value: boolean) => void) | null>(null);
@@ -3878,6 +3883,17 @@ export function FormsViewWorkspacePage() {
     [currentLayoutBlueprint, currentModel, currentView, document],
   );
 
+  function cycleNodeVisibility(currentVisibility: FormBuilderNode["visibility"]): FormBuilderNode["visibility"] {
+    switch (currentVisibility) {
+      case "visible":
+        return "readonly";
+      case "readonly":
+        return "hidden";
+      default:
+        return "visible";
+    }
+  }
+
   useEffect(() => {
     hydrateDocumentRef.current = hydrateDocument;
   }, [hydrateDocument]);
@@ -3886,10 +3902,12 @@ export function FormsViewWorkspacePage() {
     const nextModelDraft = cloneFormsPlaceholderModel(resolvedModel);
     setModelDraft(nextModelDraft);
     setSavedModelDraft(nextModelDraft);
-    const nextLayoutBlueprint = createEmptyLayoutBlueprint(nextModelDraft);
-    setLayoutBlueprintDraft(nextLayoutBlueprint);
-    setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
-  }, [resolvedModel]);
+    if (!hasResolvedWorkspace) {
+      const nextLayoutBlueprint = createEmptyLayoutBlueprint(nextModelDraft);
+      setLayoutBlueprintDraft(nextLayoutBlueprint);
+      setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
+    }
+  }, [hasResolvedWorkspace, resolvedModel]);
 
   useEffect(() => {
     if (!hasResolvedWorkspace) {
@@ -3897,18 +3915,18 @@ export function FormsViewWorkspacePage() {
     }
 
     const draftSignature = `${resolvedModel.id}:${resolvedView.id}`;
+    if (hydratedDraftSignature === draftSignature) {
+      return;
+    }
     const accessToken = getAccessToken();
     if (!accessToken) {
       return;
     }
-    if (loadedDraftSignatureRef.current === draftSignature) {
-      return;
-    }
 
     let isActive = true;
-    loadedDraftSignatureRef.current = draftSignature;
     setIsDraftSyncing(true);
     setDraftSyncError(null);
+    setHydratedDraftSignature((current) => (current === draftSignature ? current : null));
 
     async function recoverUnauthorizedAccessToken() {
       const recovered = await checkAuth();
@@ -3932,31 +3950,36 @@ export function FormsViewWorkspacePage() {
         }
 
         const loadedModel = normalizeFormsPlaceholderModel(response.draft.model, resolvedModel);
-        const nextView = loadedModel.screens.find((screen) =>
-          screen.id === resolvedView.id || screen.key === resolvedView.key
-        ) ?? resolvedView;
+        const hydratedView = normalizeFormsPlaceholderView(
+          response.draft.view,
+          findFormsPlaceholderScreenById(loadedModel.screens, resolvedView.id) ?? resolvedView,
+          loadedModel,
+        );
+        const nextModel = replaceModelViewById(loadedModel, hydratedView);
+        const nextView = findFormsPlaceholderScreenById(nextModel.screens, resolvedView.id) ?? hydratedView;
         const nextLayoutBlueprint = isRecord(response.draft.model.layoutBlueprint)
           ? response.draft.model.layoutBlueprint
-          : createEmptyLayoutBlueprint(loadedModel);
+          : createEmptyLayoutBlueprint(nextModel);
         const nextDocument = buildWorkspaceDocumentFromCanonicalSchemas(
           response.draft.model,
           response.draft.view,
-          loadedModel,
+          nextModel,
           nextView,
         );
-        const nextModel = cloneFormsPlaceholderModel({
-          ...loadedModel,
-          schemaScopes: deriveModelSchemaScopes(loadedModel, nextDocument),
+        const nextModelWithScopes = cloneFormsPlaceholderModel({
+          ...nextModel,
+          schemaScopes: deriveModelSchemaScopes(nextModel, nextDocument),
         });
         const shouldMarkModelAsDirty =
-          JSON.stringify(nextModel.schemaScopes ?? [])
-          !== JSON.stringify(loadedModel.schemaScopes ?? []);
-        const reconciledDocument = reconcileFormBuilderDocumentWithModel(nextDocument, nextModel, nextLayoutBlueprint);
+          JSON.stringify(nextModelWithScopes.schemaScopes ?? [])
+          !== JSON.stringify(nextModel.schemaScopes ?? []);
+        const reconciledDocument = reconcileFormBuilderDocumentWithModel(nextDocument, nextModelWithScopes, nextLayoutBlueprint);
         const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextDocument);
 
-        replaceModel(nextModel);
-        setModelDraft(nextModel);
-        setSavedModelDraft(shouldMarkModelAsDirty ? loadedModel : nextModel);
+        setHydratedDraftSignature(draftSignature);
+        replaceModel(nextModelWithScopes);
+        setModelDraft(nextModelWithScopes);
+        setSavedModelDraft(shouldMarkModelAsDirty ? nextModel : nextModelWithScopes);
         setLayoutBlueprintDraft(nextLayoutBlueprint);
         setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
         hydrateDocumentRef.current(nextDocument);
@@ -3975,10 +3998,9 @@ export function FormsViewWorkspacePage() {
         }
 
         if (isDraftEndpointUnavailable(error)) {
+          setHydratedDraftSignature(draftSignature);
           return;
         }
-
-        loadedDraftSignatureRef.current = null;
         setDraftSyncError(
           error instanceof Error
             ? error.message
@@ -3994,7 +4016,7 @@ export function FormsViewWorkspacePage() {
     return () => {
       isActive = false;
     };
-  }, [checkAuth, draftClient, getAccessToken, hasResolvedWorkspace, replaceModel, resolvedModel, resolvedView, signOut, t]);
+  }, [checkAuth, draftClient, getAccessToken, hasResolvedWorkspace, hydratedDraftSignature, replaceModel, resolvedModel, resolvedView, signOut, t]);
 
   useEffect(() => {
     setVisibilityRuleEditor(null);
@@ -4029,12 +4051,8 @@ export function FormsViewWorkspacePage() {
     }
   }, [currentViewFilterTargets, pendingDefaultFilterFieldId]);
   const debugDataSchema = useMemo(
-    () => JSON.stringify(compiledDebugSchemas.dataSchema, null, 2),
-    [compiledDebugSchemas.dataSchema],
-  );
-  const debugLayoutBlueprint = useMemo(
-    () => JSON.stringify(compiledDebugSchemas.layoutBlueprint, null, 2),
-    [compiledDebugSchemas.layoutBlueprint],
+    () => JSON.stringify(compiledDebugSchemas.modelSchema, null, 2),
+    [compiledDebugSchemas.modelSchema],
   );
   const debugUiSchema = useMemo(
     () => JSON.stringify(compiledDebugSchemas.uiSchema, null, 2),
@@ -4208,7 +4226,7 @@ export function FormsViewWorkspacePage() {
     updateCurrentModel((currentModelDraft) => ({
       ...currentModelDraft,
       screens: currentModelDraft.screens.map((screenEntry) =>
-        screenEntry.id === currentView.id || screenEntry.key === currentView.key
+        screenEntry.id === currentView.id
           ? updater(screenEntry)
           : screenEntry
       ),
@@ -5052,16 +5070,15 @@ export function FormsViewWorkspacePage() {
   }
 
   async function handleSave() {
-    const structureChanged =
+    const structureChanged = isDefaultView && (
       JSON.stringify(currentDataSchema) !== JSON.stringify(savedDataSchema)
-      || JSON.stringify(currentLayoutBlueprint) !== JSON.stringify(savedLayoutBlueprintDraft);
+      || JSON.stringify(currentLayoutBlueprint) !== JSON.stringify(savedLayoutBlueprintDraft)
+    );
     const previousModelStructureVersion = savedModelDraft.modelStructureVersion ?? 1;
     const nextModelStructureVersion = structureChanged
       ? previousModelStructureVersion + 1
-      : (currentModel.modelStructureVersion ?? previousModelStructureVersion);
-    const previousCurrentView = savedModelDraft.screens.find((screen) =>
-      screen.id === currentView.id || screen.key === currentView.key
-    ) ?? currentView;
+      : (savedModelDraft.modelStructureVersion ?? currentModel.modelStructureVersion ?? previousModelStructureVersion);
+    const previousCurrentView = findFormsPlaceholderScreenById(savedModelDraft.screens, currentView.id) ?? currentView;
     const nextViewTitle = document.viewTitle.trim() || currentView.title;
     const nextViewDescription = document.viewDescription;
     const nextModel = cloneFormsPlaceholderModel({
@@ -5086,7 +5103,7 @@ export function FormsViewWorkspacePage() {
       modelStructureVersion: nextModelStructureVersion,
       schemaScopes: currentModelSchemaScopes,
       screens: currentModel.screens.map((screenEntry) =>
-        screenEntry.id === currentView.id || screenEntry.key === currentView.key
+        screenEntry.id === currentView.id
           ? {
               ...screenEntry,
               displayName: nextViewTitle,
@@ -5101,11 +5118,9 @@ export function FormsViewWorkspacePage() {
         ? ((savedModelDraft.version ?? previousModelStructureVersion) + 1)
         : (currentModel.version ?? savedModelDraft.version ?? previousModelStructureVersion),
     });
-    const nextView = nextModel.screens.find((screen) =>
-      screen.id === currentView.id || screen.key === currentView.key
-    ) ?? currentView;
-    const nextDataSchema = buildCanonicalDataSchema(nextModel);
-    const nextLayoutBlueprint = currentLayoutBlueprint;
+    const nextView = findFormsPlaceholderScreenById(nextModel.screens, currentView.id) ?? currentView;
+    const nextDataSchema = isDefaultView ? buildCanonicalDataSchema(nextModel) : savedDataSchema;
+    const nextLayoutBlueprint = isDefaultView ? currentLayoutBlueprint : savedLayoutBlueprintDraft;
     const nextUiSchema = currentUiSchema;
     const expectedVersions = {
       model: savedModelDraft.version ?? previousModelStructureVersion,
@@ -5176,18 +5191,26 @@ export function FormsViewWorkspacePage() {
       );
 
       const savedModel = normalizeFormsPlaceholderModel(response.draft.model, nextModel);
-      const savedView = savedModel.screens.find((screen) =>
-        screen.id === currentView.id || screen.key === currentView.key
-      ) ?? nextView;
+      const hydratedSavedView = normalizeFormsPlaceholderView(
+        response.draft.view,
+        findFormsPlaceholderScreenById(savedModel.screens, currentView.id) ?? nextView,
+        savedModel,
+      );
+      const savedModelWithView = replaceModelViewById(savedModel, hydratedSavedView);
       const savedLayoutBlueprint = isRecord(response.draft.model.layoutBlueprint)
         ? response.draft.model.layoutBlueprint
         : nextLayoutBlueprint;
       const savedDocument = reconcileFormBuilderDocumentWithModel(
-        buildWorkspaceDocumentFromCanonicalSchemas(response.draft.model, response.draft.view, savedModel, savedView),
-        savedModel,
+        buildWorkspaceDocumentFromCanonicalSchemas(
+          response.draft.model,
+          response.draft.view,
+          savedModelWithView,
+          hydratedSavedView,
+        ),
+        savedModelWithView,
         savedLayoutBlueprint,
       );
-      commitSavedDraft(savedModel, savedDocument, savedLayoutBlueprint);
+      commitSavedDraft(savedModelWithView, savedDocument, savedLayoutBlueprint);
     } catch (error) {
       if (isUnauthorizedApiError(error)) {
         void signOut();
@@ -5251,6 +5274,19 @@ export function FormsViewWorkspacePage() {
     );
   }
 
+  if (hasResolvedWorkspace && !hasHydratedCurrentDraft && !draftSyncError) {
+    return (
+      <Card className="tenant-web__platform-studio-missing">
+        <CardHeader>
+          <div>
+            <CardTitle>{t("tenant.platformStudio.forms.loadingWorkspaceTitle")}</CardTitle>
+            <CardDescription>{t("tenant.platformStudio.forms.loadingWorkspaceDescription")}</CardDescription>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   if (!hasResolvedWorkspace) {
     return (
       <Card className="tenant-web__platform-studio-missing">
@@ -5282,7 +5318,7 @@ export function FormsViewWorkspacePage() {
         <div className="tenant-web__platform-studio-panel-actions">
           <Button
             leadingIcon={<BackArrowIcon />}
-            onClick={() => requestNavigate(platformStudioPaths.model(currentModelKey))}
+            onClick={() => requestNavigate(platformStudioPaths.model(currentModelRouteId))}
             variant="ghost"
           >
             {t("tenant.platformStudio.forms.backToModel")}
@@ -5313,11 +5349,17 @@ export function FormsViewWorkspacePage() {
           <Badge appearance="soft" size="sm" variant="brand">
             {currentModel.title}
           </Badge>
-          <Badge appearance="soft" size="sm" variant={isDefaultView ? "brand" : "info"}>
-            {isDefaultView
-              ? t("tenant.platformStudio.forms.builder.viewMode.default")
-              : t("tenant.platformStudio.forms.builder.viewMode.override")}
-          </Badge>
+          {isDefaultView ? (
+            <Badge appearance="soft" size="sm" variant="brand">
+              <span className="tenant-web__platform-studio-badge-label">
+                <StarIcon
+                  aria-hidden="true"
+                  className="tenant-web__platform-studio-badge-icon"
+                />
+                {t("tenant.platformStudio.forms.builder.viewMode.default")}
+              </span>
+            </Badge>
+          ) : null}
           {isDraftSyncing ? (
             <Badge appearance="soft" size="sm" variant="info">
               {t("tenant.platformStudio.forms.builder.syncingDraft")}
@@ -5351,11 +5393,6 @@ export function FormsViewWorkspacePage() {
           <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
             <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
               <div className="tenant-web__platform-studio-search">
-                {!isDefaultView ? (
-                  <div className="tenant-web__platform-studio-inline-help">
-                    <span>{t("tenant.platformStudio.forms.builder.defaultViewPaletteNotice")}</span>
-                  </div>
-                ) : null}
                 <div className="tenant-web__platform-studio-search-field">
                   <span className="tenant-web__platform-studio-search-icon">
                     <SearchIcon />
@@ -5516,6 +5553,7 @@ export function FormsViewWorkspacePage() {
                   {currentNodes.length > 0 ? (
                     currentNodes.map((node) => (
                       <CanvasNodeRow
+                        canEditVisibility={workspaceAccess.canEditSettings}
                         canMoveItems={canDragItems}
                         currentLevelId={currentScopeParentId}
                         document={document}
@@ -5546,6 +5584,11 @@ export function FormsViewWorkspacePage() {
                           setDragOverNodeId(null);
                         }}
                         onOpenLevel={() => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, node.id))}
+                        onToggleVisibility={() => updateDocument((currentDocument) =>
+                          updateFormBuilderNode(currentDocument, node.id, {
+                            visibility: cycleNodeVisibility(node.visibility),
+                          })
+                        )}
                         onSelect={() => {
                           updateDocument((currentDocument) => selectFormBuilderNode(currentDocument, node.id));
                           setInspectorTab("selection");
@@ -6422,16 +6465,10 @@ export function FormsViewWorkspacePage() {
                                         visibility: event.target.value as FormBuilderNode["visibility"],
                                       })
                                     )}
-                                    value={
-                                      selectedNode.type === "view_only_field" && selectedNode.visibility === "readonly"
-                                        ? "visible"
-                                        : selectedNode.visibility
-                                    }
+                                    value={selectedNode.visibility}
                                   >
                                     <option value="visible">{t("tenant.platformStudio.forms.builder.visibility.visible")}</option>
-                                    {selectedNode.type !== "view_only_field" ? (
-                                      <option value="readonly">{t("tenant.platformStudio.forms.builder.visibility.readonly")}</option>
-                                    ) : null}
+                                    <option value="readonly">{t("tenant.platformStudio.forms.builder.visibility.readonly")}</option>
                                     <option value="hidden">{t("tenant.platformStudio.forms.builder.visibility.hidden")}</option>
                                   </Select>
                                 </div>
@@ -7900,24 +7937,12 @@ export function FormsViewWorkspacePage() {
               <Card className="tenant-web__platform-studio-debug-schema-card">
                 <CardHeader>
                   <div>
-                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugDataSchemaTitle")}</CardTitle>
-                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugDataSchemaDescription")}</CardDescription>
+                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugModelSchemaTitle")}</CardTitle>
+                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugModelSchemaDescription")}</CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
                   <pre className="tenant-web__platform-studio-debug-schema-pre">{debugDataSchema}</pre>
-                </CardContent>
-              </Card>
-
-              <Card className="tenant-web__platform-studio-debug-schema-card">
-                <CardHeader>
-                  <div>
-                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugLayoutBlueprintTitle")}</CardTitle>
-                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugLayoutBlueprintDescription")}</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
-                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugLayoutBlueprint}</pre>
                 </CardContent>
               </Card>
 

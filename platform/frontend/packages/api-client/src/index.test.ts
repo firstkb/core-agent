@@ -355,14 +355,14 @@ describe("api-client tenant form builder authoring", () => {
           key: "customer-profile",
           modelStructureVersion: 1,
           name: "Customer Profile",
-          selectedViewId: "default",
+          selectedViewId: "view_customer_profile_default",
           storageKey: "customer_profile",
           title: "Customer Profile",
           version: 1,
           views: [
             {
               displayName: "Customer Profile",
-              id: "default",
+              id: "view_customer_profile_default",
               isActive: true,
               isDefault: true,
               isViewLocked: false,
@@ -388,7 +388,8 @@ describe("api-client tenant form builder authoring", () => {
       title: "Customer Profile",
     });
 
-    expect(out.selectedViewId).toBe("default");
+    expect(out.selectedViewId).toBe("view_customer_profile_default");
+    expect(out.views[0]?.id).toBe("view_customer_profile_default");
     expect(out.views[0]?.key).toBe("default");
     expect(fetchMock).toHaveBeenCalledWith(
       "/tenant-api/app/platform-studio/forms/models",

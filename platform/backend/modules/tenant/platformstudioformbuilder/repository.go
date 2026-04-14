@@ -305,7 +305,7 @@ func (r *repository) DeleteView(ctx context.Context, tenant requestctx.TenantInf
 	const deleteQuery = `
 DELETE FROM ps_view
  WHERE model_id = $1
-   AND (view_id = $2 OR view_key = $2)`
+   AND view_id = $2`
 	if _, err := tx.ExecContext(ctx, deleteQuery, modelID, viewID); err != nil {
 		return fmt.Errorf("form builder: delete view: %w", err)
 	}
@@ -437,7 +437,7 @@ SELECT guid,
        published_artifacts_json
   FROM ps_view
  WHERE model_id = $1
-   AND (view_id = $2 OR view_key = $2)`
+   AND view_id = $2`
 
 	row := tx.QueryRowContext(ctx, query, modelID, viewID)
 	record, err := scanViewRecord(row)
@@ -696,7 +696,7 @@ UPDATE ps_view
        definition_json = $14::jsonb,
        published_artifacts_json = $15::jsonb
  WHERE model_id = $1
-   AND (view_id = $2 OR view_key = $2)
+   AND view_id = $2
 RETURNING guid,
           model_id,
           view_id,
@@ -758,7 +758,7 @@ UPDATE ps_view
        definition_json = $14::jsonb,
        published_artifacts_json = $15::jsonb
  WHERE model_id = $1
-   AND (view_id = $2 OR view_key = $2)
+   AND view_id = $2
    AND version = $16
 RETURNING guid,
           model_id,

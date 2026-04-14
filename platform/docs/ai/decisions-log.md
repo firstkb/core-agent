@@ -339,6 +339,40 @@ Primary sources:
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-state.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
 
+### 2026-04-13 — Default view owns model structure; non-default views own UI-only presentation
+
+Status: active  
+Decision:
+
+- `default` view is the only editor for model-owned `dataSchema` and canonical `layoutBlueprint`
+- non-default views remain `uiSchema`-only authoring surfaces
+- `uiSchema`-only still includes view-local presentation and composition such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields
+- do not tighten non-default views into read-only layout shells as long as those changes do not mutate model-owned schema or blueprint state
+
+Primary sources:
+
+- `platform/docs/ai/modules/platform-studio.md`
+- `platform/docs/ai/current-state.md`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+
+### 2026-04-13 — Structure lock is administrative, not structural drift
+
+Status: active  
+Decision:
+
+- toggling model structure lock is a model-level administrative change only
+- it must not increment `modelStructureVersion` unless real schema/layout structure changed
+- lock toggles alone must not produce cross-view drift warnings
+- deleting a non-default view removes only that view; deleting a default view promotes a remaining view to `default + active`; deleting the last remaining view is rejected
+
+Primary sources:
+
+- `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/repository.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service_test.go`
+- `platform/docs/ai/modules/platform-studio.md`
+
 ### 2026-04-05 — Collection Table is a separate shared-runtime domain from Admin Module Registry
 
 Status: active  

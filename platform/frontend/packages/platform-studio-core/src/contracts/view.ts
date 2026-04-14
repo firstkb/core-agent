@@ -21,18 +21,49 @@ export const VIEW_LAYOUT_NODE_KINDS = [
 
 export type ViewLayoutNodeKind = (typeof VIEW_LAYOUT_NODE_KINDS)[number];
 
+export const VIEW_STATUSES = ["draft", "published", "archived"] as const;
+
+export type ViewStatus = (typeof VIEW_STATUSES)[number];
+
+export const VIEW_WARNING_CODES = [
+  "model-structure-changed",
+  "field-count-changed",
+] as const;
+
+export type ViewWarningCode = (typeof VIEW_WARNING_CODES)[number];
+
+export type ViewLockState = {
+  viewLocked?: boolean;
+};
+
+export type ViewWarning = {
+  code: ViewWarningCode;
+  message: string;
+};
+
 export type ViewDefinition = {
   channel: ViewChannel;
   description?: string;
+  displayName?: string;
   entityId: BuilderEntityId;
+  guid?: string;
   id: BuilderViewId;
+  isActive?: boolean;
   isDefault?: boolean;
   key: string;
+  lastAlignedModelStructureVersion?: number;
+  lockState?: ViewLockState;
+  modelId?: BuilderEntityId;
   nodes: ViewLayoutNode[];
   rootNodeId: BuilderNodeId;
+  status?: ViewStatus;
   title: string;
   type: ViewType;
   variantOf?: BuilderViewId;
+  version?: number | string;
+  viewType?: ViewType;
+  viewVersion?: number;
+  warnings?: ViewWarning[];
 };
 
 export type ViewSectionNode = {
@@ -66,6 +97,7 @@ export type ViewFieldNode = {
   fieldId: BuilderFieldId;
   id: BuilderNodeId;
   kind: "field";
+  title?: string;
   widgetKey: string;
 };
 

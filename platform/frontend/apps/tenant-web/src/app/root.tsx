@@ -18,8 +18,8 @@ import { BrowserRouter } from "react-router-dom";
 
 import {
   App,
-  type TenantRuntimeConfig,
 } from "./app";
+import type { TenantRuntimeConfig } from "./tenant-runtime-config";
 import { tenantLocaleResources } from "../locales";
 import { TenantBrandImage } from "./tenant-brand-image";
 

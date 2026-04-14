@@ -25,6 +25,13 @@ It connects:
 This contract stays transport-agnostic.
 It may later map to REST, RPC, or one internal gateway surface.
 
+Important Stage-1 note:
+
+- the first required Form Builder contract is about authoring-state load/save
+- model/view `status` is not part of the first mandatory product-facing contract
+- canonical REST transport naming for authoring-state load/save is `/authoring`; if `draft` appears in operation names or temporary routes, treat it only as a compatibility alias for authoring state, not as the user-facing lifecycle
+- site publication and privileges are deferred to Navigation Builder
+
 ## Core Lifecycle Rule
 
 The accepted V2 lifecycle is:
@@ -99,9 +106,12 @@ Important rule:
 
 ## Draft And Publish State
 
-### Recommended Status Vocabulary
+### Deferred Status Vocabulary
 
-Recommended shared status values:
+This section is deferred until publish lifecycle becomes active.
+Do not treat it as required for the first authoring-state implementation.
+
+Possible shared status values later:
 
 - `draft`
 - `published`

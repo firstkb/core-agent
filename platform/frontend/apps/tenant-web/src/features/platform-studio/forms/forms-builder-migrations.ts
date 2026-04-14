@@ -11,6 +11,7 @@ type LegacyWorkspaceDocumentShape = {
   currentParentId: string | null;
   filterDefinitions: unknown;
   nodes: unknown;
+  rootScope?: unknown;
   selectedNodeId: string | null;
   subformScopes?: unknown;
   systemFields: unknown;
@@ -24,6 +25,7 @@ type PersistedScopeUiSchema = {
   currentParentId: string | null;
   nodes: unknown;
   selectedNodeId: string | null;
+  unplacedFieldIds?: ReadonlyArray<string>;
 };
 
 type PersistedWorkspaceDocumentV2 = {
@@ -214,6 +216,7 @@ function buildScopeUiSchema(
   parentScopeNodeId: string | null,
   options?: {
     stripSubformGridColumns?: boolean;
+    unplacedFieldIds?: unknown;
   },
 ): PersistedScopeUiSchema {
   const scopeNodes = nodes.map((node) => ({
@@ -232,6 +235,9 @@ function buildScopeUiSchema(
     currentParentId: null,
     nodes: scopeNodes,
     selectedNodeId: scopeNodes.find((node) => node.parentId === null)?.id ?? scopeNodes[0]?.id ?? null,
+    unplacedFieldIds: Array.isArray(options?.unplacedFieldIds)
+      ? dedupeStringValues(options.unplacedFieldIds.filter((value): value is string => typeof value === "string"))
+      : [],
   };
 }
 
@@ -290,6 +296,7 @@ export function unwrapPersistedWorkspaceDocument(rawValue: unknown): unknown {
       currentParentId: typeof rootUiSchema?.currentParentId === "string" ? rootUiSchema.currentParentId : null,
       filterDefinitions: candidateV3.rootView.filterDefinitions,
       nodes: [...rootNodes, ...subformNodes],
+      rootScope: candidateV3.rootScope,
       selectedNodeId: typeof rootUiSchema?.selectedNodeId === "string" ? rootUiSchema.selectedNodeId : null,
       subformScopes: candidateV3.subformScopes,
       systemFields: candidateV3.rootView.systemFields,
@@ -323,6 +330,12 @@ export function wrapWorkspaceDocumentForPersistence(
   allFieldIds: ReadonlyArray<string>,
 ): PersistedWorkspaceDocumentV3 {
   const nodes = getWorkspaceNodes(document.nodes);
+  const documentRootScope = isRecord(document.rootScope)
+    ? document.rootScope
+    : null;
+  const documentRootUiSchema = documentRootScope && isRecord(documentRootScope.uiSchema)
+    ? documentRootScope.uiSchema
+    : null;
   const nodeMap = new Map(nodes.map((node) => [node.id, node]));
   const subformNodes = nodes.filter((node) => node.type === "subform");
   const persistedSubformScopes = Array.isArray(document.subformScopes)
@@ -338,10 +351,20 @@ export function wrapWorkspaceDocumentForPersistence(
     const existingActions = existingViewSettings && isRecord(existingViewSettings.actions)
       ? existingViewSettings.actions
       : null;
+    const existingScopeUiSchema = isRecord(existingScope?.uiSchema) ? existingScope.uiSchema : null;
+    const existingDataSchema = isRecord(existingScope?.dataSchema) ? existingScope.dataSchema : null;
     const fieldIds = dedupeStringValues(
-      scopedNodes
-        .filter((node) => node.type === "field" && typeof node.fieldId === "string")
-        .map((node) => node.fieldId as string),
+      [
+        ...scopedNodes
+          .filter((node) => node.type === "field" && typeof node.fieldId === "string")
+          .map((node) => node.fieldId as string),
+        ...(Array.isArray(existingScopeUiSchema?.unplacedFieldIds)
+          ? existingScopeUiSchema.unplacedFieldIds.filter((value): value is string => typeof value === "string")
+          : []),
+        ...(Array.isArray(existingDataSchema?.fieldIds)
+          ? existingDataSchema.fieldIds.filter((value): value is string => typeof value === "string")
+          : []),
+      ],
     );
 
     return {
@@ -353,8 +376,12 @@ export function wrapWorkspaceDocumentForPersistence(
       scopeId: subformNode.id,
       scopeType: "SUBFORM" as const,
       subformType: (subformNode.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT") as "CHECKLIST" | "DEFAULT",
-      tableKey: `pb_${slugifyScopeKey(typeof subformNode.title === "string" ? subformNode.title : subformNode.id)}`,
-      uiSchema: buildScopeUiSchema(scopedNodes, subformNode.id),
+      tableKey: typeof existingScope?.tableKey === "string" && existingScope.tableKey.trim().length > 0
+        ? existingScope.tableKey
+        : `pb_${slugifyScopeKey(typeof subformNode.title === "string" ? subformNode.title : subformNode.id)}`,
+      uiSchema: buildScopeUiSchema(scopedNodes, subformNode.id, {
+        unplacedFieldIds: existingScopeUiSchema?.unplacedFieldIds,
+      }),
       viewSettings: {
         actions: {
           canAdd: typeof existingActions?.canAdd === "boolean" ? existingActions.canAdd : true,
@@ -385,7 +412,10 @@ export function wrapWorkspaceDocumentForPersistence(
       },
       scopeId: "root",
       scopeType: "ROOT",
-      uiSchema: buildScopeUiSchema(rootScopeNodes, null, { stripSubformGridColumns: true }),
+      uiSchema: buildScopeUiSchema(rootScopeNodes, null, {
+        stripSubformGridColumns: true,
+        unplacedFieldIds: documentRootUiSchema?.unplacedFieldIds,
+      }),
     },
     rootView: {
       filterDefinitions: document.filterDefinitions,

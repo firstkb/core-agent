@@ -1,4 +1,7 @@
-import type { FormsPlaceholderModel } from "./forms-placeholder-data";
+import type {
+  FormsPlaceholderModel,
+  FormsPlaceholderView,
+} from "./forms-placeholder-data";
 
 export type FormsActorRole = "schemaOwner" | "viewEditor" | "readonly";
 
@@ -54,12 +57,14 @@ export function getFormsPlaceholderActor(actorId: string | undefined) {
 export function getFormsAuthoringAccess(
   actor: FormsPlaceholderActor,
   model?: FormsPlaceholderModel | null,
+  view?: FormsPlaceholderView | null,
 ): FormsAuthoringAccess {
   const isModelOwner = actor.role === "schemaOwner";
   const isReadonlyUser = actor.role === "readonly";
   const modelAllowsViewOnlyEditing = model?.canEditViewsOnly ?? true;
+  const viewLockedForActor = Boolean(view?.isViewLocked) && !isModelOwner;
   const canManageStructure = isModelOwner;
-  const canEditViews = isModelOwner || (actor.role === "viewEditor" && modelAllowsViewOnlyEditing);
+  const canEditViews = (isModelOwner || (actor.role === "viewEditor" && modelAllowsViewOnlyEditing)) && !viewLockedForActor;
 
   let summaryKey = "tenant.platformStudio.forms.permissionSummary.manageAll";
   let summaryVariant: FormsPermissionSummaryVariant = "brand";
@@ -67,6 +72,9 @@ export function getFormsAuthoringAccess(
   if (isReadonlyUser) {
     summaryKey = "tenant.platformStudio.forms.permissionSummary.readonly";
     summaryVariant = "neutral";
+  } else if (viewLockedForActor) {
+    summaryKey = "tenant.platformStudio.forms.permissionSummary.viewLocked";
+    summaryVariant = "warning";
   } else if (!canEditViews) {
     summaryKey = "tenant.platformStudio.forms.permissionSummary.viewAccessUnavailable";
     summaryVariant = "warning";
@@ -88,7 +96,9 @@ export function getFormsAuthoringAccess(
   if (!canEditViews) {
     viewRestrictionKey = isReadonlyUser
       ? "tenant.platformStudio.forms.permission.readonly"
-      : "tenant.platformStudio.forms.permission.viewAccessDisabled";
+      : viewLockedForActor
+        ? "tenant.platformStudio.forms.permission.viewLocked"
+        : "tenant.platformStudio.forms.permission.viewAccessDisabled";
   }
 
   return {

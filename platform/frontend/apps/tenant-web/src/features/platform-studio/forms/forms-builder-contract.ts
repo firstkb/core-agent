@@ -98,6 +98,8 @@ export const formsPlaceholderAcceptedFieldPresets: ReadonlySet<FormsPlaceholderF
 export type FormBuilderSubformType = "CHECKLIST" | "DEFAULT";
 
 export type FormBuilderNodeType =
+  | "accordion"
+  | "accordion_item"
   | "column"
   | "divider"
   | "field"

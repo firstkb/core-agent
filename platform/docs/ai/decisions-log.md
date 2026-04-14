@@ -236,6 +236,109 @@ Primary sources:
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
 - `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 
+### 2026-04-13 — Form Builder authoring lifecycle is stable-key based and publish-agnostic
+
+Status: active  
+Decision:
+
+- Form Builder `Save` is authoring save only, not site publication
+- site exposure and privileges are deferred to Navigation Builder
+- route params keep the names `modelId` and `viewId`, but their values are immutable stable keys
+- model/view titles are never identifiers
+- database `guid` is internal identity only
+- model/view `status` is not part of the first mandatory product-facing contract
+- if `/draft` appears in temporary API naming, it is only a technical alias for authoring state
+
+Primary sources:
+
+- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
+- `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md`
+- `platform/docs/ai/modules/platform-studio.md`
+
+### 2026-04-13 — Form Builder create-model must produce a usable first workspace
+
+Status: active  
+Decision:
+
+- the first authoring `Create Model` action must create the model and seed its first default view in the same backend action
+- frontend should redirect directly into the returned selected view workspace instead of leaving a view-less model shell
+- persisted authoring lock semantics stay split across dedicated model/view columns rather than collapsing back into one opaque JSON-only lock state
+
+Primary sources:
+
+- `platform/docs/ai/modules/platform-studio.md`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-index-page.tsx`
+
+### 2026-04-13 — Form Builder authoring transport uses `/authoring` as the canonical route
+
+Status: active  
+Decision:
+
+- the tenant Form Builder authoring transport path is `/app/platform-studio/forms/models/{modelId}/views/{viewId}/authoring`
+- `/draft` remains only as a temporary compatibility alias while existing clients and links age out
+- the route naming change is transport-level only and does not reopen publish lifecycle semantics
+
+Primary sources:
+
+- `platform/backend/cmd/api-tenant/internal/server/routes_platform_studio_form_builder.go`
+- `platform/frontend/packages/api-client/src/index.ts`
+
+### 2026-04-13 — Form Builder seeds the first view, not the first authored section
+
+Status: active  
+Decision:
+
+- `Create Model` still seeds the first default view so the user can enter a usable workspace immediately
+- if that brand-new model has no fields yet, entering its first view must not auto-insert authored layout nodes such as `Main section`
+- creating a new view on a model that already has fields should seed root-level field nodes from those fields
+- opening any view must reconcile missing model fields back into the UI schema at the matching scope root and prefer the first valid layout root inside that scope instead of raw scope root
+- until the broader model-scope contract lands, per-field `schemaScopeKey` in authoring draft model JSON is the temporary root-vs-subform hint used during reconciliation
+- model authoring draft now also carries `schemaScopes` so new views can materialize required subform anchors even when that view has never authored a local `subform` node yet
+- that reconciliation is a real unsaved authoring delta, so `Save` must stay active until the reconciled layout is persisted
+
+Primary sources:
+
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-state.ts`
+- `platform/docs/ai/modules/platform-studio.md`
+
+### 2026-04-13 — Form Builder adopts a three-schema authoring split
+
+Status: active  
+Decision:
+
+- `ps_model.definition_json` is the model-owned source for `dataSchema` and `layoutBlueprint`
+- `ps_view.definition_json` is the view-owned source for `uiSchema`
+- the `default` view is the first stable editor for model-owned `layoutBlueprint`
+- `Add View` must seed a fresh `uiSchema` from model `dataSchema + layoutBlueprint`
+- `Copy View` must remain an exact clone of the source `uiSchema`
+- authored scope-root fields must round-trip through the reserved `layoutBlueprint.fieldPlacements[].containerKey = "__scope_root__"` value
+- unresolved field placement must surface as explicit `Unplaced fields` instead of silently falling back to `root`
+- `Accordion` and `Accordion item` are part of the accepted blueprint container set alongside `Tabs` and `Tab item`
+
+Primary sources:
+
+- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
+
+### 2026-04-13 — First stable three-schema rollout stays lazy-compatible and default-view-owned
+
+Status: active  
+Decision:
+
+- canonical authoring transport now uses the explicit split `draft.model.{dataSchema,layoutBlueprint}` and `draft.view.uiSchema`
+- the first rollout keeps compatibility migration lazy on read and next save, without a destructive schema rewrite
+- frontend reconcile must treat backend-issued `containerKey` values as canonical compatibility identity rather than synthesizing an alternate naming scheme
+- model-structure and blueprint-layout editing stay restricted to the `default` view in the first stable rollout; non-default views remain `uiSchema`-only authoring surfaces
+
+Primary sources:
+
+- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
+- `platform/backend/modules/tenant/platformstudioformbuilder/authoring_schema.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-state.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+
 ### 2026-04-05 — Collection Table is a separate shared-runtime domain from Admin Module Registry
 
 Status: active  

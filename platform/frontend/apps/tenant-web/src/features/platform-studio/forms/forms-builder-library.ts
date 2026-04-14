@@ -14,6 +14,7 @@ import type {
   FormsPlaceholderField,
   FormsPlaceholderFieldFamily,
 } from "./forms-placeholder-data";
+import { createFormsPlaceholderStorageKey } from "./forms-placeholder-data";
 
 type FieldLike = {
   family?: string;
@@ -84,6 +85,24 @@ export const formBuilderPaletteSectionDefinitions: ReadonlyArray<FormBuilderPale
 ];
 
 export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderLibraryElementDefinition> = [
+  {
+    category: "layout",
+    descriptionKey: "tenant.platformStudio.forms.builder.palette.accordionDescription",
+    iconKey: "accordion",
+    labelKey: "tenant.platformStudio.forms.builder.palette.accordion",
+    nodeType: "accordion",
+    searchTerms: ["accordion", "expand", "collapse"],
+    section: "layout",
+  },
+  {
+    category: "layout",
+    descriptionKey: "tenant.platformStudio.forms.builder.palette.accordionItemDescription",
+    iconKey: "accordion_item",
+    labelKey: "tenant.platformStudio.forms.builder.palette.accordionItem",
+    nodeType: "accordion_item",
+    searchTerms: ["accordion item", "accordion panel"],
+    section: "layout",
+  },
   {
     category: "layout",
     descriptionKey: "tenant.platformStudio.forms.builder.palette.sectionDescription",
@@ -643,11 +662,18 @@ export function createFormBuilderFieldFromDefinition(
   definition: FormBuilderLibraryFieldDefinition,
   fields: ReadonlyArray<FormsPlaceholderField>,
 ): FormsPlaceholderField {
+  const displayName = definition.template.displayName?.trim() || definition.template.label;
+  const id = createUniqueFieldId(definition.idBase, fields);
+
   return {
     ...definition.template,
+    displayName,
     displayFields: definition.template.displayFields ? [...definition.template.displayFields] : undefined,
-    id: createUniqueFieldId(definition.idBase, fields),
+    id,
+    isPersisted: false,
     options: definition.template.options ? [...definition.template.options] : undefined,
+    status: "draft",
+    storageKey: createFormsPlaceholderStorageKey(definition.template.storageKey ?? displayName, id),
     sourceFilters: definition.template.sourceFilters ? [...definition.template.sourceFilters] : undefined,
   };
 }

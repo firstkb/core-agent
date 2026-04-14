@@ -12,6 +12,10 @@ type BackendEnvelope<T> = {
 
 type AuthIdentifier = { email: string } | { phone: string };
 
+type ApiClientRequestActivitySnapshot = {
+  activeRequestCount: number;
+};
+
 type AuthOtpRequestData = {
   otp_length: number;
   status: string;
@@ -137,6 +141,157 @@ type TenantProfileClient = {
   getProfile: (accessToken: string) => Promise<TenantProfile>;
 };
 
+type FormBuilderDraftVersions = {
+  model?: number;
+  view?: number;
+};
+
+type FormBuilderModelSummary = {
+  canEditViewsOnly: boolean;
+  description?: string;
+  displayName: string;
+  guid?: string;
+  id: string;
+  isStructureLocked: boolean;
+  key: string;
+  modelStructureVersion: number;
+  name: string;
+  storageKey?: string;
+  title: string;
+  version: number;
+};
+
+type FormBuilderModelFieldSummary = {
+  displayName: string;
+  id: string;
+  isLocked: boolean;
+  isPersisted: boolean;
+  key: string;
+  label: string;
+  status?: string;
+  storageKey?: string;
+};
+
+type FormBuilderViewSummary = {
+  description?: string;
+  displayName: string;
+  guid?: string;
+  id: string;
+  isActive: boolean;
+  isDefault: boolean;
+  isViewLocked: boolean;
+  key: string;
+  kind: string;
+  lastAlignedModelStructureVersion: number;
+  modelId: string;
+  name: string;
+  title: string;
+  version: number;
+};
+
+type FormBuilderModelDetail = FormBuilderModelSummary & {
+  fields: FormBuilderModelFieldSummary[];
+  selectedViewId?: string;
+  views: FormBuilderViewSummary[];
+};
+
+type FormBuilderViewDetail = {
+  draft?: JsonRecord;
+  model: FormBuilderModelSummary;
+  view: FormBuilderViewSummary;
+};
+
+type FormBuilderCreateModelInput = {
+  description?: string;
+  key?: string;
+  title: string;
+};
+
+type FormBuilderCreateViewInput = {
+  description?: string;
+  isActive?: boolean;
+  key?: string;
+  kind?: string;
+  title: string;
+};
+
+type FormBuilderCopyViewInput = {
+  description?: string;
+  isActive?: boolean;
+  key?: string;
+  kind?: string;
+  title?: string;
+};
+
+type FormBuilderDraftPayload = {
+  model: JsonRecord;
+  view: JsonRecord;
+};
+
+type FormBuilderValidationMessage = {
+  code?: string;
+  message: string;
+  target?: string;
+};
+
+type FormBuilderValidationSummary = {
+  canPublish: boolean;
+  canSave: boolean;
+  errors: FormBuilderValidationMessage[];
+  warnings: FormBuilderValidationMessage[];
+};
+
+type FormBuilderDraftPublishState = {
+  hasUnpublishedChanges: boolean;
+  lastPublishedAt?: string;
+  lastPublishedBy?: string;
+  modelPublishedVersion: number;
+  modelVersion: number;
+  viewPublishedVersion: number;
+  viewVersion: number;
+};
+
+type FormBuilderDraftResponse = {
+  draft: FormBuilderDraftPayload;
+  publishState: FormBuilderDraftPublishState;
+  validationSummary: FormBuilderValidationSummary;
+};
+
+type FormBuilderSaveDraftInput = {
+  draft: FormBuilderDraftPayload;
+  expectedVersions?: FormBuilderDraftVersions;
+};
+
+type TenantFormBuilderDraftClient = {
+  loadDraft: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderDraftResponse>;
+  saveDraft: (
+    accessToken: string,
+    modelId: string,
+    viewId: string,
+    input: FormBuilderSaveDraftInput,
+  ) => Promise<FormBuilderDraftResponse>;
+};
+
+type TenantFormBuilderAuthoringClient = {
+  copyView: (
+    accessToken: string,
+    modelId: string,
+    viewId: string,
+    input?: FormBuilderCopyViewInput,
+  ) => Promise<FormBuilderModelDetail>;
+  createModel: (accessToken: string, input: FormBuilderCreateModelInput) => Promise<FormBuilderModelDetail>;
+  createView: (
+    accessToken: string,
+    modelId: string,
+    input: FormBuilderCreateViewInput,
+  ) => Promise<FormBuilderModelDetail>;
+  deleteView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderModelDetail>;
+  getModel: (accessToken: string, modelId: string) => Promise<FormBuilderModelDetail>;
+  getView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderViewDetail>;
+  listModels: (accessToken: string) => Promise<FormBuilderModelSummary[]>;
+  listViews: (accessToken: string, modelId: string) => Promise<FormBuilderViewSummary[]>;
+};
+
 type AdminProfileClient = {
   getProfile: (accessToken: string) => Promise<AdminProfile>;
 };
@@ -181,6 +336,44 @@ class ApiClientError extends Error {
     this.responseStatus = options?.responseStatus;
     this.statusCode = options?.statusCode;
   }
+}
+
+const apiClientRequestActivityListeners = new Set<() => void>();
+let activeApiClientRequestCount = 0;
+
+function emitApiClientRequestActivity() {
+  apiClientRequestActivityListeners.forEach((listener) => listener());
+}
+
+function beginApiClientRequestActivity() {
+  activeApiClientRequestCount += 1;
+  emitApiClientRequestActivity();
+
+  let completed = false;
+
+  return () => {
+    if (completed) {
+      return;
+    }
+
+    completed = true;
+    activeApiClientRequestCount = Math.max(0, activeApiClientRequestCount - 1);
+    emitApiClientRequestActivity();
+  };
+}
+
+function getApiClientRequestActivitySnapshot(): ApiClientRequestActivitySnapshot {
+  return {
+    activeRequestCount: activeApiClientRequestCount,
+  };
+}
+
+function subscribeApiClientRequestActivity(listener: () => void) {
+  apiClientRequestActivityListeners.add(listener);
+
+  return () => {
+    apiClientRequestActivityListeners.delete(listener);
+  };
 }
 
 function normalizeBaseUrl(baseUrl: string) {
@@ -243,6 +436,7 @@ async function requestEnvelope<T>(
     timeoutMs?: number;
   },
 ): Promise<BackendEnvelope<T>> {
+  const completeRequestActivity = beginApiClientRequestActivity();
   const headers = new Headers({
     Accept: "application/json",
   });
@@ -277,57 +471,68 @@ async function requestEnvelope<T>(
   }
 
   try {
-    response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
-      body,
-      credentials: options?.credentials,
-      headers,
-      method: options?.method ?? (body ? "POST" : "GET"),
-      signal: controller?.signal,
-    });
-  } catch (error) {
-    if (timeoutId !== null) {
-      globalThis.clearTimeout(timeoutId);
-    }
-
-    if (didTimeout) {
-      throw new ApiClientError("Request timed out.", {
-        code: "request_timeout",
+    try {
+      response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
+        body,
+        credentials: options?.credentials,
+        headers,
+        method: options?.method ?? (body ? "POST" : "GET"),
+        signal: controller?.signal,
       });
+    } catch (error) {
+      if (didTimeout) {
+        throw new ApiClientError("Request timed out.", {
+          code: "request_timeout",
+        });
+      }
+
+      const message = error instanceof Error ? error.message : "Network request failed.";
+      throw new ApiClientError(message, { code: "network_error" });
+    } finally {
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
     }
 
-    const message = error instanceof Error ? error.message : "Network request failed.";
-    throw new ApiClientError(message, { code: "network_error" });
+    const payload = await parseJsonBody(response);
+
+    if (response.ok && payload === null && options?.allowEmptySuccess) {
+      return { status: "ok" };
+    }
+
+    const envelope = normalizeEnvelope<T>(payload, response);
+
+    if (!response.ok || envelope.status !== "ok") {
+      throw new ApiClientError(
+        normalizeMessage(response.status, envelope.message),
+        {
+          code: envelope.code,
+          payload: envelope.data ?? payload,
+          responseStatus: envelope.status,
+          statusCode: response.status,
+        },
+      );
+    }
+
+    return envelope;
   } finally {
-    if (timeoutId !== null) {
-      globalThis.clearTimeout(timeoutId);
-    }
+    completeRequestActivity();
   }
-
-  const payload = await parseJsonBody(response);
-
-  if (response.ok && payload === null && options?.allowEmptySuccess) {
-    return { status: "ok" };
-  }
-
-  const envelope = normalizeEnvelope<T>(payload, response);
-
-  if (!response.ok || envelope.status !== "ok") {
-    throw new ApiClientError(
-      normalizeMessage(response.status, envelope.message),
-      {
-        code: envelope.code,
-        payload: envelope.data ?? payload,
-        responseStatus: envelope.status,
-        statusCode: response.status,
-      },
-    );
-  }
-
-  return envelope;
 }
 
 function assertPositiveInteger(value: unknown, fieldName: string) {
   if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+
+  return value;
+}
+
+function assertNonNegativeInteger(value: unknown, fieldName: string) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) {
     throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
       code: "invalid_payload",
       payload: value,
@@ -346,6 +551,195 @@ function assertString(value: unknown, fieldName: string) {
   }
 
   return value;
+}
+
+function assertBoolean(value: unknown, fieldName: string) {
+  if (typeof value !== "boolean") {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+
+  return value;
+}
+
+function normalizeJsonRecord(payload: unknown, fieldName: string) {
+  if (!isRecord(payload)) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return payload;
+}
+
+function normalizeValidationMessages(payload: unknown, fieldName: string) {
+  if (!Array.isArray(payload)) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return payload.map((entry, index) => {
+    if (!isRecord(entry)) {
+      throw new ApiClientError(`Invalid ${fieldName}[${index}] received from API.`, {
+        code: "invalid_payload",
+        payload: entry,
+      });
+    }
+
+    return {
+      code: typeof entry.code === "string" ? entry.code : undefined,
+      message: assertString(entry.message, `${fieldName}[${index}].message`),
+      target: typeof entry.target === "string" ? entry.target : undefined,
+    };
+  });
+}
+
+function normalizeOptionalString(value: unknown) {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized ? normalized : undefined;
+}
+
+function normalizeOptionalPositiveInteger(value: unknown, fieldName: string) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  return assertPositiveInteger(value, fieldName);
+}
+
+function normalizeFormBuilderModelSummary(payload: unknown, fieldName: string): FormBuilderModelSummary {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const displayName = assertString(record.displayName, `${fieldName}.displayName`);
+
+  return {
+    canEditViewsOnly: assertBoolean(record.canEditViewsOnly, `${fieldName}.canEditViewsOnly`),
+    description: normalizeOptionalString(record.description),
+    displayName,
+    guid: normalizeOptionalString(record.guid),
+    id: assertString(record.id, `${fieldName}.id`),
+    isStructureLocked: assertBoolean(record.isStructureLocked, `${fieldName}.isStructureLocked`),
+    key: assertString(record.key, `${fieldName}.key`),
+    modelStructureVersion: assertPositiveInteger(record.modelStructureVersion, `${fieldName}.modelStructureVersion`),
+    name: normalizeOptionalString(record.name) ?? displayName,
+    storageKey: normalizeOptionalString(record.storageKey),
+    title: normalizeOptionalString(record.title) ?? displayName,
+    version: normalizeOptionalPositiveInteger(record.version, `${fieldName}.version`) ?? 1,
+  };
+}
+
+function normalizeFormBuilderFieldSummary(payload: unknown, fieldName: string): FormBuilderModelFieldSummary {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const displayName = normalizeOptionalString(record.displayName) ?? assertString(record.label, `${fieldName}.label`);
+
+  return {
+    displayName,
+    id: assertString(record.id, `${fieldName}.id`),
+    isLocked: assertBoolean(record.isLocked, `${fieldName}.isLocked`),
+    isPersisted: assertBoolean(record.isPersisted, `${fieldName}.isPersisted`),
+    key: normalizeOptionalString(record.key) ?? assertString(record.id, `${fieldName}.id`),
+    label: normalizeOptionalString(record.label) ?? displayName,
+    status: normalizeOptionalString(record.status),
+    storageKey: normalizeOptionalString(record.storageKey),
+  };
+}
+
+function normalizeFormBuilderViewSummary(payload: unknown, fieldName: string): FormBuilderViewSummary {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const displayName = assertString(record.displayName, `${fieldName}.displayName`);
+
+  return {
+    description: normalizeOptionalString(record.description),
+    displayName,
+    guid: normalizeOptionalString(record.guid),
+    id: assertString(record.id, `${fieldName}.id`),
+    isActive: assertBoolean(record.isActive, `${fieldName}.isActive`),
+    isDefault: assertBoolean(record.isDefault, `${fieldName}.isDefault`),
+    isViewLocked: assertBoolean(record.isViewLocked, `${fieldName}.isViewLocked`),
+    key: assertString(record.key, `${fieldName}.key`),
+    kind: assertString(record.kind, `${fieldName}.kind`),
+    lastAlignedModelStructureVersion: assertPositiveInteger(
+      record.lastAlignedModelStructureVersion,
+      `${fieldName}.lastAlignedModelStructureVersion`,
+    ),
+    modelId: assertString(record.modelId, `${fieldName}.modelId`),
+    name: normalizeOptionalString(record.name) ?? displayName,
+    title: normalizeOptionalString(record.title) ?? displayName,
+    version: normalizeOptionalPositiveInteger(record.version, `${fieldName}.version`) ?? 1,
+  };
+}
+
+function normalizeFormBuilderModelDetail(payload: unknown): FormBuilderModelDetail {
+  const record = normalizeJsonRecord(payload, "modelDetail");
+  const fields = Array.isArray(record.fields) ? record.fields : [];
+  const views = Array.isArray(record.views) ? record.views : [];
+  const model = normalizeFormBuilderModelSummary(record, "modelDetail");
+
+  return {
+    ...model,
+    fields: fields.map((entry, index) => normalizeFormBuilderFieldSummary(entry, `modelDetail.fields[${index}]`)),
+    selectedViewId: normalizeOptionalString(record.selectedViewId),
+    views: views.map((entry, index) => normalizeFormBuilderViewSummary(entry, `modelDetail.views[${index}]`)),
+  };
+}
+
+function normalizeFormBuilderViewDetail(payload: unknown): FormBuilderViewDetail {
+  const record = normalizeJsonRecord(payload, "viewDetail");
+
+  return {
+    draft: record.draft === undefined ? undefined : normalizeJsonRecord(record.draft, "viewDetail.draft"),
+    model: normalizeFormBuilderModelSummary(record.model, "viewDetail.model"),
+    view: normalizeFormBuilderViewSummary(record.view, "viewDetail.view"),
+  };
+}
+
+function normalizeFormBuilderDraftResponse(payload: unknown): FormBuilderDraftResponse {
+  if (!isRecord(payload)) {
+    throw new ApiClientError("Invalid form builder draft payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  const draft = normalizeJsonRecord(payload.draft, "draft");
+  const publishState = normalizeJsonRecord(payload.publishState, "publishState");
+  const validationSummary = normalizeJsonRecord(payload.validationSummary, "validationSummary");
+
+  return {
+    draft: {
+      model: normalizeJsonRecord(draft.model, "draft.model"),
+      view: normalizeJsonRecord(draft.view, "draft.view"),
+    },
+    publishState: {
+      hasUnpublishedChanges: assertBoolean(publishState.hasUnpublishedChanges, "publishState.hasUnpublishedChanges"),
+      lastPublishedAt: typeof publishState.lastPublishedAt === "string" ? publishState.lastPublishedAt : undefined,
+      lastPublishedBy: typeof publishState.lastPublishedBy === "string" ? publishState.lastPublishedBy : undefined,
+      modelPublishedVersion: assertNonNegativeInteger(
+        publishState.modelPublishedVersion,
+        "publishState.modelPublishedVersion",
+      ),
+      modelVersion: assertPositiveInteger(publishState.modelVersion, "publishState.modelVersion"),
+      viewPublishedVersion: assertNonNegativeInteger(
+        publishState.viewPublishedVersion,
+        "publishState.viewPublishedVersion",
+      ),
+      viewVersion: assertPositiveInteger(publishState.viewVersion, "publishState.viewVersion"),
+    },
+    validationSummary: {
+      canPublish: assertBoolean(validationSummary.canPublish, "validationSummary.canPublish"),
+      canSave: assertBoolean(validationSummary.canSave, "validationSummary.canSave"),
+      errors: normalizeValidationMessages(validationSummary.errors, "validationSummary.errors"),
+      warnings: normalizeValidationMessages(validationSummary.warnings, "validationSummary.warnings"),
+    },
+  };
 }
 
 function normalizeOtpRequestData(payload: unknown): AuthOtpRequestData {
@@ -550,6 +944,8 @@ async function requestWithUnauthorizedRetry<T>(
 function createApiClient(baseUrl: string): ApiClient {
   return {
     async getHealth() {
+      const completeRequestActivity = beginApiClientRequestActivity();
+
       try {
         const response = await fetch(`${normalizeBaseUrl(baseUrl)}/health`);
         return {
@@ -561,6 +957,8 @@ function createApiClient(baseUrl: string): ApiClient {
           status: "degraded",
           checkedAt: new Date().toISOString(),
         };
+      } finally {
+        completeRequestActivity();
       }
     },
   };
@@ -640,6 +1038,149 @@ function createTenantProfileClient(baseUrl: string): TenantProfileClient {
   };
 }
 
+function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuilderAuthoringClient {
+  return {
+    async copyView(accessToken: string, modelId: string, viewId: string, input?: FormBuilderCopyViewInput) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}/copy`,
+        {
+          accessToken,
+          body: input ?? {},
+          method: "POST",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async createModel(accessToken: string, input: FormBuilderCreateModelInput) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/forms/models", {
+        accessToken,
+        body: input,
+        method: "POST",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async createView(accessToken: string, modelId: string, input: FormBuilderCreateViewInput) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async deleteView(accessToken: string, modelId: string, viewId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`,
+        {
+          accessToken,
+          method: "DELETE",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async getModel(accessToken: string, modelId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderModelDetail(envelope.data);
+    },
+    async getView(accessToken: string, modelId: string, viewId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderViewDetail(envelope.data);
+    },
+    async listModels(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/forms/models", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+      const payload = normalizeJsonRecord(envelope.data, "modelList");
+      const items = Array.isArray(payload.items) ? payload.items : [];
+
+      return items.map((entry, index) => normalizeFormBuilderModelSummary(entry, `modelList.items[${index}]`));
+    },
+    async listViews(accessToken: string, modelId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+      const payload = normalizeJsonRecord(envelope.data, "viewList");
+      const items = Array.isArray(payload.items) ? payload.items : [];
+
+      return items.map((entry, index) => normalizeFormBuilderViewSummary(entry, `viewList.items[${index}]`));
+    },
+  };
+}
+
+function createTenantFormBuilderDraftClient(baseUrl: string): TenantFormBuilderDraftClient {
+  return {
+    async loadDraft(accessToken: string, modelId: string, viewId: string) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}/authoring`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderDraftResponse(envelope.data);
+    },
+    async saveDraft(accessToken: string, modelId: string, viewId: string, input: FormBuilderSaveDraftInput) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}/authoring`,
+        {
+          accessToken,
+          body: {
+            draft: input.draft,
+            expectedVersions: input.expectedVersions ?? {},
+          },
+          method: "PUT",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeFormBuilderDraftResponse(envelope.data);
+    },
+  };
+}
+
 function createAdminProfileClient(baseUrl: string): AdminProfileClient {
   return {
     async getProfile(accessToken: string) {
@@ -707,9 +1248,13 @@ export {
   createAdminProfileClient,
   createApiClient,
   createAuthClient,
+  createTenantFormBuilderAuthoringClient,
+  createTenantFormBuilderDraftClient,
+  getApiClientRequestActivitySnapshot,
   createTenantProfileClient,
   isUnauthorizedApiError,
   requestWithUnauthorizedRetry,
+  subscribeApiClientRequestActivity,
 };
 export type {
   AdminEmployee,
@@ -725,12 +1270,30 @@ export type {
   AdminProfile,
   AdminProfileClient,
   ApiClient,
+  ApiClientRequestActivitySnapshot,
   ApiHealth,
   AuthClient,
   AuthIdentifier,
   AuthOtpRequestData,
   AuthTokenData,
   BackendEnvelope,
+  FormBuilderDraftPayload,
+  FormBuilderDraftPublishState,
+  FormBuilderDraftResponse,
+  FormBuilderDraftVersions,
+  FormBuilderCreateModelInput,
+  FormBuilderCreateViewInput,
+  FormBuilderCopyViewInput,
+  FormBuilderModelDetail,
+  FormBuilderModelFieldSummary,
+  FormBuilderModelSummary,
+  FormBuilderSaveDraftInput,
+  FormBuilderValidationMessage,
+  FormBuilderValidationSummary,
+  FormBuilderViewDetail,
+  FormBuilderViewSummary,
   TenantProfile,
+  TenantFormBuilderAuthoringClient,
+  TenantFormBuilderDraftClient,
   TenantProfileClient,
 };

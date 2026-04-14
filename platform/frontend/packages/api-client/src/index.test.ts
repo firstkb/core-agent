@@ -4,7 +4,11 @@ import {
   ApiClientError,
   createAdminEmployeesClient,
   createAuthClient,
+  createTenantFormBuilderAuthoringClient,
+  createTenantFormBuilderDraftClient,
+  getApiClientRequestActivitySnapshot,
   requestWithUnauthorizedRetry,
+  subscribeApiClientRequestActivity,
 } from "./index";
 
 describe("api-client auth bootstrap timeouts", () => {
@@ -158,5 +162,333 @@ describe("api-client unauthorized recovery", () => {
     expect(recoverUnauthorized).toHaveBeenCalledTimes(1);
     expect(request).toHaveBeenNthCalledWith(1, "stale-token");
     expect(request).toHaveBeenNthCalledWith(2, "fresh-token");
+  });
+});
+
+describe("api-client tenant form builder draft", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads a form builder draft from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          draft: {
+            model: {
+              id: "safety-incident",
+            },
+            view: {
+              viewTitle: "Incident Intake",
+            },
+          },
+          publishState: {
+            hasUnpublishedChanges: true,
+            modelPublishedVersion: 0,
+            modelVersion: 2,
+            viewPublishedVersion: 0,
+            viewVersion: 3,
+          },
+          validationSummary: {
+            canPublish: false,
+            canSave: true,
+            errors: [],
+            warnings: [],
+          },
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantFormBuilderDraftClient("/tenant-api").loadDraft(
+      "token",
+      "safety-incident",
+      "default-view",
+    );
+
+    expect(out.draft.model.id).toBe("safety-incident");
+    expect(out.publishState.viewVersion).toBe(3);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/forms/models/safety-incident/views/default-view/authoring",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("saves a form builder draft through the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          draft: {
+            model: {
+              id: "safety-incident",
+            },
+            view: {
+              viewTitle: "Incident Intake",
+            },
+          },
+          publishState: {
+            hasUnpublishedChanges: true,
+            modelPublishedVersion: 0,
+            modelVersion: 4,
+            viewPublishedVersion: 0,
+            viewVersion: 6,
+          },
+          validationSummary: {
+            canPublish: false,
+            canSave: true,
+            errors: [],
+            warnings: [],
+          },
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantFormBuilderDraftClient("/tenant-api").saveDraft(
+      "token",
+      "safety-incident",
+      "default-view",
+      {
+        draft: {
+          model: { id: "safety-incident" },
+          view: { viewTitle: "Incident Intake" },
+        },
+        expectedVersions: {
+          model: 3,
+          view: 5,
+        },
+      },
+    );
+
+    expect(out.publishState.modelVersion).toBe(4);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/forms/models/safety-incident/views/default-view/authoring",
+      expect.objectContaining({
+        body: JSON.stringify({
+          draft: {
+            model: { id: "safety-incident" },
+            view: { viewTitle: "Incident Intake" },
+          },
+          expectedVersions: {
+            model: 3,
+            view: 5,
+          },
+        }),
+        headers: expect.any(Headers),
+        method: "PUT",
+      }),
+    );
+  });
+});
+
+describe("api-client tenant form builder authoring", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("lists form builder models from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          items: [
+            {
+              canEditViewsOnly: false,
+              displayName: "Site Audit",
+              id: "site-audit",
+              isStructureLocked: false,
+              key: "site-audit",
+              modelStructureVersion: 3,
+              name: "Site Audit",
+              storageKey: "site_audit",
+              title: "Site Audit",
+              version: 4,
+            },
+          ],
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantFormBuilderAuthoringClient("/tenant-api").listModels("token");
+
+    expect(out).toEqual([
+      expect.objectContaining({
+        displayName: "Site Audit",
+        id: "site-audit",
+        key: "site-audit",
+        modelStructureVersion: 3,
+      }),
+    ]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/forms/models",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("creates a model and returns the selected first view", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          canEditViewsOnly: false,
+          displayName: "Customer Profile",
+          fields: [],
+          id: "customer-profile",
+          isStructureLocked: false,
+          key: "customer-profile",
+          modelStructureVersion: 1,
+          name: "Customer Profile",
+          selectedViewId: "default",
+          storageKey: "customer_profile",
+          title: "Customer Profile",
+          version: 1,
+          views: [
+            {
+              displayName: "Customer Profile",
+              id: "default",
+              isActive: true,
+              isDefault: true,
+              isViewLocked: false,
+              key: "default",
+              kind: "form",
+              lastAlignedModelStructureVersion: 1,
+              modelId: "customer-profile",
+              name: "Customer Profile",
+              title: "Customer Profile",
+              version: 1,
+            },
+          ],
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantFormBuilderAuthoringClient("/tenant-api").createModel("token", {
+      title: "Customer Profile",
+    });
+
+    expect(out.selectedViewId).toBe("default");
+    expect(out.views[0]?.key).toBe("default");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/forms/models",
+      expect.objectContaining({
+        body: JSON.stringify({
+          title: "Customer Profile",
+        }),
+        headers: expect.any(Headers),
+        method: "POST",
+      }),
+    );
+  });
+});
+
+describe("api-client request activity", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("tracks inflight api requests until the last concurrent request finishes", async () => {
+    function createDeferredResponse() {
+      let resolve!: (response: Response) => void;
+      const promise = new Promise<Response>((nextResolve) => {
+        resolve = nextResolve;
+      });
+
+      return { promise, resolve };
+    }
+
+    const firstRequestResponse = createDeferredResponse();
+    const secondRequestResponse = createDeferredResponse();
+
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(() => firstRequestResponse.promise)
+      .mockImplementationOnce(() => secondRequestResponse.promise);
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const activityCounts: number[] = [];
+    const unsubscribe = subscribeApiClientRequestActivity(() => {
+      activityCounts.push(getApiClientRequestActivitySnapshot().activeRequestCount);
+    });
+
+    const client = createTenantFormBuilderAuthoringClient("/tenant-api");
+    const firstRequest = client.getModel("token", "first-model");
+    const secondRequest = client.getModel("token", "second-model");
+
+    expect(getApiClientRequestActivitySnapshot().activeRequestCount).toBe(2);
+
+    firstRequestResponse.resolve(new Response(JSON.stringify({
+      data: {
+        canEditViewsOnly: false,
+        displayName: "First model",
+        fields: [],
+        id: "first-model",
+        isStructureLocked: false,
+        key: "first-model",
+        modelStructureVersion: 1,
+        name: "First model",
+        storageKey: "first_model",
+        title: "First model",
+        version: 1,
+        views: [],
+      },
+      status: "ok",
+    }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    }));
+
+    await firstRequest;
+    expect(getApiClientRequestActivitySnapshot().activeRequestCount).toBe(1);
+
+    secondRequestResponse.resolve(new Response(JSON.stringify({
+      data: {
+        canEditViewsOnly: false,
+        displayName: "Second model",
+        fields: [],
+        id: "second-model",
+        isStructureLocked: false,
+        key: "second-model",
+        modelStructureVersion: 1,
+        name: "Second model",
+        storageKey: "second_model",
+        title: "Second model",
+        version: 1,
+        views: [],
+      },
+      status: "ok",
+    }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    }));
+
+    await secondRequest;
+
+    unsubscribe();
+
+    expect(getApiClientRequestActivitySnapshot().activeRequestCount).toBe(0);
+    expect(activityCounts).toEqual([1, 2, 1, 0]);
   });
 });

@@ -11,6 +11,54 @@ export function FormBuilderElementIcon({
   ...props
 }: IconProps & { iconKey: string }) {
   switch (iconKey) {
+    case "accordion":
+      return (
+        <svg
+          fill="none"
+          viewBox="0 0 24 24"
+          {...props}
+        >
+          <rect
+            x="4.5"
+            y="5"
+            width="15"
+            height="14"
+            rx="2.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M8 9.5h8M8 12.5h8M8 15.5h5"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+        </svg>
+      );
+    case "accordion_item":
+      return (
+        <svg
+          fill="none"
+          viewBox="0 0 24 24"
+          {...props}
+        >
+          <rect
+            x="5"
+            y="6"
+            width="14"
+            height="12"
+            rx="2.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          />
+          <path
+            d="M8 10.5h8M11 14h2"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+        </svg>
+      );
     case "section":
       return (
         <svg

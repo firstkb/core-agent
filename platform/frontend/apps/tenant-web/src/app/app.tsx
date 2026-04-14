@@ -32,12 +32,9 @@ import {
 } from "../features/published-app";
 import { TenantDashboardPage } from "../pages/dashboard/page";
 import { PrivateApp } from "./private-app";
+import { TenantRuntimeConfigProvider } from "./tenant-runtime-config-context";
+import type { TenantRuntimeConfig } from "./tenant-runtime-config";
 import { TenantBrandImage } from "./tenant-brand-image";
-
-type TenantRuntimeConfig = {
-  authApiUrl: string;
-  tenantApiUrl: string;
-};
 
 type TenantWorkspaceUserSession = {
   displayName: string;
@@ -385,8 +382,9 @@ export function App({
   const tenantName = profile?.tenant.name?.trim();
 
   return (
-    <AuthGuard
-      authenticated={
+    <TenantRuntimeConfigProvider value={runtimeConfig}>
+      <AuthGuard
+        authenticated={
         profileReady && workspaceUser ? (
           <Routes>
             <Route element={<Navigate replace to="/dashboard" />} path="/sign-in" />
@@ -419,7 +417,7 @@ export function App({
           label={t("tenant.loaders.pendingLabel")}
         />
       }
-      unauthenticated={
+        unauthenticated={
         <Routes>
           <Route
             element={
@@ -472,7 +470,8 @@ export function App({
           <Route element={<Navigate replace to="/sign-in" />} path="*" />
         </Routes>
       }
-    />
+      />
+    </TenantRuntimeConfigProvider>
   );
 }
 

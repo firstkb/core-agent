@@ -6,6 +6,13 @@ import {
   useState,
 } from "react";
 
+import {
+  ApiClientError,
+  createTenantFormBuilderDraftClient,
+  isUnauthorizedApiError,
+  requestWithUnauthorizedRetry,
+} from "@platform/api-client";
+import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import {
   AlertDialog,
@@ -84,24 +91,28 @@ import {
   getFormBuilderNodeSummary,
   getFormBuilderNodeScopeId,
   getFormBuilderScopeFieldIds,
+  getFormBuilderScopeUnplacedFieldIds,
   getFormsWorkspaceAccess,
+  createPersistedFormBuilderDocument,
+  formBuilderScopeRootPlacementKey,
   isFormBuilderContainer,
+  normalizePersistedFormBuilderDocument,
+  reconcileFormBuilderDocumentWithModel,
   reorderFormBuilderNode,
   removeFormBuilderNode,
   selectFormBuilderNode,
   setFormBuilderCurrentParent,
   updateFormBuilderNode,
   useFormBuilderDocument,
+  type FormBuilderFilterScalar,
   type FormBuilderFilterCondition,
+  type FormBuilderFilterOperator,
+  type FormBuilderFilterValueSource,
+  type FormBuilderGridColumnDefinition,
   type FormBuilderLookupDynamicToken,
   type FormBuilderLookupFilterClause,
   type FormBuilderLookupFilterCondition,
   type FormBuilderLookupPreset,
-  type FormBuilderScalarFilterCondition,
-  type FormBuilderGridColumnDefinition,
-  type FormBuilderFilterOperator,
-  type FormBuilderFilterScalar,
-  type FormBuilderFilterValueSource,
   type FormBuilderNode,
   type FormBuilderFieldPaletteCategory,
   type FormBuilderQuickFilter,
@@ -110,18 +121,26 @@ import {
   type FormBuilderRuleOperator,
   type FormBuilderRuleScalar,
   type FormBuilderRuntimePreset,
+  type FormBuilderScalarFilterCondition,
   type FormBuilderVisibilityRule,
 } from "../forms-builder-state";
 import {
   getFormsAuthoringAccess,
   getFormsPlaceholderActor,
 } from "../forms-actors";
+import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
+  cloneFormsPlaceholderModel,
+  createFormsPlaceholderStorageKey,
+  getFormsPlaceholderFieldDisplayName,
   getFormsPlaceholderFieldIconKey,
+  getFormsPlaceholderModelKey,
+  normalizeFormsPlaceholderModel,
   type FormsPlaceholderChoiceDisplay,
   type FormsPlaceholderChoiceOrientation,
   type FormsPlaceholderFieldKind,
   type FormsPlaceholderFieldOptionStyle,
+  type FormsPlaceholderFieldSemanticRole,
   type FormsPlaceholderFieldValidation,
   type FormsPlaceholderLookupConfig,
   type FormsPlaceholderLookupDisplayMode,
@@ -131,8 +150,8 @@ import {
   getFormsPlaceholderModel,
   type FormsPlaceholderField,
   getFormsPlaceholderView,
-  useFormsPlaceholderModels,
 } from "../forms-placeholder-data";
+import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
 
 type InspectorTab = "grid" | "selection" | "view";
 
@@ -140,6 +159,524 @@ declare global {
   interface Window {
     __tenantPlatformStudioLeaveGuard?: () => boolean | Promise<boolean>;
   }
+}
+
+function isDraftEndpointUnavailable(error: unknown) {
+  return error instanceof ApiClientError && error.statusCode === 404;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function dedupeStringValues(values: ReadonlyArray<string>) {
+  return [...new Set(values.filter((value) => value.trim().length > 0))];
+}
+
+function getFieldSchemaScopeId(field: Pick<FormsPlaceholderField, "schemaScopeKey">) {
+  const normalizedScopeKey = field.schemaScopeKey?.trim();
+  return normalizedScopeKey && normalizedScopeKey.length > 0
+    ? normalizedScopeKey
+    : "root";
+}
+
+function humanizeAuthoringSchemaScopeKey(value: string) {
+  return value
+    .replace(/^pb_/, "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Subform";
+}
+
+function getModelSubformScopeDefinitions(model: FormsPlaceholderModel) {
+  const scopes = new Map(
+    (model.schemaScopes ?? []).map((scope) => [scope.key, scope]),
+  );
+
+  model.fields.forEach((field) => {
+    const scopeId = getFieldSchemaScopeId(field);
+    if (scopeId === "root" || scopes.has(scopeId)) {
+      return;
+    }
+
+    scopes.set(scopeId, {
+      displayName: humanizeAuthoringSchemaScopeKey(scopeId),
+      key: scopeId,
+      scopeType: "SUBFORM" as const,
+      subformType: "DEFAULT" as const,
+    });
+  });
+
+  return [...scopes.values()];
+}
+
+function createEmptyLayoutBlueprint(model: FormsPlaceholderModel) {
+  return {
+    rootScope: {
+      containers: [],
+      fieldPlacements: [],
+      schemaScopeId: "root",
+      unplacedFieldIds: [],
+    },
+    subformScopes: getModelSubformScopeDefinitions(model).map((scope) => ({
+      containers: [],
+      fieldPlacements: [],
+      schemaScopeId: scope.key,
+      unplacedFieldIds: [],
+    })),
+  } satisfies Record<string, unknown>;
+}
+
+function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
+  return {
+    ...field,
+    fieldId: field.id,
+    schemaScopeId: getFieldSchemaScopeId(field),
+  };
+}
+
+function buildCanonicalDataSchema(model: FormsPlaceholderModel) {
+  const rootFields = model.fields
+    .filter((field) => getFieldSchemaScopeId(field) === "root")
+    .map(serializeModelFieldForDataSchema);
+  const subformScopes = getModelSubformScopeDefinitions(model).map((scope) => ({
+    displayName: scope.displayName,
+    fields: model.fields
+      .filter((field) => getFieldSchemaScopeId(field) === scope.key)
+      .map(serializeModelFieldForDataSchema),
+    schemaScopeId: scope.key,
+    scopeType: "SUBFORM",
+    subformType: scope.subformType,
+    tableKey: scope.key,
+  }));
+
+  return {
+    modelId: model.id,
+    modelTitle: model.title,
+    rootScope: {
+      fields: rootFields,
+      schemaScopeId: "root",
+      scopeType: "ROOT",
+    },
+    subformScopes,
+  } satisfies Record<string, unknown>;
+}
+
+function isBlueprintContainerType(type: FormBuilderNode["type"]) {
+  return (
+    type === "accordion" ||
+    type === "accordion_item" ||
+    type === "column" ||
+    type === "grid" ||
+    type === "group" ||
+    type === "section" ||
+    type === "subform" ||
+    type === "tab_item" ||
+    type === "tabs"
+  );
+}
+
+function deriveTransientContainerKey(
+  scopeId: string,
+  node: FormBuilderNode,
+  parentContainerKey: string,
+  usedKeys: Map<string, number>,
+) {
+  const base = [
+    scopeId,
+    node.type,
+    toStorageKey(node.title?.trim() || node.id),
+  ].filter(Boolean).join(".");
+  const parentAwareBase = parentContainerKey && !base.startsWith(parentContainerKey)
+    ? `${parentContainerKey}.${toStorageKey(node.title?.trim() || node.id)}`
+    : base;
+  const nextBase = parentAwareBase || `${scopeId}.${node.type}.${toStorageKey(node.id)}`;
+  const usageCount = usedKeys.get(nextBase) ?? 0;
+  usedKeys.set(nextBase, usageCount + 1);
+  return usageCount === 0 ? nextBase : `${nextBase}.${usageCount + 1}`;
+}
+
+function orderScopeNodesForAuthoringCompile(
+  nodes: ReadonlyArray<FormBuilderNode>,
+) {
+  const indexedNodes = nodes.map((node, index) => ({ index, node }));
+  const childrenByParentId = new Map<string | null, Array<{ index: number; node: FormBuilderNode }>>();
+  const visitedNodeIds = new Set<string>();
+  const orderedNodes: FormBuilderNode[] = [];
+  const sortEntries = (entries: ReadonlyArray<{ index: number; node: FormBuilderNode }>) =>
+    [...entries].sort((left, right) => {
+      if (left.node.order === right.node.order) {
+        return left.index - right.index;
+      }
+
+      return left.node.order - right.node.order;
+    });
+
+  indexedNodes.forEach((entry) => {
+    const parentId = entry.node.parentId ?? null;
+    const siblings = childrenByParentId.get(parentId) ?? [];
+    siblings.push(entry);
+    childrenByParentId.set(parentId, siblings);
+  });
+
+  const visitChildren = (parentId: string | null) => {
+    sortEntries(childrenByParentId.get(parentId) ?? []).forEach((entry) => {
+      if (visitedNodeIds.has(entry.node.id)) {
+        return;
+      }
+
+      visitedNodeIds.add(entry.node.id);
+      orderedNodes.push(entry.node);
+      visitChildren(entry.node.id);
+    });
+  };
+
+  visitChildren(null);
+
+  sortEntries(indexedNodes).forEach((entry) => {
+    if (visitedNodeIds.has(entry.node.id)) {
+      return;
+    }
+
+    visitedNodeIds.add(entry.node.id);
+    orderedNodes.push(entry.node);
+    visitChildren(entry.node.id);
+  });
+
+  return orderedNodes;
+}
+
+function compileAuthoringScope(
+  scopeId: string,
+  nodes: ReadonlyArray<FormBuilderNode>,
+  unplacedFieldIds: ReadonlyArray<string>,
+) {
+  const orderedNodes = orderScopeNodesForAuthoringCompile(nodes);
+  const containerKeyByNodeId = new Map<string, string>();
+  const usedKeys = new Map<string, number>();
+  const uiNodes: Record<string, unknown>[] = [];
+  const containers: Record<string, unknown>[] = [];
+  const fieldPlacements: Record<string, unknown>[] = [];
+  const unresolvedFieldIds: string[] = [];
+
+  orderedNodes.forEach((node, index) => {
+    if (isBlueprintContainerType(node.type)) {
+      const parentContainerKey = node.parentId
+        ? (containerKeyByNodeId.get(node.parentId) ?? "")
+        : "";
+      const containerKey = node.containerKey?.trim()
+        || deriveTransientContainerKey(scopeId, node, parentContainerKey, usedKeys);
+      containerKeyByNodeId.set(node.id, containerKey);
+
+      const baseContainer = {
+        containerKey,
+        order: node.order ?? index,
+        parentContainerKey,
+        title: node.title ?? "",
+        type: node.type,
+      } satisfies Record<string, unknown>;
+      containers.push(
+        node.type === "subform"
+          ? {
+              ...baseContainer,
+              displayName: node.title ?? humanizeAuthoringSchemaScopeKey(node.tableKey ?? node.schemaScopeId ?? node.id),
+              schemaScopeId: node.schemaScopeId ?? node.tableKey ?? node.id,
+              subformType: node.subformType ?? "DEFAULT",
+              tableKey: node.tableKey ?? node.schemaScopeId ?? node.id,
+            }
+          : baseContainer,
+      );
+      uiNodes.push(
+        node.type === "subform"
+          ? {
+              ...node,
+              containerKey,
+              schemaScopeId: node.schemaScopeId ?? node.tableKey ?? node.id,
+              subformType: node.subformType ?? "DEFAULT",
+              tableKey: node.tableKey ?? node.schemaScopeId ?? node.id,
+            }
+          : {
+              ...node,
+              containerKey,
+            },
+      );
+      return;
+    }
+
+    if (node.type === "field" && typeof node.fieldId === "string") {
+      const parentContainerKey = node.parentId
+        ? (containerKeyByNodeId.get(node.parentId) ?? "")
+        : "";
+      if (node.parentId && !parentContainerKey) {
+        unresolvedFieldIds.push(node.fieldId);
+        return;
+      }
+
+      fieldPlacements.push({
+        containerKey: node.parentId ? parentContainerKey : formBuilderScopeRootPlacementKey,
+        fieldId: node.fieldId,
+        order: node.order ?? index,
+      });
+      uiNodes.push({ ...node });
+      return;
+    }
+
+    uiNodes.push({ ...node });
+  });
+
+  return {
+    fieldPlacements,
+    layoutBlueprintScope: {
+      containers,
+      fieldPlacements,
+      schemaScopeId: scopeId,
+      unplacedFieldIds: dedupeStringValues([
+        ...unplacedFieldIds,
+        ...unresolvedFieldIds,
+      ]),
+    } satisfies Record<string, unknown>,
+    uiScope: {
+      nodes: uiNodes,
+      schemaScopeId: scopeId,
+      unplacedFieldIds: dedupeStringValues([
+        ...unplacedFieldIds,
+        ...unresolvedFieldIds,
+      ]),
+    } satisfies Record<string, unknown>,
+  };
+}
+
+function buildCanonicalUiSchema(
+  document: ReturnType<typeof useFormBuilderDocument>["document"],
+) {
+  const rootScope = compileAuthoringScope(
+    "root",
+    document.rootScope.uiSchema.nodes,
+    document.rootScope.uiSchema.unplacedFieldIds,
+  );
+  const subformScopes = document.subformScopes.map((scope) => {
+    const compiled = compileAuthoringScope(
+      scope.tableKey,
+      scope.uiSchema.nodes,
+      scope.uiSchema.unplacedFieldIds,
+    );
+
+    return {
+      ...compiled.uiScope,
+      filterDefinitions: scope.filterDefinitions,
+      parentSubformNodeId: scope.parentSubformNodeId,
+      subformType: scope.subformType,
+      tableKey: scope.tableKey,
+      viewSettings: scope.viewSettings,
+    };
+  });
+
+  return {
+    rootScope: {
+      ...rootScope.uiScope,
+      filterDefinitions: document.filterDefinitions,
+      systemFields: document.systemFields,
+      viewSettings: document.viewSettings,
+    },
+    subformScopes,
+  } satisfies Record<string, unknown>;
+}
+
+function buildCanonicalLayoutBlueprint(
+  document: ReturnType<typeof useFormBuilderDocument>["document"],
+) {
+  const rootScope = compileAuthoringScope(
+    "root",
+    document.rootScope.uiSchema.nodes,
+    document.rootScope.uiSchema.unplacedFieldIds,
+  );
+
+  return {
+    rootScope: rootScope.layoutBlueprintScope,
+    subformScopes: document.subformScopes.map((scope) =>
+      compileAuthoringScope(
+        scope.tableKey,
+        scope.uiSchema.nodes,
+        scope.uiSchema.unplacedFieldIds,
+      ).layoutBlueprintScope
+    ),
+  } satisfies Record<string, unknown>;
+}
+
+function buildWorkspaceDocumentFromCanonicalSchemas(
+  modelPayload: Record<string, unknown>,
+  viewPayload: Record<string, unknown>,
+  model: FormsPlaceholderModel,
+  view: FormsPlaceholderView,
+) {
+  const dataSchema = isRecord(modelPayload.dataSchema) ? modelPayload.dataSchema : null;
+  const uiSchema = isRecord(viewPayload.uiSchema) ? viewPayload.uiSchema : null;
+  if (!dataSchema || !uiSchema) {
+    return normalizePersistedFormBuilderDocument(viewPayload, model, view);
+  }
+
+  const rootUiScope = isRecord(uiSchema.rootScope) ? uiSchema.rootScope : null;
+  const rootDataScope = isRecord(dataSchema.rootScope) ? dataSchema.rootScope : null;
+  const subformDataScopeById = new Map<string, Record<string, unknown>>();
+  if (Array.isArray(dataSchema.subformScopes)) {
+    dataSchema.subformScopes.forEach((entry) => {
+      if (!isRecord(entry)) {
+        return;
+      }
+
+      const scopeId = typeof entry.schemaScopeId === "string" && entry.schemaScopeId.trim().length > 0
+        ? entry.schemaScopeId
+        : typeof entry.tableKey === "string" && entry.tableKey.trim().length > 0
+          ? entry.tableKey
+          : "";
+      if (!scopeId) {
+        return;
+      }
+
+      subformDataScopeById.set(scopeId, entry);
+    });
+  }
+
+  const subformScopes = Array.isArray(uiSchema.subformScopes)
+    ? uiSchema.subformScopes.flatMap((entry) => {
+        if (!isRecord(entry)) {
+          return [];
+        }
+
+        const schemaScopeId = typeof entry.schemaScopeId === "string" && entry.schemaScopeId.trim().length > 0
+          ? entry.schemaScopeId
+          : typeof entry.tableKey === "string" && entry.tableKey.trim().length > 0
+            ? entry.tableKey
+            : "";
+        const parentSubformNodeId = typeof entry.parentSubformNodeId === "string" ? entry.parentSubformNodeId : "";
+        if (!schemaScopeId || !parentSubformNodeId) {
+          return [];
+        }
+
+        const dataScope = subformDataScopeById.get(schemaScopeId);
+        const fieldIds = Array.isArray(dataScope?.fields)
+          ? dataScope.fields.flatMap((field) =>
+            isRecord(field) && typeof field.fieldId === "string"
+              ? [field.fieldId]
+              : isRecord(field) && typeof field.id === "string"
+                ? [field.id]
+                : [])
+          : [];
+        const scopeUiNodes = Array.isArray(entry.nodes)
+          ? entry.nodes.map((node) =>
+            isRecord(node) && node.parentId === null
+              ? {
+                  ...node,
+                  parentId: parentSubformNodeId,
+                }
+              : node)
+          : [];
+
+        return [{
+          dataSchema: {
+            fieldIds,
+          },
+          filterDefinitions: isRecord(entry.filterDefinitions) ? entry.filterDefinitions : {},
+          parentSubformNodeId,
+          scopeId: parentSubformNodeId,
+          scopeType: "SUBFORM" as const,
+          subformType: entry.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT",
+          tableKey: typeof entry.tableKey === "string" && entry.tableKey.trim().length > 0
+            ? entry.tableKey
+            : schemaScopeId,
+          uiSchema: {
+            currentParentId: null,
+            nodes: scopeUiNodes,
+            selectedNodeId: null,
+            unplacedFieldIds: Array.isArray(entry.unplacedFieldIds)
+              ? entry.unplacedFieldIds
+              : [],
+          },
+          viewSettings: isRecord(entry.viewSettings) ? entry.viewSettings : {},
+        }];
+      })
+    : [];
+
+  return normalizePersistedFormBuilderDocument({
+    currentParentId: null,
+    filterDefinitions: isRecord(rootUiScope?.filterDefinitions) ? rootUiScope.filterDefinitions : {},
+    nodes: [
+      ...(Array.isArray(rootUiScope?.nodes) ? rootUiScope.nodes : []),
+      ...subformScopes.flatMap((scope) => scope.uiSchema.nodes),
+    ],
+    rootScope: {
+      dataSchema: {
+        fieldIds: Array.isArray(rootDataScope?.fields)
+          ? rootDataScope.fields.flatMap((field) =>
+            isRecord(field) && typeof field.fieldId === "string"
+              ? [field.fieldId]
+              : isRecord(field) && typeof field.id === "string"
+                ? [field.id]
+                : [])
+          : [],
+      },
+      scopeId: "root",
+      scopeType: "ROOT",
+      uiSchema: {
+        currentParentId: null,
+        nodes: Array.isArray(rootUiScope?.nodes) ? rootUiScope.nodes : [],
+        selectedNodeId: null,
+        unplacedFieldIds: Array.isArray(rootUiScope?.unplacedFieldIds)
+          ? rootUiScope.unplacedFieldIds
+          : [],
+      },
+    },
+    selectedNodeId: null,
+    subformScopes,
+    systemFields: isRecord(rootUiScope?.systemFields) ? rootUiScope.systemFields : {},
+    viewDescription: typeof viewPayload.description === "string" ? viewPayload.description : view.description,
+    viewKind: viewPayload.kind === "detail" ? "detail" : view.kind,
+    viewSettings: isRecord(rootUiScope?.viewSettings) ? rootUiScope.viewSettings : {},
+    viewTitle: typeof viewPayload.title === "string" ? viewPayload.title : view.title,
+  }, model, view);
+}
+
+function createRouteBootstrapFallbackView(viewId?: string): FormsPlaceholderView {
+  const normalizedViewId = viewId?.trim() || "__route-bootstrap-view__";
+
+  return {
+    description: "",
+    displayName: normalizedViewId,
+    id: normalizedViewId,
+    isActive: true,
+    isViewLocked: false,
+    key: normalizedViewId,
+    kind: "form",
+    lastAlignedModelStructureVersion: 1,
+    title: normalizedViewId,
+    viewVersion: 1,
+  };
+}
+
+function createRouteBootstrapFallbackModel(
+  modelId: string | undefined,
+  fallbackView: FormsPlaceholderView,
+): FormsPlaceholderModel {
+  const normalizedModelId = modelId?.trim() || "__route-bootstrap-model__";
+
+  return {
+    canEditViewsOnly: false,
+    description: "",
+    displayName: normalizedModelId,
+    fields: [],
+    id: normalizedModelId,
+    isStructureLocked: false,
+    key: normalizedModelId,
+    modelStructureVersion: 1,
+    owner: "",
+    screens: [fallbackView],
+    title: normalizedModelId,
+    version: 1,
+  };
+}
+
+function isDefaultBlueprintView(view: Pick<FormsPlaceholderView, "id" | "key">) {
+  return view.id === "default" || view.key === "default";
 }
 
 function getNodeTypeKey(nodeType: FormBuilderNode["type"]) {
@@ -924,12 +1461,36 @@ function getFieldById(
   return fields.find((field) => field.id === fieldId) ?? null;
 }
 
+function getModelFieldLabel(field: FormsPlaceholderField) {
+  return getFormsPlaceholderFieldDisplayName(field);
+}
+
+function isPersistedModelField(field: FormsPlaceholderField) {
+  return field.isPersisted ?? field.status !== "draft";
+}
+
+function getSystemFieldSemanticRole(role: SystemFieldRole): FormsPlaceholderFieldSemanticRole {
+  return role === "reportedBy"
+    ? "reportedBy"
+    : role === "reportedDate"
+      ? "reportedDate"
+      : "workflowStatus";
+}
+
+function getSystemFieldExistingCandidate(
+  fields: ReadonlyArray<FormsPlaceholderField>,
+  role: SystemFieldRole,
+) {
+  const semanticRole = getSystemFieldSemanticRole(role);
+  return fields.find((field) => field.semanticRole === semanticRole) ?? null;
+}
+
 function getAuthoringFieldLabel(
   field: FormsPlaceholderField,
   document: ReturnType<typeof useFormBuilderDocument>["document"],
 ) {
   const node = findFormBuilderNodeByFieldId(document, field.id);
-  return node?.title?.trim() || field.label;
+  return node?.title?.trim() || getModelFieldLabel(field);
 }
 
 function getFieldLabelAndBoundField(
@@ -939,7 +1500,7 @@ function getFieldLabelAndBoundField(
   const labelField = getAuthoringFieldLabel(field, document);
 
   return {
-    boundField: field.label,
+    boundField: getModelFieldLabel(field),
     labelField,
   };
 }
@@ -1342,21 +1903,6 @@ function getSystemFieldOptions(
   );
 }
 
-function getSystemFieldExistingCandidate(
-  fields: ReadonlyArray<FormsPlaceholderField>,
-  role: SystemFieldRole,
-) {
-  if (role === "reportedBy") {
-    return fields.find((field) => field.kind === "db_lookup" && field.label === "Reported By") ?? null;
-  }
-
-  if (role === "reportedDate") {
-    return fields.find((field) => field.kind === "date" && field.label === "Reported Date") ?? null;
-  }
-
-  return fields.find((field) => field.kind === "single_select" && field.label === "Status") ?? null;
-}
-
 function getSystemFieldTemplate(
   fields: ReadonlyArray<FormsPlaceholderField>,
   role: SystemFieldRole,
@@ -1378,36 +1924,51 @@ function getSystemFieldTemplate(
 
   if (role === "reportedBy") {
     return {
+      displayName: "Reported By",
       displayFields: ["Full name", "Email"],
       family: "preset",
       id: nextId,
+      isPersisted: false,
       isLocked: false,
       kind: "db_lookup",
       label: "Reported By",
       preset: "contact_lookup",
+      semanticRole: "reportedBy",
       selectionMode: "single",
       sourceFilters: ["Only active contacts"],
       sourceLabel: "Contacts",
+      status: "draft",
+      storageKey: createFormsPlaceholderStorageKey("Reported By", nextId),
     };
   }
 
   if (role === "reportedDate") {
     return {
+      displayName: "Reported Date",
       family: "core",
       id: nextId,
+      isPersisted: false,
       isLocked: false,
       kind: "date",
       label: "Reported Date",
+      semanticRole: "reportedDate",
+      status: "draft",
+      storageKey: createFormsPlaceholderStorageKey("Reported Date", nextId),
     };
   }
 
   return {
+    displayName: "Status",
     family: "choice",
     id: nextId,
+    isPersisted: false,
     isLocked: false,
     kind: "single_select",
     label: "Status",
     options: ["Draft", "Open", "Closed"],
+    semanticRole: "workflowStatus",
+    status: "draft",
+    storageKey: createFormsPlaceholderStorageKey("Status", nextId),
   };
 }
 
@@ -2436,23 +2997,18 @@ function getSummaryText(
   childrenCount: number,
 ) {
   if (summaryKey === "tenant.platformStudio.forms.builder.summary.children") {
-    return t(summaryKey, { count: childrenCount });
+    return `${t(getNodeTypeKey(node.type))} (${t(summaryKey, { count: childrenCount })})`;
   }
 
   if (node.type === "field") {
     const field = objectFields.find((entry) => entry.id === node.fieldId);
-
-    return t(summaryKey, {
-      fieldLabel: field?.label ?? objectTitle,
+    return field ? t(getFieldTypeKey(field)) : t(summaryKey, {
+      fieldLabel: objectTitle,
     });
   }
 
   if (node.type === "view_only_field") {
-    const bindingOption = getViewOnlyBindingOption(node.viewOnlyBinding, document, objectFields, t);
-
-    return t(summaryKey, {
-      fieldLabel: bindingOption?.label ?? t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBindingPending"),
-    });
+    return t(getNodeTypeKey("view_only_field"));
   }
 
   if ((node.type === "text" || node.type === "rich_text") && node.text?.trim()) {
@@ -2485,73 +3041,15 @@ function compileDebugSchemas(
   document: ReturnType<typeof useFormBuilderDocument>["document"],
   model: FormsPlaceholderModel,
   view: FormsPlaceholderView,
+  layoutBlueprint: Record<string, unknown>,
 ) {
-  const rootDataSchema = {
-    fields: model.fields.filter((field) => document.rootScope.dataSchema.fieldIds.includes(field.id)),
-    modelId: model.id,
-    modelTitle: model.title,
-  };
-
-  const rootUiSchema = {
-    filterDefinitions: document.filterDefinitions,
-    nodes: document.rootScope.uiSchema.nodes,
-    systemFields: document.systemFields,
-    viewDescription: document.viewDescription,
-    viewId: view.id,
-    viewKind: document.viewKind,
-    viewSettings: document.viewSettings,
-    viewTitle: document.viewTitle,
-  };
-
-  const subformScopes = document.subformScopes.map((scope) => ({
-    dataSchema: {
-      fields: model.fields.filter((field) => scope.dataSchema.fieldIds.includes(field.id)),
-    },
-    filterDefinitions: scope.filterDefinitions,
-    parentSubformNodeId: scope.parentSubformNodeId,
-    scopeId: scope.scopeId,
-    scopeType: scope.scopeType,
-    subformType: scope.subformType,
-    tableKey: scope.tableKey,
-    viewSettings: scope.viewSettings,
-    uiSchema: {
-      nodes: scope.uiSchema.nodes,
-    },
-  }));
-
   return {
-    dataSchema: {
-      rootScope: {
-        dataSchema: rootDataSchema,
-        scopeId: "root" as const,
-        scopeType: "ROOT" as const,
-      },
-      subformScopes: subformScopes.map((scope) => ({
-        dataSchema: scope.dataSchema,
-        filterDefinitions: scope.filterDefinitions,
-        parentSubformNodeId: scope.parentSubformNodeId,
-        scopeId: scope.scopeId,
-        scopeType: scope.scopeType,
-        subformType: scope.subformType,
-        tableKey: scope.tableKey,
-      })),
-    },
+    dataSchema: buildCanonicalDataSchema(model),
+    layoutBlueprint,
     uiSchema: {
-      rootScope: {
-        scopeId: "root" as const,
-        scopeType: "ROOT" as const,
-        uiSchema: rootUiSchema,
-      },
-      subformScopes: subformScopes.map((scope) => ({
-        filterDefinitions: scope.filterDefinitions,
-        parentSubformNodeId: scope.parentSubformNodeId,
-        scopeId: scope.scopeId,
-        scopeType: scope.scopeType,
-        subformType: scope.subformType,
-        tableKey: scope.tableKey,
-        viewSettings: scope.viewSettings,
-        uiSchema: scope.uiSchema,
-      })),
+      viewId: view.id,
+      viewKey: view.key,
+      ...buildCanonicalUiSchema(document),
     },
   };
 }
@@ -2580,6 +3078,24 @@ function BackArrowIcon() {
         strokeLinejoin="round"
         strokeWidth="1.8"
       />
+    </svg>
+  );
+}
+
+function DatabaseFieldIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+      viewBox="0 0 20 20"
+    >
+      <ellipse cx="10" cy="5" rx="5.5" ry="2.5" />
+      <path d="M4.5 5v4c0 1.4 2.46 2.5 5.5 2.5s5.5-1.1 5.5-2.5V5" />
+      <path d="M4.5 9v4c0 1.4 2.46 2.5 5.5 2.5s5.5-1.1 5.5-2.5V9" />
     </svg>
   );
 }
@@ -2986,10 +3502,41 @@ export function FormsViewWorkspacePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
+  const runtimeConfig = useTenantRuntimeConfig();
+  const draftClient = useMemo(
+    () => createTenantFormBuilderDraftClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
+  const {
+    checkAuth,
+    getAccessToken,
+    signOut,
+  } = useAuth();
+  const {
+    ensureModel,
+    models,
+    replaceModel,
+  } = useFormBuilderAuthoring();
   const currentActor = getFormsPlaceholderActor(undefined);
-  const [models, setModels] = useFormsPlaceholderModels();
   const model = getFormsPlaceholderModel(params.modelId, models);
   const view = getFormsPlaceholderView(params.modelId, params.viewId, models);
+  const fallbackView = useMemo(
+    () => createRouteBootstrapFallbackView(params.viewId),
+    [params.viewId],
+  );
+  const fallbackModel = useMemo(
+    () => createRouteBootstrapFallbackModel(params.modelId, fallbackView),
+    [fallbackView, params.modelId],
+  );
+  const hasResolvedWorkspace = Boolean(model && view);
+  const resolvedModel = model ?? fallbackModel;
+  const resolvedView = view
+    ?? resolvedModel.screens.find((screen) =>
+      screen.id === fallbackView.id || screen.key === fallbackView.key
+    )
+    ?? fallbackView;
+  const [routeBootstrapError, setRouteBootstrapError] = useState<string | null>(null);
+  const [isBootstrappingRoute, setIsBootstrappingRoute] = useState(Boolean(params.modelId && params.viewId));
   const [paletteQuery, setPaletteQuery] = useState("");
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("selection");
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
@@ -3002,32 +3549,69 @@ export function FormsViewWorkspacePage() {
   const [savePulse, setSavePulse] = useState(false);
   const [leaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
+  const [draftSyncError, setDraftSyncError] = useState<string | null>(null);
+  const [isDraftSyncing, setIsDraftSyncing] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
-  if (!model || !view) {
-    return (
-      <Card className="tenant-web__platform-studio-missing">
-        <CardHeader>
-          <div>
-            <CardTitle>{t("tenant.platformStudio.forms.missingTitle")}</CardTitle>
-            <CardDescription>{t("tenant.platformStudio.forms.missingDescription")}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="tenant-web__platform-studio-row">
-          <Button onClick={() => navigate(platformStudioPaths.forms)} variant="outline">
-            {t("tenant.platformStudio.forms.backToForms")}
-          </Button>
-          {params.modelId ? (
-            <Button onClick={() => navigate(platformStudioPaths.model(params.modelId ?? ""))} variant="ghost">
-              {t("tenant.platformStudio.forms.backToModel")}
-            </Button>
-          ) : null}
-        </CardContent>
-      </Card>
-    );
-  }
+  useEffect(() => {
+    if (!params.modelId || !params.viewId) {
+      setIsBootstrappingRoute(false);
+      setRouteBootstrapError(null);
+      return;
+    }
 
-  const currentModel = model;
-  const currentView = view;
+    if (model && view) {
+      setIsBootstrappingRoute(false);
+      setRouteBootstrapError(null);
+      return;
+    }
+
+    let isActive = true;
+    setIsBootstrappingRoute(true);
+    setRouteBootstrapError(null);
+
+    void ensureModel(params.modelId)
+      .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (error instanceof ApiClientError && error.statusCode === 404) {
+          setRouteBootstrapError(null);
+          return;
+        }
+
+        setRouteBootstrapError(
+          error instanceof Error
+            ? error.message
+            : t("tenant.platformStudio.forms.workspaceBootstrapError"),
+        );
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsBootstrappingRoute(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [ensureModel, model, params.modelId, params.viewId, t, view]);
+
+  const [modelDraft, setModelDraft] = useState<FormsPlaceholderModel>(() => cloneFormsPlaceholderModel(resolvedModel));
+  const [savedModelDraft, setSavedModelDraft] = useState<FormsPlaceholderModel>(() => cloneFormsPlaceholderModel(resolvedModel));
+  const [layoutBlueprintDraft, setLayoutBlueprintDraft] = useState<Record<string, unknown>>(() =>
+    createEmptyLayoutBlueprint(resolvedModel),
+  );
+  const [savedLayoutBlueprintDraft, setSavedLayoutBlueprintDraft] = useState<Record<string, unknown>>(() =>
+    createEmptyLayoutBlueprint(resolvedModel),
+  );
+  const currentModel = modelDraft;
+  const currentView = currentModel.screens.find((screen) =>
+    screen.id === resolvedView.id || screen.key === resolvedView.key
+  ) ?? resolvedView;
+  const isDefaultView = isDefaultBlueprintView(currentView);
+  const currentModelKey = getFormsPlaceholderModelKey(currentModel);
   const [pendingDefaultFilterFieldId, setPendingDefaultFilterFieldId] = useState(
     () => currentModel.fields[0]?.id ?? "",
   );
@@ -3051,17 +3635,39 @@ export function FormsViewWorkspacePage() {
     fieldId: string;
     modelId: string;
     selectedFieldKeys: ReadonlyArray<string>;
-    sortFieldKey: string;
+      sortFieldKey: string;
   } | null>(null);
 
-  const access = getFormsAuthoringAccess(currentActor, currentModel);
-  const workspaceAccess = getFormsWorkspaceAccess(access, currentModel);
+  const access = getFormsAuthoringAccess(currentActor, currentModel, currentView);
+  const workspaceAccess = getFormsWorkspaceAccess(access, currentModel, currentView);
   const {
     document,
-    isDirty: hasUnsavedChanges,
-    saveDocument,
+    hydrateDocument,
+    isDirty: hasUnsavedDocumentChanges,
     setDocument,
   } = useFormBuilderDocument(currentModel, currentView);
+  const hydrateDocumentRef = useRef(hydrateDocument);
+  const loadedDraftSignatureRef = useRef<string | null>(null);
+  const hasUnsavedModelChanges = useMemo(
+    () => JSON.stringify(modelDraft) !== JSON.stringify(savedModelDraft),
+    [modelDraft, savedModelDraft],
+  );
+  const hasUnsavedChanges = hasUnsavedDocumentChanges || hasUnsavedModelChanges;
+  const currentModelSchemaScopes = useMemo(
+    () => deriveModelSchemaScopes(currentModel, document),
+    [currentModel, document],
+  );
+  const currentDataSchema = useMemo(
+    () => buildCanonicalDataSchema({
+      ...currentModel,
+      schemaScopes: currentModelSchemaScopes,
+    }),
+    [currentModel, currentModelSchemaScopes],
+  );
+  const savedDataSchema = useMemo(
+    () => buildCanonicalDataSchema(savedModelDraft),
+    [savedModelDraft],
+  );
   const activeScope = getActiveFormBuilderScope(document);
   const currentScopeParentId = getCurrentFormBuilderParentId(document);
   const currentScopeSelectedNodeId = getCurrentFormBuilderSelectedNodeId(document);
@@ -3186,6 +3792,9 @@ export function FormsViewWorkspacePage() {
   const selectedFieldIsDateToday = selectedField?.preset === "date_today";
   const selectedFieldIsTags = selectedField?.preset === "tags";
   const selectedFieldAutocompleteChecked = selectedField ? selectedField.autocomplete !== "off" : true;
+  const canEditModelDefinition = access.canManageStructure && isDefaultView;
+  const canToggleModelLocks = access.canManageStructure && isDefaultView;
+  const canToggleViewLocks = access.canManageStructure;
   const selectedFieldDefaultAutocompleteValue = useMemo(() => {
     if (!selectedField) {
       return "on";
@@ -3202,23 +3811,190 @@ export function FormsViewWorkspacePage() {
         return "on";
     }
   }, [selectedField]);
-  const isMainFormRootLevel = document.activeScopeId === "root" && currentScopeParentId === null;
   const currentScopeContainerType = currentScopeParentId
     ? currentParentNode?.type ?? null
     : (activeScope.scopeType === "SUBFORM" ? "subform" : null);
   const canPlaceFieldAtCurrentLevel = getAllowedChildNodeTypes(currentScopeContainerType).includes("field");
+  const currentUiSchema = useMemo(
+    () => buildCanonicalUiSchema(document),
+    [document],
+  );
+  const currentLayoutBlueprint = useMemo(
+    () => (isDefaultView ? buildCanonicalLayoutBlueprint(document) : layoutBlueprintDraft),
+    [document, isDefaultView, layoutBlueprintDraft],
+  );
   const breadcrumb = getFormBuilderBreadcrumb(document);
-  const elementItems = getElementPaletteItems(document, workspaceAccess, paletteQuery);
-  const fieldItems = getFieldPaletteItems(document, workspaceAccess, paletteQuery);
+  const structureEditingAccess = useMemo(
+    () => (isDefaultView
+      ? workspaceAccess
+      : {
+          ...workspaceAccess,
+          canAddElementItems: false,
+          canAddFieldItems: false,
+          canRemoveItems: false,
+          lockReasonKey: "tenant.platformStudio.forms.builder.defaultViewBlueprintOnlyNotice",
+          structureLockReasonKey: "tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice",
+        }),
+    [isDefaultView, workspaceAccess],
+  );
+  const elementItems = getElementPaletteItems(document, structureEditingAccess, paletteQuery);
   const workflowStatusField = getFieldById(currentModel.fields, document.systemFields.workflowStatus?.fieldId);
   const workflowStatusOptions = workflowStatusField?.options ?? [];
+  const currentScopePlacementLabel = isRootViewScope
+    ? t("tenant.platformStudio.forms.builder.rootLevel")
+    : currentScopeViewLabel;
+  const currentScopeUnplacedFieldIds = useMemo(
+    () => getFormBuilderScopeUnplacedFieldIds(document, currentScopeSubformNode?.id ?? null),
+    [currentScopeSubformNode?.id, document],
+  );
+  const currentScopeUnplacedFields = useMemo(() => {
+    const fieldById = new Map(currentModel.fields.map((field) => [field.id, {
+      ...field,
+      label: getAuthoringFieldLabel(field, document),
+    }]));
+    return currentScopeUnplacedFieldIds.flatMap((fieldId) => {
+      const field = fieldById.get(fieldId);
+      return field ? [field] : [];
+    });
+  }, [currentModel.fields, currentScopeUnplacedFieldIds, document]);
+  const canCreateFieldAtCurrentLevel = canPlaceFieldAtCurrentLevel;
+  const fieldPlacementAccess = structureEditingAccess;
+  const fieldItems = getFieldPaletteItems(document, fieldPlacementAccess, paletteQuery);
+  const canPlaceUnplacedFields = isDefaultView
+    && structureEditingAccess.canAddFieldItems
+    && canPlaceFieldAtCurrentLevel;
+  const unplacedFieldsHintKey = !isDefaultView
+    ? "tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice"
+    : (!structureEditingAccess.canAddFieldItems
+      ? (structureEditingAccess.structureLockReasonKey ?? structureEditingAccess.lockReasonKey)
+      : (!canPlaceFieldAtCurrentLevel
+        ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
+        : null));
   const pendingNavigationPathRef = useRef<string | null>(null);
   const pendingLeaveResolverRef = useRef<((value: boolean) => void) | null>(null);
   const selectionPanelTopRef = useRef<HTMLDivElement | null>(null);
   const compiledDebugSchemas = useMemo(
-    () => compileDebugSchemas(document, currentModel, currentView),
-    [currentModel, currentView, document],
+    () => compileDebugSchemas(document, currentModel, currentView, currentLayoutBlueprint),
+    [currentLayoutBlueprint, currentModel, currentView, document],
   );
+
+  useEffect(() => {
+    hydrateDocumentRef.current = hydrateDocument;
+  }, [hydrateDocument]);
+
+  useEffect(() => {
+    const nextModelDraft = cloneFormsPlaceholderModel(resolvedModel);
+    setModelDraft(nextModelDraft);
+    setSavedModelDraft(nextModelDraft);
+    const nextLayoutBlueprint = createEmptyLayoutBlueprint(nextModelDraft);
+    setLayoutBlueprintDraft(nextLayoutBlueprint);
+    setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
+  }, [resolvedModel]);
+
+  useEffect(() => {
+    if (!hasResolvedWorkspace) {
+      return;
+    }
+
+    const draftSignature = `${resolvedModel.id}:${resolvedView.id}`;
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      return;
+    }
+    if (loadedDraftSignatureRef.current === draftSignature) {
+      return;
+    }
+
+    let isActive = true;
+    loadedDraftSignatureRef.current = draftSignature;
+    setIsDraftSyncing(true);
+    setDraftSyncError(null);
+
+    async function recoverUnauthorizedAccessToken() {
+      const recovered = await checkAuth();
+      if (!recovered) {
+        return null;
+      }
+
+      return getAccessToken();
+    }
+
+    void requestWithUnauthorizedRetry(
+      (bearerToken) => draftClient.loadDraft(bearerToken, resolvedModel.id, resolvedView.id),
+      {
+        accessToken,
+        onUnauthorized: recoverUnauthorizedAccessToken,
+      },
+    )
+      .then((response) => {
+        if (!isActive) {
+          return;
+        }
+
+        const loadedModel = normalizeFormsPlaceholderModel(response.draft.model, resolvedModel);
+        const nextView = loadedModel.screens.find((screen) =>
+          screen.id === resolvedView.id || screen.key === resolvedView.key
+        ) ?? resolvedView;
+        const nextLayoutBlueprint = isRecord(response.draft.model.layoutBlueprint)
+          ? response.draft.model.layoutBlueprint
+          : createEmptyLayoutBlueprint(loadedModel);
+        const nextDocument = buildWorkspaceDocumentFromCanonicalSchemas(
+          response.draft.model,
+          response.draft.view,
+          loadedModel,
+          nextView,
+        );
+        const nextModel = cloneFormsPlaceholderModel({
+          ...loadedModel,
+          schemaScopes: deriveModelSchemaScopes(loadedModel, nextDocument),
+        });
+        const shouldMarkModelAsDirty =
+          JSON.stringify(nextModel.schemaScopes ?? [])
+          !== JSON.stringify(loadedModel.schemaScopes ?? []);
+        const reconciledDocument = reconcileFormBuilderDocumentWithModel(nextDocument, nextModel, nextLayoutBlueprint);
+        const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextDocument);
+
+        replaceModel(nextModel);
+        setModelDraft(nextModel);
+        setSavedModelDraft(shouldMarkModelAsDirty ? loadedModel : nextModel);
+        setLayoutBlueprintDraft(nextLayoutBlueprint);
+        setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
+        hydrateDocumentRef.current(nextDocument);
+        if (shouldMarkReconciledAsDirty) {
+          setDocument(reconciledDocument);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (isUnauthorizedApiError(error)) {
+          void signOut();
+          return;
+        }
+
+        if (isDraftEndpointUnavailable(error)) {
+          return;
+        }
+
+        loadedDraftSignatureRef.current = null;
+        setDraftSyncError(
+          error instanceof Error
+            ? error.message
+            : t("tenant.platformStudio.forms.builder.draftLoadError"),
+        );
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsDraftSyncing(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [checkAuth, draftClient, getAccessToken, hasResolvedWorkspace, replaceModel, resolvedModel, resolvedView, signOut, t]);
 
   useEffect(() => {
     setVisibilityRuleEditor(null);
@@ -3255,6 +4031,10 @@ export function FormsViewWorkspacePage() {
   const debugDataSchema = useMemo(
     () => JSON.stringify(compiledDebugSchemas.dataSchema, null, 2),
     [compiledDebugSchemas.dataSchema],
+  );
+  const debugLayoutBlueprint = useMemo(
+    () => JSON.stringify(compiledDebugSchemas.layoutBlueprint, null, 2),
+    [compiledDebugSchemas.layoutBlueprint],
   );
   const debugUiSchema = useMemo(
     () => JSON.stringify(compiledDebugSchemas.uiSchema, null, 2),
@@ -3297,7 +4077,7 @@ export function FormsViewWorkspacePage() {
   }, [hasUnsavedChanges]);
 
   const systemFieldItems = useMemo<ReadonlyArray<SystemFieldPaletteItem>>(() => {
-    if (!canPlaceFieldAtCurrentLevel || !isMainFormRootLevel) {
+    if (!canPlaceFieldAtCurrentLevel || document.activeScopeId !== "root") {
       return [];
     }
 
@@ -3309,10 +4089,10 @@ export function FormsViewWorkspacePage() {
 
         return {
           descriptionKey: getSystemFieldPaletteDescriptionKey(role),
-          disabled: !workspaceAccess.canAddItems || alreadyConfigured,
+          disabled: !fieldPlacementAccess.canAddFieldItems || alreadyConfigured,
           disabledReasonKey: alreadyConfigured
             ? "tenant.platformStudio.forms.builder.systemField.alreadyConfigured"
-            : (!workspaceAccess.canAddItems ? workspaceAccess.lockReasonKey : null),
+            : (!fieldPlacementAccess.canAddFieldItems ? fieldPlacementAccess.structureLockReasonKey : null),
           iconKey:
             role === "reportedBy"
               ? "db_lookup"
@@ -3335,7 +4115,7 @@ export function FormsViewWorkspacePage() {
       .filter((item) =>
         !normalizedSearch || item.searchTerms.some((term) => term.toLowerCase().includes(normalizedSearch)),
       );
-  }, [canPlaceFieldAtCurrentLevel, document, isMainFormRootLevel, paletteQuery, workspaceAccess]);
+  }, [canPlaceFieldAtCurrentLevel, document, fieldPlacementAccess, paletteQuery]);
 
   const paletteSections = useMemo(
     () =>
@@ -3371,28 +4151,45 @@ export function FormsViewWorkspacePage() {
     setDocument((currentDocument) => updater(currentDocument));
   }
 
-  function updateModels(
-    updater: (currentModels: typeof models) => typeof models,
+  function updateCurrentModel(
+    updater: (currentModelDraft: FormsPlaceholderModel) => FormsPlaceholderModel,
   ) {
-    setModels((currentModels) => updater(currentModels));
+    setModelDraft((currentValue) => updater(currentValue));
   }
 
   function updateFieldById(
     fieldId: string,
     updater: (field: FormsPlaceholderField) => FormsPlaceholderField,
   ) {
-    updateModels((currentModels) =>
-      currentModels.map((modelEntry) =>
-        modelEntry.id === currentModel.id
-          ? {
-              ...modelEntry,
-              fields: modelEntry.fields.map((field) =>
-                field.id === fieldId ? updater(field) : field
-              ),
-            }
-          : modelEntry,
+    if (!canEditModelDefinition) {
+      return;
+    }
+
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      fields: currentModelDraft.fields.map((field) =>
+        field.id === fieldId ? updater(field) : field
       ),
+    }));
+  }
+
+  function deleteUnsavedField(fieldId: string, nodeId: string) {
+    const nextModelBase = cloneFormsPlaceholderModel({
+      ...currentModel,
+      fields: currentModel.fields.filter((field) => field.id !== fieldId),
+    });
+    const documentWithoutField = normalizePersistedFormBuilderDocument(
+      createPersistedFormBuilderDocument(removeFormBuilderNode(document, nodeId)),
+      nextModelBase,
+      currentView,
     );
+    const nextModel = cloneFormsPlaceholderModel({
+      ...nextModelBase,
+      schemaScopes: deriveModelSchemaScopes(nextModelBase, documentWithoutField),
+    });
+
+    setModelDraft(nextModel);
+    setDocument(documentWithoutField);
   }
 
   function updateSelectedField(
@@ -3405,23 +4202,90 @@ export function FormsViewWorkspacePage() {
     updateFieldById(selectedField.id, updater);
   }
 
+  function updateCurrentViewMetadata(
+    updater: (viewEntry: FormsPlaceholderView) => FormsPlaceholderView,
+  ) {
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      screens: currentModelDraft.screens.map((screenEntry) =>
+        screenEntry.id === currentView.id || screenEntry.key === currentView.key
+          ? updater(screenEntry)
+          : screenEntry
+      ),
+    }));
+  }
+
+  function getScopeSchemaScopeKey(scope: typeof activeScope) {
+    return scope.scopeType === "SUBFORM" ? scope.tableKey : "root";
+  }
+
+  function getDocumentFieldSchemaScopeKey(
+    currentDocument: typeof document,
+    fieldId: string,
+  ) {
+    const subformScope = currentDocument.subformScopes.find((scope) => scope.dataSchema.fieldIds.includes(fieldId));
+    if (subformScope) {
+      return subformScope.tableKey;
+    }
+
+    return currentDocument.rootScope.dataSchema.fieldIds.includes(fieldId) ? "root" : null;
+  }
+
+  function humanizeSchemaScopeKey(value: string) {
+    return value
+      .replace(/^pb_/, "")
+      .replace(/[_-]+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Subform";
+  }
+
+  function deriveModelSchemaScopes(
+    modelDraft: FormsPlaceholderModel,
+    currentDocument: typeof document,
+  ) {
+    const nextScopes = new Map(
+      (modelDraft.schemaScopes ?? []).map((scope) => [scope.key, scope]),
+    );
+    const subformNodeById = new Map(
+      currentDocument.rootScope.uiSchema.nodes
+        .filter((node) => node.type === "subform")
+        .map((node) => [node.id, node]),
+    );
+
+    currentDocument.subformScopes.forEach((scope) => {
+      const key = scope.tableKey.trim();
+      if (!key) {
+        return;
+      }
+
+      nextScopes.set(key, {
+        displayName:
+          subformNodeById.get(scope.parentSubformNodeId)?.title?.trim()
+          || nextScopes.get(key)?.displayName
+          || humanizeSchemaScopeKey(key),
+        key,
+        scopeType: "SUBFORM",
+        subformType: scope.subformType,
+      });
+    });
+
+    return [...nextScopes.values()];
+  }
+
   function handleCreateLibraryField(definition: FormBuilderLibraryFieldDefinition) {
-    if (!canPlaceFieldAtCurrentLevel || !workspaceAccess.canAddItems) {
+    if (!canCreateFieldAtCurrentLevel || !structureEditingAccess.canAddFieldItems || !canEditModelDefinition) {
       return;
     }
 
-    const nextField = createFormBuilderFieldFromDefinition(definition, currentModel.fields);
+    const nextField = {
+      ...createFormBuilderFieldFromDefinition(definition, currentModel.fields),
+      schemaScopeKey: getScopeSchemaScopeKey(activeScope),
+    };
 
-    updateModels((currentModels) =>
-      currentModels.map((modelEntry) =>
-        modelEntry.id === currentModel.id
-          ? {
-              ...modelEntry,
-              fields: [...modelEntry.fields, nextField],
-            }
-          : modelEntry,
-      ),
-    );
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      fields: [...currentModelDraft.fields, nextField],
+    }));
 
     updateDocument((currentDocument) =>
       addFormBuilderFieldNode(currentDocument, getCurrentFormBuilderInsertParentId(currentDocument), nextField)
@@ -3603,6 +4467,29 @@ export function FormsViewWorkspacePage() {
     role: SystemFieldRole,
     fieldId: string,
   ) {
+    if (!canEditModelDefinition) {
+      return;
+    }
+
+    const semanticRole = getSystemFieldSemanticRole(role);
+
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      fields: currentModelDraft.fields.map((field) =>
+        field.semanticRole === semanticRole && field.id !== fieldId
+          ? {
+              ...field,
+              semanticRole: undefined,
+            }
+          : field.id === fieldId
+            ? {
+                ...field,
+                semanticRole,
+              }
+            : field,
+      ),
+    }));
+
     updateDocument((currentDocument) => {
       const normalizedFieldId = fieldId.trim();
       const nextSystemFields = {
@@ -4078,20 +4965,26 @@ export function FormsViewWorkspacePage() {
       return;
     }
 
+    if (!canPlaceFieldAtCurrentLevel || !structureEditingAccess.canAddFieldItems || !canEditModelDefinition) {
+      return;
+    }
+
     const existingField = getSystemFieldExistingCandidate(currentModel.fields, role);
-    const nextField = existingField ?? getSystemFieldTemplate(currentModel.fields, role);
+    const nextField = {
+      ...(existingField ?? getSystemFieldTemplate(currentModel.fields, role)),
+      schemaScopeKey: "root",
+    };
 
     if (!existingField) {
-      updateModels((currentModels) =>
-        currentModels.map((modelEntry) =>
-          modelEntry.id === currentModel.id
-            ? {
-                ...modelEntry,
-                fields: [...modelEntry.fields, nextField],
-              }
-            : modelEntry,
-        ),
-      );
+      updateCurrentModel((currentModelDraft) => ({
+        ...currentModelDraft,
+        fields: [...currentModelDraft.fields, nextField],
+      }));
+    } else if (existingField.schemaScopeKey !== "root") {
+      updateFieldById(existingField.id, (field) => ({
+        ...field,
+        schemaScopeKey: "root",
+      }));
     }
 
     updateDocument((currentDocument) => {
@@ -4141,7 +5034,7 @@ export function FormsViewWorkspacePage() {
         return nextDocument;
       }
 
-      return addFormBuilderFieldNode(nextDocument, nextDocument.currentParentId, nextField);
+      return addFormBuilderFieldNode(nextDocument, getCurrentFormBuilderInsertParentId(nextDocument), nextField);
     });
 
     setInspectorTab("view");
@@ -4153,11 +5046,167 @@ export function FormsViewWorkspacePage() {
   const canDragItems = workspaceAccess.canMoveItems && currentNodes.length > 1;
   const selectedNodeLabel = selectedNode ? getFormBuilderDisplayLabel(selectedNode, currentModel) : "";
 
-  function handleSave() {
-    saveDocument();
-
+  function triggerSavePulse() {
     setSavePulse(true);
     window.setTimeout(() => setSavePulse(false), 1200);
+  }
+
+  async function handleSave() {
+    const structureChanged =
+      JSON.stringify(currentDataSchema) !== JSON.stringify(savedDataSchema)
+      || JSON.stringify(currentLayoutBlueprint) !== JSON.stringify(savedLayoutBlueprintDraft);
+    const previousModelStructureVersion = savedModelDraft.modelStructureVersion ?? 1;
+    const nextModelStructureVersion = structureChanged
+      ? previousModelStructureVersion + 1
+      : (currentModel.modelStructureVersion ?? previousModelStructureVersion);
+    const previousCurrentView = savedModelDraft.screens.find((screen) =>
+      screen.id === currentView.id || screen.key === currentView.key
+    ) ?? currentView;
+    const nextViewTitle = document.viewTitle.trim() || currentView.title;
+    const nextViewDescription = document.viewDescription;
+    const nextModel = cloneFormsPlaceholderModel({
+      ...currentModel,
+      fields: currentModel.fields.map((field) => {
+        const modelLabel = getModelFieldLabel(field);
+        const schemaScopeKey = getDocumentFieldSchemaScopeKey(document, field.id) ?? field.schemaScopeKey;
+        const storageKey = field.storageKey && isPersistedModelField(field)
+          ? field.storageKey
+          : createFormsPlaceholderStorageKey(field.storageKey ?? modelLabel, field.id);
+
+        return {
+          ...field,
+          displayName: modelLabel,
+          isPersisted: true,
+          label: modelLabel,
+          schemaScopeKey,
+          status: field.status === "published" ? "published" : "persisted",
+          storageKey,
+        };
+      }),
+      modelStructureVersion: nextModelStructureVersion,
+      schemaScopes: currentModelSchemaScopes,
+      screens: currentModel.screens.map((screenEntry) =>
+        screenEntry.id === currentView.id || screenEntry.key === currentView.key
+          ? {
+              ...screenEntry,
+              displayName: nextViewTitle,
+              description: nextViewDescription,
+              lastAlignedModelStructureVersion: nextModelStructureVersion,
+              title: nextViewTitle,
+              viewVersion: (previousCurrentView.viewVersion ?? screenEntry.viewVersion ?? 0) + 1,
+            }
+          : screenEntry
+      ),
+      version: hasUnsavedModelChanges
+        ? ((savedModelDraft.version ?? previousModelStructureVersion) + 1)
+        : (currentModel.version ?? savedModelDraft.version ?? previousModelStructureVersion),
+    });
+    const nextView = nextModel.screens.find((screen) =>
+      screen.id === currentView.id || screen.key === currentView.key
+    ) ?? currentView;
+    const nextDataSchema = buildCanonicalDataSchema(nextModel);
+    const nextLayoutBlueprint = currentLayoutBlueprint;
+    const nextUiSchema = currentUiSchema;
+    const expectedVersions = {
+      model: savedModelDraft.version ?? previousModelStructureVersion,
+      view: previousCurrentView.viewVersion ?? currentView.viewVersion ?? 1,
+    };
+
+    const commitSavedDraft = (
+      savedModel: FormsPlaceholderModel,
+      savedDocument: typeof document,
+      savedLayoutBlueprint: Record<string, unknown>,
+    ) => {
+      hydrateDocument(savedDocument);
+      setModelDraft(savedModel);
+      setSavedModelDraft(savedModel);
+      setLayoutBlueprintDraft(savedLayoutBlueprint);
+      setSavedLayoutBlueprintDraft(savedLayoutBlueprint);
+      replaceModel(savedModel);
+      setDraftSyncError(null);
+      triggerSavePulse();
+    };
+
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      setDraftSyncError(t("tenant.platformStudio.forms.builder.draftSaveError"));
+      return;
+    }
+
+    setIsSavingDraft(true);
+    setDraftSyncError(null);
+
+    async function recoverUnauthorizedAccessToken() {
+      const recovered = await checkAuth();
+      if (!recovered) {
+        return null;
+      }
+
+      return getAccessToken();
+    }
+
+    try {
+      const response = await requestWithUnauthorizedRetry(
+        (bearerToken) => draftClient.saveDraft(
+          bearerToken,
+          nextModel.id,
+          currentView.id,
+          {
+            draft: {
+              model: {
+                ...(nextModel as unknown as Record<string, unknown>),
+                dataSchema: nextDataSchema,
+                layoutBlueprint: nextLayoutBlueprint,
+              },
+              view: {
+                ...(nextView as unknown as Record<string, unknown>),
+                description: nextViewDescription,
+                kind: nextView.kind,
+                title: nextViewTitle,
+                uiSchema: nextUiSchema,
+              },
+            },
+            expectedVersions,
+          },
+        ),
+        {
+          accessToken,
+          onUnauthorized: recoverUnauthorizedAccessToken,
+        },
+      );
+
+      const savedModel = normalizeFormsPlaceholderModel(response.draft.model, nextModel);
+      const savedView = savedModel.screens.find((screen) =>
+        screen.id === currentView.id || screen.key === currentView.key
+      ) ?? nextView;
+      const savedLayoutBlueprint = isRecord(response.draft.model.layoutBlueprint)
+        ? response.draft.model.layoutBlueprint
+        : nextLayoutBlueprint;
+      const savedDocument = reconcileFormBuilderDocumentWithModel(
+        buildWorkspaceDocumentFromCanonicalSchemas(response.draft.model, response.draft.view, savedModel, savedView),
+        savedModel,
+        savedLayoutBlueprint,
+      );
+      commitSavedDraft(savedModel, savedDocument, savedLayoutBlueprint);
+    } catch (error) {
+      if (isUnauthorizedApiError(error)) {
+        void signOut();
+        return;
+      }
+
+      if (isDraftEndpointUnavailable(error)) {
+        commitSavedDraft(nextModel, document, nextLayoutBlueprint);
+        return;
+      }
+
+      setDraftSyncError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.builder.draftSaveError"),
+      );
+    } finally {
+      setIsSavingDraft(false);
+    }
   }
 
   function resolveLeaveConfirmation(shouldLeave: boolean) {
@@ -4189,6 +5238,42 @@ export function FormsViewWorkspacePage() {
     setLeaveConfirmOpen(true);
   }
 
+  if (!hasResolvedWorkspace && isBootstrappingRoute) {
+    return (
+      <Card className="tenant-web__platform-studio-missing">
+        <CardHeader>
+          <div>
+            <CardTitle>{t("tenant.platformStudio.forms.loadingWorkspaceTitle")}</CardTitle>
+            <CardDescription>{t("tenant.platformStudio.forms.loadingWorkspaceDescription")}</CardDescription>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  if (!hasResolvedWorkspace) {
+    return (
+      <Card className="tenant-web__platform-studio-missing">
+        <CardHeader>
+          <div>
+            <CardTitle>{t("tenant.platformStudio.forms.missingTitle")}</CardTitle>
+            <CardDescription>{routeBootstrapError ?? t("tenant.platformStudio.forms.missingDescription")}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="tenant-web__platform-studio-row">
+          <Button onClick={() => navigate(platformStudioPaths.forms)} variant="outline">
+            {t("tenant.platformStudio.forms.backToForms")}
+          </Button>
+          {params.modelId ? (
+            <Button onClick={() => navigate(platformStudioPaths.model(params.modelId ?? ""))} variant="ghost">
+              {t("tenant.platformStudio.forms.backToModel")}
+            </Button>
+          ) : null}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="tenant-web__platform-studio-shell tenant-web__platform-studio-shell--desktop-panels">
       <PlatformStudioTabs onFormsNavigate={() => requestNavigate(platformStudioPaths.forms)} />
@@ -4197,7 +5282,7 @@ export function FormsViewWorkspacePage() {
         <div className="tenant-web__platform-studio-panel-actions">
           <Button
             leadingIcon={<BackArrowIcon />}
-            onClick={() => requestNavigate(platformStudioPaths.model(currentModel.id))}
+            onClick={() => requestNavigate(platformStudioPaths.model(currentModelKey))}
             variant="ghost"
           >
             {t("tenant.platformStudio.forms.backToModel")}
@@ -4210,23 +5295,47 @@ export function FormsViewWorkspacePage() {
             {t("tenant.platformStudio.forms.builder.debugAction")}
           </Button>
           <Button
-            disabled={!hasUnsavedChanges && !savePulse}
-            onClick={handleSave}
+            disabled={((!hasUnsavedChanges && !savePulse) || isSavingDraft || isDraftSyncing)}
+            onClick={() => {
+              void handleSave();
+            }}
             size="sm"
             variant={savePulse ? "secondary" : "primary"}
           >
             {savePulse
               ? t("tenant.platformStudio.forms.builder.savedAction")
-              : t("tenant.platformStudio.forms.builder.saveAction")}
+              : isSavingDraft
+                ? t("tenant.platformStudio.forms.builder.savingAction")
+                : t("tenant.platformStudio.forms.builder.saveAction")}
           </Button>
         </div>
         <div className="tenant-web__platform-studio-badge-row">
           <Badge appearance="soft" size="sm" variant="brand">
             {currentModel.title}
           </Badge>
+          <Badge appearance="soft" size="sm" variant={isDefaultView ? "brand" : "info"}>
+            {isDefaultView
+              ? t("tenant.platformStudio.forms.builder.viewMode.default")
+              : t("tenant.platformStudio.forms.builder.viewMode.override")}
+          </Badge>
+          {isDraftSyncing ? (
+            <Badge appearance="soft" size="sm" variant="info">
+              {t("tenant.platformStudio.forms.builder.syncingDraft")}
+            </Badge>
+          ) : null}
+          {draftSyncError ? (
+            <Badge appearance="soft" size="sm" variant="warning">
+              {draftSyncError}
+            </Badge>
+          ) : null}
           {currentModel.isStructureLocked ? (
             <Badge appearance="soft" size="sm" variant="warning">
               {t("tenant.platformStudio.forms.structureLocked")}
+            </Badge>
+          ) : null}
+          {currentView.isViewLocked ? (
+            <Badge appearance="soft" size="sm" variant="warning">
+              {t("tenant.platformStudio.forms.viewLocked")}
             </Badge>
           ) : null}
           {currentModel.canEditViewsOnly ? (
@@ -4242,6 +5351,11 @@ export function FormsViewWorkspacePage() {
           <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
             <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
               <div className="tenant-web__platform-studio-search">
+                {!isDefaultView ? (
+                  <div className="tenant-web__platform-studio-inline-help">
+                    <span>{t("tenant.platformStudio.forms.builder.defaultViewPaletteNotice")}</span>
+                  </div>
+                ) : null}
                 <div className="tenant-web__platform-studio-search-field">
                   <span className="tenant-web__platform-studio-search-icon">
                     <SearchIcon />
@@ -4444,13 +5558,57 @@ export function FormsViewWorkspacePage() {
                   ) : (
                     <div className="tenant-web__platform-studio-empty-state tenant-web__platform-studio-builder-empty">
                       <p>
-                        {workspaceAccess.canAddItems
+                        {structureEditingAccess.canAddElementItems || structureEditingAccess.canAddFieldItems
                           ? t("tenant.platformStudio.forms.builder.canvasEmpty")
                           : t("tenant.platformStudio.forms.builder.canvasEmptyLocked")}
                       </p>
                     </div>
                   )}
                 </div>
+
+                {currentScopeUnplacedFields.length > 0 ? (
+                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
+                    <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
+                      <span>{t("tenant.platformStudio.forms.builder.unplacedFieldsTitle")}</span>
+                    </div>
+                    <p className="tenant-web__platform-studio-inline-help">
+                      {t("tenant.platformStudio.forms.builder.unplacedFieldsDescription", {
+                        scope: currentScopePlacementLabel,
+                      })}
+                    </p>
+
+                    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
+                      {currentScopeUnplacedFields.map((field) => (
+                        <div className="tenant-web__platform-studio-compact-row" key={`unplaced-${field.id}`}>
+                          <div className="tenant-web__platform-studio-compact-row-main">
+                            <span className="tenant-web__platform-studio-compact-row-label">
+                              {getFormsPlaceholderFieldDisplayName(field)}
+                            </span>
+                            <span className="tenant-web__platform-studio-compact-row-summary">
+                              {t(getFieldTypeKey(field))}
+                            </span>
+                          </div>
+                          <Button
+                            disabled={!canPlaceUnplacedFields}
+                            onClick={() => updateDocument((currentDocument) =>
+                              addFormBuilderFieldNode(currentDocument, currentScopeParentId, field)
+                            )}
+                            size="sm"
+                            variant="secondary"
+                          >
+                            {t("tenant.platformStudio.forms.builder.unplacedFieldsPlaceAction")}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {unplacedFieldsHintKey ? (
+                      <p className="tenant-web__platform-studio-inline-help">
+                        {t(unplacedFieldsHintKey)}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             </PlatformStudioPanelScroll>
           </CardContent>
@@ -4501,6 +5659,25 @@ export function FormsViewWorkspacePage() {
                             </div>
                           </div>
 
+                          {selectedField && isPersistedModelField(selectedField) ? (
+                            <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
+                              <div className="tenant-web__platform-studio-compact-row">
+                                <div className="tenant-web__platform-studio-compact-row-main">
+                                  <span className="tenant-web__platform-studio-compact-row-title-wrap">
+                                    <span className="tenant-web__platform-studio-compact-row-label">
+                                      <DatabaseFieldIcon />
+                                      {" "}
+                                      {getModelFieldLabel(selectedField)}
+                                    </span>
+                                  </span>
+                                  <span className="tenant-web__platform-studio-compact-row-summary">
+                                    {selectedField.storageKey}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+
                           {workspaceAccess.canEditSettings ? (
                             <div className="tenant-web__platform-studio-form">
                               {selectedNode.type === "field" ? (
@@ -4511,9 +5688,30 @@ export function FormsViewWorkspacePage() {
                                     </Label>
                                     <Input
                                       id="tenant-platform-studio-node-title"
-                                      onChange={(event) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
-                                      )}
+                                      onChange={(event) => {
+                                        const nextTitle = event.target.value;
+
+                                        if (!selectedField) {
+                                          return;
+                                        }
+
+                                        if (!isPersistedModelField(selectedField)) {
+                                          updateFieldById(selectedField.id, (field) => {
+                                            const nextModelLabel = nextTitle.trim() || getModelFieldLabel(field);
+
+                                            return {
+                                              ...field,
+                                              displayName: nextModelLabel,
+                                              label: nextModelLabel,
+                                              storageKey: createFormsPlaceholderStorageKey(nextModelLabel, field.id),
+                                            };
+                                          });
+                                        }
+
+                                        updateDocument((currentDocument) =>
+                                          updateFormBuilderNode(currentDocument, selectedNode.id, { title: nextTitle })
+                                        );
+                                      }}
                                       value={selectedNode.title ?? ""}
                                     />
                                   </div>
@@ -4577,8 +5775,8 @@ export function FormsViewWorkspacePage() {
                                         <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
                                           {(selectedField.options ?? []).map((option, optionIndex) => (
                                             <ChoiceOptionRow
-                                              canEdit={workspaceAccess.canEditSettings}
-                                              canMoveItems={workspaceAccess.canEditSettings && (selectedField.options?.length ?? 0) > 1}
+                                              canEdit={workspaceAccess.canEditSettings && canEditModelDefinition}
+                                              canMoveItems={workspaceAccess.canEditSettings && canEditModelDefinition && (selectedField.options?.length ?? 0) > 1}
                                               dragOverOptionIndex={dragOverChoiceOptionIndex}
                                               draggedOptionIndex={draggedChoiceOptionIndex}
                                               index={optionIndex}
@@ -4617,7 +5815,7 @@ export function FormsViewWorkspacePage() {
 
                                       <div className="tenant-web__platform-studio-button-row">
                                         <Button
-                                          disabled={!workspaceAccess.canEditSettings}
+                                          disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
                                           onClick={() => updateSelectedFieldOptions((options) => [
                                             ...options,
                                             `${t("tenant.platformStudio.forms.builder.fieldSettings.newOption")} ${options.length + 1}`,
@@ -4875,7 +6073,7 @@ export function FormsViewWorkspacePage() {
 
                                           <div className="tenant-web__platform-studio-button-row">
                                             <Button
-                                              disabled={!workspaceAccess.canEditSettings}
+                                              disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
                                               onClick={openLookupSourcePicker}
                                               size="sm"
                                               variant="secondary"
@@ -5239,9 +6437,9 @@ export function FormsViewWorkspacePage() {
                                 </div>
                               ) : null}
 
-                              {!workspaceAccess.canRemoveItems ? (
+                              {!structureEditingAccess.canRemoveItems ? (
                                 <p className="tenant-web__platform-studio-inline-help">
-                                  {t("tenant.platformStudio.forms.builder.lockedStructureHint")}
+                                  {t(structureEditingAccess.lockReasonKey ?? "tenant.platformStudio.forms.builder.lockedStructureHint")}
                                 </p>
                               ) : null}
                             </div>
@@ -5388,7 +6586,7 @@ export function FormsViewWorkspacePage() {
                           </div>
                         ) : null}
 
-                        {workspaceAccess.canRemoveItems ? (
+                        {structureEditingAccess.canRemoveItems ? (
                           <div className="tenant-web__platform-studio-inspector-section">
                             <div className="tenant-web__platform-studio-danger-zone">
                               <Button
@@ -5527,6 +6725,84 @@ export function FormsViewWorkspacePage() {
 
                           <div className="tenant-web__platform-studio-inspector-section">
                             <div className="tenant-web__platform-studio-labeled-divider">
+                              <span>{t("tenant.platformStudio.forms.builder.viewSection.authoringLocks")}</span>
+                            </div>
+                            <div className="tenant-web__platform-studio-builder-stack">
+                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                <div>
+                                  <p className="tenant-web__platform-studio-compact-row-label">
+                                    {t("tenant.platformStudio.forms.builder.activeViewLabel")}
+                                  </p>
+                                  <p className="tenant-web__platform-studio-compact-row-summary">
+                                    {currentView.isActive
+                                      ? t("tenant.platformStudio.forms.viewActive")
+                                      : t("tenant.platformStudio.forms.viewInactive")}
+                                  </p>
+                                </div>
+                                <Switch
+                                  checked={currentView.isActive}
+                                  disabled={!workspaceAccess.canEditSettings}
+                                  onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
+                                    ...viewEntry,
+                                    isActive: checked,
+                                  }))}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                <div>
+                                  <p className="tenant-web__platform-studio-compact-row-label">
+                                    {t("tenant.platformStudio.forms.builder.locking.model")}
+                                  </p>
+                                  <p className="tenant-web__platform-studio-compact-row-summary">
+                                    {currentModel.isStructureLocked
+                                      ? t("tenant.platformStudio.forms.builder.locking.locked")
+                                      : t("tenant.platformStudio.forms.builder.locking.unlocked")}
+                                  </p>
+                                </div>
+                                <Switch
+                                  checked={currentModel.isStructureLocked}
+                                  disabled={!canToggleModelLocks}
+                                  onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
+                                    ...currentModelDraft,
+                                    isStructureLocked: checked,
+                                  }))}
+                                  size="sm"
+                                />
+                              </div>
+                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                <div>
+                                  <p className="tenant-web__platform-studio-compact-row-label">
+                                    {t("tenant.platformStudio.forms.builder.locking.view")}
+                                  </p>
+                                  <p className="tenant-web__platform-studio-compact-row-summary">
+                                    {currentView.isViewLocked
+                                      ? t("tenant.platformStudio.forms.builder.locking.locked")
+                                      : t("tenant.platformStudio.forms.builder.locking.unlocked")}
+                                  </p>
+                                </div>
+                                <Switch
+                                  checked={currentView.isViewLocked ?? false}
+                                  disabled={!canToggleViewLocks}
+                                  onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
+                                    ...viewEntry,
+                                    isViewLocked: checked,
+                                  }))}
+                                  size="sm"
+                                />
+                              </div>
+                              {!canToggleModelLocks ? (
+                                <p className="tenant-web__platform-studio-inline-help">
+                                  {t(isDefaultView
+                                    ? "tenant.platformStudio.forms.builder.locking.ownerOnly"
+                                    : "tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice")}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="tenant-web__platform-studio-inspector-section">
+                            <div className="tenant-web__platform-studio-labeled-divider">
                               <span>{t("tenant.platformStudio.forms.builder.viewSection.workflow")}</span>
                             </div>
                             <div className="tenant-web__platform-studio-builder-stack">
@@ -5583,7 +6859,7 @@ export function FormsViewWorkspacePage() {
                                     <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
                                       <Select
                                         aria-label={t(getSystemFieldKey(role))}
-                                        disabled={!workspaceAccess.canEditSettings}
+                                        disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
                                         id={`tenant-platform-studio-system-field-${role}`}
                                         onChange={(event) => updateSystemFieldBinding(role, event.target.value)}
                                         value={boundFieldId}
@@ -5610,7 +6886,7 @@ export function FormsViewWorkspacePage() {
                                             {t("tenant.platformStudio.forms.builder.systemField.initialValue")}
                                           </Label>
                                           <Select
-                                            disabled={!workspaceAccess.canEditSettings || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
+                                            disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
                                             id="tenant-platform-studio-system-field-status-initial"
                                             onChange={(event) => updateWorkflowStatusOption("initialValue", event.target.value)}
                                             value={document.systemFields.workflowStatus?.initialValue ?? ""}
@@ -5629,7 +6905,7 @@ export function FormsViewWorkspacePage() {
                                             {t("tenant.platformStudio.forms.builder.systemField.finalValue")}
                                           </Label>
                                           <Select
-                                            disabled={!workspaceAccess.canEditSettings || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
+                                            disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
                                             id="tenant-platform-studio-system-field-status-final"
                                             onChange={(event) => updateWorkflowStatusOption("finalValue", event.target.value)}
                                             value={document.systemFields.workflowStatus?.finalValue ?? ""}
@@ -5938,6 +7214,12 @@ export function FormsViewWorkspacePage() {
             <AlertDialogAction
               onClick={() => {
                 if (!selectedNode) {
+                  setDeleteNodeOpen(false);
+                  return;
+                }
+
+                if (selectedNode.type === "field" && selectedField && !isPersistedModelField(selectedField)) {
+                  deleteUnsavedField(selectedField.id, selectedNode.id);
                   setDeleteNodeOpen(false);
                   return;
                 }
@@ -6624,6 +7906,18 @@ export function FormsViewWorkspacePage() {
                 </CardHeader>
                 <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
                   <pre className="tenant-web__platform-studio-debug-schema-pre">{debugDataSchema}</pre>
+                </CardContent>
+              </Card>
+
+              <Card className="tenant-web__platform-studio-debug-schema-card">
+                <CardHeader>
+                  <div>
+                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugLayoutBlueprintTitle")}</CardTitle>
+                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugLayoutBlueprintDescription")}</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
+                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugLayoutBlueprint}</pre>
                 </CardContent>
               </Card>
 

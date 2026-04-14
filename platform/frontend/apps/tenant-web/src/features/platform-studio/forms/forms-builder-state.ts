@@ -12,6 +12,7 @@ import type {
   FormsPlaceholderScreen,
 } from "./forms-placeholder-data";
 import {
+  getFormsPlaceholderFieldDisplayName,
   getFormsPlaceholderFieldIconKey,
   getFormsPlaceholderFieldSearchText,
 } from "./forms-placeholder-data";
@@ -47,7 +48,16 @@ export type FormBuilderFieldPaletteCategory = Exclude<
   FormBuilderPaletteSectionKey,
   "content" | "layout" | "systemFields"
 >;
-type FormBuilderContainerNodeType = "column" | "grid" | "group" | "section" | "subform" | "tab_item" | "tabs";
+type FormBuilderContainerNodeType =
+  | "accordion"
+  | "accordion_item"
+  | "column"
+  | "grid"
+  | "group"
+  | "section"
+  | "subform"
+  | "tab_item"
+  | "tabs";
 export type FormBuilderSystemFields = {
   version: 1;
   reportedBy?: {
@@ -227,6 +237,7 @@ export type FormBuilderFilterDefinitions = {
 };
 
 export type FormBuilderNode = {
+  containerKey?: string;
   fieldId?: string;
   helperText?: string;
   id: string;
@@ -235,8 +246,10 @@ export type FormBuilderNode = {
   childGridColumns?: ReadonlyArray<FormBuilderGridColumnDefinition>;
   required?: boolean;
   rules?: FormBuilderNodeRules;
+  schemaScopeId?: string;
   runtimePreset?: FormBuilderRuntimePreset;
   subformType?: FormBuilderSubformType;
+  tableKey?: string;
   text?: string;
   title?: string;
   type: FormBuilderNodeType;
@@ -285,6 +298,7 @@ export type FormBuilderScopeUiSchema = {
   currentParentId: string | null;
   nodes: ReadonlyArray<FormBuilderNode>;
   selectedNodeId: string | null;
+  unplacedFieldIds: ReadonlyArray<string>;
 };
 
 export type FormBuilderRootScope = {
@@ -328,11 +342,13 @@ export type FormBuilderDocument = {
 };
 
 export type FormBuilderWorkspaceAccess = {
-  canAddItems: boolean;
+  canAddElementItems: boolean;
+  canAddFieldItems: boolean;
   canEditSettings: boolean;
   canMoveItems: boolean;
   canRemoveItems: boolean;
   lockReasonKey: string | null;
+  structureLockReasonKey: string | null;
 };
 
 export type FormBuilderElementDefinition = {
@@ -445,21 +461,44 @@ const formBuilderRuleOperatorValues = new Set<FormBuilderRuleOperator>([
   "lt",
   "lte",
 ]);
+const blueprintContainerNodeTypes = new Set<FormBuilderContainerNodeType>([
+  "accordion",
+  "accordion_item",
+  "column",
+  "grid",
+  "group",
+  "section",
+  "subform",
+  "tab_item",
+  "tabs",
+]);
 
 const containerChildTypes: Record<"root" | FormBuilderContainerNodeType, ReadonlyArray<FormBuilderNodeType>> = {
+  accordion: ["accordion_item"],
+  accordion_item: ["group", "grid", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
   column: ["group", "grid", "tabs", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
   grid: ["column"],
-  group: ["group", "grid", "tabs", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
-  root: ["section", "group", "grid", "tabs", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
-  section: ["group", "grid", "tabs", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
-  subform: ["section", "group", "grid", "tabs", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field"],
-  tab_item: ["group", "grid", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
+  group: ["group", "grid", "tabs", "accordion", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
+  root: ["section", "group", "grid", "tabs", "accordion", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
+  section: ["group", "grid", "tabs", "accordion", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
+  subform: ["section", "group", "grid", "tabs", "accordion", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field"],
+  tab_item: ["group", "grid", "accordion", "heading", "text", "rich_text", "view_only_field", "divider", "spacer", "field", "subform"],
   tabs: ["tab_item"],
 };
+
+export const formBuilderScopeRootPlacementKey = "__scope_root__";
+
+function isBlueprintContainerType(
+  value: FormBuilderNodeType | string | null | undefined,
+): value is FormBuilderContainerNodeType {
+  return typeof value === "string" && blueprintContainerNodeTypes.has(value as FormBuilderContainerNodeType);
+}
 
 export const formBuilderElementDefinitions: ReadonlyArray<FormBuilderElementDefinition> = formBuilderLibraryElementDefinitions;
 
 const formBuilderElementLabels: Record<Exclude<FormBuilderNodeType, "field">, string> = {
+  accordion: "Accordion",
+  accordion_item: "Accordion item",
   column: "Column",
   divider: "Divider",
   grid: "Grid layout",
@@ -1179,13 +1218,16 @@ function createNode(
       : type === "rich_text"
         ? "Use rich text for formatted guidance, callouts, or release notes."
         : undefined;
+  const nextId = idFactory(type);
 
   return {
     helperText: "",
-    id: idFactory(type),
+    id: nextId,
     order,
     parentId,
     required: false,
+    schemaScopeId: type === "subform" ? (partial?.schemaScopeId ?? partial?.tableKey ?? nextId) : partial?.schemaScopeId,
+    tableKey: type === "subform" ? (partial?.tableKey ?? partial?.schemaScopeId ?? nextId) : partial?.tableKey,
     text: partial?.text ?? baseText,
     title: partial?.title ?? baseTitle,
     type,
@@ -1196,6 +1238,8 @@ function createNode(
 
 export function isFormBuilderContainer(type: FormBuilderNodeType) {
   return (
+    type === "accordion" ||
+    type === "accordion_item" ||
     type === "section" ||
     type === "group" ||
     type === "grid" ||
@@ -1209,62 +1253,147 @@ export function isFormBuilderContainer(type: FormBuilderNodeType) {
 export function getFormsWorkspaceAccess(
   access: FormsAuthoringAccess,
   object: FormsPlaceholderObject,
+  screen?: FormsPlaceholderScreen | null,
 ): FormBuilderWorkspaceAccess {
-  const isLocked = object.isStructureLocked;
-  const canEditSettings = access.canEditViews;
+  const viewLockedForActor = Boolean(screen?.isViewLocked) && !access.canManageStructure;
+  const structureLockedForActor = object.isStructureLocked && !access.canManageStructure;
+  const canEditSettings = access.canEditViews && !viewLockedForActor;
+  const viewLockReasonKey = viewLockedForActor
+    ? "tenant.platformStudio.forms.builder.lockedViewNotice"
+    : (access.canEditViews
+      ? null
+      : (access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly"));
+  const structureLockReasonKey = viewLockedForActor
+    ? viewLockReasonKey
+    : structureLockedForActor
+      ? "tenant.platformStudio.forms.builder.lockedStructureNotice"
+      : access.structureRestrictionKey;
 
   return {
-    canAddItems: access.canEditViews && !isLocked,
+    canAddElementItems: canEditSettings,
+    canAddFieldItems: canEditSettings && !structureLockedForActor,
     canEditSettings,
-    canMoveItems: access.canEditViews,
-    canRemoveItems: access.canEditViews && !isLocked,
-    lockReasonKey: isLocked
-      ? "tenant.platformStudio.forms.builder.lockedStructureNotice"
-      : access.canEditViews
-        ? null
-        : (access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly"),
+    canMoveItems: canEditSettings,
+    canRemoveItems: canEditSettings,
+    lockReasonKey: viewLockReasonKey,
+    structureLockReasonKey,
   };
 }
 
 export function createDefaultFormBuilderDocument(
   object: FormsPlaceholderObject,
   screen: FormsPlaceholderScreen,
-  idFactory?: (prefix: string) => string,
 ): FormBuilderDocument {
-  const sectionTitle = screen.kind === "detail" ? "Summary" : "Main section";
-  const section = createNode("section", null, 0, { title: sectionTitle }, idFactory);
-  const fieldNodes = object.fields.map((field, index) =>
+  const modelSubformScopes = getModelSubformSchemaScopes(object);
+  if (object.fields.length === 0 && modelSubformScopes.length === 0) {
+    return createDocumentShell(
+      screen.title,
+      screen.kind,
+      `${screen.title} for ${object.title}.`,
+      getRootSeedFieldIds(object.fields),
+    );
+  }
+
+  const seededFields = object.fields.filter((field) => {
+    const scopeKey = getFieldSchemaScopeKey(field);
+    return scopeKey === null || scopeKey === "root";
+  });
+
+  const rootFieldNodes = seededFields.map((field, index) =>
     createNode(
       "field",
-      section.id,
+      null,
       index,
       {
         fieldId: field.id,
         helperText: "",
-        title: field.label,
+        title: getFormsPlaceholderFieldDisplayName(field),
       },
-      idFactory,
     ),
   );
-  const viewDescription = `${screen.title} for ${object.title}.`;
+
+  const subformNodes = modelSubformScopes.map((scope, index) =>
+    createNode(
+      "subform",
+      null,
+      rootFieldNodes.length + index,
+      {
+        subformType: scope.subformType,
+        title: scope.displayName,
+      },
+    ),
+  );
+  const subformNodeByScopeKey = new Map(
+    subformNodes.map((node, index) => [modelSubformScopes[index].key, node]),
+  );
+  const subformFieldOrderByScopeKey = new Map<string, number>();
+  const subformFieldNodes = object.fields.flatMap((field) => {
+    const scopeKey = getFieldSchemaScopeKey(field);
+    if (!scopeKey || scopeKey === "root") {
+      return [];
+    }
+
+    const parentSubformNode = subformNodeByScopeKey.get(scopeKey);
+    if (!parentSubformNode) {
+      return [];
+    }
+
+    const nextOrder = subformFieldOrderByScopeKey.get(scopeKey) ?? 0;
+    subformFieldOrderByScopeKey.set(scopeKey, nextOrder + 1);
+
+    return [createNode(
+      "field",
+      parentSubformNode.id,
+      nextOrder,
+      {
+        fieldId: field.id,
+        helperText: "",
+        title: getFormsPlaceholderFieldDisplayName(field),
+      },
+    )];
+  });
+
+  const baseDocument = createDocumentShell(
+    screen.title,
+    screen.kind,
+    `${screen.title} for ${object.title}.`,
+    getRootSeedFieldIds(object.fields),
+  );
+  baseDocument.subformScopes = subformNodes.map((node, index) => ({
+    dataSchema: {
+      fieldIds: object.fields
+        .filter((field) => getFieldSchemaScopeKey(field) === modelSubformScopes[index].key)
+        .map((field) => field.id),
+    },
+    filterDefinitions: createDefaultFilterDefinitions(),
+    parentSubformNodeId: node.id,
+    scopeId: node.id,
+    scopeType: "SUBFORM",
+    subformType: modelSubformScopes[index].subformType,
+    tableKey: modelSubformScopes[index].key,
+    uiSchema: {
+      currentParentId: null,
+      nodes: [],
+      selectedNodeId: null,
+      unplacedFieldIds: [],
+    },
+    viewSettings: createDefaultSubformViewSettings(),
+  }));
 
   return buildScopedDocumentFromFlatWorkspace(
     {
       currentParentId: null,
-      nodes: [section, ...fieldNodes],
+      nodes: [...rootFieldNodes, ...subformNodes, ...subformFieldNodes],
       selectedNodeId: null,
     },
-    createDocumentShell(
-      screen.title,
-      screen.kind,
-      viewDescription,
-      object.fields.map((field) => field.id),
-    ),
+    baseDocument,
   );
 }
 
 function isValidNodeType(value: unknown): value is FormBuilderNodeType {
   return (
+    value === "accordion" ||
+    value === "accordion_item" ||
     value === "column" ||
     value === "section" ||
     value === "group" ||
@@ -1341,11 +1470,23 @@ export function getFormBuilderScopeFieldIds(
   scopeSubformId: string | null,
 ) {
   if (!scopeSubformId) {
-    return new Set(document.rootScope.dataSchema.fieldIds);
+    return new Set(getEffectiveScopeFieldIds(document.rootScope));
   }
 
   const subformScope = document.subformScopes.find((scope) => scope.scopeId === scopeSubformId);
-  return new Set(subformScope?.dataSchema.fieldIds ?? []);
+  return new Set(subformScope ? getEffectiveScopeFieldIds(subformScope) : []);
+}
+
+export function getFormBuilderScopeUnplacedFieldIds(
+  document: FormBuilderDocument,
+  scopeSubformId: string | null,
+) {
+  if (!scopeSubformId) {
+    return [...document.rootScope.uiSchema.unplacedFieldIds];
+  }
+
+  const subformScope = document.subformScopes.find((scope) => scope.scopeId === scopeSubformId);
+  return [...(subformScope?.uiSchema.unplacedFieldIds ?? [])];
 }
 
 export function getFormBuilderNodeScopeId(
@@ -1448,6 +1589,10 @@ export function getAllowedChildNodeTypes(
   return containerChildTypes[parentType];
 }
 
+function isFormBuilderScopeRootPlacementKey(value: string | null | undefined) {
+  return typeof value === "string" && value.trim() === formBuilderScopeRootPlacementKey;
+}
+
 type FormBuilderFlatWorkspaceState = {
   currentParentId: string | null;
   nodes: ReadonlyArray<FormBuilderNode>;
@@ -1488,6 +1633,7 @@ function createDocumentShell(
         currentParentId: null,
         nodes: [],
         selectedNodeId: null,
+        unplacedFieldIds: [],
       },
     },
     selectedNodeId: null,
@@ -1498,6 +1644,74 @@ function createDocumentShell(
     viewDescription,
     viewTitle,
   };
+}
+
+function getFieldSchemaScopeKey(field: Pick<FormsPlaceholderField, "schemaScopeKey">) {
+  const normalizedScopeKey = field.schemaScopeKey?.trim();
+  return normalizedScopeKey && normalizedScopeKey.length > 0
+    ? normalizedScopeKey
+    : null;
+}
+
+function humanizeSchemaScopeKey(value: string) {
+  return value
+    .replace(/^pb_/, "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Subform";
+}
+
+function getModelSubformSchemaScopes(object: FormsPlaceholderObject) {
+  const scopes = new Map<string, { displayName: string; key: string; subformType: FormBuilderSubformType }>();
+
+  object.schemaScopes?.forEach((scope) => {
+    const key = scope.key.trim();
+    if (!key) {
+      return;
+    }
+
+    scopes.set(key, {
+      displayName: scope.displayName.trim() || humanizeSchemaScopeKey(key),
+      key,
+      subformType: scope.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT",
+    });
+  });
+
+  object.fields.forEach((field) => {
+    const scopeKey = getFieldSchemaScopeKey(field);
+    if (!scopeKey || scopeKey === "root" || scopes.has(scopeKey)) {
+      return;
+    }
+
+    scopes.set(scopeKey, {
+      displayName: humanizeSchemaScopeKey(scopeKey),
+      key: scopeKey,
+      subformType: "DEFAULT",
+    });
+  });
+
+  return [...scopes.values()];
+}
+
+function getRootSeedFieldIds(fields: ReadonlyArray<FormsPlaceholderField>) {
+  return fields
+    .filter((field) => {
+      const scopeKey = getFieldSchemaScopeKey(field);
+      return scopeKey === null || scopeKey === "root";
+    })
+    .map((field) => field.id);
+}
+
+function createEmptyFormBuilderDocument(
+  object: FormsPlaceholderObject,
+  screen: FormsPlaceholderScreen,
+): FormBuilderDocument {
+  return createDocumentShell(
+    screen.title,
+    screen.kind,
+    `${screen.title} for ${object.title}.`,
+    getRootSeedFieldIds(object.fields),
+  );
 }
 
 function getNodeMap(nodes: ReadonlyArray<FormBuilderNode>) {
@@ -1620,6 +1834,43 @@ function normalizeScopeSelectedNodeId(
   return getDefaultSelectedNodeIdForScope(nodes, options?.allowNull ?? false);
 }
 
+function getScopePlacedFieldIds(
+  nodes: ReadonlyArray<FormBuilderNode>,
+) {
+  return new Set(
+    nodes
+      .filter((node): node is FormBuilderNode & { fieldId: string } =>
+        node.type === "field" && typeof node.fieldId === "string")
+      .map((node) => node.fieldId),
+  );
+}
+
+function getScopedFieldIds(
+  uiSchema: Pick<FormBuilderScopeUiSchema, "nodes" | "unplacedFieldIds">,
+) {
+  return dedupeFieldIds([
+    ...uiSchema.nodes
+      .filter((node): node is FormBuilderNode & { fieldId: string } =>
+        node.type === "field" && typeof node.fieldId === "string")
+      .map((node) => node.fieldId),
+    ...(uiSchema.unplacedFieldIds ?? []),
+  ]);
+}
+
+function normalizeScopeUnplacedFieldIds(
+  uiSchema: Pick<FormBuilderScopeUiSchema, "nodes" | "unplacedFieldIds">,
+  availableFieldIds: ReadonlyArray<string>,
+) {
+  const availableFieldIdSet = new Set(availableFieldIds);
+  const placedFieldIds = getScopePlacedFieldIds(uiSchema.nodes);
+
+  return dedupeFieldIds(
+    (uiSchema.unplacedFieldIds ?? []).filter((fieldId) =>
+      availableFieldIdSet.has(fieldId) && !placedFieldIds.has(fieldId),
+    ),
+  );
+}
+
 function localizeFlatNodeIdForSubformScope(
   nodeId: string | null | undefined,
   scopeId: string,
@@ -1658,6 +1909,15 @@ function getSubformScope(
   return document.subformScopes.find((scope) => scope.scopeId === scopeId) ?? null;
 }
 
+function getEffectiveScopeFieldIds(
+  scope: Pick<FormBuilderScope, "dataSchema" | "uiSchema">,
+) {
+  return dedupeFieldIds([
+    ...scope.dataSchema.fieldIds,
+    ...getScopedFieldIds(scope.uiSchema),
+  ]);
+}
+
 function getScopeNodes(
   document: FormBuilderDocument,
   scopeId: "root" | string,
@@ -1667,12 +1927,46 @@ function getScopeNodes(
     : (document.subformScopes.find((scope) => scope.scopeId === scopeId)?.uiSchema.nodes ?? []);
 }
 
+function findPreferredFieldParentIdInScopeNodes(
+  nodes: ReadonlyArray<FormBuilderNode>,
+  parentId: string | null,
+): string | null {
+  const children = [...nodes]
+    .filter((node) => node.parentId === parentId)
+    .sort((left, right) => left.order - right.order);
+
+  for (const child of children) {
+    if (
+      child.type === "section" ||
+      child.type === "accordion_item" ||
+      child.type === "group" ||
+      child.type === "column" ||
+      child.type === "tab_item"
+    ) {
+      return child.id;
+    }
+
+    if (child.type === "grid" || child.type === "tabs" || child.type === "accordion") {
+      const nestedParentId = findPreferredFieldParentIdInScopeNodes(nodes, child.id);
+      if (nestedParentId) {
+        return nestedParentId;
+      }
+    }
+  }
+
+  return null;
+}
+
 function createSubformScopeFromNode(
   subformNode: FormBuilderNode,
   existingScope?: FormBuilderSubformScope,
 ): FormBuilderSubformScope {
   const fieldIds = new Set(existingScope?.dataSchema.fieldIds ?? []);
   const nextColumns = subformNode.childGridColumns ?? existingScope?.viewSettings.list.columns ?? [];
+  const scopeTableKey = subformNode.tableKey?.trim()
+    || subformNode.schemaScopeId?.trim()
+    || existingScope?.tableKey
+    || `pb_${slugifyScopeKey(subformNode.title?.trim() || subformNode.id)}`;
 
   return {
     dataSchema: {
@@ -1686,11 +1980,12 @@ function createSubformScopeFromNode(
     scopeId: subformNode.id,
     scopeType: "SUBFORM",
     subformType: subformNode.subformType ?? existingScope?.subformType ?? "DEFAULT",
-    tableKey: existingScope?.tableKey ?? `pb_${slugifyScopeKey(subformNode.title?.trim() || subformNode.id)}`,
+    tableKey: scopeTableKey,
     uiSchema: existingScope?.uiSchema ?? {
       currentParentId: null,
       nodes: [],
       selectedNodeId: null,
+      unplacedFieldIds: [],
     },
     viewSettings: normalizeSubformViewSettings(
       {
@@ -1723,16 +2018,15 @@ function finalizeScopedDocument(
       ...scope.uiSchema,
       currentParentId: normalizeScopeCurrentParentId(scope.uiSchema.nodes, scope.uiSchema.currentParentId),
       selectedNodeId: normalizeScopeSelectedNodeId(scope.uiSchema.nodes, scope.uiSchema.selectedNodeId, { allowNull: true }),
+      unplacedFieldIds: normalizeScopeUnplacedFieldIds(
+        scope.uiSchema,
+        scope.dataSchema.fieldIds,
+      ),
     },
   }));
   const subformFieldIds = new Set<string>();
   const normalizedSubformScopes = subformScopes.map((scope) => {
-    const fieldIds = dedupeFieldIds(
-      scope.uiSchema.nodes
-        .filter((node): node is FormBuilderNode & { fieldId: string } =>
-          node.type === "field" && typeof node.fieldId === "string")
-        .map((node) => node.fieldId),
-    );
+    const fieldIds = getScopedFieldIds(scope.uiSchema);
     fieldIds.forEach((fieldId) => subformFieldIds.add(fieldId));
 
     return {
@@ -1741,6 +2035,10 @@ function finalizeScopedDocument(
         fieldIds,
       },
       filterDefinitions: normalizeFilterDefinitions(scope.filterDefinitions, new Set(fieldIds)),
+      uiSchema: {
+        ...scope.uiSchema,
+        unplacedFieldIds: normalizeScopeUnplacedFieldIds(scope.uiSchema, fieldIds),
+      },
       viewSettings: normalizeSubformViewSettings(
         {
           ...scope.viewSettings,
@@ -1778,6 +2076,10 @@ function finalizeScopedDocument(
         ...document.rootScope.uiSchema,
         currentParentId: normalizeScopeCurrentParentId(document.rootScope.uiSchema.nodes, document.rootScope.uiSchema.currentParentId),
         selectedNodeId: normalizeScopeSelectedNodeId(document.rootScope.uiSchema.nodes, document.rootScope.uiSchema.selectedNodeId),
+        unplacedFieldIds: normalizeScopeUnplacedFieldIds(
+          document.rootScope.uiSchema,
+          knownFieldIds.filter((fieldId) => !subformFieldIds.has(fieldId)),
+        ),
       },
     },
     subformScopes: normalizedSubformScopes,
@@ -1815,6 +2117,29 @@ function updateScopeUiSchema(
         : scope,
     ),
   }, options?.extraFieldIds);
+}
+
+function appendScopeUnplacedFieldIds(
+  uiSchema: FormBuilderScopeUiSchema,
+  fieldIds: ReadonlyArray<string>,
+) {
+  return {
+    ...uiSchema,
+    unplacedFieldIds: dedupeFieldIds([
+      ...uiSchema.unplacedFieldIds,
+      ...fieldIds,
+    ]),
+  };
+}
+
+function removeScopeUnplacedFieldId(
+  uiSchema: FormBuilderScopeUiSchema,
+  fieldId: string,
+) {
+  return {
+    ...uiSchema,
+    unplacedFieldIds: uiSchema.unplacedFieldIds.filter((entry) => entry !== fieldId),
+  };
 }
 
 function flattenScopedNodes(
@@ -1926,13 +2251,15 @@ function buildScopedDocumentFromFlatWorkspace(
       activeScopeIdCandidate === subformNode.id && selectedNodeScopeId === subformNode.id
         ? localizeFlatNodeIdForSubformScope(flatState.selectedNodeId, subformNode.id)
         : existingScope?.uiSchema.selectedNodeId;
-    const fieldIds = dedupeFieldIds(
-      scopedNodes
-        .filter((node): node is FormBuilderNode & { fieldId: string } =>
-          node.type === "field" && typeof node.fieldId === "string")
-        .map((node) => node.fieldId),
-    );
+    const fieldIds = getScopedFieldIds({
+      nodes: scopedNodes,
+      unplacedFieldIds: existingScope?.uiSchema.unplacedFieldIds ?? [],
+    });
     fieldIds.forEach((fieldId) => subformFieldIds.add(fieldId));
+    const scopeTableKey = subformNode.tableKey?.trim()
+      || subformNode.schemaScopeId?.trim()
+      || existingScope?.tableKey
+      || `pb_${slugifyScopeKey(subformNode.title?.trim() || subformNode.id)}`;
 
     return {
       dataSchema: {
@@ -1946,11 +2273,15 @@ function buildScopedDocumentFromFlatWorkspace(
       scopeId: subformNode.id,
       scopeType: "SUBFORM" as const,
       subformType: subformNode.subformType ?? existingScope?.subformType ?? "DEFAULT",
-      tableKey: existingScope?.tableKey ?? `pb_${slugifyScopeKey(subformNode.title?.trim() || subformNode.id)}`,
+      tableKey: scopeTableKey,
       uiSchema: {
         currentParentId: normalizeScopeCurrentParentId(scopedNodes, currentParentCandidate),
         nodes: scopedNodes,
         selectedNodeId: normalizeScopeSelectedNodeId(scopedNodes, selectedCandidate, { allowNull: true }),
+        unplacedFieldIds: normalizeScopeUnplacedFieldIds(
+          existingScope?.uiSchema ?? { nodes: scopedNodes, unplacedFieldIds: [] },
+          fieldIds,
+        ),
       },
       viewSettings: normalizeSubformViewSettings(
         {
@@ -1978,13 +2309,17 @@ function buildScopedDocumentFromFlatWorkspace(
         currentParentId: normalizeScopeCurrentParentId(rootScopeNodes, rootCurrentParentCandidate),
         nodes: rootScopeNodes,
         selectedNodeId: normalizeScopeSelectedNodeId(rootScopeNodes, rootSelectedCandidate),
+        unplacedFieldIds: normalizeScopeUnplacedFieldIds(
+          baseDocument.rootScope.uiSchema,
+          knownFieldIds.filter((fieldId) => !subformFieldIds.has(fieldId)),
+        ),
       },
     },
     subformScopes,
   });
 }
 
-function normalizeDocument(
+export function normalizeFormBuilderDocument(
   rawValue: unknown,
   object: FormsPlaceholderObject,
   screen: FormsPlaceholderScreen,
@@ -2016,6 +2351,7 @@ function normalizeDocument(
         childGridColumns: node.type === "subform"
           ? normalizeGridColumns(node.childGridColumns, fieldIds)
           : undefined,
+        containerKey: typeof node.containerKey === "string" ? node.containerKey : undefined,
         fieldId: typeof node.fieldId === "string" ? node.fieldId : undefined,
         helperText: typeof node.helperText === "string" ? node.helperText : "",
         id: node.id,
@@ -2024,7 +2360,9 @@ function normalizeDocument(
         required: Boolean(node.required),
         rules: normalizeNodeRules(node.rules, fieldIds),
         runtimePreset: isRuntimePreset(node.runtimePreset) ? node.runtimePreset : undefined,
+        schemaScopeId: typeof node.schemaScopeId === "string" ? node.schemaScopeId : undefined,
         subformType: node.type === "subform" && isSubformType(node.subformType) ? node.subformType : undefined,
+        tableKey: typeof node.tableKey === "string" ? node.tableKey : undefined,
         text: typeof node.text === "string" ? node.text : undefined,
         title: typeof node.title === "string" ? node.title : undefined,
         type: node.type,
@@ -2037,10 +2375,6 @@ function normalizeDocument(
             : "visible",
       });
     });
-
-  if (nodes.length === 0) {
-    return createDefaultFormBuilderDocument(object, screen);
-  }
 
   const currentParentNode = typeof candidate.currentParentId === "string"
     ? nodes.find((node) => node.id === candidate.currentParentId)
@@ -2061,7 +2395,7 @@ function normalizeDocument(
     typeof candidate.viewDescription === "string"
       ? candidate.viewDescription
       : `${screen.title} for ${object.title}.`,
-    object.fields.map((field) => field.id),
+    getRootSeedFieldIds(object.fields),
   );
 
   normalizedDocument.filterDefinitions = normalizeFilterDefinitions(candidate.filterDefinitions, fieldIds);
@@ -2079,6 +2413,15 @@ function normalizeDocument(
     candidate.viewKind === "detail" || candidate.viewKind === "form"
       ? candidate.viewKind
       : screen.kind;
+  normalizedDocument.rootScope.uiSchema.unplacedFieldIds = normalizeScopeUnplacedFieldIds(
+    {
+      nodes: [],
+      unplacedFieldIds: Array.isArray(candidate.rootScope?.uiSchema?.unplacedFieldIds)
+        ? candidate.rootScope.uiSchema.unplacedFieldIds.filter((value): value is string => typeof value === "string")
+        : [],
+    },
+    normalizedDocument.rootScope.dataSchema.fieldIds,
+  );
   normalizedDocument.subformScopes = Array.isArray(candidate.subformScopes)
     ? candidate.subformScopes.flatMap((entry) => {
         if (!entry || typeof entry !== "object") {
@@ -2115,6 +2458,15 @@ function normalizeDocument(
             currentParentId: null,
             nodes: [],
             selectedNodeId: null,
+            unplacedFieldIds: normalizeScopeUnplacedFieldIds(
+              {
+                nodes: [],
+                unplacedFieldIds: Array.isArray(scope.uiSchema?.unplacedFieldIds)
+                  ? scope.uiSchema.unplacedFieldIds.filter((value): value is string => typeof value === "string")
+                  : [],
+              },
+              normalizedFieldIds,
+            ),
           },
           viewSettings: normalizeSubformViewSettings(scope.viewSettings, new Set(normalizedFieldIds)),
         }];
@@ -2131,8 +2483,30 @@ function normalizeDocument(
   );
 }
 
+export function normalizePersistedFormBuilderDocument(
+  rawValue: unknown,
+  object: FormsPlaceholderObject,
+  screen: FormsPlaceholderScreen,
+) {
+  const normalizedRawValue = unwrapPersistedWorkspaceDocument(rawValue);
+  if (!normalizedRawValue || typeof normalizedRawValue !== "object") {
+    return createEmptyFormBuilderDocument(object, screen);
+  }
+
+  const candidate = normalizedRawValue as { nodes?: unknown };
+  if (!Array.isArray(candidate.nodes)) {
+    return createEmptyFormBuilderDocument(object, screen);
+  }
+
+  return normalizeFormBuilderDocument(rawValue, object, screen);
+}
+
 function getPersistedFormBuilderDocument(document: FormBuilderDocument): FormBuilderDocument {
   return resetFormBuilderWorkspaceNavigation(document);
+}
+
+export function createPersistedFormBuilderDocument(document: FormBuilderDocument) {
+  return getPersistedFormBuilderDocument(document);
 }
 
 function resetFormBuilderWorkspaceNavigation(document: FormBuilderDocument): FormBuilderDocument {
@@ -2166,18 +2540,18 @@ export function readFormBuilderDocument(
     return createDefaultFormBuilderDocument(object, screen);
   }
 
-  const savedStorageKey = `${formsWorkspaceSavedStoragePrefix}:${object.id}:${screen.id}`;
-  const legacyStorageKey = `${legacyFormsWorkspaceStoragePrefix}:${object.id}:${screen.id}`;
+  const savedStorageKey = `${formsWorkspaceSavedStoragePrefix}:${object.key}:${screen.key}`;
+  const legacyStorageKey = `${legacyFormsWorkspaceStoragePrefix}:${object.key}:${screen.key}`;
 
   try {
     const savedValue = window.localStorage.getItem(savedStorageKey);
     if (savedValue) {
-      return resetFormBuilderWorkspaceNavigation(normalizeDocument(JSON.parse(savedValue), object, screen));
+      return resetFormBuilderWorkspaceNavigation(normalizeFormBuilderDocument(JSON.parse(savedValue), object, screen));
     }
 
     const legacyValue = window.localStorage.getItem(legacyStorageKey);
     if (legacyValue) {
-      return resetFormBuilderWorkspaceNavigation(normalizeDocument(JSON.parse(legacyValue), object, screen));
+      return resetFormBuilderWorkspaceNavigation(normalizeFormBuilderDocument(JSON.parse(legacyValue), object, screen));
     }
   } catch {
     return createDefaultFormBuilderDocument(object, screen);
@@ -2195,8 +2569,8 @@ export function saveFormBuilderDocument(
     return;
   }
 
-  const savedStorageKey = `${formsWorkspaceSavedStoragePrefix}:${object.id}:${screen.id}`;
-  const legacyStorageKey = `${legacyFormsWorkspaceStoragePrefix}:${object.id}:${screen.id}`;
+  const savedStorageKey = `${formsWorkspaceSavedStoragePrefix}:${object.key}:${screen.key}`;
+  const legacyStorageKey = `${legacyFormsWorkspaceStoragePrefix}:${object.key}:${screen.key}`;
 
   try {
     window.localStorage.setItem(
@@ -2216,7 +2590,7 @@ export function useFormBuilderDocument(
   object: FormsPlaceholderObject,
   screen: FormsPlaceholderScreen,
 ) {
-  const storageSignature = useMemo(() => `${object.id}:${screen.id}`, [object.id, screen.id]);
+  const storageSignature = useMemo(() => `${object.key}:${screen.key}`, [object.key, screen.key]);
   const [document, setDocument] = useState<FormBuilderDocument>(() => readFormBuilderDocument(object, screen));
   const [savedDocument, setSavedDocument] = useState<FormBuilderDocument>(() =>
     getPersistedFormBuilderDocument(readFormBuilderDocument(object, screen)),
@@ -2226,7 +2600,7 @@ export function useFormBuilderDocument(
     const nextSavedDocument = readFormBuilderDocument(object, screen);
     setDocument(nextSavedDocument);
     setSavedDocument(getPersistedFormBuilderDocument(nextSavedDocument));
-  }, [storageSignature, object.id, screen.id]);
+  }, [storageSignature, object.key, screen.key]);
 
   const isDirty = useMemo(
     () => JSON.stringify(getPersistedFormBuilderDocument(document)) !== JSON.stringify(savedDocument),
@@ -2238,8 +2612,15 @@ export function useFormBuilderDocument(
     setSavedDocument(getPersistedFormBuilderDocument(document));
   }, [document, object, screen]);
 
+  const hydrateDocument = useCallback((nextDocument: FormBuilderDocument) => {
+    saveFormBuilderDocument(object, screen, nextDocument);
+    setDocument(nextDocument);
+    setSavedDocument(getPersistedFormBuilderDocument(nextDocument));
+  }, [object, screen]);
+
   return {
     document,
+    hydrateDocument,
     isDirty,
     saveDocument,
     savedDocument,
@@ -2453,16 +2834,456 @@ export function addFormBuilderFieldNode(
     {
       fieldId: field.id,
       helperText: "",
-      title: field.label,
+      title: getFormsPlaceholderFieldDisplayName(field),
     },
     idFactory,
   );
 
   return updateScopeUiSchema(document, targetScopeId, (uiSchema) => ({
-    ...uiSchema,
+    ...removeScopeUnplacedFieldId(uiSchema, field.id),
     nodes: [...uiSchema.nodes, nextNode],
     selectedNodeId: nextNode.id,
   }), { extraFieldIds: [field.id] });
+}
+
+function appendFieldNodeToScope(
+  document: FormBuilderDocument,
+  scopeId: "root" | string,
+  field: FormsPlaceholderField,
+  idFactory?: (prefix: string) => string,
+) {
+  const scopeNodes = getScopeNodes(document, scopeId);
+  const preferredParentId = findPreferredFieldParentIdInScopeNodes(scopeNodes, null);
+  const nextNode = createNode(
+    "field",
+    preferredParentId,
+    getNextOrderValue(scopeNodes, preferredParentId),
+    {
+      fieldId: field.id,
+      helperText: "",
+      title: getFormsPlaceholderFieldDisplayName(field),
+    },
+    idFactory,
+  );
+
+  return updateScopeUiSchema(document, scopeId, (uiSchema) => ({
+    ...removeScopeUnplacedFieldId(uiSchema, field.id),
+    nodes: [...uiSchema.nodes, nextNode],
+  }), { extraFieldIds: [field.id] });
+}
+
+function appendSubformNodeToRoot(
+  document: FormBuilderDocument,
+  schemaScope: ReturnType<typeof getModelSubformSchemaScopes>[number],
+  idFactory?: (prefix: string) => string,
+) {
+  const nextNode = createNode(
+    "subform",
+    null,
+    getNextOrderValue(document.rootScope.uiSchema.nodes, null),
+    {
+      schemaScopeId: schemaScope.key,
+      subformType: schemaScope.subformType,
+      tableKey: schemaScope.key,
+      title: schemaScope.displayName,
+    },
+    idFactory,
+  );
+
+  const nextDocument = updateScopeUiSchema(document, "root", (uiSchema) => ({
+    ...uiSchema,
+    nodes: [...uiSchema.nodes, nextNode],
+  }));
+
+  return {
+    document: withFlatCompatibilityCache({
+      ...nextDocument,
+      subformScopes: nextDocument.subformScopes.map((scope) =>
+        scope.parentSubformNodeId === nextNode.id
+          ? {
+              ...scope,
+              subformType: schemaScope.subformType,
+              tableKey: schemaScope.key,
+            }
+          : scope,
+      ),
+    }),
+    scopeId: nextNode.id,
+  };
+}
+
+function appendFieldNodeToScopeParent(
+  document: FormBuilderDocument,
+  scopeId: "root" | string,
+  parentId: string | null,
+  field: FormsPlaceholderField,
+  order?: number,
+  idFactory?: (prefix: string) => string,
+) {
+  const scopeNodes = getScopeNodes(document, scopeId);
+  const nextNode = createNode(
+    "field",
+    parentId,
+    order ?? getNextOrderValue(scopeNodes, parentId),
+    {
+      fieldId: field.id,
+      helperText: "",
+      title: getFormsPlaceholderFieldDisplayName(field),
+    },
+    idFactory,
+  );
+
+  return updateScopeUiSchema(document, scopeId, (uiSchema) => ({
+    ...removeScopeUnplacedFieldId(uiSchema, field.id),
+    nodes: [...uiSchema.nodes, nextNode],
+  }), { extraFieldIds: [field.id] });
+}
+
+function getLayoutBlueprintScope(
+  layoutBlueprint: unknown,
+  scopeKey: string,
+) {
+  if (!layoutBlueprint || typeof layoutBlueprint !== "object") {
+    return null;
+  }
+
+  const candidate = layoutBlueprint as {
+    rootScope?: unknown;
+    subformScopes?: unknown;
+  };
+  if (scopeKey === "root") {
+    return candidate.rootScope && typeof candidate.rootScope === "object"
+      ? candidate.rootScope as Record<string, unknown>
+      : null;
+  }
+
+  if (!Array.isArray(candidate.subformScopes)) {
+    return null;
+  }
+
+  return candidate.subformScopes.find((entry) =>
+    entry && typeof entry === "object" && (
+      (typeof (entry as { schemaScopeId?: unknown }).schemaScopeId === "string"
+        && (entry as { schemaScopeId: string }).schemaScopeId === scopeKey)
+      || (typeof (entry as { tableKey?: unknown }).tableKey === "string"
+        && (entry as { tableKey: string }).tableKey === scopeKey)
+    ),
+  ) as Record<string, unknown> | null;
+}
+
+export function reconcileFormBuilderDocumentWithModel(
+  document: FormBuilderDocument,
+  object: FormsPlaceholderObject,
+  layoutBlueprint?: unknown,
+) {
+  const fieldById = new Map(object.fields.map((field) => [field.id, field]));
+  let nextDocument = document;
+  const scopeIdBySchemaScopeKey = new Map(
+    document.subformScopes.map((scope) => [scope.tableKey, scope.scopeId]),
+  );
+  getModelSubformSchemaScopes(object).forEach((schemaScope) => {
+    if (scopeIdBySchemaScopeKey.has(schemaScope.key)) {
+      return;
+    }
+
+    const appended = appendSubformNodeToRoot(nextDocument, schemaScope);
+    nextDocument = appended.document;
+    scopeIdBySchemaScopeKey.set(schemaScope.key, appended.scopeId);
+  });
+
+  if (layoutBlueprint && typeof layoutBlueprint === "object") {
+    const reconcileScope = (
+      scopeId: "root" | string,
+      availableFieldIds: ReadonlyArray<string>,
+      blueprintScopeKey: string = scopeId,
+    ) => {
+      const blueprintScope = getLayoutBlueprintScope(layoutBlueprint, blueprintScopeKey) ?? {
+        containers: [],
+        fieldPlacements: [],
+        schemaScopeId: blueprintScopeKey,
+        unplacedFieldIds: [],
+      };
+
+      const availableFieldIdSet = new Set(availableFieldIds);
+      const normalizeContainerNodes = () =>
+        getScopeNodes(nextDocument, scopeId).filter((node) => isBlueprintContainerType(node.type));
+      let containerNodeIdsByKey = new Map(
+        normalizeContainerNodes()
+          .filter((node) => typeof node.containerKey === "string" && node.containerKey.trim().length > 0)
+          .map((node) => [node.containerKey as string, node.id]),
+      );
+
+      const rawContainers = Array.isArray(blueprintScope.containers) ? blueprintScope.containers : [];
+      const containers = rawContainers
+        .flatMap((entry, index) => {
+          if (!entry || typeof entry !== "object") {
+            return [];
+          }
+
+          const container = entry as Record<string, unknown>;
+          const containerKey = typeof container.containerKey === "string" ? container.containerKey.trim() : "";
+          const containerType = typeof container.type === "string" ? container.type : "";
+          if (!containerKey || !isBlueprintContainerType(containerType)) {
+            return [];
+          }
+
+          return [{
+            containerKey,
+            containerType,
+            order: typeof container.order === "number" ? container.order : index,
+            parentContainerKey: typeof container.parentContainerKey === "string"
+              ? container.parentContainerKey
+              : "",
+            schemaScopeId: typeof container.schemaScopeId === "string" ? container.schemaScopeId : undefined,
+            subformType: isSubformType(container.subformType) ? container.subformType : undefined,
+            tableKey: typeof container.tableKey === "string" ? container.tableKey : undefined,
+            title: typeof container.title === "string" ? container.title : undefined,
+          }];
+        })
+        .sort((left, right) => left.order - right.order);
+
+      containers.forEach((container) => {
+        if (containerNodeIdsByKey.has(container.containerKey)) {
+          return;
+        }
+
+        let existingNodeId: string | null = null;
+        if (container.containerType === "subform") {
+          const existingNode = getScopeNodes(nextDocument, scopeId).find((node) =>
+            node.type === "subform"
+            && (
+              (container.tableKey && node.tableKey === container.tableKey)
+              || (container.schemaScopeId && node.schemaScopeId === container.schemaScopeId)
+            ),
+          );
+          if (existingNode) {
+            existingNodeId = existingNode.id;
+            nextDocument = updateFormBuilderNode(nextDocument, existingNode.id, {
+              containerKey: container.containerKey,
+              schemaScopeId: container.schemaScopeId,
+              subformType: container.subformType,
+              tableKey: container.tableKey,
+              title: container.title,
+            });
+          }
+        }
+
+        if (existingNodeId) {
+          containerNodeIdsByKey.set(container.containerKey, existingNodeId);
+          return;
+        }
+
+        const parentId = container.parentContainerKey
+          ? (containerNodeIdsByKey.get(container.parentContainerKey) ?? null)
+          : null;
+        let createdNodeId: string | null = null;
+        nextDocument = updateScopeUiSchema(nextDocument, scopeId, (uiSchema) => {
+          const nextNode = createNode(
+            container.containerType,
+            parentId,
+            container.order,
+            {
+              containerKey: container.containerKey,
+              schemaScopeId: container.schemaScopeId,
+              subformType: container.subformType,
+              tableKey: container.tableKey,
+              title: container.title,
+            },
+            (prefix) => {
+              createdNodeId = defaultNodeId(prefix);
+              return createdNodeId;
+            },
+          );
+
+          return {
+            ...uiSchema,
+            nodes: [...uiSchema.nodes, nextNode],
+          };
+        });
+        if (createdNodeId) {
+          containerNodeIdsByKey.set(container.containerKey, createdNodeId);
+        }
+      });
+
+      const validContainerNodeIds = new Set(containerNodeIdsByKey.values());
+      const placements = Array.isArray(blueprintScope.fieldPlacements)
+        ? blueprintScope.fieldPlacements
+            .flatMap((entry, index) => {
+              if (!entry || typeof entry !== "object") {
+                return [];
+              }
+
+              const placement = entry as Record<string, unknown>;
+              const fieldId = typeof placement.fieldId === "string" ? placement.fieldId : "";
+              const containerKey = typeof placement.containerKey === "string" ? placement.containerKey.trim() : "";
+              if (!fieldId || !containerKey || !availableFieldIdSet.has(fieldId)) {
+                return [];
+              }
+
+              return [{
+                containerKey,
+                fieldId,
+                order: typeof placement.order === "number" ? placement.order : index,
+              }];
+            })
+            .sort((left, right) => left.order - right.order)
+        : [];
+      const scopeRootPlacementFieldIds = new Set(
+        placements
+          .filter((placement) => isFormBuilderScopeRootPlacementKey(placement.containerKey))
+          .map((placement) => placement.fieldId),
+      );
+      const invalidFieldIds = dedupeFieldIds(
+        getScopeNodes(nextDocument, scopeId)
+          .filter((node): node is FormBuilderNode & { fieldId: string } =>
+            node.type === "field"
+            && typeof node.fieldId === "string"
+            && (
+              (node.parentId === null && !scopeRootPlacementFieldIds.has(node.fieldId))
+              || (node.parentId !== null && !validContainerNodeIds.has(node.parentId))
+            ))
+          .map((node) => node.fieldId),
+      );
+      if (invalidFieldIds.length > 0) {
+        nextDocument = updateScopeUiSchema(nextDocument, scopeId, (uiSchema) => ({
+          ...appendScopeUnplacedFieldIds(uiSchema, invalidFieldIds),
+          nodes: uiSchema.nodes.filter((node) =>
+            node.type !== "field"
+            || typeof node.fieldId !== "string"
+            || !invalidFieldIds.includes(node.fieldId)
+            || (node.parentId !== null && validContainerNodeIds.has(node.parentId))
+          ),
+        }), { extraFieldIds: invalidFieldIds });
+      }
+
+      const boundFieldIds = new Set(
+        getScopeNodes(nextDocument, scopeId)
+          .filter((node): node is FormBuilderNode & { fieldId: string } =>
+            node.type === "field" && typeof node.fieldId === "string")
+          .map((node) => node.fieldId),
+      );
+
+      placements.forEach((placement) => {
+        if (boundFieldIds.has(placement.fieldId)) {
+          return;
+        }
+
+        const field = fieldById.get(placement.fieldId);
+        const isScopeRootPlacement = isFormBuilderScopeRootPlacementKey(placement.containerKey);
+        const parentId = isScopeRootPlacement
+          ? null
+          : (containerNodeIdsByKey.get(placement.containerKey) ?? null);
+        if (!field || (!isScopeRootPlacement && !parentId)) {
+          return;
+        }
+
+        nextDocument = appendFieldNodeToScopeParent(
+          nextDocument,
+          scopeId,
+          parentId,
+          field,
+          placement.order,
+        );
+        boundFieldIds.add(placement.fieldId);
+      });
+
+      const blueprintUnplacedFieldIds = Array.isArray(blueprintScope.unplacedFieldIds)
+        ? blueprintScope.unplacedFieldIds.filter((value): value is string =>
+          typeof value === "string" && availableFieldIdSet.has(value))
+        : [];
+
+      const nextBoundFieldIds = new Set(
+        getScopeNodes(nextDocument, scopeId)
+          .filter((node): node is FormBuilderNode & { fieldId: string } =>
+            node.type === "field" && typeof node.fieldId === "string")
+          .map((node) => node.fieldId),
+      );
+      const nextUnplacedFieldIds = dedupeFieldIds([
+        ...getActiveFormBuilderScope(
+          scopeId === "root"
+            ? nextDocument
+            : {
+                ...nextDocument,
+                activeScopeId: scopeId,
+              } as FormBuilderDocument,
+        ).uiSchema.unplacedFieldIds,
+        ...blueprintUnplacedFieldIds,
+        ...availableFieldIds.filter((fieldId) => !nextBoundFieldIds.has(fieldId)),
+      ]);
+
+      nextDocument = updateScopeUiSchema(nextDocument, scopeId, (uiSchema) => ({
+        ...uiSchema,
+        unplacedFieldIds: nextUnplacedFieldIds,
+      }), { extraFieldIds: availableFieldIds });
+    };
+
+    reconcileScope(
+      "root",
+      object.fields
+        .filter((field) => {
+          const scopeKey = getFieldSchemaScopeKey(field);
+          return scopeKey === null || scopeKey === "root";
+        })
+        .map((field) => field.id),
+    );
+    nextDocument.subformScopes.forEach((scope) => {
+      reconcileScope(
+        scope.scopeId,
+        object.fields
+          .filter((field) => getFieldSchemaScopeKey(field) === scope.tableKey)
+          .map((field) => field.id),
+        scope.tableKey,
+      );
+    });
+
+    return nextDocument;
+  }
+
+  const assignedSubformFieldIds = new Set(
+    nextDocument.subformScopes.flatMap((scope) =>
+      scope.dataSchema.fieldIds.filter((fieldId) => fieldById.has(fieldId))
+    ),
+  );
+  const boundFieldIds = getBoundFieldIds(nextDocument);
+
+  nextDocument.subformScopes.forEach((scope) => {
+    scope.dataSchema.fieldIds.forEach((fieldId) => {
+      const field = fieldById.get(fieldId);
+      if (!field || boundFieldIds.has(fieldId)) {
+        return;
+      }
+
+      nextDocument = appendFieldNodeToScope(nextDocument, scope.scopeId, field);
+      boundFieldIds.add(fieldId);
+    });
+  });
+
+  object.fields.forEach((field) => {
+    if (boundFieldIds.has(field.id)) {
+      return;
+    }
+
+    const schemaScopeKey = getFieldSchemaScopeKey(field);
+    if (schemaScopeKey && schemaScopeKey !== "root") {
+      const targetScopeId = scopeIdBySchemaScopeKey.get(schemaScopeKey);
+      if (!targetScopeId) {
+        return;
+      }
+
+      nextDocument = appendFieldNodeToScope(nextDocument, targetScopeId, field);
+      boundFieldIds.add(field.id);
+      return;
+    }
+
+    if (assignedSubformFieldIds.has(field.id)) {
+      return;
+    }
+
+    nextDocument = appendFieldNodeToScope(nextDocument, "root", field);
+    boundFieldIds.add(field.id);
+  });
+
+  return nextDocument;
 }
 
 function collectDescendantIds(nodes: ReadonlyArray<FormBuilderNode>, nodeId: string) {
@@ -2533,6 +3354,12 @@ export function removeFormBuilderNode(
 
   const scopeNodes = getScopeNodes(document, scopeId);
   const descendants = collectDescendantIds(scopeNodes, nodeId);
+  const removedFieldIds = dedupeFieldIds(
+    scopeNodes
+      .filter((entry): entry is FormBuilderNode & { fieldId: string } =>
+        descendants.has(entry.id) && entry.type === "field" && typeof entry.fieldId === "string")
+      .map((entry) => entry.fieldId),
+  );
   const nextNodes = resequenceSiblingOrders(
     scopeNodes.filter((entry) => !descendants.has(entry.id)),
     node.parentId,
@@ -2552,7 +3379,7 @@ export function removeFormBuilderNode(
       rootScope: {
         ...document.rootScope,
         uiSchema: {
-          ...document.rootScope.uiSchema,
+          ...appendScopeUnplacedFieldIds(document.rootScope.uiSchema, removedFieldIds),
           currentParentId: currentParentRemoved ? node.parentId : document.rootScope.uiSchema.currentParentId,
           nodes: nextNodes,
           selectedNodeId: selectedRemoved
@@ -2577,7 +3404,7 @@ export function removeFormBuilderNode(
     : false;
 
   return updateScopeUiSchema(document, scopeId, (uiSchema) => ({
-    ...uiSchema,
+    ...appendScopeUnplacedFieldIds(uiSchema, removedFieldIds),
     currentParentId: currentParentRemoved ? node.parentId : uiSchema.currentParentId,
     nodes: nextNodes,
     selectedNodeId: selectedRemoved
@@ -2713,8 +3540,8 @@ export function getElementPaletteItems(
     })
     .map((definition) => ({
       ...definition,
-      disabled: !access.canAddItems,
-      disabledReasonKey: access.canAddItems ? null : access.lockReasonKey,
+      disabled: !access.canAddElementItems,
+      disabledReasonKey: access.canAddElementItems ? null : access.lockReasonKey,
       kind: "element",
     }));
 }
@@ -2744,8 +3571,8 @@ export function getFieldPaletteItems(
       category: getFormBuilderFieldPaletteSection(definition.template),
       descriptionKey: "tenant.platformStudio.forms.builder.palette.fieldDescription",
       definition,
-      disabled: !access.canAddItems,
-      disabledReasonKey: access.canAddItems ? null : access.lockReasonKey,
+      disabled: !access.canAddFieldItems,
+      disabledReasonKey: access.canAddFieldItems ? null : access.structureLockReasonKey,
       iconKey: getFormsPlaceholderFieldIconKey({ ...definition.template, id: definition.idBase }),
       kind: "field" as const,
     }));
@@ -2756,8 +3583,8 @@ export function getFormBuilderDisplayLabel(
   object: FormsPlaceholderObject,
 ) {
   if (node.type === "field") {
-    const field = object.fields.find((entry) => entry.id === node.fieldId);
-    return node.title || field?.label || "Field";
+      const field = object.fields.find((entry) => entry.id === node.fieldId);
+    return node.title || (field ? getFormsPlaceholderFieldDisplayName(field) : null) || "Field";
   }
 
   if (node.type === "text") {

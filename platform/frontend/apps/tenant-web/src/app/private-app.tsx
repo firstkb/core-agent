@@ -5,6 +5,10 @@ import {
   LocaleMenuItems,
   WorkspaceShell,
 } from "@platform/app-shell";
+import {
+  getApiClientRequestActivitySnapshot,
+  subscribeApiClientRequestActivity,
+} from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import {
@@ -24,6 +28,8 @@ import {
   PlusIcon,
   SearchIcon,
   StarIcon,
+  TopLoader,
+  createTopLoaderController,
 } from "@platform/ui-kit";
 import {
   Outlet,
@@ -35,6 +41,7 @@ import {
   isPlatformStudioPath,
   platformStudioPaths,
 } from "../features/platform-studio";
+import { subscribeFormsPlaceholderModelsCache } from "../features/platform-studio/forms/forms-placeholder-data";
 import { offlineSyncStatus } from "../offline/sync-status";
 import {
   getTenantShellHeaderMeta,
@@ -60,6 +67,7 @@ type TenantThemeMode = "light" | "dark";
 const tenantThemeStorageKey = "tenant-workspace-theme";
 const tenantSidebarCollapsedStorageKey = "tenant-workspace-sidebar-collapsed";
 const appBuild = getAppBuildMetadata();
+const tenantShellTopLoaderController = createTopLoaderController();
 
 function isEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -102,6 +110,7 @@ export function PrivateApp({
   const location = useLocation();
   const navigate = useNavigate();
   const shellBrand = tenantName?.trim() ? tenantName : t("tenant.shell.brand");
+  const [, setPlatformStudioHeaderVersion] = useState(0);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -173,6 +182,29 @@ export function PrivateApp({
     };
   }, []);
 
+  useEffect(() => {
+    return subscribeFormsPlaceholderModelsCache(() => {
+      setPlatformStudioHeaderVersion((value) => value + 1);
+    });
+  }, []);
+
+  useEffect(() => {
+    function syncTransportActivity() {
+      const snapshot = getApiClientRequestActivitySnapshot();
+
+      if (snapshot.activeRequestCount > 0) {
+        tenantShellTopLoaderController.start();
+        return;
+      }
+
+      tenantShellTopLoaderController.done();
+    }
+
+    syncTransportActivity();
+
+    return subscribeApiClientRequestActivity(syncTransportActivity);
+  }, []);
+
   async function canLeaveCurrentPlatformStudioSurface() {
     if (typeof window === "undefined") {
       return true;
@@ -238,6 +270,7 @@ export function PrivateApp({
 
   return (
     <>
+      <TopLoader controller={tenantShellTopLoaderController} />
       <WorkspaceShell
         brand={shellBrand}
         enableCollapsedRailHoverPreview

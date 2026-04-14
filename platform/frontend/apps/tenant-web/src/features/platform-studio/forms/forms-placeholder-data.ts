@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import type {
+  FormBuilderSubformType,
   FormsPlaceholderAcceptedFieldKind,
   FormsPlaceholderFieldPreset,
 } from "./forms-builder-contract";
@@ -16,6 +17,8 @@ export type FormsPlaceholderFieldKind = FormsPlaceholderAcceptedFieldKind;
 export type FormsPlaceholderChoiceRenderStyle = "buttons" | "native";
 export type FormsPlaceholderChoiceOrientation = "horizontal" | "vertical";
 export type FormsPlaceholderFieldValidation = "email" | "phone" | "url";
+export type FormsPlaceholderFieldStatus = "draft" | "persisted" | "published";
+export type FormsPlaceholderFieldSemanticRole = "reportedBy" | "reportedDate" | "workflowStatus";
 export type FormsPlaceholderTagMode = "create_only" | "select_existing" | "select_or_create";
 export type FormsPlaceholderLookupDisplayMode = "catalog_modal" | "search_select";
 export type FormsPlaceholderLookupSearchBehavior = "ajax" | "prefetch";
@@ -47,17 +50,26 @@ export type FormsPlaceholderLookupConfig = {
   storedValueField?: string;
 };
 
+export type FormsPlaceholderSchemaScope = {
+  displayName: string;
+  key: string;
+  scopeType: "SUBFORM";
+  subformType: FormBuilderSubformType;
+};
+
 export type FormsPlaceholderField = {
   autocomplete?: string;
   choiceDisplay?: FormsPlaceholderChoiceDisplay;
   defaultValueMode?: "today";
   dependentFilter?: string;
+  displayName?: string;
   displayFormat?: string;
   displayFields?: ReadonlyArray<string>;
   family: FormsPlaceholderFieldFamily;
   historicalUpdates?: boolean;
   id: string;
   inputMode?: string;
+  isPersisted?: boolean;
   isLocked: boolean;
   kind: FormsPlaceholderFieldKind;
   label: string;
@@ -68,39 +80,324 @@ export type FormsPlaceholderField = {
   placeholder?: string;
   preset?: FormsPlaceholderFieldPreset;
   readonly?: boolean;
+  semanticRole?: FormsPlaceholderFieldSemanticRole;
   selectionMode?: FormsPlaceholderSelectionMode;
+  schemaScopeKey?: string;
   sourceFilters?: ReadonlyArray<string>;
   sourceLabel?: string;
+  status?: FormsPlaceholderFieldStatus;
+  storageKey?: string;
   tagMode?: FormsPlaceholderTagMode;
   validation?: FormsPlaceholderFieldValidation;
 };
 
 export type FormsPlaceholderScreen = {
   description: string;
+  displayName?: string;
+  guid?: string;
   id: string;
   isActive: boolean;
+  isViewLocked?: boolean;
+  key: string;
   kind: "detail" | "form";
+  lastAlignedModelStructureVersion?: number;
   title: string;
+  viewVersion?: number;
 };
 
 export type FormsPlaceholderObject = {
   canEditViewsOnly: boolean;
   description: string;
+  displayName?: string;
   fields: ReadonlyArray<FormsPlaceholderField>;
+  guid?: string;
   id: string;
   isStructureLocked: boolean;
+  key: string;
+  modelStructureVersion?: number;
   owner: string;
+  schemaScopes?: ReadonlyArray<FormsPlaceholderSchemaScope>;
   screens: ReadonlyArray<FormsPlaceholderScreen>;
   title: string;
+  version?: number;
 };
 
 export type FormsPlaceholderView = FormsPlaceholderScreen;
 export type FormsPlaceholderModel = FormsPlaceholderObject;
 
 const formsPlaceholderStorageKey = "tenant-web-platform-studio-objects";
+const formsPlaceholderStorageEvent = "tenant-web-platform-studio-objects-updated";
 const formsTitleCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
 
-function cloneField(field: FormsPlaceholderField): FormsPlaceholderField {
+function normalizeStorageKeyPart(value: string | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function normalizeStableKey(value: string | undefined, fallbackId: string) {
+  const trimmedValue = value?.trim();
+  if (trimmedValue) {
+    return trimmedValue;
+  }
+
+  return fallbackId;
+}
+
+function normalizeOptionalGuid(value: string | undefined, fallback?: string) {
+  const trimmedValue = value?.trim();
+  if (trimmedValue) {
+    return trimmedValue;
+  }
+
+  return fallback;
+}
+
+export function createFormsPlaceholderStorageKey(
+  label: string | undefined,
+  fallbackId: string | undefined,
+) {
+  const normalizedLabel = normalizeStorageKeyPart(label);
+  if (normalizedLabel) {
+    return normalizedLabel;
+  }
+
+  const normalizedFallbackId = normalizeStorageKeyPart(fallbackId);
+  return normalizedFallbackId || "field";
+}
+
+function humanizeSchemaScopeKey(value: string) {
+  return value
+    .replace(/^pb_/, "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "Subform";
+}
+
+export function getFormsPlaceholderFieldDisplayName(field: FormsPlaceholderField) {
+  return field.displayName?.trim() || field.label;
+}
+
+function cloneFormsPlaceholderSchemaScope(scope: FormsPlaceholderSchemaScope): FormsPlaceholderSchemaScope {
+  return {
+    displayName: scope.displayName.trim() || humanizeSchemaScopeKey(scope.key),
+    key: scope.key.trim(),
+    scopeType: "SUBFORM",
+    subformType: scope.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT",
+  };
+}
+
+function normalizeSchemaScopes(
+  value: unknown,
+  fallback: ReadonlyArray<FormsPlaceholderSchemaScope> | undefined,
+): ReadonlyArray<FormsPlaceholderSchemaScope> | undefined {
+  if (!Array.isArray(value)) {
+    return fallback ? fallback.map(cloneFormsPlaceholderSchemaScope) : undefined;
+  }
+
+  const scopes = value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") {
+      return [];
+    }
+
+    const candidate = entry as Partial<FormsPlaceholderSchemaScope>;
+    const key = typeof candidate.key === "string" && candidate.key.trim().length > 0
+      ? candidate.key.trim()
+      : "";
+    if (!key) {
+      return [];
+    }
+
+    return [{
+      displayName:
+        typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0
+          ? candidate.displayName.trim()
+          : humanizeSchemaScopeKey(key),
+      key,
+      scopeType: "SUBFORM" as const,
+      subformType: (candidate.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT") as FormBuilderSubformType,
+    }];
+  });
+
+  if (scopes.length === 0) {
+    return fallback ? fallback.map(cloneFormsPlaceholderSchemaScope) : undefined;
+  }
+
+  const seen = new Set<string>();
+  return scopes.filter((scope) => {
+    if (seen.has(scope.key)) {
+      return false;
+    }
+
+    seen.add(scope.key);
+    return true;
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function extractFieldsFromCanonicalDataSchema(
+  value: unknown,
+) {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const rootScope = isRecord(value.rootScope) ? value.rootScope : null;
+  const subformScopes = Array.isArray(value.subformScopes) ? value.subformScopes : [];
+  const fields: Partial<FormsPlaceholderField>[] = [];
+
+  const appendFields = (
+    scopeKey: string,
+    scopeFields: unknown,
+  ) => {
+    if (!Array.isArray(scopeFields)) {
+      return;
+    }
+
+    scopeFields.forEach((entry) => {
+      if (!isRecord(entry)) {
+        return;
+      }
+
+      const fieldId = typeof entry.fieldId === "string" && entry.fieldId.trim().length > 0
+        ? entry.fieldId
+        : typeof entry.id === "string" && entry.id.trim().length > 0
+          ? entry.id
+          : typeof entry.storageKey === "string" && entry.storageKey.trim().length > 0
+            ? entry.storageKey
+            : "";
+      if (!fieldId) {
+        return;
+      }
+
+      fields.push({
+        ...entry,
+        id: fieldId,
+        schemaScopeKey: scopeKey,
+      });
+    });
+  };
+
+  appendFields("root", rootScope?.fields);
+  subformScopes.forEach((entry) => {
+    if (!isRecord(entry)) {
+      return;
+    }
+
+    const scopeKey = typeof entry.schemaScopeId === "string" && entry.schemaScopeId.trim().length > 0
+      ? entry.schemaScopeId
+      : typeof entry.tableKey === "string" && entry.tableKey.trim().length > 0
+        ? entry.tableKey
+        : "";
+    if (!scopeKey) {
+      return;
+    }
+
+    appendFields(scopeKey, entry.fields);
+  });
+
+  return fields.length > 0 ? fields : null;
+}
+
+function extractSchemaScopesFromCanonicalDataSchema(
+  value: unknown,
+): ReadonlyArray<FormsPlaceholderSchemaScope> | undefined {
+  if (!isRecord(value) || !Array.isArray(value.subformScopes)) {
+    return undefined;
+  }
+
+  return normalizeSchemaScopes(
+    value.subformScopes.map((entry) => {
+      if (!isRecord(entry)) {
+        return null;
+      }
+
+      const key = typeof entry.schemaScopeId === "string" && entry.schemaScopeId.trim().length > 0
+        ? entry.schemaScopeId
+        : typeof entry.tableKey === "string" && entry.tableKey.trim().length > 0
+          ? entry.tableKey
+          : "";
+      if (!key) {
+        return null;
+      }
+
+      return {
+        displayName:
+          typeof entry.displayName === "string" && entry.displayName.trim().length > 0
+            ? entry.displayName
+            : humanizeSchemaScopeKey(key),
+        key,
+        scopeType: "SUBFORM",
+        subformType: entry.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT",
+      };
+    }),
+    undefined,
+  );
+}
+
+function getDefaultFieldStatus(field: FormsPlaceholderField) {
+  if (field.status) {
+    return field.status;
+  }
+
+  return field.isPersisted === false ? "draft" : "persisted";
+}
+
+function getDefaultFieldSemanticRole(field: Pick<FormsPlaceholderField, "id" | "kind" | "semanticRole">) {
+  if (field.semanticRole) {
+    return field.semanticRole;
+  }
+
+  if (field.kind === "db_lookup" && field.id.startsWith("reported-by")) {
+    return "reportedBy";
+  }
+
+  if (field.kind === "date" && field.id.startsWith("reported-date")) {
+    return "reportedDate";
+  }
+
+  if (field.kind === "single_select" && field.id === "status") {
+    return "workflowStatus";
+  }
+
+  return undefined;
+}
+
+function getDefaultViewVersion(screen: FormsPlaceholderScreen) {
+  return typeof screen.viewVersion === "number" && Number.isFinite(screen.viewVersion) && screen.viewVersion > 0
+    ? Math.floor(screen.viewVersion)
+    : 1;
+}
+
+function getDefaultAlignedVersion(
+  object: Pick<FormsPlaceholderObject, "modelStructureVersion">,
+  screen: FormsPlaceholderScreen,
+) {
+  if (
+    typeof screen.lastAlignedModelStructureVersion === "number"
+    && Number.isFinite(screen.lastAlignedModelStructureVersion)
+    && screen.lastAlignedModelStructureVersion > 0
+  ) {
+    return Math.floor(screen.lastAlignedModelStructureVersion);
+  }
+
+  return typeof object.modelStructureVersion === "number" && Number.isFinite(object.modelStructureVersion) && object.modelStructureVersion > 0
+    ? Math.floor(object.modelStructureVersion)
+    : 1;
+}
+
+export function cloneFormsPlaceholderField(field: FormsPlaceholderField): FormsPlaceholderField {
+  const displayName = getFormsPlaceholderFieldDisplayName(field);
+
   return {
     ...field,
     choiceDisplay: field.choiceDisplay
@@ -111,7 +408,9 @@ function cloneField(field: FormsPlaceholderField): FormsPlaceholderField {
             : undefined,
         }
       : undefined,
+    displayName,
     displayFields: field.displayFields ? [...field.displayFields] : undefined,
+    isPersisted: field.isPersisted ?? getDefaultFieldStatus(field) !== "draft",
     lookupConfig: field.lookupConfig
       ? {
           ...field.lookupConfig,
@@ -122,151 +421,55 @@ function cloneField(field: FormsPlaceholderField): FormsPlaceholderField {
         }
       : undefined,
     options: field.options ? [...field.options] : undefined,
+    semanticRole: getDefaultFieldSemanticRole(field),
     selectionMode: field.selectionMode,
+    schemaScopeKey: normalizeOptionalString(field.schemaScopeKey, undefined),
     sourceFilters: field.sourceFilters ? [...field.sourceFilters] : undefined,
+    status: getDefaultFieldStatus(field),
+    storageKey: createFormsPlaceholderStorageKey(field.storageKey ?? displayName, field.id),
   };
 }
 
-const defaultFormsPlaceholderObjects: ReadonlyArray<FormsPlaceholderObject> = [
-  {
-    canEditViewsOnly: true,
-    description: "Customer onboarding structure with a locked identity core and multiple screen variants.",
-    fields: [
-      { family: "core", id: "customer-name", isLocked: true, kind: "short_text", label: "Customer name" },
-      {
-        family: "preset",
-        id: "customer-email",
-        isLocked: false,
-        kind: "short_text",
-        label: "Email",
-        preset: "email",
-      },
-      {
-        family: "core",
-        historicalUpdates: true,
-        id: "activity-notes",
-        isLocked: false,
-        kind: "long_text",
-        label: "Activity notes",
-      },
-      {
-        family: "preset",
-        id: "account-tags",
-        isLocked: false,
-        kind: "multi_select",
-        label: "Account tags",
-        options: ["VIP", "Renewal", "Escalated"],
-        preset: "tags",
-      },
-      {
-        dependentFilter: "Limit by selected account team.",
-        displayFields: ["Full name", "Email"],
-        family: "preset",
-        id: "assigned-owner",
-        isLocked: false,
-        kind: "db_lookup",
-        label: "Assigned owner",
-        preset: "contact_lookup",
-        selectionMode: "single",
-        sourceFilters: ["Only active users"],
-        sourceLabel: "Users",
-      },
-      {
-        family: "choice",
-        id: "customer-status",
-        isLocked: true,
-        kind: "single_select",
-        label: "Status",
-        options: ["Draft", "Active", "Paused"],
-      },
-    ],
-    id: "customer-profile",
-    isStructureLocked: true,
-    owner: "Schema Ops",
-    screens: [
-      {
-        description: "Primary customer intake flow for onboarding and identity capture.",
-        id: "intake-form",
-        isActive: true,
-        kind: "form",
-        title: "Intake Form",
-      },
-      {
-        description: "Condensed read-focused summary for customer profile review.",
-        id: "detail-summary",
-        isActive: false,
-        kind: "detail",
-        title: "Detail Summary",
-      },
-    ],
-    title: "Customer Profile",
-  },
-  {
-    canEditViewsOnly: false,
-    description: "Field inspection structure kept editable while the route scaffold is being wired.",
-    fields: [
-      { family: "core", id: "site-name", isLocked: false, kind: "short_text", label: "Site name" },
-      { family: "core", id: "audit-date", isLocked: false, kind: "date", label: "Audit date" },
-      {
-        family: "choice",
-        id: "risk-tier",
-        isLocked: false,
-        kind: "single_select",
-        label: "Risk tier",
-        options: ["Low", "Medium", "High"],
-      },
-      {
-        family: "preset",
-        id: "follow-up-phone",
-        isLocked: false,
-        kind: "short_text",
-        label: "Follow-up phone",
-        preset: "phone",
-      },
-      {
-        family: "core",
-        id: "last-reviewed-at",
-        isLocked: false,
-        kind: "date_time",
-        label: "Last reviewed at",
-      },
-      {
-        family: "core",
-        id: "estimated-loss",
-        isLocked: false,
-        kind: "currency",
-        label: "Estimated loss",
-      },
-      {
-        family: "core",
-        id: "needs-follow-up",
-        isLocked: false,
-        kind: "boolean",
-        label: "Needs follow-up",
-      },
-    ],
-    id: "site-audit",
-    isStructureLocked: false,
-    owner: "Operations QA",
-    screens: [
-      {
-        description: "Operational checklist used during live field inspections.",
-        id: "field-checklist",
-        isActive: true,
-        kind: "form",
-        title: "Field Checklist",
-      },
-      {
-        description: "Read-only inspection recap for supervisors and follow-up review.",
-        id: "inspection-summary",
-        isActive: false,
-        kind: "detail",
-        title: "Inspection Summary",
-      },
-    ],
-    title: "Site Audit",
-  },
-];
+export function cloneFormsPlaceholderView(
+  screen: FormsPlaceholderScreen,
+  object?: Pick<FormsPlaceholderObject, "modelStructureVersion">,
+): FormsPlaceholderScreen {
+  return {
+    ...screen,
+    displayName: screen.displayName?.trim() || screen.title,
+    guid: normalizeOptionalGuid(screen.guid),
+    isViewLocked: screen.isViewLocked ?? false,
+    key: normalizeStableKey(screen.key, screen.id),
+    lastAlignedModelStructureVersion: getDefaultAlignedVersion(object ?? { modelStructureVersion: 1 }, screen),
+    viewVersion: getDefaultViewVersion(screen),
+  };
+}
+
+export function cloneFormsPlaceholderModel(model: FormsPlaceholderObject): FormsPlaceholderObject {
+  const normalizedModelStructureVersion =
+    typeof model.modelStructureVersion === "number" && Number.isFinite(model.modelStructureVersion) && model.modelStructureVersion > 0
+      ? Math.floor(model.modelStructureVersion)
+      : 1;
+  const normalizedVersion =
+    typeof model.version === "number" && Number.isFinite(model.version) && model.version > 0
+      ? Math.floor(model.version)
+      : normalizedModelStructureVersion;
+  const baseModel = {
+    ...model,
+    displayName: model.displayName?.trim() || model.title,
+    guid: normalizeOptionalGuid(model.guid),
+    key: normalizeStableKey(model.key, model.id),
+    modelStructureVersion: normalizedModelStructureVersion,
+    version: normalizedVersion,
+  };
+
+  return {
+    ...baseModel,
+    fields: model.fields.map(cloneFormsPlaceholderField),
+    schemaScopes: normalizeSchemaScopes(model.schemaScopes, model.schemaScopes),
+    screens: model.screens.map((screen) => cloneFormsPlaceholderView(screen, baseModel)),
+  };
+}
 
 export function sortFormsPlaceholderScreens(screens: ReadonlyArray<FormsPlaceholderScreen>) {
   return [...screens].sort((left, right) => formsTitleCollator.compare(left.title, right.title));
@@ -284,14 +487,92 @@ export function sortFormsPlaceholderObjects(objects: ReadonlyArray<FormsPlacehol
 export const sortFormsPlaceholderViews = sortFormsPlaceholderScreens;
 export const sortFormsPlaceholderModels = sortFormsPlaceholderObjects;
 
-function cloneDefaultObjects() {
-  return sortFormsPlaceholderObjects(
-    defaultFormsPlaceholderObjects.map((object) => ({
-      ...object,
-      fields: object.fields.map(cloneField),
-      screens: object.screens.map((screen) => ({ ...screen })),
-    })),
-  );
+function createFallbackField(candidate: Partial<FormsPlaceholderField>, index: number): FormsPlaceholderField {
+  const id =
+    (typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id : undefined)
+    ?? `field-${index + 1}`;
+  const label =
+    (typeof candidate.label === "string" && candidate.label.trim().length > 0 ? candidate.label : undefined)
+    ?? id;
+
+  return {
+    family: isFieldFamily(candidate.family) ? candidate.family : "core",
+    id,
+    isLocked: typeof candidate.isLocked === "boolean" ? candidate.isLocked : false,
+    kind: isFieldKind(candidate.kind) ? candidate.kind : "short_text",
+    label,
+  };
+}
+
+function createFallbackScreen(candidate: Partial<FormsPlaceholderScreen>, index: number): FormsPlaceholderScreen {
+  const id =
+    (typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id : undefined)
+    ?? (typeof candidate.key === "string" && candidate.key.trim().length > 0 ? candidate.key : undefined)
+    ?? `view-${index + 1}`;
+  const title =
+    (typeof candidate.title === "string" && candidate.title.trim().length > 0 ? candidate.title : undefined)
+    ?? (typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0 ? candidate.displayName : undefined)
+    ?? id;
+
+  return {
+    description: typeof candidate.description === "string" ? candidate.description : "",
+    displayName: typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0
+      ? candidate.displayName
+      : title,
+    guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined),
+    id,
+    isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : index === 0,
+    isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : false,
+    key: normalizeStableKey(typeof candidate.key === "string" ? candidate.key : undefined, id),
+    kind: candidate.kind === "detail" ? "detail" : "form",
+    lastAlignedModelStructureVersion:
+      typeof candidate.lastAlignedModelStructureVersion === "number"
+      && Number.isFinite(candidate.lastAlignedModelStructureVersion)
+      && candidate.lastAlignedModelStructureVersion > 0
+        ? Math.floor(candidate.lastAlignedModelStructureVersion)
+        : 1,
+    title,
+    viewVersion:
+      typeof candidate.viewVersion === "number" && Number.isFinite(candidate.viewVersion) && candidate.viewVersion > 0
+        ? Math.floor(candidate.viewVersion)
+        : 1,
+  };
+}
+
+function createFallbackModel(candidate: Partial<FormsPlaceholderObject>, index: number): FormsPlaceholderObject {
+  const id =
+    (typeof candidate.id === "string" && candidate.id.trim().length > 0 ? candidate.id : undefined)
+    ?? (typeof candidate.key === "string" && candidate.key.trim().length > 0 ? candidate.key : undefined)
+    ?? `model-${index + 1}`;
+  const title =
+    (typeof candidate.title === "string" && candidate.title.trim().length > 0 ? candidate.title : undefined)
+    ?? (typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0 ? candidate.displayName : undefined)
+    ?? id;
+
+  return {
+    canEditViewsOnly: typeof candidate.canEditViewsOnly === "boolean" ? candidate.canEditViewsOnly : false,
+    description: typeof candidate.description === "string" ? candidate.description : "",
+    displayName: typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0
+      ? candidate.displayName
+      : title,
+    fields: [],
+    guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined),
+    id,
+    isStructureLocked: typeof candidate.isStructureLocked === "boolean" ? candidate.isStructureLocked : false,
+    key: normalizeStableKey(typeof candidate.key === "string" ? candidate.key : undefined, id),
+    modelStructureVersion:
+      typeof candidate.modelStructureVersion === "number" && Number.isFinite(candidate.modelStructureVersion) && candidate.modelStructureVersion > 0
+        ? Math.floor(candidate.modelStructureVersion)
+        : 1,
+    owner: typeof candidate.owner === "string" ? candidate.owner : "",
+    schemaScopes: [],
+    screens: [],
+    title,
+    version:
+      typeof candidate.version === "number" && Number.isFinite(candidate.version) && candidate.version > 0
+        ? Math.floor(candidate.version)
+        : 1,
+  };
 }
 
 function isFieldFamily(value: unknown): value is FormsPlaceholderFieldFamily {
@@ -344,6 +625,14 @@ function isChoiceOrientation(value: unknown): value is FormsPlaceholderChoiceOri
 
 function isFieldValidation(value: unknown): value is FormsPlaceholderFieldValidation {
   return value === "email" || value === "phone" || value === "url";
+}
+
+function isFieldStatus(value: unknown): value is FormsPlaceholderFieldStatus {
+  return value === "draft" || value === "persisted" || value === "published";
+}
+
+function isFieldSemanticRole(value: unknown): value is FormsPlaceholderFieldSemanticRole {
+  return value === "reportedBy" || value === "reportedDate" || value === "workflowStatus";
 }
 
 function isTagMode(value: unknown): value is FormsPlaceholderTagMode {
@@ -477,7 +766,11 @@ function normalizeLookupConfig(
 
 function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<FormsPlaceholderScreen>) {
   if (!Array.isArray(value)) {
-    return sortFormsPlaceholderScreens(fallbackScreens.map((screen) => ({ ...screen })));
+    return sortFormsPlaceholderScreens(
+      fallbackScreens.map((screen) =>
+        cloneFormsPlaceholderView(screen, { modelStructureVersion: getDefaultAlignedVersion({ modelStructureVersion: 1 }, screen) }),
+      ),
+    );
   }
 
   return sortFormsPlaceholderScreens(
@@ -486,7 +779,11 @@ function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<F
       const fallback =
         fallbackScreens.find((screen) => screen.id === candidate.id) ??
         fallbackScreens[index] ??
-        fallbackScreens[0];
+        createFallbackScreen(candidate, index);
+      const normalizedViewVersion =
+        typeof candidate.viewVersion === "number" && Number.isFinite(candidate.viewVersion) && candidate.viewVersion > 0
+          ? Math.floor(candidate.viewVersion)
+          : getDefaultViewVersion(fallback);
 
       return {
         ...fallback,
@@ -495,7 +792,24 @@ function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<F
           typeof candidate.description === "string"
             ? candidate.description
             : fallback.description,
+        displayName:
+          typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0
+            ? candidate.displayName
+            : (fallback.displayName?.trim() || fallback.title),
+        guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined, fallback.guid),
         isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : fallback.isActive,
+        isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : (fallback.isViewLocked ?? false),
+        key: normalizeStableKey(
+          typeof candidate.key === "string" ? candidate.key : undefined,
+          fallback.key,
+        ),
+        lastAlignedModelStructureVersion:
+          typeof candidate.lastAlignedModelStructureVersion === "number"
+            && Number.isFinite(candidate.lastAlignedModelStructureVersion)
+            && candidate.lastAlignedModelStructureVersion > 0
+            ? Math.floor(candidate.lastAlignedModelStructureVersion)
+            : fallback.lastAlignedModelStructureVersion,
+        viewVersion: normalizedViewVersion,
       };
     }),
   );
@@ -503,26 +817,47 @@ function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<F
 
 function normalizeStoredObjects(value: unknown) {
   if (!Array.isArray(value)) {
-    return cloneDefaultObjects();
+    return [] as FormsPlaceholderObject[];
   }
-
-  const defaults = cloneDefaultObjects();
 
   return sortFormsPlaceholderObjects(
     value.map((entry, index) => {
       const candidate = typeof entry === "object" && entry ? entry as Partial<FormsPlaceholderObject> : {};
-      const fallback = defaults.find((item) => item.id === candidate.id) ?? defaults[index] ?? defaults[0];
+      const fallback = createFallbackModel(candidate, index);
+      const canonicalFields = extractFieldsFromCanonicalDataSchema(
+        (candidate as { dataSchema?: unknown }).dataSchema,
+      );
+      const canonicalSchemaScopes = extractSchemaScopesFromCanonicalDataSchema(
+        (candidate as { dataSchema?: unknown }).dataSchema,
+      );
+      const normalizedModelStructureVersion =
+        typeof candidate.modelStructureVersion === "number"
+          && Number.isFinite(candidate.modelStructureVersion)
+          && candidate.modelStructureVersion > 0
+          ? Math.floor(candidate.modelStructureVersion)
+          : (fallback.modelStructureVersion ?? 1);
+      const normalizedVersion =
+        typeof candidate.version === "number" && Number.isFinite(candidate.version) && candidate.version > 0
+          ? Math.floor(candidate.version)
+          : (fallback.version ?? normalizedModelStructureVersion);
+      const rawFields = canonicalFields ?? candidate.fields;
 
       return {
         ...fallback,
         ...candidate,
-        fields: Array.isArray(candidate.fields)
-          ? candidate.fields.map((field, fieldIndex) => {
+        displayName:
+          typeof candidate.displayName === "string" && candidate.displayName.trim().length > 0
+            ? candidate.displayName
+            : (fallback.displayName?.trim() || fallback.title),
+        fields: Array.isArray(rawFields)
+          ? rawFields.map((field, fieldIndex) => {
               const nextField =
                 typeof field === "object" && field
                   ? field as Partial<FormsPlaceholderField>
                   : {};
-              const fallbackField = fallback.fields.find((item) => item.id === nextField.id) ?? fallback.fields[fieldIndex];
+              const fallbackField = fallback.fields.find((item) => item.id === nextField.id)
+                ?? fallback.fields[fieldIndex]
+                ?? createFallbackField(nextField, fieldIndex);
               const rawKind = typeof (nextField as { kind?: unknown }).kind === "string"
                 ? (nextField as { kind?: string }).kind
                 : undefined;
@@ -531,6 +866,26 @@ function normalizeStoredObjects(value: unknown) {
               const normalizedFamily = normalizedPreset
                 ? "preset"
                 : (isFieldFamily(nextField.family) ? nextField.family : fallbackField.family);
+              const normalizedDisplayName =
+                typeof nextField.displayName === "string" && nextField.displayName.trim().length > 0
+                  ? nextField.displayName
+                  : getFormsPlaceholderFieldDisplayName(fallbackField);
+              const normalizedStatus = isFieldStatus(nextField.status)
+                ? nextField.status
+                : getDefaultFieldStatus(fallbackField);
+              const normalizedIsPersisted =
+                typeof nextField.isPersisted === "boolean"
+                  ? nextField.isPersisted
+                  : normalizedStatus !== "draft";
+              const normalizedStorageKey = createFormsPlaceholderStorageKey(
+                typeof nextField.storageKey === "string" && nextField.storageKey.trim().length > 0
+                  ? nextField.storageKey
+                  : normalizedDisplayName,
+                nextField.id ?? fallbackField.id,
+              );
+              const normalizedSemanticRole = isFieldSemanticRole(nextField.semanticRole)
+                ? nextField.semanticRole
+                : getDefaultFieldSemanticRole(fallbackField);
 
               return {
                 ...fallbackField,
@@ -546,6 +901,7 @@ function normalizeStoredObjects(value: unknown) {
                   typeof nextField.dependentFilter === "string"
                     ? nextField.dependentFilter
                     : fallbackField.dependentFilter,
+                displayName: normalizedDisplayName,
                 displayFormat: normalizeOptionalString(nextField.displayFormat, fallbackField.displayFormat),
                 displayFields: normalizeStringList(nextField.displayFields, fallbackField.displayFields),
                 family: normalizedFamily,
@@ -554,6 +910,7 @@ function normalizeStoredObjects(value: unknown) {
                     ? nextField.historicalUpdates
                     : fallbackField.historicalUpdates,
                 inputMode: normalizeOptionalString(nextField.inputMode, fallbackField.inputMode),
+                isPersisted: normalizedIsPersisted,
                 isLocked: typeof nextField.isLocked === "boolean" ? nextField.isLocked : fallbackField.isLocked,
                 kind: normalizedKind,
                 lookupConfig: normalizeLookupConfig(nextField.lookupConfig, fallbackField.lookupConfig),
@@ -565,39 +922,144 @@ function normalizeStoredObjects(value: unknown) {
                 placeholder: normalizeOptionalString(nextField.placeholder, fallbackField.placeholder),
                 preset: normalizedPreset,
                 readonly: typeof nextField.readonly === "boolean" ? nextField.readonly : fallbackField.readonly,
+                semanticRole: normalizedSemanticRole,
                 selectionMode: isSelectionMode(nextField.selectionMode) ? nextField.selectionMode : fallbackField.selectionMode,
+                schemaScopeKey: normalizeOptionalString(nextField.schemaScopeKey, fallbackField.schemaScopeKey),
                 sourceFilters: normalizeStringList(nextField.sourceFilters, fallbackField.sourceFilters),
                 sourceLabel:
                   typeof nextField.sourceLabel === "string" && nextField.sourceLabel.trim().length > 0
                     ? nextField.sourceLabel
                     : fallbackField.sourceLabel,
+                status: normalizedStatus,
+                storageKey: normalizedStorageKey,
                 tagMode: isTagMode(nextField.tagMode) ? nextField.tagMode : fallbackField.tagMode,
                 validation: isFieldValidation(nextField.validation) ? nextField.validation : fallbackField.validation,
               };
             })
           : fallback.fields,
+        modelStructureVersion: normalizedModelStructureVersion,
         owner: typeof candidate.owner === "string" && candidate.owner.trim() ? candidate.owner : fallback.owner,
-        screens: normalizeStoredScreens(candidate.screens, fallback.screens),
+        guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined, fallback.guid),
+        key: normalizeStableKey(
+          typeof candidate.key === "string" ? candidate.key : undefined,
+          fallback.key,
+        ),
+        schemaScopes: normalizeSchemaScopes(
+          canonicalSchemaScopes ?? candidate.schemaScopes,
+          fallback.schemaScopes,
+        ),
+        screens: normalizeStoredScreens(candidate.screens, fallback.screens).map((screen) => ({
+          ...screen,
+          lastAlignedModelStructureVersion:
+            typeof screen.lastAlignedModelStructureVersion === "number" && screen.lastAlignedModelStructureVersion > 0
+              ? screen.lastAlignedModelStructureVersion
+              : normalizedModelStructureVersion,
+        })),
+        version: normalizedVersion,
       };
     }),
   );
 }
 
-export function getFormsPlaceholderObjects() {
+export function normalizeFormsPlaceholderModel(
+  candidate: unknown,
+  fallbackModel?: FormsPlaceholderObject,
+) {
+  const normalized = normalizeStoredObjects([candidate])[0];
+
+  if (!fallbackModel) {
+    return normalized;
+  }
+
+  return cloneFormsPlaceholderModel({
+    ...fallbackModel,
+    ...normalized,
+    fields: normalized.fields,
+    screens: normalized.screens.length > 0 ? normalized.screens : fallbackModel.screens,
+  });
+}
+
+function readStoredFormsPlaceholderObjects() {
   if (typeof window === "undefined") {
-    return cloneDefaultObjects();
+    return [] as FormsPlaceholderObject[];
   }
 
   const storedValue = window.localStorage.getItem(formsPlaceholderStorageKey);
   if (!storedValue) {
-    return cloneDefaultObjects();
+    return [] as FormsPlaceholderObject[];
   }
 
   try {
     return normalizeStoredObjects(JSON.parse(storedValue));
   } catch {
-    return cloneDefaultObjects();
+    return [] as FormsPlaceholderObject[];
   }
+}
+
+function notifyFormsPlaceholderModelsCacheChanged() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent(formsPlaceholderStorageEvent));
+}
+
+export function getCachedFormsPlaceholderModels() {
+  return readStoredFormsPlaceholderObjects();
+}
+
+export function storeFormsPlaceholderModels(models: ReadonlyArray<FormsPlaceholderModel>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(
+    formsPlaceholderStorageKey,
+    JSON.stringify(sortFormsPlaceholderObjects(models)),
+  );
+  notifyFormsPlaceholderModelsCacheChanged();
+}
+
+export function clearFormsPlaceholderModelsCache() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(formsPlaceholderStorageKey);
+  notifyFormsPlaceholderModelsCacheChanged();
+}
+
+export function subscribeFormsPlaceholderModelsCache(onChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  function handleCustomEvent() {
+    onChange();
+  }
+
+  function handleStorage(event: StorageEvent) {
+    if (event.key === formsPlaceholderStorageKey) {
+      onChange();
+    }
+  }
+
+  window.addEventListener(formsPlaceholderStorageEvent, handleCustomEvent);
+  window.addEventListener("storage", handleStorage);
+
+  return () => {
+    window.removeEventListener(formsPlaceholderStorageEvent, handleCustomEvent);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
+export function getFormsPlaceholderObjects() {
+  if (typeof window === "undefined") {
+    return [] as FormsPlaceholderObject[];
+  }
+
+  const storedObjects = readStoredFormsPlaceholderObjects();
+  return storedObjects;
 }
 
 export function useFormsPlaceholderObjects() {
@@ -617,6 +1079,25 @@ export function useFormsPlaceholderObjects() {
 export const getFormsPlaceholderModels = getFormsPlaceholderObjects;
 export const useFormsPlaceholderModels = useFormsPlaceholderObjects;
 
+function matchesFormsPlaceholderIdentity(
+  candidate: Pick<FormsPlaceholderObject | FormsPlaceholderScreen, "guid" | "id" | "key">,
+  value: string,
+) {
+  const normalizedValue = value.trim();
+
+  return candidate.key === normalizedValue
+    || candidate.id === normalizedValue
+    || candidate.guid === normalizedValue;
+}
+
+export function getFormsPlaceholderModelKey(model: Pick<FormsPlaceholderObject, "id" | "key">) {
+  return model.key.trim() || model.id;
+}
+
+export function getFormsPlaceholderViewKey(view: Pick<FormsPlaceholderScreen, "id" | "key">) {
+  return view.key.trim() || view.id;
+}
+
 export function getFormsPlaceholderObject(
   objectId: string | undefined,
   objects: ReadonlyArray<FormsPlaceholderObject> = getFormsPlaceholderObjects(),
@@ -625,7 +1106,7 @@ export function getFormsPlaceholderObject(
     return null;
   }
 
-  return objects.find((object) => object.id === objectId) ?? null;
+  return objects.find((object) => matchesFormsPlaceholderIdentity(object, objectId)) ?? null;
 }
 
 export function getFormsPlaceholderModel(
@@ -644,7 +1125,9 @@ export function getFormsPlaceholderScreen(
     return null;
   }
 
-  return getFormsPlaceholderObject(objectId, objects)?.screens.find((screen) => screen.id === screenId) ?? null;
+  return getFormsPlaceholderObject(objectId, objects)?.screens.find((screen) =>
+    matchesFormsPlaceholderIdentity(screen, screenId)
+  ) ?? null;
 }
 
 export function getFormsPlaceholderView(
@@ -682,10 +1165,14 @@ export function getFormsPlaceholderFieldIconKey(field: FormsPlaceholderField) {
 export function getFormsPlaceholderFieldSearchText(field: FormsPlaceholderField) {
   return [
     field.label,
+    field.displayName,
     field.family,
     field.kind.replaceAll("_", " "),
     field.preset?.replaceAll("_", " "),
+    field.semanticRole,
     field.sourceLabel,
+    field.status,
+    field.storageKey,
     field.lookupConfig?.sourceModel,
     field.lookupConfig?.displayMode,
     field.lookupConfig?.displayTemplate,

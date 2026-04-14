@@ -1,0 +1,132 @@
+package platformstudioformbuilder
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"strings"
+
+	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
+)
+
+type Handler struct {
+	service *Service
+}
+
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
+}
+
+func (h *Handler) ListModels(ctx context.Context, _ *http.Request, _ struct{}) (*ListModelsResponse, error) {
+	out, err := h.service.ListModels(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) CreateModel(ctx context.Context, _ *http.Request, req CreateModelRequest) (*ModelDetailResponse, error) {
+	out, err := h.service.CreateModel(ctx, req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) GetModel(ctx context.Context, r *http.Request, _ struct{}) (*ModelDetailResponse, error) {
+	out, err := h.service.GetModel(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) ListViews(ctx context.Context, r *http.Request, _ struct{}) (*ListViewsResponse, error) {
+	out, err := h.service.ListViews(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) CreateView(ctx context.Context, r *http.Request, req CreateViewRequest) (*ModelDetailResponse, error) {
+	out, err := h.service.CreateView(ctx, strings.TrimSpace(r.PathValue("modelId")), req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) CopyView(ctx context.Context, r *http.Request, req CopyViewRequest) (*ModelDetailResponse, error) {
+	out, err := h.service.CopyView(ctx, strings.TrimSpace(r.PathValue("modelId")), strings.TrimSpace(r.PathValue("viewId")), req)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) GetView(ctx context.Context, r *http.Request, _ struct{}) (*ViewDetailResponse, error) {
+	out, err := h.service.GetView(ctx, strings.TrimSpace(r.PathValue("modelId")), strings.TrimSpace(r.PathValue("viewId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) DeleteView(ctx context.Context, r *http.Request, _ struct{}) (*ModelDetailResponse, error) {
+	out, err := h.service.DeleteView(ctx, strings.TrimSpace(r.PathValue("modelId")), strings.TrimSpace(r.PathValue("viewId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadDraft(ctx context.Context, r *http.Request, _ struct{}) (*LoadDraftResponse, error) {
+	out, err := h.service.LoadDraft(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) SaveDraft(ctx context.Context, r *http.Request, req SaveDraftRequest) (*SaveDraftResponse, error) {
+	out, err := h.service.SaveDraft(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func mapError(err error) *apperr.AppError {
+	switch {
+	case errors.Is(err, ErrUnauthorized):
+		return apperr.New("FORM_BUILDER_UNAUTHORIZED", http.StatusUnauthorized, "unauthorized")
+	case errors.Is(err, ErrTenantMissing):
+		return apperr.New("FORM_BUILDER_TENANT_MISSING", http.StatusForbidden, "tenant context missing")
+	case errors.Is(err, ErrInvalidDraft):
+		return apperr.New("FORM_BUILDER_INVALID", http.StatusBadRequest, "invalid payload")
+	case errors.Is(err, ErrModelLocked):
+		return apperr.New("FORM_BUILDER_MODEL_LOCKED", http.StatusForbidden, "model is locked")
+	case errors.Is(err, ErrViewLocked):
+		return apperr.New("FORM_BUILDER_VIEW_LOCKED", http.StatusForbidden, "view is locked")
+	case errors.Is(err, ErrDraftConflict):
+		return apperr.New("FORM_BUILDER_CONFLICT", http.StatusConflict, "draft version conflict")
+	case errors.Is(err, ErrModelNotFound):
+		return apperr.New("FORM_BUILDER_MODEL_NOT_FOUND", http.StatusNotFound, "model not found")
+	case errors.Is(err, ErrViewNotFound):
+		return apperr.New("FORM_BUILDER_VIEW_NOT_FOUND", http.StatusNotFound, "view not found")
+	case errors.Is(err, ErrCannotDeleteLastView):
+		return apperr.New("FORM_BUILDER_VIEW_DELETE_BLOCKED", http.StatusConflict, "cannot delete last view")
+	default:
+		return apperr.New("FORM_BUILDER_INTERNAL", http.StatusInternalServerError, "internal error")
+	}
+}

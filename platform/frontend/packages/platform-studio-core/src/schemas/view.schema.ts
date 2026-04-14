@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 import {
+  VIEW_STATUSES,
+  VIEW_WARNING_CODES,
+} from "../contracts/view";
+import {
   builderDescriptionSchema,
   builderIdSchema,
   builderKeySchema,
@@ -48,6 +52,7 @@ export const viewFieldNodeSchema = z.object({
   fieldId: builderIdSchema,
   id: builderIdSchema,
   kind: z.literal("field"),
+  title: builderLabelSchema.optional(),
   widgetKey: z.string().trim().min(1),
 });
 
@@ -80,16 +85,41 @@ export const viewLayoutNodeSchema = z.discriminatedUnion("kind", [
   viewDividerNodeSchema,
 ]);
 
+export const viewStatusSchema = z.enum(VIEW_STATUSES);
+export const viewWarningCodeSchema = z.enum(VIEW_WARNING_CODES);
+
+export const viewLockStateSchema = z.object({
+  viewLocked: z.boolean().optional(),
+});
+
+export const viewWarningSchema = z.object({
+  code: viewWarningCodeSchema,
+  message: builderLabelSchema,
+});
+
 export const viewDefinitionSchema = z.object({
   channel: viewChannelSchema,
   description: builderDescriptionSchema.optional(),
+  displayName: builderLabelSchema.optional(),
   entityId: builderIdSchema,
+  guid: builderIdSchema.optional(),
   id: builderIdSchema,
+  isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   key: builderKeySchema,
+  lastAlignedModelStructureVersion: z.number().int().nonnegative().optional(),
+  lockState: viewLockStateSchema.optional(),
+  modelId: builderIdSchema.optional(),
   nodes: z.array(viewLayoutNodeSchema),
   rootNodeId: builderIdSchema,
+  status: viewStatusSchema.optional(),
   title: builderLabelSchema,
   type: viewTypeSchema,
   variantOf: builderIdSchema.optional(),
+  version: z
+    .union([z.number().int().nonnegative(), z.string().trim().min(1)])
+    .optional(),
+  viewType: viewTypeSchema.optional(),
+  viewVersion: z.number().int().nonnegative().optional(),
+  warnings: z.array(viewWarningSchema).optional(),
 });

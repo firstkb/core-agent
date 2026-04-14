@@ -48,6 +48,7 @@ Entry point for the active frontend documentation set.
 - `platform-studio/form-builder-v2-field-contract.md`: canonical separation of base field types, presets, System Fields, page settings, and filter definitions
 - `platform-studio/form-builder-slice-1-inspector-and-view-schema.md`: canonical slice-1 inspector structure and exact JSON schema for `systemFields` and `filterDefinitions`
 - `platform-studio/form-builder-page-and-filter-notes.md`: supporting notes for legacy EzData Page settings and filter surfaces that should stay separate from the field palette
+- `platform-studio/form-builder-backend-execution-plan.md`: short staged execution plan tying `Contract Lock`, `Frontend Refactor`, `Backend Draft API`, and `Publish Slice` to the locked Form Builder backend contract
 - `platform-studio/form-builder-implementation-backlog.md`: ordered execution backlog for library, inspector, grid tab, rules, and scope-aware storage in the current frontend codebase
 - `platform-studio/form-builder-approved-frontend-workstream-plan.md`: current approved frontend execution plan for multivalue storage, lookup derived outputs, DB lookup UX, subform child-view settings, filters, and remaining field-by-field completion
 - `phase-e-gap-review.md`: closed-cycle gap review for shared-layer expansion after the first full approval pass

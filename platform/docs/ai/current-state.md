@@ -1,7 +1,7 @@
 # Current State
 
 Status: active snapshot
-Snapshot date: 2026-04-07
+Snapshot date: 2026-04-13
 
 Confidence classes:
 - `code-confirmed` = directly observed in code, config, imports, or repository tree
@@ -22,6 +22,7 @@ Confidence classes:
 - Admin modules observed in code include navigation, profile, tenant management, employees list, module registry list, module registry management, module registry grants, and access policy.
 - Tenant module currently confirmed in code:
   - `tenant/profile`
+  - `tenant/platformstudioformbuilder`
 - Shared backend areas observed in code include authentication, sessions, collection-table helpers, collection preferences, audit, notifications, and forms.
 
 ### Frontend
@@ -85,6 +86,23 @@ Confidence classes:
 - Platform Studio taxonomy is now locked around one umbrella plus multiple tools: Form Builder is active, Navigation Builder and Action Builder are planned.
 - `@platform/platform-studio-core` is the shared non-UI contract layer for Platform Studio builders.
 - The first Form Builder integration contract is now locked around model list/detail, view list/detail, layout draft tree, locks, and save semantics.
+- `api-tenant` Form Builder now exposes concrete authoring endpoints for model list/create/detail, view list/create/detail/copy/delete, plus canonical authoring `load/save` routes under `/authoring`; `/draft` remains as a temporary compatibility alias only.
+- `Create Model` now seeds the first default view in one backend action and returns a selected view for direct workspace redirect instead of leaving a view-less model shell.
+- opening the first workspace for a brand-new model with no fields no longer auto-authors a `Main section`; that view stays empty until the user adds layout or fields.
+- `api-tenant` Form Builder backend now persists model-owned `dataSchema + layoutBlueprint` in `ps_model.definition_json` and view-owned `uiSchema` in `ps_view.definition_json`, and canonical `/authoring` load/save now expose that explicit three-schema split while keeping lazy compatibility mirrors for older drafts during the rollout.
+- `Create Model` now seeds empty model `dataSchema`, empty model `layoutBlueprint`, and a default-view `uiSchema`.
+- creating an additional view now seeds a fresh `uiSchema` from the current model `dataSchema + layoutBlueprint`, including blueprint containers and subform anchors instead of a root-only field drop or an empty shell.
+- `Copy View` now clones the source `uiSchema` exactly while aligning the copied view to the current `modelStructureVersion`.
+- opening any view now reconciles missing model fields and blueprint containers against backend-issued canonical `containerKey` values, routes unresolved fields into explicit per-scope `unplacedFieldIds`, and leaves `Save` active until that reconciled state is persisted.
+- Form Builder three-schema drafts now also support explicit scope-root field placement through the reserved `layoutBlueprint.fieldPlacements[].containerKey = "__scope_root__"` key, so authored root-level fields round-trip without being downgraded into `Unplaced fields`.
+- `tenant-web` now persists a lightweight per-field `schemaScopeKey` hint in authoring draft model JSON so root-vs-subform field intent can survive save/reload and be reused during later view reconciliation.
+- `tenant-web` now also persists model-level `schemaScopes` in authoring draft model JSON and uses them to seed missing subform anchors in newly opened views, instead of relying only on view-local `subformScopes`.
+- dedicated persisted `model_locked` and `view_locked` columns now back separate authoring lock semantics, while `ps_view.is_active` persists the explicit authoring active-view flag.
+- `tenant-web` Form Builder now consumes the real backend model/view authoring endpoints for Add Model, Add View, Copy View, Delete View, list/detail loading, direct workspace entry, and canonical `/authoring` load/save transport without publish-time DDL; `/draft` route naming remains only as a temporary compatibility alias, not product lifecycle.
+- `tenant-web` no longer falls back to bundled mock Form Builder model/view records when backend-backed cache is empty; empty model/view state now stays genuinely empty until backend data is loaded.
+- `tenant-web` private shell now mounts the shared `ui-kit` `TopLoader` and drives it from `@platform/api-client` inflight request activity, so viewport-level transport feedback runs during tenant API requests without replacing local loading/empty/error states.
+- `tenant-web` Form Builder now loads and saves the explicit three-schema payload, treats backend-issued `containerKey` values as canonical during reconcile, renders explicit per-scope `Unplaced fields`, and exposes `Data Schema`, `Layout Blueprint`, and `UI Schema` in the debug modal.
+- the first stable three-schema rollout now restricts model and blueprint editing to the `default` view; non-default views remain `uiSchema`-only authoring surfaces.
 - Collection Table is treated as its own reusable runtime/package domain; Module Registry is a proving surface, not the owner of the table contract.
 
 ## Inferred state

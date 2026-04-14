@@ -82,6 +82,7 @@ Current active builder direction:
 - `platform-studio/README.md`
 - `platform-studio/taxonomy-and-naming.md`
 - `platform-studio/form-builder-first-contract.md`
+- `platform-studio/form-builder-three-schema-contract.md`
 - `platform-studio/v2-foundation-brief.md`
 - `platform-studio/forms-foundation-a-technical-map.md`
 - `platform-studio/data-schema-storage-rules.md`
@@ -117,6 +118,7 @@ Current active builder direction:
 
 Supporting builder docs:
 
+- `platform-studio/form-builder-backend-execution-plan.md`
 - `platform-studio/form-builder-implementation-backlog.md`
 - `platform-studio/form-builder-approved-frontend-workstream-plan.md`
 - `platform-studio/form-builder-rich-text-editor-workstream-contract.md`

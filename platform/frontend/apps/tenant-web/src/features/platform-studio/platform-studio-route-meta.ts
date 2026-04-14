@@ -4,6 +4,7 @@ import {
 } from "react-router-dom";
 
 import {
+  getCachedFormsPlaceholderModels,
   getFormsPlaceholderModel,
   getFormsPlaceholderView,
 } from "./forms/forms-placeholder-data";
@@ -54,18 +55,6 @@ type PlatformStudioRouteMeta =
       viewLabel: string;
     };
 
-function formatRouteLabel(value: string | undefined) {
-  if (!value) {
-    return "Unknown";
-  }
-
-  return value
-    .split(/[-_]/)
-    .filter(Boolean)
-    .map((segment) => segment.slice(0, 1).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
-
 export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRouteMeta | null {
   if (pathname === platformStudioRoutePatterns.root) {
     return { kind: "root" };
@@ -92,27 +81,28 @@ export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRout
       legacyObjectViewMatch?.params.screenId ??
       legacyObjectScreenMatch?.params.screenId ??
       "";
-    const model = getFormsPlaceholderModel(modelId);
-    const view = getFormsPlaceholderView(modelId, viewId);
+    const cachedModels = getCachedFormsPlaceholderModels();
+    const model = getFormsPlaceholderModel(modelId, cachedModels);
+    const view = getFormsPlaceholderView(modelId, viewId, cachedModels);
 
     return {
       kind: "view",
       modelId,
-      modelLabel: model?.title ?? formatRouteLabel(modelId),
+      modelLabel: model?.title ?? "",
       viewId,
-      viewLabel: view?.title ?? formatRouteLabel(viewId),
+      viewLabel: view?.title ?? "",
     };
   }
 
   const modelMatch = matchPath(platformStudioRoutePatterns.model, pathname) as PathMatch<"modelId"> | null;
   if (modelMatch) {
     const modelId = modelMatch.params.modelId ?? "";
-    const model = getFormsPlaceholderModel(modelId);
+    const model = getFormsPlaceholderModel(modelId, getCachedFormsPlaceholderModels());
 
     return {
       kind: "model",
       modelId,
-      modelLabel: model?.title ?? formatRouteLabel(modelId),
+      modelLabel: model?.title ?? "",
     };
   }
 
@@ -132,7 +122,7 @@ export function getPlatformStudioHeaderTitle(translate: TranslateFunction, pathn
     case "model":
       return translate("tenant.navigation.platformStudio.forms.headerTitle");
     case "view":
-      return routeMeta.viewLabel;
+      return routeMeta.viewLabel || translate("tenant.navigation.platformStudio.forms.headerTitle");
   }
 }
 
@@ -148,10 +138,18 @@ export function getPlatformStudioHeaderMeta(translate: TranslateFunction, pathna
     case "forms":
       return translate("tenant.navigation.platformStudio.forms.headerMeta");
     case "model":
+      if (!routeMeta.modelLabel) {
+        return translate("tenant.navigation.platformStudio.forms.headerMeta");
+      }
+
       return translate("tenant.navigation.platformStudio.forms.modelHeaderMeta", {
         label: routeMeta.modelLabel,
       });
     case "view":
+      if (!routeMeta.modelLabel || !routeMeta.viewLabel) {
+        return translate("tenant.navigation.platformStudio.forms.headerMeta");
+      }
+
       return translate("tenant.navigation.platformStudio.forms.viewHeaderMeta", {
         modelLabel: routeMeta.modelLabel,
         viewLabel: routeMeta.viewLabel,

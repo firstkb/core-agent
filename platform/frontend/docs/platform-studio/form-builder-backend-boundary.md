@@ -9,6 +9,9 @@ The goal is to make sure the visual builder, the schema model, and the backend s
 
 This document should make the later backend phase easier once the visual builder becomes stable.
 
+Use `form-builder-backend-execution-plan.md` as the staged implementation guide.
+This document remains the boundary contract.
+
 ## Scope
 
 This boundary covers:
@@ -28,6 +31,26 @@ This boundary does not yet define:
 - final publish or release workflow
 - final database migration engine
 - final runtime rendering protocol
+
+## Locked Early-Integration Rules
+
+The first backend-ready pass should stay intentionally small and user-friendly.
+Do not build a general migration engine or speculative permissions layer before it is needed.
+
+The boundary must already support these locked rules:
+
+- adding a field changes model structure
+- removing a field from canvas changes only the current view
+- deleting a field from the model is a separate structure action
+- if a field is new and has not yet been saved, rename in canvas updates model label plus current view title
+- after the first successful `Save`, ordinary rename in canvas updates only the current view
+- use integer `modelStructureVersion`; do not use fractional values such as `0.1`
+- if `modelStructureVersion > lastAlignedModelStructureVersion`, the UI may show the yellow view-drift warning
+- `root` may lock `model` and `view` separately
+- each field must separate:
+  - immutable `id`
+  - author-facing `displayName`
+  - backend-facing `storageKey`
 
 ## Product Language vs Backend Language
 
@@ -86,17 +109,27 @@ Represents the logical model.
 Recommended shape:
 
 - `id`
+- optional `guid`
 - `key`
 - `displayName`
+- `storageKey`
 - `description`
 - `sourceType`
 - `storageBinding`
 - `structureLock`
+- `modelStructureVersion`
 - `fieldLockMode`
 - `status`
 - `version`
 - `fields`
 - `metadata`
+
+Identity rule:
+
+- `key` is the immutable author-facing identifier used in Form Builder routes
+- `guid` is internal database identity
+- `displayName` may change without changing `key`
+- `status` must not be treated as site publication state for the Form Builder UX
 
 ### 2. ModelFieldDefinition
 
@@ -107,6 +140,7 @@ Recommended shape:
 - `id`
 - `key`
 - `displayName`
+- `storageKey`
 - `description`
 - `baseType`
 - optional `fieldPreset`
@@ -116,6 +150,7 @@ Recommended shape:
 - optional `validation`
 - `relation`
 - `storage`
+- `isPersisted`
 - `lockState`
 - `filterCapabilities`
 - `listCapabilities`
@@ -129,9 +164,11 @@ Recommended shape:
 
 - `id`
 - `modelId`
+- optional `guid`
 - `key`
 - `displayName`
 - `viewType`
+- `isActive`
 - `isDefault`
 - `status`
 - `layout`
@@ -140,7 +177,17 @@ Recommended shape:
 - `filterDefinitions`
 - `permissions`
 - `version`
+- `lastAlignedModelStructureVersion`
+- `lockState`
 - `metadata`
+
+Identity rule:
+
+- `key` is the immutable author-facing identifier used in Form Builder routes
+- `guid` is internal database identity
+- `displayName` may change without changing `key`
+- `isActive` is the authoring flag behind the eye indicator in the views list
+- `status` must not be treated as site publication state for the Form Builder UX
 
 Recommended minimum `viewSettings` concerns:
 
@@ -221,6 +268,7 @@ Represents model and field edit restrictions.
 Recommended dimensions:
 
 - `structureLocked`
+- `viewLocked`
 - `uiOnlyAuthoringAllowed`
 - `fieldLocks`
 - `readonlyActors`
@@ -380,6 +428,7 @@ Recommended persisted concerns:
 - lock policies
 - storage binding
 - structural version
+- field persisted/fixed state
 
 ### View persistence
 
@@ -392,6 +441,7 @@ Recommended persisted concerns:
 - filter definitions
 - view-level permissions
 - view version
+- `lastAlignedModelStructureVersion`
 
 This separation allows:
 
@@ -406,6 +456,7 @@ The backend boundary should plan for optimistic concurrency from the start.
 Recommended rule:
 
 - each model and view carries a version token
+- model structure drift uses a separate integer `modelStructureVersion`
 - update operations require the latest known version
 - conflicts return a structured version mismatch result
 

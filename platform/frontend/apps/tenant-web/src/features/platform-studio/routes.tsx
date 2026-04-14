@@ -1,13 +1,23 @@
 import {
   Navigate,
+  Outlet,
   Route,
   useParams,
 } from "react-router-dom";
 
+import { FormBuilderAuthoringProvider } from "./forms/forms-authoring-context";
 import { platformStudioPaths } from "./platform-studio-route-meta";
 import { FormsPage } from "./forms/pages/forms-index-page";
 import { FormsViewWorkspacePage } from "./forms/pages/forms-ui-schema-workspace-page";
 import "./platform-studio.css";
+
+function FormBuilderAuthoringRoute() {
+  return (
+    <FormBuilderAuthoringProvider>
+      <Outlet />
+    </FormBuilderAuthoringProvider>
+  );
+}
 
 function LegacyViewsRouteRedirect() {
   const params = useParams();
@@ -40,12 +50,14 @@ export function renderPlatformStudioRoutes() {
         element={<Navigate replace to={platformStudioPaths.forms} />}
         path="builder"
       />
-      <Route element={<FormsPage />} path="builder/forms" />
-      <Route element={<FormsPage />} path="builder/forms/:modelId" />
-      <Route
-        element={<FormsViewWorkspacePage />}
-        path="builder/forms/:modelId/views/:viewId"
-      />
+      <Route element={<FormBuilderAuthoringRoute />}>
+        <Route element={<FormsPage />} path="builder/forms" />
+        <Route element={<FormsPage />} path="builder/forms/:modelId" />
+        <Route
+          element={<FormsViewWorkspacePage />}
+          path="builder/forms/:modelId/views/:viewId"
+        />
+      </Route>
       <Route
         element={<LegacyViewsRouteRedirect />}
         path="builder/forms/:modelId/screens/:viewId"

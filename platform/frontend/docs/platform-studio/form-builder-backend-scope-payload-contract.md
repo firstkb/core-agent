@@ -14,6 +14,25 @@ It answers:
 - how `rootScope` and `subformScopes` should be serialized
 - where generated storage and SQL view metadata should appear
 
+Use `form-builder-backend-execution-plan.md` as the staged execution companion.
+
+## Locked Stage-1 Payload Rules
+
+The first draft API must expose enough state to support the agreed authoring lifecycle:
+
+- a new field may still update model label before the first successful `Save`
+- after the first successful `Save`, ordinary canvas rename is view-only
+- remove from canvas is not delete from model
+- model structure drift is driven by integer `modelStructureVersion`
+- a view warning state is derived from:
+  - `modelStructureVersion > lastAlignedModelStructureVersion`
+- `root` may lock `model` and `view` separately
+- route params keep the names `modelId` and `viewId`
+- `modelId` resolves by stable model identity
+- `viewId` resolves by stable view id, not `view.key`
+- database `guid` stays internal and separate from the stable route key
+- Form Builder save is authoring save, not site publication
+
 ## Control Plane vs Data Plane
 
 Platform Studio V2 should separate:
@@ -69,9 +88,17 @@ Recommended columns:
 - `source_type`
 - `status`
 - `version`
+- `structure_version`
 - `definition_json`
 - `_created_at`
 - `_updated_at`
+
+Identity rule:
+
+- `model_key` is the immutable author-facing identifier used by authoring routes
+- `_guid` is internal database identity
+- `display_name` may change without changing `model_key`
+- `status` is optional backend metadata and must not be treated as site publication state for Form Builder UX
 
 What `definition_json` should hold in V2:
 
@@ -79,6 +106,8 @@ What `definition_json` should hold in V2:
 - model-level lock policy
 - storage binding summary
 - root data-schema metadata
+- field persisted/fixed state
+- projected field-storage metadata
 
 ### `ps_view`
 
@@ -92,12 +121,22 @@ Recommended columns:
 - `view_key`
 - `display_name`
 - `view_type`
+- `is_active`
 - `is_default`
 - `status`
 - `version`
+- `last_aligned_model_structure_version`
 - `definition_json`
 - `_created_at`
 - `_updated_at`
+
+Identity rule:
+
+- `view_key` is the immutable author-facing identifier used by authoring routes
+- `_guid` is internal database identity
+- `display_name` may change without changing `view_key`
+- `is_active` is the view-level authoring flag behind the eye indicator in the views list
+- `status` is optional backend metadata and must not be treated as site publication state for Form Builder UX
 
 What `definition_json` should hold in V2:
 
@@ -108,6 +147,7 @@ What `definition_json` should hold in V2:
 - `grid` settings
 - `rootScope`
 - `subformScopes`
+- current view-level lock state
 
 ## Why Not Create Separate `ps_subform_scope` Tables First
 
@@ -146,7 +186,12 @@ Recommended top-level shape:
     "displayName": "Site Audit",
     "sourceType": "managed",
     "status": "draft",
-    "version": 1
+    "version": 1,
+    "modelStructureVersion": 3,
+    "lockPolicy": {
+      "modelLocked": false,
+      "viewLocked": false
+    }
   },
   "view": {
     "id": "view_default",
@@ -155,7 +200,11 @@ Recommended top-level shape:
     "viewType": "form",
     "isDefault": true,
     "status": "draft",
-    "version": 1
+    "version": 1,
+    "lastAlignedModelStructureVersion": 2,
+    "lockState": {
+      "viewLocked": false
+    }
   },
   "rootScope": {},
   "subformScopes": []
@@ -310,6 +359,8 @@ Should persist:
 - logical field catalog
 - storage binding summary
 - root-model metadata
+- `modelStructureVersion`
+- lock policy and field persisted state
 
 ### `ps_view.definition_json`
 
@@ -322,6 +373,8 @@ Should persist:
 - `subformScopes`
 - grid bindings
 - lookup-output bindings used by the UI
+- `lastAlignedModelStructureVersion`
+- view-level lock state
 
 ## Builder UI / UX Implications
 
@@ -351,6 +404,8 @@ The debug or advanced inspector can safely expose:
 - canonical data view name
 - grid SQL view names
 - available lookup outputs
+- field `Label`
+- field `Storage field`
 
 ## Recommended First Backend Slice
 

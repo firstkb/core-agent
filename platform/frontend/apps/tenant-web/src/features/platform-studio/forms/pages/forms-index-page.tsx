@@ -3,6 +3,7 @@ import {
   useState,
 } from "react";
 
+import { ApiClientError } from "@platform/api-client";
 import { useTranslation } from "@platform/i18n";
 import {
   AlertDialog,
@@ -19,8 +20,16 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   EyeIcon,
   EyeOffIcon,
+  Input,
+  Label,
   LockIcon,
   Menu,
   MenuContent,
@@ -38,16 +47,18 @@ import {
   getFormsAuthoringAccess,
   getFormsPlaceholderActor,
 } from "../forms-actors";
-import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
-import { PlatformStudioTabs } from "../../platform-studio-tabs";
-import { platformStudioPaths } from "../../platform-studio-route-meta";
+import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
   getFormsPlaceholderModel,
-  sortFormsPlaceholderModels,
+  getFormsPlaceholderModelKey,
+  getFormsPlaceholderViewKey,
   sortFormsPlaceholderViews,
-  useFormsPlaceholderModels,
   type FormsPlaceholderModel,
+  type FormsPlaceholderView,
 } from "../forms-placeholder-data";
+import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
+import { platformStudioPaths } from "../../platform-studio-route-meta";
+import { PlatformStudioTabs } from "../../platform-studio-tabs";
 
 function ScreenActionsIcon() {
   return (
@@ -59,6 +70,18 @@ function ScreenActionsIcon() {
       <circle cx="5.5" cy="12" r="1.75" />
       <circle cx="12" cy="12" r="1.75" />
       <circle cx="18.5" cy="12" r="1.75" />
+    </svg>
+  );
+}
+
+function ViewWarningIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 3.2 2.6 20.2h18.8L12 3.2Zm0 5.1c.5 0 .9.4.9.9v4.8a.9.9 0 1 1-1.8 0V9.2c0-.5.4-.9.9-.9Zm0 9.1a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z" />
     </svg>
   );
 }
@@ -83,196 +106,294 @@ function getViewStatusKey(isActive: boolean) {
     : "tenant.platformStudio.forms.viewInactive";
 }
 
-type DeleteIntent =
+function getSelectedViewRouteId(
+  model: FormsPlaceholderModel,
+  selectedViewId: string | null,
+) {
+  if (selectedViewId) {
+    const selectedView = model.screens.find((screen) =>
+      screen.id === selectedViewId || screen.key === selectedViewId
+    );
+
+    if (selectedView) {
+      return selectedView.id.trim() || getFormsPlaceholderViewKey(selectedView);
+    }
+  }
+
+  return model.screens[0] ? (model.screens[0].id.trim() || getFormsPlaceholderViewKey(model.screens[0])) : null;
+}
+
+type AuthoringDialogState =
   | {
-      kind: "model";
+      kind: "create-model";
+      title: string;
+    }
+  | {
+      kind: "create-view";
       modelId: string;
       title: string;
     }
   | {
-      kind: "view";
+      kind: "copy-view";
       modelId: string;
-      viewId: string;
       title: string;
+      viewId: string;
     };
+
+type DeleteIntent = {
+  modelId: string;
+  title: string;
+  viewId: string;
+};
 
 export function FormsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
+  const {
+    copyView,
+    createModel,
+    createView,
+    deleteView,
+    ensureModel,
+    isLoadingModels,
+    models,
+    modelsError,
+  } = useFormBuilderAuthoring();
   const currentActor = getFormsPlaceholderActor(undefined);
-  const [models, setModels] = useFormsPlaceholderModels();
+  const [dialogState, setDialogState] = useState<AuthoringDialogState | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [isSubmittingDialog, setIsSubmittingDialog] = useState(false);
   const [deleteIntent, setDeleteIntent] = useState<DeleteIntent | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeletingView, setIsDeletingView] = useState(false);
+  const [isLoadingSelectedModel, setIsLoadingSelectedModel] = useState(false);
+  const [selectedModelError, setSelectedModelError] = useState<string | null>(null);
   const selectedModel = getFormsPlaceholderModel(params.modelId, models);
   const hasModelParam = Boolean(params.modelId);
   const pageAccess = getFormsAuthoringAccess(currentActor);
   const selectedModelAccess = getFormsAuthoringAccess(currentActor, selectedModel);
+  const sortedViews = selectedModel ? sortFormsPlaceholderViews(selectedModel.screens) : [];
 
   useEffect(() => {
-    if (hasModelParam && !selectedModel) {
-      navigate(platformStudioPaths.forms, { replace: true });
+    if (!params.modelId) {
+      setIsLoadingSelectedModel(false);
+      setSelectedModelError(null);
+      return;
     }
-  }, [hasModelParam, navigate, selectedModel]);
+
+    let isActive = true;
+    setIsLoadingSelectedModel(true);
+    setSelectedModelError(null);
+
+    void ensureModel(params.modelId)
+      .then((model) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (!model) {
+          navigate(platformStudioPaths.forms, { replace: true });
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isActive) {
+          return;
+        }
+
+        if (error instanceof ApiClientError && error.statusCode === 404) {
+          navigate(platformStudioPaths.forms, { replace: true });
+          return;
+        }
+
+        setSelectedModelError(
+          error instanceof Error
+            ? error.message
+            : t("tenant.platformStudio.forms.modelDetailLoadError"),
+        );
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingSelectedModel(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [ensureModel, navigate, params.modelId, t]);
 
   useEffect(() => {
-    if (!deleteIntent) {
+    if (!deleteIntent || !selectedModel) {
       return;
     }
 
-    if (!selectedModel || deleteIntent.modelId !== selectedModel.id) {
-      setDeleteIntent(null);
-      return;
-    }
-
-    if (
-      deleteIntent.kind === "view" &&
-      !selectedModel.screens.some((screen) => screen.id === deleteIntent.viewId)
-    ) {
-      setDeleteIntent(null);
-      return;
-    }
-
-    const access = getFormsAuthoringAccess(currentActor, selectedModel);
-    if (
-      (deleteIntent.kind === "model" && !access.canDeleteModel) ||
-      (deleteIntent.kind === "view" && !access.canDeleteView)
-    ) {
-      setDeleteIntent(null);
-    }
-  }, [currentActor, deleteIntent, selectedModel]);
-
-  function updateModel(modelId: string, updater: (model: FormsPlaceholderModel) => FormsPlaceholderModel) {
-    setModels((currentModels) =>
-      sortFormsPlaceholderModels(
-        currentModels.map((model) => {
-          if (model.id !== modelId) {
-            return model;
-          }
-
-          const nextModel = updater(model);
-
-          return {
-            ...nextModel,
-            screens: sortFormsPlaceholderViews(nextModel.screens),
-          };
-        }),
-      ),
-    );
-  }
-
-  function handleCopyView(modelId: string, viewId: string) {
-    const model = getFormsPlaceholderModel(modelId, models);
-    if (!getFormsAuthoringAccess(currentActor, model).canCopyView) {
-      return;
-    }
-
-    updateModel(modelId, (model) => {
-      const sourceView = model.screens.find((screen) => screen.id === viewId);
-      if (!sourceView) {
-        return model;
-      }
-
-      const nextTitle = createCopiedViewTitle(
-        sourceView.title,
-        model.screens.map((screen) => screen.title),
-      );
-
-      return {
-        ...model,
-        screens: [
-          ...model.screens,
-          {
-            ...sourceView,
-            id: `${sourceView.id}-copy-${Date.now()}`,
-            title: nextTitle,
-          },
-        ],
-      };
-    });
-  }
-
-  function handleDeleteView(modelId: string, viewId: string, viewTitle: string) {
-    const model = getFormsPlaceholderModel(modelId, models);
-    if (!getFormsAuthoringAccess(currentActor, model).canDeleteView) {
-      return;
-    }
-
-    setDeleteIntent({
-      kind: "view",
-      modelId,
-      viewId,
-      title: viewTitle,
-    });
-  }
-
-  function handleDeleteModel(modelId: string, modelTitle: string) {
-    const model = getFormsPlaceholderModel(modelId, models);
-    if (!getFormsAuthoringAccess(currentActor, model).canDeleteModel) {
-      return;
-    }
-
-    setDeleteIntent({
-      kind: "model",
-      modelId,
-      title: modelTitle,
-    });
-  }
-
-  function handleConfirmDelete() {
-    if (!deleteIntent) {
-      return;
-    }
-
-    const model = getFormsPlaceholderModel(deleteIntent.modelId, models);
-    const access = getFormsAuthoringAccess(currentActor, model);
-
-    if (deleteIntent.kind === "view") {
-      if (!access.canDeleteView) {
-        setDeleteIntent(null);
+    if (deleteIntent.modelId !== selectedModel.id) {
+      const selectedModelKey = getFormsPlaceholderModelKey(selectedModel);
+      if (deleteIntent.modelId === selectedModelKey) {
         return;
       }
 
-      updateModel(deleteIntent.modelId, (model) => ({
-        ...model,
-        screens: model.screens.filter((screen) => screen.id !== deleteIntent.viewId),
-      }));
       setDeleteIntent(null);
+      setDeleteError(null);
       return;
     }
 
-    if (!access.canDeleteModel) {
+    if (!selectedModel.screens.some((screen) =>
+      screen.id === deleteIntent.viewId || screen.key === deleteIntent.viewId
+    )) {
       setDeleteIntent(null);
-      return;
+      setDeleteError(null);
     }
+  }, [deleteIntent, selectedModel]);
 
-    setModels((currentModels) =>
-      sortFormsPlaceholderModels(currentModels.filter((model) => model.id !== deleteIntent.modelId)),
-    );
-    setDeleteIntent(null);
-    navigate(platformStudioPaths.forms, { replace: true });
+  function openCreateModelDialog() {
+    setDialogError(null);
+    setDialogState({
+      kind: "create-model",
+      title: "",
+    });
   }
 
-  const activeDeleteIntent =
-    deleteIntent &&
-    selectedModel &&
-    deleteIntent.modelId === selectedModel.id &&
-    (
-      (deleteIntent.kind === "model" && selectedModelAccess.canDeleteModel) ||
-      (deleteIntent.kind === "view" && selectedModelAccess.canDeleteView)
-    )
-      ? deleteIntent
-      : null;
-  const sortedModels = sortFormsPlaceholderModels(models);
-  const sortedViews = selectedModel ? sortFormsPlaceholderViews(selectedModel.screens) : [];
+  function openCreateViewDialog(model: FormsPlaceholderModel) {
+    setDialogError(null);
+    setDialogState({
+      kind: "create-view",
+      modelId: getFormsPlaceholderModelKey(model),
+      title: "",
+    });
+  }
+
+  function openCopyViewDialog(model: FormsPlaceholderModel, view: FormsPlaceholderView) {
+    setDialogError(null);
+    setDialogState({
+      kind: "copy-view",
+      modelId: getFormsPlaceholderModelKey(model),
+      title: createCopiedViewTitle(view.title, model.screens.map((screen) => screen.title)),
+      viewId: view.id.trim() || getFormsPlaceholderViewKey(view),
+    });
+  }
+
+  function closeDialog(nextOpen: boolean) {
+    if (nextOpen) {
+      return;
+    }
+
+    if (isSubmittingDialog) {
+      return;
+    }
+
+    setDialogState(null);
+    setDialogError(null);
+  }
+
+  async function handleDialogSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!dialogState) {
+      return;
+    }
+
+    const title = dialogState.title.trim();
+    if (!title) {
+      setDialogError(t("tenant.platformStudio.forms.titleRequired"));
+      return;
+    }
+
+    setIsSubmittingDialog(true);
+    setDialogError(null);
+
+    try {
+      if (dialogState.kind === "create-model") {
+        const result = await createModel({ title });
+        const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
+        setDialogState(null);
+
+        if (selectedViewKey) {
+          navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
+          return;
+        }
+
+        navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+        return;
+      }
+
+      if (dialogState.kind === "create-view") {
+        const result = await createView(dialogState.modelId, { title });
+        const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
+        setDialogState(null);
+
+        if (selectedViewKey) {
+          navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
+          return;
+        }
+
+        navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+        return;
+      }
+
+      const result = await copyView(dialogState.modelId, dialogState.viewId, { title });
+      const selectedViewKey = getSelectedViewRouteId(result.model, result.selectedViewId);
+      setDialogState(null);
+
+      if (selectedViewKey) {
+        navigate(platformStudioPaths.view(getFormsPlaceholderModelKey(result.model), selectedViewKey));
+        return;
+      }
+
+      navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(result.model)));
+    } catch (error) {
+      setDialogError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.mutationError"),
+      );
+    } finally {
+      setIsSubmittingDialog(false);
+    }
+  }
+
+  function handleDeleteViewIntent(model: FormsPlaceholderModel, view: FormsPlaceholderView) {
+    if (!getFormsAuthoringAccess(currentActor, model, view).canDeleteView) {
+      return;
+    }
+
+    setDeleteError(null);
+    setDeleteIntent({
+      modelId: getFormsPlaceholderModelKey(model),
+      title: view.title,
+      viewId: view.id.trim() || getFormsPlaceholderViewKey(view),
+    });
+  }
+
+  async function handleConfirmDeleteView() {
+    if (!deleteIntent) {
+      return;
+    }
+
+    setIsDeletingView(true);
+    setDeleteError(null);
+
+    try {
+      await deleteView(deleteIntent.modelId, deleteIntent.viewId);
+      setDeleteIntent(null);
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.mutationError"),
+      );
+    } finally {
+      setIsDeletingView(false);
+    }
+  }
+
   const addModelTitle = pageAccess.canManageStructure
-    ? t("tenant.platformStudio.forms.placeholderActionTitle")
+    ? undefined
     : t(pageAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure");
   const addViewTitle = selectedModelAccess.canEditViews
-    ? t("tenant.platformStudio.forms.placeholderActionTitle")
-    : t(selectedModelAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled");
-  const deleteModelActionTitle = selectedModelAccess.canDeleteModel
     ? undefined
-    : t(selectedModelAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure");
+    : t(selectedModelAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled");
 
   return (
     <div className="tenant-web__platform-studio-shell tenant-web__platform-studio-shell--desktop-panels">
@@ -285,8 +406,9 @@ export function FormsPage() {
               <CardTitle>{t("tenant.platformStudio.forms.modelsTitle")}</CardTitle>
               <Button
                 className="tenant-web__platform-studio-action-button"
-                disabled
+                disabled={!pageAccess.canManageStructure || isSubmittingDialog}
                 leadingIcon={<PlusIcon />}
+                onClick={openCreateModelDialog}
                 size="sm"
                 title={addModelTitle}
                 variant="secondary"
@@ -298,18 +420,42 @@ export function FormsPage() {
           <CardContent className="tenant-web__platform-studio-panel-content">
             <PlatformStudioPanelScroll aria-label={t("tenant.platformStudio.forms.modelsTitle")}>
               <div className="tenant-web__platform-studio-object-list">
-                {sortedModels.map((model) => {
+                {modelsError ? (
+                  <div className="tenant-web__platform-studio-inline-help">
+                    <span>{modelsError}</span>
+                  </div>
+                ) : null}
+
+                {isLoadingModels && models.length === 0 ? (
+                  <div className="tenant-web__platform-studio-builder-empty">
+                    <p>{t("tenant.platformStudio.forms.loadingModels")}</p>
+                  </div>
+                ) : null}
+
+                {!isLoadingModels && models.length === 0 ? (
+                  <div className="tenant-web__platform-studio-builder-empty">
+                    <p className="tenant-web__platform-studio-empty-title">
+                      {t("tenant.platformStudio.forms.emptyModelsTitle")}
+                    </p>
+                    <p>{t("tenant.platformStudio.forms.emptyModelsDescription")}</p>
+                  </div>
+                ) : null}
+
+                {models.map((model) => {
                   const isActive = selectedModel?.id === model.id;
 
                   return (
                     <button
                       className={`tenant-web__platform-studio-object-item${isActive ? " tenant-web__platform-studio-object-item--active" : ""}`}
                       key={model.id}
-                      onClick={() => navigate(platformStudioPaths.model(model.id))}
+                      onClick={() => navigate(platformStudioPaths.model(getFormsPlaceholderModelKey(model)))}
                       type="button"
                     >
                       <span className="tenant-web__platform-studio-object-copy">
                         <span className="tenant-web__platform-studio-object-title">{model.title}</span>
+                        {model.description ? (
+                          <span className="tenant-web__platform-studio-screen-description">{model.description}</span>
+                        ) : null}
                       </span>
                       {model.isStructureLocked ? (
                         <Badge
@@ -340,8 +486,9 @@ export function FormsPage() {
                   <div className="tenant-web__platform-studio-panel-actions">
                     <Button
                       className="tenant-web__platform-studio-action-button"
-                      disabled
+                      disabled={!selectedModelAccess.canEditViews || isSubmittingDialog}
                       leadingIcon={<PlusIcon />}
+                      onClick={() => openCreateViewDialog(selectedModel)}
                       size="sm"
                       title={addViewTitle}
                       variant="secondary"
@@ -367,9 +514,8 @@ export function FormsPage() {
                         </MenuItem>
                         <MenuSeparator />
                         <MenuItem
-                          disabled={!selectedModelAccess.canDeleteModel}
-                          onClick={() => handleDeleteModel(selectedModel.id, selectedModel.title)}
-                          title={deleteModelActionTitle}
+                          disabled
+                          title={t("tenant.platformStudio.forms.modelDeleteDeferred")}
                           tone="danger"
                         >
                           {t("tenant.platformStudio.forms.deleteModel")}
@@ -395,77 +541,149 @@ export function FormsPage() {
                       ) : null}
                     </div>
 
-                    {sortedViews.map((view) => (
-                      <div className="tenant-web__platform-studio-screen-item" key={view.id}>
-                        <div className="tenant-web__platform-studio-screen-copy">
-                          <span className="tenant-web__platform-studio-screen-title">{view.title}</span>
-                          <span className="tenant-web__platform-studio-screen-description">{view.description}</span>
-                        </div>
-                        <div className="tenant-web__platform-studio-screen-actions">
-                          <span
-                            aria-label={t(getViewStatusKey(view.isActive))}
-                            className={`tenant-web__platform-studio-view-status${view.isActive ? " tenant-web__platform-studio-view-status--active" : " tenant-web__platform-studio-view-status--inactive"}`}
-                            title={t(getViewStatusKey(view.isActive))}
-                          >
-                            {view.isActive ? <EyeIcon /> : <EyeOffIcon />}
-                          </span>
-                          <Button
-                            onClick={() => navigate(platformStudioPaths.view(selectedModel.id, view.id))}
-                            size="sm"
-                            variant="secondary"
-                          >
-                            {t("tenant.platformStudio.forms.openWorkspace")}
-                          </Button>
-                          <Menu align="end">
-                            <MenuTrigger>
-                              <button
-                                aria-label={t("tenant.platformStudio.forms.viewActions")}
-                                className="tenant-web__platform-studio-menu-trigger"
-                                type="button"
-                              >
-                                <ScreenActionsIcon />
-                              </button>
-                            </MenuTrigger>
-                            <MenuContent className="tenant-web__platform-studio-menu">
-                              <MenuItem
-                                disabled
-                                title={t("tenant.platformStudio.forms.placeholderActionTitle")}
-                              >
-                                {t("tenant.platformStudio.forms.exportView")}
-                              </MenuItem>
-                              <MenuItem
-                                disabled={!selectedModelAccess.canCopyView}
-                                onClick={() => handleCopyView(selectedModel.id, view.id)}
-                                title={selectedModelAccess.canCopyView ? undefined : t(selectedModelAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                              >
-                                {t("tenant.platformStudio.forms.copyView")}
-                              </MenuItem>
-                              <MenuSeparator />
-                              <MenuItem
-                                disabled={!selectedModelAccess.canDeleteView}
-                                onClick={() => handleDeleteView(selectedModel.id, view.id, view.title)}
-                                title={selectedModelAccess.canDeleteView ? undefined : t(selectedModelAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                                tone="danger"
-                              >
-                                {t("tenant.platformStudio.forms.deleteView")}
-                              </MenuItem>
-                            </MenuContent>
-                          </Menu>
-                        </div>
+                    {selectedModelError ? (
+                      <div className="tenant-web__platform-studio-inline-help">
+                        <span>{selectedModelError}</span>
                       </div>
-                    ))}
+                    ) : null}
+
+                    {isLoadingSelectedModel && sortedViews.length === 0 ? (
+                      <div className="tenant-web__platform-studio-builder-empty">
+                        <p>{t("tenant.platformStudio.forms.loadingViews")}</p>
+                      </div>
+                    ) : null}
+
+                    {!isLoadingSelectedModel && sortedViews.length === 0 ? (
+                      <div className="tenant-web__platform-studio-builder-empty">
+                        <p className="tenant-web__platform-studio-empty-title">
+                          {t("tenant.platformStudio.forms.emptyViewsTitle")}
+                        </p>
+                        <p>{t("tenant.platformStudio.forms.emptyViewsDescription")}</p>
+                      </div>
+                    ) : null}
+
+                    {sortedViews.map((view) => {
+                      const viewAccess = getFormsAuthoringAccess(currentActor, selectedModel, view);
+                      const viewHasModelDrift = (selectedModel.modelStructureVersion ?? 1) > (view.lastAlignedModelStructureVersion ?? 1);
+
+                      return (
+                        <div className="tenant-web__platform-studio-screen-item" key={view.id}>
+                          <div className="tenant-web__platform-studio-screen-copy">
+                            <span className="tenant-web__platform-studio-screen-title">{view.title}</span>
+                            <span className="tenant-web__platform-studio-screen-description">
+                              {view.description || t(`tenant.platformStudio.forms.screenKind.${view.kind}`)}
+                            </span>
+                          </div>
+                          <div className="tenant-web__platform-studio-screen-actions">
+                            {viewHasModelDrift ? (
+                              <span
+                                aria-label={t("tenant.platformStudio.forms.viewModelStructureChanged")}
+                                className="tenant-web__platform-studio-view-status tenant-web__platform-studio-view-status--warning"
+                                title={t("tenant.platformStudio.forms.viewModelStructureChanged")}
+                              >
+                                <ViewWarningIcon />
+                              </span>
+                            ) : null}
+                            {view.isViewLocked ? (
+                              <span
+                                aria-label={t("tenant.platformStudio.forms.viewLocked")}
+                                className="tenant-web__platform-studio-view-status tenant-web__platform-studio-view-status--inactive"
+                                title={t("tenant.platformStudio.forms.viewLocked")}
+                              >
+                                <LockIcon />
+                              </span>
+                            ) : null}
+                            <span
+                              aria-label={t(getViewStatusKey(view.isActive))}
+                              className={`tenant-web__platform-studio-view-status${view.isActive ? " tenant-web__platform-studio-view-status--active" : " tenant-web__platform-studio-view-status--inactive"}`}
+                              title={t(getViewStatusKey(view.isActive))}
+                            >
+                              {view.isActive ? <EyeIcon /> : <EyeOffIcon />}
+                            </span>
+                            <Button
+                              onClick={() => navigate(platformStudioPaths.view(
+                                getFormsPlaceholderModelKey(selectedModel),
+                                view.id.trim() || getFormsPlaceholderViewKey(view),
+                              ))}
+                              size="sm"
+                              variant="secondary"
+                            >
+                              {t("tenant.platformStudio.forms.openWorkspace")}
+                            </Button>
+                            <Menu align="end">
+                              <MenuTrigger>
+                                <button
+                                  aria-label={t("tenant.platformStudio.forms.viewActions")}
+                                  className="tenant-web__platform-studio-menu-trigger"
+                                  type="button"
+                                >
+                                  <ScreenActionsIcon />
+                                </button>
+                              </MenuTrigger>
+                              <MenuContent className="tenant-web__platform-studio-menu">
+                                <MenuItem
+                                  disabled
+                                  title={t("tenant.platformStudio.forms.placeholderActionTitle")}
+                                >
+                                  {t("tenant.platformStudio.forms.exportView")}
+                                </MenuItem>
+                                <MenuItem
+                                  disabled={!viewAccess.canCopyView || isSubmittingDialog}
+                                  onClick={() => openCopyViewDialog(selectedModel, view)}
+                                  title={viewAccess.canCopyView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
+                                >
+                                  {t("tenant.platformStudio.forms.copyView")}
+                                </MenuItem>
+                                <MenuSeparator />
+                                <MenuItem
+                                  disabled={!viewAccess.canDeleteView || isDeletingView}
+                                  onClick={() => handleDeleteViewIntent(selectedModel, view)}
+                                  title={viewAccess.canDeleteView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
+                                  tone="danger"
+                                >
+                                  {t("tenant.platformStudio.forms.deleteView")}
+                                </MenuItem>
+                              </MenuContent>
+                            </Menu>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </PlatformStudioPanelScroll>
               </CardContent>
             </>
-          ) : hasModelParam ? null : (
+          ) : hasModelParam ? (
             <>
               <CardHeader>
-                <CardTitle>{t("tenant.platformStudio.forms.emptySelectionTitle")}</CardTitle>
+                <div className="tenant-web__platform-studio-panel-header">
+                  <CardTitle>
+                    {selectedModelError
+                      ? t("tenant.platformStudio.forms.missingTitle")
+                      : t("tenant.platformStudio.forms.loadingModelTitle")}
+                  </CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="tenant-web__platform-studio-panel-content">
                 <PlatformStudioPanelScroll>
-                  <div className="tenant-web__platform-studio-empty-state" />
+                  <div className="tenant-web__platform-studio-builder-empty">
+                    <p>{selectedModelError ?? t("tenant.platformStudio.forms.loadingViews")}</p>
+                  </div>
+                </PlatformStudioPanelScroll>
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader>
+                <div className="tenant-web__platform-studio-panel-header">
+                  <CardTitle>{t("tenant.platformStudio.forms.emptySelectionTitle")}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="tenant-web__platform-studio-panel-content">
+                <PlatformStudioPanelScroll>
+                  <div className="tenant-web__platform-studio-builder-empty">
+                    <p>{t("tenant.platformStudio.forms.emptySelectionDescription")}</p>
+                  </div>
                 </PlatformStudioPanelScroll>
               </CardContent>
             </>
@@ -473,29 +691,118 @@ export function FormsPage() {
         </Card>
       </section>
 
-      <AlertDialog onOpenChange={(open) => {
-        if (!open) {
-          setDeleteIntent(null);
-        }
-      }} open={Boolean(activeDeleteIntent)}>
+      <Dialog onOpenChange={closeDialog} open={Boolean(dialogState)}>
+        <DialogContent className="tenant-web__platform-studio-authoring-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {dialogState?.kind === "create-model"
+                ? t("tenant.platformStudio.forms.createModelTitle")
+                : dialogState?.kind === "create-view"
+                  ? t("tenant.platformStudio.forms.createViewTitle")
+                  : t("tenant.platformStudio.forms.copyViewTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {dialogState?.kind === "create-model"
+                ? t("tenant.platformStudio.forms.createModelDescription")
+                : dialogState?.kind === "create-view"
+                  ? t("tenant.platformStudio.forms.createViewDescription")
+                  : t("tenant.platformStudio.forms.copyViewDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogBody className="tenant-web__platform-studio-authoring-dialog-body">
+            <form onSubmit={(event) => {
+              void handleDialogSubmit(event);
+            }}>
+              <div className="tenant-web__platform-studio-form-group">
+                <Label htmlFor="tenant-platform-studio-authoring-title">
+                  {t("tenant.platformStudio.forms.titleLabel")}
+                </Label>
+                <Input
+                  autoFocus
+                  id="tenant-platform-studio-authoring-title"
+                  onChange={(event) => {
+                    if (!dialogState) {
+                      return;
+                    }
+
+                    setDialogState({
+                      ...dialogState,
+                      title: event.target.value,
+                    });
+                    setDialogError(null);
+                  }}
+                  placeholder={t("tenant.platformStudio.forms.titlePlaceholder")}
+                  value={dialogState?.title ?? ""}
+                />
+              </div>
+
+              {dialogError ? (
+                <div className="tenant-web__platform-studio-inline-help">
+                  <span>{dialogError}</span>
+                </div>
+              ) : null}
+
+              <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
+                <Button
+                  disabled={isSubmittingDialog}
+                  onClick={() => {
+                    setDialogState(null);
+                    setDialogError(null);
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  {t("tenant.platformStudio.forms.cancelAction")}
+                </Button>
+                <Button
+                  disabled={isSubmittingDialog}
+                  type="submit"
+                >
+                  {isSubmittingDialog
+                    ? t("tenant.platformStudio.forms.savingAction")
+                    : dialogState?.kind === "copy-view"
+                      ? t("tenant.platformStudio.forms.copyAction")
+                      : t("tenant.platformStudio.forms.createAction")}
+                </Button>
+              </div>
+            </form>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open && !isDeletingView) {
+            setDeleteIntent(null);
+            setDeleteError(null);
+          }
+        }}
+        open={Boolean(deleteIntent)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {activeDeleteIntent?.kind === "model"
-                ? t("tenant.platformStudio.forms.confirmDeleteModel", { title: activeDeleteIntent.title })
-                : t("tenant.platformStudio.forms.confirmDeleteScreen", { title: activeDeleteIntent?.title ?? "" })}
+              {t("tenant.platformStudio.forms.confirmDeleteScreen", { title: deleteIntent?.title ?? "" })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {activeDeleteIntent?.kind === "model"
-                ? t("tenant.platformStudio.forms.confirmDeleteModelDescription", { title: activeDeleteIntent.title })
-                : t("tenant.platformStudio.forms.confirmDeleteScreenDescription", { title: activeDeleteIntent?.title ?? "" })}
+              {deleteError
+                ? deleteError
+                : t("tenant.platformStudio.forms.confirmDeleteScreenDescription", { title: deleteIntent?.title ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("tenant.platformStudio.forms.cancelDelete")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} variant="danger">
-              {activeDeleteIntent?.kind === "model"
-                ? t("tenant.platformStudio.forms.deleteModel")
+            <AlertDialogCancel disabled={isDeletingView}>
+              {t("tenant.platformStudio.forms.cancelDelete")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeletingView}
+              onClick={() => {
+                void handleConfirmDeleteView();
+              }}
+              variant="danger"
+            >
+              {isDeletingView
+                ? t("tenant.platformStudio.forms.deletingAction")
                 : t("tenant.platformStudio.forms.deleteView")}
             </AlertDialogAction>
           </AlertDialogFooter>

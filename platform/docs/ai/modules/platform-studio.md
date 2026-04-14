@@ -1,7 +1,7 @@
 # Module Memory — Platform Studio
 
 Status: active
-Date: 2026-04-07
+Date: 2026-04-13
 
 ## Read this when
 
@@ -15,6 +15,8 @@ Date: 2026-04-07
 - `platform/frontend/docs/platform-studio/README.md`
 - `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
 - `platform/frontend/docs/platform-studio/v2-foundation-brief.md`
 - `platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md`
 - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
@@ -25,6 +27,10 @@ Date: 2026-04-07
 
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/**`
 - `platform/frontend/packages/platform-studio-core/**`
+- `platform/backend/modules/tenant/platformstudioformbuilder/**`
+- `platform/backend/cmd/api-tenant/internal/server/routes_platform_studio_form_builder.go`
+- `platform/backend/migrations/postgres/tenant/040_platform_studio_form_builder_drafts.sql`
+- `platform/backend/migrations/postgres/tenant/041_platform_studio_form_builder_authoring_locks.sql`
 
 ## Locked invariants
 
@@ -40,7 +46,16 @@ Date: 2026-04-07
 - builder UI authors business-level model and layout intent, not raw database schema implementation
 - user-facing Form Builder language is `Model` and `View`
 - active Form Builder route params are `modelId` and `viewId`
+- `modelId` route params resolve by the stable model identity
+- `viewId` route params resolve by stable view id, not `view.key`, title, or database GUID
 - legacy `EntityDefinition` and `FieldDefinition` names may remain only as compatibility aliases during migration
+- the first backend-facing Form Builder pass uses integer `modelStructureVersion`
+- view drift is driven by `modelStructureVersion > lastAlignedModelStructureVersion`
+- `root` may lock `model` and `view` separately
+- a newly added field may still update the model label before first successful `Save`; after that, ordinary canvas rename is view-only
+- Form Builder `Save` is authoring save only; site publication and privileges are deferred to Navigation Builder
+- each view now carries an explicit `isActive` authoring flag behind the eye indicator in the views list
+- canonical tenant API route naming for authoring state is `/authoring`; legacy `/draft` remains only as a temporary compatibility alias and not the intended user-facing lifecycle language
 
 ## Product direction
 
@@ -77,6 +92,27 @@ The first backend-ready Form Builder contract is locked around:
 - layout draft tree
 - lock state
 - save semantics
+
+Current implemented backend-ready slice:
+
+- `ps_model` and `ps_view` draft metadata tables exist in tenant schema and now persist dedicated `model_locked`, `view_locked`, and `is_active` authoring fields across the first authoring slice
+- `api-tenant` now exposes model list/create/detail, view list/create/detail/copy/delete, and canonical authoring `load/save` routes for one model/view workspace, with legacy `/draft` aliases still accepted temporarily
+- `Create Model` seeds the first default view in the same backend action and returns a selected view for direct workspace redirect
+- opening the first view for a brand-new model with no fields must not auto-insert authored layout nodes
+- backend authoring persistence is now canonicalized around model-owned `dataSchema + layoutBlueprint` in `ps_model.definition_json` and view-owned `uiSchema` in `ps_view.definition_json`
+- canonical `/authoring` load/save now uses the explicit three-schema split while keeping lazy compatibility mirrors for older drafts during the rollout
+- `Create View` now seeds a fresh `uiSchema` from the current `dataSchema + layoutBlueprint`, including blueprint containers and subform anchors, instead of creating an empty shell or a root-only field drop
+- `Copy View` now clones the source `uiSchema` exactly while aligning the copied view to the current `modelStructureVersion`
+- opening any view must reconcile missing model fields and blueprint containers against backend-issued canonical `containerKey` values, route unresolved fields into explicit per-scope `Unplaced fields`, and keep `Save` active until that reconciliation is persisted
+- authored scope-root fields are now a first-class three-schema case through the reserved `layoutBlueprint.fieldPlacements[].containerKey = "__scope_root__"` key; unresolved fields still go to `Unplaced fields` instead of silently falling back to root
+- authoring draft model JSON now carries a lightweight per-field `schemaScopeKey` hint so root-vs-subform field intent can survive save/reload before the broader model-scope contract lands
+- authoring draft model JSON now also carries model-level `schemaScopes`, and new views use that registry to materialize missing subform anchors instead of treating subform topology as view-local only
+- `tenant-web` now consumes the backend authoring endpoints through a route-scoped authoring provider instead of relying on placeholder-only model/view list mutations
+- `tenant-web` no longer injects bundled mock model/view records when the backend-backed authoring cache is empty
+- `tenant-web` private shell now mounts the shared `ui-kit` `TopLoader` and drives it from `@platform/api-client` inflight request activity, so Form Builder transport requests show viewport-level progress while local content states remain explicit
+- `tenant-web` workspace now hydrates and saves the explicit three-schema payload, shows a three-pane debug modal for `Data Schema`, `Layout Blueprint`, and `UI Schema`, and treats backend-issued `containerKey` values as canonical during reconcile
+- the first stable three-schema rollout now makes the `default` view the only blueprint editor; non-default views remain `uiSchema`-only authoring surfaces
+- publish-time storage generation is still deferred
 
 ## Important docs to treat as reference-only
 

@@ -14,6 +14,7 @@ import (
 	"dtriton.com/platform/backend/internal/platform/postgres"
 
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
+	formbuilder "dtriton.com/platform/backend/modules/tenant/platformstudioformbuilder"
 	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
 )
 
@@ -63,8 +64,9 @@ type Server struct {
 	classifier *router.Classifier
 	tenants    *tenantsvc.ServiceTenantProvider
 
-	tokenValidator authpkg.JWTIssuer
-	profileHTTP    *profilesvc.Handler
+	tokenValidator                authpkg.JWTIssuer
+	profileHTTP                   *profilesvc.Handler
+	platformStudioFormBuilderHTTP *formbuilder.Handler
 }
 
 func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {

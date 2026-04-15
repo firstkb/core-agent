@@ -13,16 +13,18 @@ import (
 )
 
 type memoryRepository struct {
-	models          map[string]*ModelRecord
-	views           map[string]map[string]*ViewRecord
-	lastRuntimePlan *runtimeApplyPlan
-	runtimeApplyErr error
+	models           map[string]*ModelRecord
+	views            map[string]map[string]*ViewRecord
+	runtimeRelations map[string]string
+	lastRuntimePlan  *runtimeApplyPlan
+	runtimeApplyErr  error
 }
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{
-		models: map[string]*ModelRecord{},
-		views:  map[string]map[string]*ViewRecord{},
+		models:           map[string]*ModelRecord{},
+		views:            map[string]map[string]*ViewRecord{},
+		runtimeRelations: map[string]string{},
 	}
 }
 
@@ -67,6 +69,16 @@ func (r *memoryRepository) GetView(_ context.Context, _ requestctx.TenantInfo, m
 		return &clone, nil
 	}
 	return nil, nil
+}
+
+func (r *memoryRepository) ListExistingRuntimeRelations(_ context.Context, _ requestctx.TenantInfo, names []string) (map[string]string, error) {
+	relations := make(map[string]string)
+	for _, name := range names {
+		if kind, ok := r.runtimeRelations[name]; ok {
+			relations[name] = kind
+		}
+	}
+	return relations, nil
 }
 
 func (r *memoryRepository) CreateModelWithFirstView(_ context.Context, _ requestctx.TenantInfo, model ModelRecord, firstView ViewRecord) (*ModelRecord, *ViewRecord, error) {
@@ -1610,6 +1622,37 @@ func TestRuntimeGridViewNamesForViewIncludesRootAndSubformGridViews(t *testing.T
 	}
 }
 
+func TestRuntimeViewNamesForModelIncludesGridAndDataViews(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedCanonicalModelAndDefaultView(t, repo)
+	_, err := NewService(repo).CreateView(testContext(), model.ModelID, CreateViewRequest{Title: "Operations"})
+	if err != nil {
+		t.Fatalf("CreateView returned error: %v", err)
+	}
+
+	views, err := repo.ListViews(testContext(), requestctx.TenantInfo{}, model.ModelID)
+	if err != nil {
+		t.Fatalf("ListViews returned error: %v", err)
+	}
+	names, err := runtimeViewNamesForModel(model, views)
+	if err != nil {
+		t.Fatalf("runtimeViewNamesForModel returned error: %v", err)
+	}
+
+	scopeRtAlias := buildGeneratedRuntimeScopeAlias("pb_info")
+	want := []string{
+		"vg_site_audit__default",
+		"vg_site_audit__" + scopeRtAlias + "__default",
+		"vg_site_audit__operations",
+		"vg_site_audit__" + scopeRtAlias + "__operations",
+		"vw_site_audit",
+		"vw_site_audit__" + scopeRtAlias,
+	}
+	if !reflect.DeepEqual(names, want) {
+		t.Fatalf("runtime view names = %#v, want %#v", names, want)
+	}
+}
+
 func TestDeleteModelRemovesModelAndViews(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{
@@ -1949,6 +1992,46 @@ func TestSaveDraftRejectsRuntimeRelationNameConflicts(t *testing.T) {
 
 	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
 	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrRuntimeNameConflict) {
+		t.Fatalf("SaveDraft error = %v, want %v", err, ErrRuntimeNameConflict)
+	}
+}
+
+func TestSaveDraftRejectsPhysicalRuntimeRelationConflictsOutsideManagedMetadata(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	repo.runtimeRelations["ps_external_conflict"] = "table"
+	repo.runtimeRelations["vw_external_conflict"] = "view"
+	repo.runtimeRelations["vg_external_conflict__default"] = "view"
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	rootScope := asMap(asMap(modelPayload["dataSchema"])["rootScope"])
+	rootScope["runtime"] = map[string]any{
+		"rtAlias":      "external_conflict",
+		"tableName":    "ps_external_conflict",
+		"mvTableName":  "ps_external_conflict__mv",
+		"dataViewName": "vw_external_conflict",
+	}
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	asMap(asMap(viewPayload["uiSchema"])["rootScope"])["runtime"] = map[string]any{
+		"viewRtAlias":  "default",
+		"dataViewName": "vw_external_conflict",
+		"gridViewName": "vg_external_conflict__default",
+	}
 
 	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
 		Draft: DraftPayload{

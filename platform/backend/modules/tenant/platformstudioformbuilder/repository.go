@@ -9,6 +9,7 @@ import (
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 	"dtriton.com/platform/backend/internal/platform/postgres"
+	"github.com/lib/pq"
 )
 
 type repository struct {
@@ -24,6 +25,7 @@ type Repository interface {
 	GetModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) (*ModelRecord, error)
 	ListViews(ctx context.Context, tenant requestctx.TenantInfo, modelID string) ([]ViewRecord, error)
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) (*ViewRecord, error)
+	ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error)
 	CreateModelWithFirstView(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, firstView ViewRecord) (*ModelRecord, *ViewRecord, error)
 	CreateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord) (*ViewRecord, error)
 	UpdateModel(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, expectedVersion *int64) (*ModelRecord, error)
@@ -150,6 +152,60 @@ func (r *repository) GetView(ctx context.Context, tenant requestctx.TenantInfo, 
 		return nil, fmt.Errorf("form builder: commit get view tx: %w", err)
 	}
 	return record, nil
+}
+
+func (r *repository) ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error) {
+	names = normalizeRuntimeRelationNames(names)
+	if len(names) == 0 {
+		return map[string]string{}, nil
+	}
+
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("form builder: begin runtime relation lookup tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	rows, err := tx.QueryContext(ctx, `
+SELECT c.relname,
+       CASE
+           WHEN c.relkind IN ('r', 'p') THEN 'table'
+           WHEN c.relkind = 'v' THEN 'view'
+           WHEN c.relkind = 'm' THEN 'materialized view'
+           ELSE c.relkind::text
+       END AS relation_kind
+  FROM pg_class c
+  JOIN pg_namespace n
+    ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname = ANY($1)`, pq.Array(names))
+	if err != nil {
+		return nil, fmt.Errorf("form builder: list runtime relations: %w", err)
+	}
+	defer rows.Close()
+
+	relations := make(map[string]string, len(names))
+	for rows.Next() {
+		var relationName string
+		var relationKind string
+		if err := rows.Scan(&relationName, &relationKind); err != nil {
+			return nil, fmt.Errorf("form builder: scan runtime relation: %w", err)
+		}
+		relations[relationName] = relationKind
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form builder: runtime relation rows: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form builder: commit runtime relation lookup tx: %w", err)
+	}
+
+	return relations, nil
 }
 
 func (r *repository) CreateModelWithFirstView(
@@ -389,6 +445,48 @@ func runtimeGridViewNamesForView(model *ModelRecord, view *ViewRecord, views []V
 	return names, nil
 }
 
+func runtimeViewNamesForModel(model *ModelRecord, views []ViewRecord) ([]string, error) {
+	if model == nil {
+		return nil, nil
+	}
+
+	modelPayload, err := buildCanonicalModelPayload(model, views)
+	if err != nil {
+		return nil, err
+	}
+
+	names := make([]string, 0)
+	seen := make(map[string]struct{})
+
+	for _, view := range views {
+		view := view
+		gridViewNames, err := runtimeGridViewNamesForView(model, &view, views)
+		if err != nil {
+			return nil, err
+		}
+		for _, name := range gridViewNames {
+			if _, ok := seen[name]; ok {
+				continue
+			}
+			seen[name] = struct{}{}
+			names = append(names, name)
+		}
+	}
+
+	for _, ref := range collectDataSchemaRuntimeRelationRefs(asMap(modelPayload["dataSchema"]), "model "+model.ModelID) {
+		if ref.Kind != "data view" {
+			continue
+		}
+		if _, ok := seen[ref.Name]; ok {
+			continue
+		}
+		seen[ref.Name] = struct{}{}
+		names = append(names, ref.Name)
+	}
+
+	return names, nil
+}
+
 func (r *repository) DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error {
 	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
 	if err != nil {
@@ -408,6 +506,20 @@ func (r *repository) DeleteModel(ctx context.Context, tenant requestctx.TenantIn
 	if modelRecord == nil {
 		return ErrModelNotFound
 	}
+	views, err := loadViewsTx(ctx, tx, modelRecord.ModelID)
+	if err != nil {
+		return err
+	}
+	viewNames, err := runtimeViewNamesForModel(modelRecord, views)
+	if err != nil {
+		return err
+	}
+
+	for _, viewName := range viewNames {
+		if _, err := tx.ExecContext(ctx, fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(viewName))); err != nil {
+			return fmt.Errorf("form builder: drop runtime view %s during delete model: %w", viewName, err)
+		}
+	}
 
 	if _, err := tx.ExecContext(ctx, `
 DELETE FROM ps_view
@@ -425,6 +537,26 @@ DELETE FROM ps_model
 		return fmt.Errorf("form builder: commit delete model tx: %w", err)
 	}
 	return nil
+}
+
+func normalizeRuntimeRelationNames(names []string) []string {
+	if len(names) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(names))
+	normalized := make([]string, 0, len(names))
+	for _, name := range names {
+		name = normalizeString(name)
+		if name == "" {
+			continue
+		}
+		if _, ok := seen[name]; ok {
+			continue
+		}
+		seen[name] = struct{}{}
+		normalized = append(normalized, name)
+	}
+	return normalized
 }
 
 func loadModelTx(ctx context.Context, tx *sql.Tx, modelID string) (*ModelRecord, error) {

@@ -479,7 +479,7 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	if err != nil {
 		return nil, err
 	}
-	if err := s.validateRuntimeRelationConflicts(ctx, tenant, model.ModelID, currentView.ViewID, modelPayload, viewPayload); err != nil {
+	if err := s.validateRuntimeRelationConflicts(ctx, tenant, model.ModelID, currentView.ViewID, modelPayload, viewPayload, existingModelPayload, existingViewPayload); err != nil {
 		return nil, err
 	}
 

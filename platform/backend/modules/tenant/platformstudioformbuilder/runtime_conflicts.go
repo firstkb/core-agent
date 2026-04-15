@@ -83,6 +83,8 @@ func (s *Service) validateRuntimeRelationConflicts(
 	currentViewID string,
 	modelPayload map[string]any,
 	viewPayload map[string]any,
+	existingModelPayload map[string]any,
+	existingViewPayload map[string]any,
 ) error {
 	currentRefs := append(
 		collectDataSchemaRuntimeRelationRefs(asMap(modelPayload["dataSchema"]), "current model"),
@@ -137,5 +139,46 @@ func (s *Service) validateRuntimeRelationConflicts(
 		}
 	}
 
+	ownedByCurrent := make(map[string]runtimeRelationRef)
+	for _, ref := range append(
+		collectDataSchemaRuntimeRelationRefs(asMap(existingModelPayload["dataSchema"]), "persisted model"),
+		collectUISchemaGridRelationRefs(asMap(existingViewPayload["uiSchema"]), "persisted view")...,
+	) {
+		ownedByCurrent[ref.Name] = ref
+	}
+
+	actualRelations, err := s.repo.ListExistingRuntimeRelations(ctx, tenant, runtimeRelationNames(currentRefs))
+	if err != nil {
+		return err
+	}
+	for _, ref := range currentRefs {
+		actualKind, ok := actualRelations[ref.Name]
+		if !ok {
+			continue
+		}
+		expectedKind := expectedRuntimeRelationPhysicalKind(ref.Kind)
+		if actualKind != expectedKind {
+			return fmt.Errorf("%w: relation name %q for %s already exists in public as %s, expected %s", ErrRuntimeNameConflict, ref.Name, ref.Owner, actualKind, expectedKind)
+		}
+		if _, ok := ownedByCurrent[ref.Name]; !ok {
+			return fmt.Errorf("%w: relation name %q for %s already exists in public as %s and is not owned by current runtime metadata", ErrRuntimeNameConflict, ref.Name, ref.Owner, actualKind)
+		}
+	}
+
 	return nil
+}
+
+func runtimeRelationNames(refs []runtimeRelationRef) []string {
+	names := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		names = append(names, ref.Name)
+	}
+	return normalizeRuntimeRelationNames(names)
+}
+
+func expectedRuntimeRelationPhysicalKind(kind string) string {
+	if strings.Contains(kind, "view") {
+		return "view"
+	}
+	return "table"
 }

@@ -105,6 +105,18 @@ Confidence classes:
 - `tenant-web` Form Builder now loads and saves the explicit three-schema payload, treats backend-issued `containerKey` values as canonical during reconcile, renders explicit per-scope `Unplaced fields`, and exposes `Data Schema`, `Layout Blueprint`, and `UI Schema` in the debug modal.
 - the first stable three-schema rollout now restricts model and blueprint editing to the `default` view; non-default views remain `uiSchema`-only authoring surfaces and may still perform view-local UI composition and presentation changes such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields, as long as model-owned `dataSchema + layoutBlueprint` remain untouched.
 - deleting a non-default view removes only that view; deleting a default view promotes one remaining view to `default + active`; deleting the last remaining view is rejected.
+- Form Builder `Save` now runs additive runtime apply after authoring persistence and already reconciles lookup-derived grid/data SQL outputs for single-value `db_lookup` fields (`contact/company/project` presets plus generic managed-model lookups) and multivalue lookup `__labels` / `__count` outputs through the shared multivalue bridge table.
+- Form Builder runtime grid views now follow `viewSettings.list.columns` instead of cloning full data views; each grid view always keeps system columns, and empty child grids keep only system columns plus the parent FK.
+- Form Builder runtime SQL view names now shorten deterministically with a hash suffix when raw canonical/grid identifiers would exceed PostgreSQL's 63-byte identifier limit, which removes the observed subform grid-name truncation/collision issue.
+- Tenant lookup runtime now has live reference dictionaries `state` and `jobtype`; `company_lookup` resolves `__state` through `state.state_name`, while `jobtype` is present for later users/title normalization without changing the current `users_title` text-backed output yet.
+- Form Builder managed runtime tables now persist `tenant_id`; canonical data views and grid views also expose `tenant_id`.
+- Tenant-scoped runtime SQL now joins lookup targets and multivalue bridge rows through `tenant_id`, and generated runtime indexes now prefer tenant-aware composites for GUID, parent FK, lookup FK, and multivalue owner/field access.
+- Form Builder accepted runtime naming direction is now `Runtime Naming Contract v1.1`: logical authoring keys stay separate from immutable physical runtime aliases, with runtime metadata returned in both canonical `dataSchema` scopes and canonical `uiSchema` scopes.
+- Accepted v1.1 naming prefixes are `ps_` for tables, `vw_` for canonical data views, and `vg_` for grid views.
+- Accepted v1.1 cutover is non-compatibility: if runtime metadata is absent during `Save`, backend creates and returns it; after that, the runtime metadata is canonical, and old runtime naming is not preserved as a supported compatibility layer.
+- Local tenant DB application is now confirmed for the documented local migrate path: `go run ./cmd/migrate --env ./env/migrate.local.env.example` applied `042_lookup_reference_tables` into `108-demo`, and `public.state` / `public.jobtype` are present.
+- Current nuance: `jobtype.tenant_id` is seeded as `0` during migration bootstrap because that seed runs outside tenant request context; if sandbox/demo require tenant-owned `jobtype` rows with tenant IDs like `100/101`, that needs a dedicated tenant-aware seed/backfill slice.
+- Current PostgreSQL runtime naming risk is reduced for SQL views, but physical table names still use readable raw scope-storage keys and may need the same deterministic shortening approach later if authoring keys get longer.
 - Collection Table is treated as its own reusable runtime/package domain; Module Registry is a proving surface, not the owner of the table contract.
 
 ## Inferred state
@@ -120,6 +132,7 @@ Confidence classes:
 - Collection Table still has deferred shared-capability work for FE/BE `XLS export`, `view`, and `pdf` support.
 - Navigation Builder and Action Builder remain planned Platform Studio tools; implementation has not started yet.
 - Form Builder still needs a follow-up access-policy hardening slice for `level: 100 root` lock behavior: only `root` should be able to toggle model/view locks; once `lock model` is enabled, non-root users should stay limited to creating/managing views while `root` retains builder access and default-view control; once `lock view` is enabled for a view, non-root users should not be able to enter that Form Builder workspace, while `root` must retain access and control.
+- Form Builder still has deferred filter work: current view filters compose conditions with `AND` only; the contract still needs an `OR` path for repeated lookup-family entities such as multiple `DB lookup Contact` fields, plus a cleanup pass for `Contact`, `Project`, `Company`, multiselect-based filters, and `Reported By`.
 
 ## Active workstreams
 

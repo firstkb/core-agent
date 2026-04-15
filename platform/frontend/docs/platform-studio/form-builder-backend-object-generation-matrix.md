@@ -5,7 +5,7 @@ Date: 2026-04-09
 
 ## Purpose
 
-This document defines what backend objects are generated, reused, or forbidden during `publishBuilderDraft`.
+This document defines what backend objects are generated, reused, or forbidden during the additive runtime-apply contour triggered from `saveBuilderDraft`.
 
 It covers:
 
@@ -17,13 +17,14 @@ It covers:
 - SQL grid views
 - lookup-derived outputs
 
-It exists to make publish behavior explicit before backend implementation.
+It exists to make runtime-apply behavior explicit before backend implementation.
 
 ## Core Rule
 
 Accepted rule:
 
-- `publishBuilderDraft` is the only lifecycle operation that may generate or reconcile runtime storage objects
+- ordinary Form Builder `Save` is the lifecycle operation that may generate or reconcile additive-safe runtime storage objects
+- destructive or ambiguous storage changes remain outside ordinary `Save`
 
 Important rule:
 
@@ -54,7 +55,7 @@ Recommended meaning:
 
 ## Generation Layers
 
-Backend publish may work across three layers:
+Backend runtime apply may work across three layers:
 
 1. control-plane metadata
    - `ps_model`
@@ -70,7 +71,7 @@ Backend publish may work across three layers:
 
 Important rule:
 
-- `ps_model` and `ps_view` are always updated as metadata during successful publish
+- `ps_model` and `ps_view` are always updated as metadata during successful `Save`
 - the generation matrix below focuses on data-plane and query-plane objects
 
 ## Matrix By Model Source Type
@@ -215,6 +216,14 @@ Recommended first-slice backend behavior:
 - prefer guarded additive reconciliation for tables
 - reject ambiguous destructive storage changes instead of auto-migrating them
 
+Tenant-aware index rule:
+
+- generated managed tables should index `tenant_id`
+- generated lookup foreign keys should prefer tenant-scoped indexes such as `(tenant_id, <lookup_fk>)`
+- generated child tables should prefer tenant-scoped parent indexes such as `(tenant_id, <parent_fk>)`
+- generated multivalue bridge tables should prefer tenant-scoped owner and field indexes
+- generated GUID uniqueness should be tenant-scoped as `(tenant_id, _guid)`
+
 ## Parent-Child Relationship Objects
 
 For managed subforms, publish should reconcile:
@@ -266,7 +275,7 @@ Important rule:
 
 ## Publish Summary Contract
 
-`publishBuilderDraft` should return generation outcomes per scope.
+`saveBuilderDraft` should return runtime-apply generation outcomes per scope.
 
 Recommended shape:
 
@@ -323,15 +332,15 @@ Recommended shape:
 
 Frontend should use this matrix to drive expectations:
 
-- `managed` model publish can create planned storage artifacts
-- `external_locked` publish should not promise managed child storage
+- `managed` model save/runtime-apply can create planned storage artifacts
+- `external_locked` save/runtime-apply should not promise managed child storage
 - `CHECKLIST` should not surface grid-generation expectations
-- lookup-derived outputs should appear as published read artifacts, not editable fields
+- lookup-derived outputs should appear as runtime-applied read artifacts, not editable fields
 
 Recommended builder behavior:
 
-- show generated-artifact summaries after publish
-- show unsupported-generation cases clearly before publish
+- show generated-artifact summaries after `Save`
+- show unsupported-generation cases clearly before `Save`
 - do not promise child scopes for `external_locked` until a future contract explicitly allows them
 
 ## Companion Contracts

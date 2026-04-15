@@ -99,11 +99,13 @@ import {
   formBuilderScopeRootPlacementKey,
   isFormBuilderContainer,
   normalizePersistedFormBuilderDocument,
+  normalizeDataScopeRuntime,
   reconcileFormBuilderDocumentWithModel,
   reorderFormBuilderNode,
   removeFormBuilderNode,
   selectFormBuilderNode,
   setFormBuilderCurrentParent,
+  normalizeViewScopeRuntime,
   updateFormBuilderNode,
   useFormBuilderDocument,
   type FormBuilderFilterScalar,
@@ -245,15 +247,25 @@ function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
   };
 }
 
-function buildCanonicalDataSchema(model: FormsPlaceholderModel) {
+function buildCanonicalDataSchema(
+  model: FormsPlaceholderModel,
+  document?: ReturnType<typeof useFormBuilderDocument>["document"],
+) {
   const rootFields = model.fields
     .filter((field) => getFieldSchemaScopeId(field) === "root")
     .map(serializeModelFieldForDataSchema);
+  const subformDataRuntimeByTableKey = new Map(
+    (document?.subformScopes ?? []).flatMap((scope) =>
+      scope.dataSchema.runtime ? [[scope.tableKey, scope.dataSchema.runtime] as const] : []),
+  );
   const subformScopes = getModelSubformScopeDefinitions(model).map((scope) => ({
     displayName: scope.displayName,
     fields: model.fields
       .filter((field) => getFieldSchemaScopeId(field) === scope.key)
       .map(serializeModelFieldForDataSchema),
+    ...(subformDataRuntimeByTableKey.get(scope.key)
+      ? { runtime: subformDataRuntimeByTableKey.get(scope.key) }
+      : {}),
     schemaScopeId: scope.key,
     scopeType: "SUBFORM",
     subformType: scope.subformType,
@@ -265,6 +277,9 @@ function buildCanonicalDataSchema(model: FormsPlaceholderModel) {
     modelTitle: model.title,
     rootScope: {
       fields: rootFields,
+      ...(document?.rootScope.dataSchema.runtime
+        ? { runtime: document.rootScope.dataSchema.runtime }
+        : {}),
       schemaScopeId: "root",
       scopeType: "ROOT",
     },
@@ -475,6 +490,7 @@ function buildCanonicalUiSchema(
       ...compiled.uiScope,
       filterDefinitions: scope.filterDefinitions,
       parentSubformNodeId: scope.parentSubformNodeId,
+      ...(scope.runtime ? { runtime: scope.runtime } : {}),
       subformType: scope.subformType,
       tableKey: scope.tableKey,
       viewSettings: scope.viewSettings,
@@ -485,6 +501,7 @@ function buildCanonicalUiSchema(
     rootScope: {
       ...rootScope.uiScope,
       filterDefinitions: document.filterDefinitions,
+      ...(document.rootScope.runtime ? { runtime: document.rootScope.runtime } : {}),
       systemFields: document.systemFields,
       viewSettings: document.viewSettings,
     },
@@ -585,9 +602,11 @@ function buildWorkspaceDocumentFromCanonicalSchemas(
         return [{
           dataSchema: {
             fieldIds,
+            runtime: normalizeDataScopeRuntime(dataScope?.runtime),
           },
           filterDefinitions: isRecord(entry.filterDefinitions) ? entry.filterDefinitions : {},
           parentSubformNodeId,
+          runtime: normalizeViewScopeRuntime(entry.runtime),
           scopeId: parentSubformNodeId,
           scopeType: "SUBFORM" as const,
           subformType: entry.subformType === "CHECKLIST" ? "CHECKLIST" : "DEFAULT",
@@ -624,7 +643,9 @@ function buildWorkspaceDocumentFromCanonicalSchemas(
                 ? [field.id]
                 : [])
           : [],
+        runtime: normalizeDataScopeRuntime(rootDataScope?.runtime),
       },
+      runtime: normalizeViewScopeRuntime(rootUiScope?.runtime),
       scopeId: "root",
       scopeType: "ROOT",
       uiSchema: {
@@ -1651,14 +1672,12 @@ function sortGridScopeFields(
   return [...fields].sort((left, right) => {
     const leftColumn = getGridColumnByFieldId(columns, left.id);
     const rightColumn = getGridColumnByFieldId(columns, right.id);
-    const leftOrder = leftColumn?.order ?? Number.MAX_SAFE_INTEGER;
-    const rightOrder = rightColumn?.order ?? Number.MAX_SAFE_INTEGER;
 
-    if (leftOrder === rightOrder) {
-      return (fallbackIndexByFieldId.get(left.id) ?? 0) - (fallbackIndexByFieldId.get(right.id) ?? 0);
+    if (leftColumn && rightColumn && leftColumn.order !== rightColumn.order) {
+      return leftColumn.order - rightColumn.order;
     }
 
-    return leftOrder - rightOrder;
+    return (fallbackIndexByFieldId.get(left.id) ?? 0) - (fallbackIndexByFieldId.get(right.id) ?? 0);
   });
 }
 
@@ -3097,7 +3116,7 @@ function compileDebugSchemas(
 ) {
   return {
     modelSchema: {
-      dataSchema: buildCanonicalDataSchema(model),
+      dataSchema: buildCanonicalDataSchema(model, document),
       layoutBlueprint,
     },
     uiSchema: {
@@ -3804,16 +3823,23 @@ export function FormsViewWorkspacePage() {
     () => deriveModelSchemaScopes(currentModel, document),
     [currentModel, document],
   );
+  const savedModelSchemaScopes = useMemo(
+    () => deriveModelSchemaScopes(savedModelDraft, savedDocument),
+    [savedDocument, savedModelDraft],
+  );
   const currentDataSchema = useMemo(
     () => buildCanonicalDataSchema({
       ...currentModel,
       schemaScopes: currentModelSchemaScopes,
-    }),
-    [currentModel, currentModelSchemaScopes],
+    }, document),
+    [currentModel, currentModelSchemaScopes, document],
   );
   const savedDataSchema = useMemo(
-    () => buildCanonicalDataSchema(savedModelDraft),
-    [savedModelDraft],
+    () => buildCanonicalDataSchema({
+      ...savedModelDraft,
+      schemaScopes: savedModelSchemaScopes,
+    }, savedDocument),
+    [savedDocument, savedModelDraft, savedModelSchemaScopes],
   );
   const activeScope = getActiveFormBuilderScope(document);
   const currentScopeParentId = getCurrentFormBuilderParentId(document);
@@ -4035,8 +4061,16 @@ export function FormsViewWorkspacePage() {
   const pendingLeaveResolverRef = useRef<((value: boolean) => void) | null>(null);
   const selectionPanelTopRef = useRef<HTMLDivElement | null>(null);
   const compiledDebugSchemas = useMemo(
-    () => compileDebugSchemas(document, currentModel, currentView, currentLayoutBlueprint),
-    [currentLayoutBlueprint, currentModel, currentView, document],
+    () => compileDebugSchemas(
+      document,
+      {
+        ...currentModel,
+        schemaScopes: currentModelSchemaScopes,
+      },
+      currentView,
+      currentLayoutBlueprint,
+    ),
+    [currentLayoutBlueprint, currentModel, currentModelSchemaScopes, currentView, document],
   );
 
   function cycleNodeVisibility(currentVisibility: FormBuilderNode["visibility"]): FormBuilderNode["visibility"] {
@@ -5461,7 +5495,12 @@ export function FormsViewWorkspacePage() {
         : (currentModel.version ?? savedModelDraft.version ?? previousModelStructureVersion),
     });
     const nextView = findFormsPlaceholderScreenById(nextModel.screens, currentView.id) ?? currentView;
-    const nextDataSchema = isDefaultView ? buildCanonicalDataSchema(nextModel) : savedDataSchema;
+    const nextDataSchema = isDefaultView
+      ? buildCanonicalDataSchema({
+        ...nextModel,
+        schemaScopes: currentModelSchemaScopes,
+      }, document)
+      : savedDataSchema;
     const nextLayoutBlueprint = isDefaultView ? currentLayoutBlueprint : savedLayoutBlueprintDraft;
     const nextUiSchema = currentUiSchema;
     const expectedVersions = {

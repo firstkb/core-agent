@@ -9,7 +9,8 @@ This document defines the V2 backend lifecycle contract for:
 
 - `loadBuilderDraft`
 - `saveBuilderDraft`
-- `publishBuilderDraft`
+- the additive runtime-apply contour executed from `saveBuilderDraft`
+- a future explicit migration operation reserved for later
 
 It connects:
 
@@ -25,9 +26,9 @@ It connects:
 This contract stays transport-agnostic.
 It may later map to REST, RPC, or one internal gateway surface.
 
-Important Stage-1 note:
+Important current note:
 
-- the first required Form Builder contract is about authoring-state load/save
+- the current required Form Builder contract is about authoring-state load/save plus additive runtime apply
 - model/view `status` is not part of the first mandatory product-facing contract
 - canonical REST transport naming for authoring-state load/save is `/authoring`; if `draft` appears in operation names or temporary routes, treat it only as a compatibility alias for authoring state, not as the user-facing lifecycle
 - site publication and privileges are deferred to Navigation Builder
@@ -38,22 +39,28 @@ The accepted V2 lifecycle is:
 
 1. `loadBuilderDraft`
    - reads the latest builder draft
-   - reads the latest publish state
+   - reads the latest runtime-apply state
    - does not mutate storage
 2. `saveBuilderDraft`
    - persists builder draft metadata
    - validates authoring semantics
    - computes normalized storage/view names
-   - does not run DDL
-3. `publishBuilderDraft`
-   - performs full backend validation
-   - reconciles generated storage objects
-   - marks model and view versions as published
+   - after a successful authoring persist, starts one additive runtime-apply contour
+   - may create missing managed tables
+   - may add missing columns to existing managed tables
+   - may create or deterministically recreate canonical SQL data views
+   - may create or deterministically recreate grid SQL views
+   - must not delete tables, columns, or SQL views
+   - must keep the saved authoring state even if runtime apply fails
+3. future explicit migration operation
+   - reserved for later destructive or ambiguous storage changes
+   - not part of the current product-facing lifecycle
 
 Important rule:
 
-- `saveBuilderDraft` must never create or alter generated business tables or SQL views
-- `publishBuilderDraft` is the only accepted operation that may mutate generated storage objects
+- `saveBuilderDraft` now owns additive runtime reconciliation for managed storage
+- site publication and privileges still belong to Navigation Builder, not to Form Builder `Save`
+- destructive storage changes remain out of scope for ordinary `Save`
 
 ## Control Plane vs Generated Objects
 
@@ -66,7 +73,7 @@ Builder metadata is stored in:
 
 ### Generated Data Plane
 
-Published managed storage is generated as:
+Managed storage applied from `saveBuilderDraft` is generated as:
 
 - `ps_<root_storage_key>`
 - `ps_<root_storage_key>__<subform_table_key>`
@@ -76,7 +83,7 @@ Published managed storage is generated as:
 Important rule:
 
 - `ps_model` and `ps_view` are not business-data tables
-- they store authored definitions and lifecycle state
+- they store authored definitions and runtime state
 
 ## Ownership Split
 
@@ -104,12 +111,12 @@ Important rule:
 - view published version
 - latest publish summary for generated view artifacts
 
-## Draft And Publish State
+## Draft And Runtime State
 
 ### Deferred Status Vocabulary
 
-This section is deferred until publish lifecycle becomes active.
-Do not treat it as required for the first authoring-state implementation.
+This section is deferred until a broader runtime lifecycle becomes active.
+Do not treat it as required for the current product-facing implementation.
 
 Possible shared status values later:
 
@@ -121,11 +128,11 @@ Possible shared status values later:
 Recommended meaning:
 
 - `draft`
-  - row exists but has never been published
+  - row exists but has never completed runtime apply
 - `published`
-  - latest saved version is already published
+  - legacy compatibility label only; do not use this as the primary Form Builder UX concept
 - `dirty`
-  - a newer saved draft exists beyond the last published version
+  - a newer saved authoring version exists beyond the last successfully applied runtime version
 - `archived`
   - no longer active for authoring
 
@@ -138,8 +145,8 @@ Both model and view should carry:
 
 Recommended rule:
 
-- if `version == publishedVersion`, the row is publish-aligned
-- if `version > publishedVersion`, the row is dirty
+- if `version == publishedVersion`, the row is runtime-aligned
+- if `version > publishedVersion`, the row has saved authoring changes beyond the last successful runtime apply
 
 ## Operation Contract
 
@@ -147,7 +154,7 @@ Recommended rule:
 
 ### Purpose
 
-Load the current authored draft and the latest known publish state for one model and one view.
+Load the current authored draft and the latest known runtime-apply state for one model and one view.
 
 ### Request
 
@@ -196,9 +203,17 @@ Recommended resolution rule:
     "rootScope": {},
     "subformScopes": []
   },
+  "runtimeApply": {
+    "status": "failed",
+    "message": "Authoring was saved, but runtime apply did not complete.",
+    "storageResults": {
+      "rootScope": {},
+      "subformScopes": []
+    }
+  },
   "validationSummary": {
     "canSave": true,
-    "canPublish": true,
+    "canPublish": false,
     "errors": [],
     "warnings": []
   }
@@ -209,15 +224,15 @@ Recommended resolution rule:
 
 - read `ps_model` and `ps_view`
 - return the latest draft definition bundle
-- return the latest publish-state metadata
-- return the latest published generated-object summary when requested
+- return the latest runtime-alignment metadata
+- return the latest generated-object summary when requested
 - do not recompute or mutate storage as a side effect
 
 ## `saveBuilderDraft`
 
 ### Purpose
 
-Persist the latest builder draft without applying publish-time storage mutations.
+Persist the latest builder draft, then run additive runtime apply without destructive storage mutations.
 
 ### Request
 
@@ -249,13 +264,34 @@ Persist the latest builder draft without applying publish-time storage mutations
 - normalize storage object names from stable keys
 - persist model-owned and view-owned concerns separately
 - update versions only for the surfaces that changed
+- after a successful authoring persist, reconcile additive-safe managed runtime storage
 
-`saveBuilderDraft` must not:
+`saveBuilderDraft` runtime apply may:
 
-- create or alter `ps_<root_storage_key>` tables
-- create or alter child tables
-- create or alter SQL data views
-- create or alter SQL grid views
+- create missing `ps_<root_storage_key>` tables
+- create missing child tables
+- add missing columns to existing managed tables
+- create or deterministically recreate SQL data views
+- create or deterministically recreate SQL grid views
+
+`saveBuilderDraft` runtime apply must not:
+
+- delete tables
+- delete columns
+- delete SQL views
+- perform destructive rename/move migration
+- rollback the already-saved authoring draft when runtime apply fails
+
+### Runtime-Apply Failure Rule
+
+If runtime apply fails after the authoring draft has already been persisted:
+
+- the saved authoring state remains authoritative
+- the operation returns a runtime failure summary
+- the UI must surface this as:
+  - authoring saved
+  - runtime apply failed
+- the workspace remains conceptually dirty relative to runtime until the next successful `Save`
 
 ### Persistence Mapping
 
@@ -302,7 +338,7 @@ Typical view-owned draft concerns:
   },
   "validationSummary": {
     "canSave": true,
-    "canPublish": true,
+    "canPublish": false,
     "errors": [],
     "warnings": []
   }
@@ -315,144 +351,27 @@ Recommended rule:
 
 - if the normalized incoming draft is identical to the persisted draft, return the same version tokens without incrementing versions
 
-## `publishBuilderDraft`
+## Future Explicit Migration Operation
 
-### Purpose
+The older `publishBuilderDraft` concept is no longer the current product-facing lifecycle.
 
-Apply full validation and reconcile generated storage objects for the current draft.
+Current accepted rule:
 
-### Request
+- ordinary `Save` already performs additive runtime apply
+- destructive or ambiguous changes remain blocked
+- a future explicit migration operation may later handle:
+  - rename with mapping
+  - destructive drops
+  - scope moves with data preservation
+  - reviewed migration workflows
 
-```json
-{
-  "modelRef": {
-    "id": "mdl_site_audit"
-  },
-  "viewRef": {
-    "id": "view_default"
-  },
-  "expectedVersions": {
-    "model": 13,
-    "view": 19
-  },
-  "publishMode": "apply"
-}
-```
+That future operation is reserved and intentionally unspecified in the current implementation slice.
 
-Accepted `publishMode` values:
-
-- `apply`
-- `validate_only`
-
-Recommended default:
-
-- `apply`
-
-### Required Behavior
-
-`publishBuilderDraft` must:
-
-- load the latest saved draft
-- enforce optimistic concurrency with `expectedVersions`
-- run full publish-time validation
-- compute the storage plan for root and subform scopes
-- reconcile managed tables
-- reconcile canonical SQL data views
-- reconcile per-view SQL grid views
-- compute and persist lookup-derived SQL outputs
-- mark model and view published versions
-- persist publish summary metadata
-
-### Validation At Publish Time
-
-Publish must reject:
-
-- storage naming collisions
-- illegal structural changes under lock
-- unsupported destructive storage mutations
-- invalid parent-child subform storage relationships
-- invalid lookup-output generation definitions
-- invalid grid columns against current field or lookup-output registry
-- invalid `CHECKLIST` composition
-
-### First-Slice Publish Safety Rule
-
-Recommended first-slice limitation:
-
-- allow additive and compatible storage mutations
-- reject destructive or ambiguous schema mutations unless a future migration mode is explicitly introduced
-
-Examples that may be rejected in the first slice:
-
-- changing one published field to an incompatible base type
-- changing a published subform table key
-- removing a published field that still backs data or grid outputs
-
-### Response
-
-```json
-{
-  "draft": {
-    "model": {},
-    "view": {},
-    "rootScope": {},
-    "subformScopes": []
-  },
-  "publishState": {
-    "modelVersion": 13,
-    "modelPublishedVersion": 13,
-    "viewVersion": 19,
-    "viewPublishedVersion": 19,
-    "hasUnpublishedChanges": false,
-    "lastPublishedAt": "2026-04-09T14:05:00Z",
-    "lastPublishedBy": "usr_123"
-  },
-  "storageResults": {
-    "rootScope": {
-      "table": {
-        "name": "ps_site_audit",
-        "action": "reused"
-      },
-      "dataView": {
-        "name": "vw_ps_site_audit",
-        "action": "recreated"
-      },
-      "gridViews": [
-        {
-          "name": "vw_ps_site_audit__default_grid",
-          "action": "recreated"
-        }
-      ],
-      "lookupOutputs": [
-        {
-          "columnName": "reported_by__label",
-          "outputKind": "label",
-          "action": "recreated"
-        }
-      ]
-    },
-    "subformScopes": []
-  },
-  "validationSummary": {
-    "canSave": true,
-    "canPublish": true,
-    "errors": [],
-    "warnings": []
-  }
-}
-```
-
-### Idempotency Rule
-
-Recommended rule:
-
-- repeated publish with the same draft versions and no unresolved drift should return a successful no-op or `reused` storage result instead of creating duplicate objects
-
-## Scope Object Responsibilities During Publish
+## Scope Object Responsibilities During Runtime Apply
 
 ### Root Scope
 
-For `rootScope`, publish may reconcile:
+For `rootScope`, runtime apply from `saveBuilderDraft` may reconcile:
 
 - one root managed table
 - one canonical root SQL data view
@@ -461,7 +380,7 @@ For `rootScope`, publish may reconcile:
 
 ### Subform Scopes
 
-For each `subformScope`, publish may reconcile:
+For each `subformScope`, runtime apply from `saveBuilderDraft` may reconcile:
 
 - one managed child table
 - one canonical child-scope SQL data view
@@ -477,18 +396,18 @@ Important rule:
 
 One model may own multiple UI views.
 
-This creates two publish layers:
+This creates two runtime layers:
 
 - model-scope artifacts
   - tables
   - canonical SQL data views
 - view-scope artifacts
   - grid SQL views
-  - view publish summary
+  - view runtime summary
 
 Recommended rule:
 
-- publishing one view may still reconcile model-scope artifacts if the current saved draft changed model-owned structure
+- saving one view may still reconcile model-scope artifacts if the current saved draft changed model-owned structure
 - grid SQL views stay tied to the specific `view.key`
 
 ## Structured Error Contract
@@ -514,7 +433,7 @@ Recommended error codes:
 - `storage_collision`
 - `external_source_incompatible`
 - `migration_mode_required`
-- `publish_failed`
+- `runtime_apply_failed`
 
 ## Recommended Backend Payload Types
 
@@ -523,8 +442,9 @@ Recommended error codes:
 ```json
 {
   "draft": "BackendFormBuilderPayload",
-  "publishState": "BuilderPublishState",
+  "publishState": "BuilderRuntimeState",
   "publishedArtifacts": "PublishedArtifactSummary",
+  "runtimeApply": "RuntimeApplySummary",
   "validationSummary": "BuilderValidationSummary"
 }
 ```
@@ -541,21 +461,7 @@ Recommended error codes:
 }
 ```
 
-### `PublishBuilderDraftRequest`
-
-```json
-{
-  "modelRef": "ModelRef",
-  "viewRef": "ViewRef",
-  "expectedVersions": {
-    "model": "number",
-    "view": "number"
-  },
-  "publishMode": "apply | validate_only"
-}
-```
-
-### `BuilderPublishState`
+### `BuilderRuntimeState`
 
 ```json
 {
@@ -566,6 +472,16 @@ Recommended error codes:
   "hasUnpublishedChanges": "boolean",
   "lastPublishedAt": "ISO datetime",
   "lastPublishedBy": "string"
+}
+```
+
+### `RuntimeApplySummary`
+
+```json
+{
+  "status": "applied | applied_with_warnings | failed",
+  "message": "string",
+  "storageResults": "PublishedArtifactSummary"
 }
 ```
 
@@ -595,21 +511,21 @@ Recommended error codes:
 
 The frontend builder should assume:
 
-- `loadBuilderDraft` returns the latest normalized draft and publish state
+- `loadBuilderDraft` returns the latest normalized draft and runtime state
 - `saveBuilderDraft` may return canonicalized keys or storage names
-- `publishBuilderDraft` returns the latest generated storage summary
+- `saveBuilderDraft` also returns the latest runtime-apply summary
 
 The frontend should show:
 
-- draft vs published state
+- saved authoring state vs runtime-applied state
 - stale-write conflicts
-- publish errors separately from save errors
+- runtime-apply errors separately from authoring-save errors
 - generated grid and lookup-output availability only after the backend confirms them
 
 Recommended UI rule:
 
-- do not pretend that generated storage artifacts already exist after `saveBuilderDraft`
-- treat them as planned or projected until `publishBuilderDraft` succeeds
+- if runtime apply succeeds during `saveBuilderDraft`, treat generated artifacts as real
+- if runtime apply fails, show that authoring is saved but runtime is still out of date
 
 ## Companion Contracts
 

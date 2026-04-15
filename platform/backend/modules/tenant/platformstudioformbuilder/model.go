@@ -40,10 +40,42 @@ type ValidationSummary struct {
 	Warnings   []ValidationMessage `json:"warnings"`
 }
 
+type RuntimeApplyArtifactResult struct {
+	Name   string `json:"name"`
+	Action string `json:"action"`
+}
+
+type RuntimeApplyLookupOutputResult struct {
+	ColumnName string `json:"columnName"`
+	Action     string `json:"action"`
+}
+
+type RuntimeApplyScopeResult struct {
+	ScopeID         string                           `json:"scopeId,omitempty"`
+	Table           *RuntimeApplyArtifactResult      `json:"table,omitempty"`
+	MultiValueTable *RuntimeApplyArtifactResult      `json:"multiValueTable,omitempty"`
+	DataView        *RuntimeApplyArtifactResult      `json:"dataView,omitempty"`
+	GridViews       []RuntimeApplyArtifactResult     `json:"gridViews,omitempty"`
+	LookupOutputs   []RuntimeApplyLookupOutputResult `json:"lookupOutputs,omitempty"`
+	Warnings        []ValidationMessage              `json:"warnings,omitempty"`
+}
+
+type RuntimeApplyStorageResults struct {
+	RootScope     RuntimeApplyScopeResult   `json:"rootScope"`
+	SubformScopes []RuntimeApplyScopeResult `json:"subformScopes,omitempty"`
+}
+
+type RuntimeApplySummary struct {
+	Status         string                      `json:"status"`
+	Message        string                      `json:"message,omitempty"`
+	StorageResults *RuntimeApplyStorageResults `json:"storageResults,omitempty"`
+}
+
 type LoadDraftResponse struct {
-	Draft             DraftPayload      `json:"draft"`
-	PublishState      PublishState      `json:"publishState"`
-	ValidationSummary ValidationSummary `json:"validationSummary"`
+	Draft             DraftPayload         `json:"draft"`
+	PublishState      PublishState         `json:"publishState"`
+	ValidationSummary ValidationSummary    `json:"validationSummary"`
+	RuntimeApply      *RuntimeApplySummary `json:"runtimeApply,omitempty"`
 }
 
 type SaveDraftResponse = LoadDraftResponse

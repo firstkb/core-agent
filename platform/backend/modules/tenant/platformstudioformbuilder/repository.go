@@ -30,6 +30,7 @@ type Repository interface {
 	UpdateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord, expectedVersion *int64) (*ViewRecord, error)
 	DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error
 	DeleteView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) error
+	ApplyRuntime(ctx context.Context, tenant requestctx.TenantInfo, plan runtimeApplyPlan) (*RuntimeApplySummary, error)
 }
 
 func (r *repository) ListModels(ctx context.Context, tenant requestctx.TenantInfo) ([]ModelRecord, error) {
@@ -286,8 +287,19 @@ func (r *repository) DeleteView(ctx context.Context, tenant requestctx.TenantInf
 	if viewRecord == nil {
 		return ErrViewNotFound
 	}
+	modelRecord, err := loadModelTx(ctx, tx, modelID)
+	if err != nil {
+		return err
+	}
+	if modelRecord == nil {
+		return ErrModelNotFound
+	}
 
 	remaining, err := loadViewsTx(ctx, tx, modelID)
+	if err != nil {
+		return err
+	}
+	gridViewNames, err := runtimeGridViewNamesForView(modelRecord, viewRecord, remaining)
 	if err != nil {
 		return err
 	}
@@ -309,6 +321,11 @@ DELETE FROM ps_view
    AND view_id = $2`
 	if _, err := tx.ExecContext(ctx, deleteQuery, modelID, viewID); err != nil {
 		return fmt.Errorf("form builder: delete view: %w", err)
+	}
+	for _, gridViewName := range gridViewNames {
+		if _, err := tx.ExecContext(ctx, fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(gridViewName))); err != nil {
+			return fmt.Errorf("form builder: drop runtime grid view %s during delete: %w", gridViewName, err)
+		}
 	}
 
 	if viewRecord.IsDefault {
@@ -344,6 +361,32 @@ UPDATE ps_view
 		return fmt.Errorf("form builder: commit delete view tx: %w", err)
 	}
 	return nil
+}
+
+func runtimeGridViewNamesForView(model *ModelRecord, view *ViewRecord, views []ViewRecord) ([]string, error) {
+	if model == nil || view == nil {
+		return nil, nil
+	}
+	modelPayload, err := buildCanonicalModelPayload(model, views)
+	if err != nil {
+		return nil, err
+	}
+	viewPayload, err := buildCanonicalViewPayload(model, view, views, modelPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	refs := collectUISchemaGridRelationRefs(asMap(viewPayload["uiSchema"]), "view "+view.ViewID)
+	names := make([]string, 0, len(refs))
+	seen := make(map[string]struct{}, len(refs))
+	for _, ref := range refs {
+		if _, ok := seen[ref.Name]; ok {
+			continue
+		}
+		seen[ref.Name] = struct{}{}
+		names = append(names, ref.Name)
+	}
+	return names, nil
 }
 
 func (r *repository) DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error {

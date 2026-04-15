@@ -6,14 +6,17 @@ import (
 	"errors"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 )
 
 type memoryRepository struct {
-	models map[string]*ModelRecord
-	views  map[string]map[string]*ViewRecord
+	models          map[string]*ModelRecord
+	views           map[string]map[string]*ViewRecord
+	lastRuntimePlan *runtimeApplyPlan
+	runtimeApplyErr error
 }
 
 func newMemoryRepository() *memoryRepository {
@@ -168,6 +171,87 @@ func (r *memoryRepository) DeleteModel(_ context.Context, _ requestctx.TenantInf
 	delete(r.models, modelID)
 	delete(r.views, modelID)
 	return nil
+}
+
+func (r *memoryRepository) ApplyRuntime(_ context.Context, _ requestctx.TenantInfo, plan runtimeApplyPlan) (*RuntimeApplySummary, error) {
+	r.lastRuntimePlan = &plan
+	if r.runtimeApplyErr != nil {
+		return nil, r.runtimeApplyErr
+	}
+
+	rootScope := RuntimeApplyScopeResult{
+		ScopeID:       plan.RootScope.ScopeID,
+		Table:         &RuntimeApplyArtifactResult{Name: plan.RootScope.TableName, Action: "create"},
+		DataView:      &RuntimeApplyArtifactResult{Name: plan.RootScope.DataViewName, Action: "recreate"},
+		GridViews:     []RuntimeApplyArtifactResult{},
+		LookupOutputs: []RuntimeApplyLookupOutputResult{},
+		Warnings:      []ValidationMessage{},
+	}
+	if plan.RootScope.MultiValueTableName != "" && len(filterRuntimeMultiValueFields(plan.RootScope.Fields)) > 0 {
+		rootScope.MultiValueTable = &RuntimeApplyArtifactResult{Name: plan.RootScope.MultiValueTableName, Action: "create"}
+	}
+	for _, grid := range plan.RootScope.GridViews {
+		rootScope.GridViews = append(rootScope.GridViews, RuntimeApplyArtifactResult{Name: grid.Name, Action: "recreate"})
+	}
+	for _, field := range plan.RootScope.Fields {
+		for _, output := range field.LookupDerivedOutputs {
+			rootScope.LookupOutputs = append(rootScope.LookupOutputs, RuntimeApplyLookupOutputResult{
+				ColumnName: output.ColumnName,
+				Action:     "recreate",
+			})
+		}
+		if field.WarningMessage == "" {
+			continue
+		}
+		rootScope.Warnings = append(rootScope.Warnings, ValidationMessage{
+			Code:    "runtime_apply_field_warning",
+			Message: field.WarningMessage,
+			Target:  plan.RootScope.ScopeID,
+		})
+	}
+
+	subformScopes := make([]RuntimeApplyScopeResult, 0, len(plan.SubformScopes))
+	for _, scope := range plan.SubformScopes {
+		scopeResult := RuntimeApplyScopeResult{
+			ScopeID:       scope.ScopeID,
+			Table:         &RuntimeApplyArtifactResult{Name: scope.TableName, Action: "create"},
+			DataView:      &RuntimeApplyArtifactResult{Name: scope.DataViewName, Action: "recreate"},
+			GridViews:     []RuntimeApplyArtifactResult{},
+			LookupOutputs: []RuntimeApplyLookupOutputResult{},
+			Warnings:      []ValidationMessage{},
+		}
+		if scope.MultiValueTableName != "" && len(filterRuntimeMultiValueFields(scope.Fields)) > 0 {
+			scopeResult.MultiValueTable = &RuntimeApplyArtifactResult{Name: scope.MultiValueTableName, Action: "create"}
+		}
+		for _, grid := range scope.GridViews {
+			scopeResult.GridViews = append(scopeResult.GridViews, RuntimeApplyArtifactResult{Name: grid.Name, Action: "recreate"})
+		}
+		for _, field := range scope.Fields {
+			for _, output := range field.LookupDerivedOutputs {
+				scopeResult.LookupOutputs = append(scopeResult.LookupOutputs, RuntimeApplyLookupOutputResult{
+					ColumnName: output.ColumnName,
+					Action:     "recreate",
+				})
+			}
+			if field.WarningMessage == "" {
+				continue
+			}
+			scopeResult.Warnings = append(scopeResult.Warnings, ValidationMessage{
+				Code:    "runtime_apply_field_warning",
+				Message: field.WarningMessage,
+				Target:  scope.ScopeID,
+			})
+		}
+		subformScopes = append(subformScopes, scopeResult)
+	}
+
+	return &RuntimeApplySummary{
+		Status: "applied",
+		StorageResults: &RuntimeApplyStorageResults{
+			RootScope:     rootScope,
+			SubformScopes: subformScopes,
+		},
+	}, nil
 }
 
 func cloneModelRecord(record *ModelRecord) ModelRecord {
@@ -474,8 +558,17 @@ func TestCopyViewClonesSourceUISchemaExactly(t *testing.T) {
 	}
 
 	copiedPayload := mustDecodeJSONMap(t, copiedView.DefinitionJSON)
-	if !reflect.DeepEqual(asMap(copiedPayload["uiSchema"]), asMap(sourcePayload["uiSchema"])) {
-		t.Fatalf("copied uiSchema does not match source:\nsource=%#v\ncopied=%#v", asMap(sourcePayload["uiSchema"]), asMap(copiedPayload["uiSchema"]))
+	sourceUISchema := cloneJSONToMap(mustCanonicalJSON(asMap(sourcePayload["uiSchema"])))
+	copiedUISchema := cloneJSONToMap(mustCanonicalJSON(asMap(copiedPayload["uiSchema"])))
+	stripUISchemaRuntimeMetadata(sourceUISchema)
+	stripUISchemaRuntimeMetadata(copiedUISchema)
+	if !reflect.DeepEqual(sourceUISchema, copiedUISchema) {
+		t.Fatalf("copied uiSchema does not match source when runtime is ignored:\nsource=%#v\ncopied=%#v", sourceUISchema, copiedUISchema)
+	}
+
+	copiedRootRuntime := asMap(asMap(asMap(copiedPayload["uiSchema"])["rootScope"])["runtime"])
+	if normalizeString(copiedRootRuntime["viewRtAlias"]) != "copied" {
+		t.Fatalf("copied view runtime alias = %#v, want copied", copiedRootRuntime)
 	}
 }
 
@@ -1494,6 +1587,29 @@ func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	}
 }
 
+func TestRuntimeGridViewNamesForViewIncludesRootAndSubformGridViews(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+
+	views, err := repo.ListViews(testContext(), requestctx.TenantInfo{}, model.ModelID)
+	if err != nil {
+		t.Fatalf("ListViews returned error: %v", err)
+	}
+	names, err := runtimeGridViewNamesForView(model, view, views)
+	if err != nil {
+		t.Fatalf("runtimeGridViewNamesForView returned error: %v", err)
+	}
+
+	scopeRtAlias := buildGeneratedRuntimeScopeAlias("pb_info")
+	want := []string{
+		"vg_site_audit__default",
+		"vg_site_audit__" + scopeRtAlias + "__default",
+	}
+	if !reflect.DeepEqual(names, want) {
+		t.Fatalf("runtime grid view names = %#v, want %#v", names, want)
+	}
+}
+
 func TestDeleteModelRemovesModelAndViews(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{
@@ -1553,6 +1669,1089 @@ func TestDeleteModelRemovesModelAndViews(t *testing.T) {
 	}
 }
 
+func TestSaveDraftBuildsRuntimeApplyPlanForManagedRootAndSubformScopes(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	if _, err := svc.CreateView(testContext(), model.ModelID, CreateViewRequest{Title: "Operations"}); err != nil {
+		t.Fatalf("CreateView returned error: %v", err)
+	}
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	if out.RuntimeApply == nil {
+		t.Fatalf("expected runtime apply summary in save response")
+	}
+	if out.RuntimeApply.Status != "applied" {
+		t.Fatalf("runtime apply status = %q, want %q", out.RuntimeApply.Status, "applied")
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured by memory repo")
+	}
+
+	plan := repo.lastRuntimePlan
+	if plan.ModelRuntimeAlias != "site_audit" {
+		t.Fatalf("runtime plan model runtime alias = %q, want %q", plan.ModelRuntimeAlias, "site_audit")
+	}
+	if plan.RootScope.TableName != "ps_site_audit" {
+		t.Fatalf("root table name = %q, want %q", plan.RootScope.TableName, "ps_site_audit")
+	}
+	if plan.RootScope.DataViewName != "vw_site_audit" {
+		t.Fatalf("root data view = %q, want %q", plan.RootScope.DataViewName, "vw_site_audit")
+	}
+	if !containsGridViewPlan(plan.RootScope.GridViews, "vg_site_audit__default") {
+		t.Fatalf("expected default root grid view, got %#v", plan.RootScope.GridViews)
+	}
+	if !containsGridViewPlan(plan.RootScope.GridViews, "vg_site_audit__operations") {
+		t.Fatalf("expected operations root grid view, got %#v", plan.RootScope.GridViews)
+	}
+	if len(plan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope in runtime plan, got %#v", plan.SubformScopes)
+	}
+
+	subform := plan.SubformScopes[0]
+	scopeRtAlias := buildGeneratedRuntimeScopeAlias("pb_info")
+	if subform.TableName != "ps_site_audit__"+scopeRtAlias {
+		t.Fatalf("subform table name = %q, want %q", subform.TableName, "ps_site_audit__"+scopeRtAlias)
+	}
+	if subform.ParentForeignKey != "_parent_id" {
+		t.Fatalf("subform parent foreign key = %q, want %q", subform.ParentForeignKey, "_parent_id")
+	}
+	if subform.DataViewName != "vw_site_audit__"+scopeRtAlias {
+		t.Fatalf("subform data view = %q, want %q", subform.DataViewName, "vw_site_audit__"+scopeRtAlias)
+	}
+	if !containsGridViewPlan(subform.GridViews, "vg_site_audit__"+scopeRtAlias+"__default") {
+		t.Fatalf("expected default subform grid view, got %#v", subform.GridViews)
+	}
+	if !containsGridViewPlan(subform.GridViews, "vg_site_audit__"+scopeRtAlias+"__operations") {
+		t.Fatalf("expected operations subform grid view, got %#v", subform.GridViews)
+	}
+
+	savedModel := mustDecodeJSONMap(t, out.Draft.Model)
+	savedRootRuntime := asMap(asMap(asMap(savedModel["dataSchema"])["rootScope"])["runtime"])
+	if normalizeString(savedRootRuntime["dataViewName"]) != "vw_site_audit" {
+		t.Fatalf("saved root runtime data view = %#v", savedRootRuntime)
+	}
+	savedSubformRuntime := asMap(asMap(asSlice(asMap(savedModel["dataSchema"])["subformScopes"])[0])["runtime"])
+	if normalizeString(savedSubformRuntime["rtAlias"]) != scopeRtAlias {
+		t.Fatalf("saved subform runtime = %#v, want alias %q", savedSubformRuntime, scopeRtAlias)
+	}
+	savedView := mustDecodeJSONMap(t, out.Draft.View)
+	savedViewRootRuntime := asMap(asMap(asMap(savedView["uiSchema"])["rootScope"])["runtime"])
+	if normalizeString(savedViewRootRuntime["gridViewName"]) != "vg_site_audit__default" {
+		t.Fatalf("saved root ui runtime = %#v", savedViewRootRuntime)
+	}
+
+	rootFieldFound := false
+	for _, field := range plan.RootScope.Fields {
+		if field.FieldID != "site-name" {
+			continue
+		}
+		rootFieldFound = true
+		if field.ColumnName != "site_name" || field.PhysicalType != "text" || !field.Supported {
+			t.Fatalf("unexpected root field runtime plan: %#v", field)
+		}
+	}
+	if !rootFieldFound {
+		t.Fatalf("expected site-name root field in runtime plan, got %#v", plan.RootScope.Fields)
+	}
+
+	subformFieldFound := false
+	for _, field := range subform.Fields {
+		if field.FieldID != "info-date" {
+			continue
+		}
+		subformFieldFound = true
+		if field.ColumnName != "info_date" || field.PhysicalType != "date" || !field.Supported {
+			t.Fatalf("unexpected subform field runtime plan: %#v", field)
+		}
+	}
+	if !subformFieldFound {
+		t.Fatalf("expected info-date subform field in runtime plan, got %#v", subform.Fields)
+	}
+}
+
+func TestSaveDraftPreservesPersistedRuntimeMetadataWhenRequestOmitsRuntime(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	storedModelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	storedDataSchema := asMap(storedModelPayload["dataSchema"])
+	storedRootScope := asMap(storedDataSchema["rootScope"])
+	storedRootScope["runtime"] = map[string]any{
+		"rtAlias":      "site_audit_live",
+		"tableName":    "ps_site_audit_live",
+		"mvTableName":  "ps_site_audit_live__mv",
+		"dataViewName": "vw_site_audit_live",
+	}
+	storedSubformScope := asMap(asSlice(storedDataSchema["subformScopes"])[0])
+	storedSubformScope["runtime"] = map[string]any{
+		"rtAlias":      "sf_custom9a",
+		"tableName":    "ps_site_audit_live__sf_custom9a",
+		"mvTableName":  "ps_site_audit_live__sf_custom9a__mv",
+		"dataViewName": "vw_site_audit_live__sf_custom9a",
+	}
+	model.DefinitionJSON = mustJSON(t, storedModelPayload)
+	repo.models[model.ModelID] = model
+
+	storedViewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	storedUISchema := asMap(storedViewPayload["uiSchema"])
+	asMap(storedUISchema["rootScope"])["runtime"] = map[string]any{
+		"viewRtAlias":  "default",
+		"dataViewName": "vw_site_audit_live",
+		"gridViewName": "vg_site_audit_live__default",
+	}
+	asMap(asSlice(storedUISchema["subformScopes"])[0])["runtime"] = map[string]any{
+		"viewRtAlias":  "default",
+		"dataViewName": "vw_site_audit_live__sf_custom9a",
+		"gridViewName": "vg_site_audit_live__sf_custom9a__default",
+	}
+	view.DefinitionJSON = mustJSON(t, storedViewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+
+	incomingModelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	incomingDataSchema := asMap(incomingModelPayload["dataSchema"])
+	delete(asMap(incomingDataSchema["rootScope"]), "runtime")
+	delete(asMap(asSlice(incomingDataSchema["subformScopes"])[0]), "runtime")
+
+	incomingViewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	incomingUISchema := asMap(incomingViewPayload["uiSchema"])
+	delete(asMap(incomingUISchema["rootScope"]), "runtime")
+	delete(asMap(asSlice(incomingUISchema["subformScopes"])[0]), "runtime")
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, incomingModelPayload),
+			View:  mustJSON(t, incomingViewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	savedModel := mustDecodeJSONMap(t, out.Draft.Model)
+	savedRootRuntime := asMap(asMap(asMap(savedModel["dataSchema"])["rootScope"])["runtime"])
+	if normalizeString(savedRootRuntime["tableName"]) != "ps_site_audit_live" {
+		t.Fatalf("saved root runtime = %#v", savedRootRuntime)
+	}
+	savedSubformRuntime := asMap(asMap(asSlice(asMap(savedModel["dataSchema"])["subformScopes"])[0])["runtime"])
+	if normalizeString(savedSubformRuntime["tableName"]) != "ps_site_audit_live__sf_custom9a" {
+		t.Fatalf("saved subform runtime = %#v", savedSubformRuntime)
+	}
+
+	savedView := mustDecodeJSONMap(t, out.Draft.View)
+	savedRootViewRuntime := asMap(asMap(asMap(savedView["uiSchema"])["rootScope"])["runtime"])
+	if normalizeString(savedRootViewRuntime["gridViewName"]) != "vg_site_audit_live__default" {
+		t.Fatalf("saved root ui runtime = %#v", savedRootViewRuntime)
+	}
+	savedSubformViewRuntime := asMap(asMap(asSlice(asMap(savedView["uiSchema"])["subformScopes"])[0])["runtime"])
+	if normalizeString(savedSubformViewRuntime["gridViewName"]) != "vg_site_audit_live__sf_custom9a__default" {
+		t.Fatalf("saved subform ui runtime = %#v", savedSubformViewRuntime)
+	}
+
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+	if repo.lastRuntimePlan.RootScope.TableName != "ps_site_audit_live" {
+		t.Fatalf("runtime plan root table = %q, want %q", repo.lastRuntimePlan.RootScope.TableName, "ps_site_audit_live")
+	}
+	if repo.lastRuntimePlan.SubformScopes[0].ParentForeignKey != "_parent_id" {
+		t.Fatalf("runtime plan subform parent fk = %q, want %q", repo.lastRuntimePlan.SubformScopes[0].ParentForeignKey, "_parent_id")
+	}
+}
+
+func TestSaveDraftRejectsRuntimeRelationNameConflicts(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	conflictingModel := cloneModelRecord(model)
+	conflictingModel.ModelID = "other-audit"
+	conflictingModel.ModelKey = "other-audit"
+	conflictingModel.StorageKey = "other_audit"
+	conflictingModel.DisplayName = "Other Audit"
+	conflictingModel.DefinitionJSON = mustJSON(t, map[string]any{
+		"id":          "other-audit",
+		"key":         "other-audit",
+		"storageKey":  "other_audit",
+		"displayName": "Other Audit",
+		"sourceType":  "managed",
+		"dataSchema": map[string]any{
+			"modelId":    "other-audit",
+			"modelTitle": "Other Audit",
+			"rootScope": map[string]any{
+				"fields":        []any{},
+				"schemaScopeId": "root",
+				"scopeType":     "ROOT",
+				"runtime": map[string]any{
+					"rtAlias":      "conflict_alias",
+					"tableName":    "ps_site_audit",
+					"mvTableName":  "ps_site_audit__mv",
+					"dataViewName": "vw_conflict_alias",
+				},
+			},
+			"subformScopes": []any{},
+		},
+		"layoutBlueprint": emptyLayoutBlueprint(),
+	})
+	repo.models[conflictingModel.ModelID] = &conflictingModel
+
+	conflictingView := cloneViewRecord(view)
+	conflictingView.ModelID = conflictingModel.ModelID
+	conflictingView.ViewID = "view-other-default"
+	conflictingView.ViewKey = "default"
+	conflictingView.DisplayName = "Other Default"
+	conflictingView.DefinitionJSON = mustJSON(t, map[string]any{
+		"id":          conflictingView.ViewID,
+		"key":         "default",
+		"modelId":     conflictingModel.ModelID,
+		"displayName": conflictingView.DisplayName,
+		"kind":        "form",
+		"isDefault":   true,
+		"isActive":    true,
+		"uiSchema": map[string]any{
+			"rootScope": map[string]any{
+				"schemaScopeId": "root",
+				"nodes":         []any{},
+				"runtime": map[string]any{
+					"viewRtAlias":  "default",
+					"dataViewName": "vw_conflict_alias",
+					"gridViewName": "vg_other_audit__default",
+				},
+			},
+			"subformScopes": []any{},
+		},
+	})
+	repo.views[conflictingModel.ModelID] = map[string]*ViewRecord{
+		conflictingView.ViewID: &conflictingView,
+	}
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrRuntimeNameConflict) {
+		t.Fatalf("SaveDraft error = %v, want %v", err, ErrRuntimeNameConflict)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeRootGridViewFromVisibleGridColumns(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Site Code",
+		"id":            "site-code",
+		"key":           "site-code",
+		"kind":          "short_text",
+		"label":         "Site Code",
+		"schemaScopeId": "root",
+		"storageKey":    "site_code",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": "root.section.summary",
+		"fieldId":      "site-code",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "site-code",
+		"id":         "field-site-code",
+		"order":      1,
+		"parentId":   "root-section-summary",
+		"title":      "Site Code",
+		"type":       "field",
+		"visibility": "visible",
+	})
+	rootUIScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{
+					"id":      "grid-column-site-name",
+					"fieldId": "site-name",
+					"order":   1,
+					"visible": true,
+				},
+			},
+		},
+	}
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+
+	grid := findGridViewPlan(repo.lastRuntimePlan.RootScope.GridViews, "vg_site_audit__default")
+	if grid == nil {
+		t.Fatalf("expected default root grid plan, got %#v", repo.lastRuntimePlan.RootScope.GridViews)
+	}
+	wantColumns := []string{"_id", "tenant_id", "_guid", "_created_at", "_updated_at", "_row_version", "site_name"}
+	if !reflect.DeepEqual(grid.ColumnNames, wantColumns) {
+		t.Fatalf("root grid columns = %#v, want %#v", grid.ColumnNames, wantColumns)
+	}
+
+	gridSQL := buildRuntimeGridViewSQL(repo.lastRuntimePlan.RootScope.DataViewName, *grid)
+	if !strings.Contains(gridSQL, `v."site_name"`) {
+		t.Fatalf("expected site_name in root grid SQL, got %s", gridSQL)
+	}
+	if strings.Contains(gridSQL, `v."site_code"`) {
+		t.Fatalf("did not expect site_code in root grid SQL, got %s", gridSQL)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeSubformGridViewWithSystemColumnsWhenGridColumnsEmpty(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+
+	if len(repo.lastRuntimePlan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope, got %#v", repo.lastRuntimePlan.SubformScopes)
+	}
+	grid := findGridViewPlan(repo.lastRuntimePlan.SubformScopes[0].GridViews, "vg_site_audit__"+buildGeneratedRuntimeScopeAlias("pb_info")+"__default")
+	if grid == nil {
+		t.Fatalf("expected default subform grid plan, got %#v", repo.lastRuntimePlan.SubformScopes[0].GridViews)
+	}
+	wantColumns := []string{"_id", "tenant_id", "_guid", "_created_at", "_updated_at", "_row_version", "_parent_id"}
+	if !reflect.DeepEqual(grid.ColumnNames, wantColumns) {
+		t.Fatalf("subform grid columns = %#v, want %#v", grid.ColumnNames, wantColumns)
+	}
+
+	gridSQL := buildRuntimeGridViewSQL(repo.lastRuntimePlan.SubformScopes[0].DataViewName, *grid)
+	if strings.Contains(gridSQL, `v."info_date"`) {
+		t.Fatalf("did not expect info_date in empty subform grid SQL, got %s", gridSQL)
+	}
+}
+
+func TestBuildRuntimeGridViewsShortensOverlongNamesDeterministically(t *testing.T) {
+	fields := []runtimeApplyFieldPlan{
+		{
+			FieldID:      "email",
+			ColumnName:   "email",
+			Kind:         "short_text",
+			PhysicalType: "text",
+			Supported:    true,
+		},
+	}
+	views := []ViewRecord{
+		{ViewKey: "default"},
+		{ViewKey: "test-inspection-copy"},
+		{ViewKey: "test-inspection-copy-2"},
+		{ViewKey: "test-inspection-for-gc"},
+	}
+
+	plans := buildRuntimeGridViews("test_inspection_for_auto_82af", buildGeneratedRuntimeScopeAlias("subform-1776131757551-y3h9k3"), "subform-1776131757551-y3h9k3", "test_inspection_for_auto_82af_id", fields, views)
+	if len(plans) != 4 {
+		t.Fatalf("expected four grid view plans, got %#v", plans)
+	}
+
+	seen := map[string]struct{}{}
+	for _, plan := range plans {
+		if len(plan.Name) > 63 {
+			t.Fatalf("grid view name exceeds postgres identifier limit: %q (%d)", plan.Name, len(plan.Name))
+		}
+		if _, ok := seen[plan.Name]; ok {
+			t.Fatalf("expected unique shortened grid view names, got duplicate %q in %#v", plan.Name, plans)
+		}
+		seen[plan.Name] = struct{}{}
+	}
+}
+
+func TestBuildRuntimeApplyFieldPlanShortensOverlongColumnNames(t *testing.T) {
+	longStorageKey := strings.Repeat("very_long_field_name_", 5)
+	lookupPlan := buildRuntimeApplyFieldPlan(map[string]any{
+		"id":            "vendor-contact",
+		"fieldId":       "vendor-contact",
+		"kind":          "db_lookup",
+		"preset":        "contact_lookup",
+		"selectionMode": "single",
+		"storageKey":    longStorageKey,
+	}, nil)
+
+	if len(lookupPlan.ColumnName) > 63 {
+		t.Fatalf("lookup column name exceeds postgres identifier limit: %q (%d)", lookupPlan.ColumnName, len(lookupPlan.ColumnName))
+	}
+	if alias := runtimeGridDefaultAliasForField(lookupPlan); len(alias) > 63 {
+		t.Fatalf("lookup grid alias exceeds postgres identifier limit: %q (%d)", alias, len(alias))
+	}
+	for _, output := range lookupPlan.LookupDerivedOutputs {
+		if len(output.ColumnName) > 63 {
+			t.Fatalf("lookup output column exceeds postgres identifier limit: %q (%d)", output.ColumnName, len(output.ColumnName))
+		}
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyLookupOutputsForContactLookup(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Reported By",
+		"id":            "reported-by",
+		"key":           "reported-by",
+		"kind":          "db_lookup",
+		"label":         "Reported By",
+		"lookupConfig":  map[string]any{"sourceModel": "contacts"},
+		"preset":        "contact_lookup",
+		"schemaScopeId": "root",
+		"selectionMode": "single",
+		"storageKey":    "reported_by",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "reported-by",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "reported-by",
+		"id":         "field-reported-by",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "Reported By",
+		"type":       "field",
+		"visibility": "visible",
+	})
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	field := findRuntimeFieldPlanByID(repo.lastRuntimePlan.RootScope.Fields, "reported-by")
+	if field == nil {
+		t.Fatalf("expected reported-by field in runtime plan, got %#v", repo.lastRuntimePlan.RootScope.Fields)
+	}
+	if field.ColumnName != "reported_by_id" {
+		t.Fatalf("reported-by column name = %q, want %q", field.ColumnName, "reported_by_id")
+	}
+	if field.LookupTargetName != "users" {
+		t.Fatalf("reported-by lookup target = %q, want %q", field.LookupTargetName, "users")
+	}
+	if !containsLookupOutputColumn(field.LookupDerivedOutputs, "reported_by__label") {
+		t.Fatalf("expected reported_by__label output, got %#v", field.LookupDerivedOutputs)
+	}
+	if !containsLookupOutputColumn(field.LookupDerivedOutputs, "reported_by__company_name") {
+		t.Fatalf("expected reported_by__company_name output, got %#v", field.LookupDerivedOutputs)
+	}
+
+	viewSQL, lookupOutputs := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(viewSQL, `t."tenant_id" AS "tenant_id"`) {
+		t.Fatalf("expected tenant_id in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"public"."users" "lk_reported_by"`) {
+		t.Fatalf("expected users join in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"t"."tenant_id" = "lk_reported_by"."users_tenant_id"`) {
+		t.Fatalf("expected tenant-scoped users join in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"reported_by__company_name"`) {
+		t.Fatalf("expected reported_by__company_name in data view SQL, got %s", viewSQL)
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "reported_by__title") {
+		t.Fatalf("expected reported_by__title runtime output, got %#v", lookupOutputs)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	if !containsRuntimeLookupOutputResult(out.RuntimeApply.StorageResults.RootScope.LookupOutputs, "reported_by__phone") {
+		t.Fatalf("expected reported_by__phone in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.LookupOutputs)
+	}
+}
+
+func TestSaveDraftRuntimeDataViewIncludesHiddenCanvasFields(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	rootFieldNode := findFieldNodeByID(asSlice(rootScope["nodes"]), "site-name")
+	if rootFieldNode == nil {
+		t.Fatalf("expected site-name node in root ui scope, got %#v", rootScope["nodes"])
+	}
+	rootFieldNode["visibility"] = "hidden"
+
+	var infoScope map[string]any
+	for _, raw := range asSlice(uiSchema["subformScopes"]) {
+		candidate := asMap(raw)
+		if normalizeString(candidate["schemaScopeId"]) == "pb_info" {
+			infoScope = candidate
+			break
+		}
+	}
+	if len(infoScope) == 0 {
+		t.Fatalf("expected pb_info ui scope, got %#v", uiSchema["subformScopes"])
+	}
+	infoFieldNode := findFieldNodeByID(asSlice(infoScope["nodes"]), "info-date")
+	if infoFieldNode == nil {
+		t.Fatalf("expected info-date node in subform ui scope, got %#v", infoScope["nodes"])
+	}
+	infoFieldNode["visibility"] = "hidden"
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	rootViewSQL, _ := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(rootViewSQL, `t."site_name" AS "site_name"`) {
+		t.Fatalf("expected hidden root canvas field in data view SQL, got %s", rootViewSQL)
+	}
+	if len(repo.lastRuntimePlan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope in runtime plan, got %#v", repo.lastRuntimePlan.SubformScopes)
+	}
+	subformViewSQL, _ := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.SubformScopes[0])
+	if !strings.Contains(subformViewSQL, `t."info_date" AS "info_date"`) {
+		t.Fatalf("expected hidden subform canvas field in data view SQL, got %s", subformViewSQL)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil || out.RuntimeApply.StorageResults.RootScope.DataView == nil {
+		t.Fatalf("expected runtime apply data view summary, got %#v", out.RuntimeApply)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyLookupOutputsForManagedModelLookup(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	repo.models["company-directory"] = &ModelRecord{
+		ModelID:          "company-directory",
+		ModelKey:         "company-directory",
+		StorageKey:       "company_directory",
+		DisplayName:      "Company Directory",
+		SourceType:       "managed",
+		Version:          1,
+		StructureVersion: 1,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":         "company-directory",
+			"key":        "company-directory",
+			"storageKey": "company_directory",
+			"sourceType": "managed",
+		}),
+	}
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayFields": []any{"company_name"},
+		"displayName":   "Vendor Company",
+		"id":            "vendor-company",
+		"key":           "vendor-company",
+		"kind":          "db_lookup",
+		"label":         "Vendor Company",
+		"lookupConfig": map[string]any{
+			"displayMode":      "search_select",
+			"searchFields":     []any{"company_name"},
+			"sourceModel":      "company-directory",
+			"storedValueField": "doc_id",
+		},
+		"schemaScopeId": "root",
+		"selectionMode": "single",
+		"storageKey":    "vendor_company",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "vendor-company",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "vendor-company",
+		"id":         "field-vendor-company",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "Vendor Company",
+		"type":       "field",
+		"visibility": "visible",
+	})
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	field := findRuntimeFieldPlanByID(repo.lastRuntimePlan.RootScope.Fields, "vendor-company")
+	if field == nil {
+		t.Fatalf("expected vendor-company field in runtime plan, got %#v", repo.lastRuntimePlan.RootScope.Fields)
+	}
+	if field.LookupTargetName != "vw_company_directory" {
+		t.Fatalf("vendor-company lookup target = %q, want %q", field.LookupTargetName, "vw_company_directory")
+	}
+	if !reflect.DeepEqual(field.DisplayFields, []string{"company_name"}) {
+		t.Fatalf("vendor-company display fields = %#v, want %#v", field.DisplayFields, []string{"company_name"})
+	}
+	if !containsLookupOutputColumn(field.LookupDerivedOutputs, "vendor_company__label") {
+		t.Fatalf("expected vendor_company__label output, got %#v", field.LookupDerivedOutputs)
+	}
+
+	viewSQL, lookupOutputs := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(viewSQL, `"public"."vw_company_directory" "lk_vendor_company"`) {
+		t.Fatalf("expected managed lookup join in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"t"."tenant_id" = "lk_vendor_company"."tenant_id"`) {
+		t.Fatalf("expected tenant-scoped managed lookup join in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"lk_vendor_company"."company_name"`) || !strings.Contains(viewSQL, `"vendor_company__label"`) {
+		t.Fatalf("expected vendor_company label expression in data view SQL, got %s", viewSQL)
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "vendor_company__label") {
+		t.Fatalf("expected vendor_company__label runtime output, got %#v", lookupOutputs)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	if !containsRuntimeLookupOutputResult(out.RuntimeApply.StorageResults.RootScope.LookupOutputs, "vendor_company__label") {
+		t.Fatalf("expected vendor_company__label in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.LookupOutputs)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyLookupOutputsForCompanyLookupStateName(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Company",
+		"id":            "company",
+		"key":           "company",
+		"kind":          "db_lookup",
+		"label":         "Company",
+		"lookupConfig":  map[string]any{"sourceModel": "companies"},
+		"preset":        "company_lookup",
+		"schemaScopeId": "root",
+		"selectionMode": "single",
+		"storageKey":    "company",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "company",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "company",
+		"id":         "field-company",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "Company",
+		"type":       "field",
+		"visibility": "visible",
+	})
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	field := findRuntimeFieldPlanByID(repo.lastRuntimePlan.RootScope.Fields, "company")
+	if field == nil {
+		t.Fatalf("expected company field in runtime plan, got %#v", repo.lastRuntimePlan.RootScope.Fields)
+	}
+	if !containsLookupOutputColumn(field.LookupDerivedOutputs, "company__state") {
+		t.Fatalf("expected company__state output, got %#v", field.LookupDerivedOutputs)
+	}
+
+	viewSQL, lookupOutputs := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(viewSQL, `"public"."state" "lk_company_state"`) {
+		t.Fatalf("expected state join in company data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"t"."tenant_id" = "lk_company"."company_tenant_id"`) {
+		t.Fatalf("expected tenant-scoped company join in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"company__state"`) {
+		t.Fatalf("expected company__state projection in data view SQL, got %s", viewSQL)
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "company__state") {
+		t.Fatalf("expected company__state runtime output, got %#v", lookupOutputs)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	if !containsRuntimeLookupOutputResult(out.RuntimeApply.StorageResults.RootScope.LookupOutputs, "company__state") {
+		t.Fatalf("expected company__state in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.LookupOutputs)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyLookupOutputsForMultiLookupGridColumns(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Assigned Contacts",
+		"id":            "assigned-contacts",
+		"key":           "assigned-contacts",
+		"kind":          "db_lookup",
+		"label":         "Assigned Contacts",
+		"lookupConfig":  map[string]any{"sourceModel": "contacts"},
+		"preset":        "contact_lookup",
+		"schemaScopeId": "root",
+		"selectionMode": "multiple",
+		"storageKey":    "assigned_contacts",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["unplacedFieldIds"] = append(normalizeStringList(rootBlueprint["unplacedFieldIds"]), "assigned-contacts")
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	field := findRuntimeFieldPlanByID(repo.lastRuntimePlan.RootScope.Fields, "assigned-contacts")
+	if field == nil {
+		t.Fatalf("expected assigned-contacts field in runtime plan, got %#v", repo.lastRuntimePlan.RootScope.Fields)
+	}
+	if !field.MultiValue {
+		t.Fatalf("expected assigned-contacts to use multivalue storage, got %#v", field)
+	}
+	if !containsLookupOutputColumn(field.LookupDerivedOutputs, "assigned_contacts__labels") || !containsLookupOutputColumn(field.LookupDerivedOutputs, "assigned_contacts__count") {
+		t.Fatalf("expected labels/count lookup outputs, got %#v", field.LookupDerivedOutputs)
+	}
+
+	viewSQL, lookupOutputs := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(viewSQL, `"public"."ps_site_audit__mv"`) {
+		t.Fatalf("expected multivalue bridge table reference in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `mv."tenant_id" = t."tenant_id"`) {
+		t.Fatalf("expected tenant-scoped multivalue subquery in data view SQL, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"assigned_contacts__labels"`) || !strings.Contains(viewSQL, `"assigned_contacts__count"`) {
+		t.Fatalf("expected multivalue lookup outputs in data view SQL, got %s", viewSQL)
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "assigned_contacts__labels") || !containsRuntimeLookupOutputResult(lookupOutputs, "assigned_contacts__count") {
+		t.Fatalf("expected multivalue runtime outputs, got %#v", lookupOutputs)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	if out.RuntimeApply.StorageResults.RootScope.MultiValueTable == nil {
+		t.Fatalf("expected multivalue table artifact in runtime summary")
+	}
+}
+
+func TestSaveDraftBuildsRuntimeRootGridViewFromLookupOutputPseudoFieldIDs(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayName":   "Reported By",
+		"id":            "reported-by",
+		"key":           "reported-by",
+		"kind":          "db_lookup",
+		"label":         "Reported By",
+		"lookupConfig":  map[string]any{"sourceModel": "contacts"},
+		"preset":        "contact_lookup",
+		"schemaScopeId": "root",
+		"selectionMode": "single",
+		"storageKey":    "reported_by",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "reported-by",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "reported-by",
+		"id":         "field-reported-by",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "Reported By",
+		"type":       "field",
+		"visibility": "visible",
+	})
+	rootUIScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{
+					"fieldId": "reported-by",
+					"id":      "grid-column-reported-by",
+					"order":   1,
+					"visible": true,
+				},
+				map[string]any{
+					"fieldId": "reported-by::lookup_output::company_name",
+					"id":      "grid-column-reported-by-company-name",
+					"order":   2,
+					"visible": true,
+				},
+			},
+		},
+	}
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	grid := findGridViewPlan(repo.lastRuntimePlan.RootScope.GridViews, "vg_site_audit__default")
+	if grid == nil {
+		t.Fatalf("expected default root grid view in runtime plan")
+	}
+	wantColumns := []string{
+		"_id",
+		"tenant_id",
+		"_guid",
+		"_created_at",
+		"_updated_at",
+		"_row_version",
+		"reported_by",
+		"reported_by__company_name",
+	}
+	if !reflect.DeepEqual(grid.ColumnNames, wantColumns) {
+		t.Fatalf("root lookup-output grid columns = %#v, want %#v", grid.ColumnNames, wantColumns)
+	}
+	gridSQL := buildRuntimeGridViewSQL(repo.lastRuntimePlan.RootScope.DataViewName, *grid)
+	if !strings.Contains(gridSQL, `v."reported_by__label" AS "reported_by"`) {
+		t.Fatalf("expected reported_by label alias in grid SQL, got %s", gridSQL)
+	}
+	if !strings.Contains(gridSQL, `v."reported_by__company_name"`) {
+		t.Fatalf("expected company_name lookup output in grid SQL, got %s", gridSQL)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	foundDefaultGridArtifact := false
+	for _, artifact := range out.RuntimeApply.StorageResults.RootScope.GridViews {
+		if artifact.Name == "vg_site_audit__default" {
+			foundDefaultGridArtifact = true
+			break
+		}
+	}
+	if !foundDefaultGridArtifact {
+		t.Fatalf("expected default grid artifact in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.GridViews)
+	}
+}
+
+func TestSaveDraftReturnsSuccessWhenRuntimeApplyFails(t *testing.T) {
+	repo := newMemoryRepository()
+	repo.runtimeApplyErr = errors.New("runtime apply exploded")
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if out.RuntimeApply == nil {
+		t.Fatalf("expected failed runtime summary in save response")
+	}
+	if out.RuntimeApply.Status != "failed" {
+		t.Fatalf("runtime apply status = %q, want %q", out.RuntimeApply.Status, "failed")
+	}
+	if !containsValidationCode(out.ValidationSummary.Warnings, "runtime_apply_failed") {
+		t.Fatalf("expected runtime apply warning in validation summary, got %#v", out.ValidationSummary.Warnings)
+	}
+
+	persistedModel := repo.models[model.ModelID]
+	if persistedModel == nil {
+		t.Fatalf("expected saved model to remain persisted after runtime failure")
+	}
+	if persistedModel.Version != model.Version {
+		t.Fatalf("expected saved authoring version to remain %d, got %d", model.Version, persistedModel.Version)
+	}
+}
+
 func int64Ptr(v int64) *int64 {
 	return &v
 }
@@ -1575,6 +2774,42 @@ func mustDecodeJSONMap(t *testing.T, raw json.RawMessage) map[string]any {
 	return out
 }
 
+func containsValidationCode(messages []ValidationMessage, code string) bool {
+	for _, message := range messages {
+		if message.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func findRuntimeFieldPlanByID(fields []runtimeApplyFieldPlan, fieldID string) *runtimeApplyFieldPlan {
+	for index := range fields {
+		if fields[index].FieldID == fieldID {
+			return &fields[index]
+		}
+	}
+	return nil
+}
+
+func containsLookupOutputColumn(outputs []runtimeApplyLookupOutputPlan, columnName string) bool {
+	for _, output := range outputs {
+		if output.ColumnName == columnName {
+			return true
+		}
+	}
+	return false
+}
+
+func containsRuntimeLookupOutputResult(outputs []RuntimeApplyLookupOutputResult, columnName string) bool {
+	for _, output := range outputs {
+		if output.ColumnName == columnName {
+			return true
+		}
+	}
+	return false
+}
+
 func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*ModelRecord, *ViewRecord) {
 	t.Helper()
 
@@ -1583,7 +2818,7 @@ func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*Mo
 		"modelTitle": "Site Audit",
 		"rootScope": map[string]any{
 			"fields": []any{
-				map[string]any{"displayName": "Site Name", "id": "site-name", "key": "site-name", "label": "Site Name", "schemaScopeId": "root"},
+				map[string]any{"displayName": "Site Name", "id": "site-name", "key": "site-name", "kind": "short_text", "label": "Site Name", "schemaScopeId": "root", "storageKey": "site_name"},
 			},
 			"schemaScopeId": "root",
 			"scopeType":     "ROOT",
@@ -1591,7 +2826,7 @@ func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*Mo
 		"subformScopes": []any{
 			map[string]any{
 				"displayName":   "Info",
-				"fields":        []any{map[string]any{"displayName": "Info Date", "id": "info-date", "key": "info-date", "label": "Info Date", "schemaScopeId": "pb_info"}},
+				"fields":        []any{map[string]any{"displayName": "Info Date", "id": "info-date", "key": "info-date", "kind": "date", "label": "Info Date", "schemaScopeId": "pb_info", "storageKey": "info_date"}},
 				"schemaScopeId": "pb_info",
 				"scopeType":     "SUBFORM",
 				"subformType":   "DEFAULT",
@@ -1793,4 +3028,17 @@ func hasContainerKeyOnType(nodes []any, nodeType string) bool {
 		}
 	}
 	return false
+}
+
+func containsGridViewPlan(plans []runtimeApplyGridViewPlan, name string) bool {
+	return findGridViewPlan(plans, name) != nil
+}
+
+func findGridViewPlan(plans []runtimeApplyGridViewPlan, name string) *runtimeApplyGridViewPlan {
+	for i := range plans {
+		if plans[i].Name == name {
+			return &plans[i]
+		}
+	}
+	return nil
 }

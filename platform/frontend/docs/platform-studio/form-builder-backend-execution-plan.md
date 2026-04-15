@@ -12,7 +12,7 @@ It translates the currently agreed product rules into four practical stages:
 1. `Contract Lock`
 2. `Frontend Refactor`
 3. `Backend Draft API`
-4. `Publish Slice`
+4. `Runtime Apply Slice`
 
 This is an execution document.
 It is not the canonical contract.
@@ -49,11 +49,24 @@ Do not build:
 
 ### Authoring-state rule
 
-- Form Builder `Save` means authoring save only
+- Form Builder `Save` means:
+  - persist authoring state first
+  - then run additive runtime apply
 - Form Builder save must not be treated as site publication
 - model/view visibility on the real site is handled later through Navigation Builder and privileges
 - model/view `draft/published` must not be treated as the primary user-facing lifecycle for this surface
 - if `draft` appears in temporary API names or routes, it is only a technical alias for authoring state
+- runtime apply from `Save` may:
+  - create missing managed tables
+  - add missing columns
+  - create or deterministically recreate SQL data views
+  - create or deterministically recreate grid SQL views
+- runtime apply from `Save` must not:
+  - delete tables
+  - delete columns
+  - delete SQL views
+  - run destructive rename or scope-move migrations
+- if runtime apply fails after authoring save succeeds, the saved authoring state remains persisted and the UI must surface a runtime-apply failure
 
 ### Route identity rule
 
@@ -145,7 +158,7 @@ Each field must separate:
 Important rule:
 
 - `displayName` may change
-- `storageKey` must not silently change after publish
+- `storageKey` must not silently change after the first successful runtime apply
 
 ### Element tab rule
 
@@ -155,8 +168,8 @@ If a field is already fixed in the model, the `Element` tab should show an infor
 - `Label`
 - `Storage field`
 
-Before publish this may be presented as projected storage information.
-After publish this may present the real backend field name.
+Before runtime apply this may be presented as projected storage information.
+After successful `Save` runtime apply this may present the real backend field name.
 
 ## Stage 1 - Contract Lock
 
@@ -233,7 +246,7 @@ Make the current `tenant-web` Form Builder state match the locked contract befor
 
 ### Goal
 
-Deliver the first real integrated draft lifecycle without publish-time storage mutation.
+Deliver the first real integrated draft lifecycle with authoring persistence and no runtime storage mutation yet.
 
 ### Must implement
 
@@ -305,22 +318,22 @@ Important focus note:
 
 - do not widen Stage 3 further until the authoring contract stays stable for model creation, view creation, and save semantics
 
-## Stage 4 - Publish Slice
+## Stage 4 - Runtime Apply Slice
 
 ### Goal
 
-Add safe publish-time reconciliation only after draft lifecycle is stable.
+Add safe runtime reconciliation behind the existing `Save` action after draft lifecycle is stable.
 
 ### Must implement
 
-- `publishBuilderDraft`
-- publish-time validation split from save-time validation
+- runtime apply contour behind `saveBuilderDraft`
+- runtime validation split from authoring-save validation
 - additive-safe managed storage generation
 - canonical SQL view generation
 - per-view grid SQL view generation where allowed
-- published artifact summary
+- runtime artifact summary
 
-### Allowed publish behavior
+### Allowed runtime-apply behavior
 
 - add new field
 - add new subform
@@ -338,9 +351,9 @@ Add safe publish-time reconciliation only after draft lifecycle is stable.
 
 ### Exit criteria
 
-- safe publish works for additive changes
-- blocked publish paths return explicit structured errors
-- draft save and publish remain clearly separate operations
+- `Save` applies additive-safe runtime changes
+- blocked runtime-apply paths return explicit structured errors
+- saved authoring and runtime-apply outcomes remain clearly distinguished in the response
 
 ## Recommended implementation order
 
@@ -348,7 +361,7 @@ Add safe publish-time reconciliation only after draft lifecycle is stable.
 2. refactor frontend state and UI behavior
 3. wire `loadBuilderDraft` and `saveBuilderDraft`
 4. stabilize concurrency and lock handling
-5. add publish slice
+5. add runtime apply slice behind `Save`
 
 ## Out of scope for this pass
 

@@ -8,12 +8,13 @@ Date: 2026-04-09
 This document defines which backend validations must run on:
 
 - `saveBuilderDraft`
-- `publishBuilderDraft`
+- the additive runtime-apply contour triggered from `saveBuilderDraft`
+- a future explicit migration operation reserved for later
 
 It exists to remove ambiguity between:
 
 - draft-authoring validation
-- publish-time storage validation
+- runtime-apply storage validation
 - UI-side early hints
 - backend final authority
 
@@ -31,12 +32,13 @@ This matrix is companion guidance for:
 Accepted rule:
 
 - `saveBuilderDraft` validates authoring correctness and contract shape
-- `publishBuilderDraft` validates everything required for generated storage reconciliation
+- after a successful authoring persist, `saveBuilderDraft` also runs additive runtime-apply validation and reconciliation
+- destructive or ambiguous storage changes remain outside ordinary `Save`
 
 Important rule:
 
-- a validation may run on both `save` and `publish`
-- `publish` remains the final authority even if the same rule also ran during `save`
+- a validation may run during authoring-save or during runtime apply
+- runtime apply is the final authority for what can be reconciled safely during ordinary `Save`
 
 ## Validation Outcome Vocabulary
 
@@ -50,8 +52,16 @@ Recommended severity levels:
 Recommended enforcement vocabulary:
 
 - `save_only`
-- `publish_only`
-- `save_and_publish`
+- `runtime_apply_only`
+- `save_and_runtime_apply`
+
+## Current Lifecycle Note
+
+For the current accepted product flow, read every prior `Publish` concern in this matrix as:
+
+- runtime-apply work triggered by `Save`
+
+There is no separate user-facing `Publish` button in the current contract.
 
 ## Matrix
 
@@ -167,14 +177,14 @@ Recommended enforcement vocabulary:
 - projected lookup-output collisions
 - external-source compatibility risks not yet fully verifiable
 
-### `publishBuilderDraft` must additionally block on
+### runtime apply from `saveBuilderDraft` must additionally block on
 
 - physical table and column collisions
 - incompatible published-schema mutations
 - generated SQL data-view failures
 - generated SQL grid-view failures
 - lookup-output generation failures
-- publish-time drift between draft assumptions and actual backend state
+- runtime drift between draft assumptions and actual backend state
 
 ## Error Code Mapping
 
@@ -188,15 +198,15 @@ Recommended primary mapping:
 | storage naming or DDL collision | `storage_collision` |
 | external source mismatch | `external_source_incompatible` |
 | explicit migration required | `migration_mode_required` |
-| publish reconciliation failure | `publish_failed` |
+| runtime apply reconciliation failure | `runtime_apply_failed` |
 
 ## UI/UX Guidance
 
 Frontend should present:
 
 - `save` errors as authoring or contract errors
-- `save` warnings as projected publish risks
-- `publish` errors as storage or deployment blockers
+- runtime-apply errors as storage or deployment blockers that happened after authoring persisted
+- runtime-apply warnings as additive-reconcile risks
 
 Recommended UI rule:
 
@@ -204,14 +214,15 @@ Recommended UI rule:
 
 Recommended builder behavior:
 
-- after `save`, show that the draft is valid for persistence
-- after `publish`, show that storage artifacts were actually reconciled
+- after `save`, show whether authoring persisted successfully
+- separately show whether runtime apply succeeded or failed
+- do not imply that Navigation exposure changed as part of `Save`
 
 ## First-Slice Recommendation
 
 For the first real backend slice:
 
 - keep `saveBuilderDraft` strict on contract correctness
-- keep `publishBuilderDraft` strict on storage safety
+- keep runtime apply behind `Save` strict on additive storage safety
 - do not try to implement merge or auto-fix on backend validation failures
 - return structured errors and the latest authoritative versions instead

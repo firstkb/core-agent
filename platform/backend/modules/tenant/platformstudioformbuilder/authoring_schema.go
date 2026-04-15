@@ -131,6 +131,7 @@ func normalizeViewPayloadForStorage(
 	if err != nil {
 		return nil, err
 	}
+	uiSchema = ensureUISchemaRuntimeMetadata(uiSchema, dataSchema, out, model, existing)
 
 	delete(out, "currentParentId")
 	delete(out, "guid")
@@ -169,7 +170,7 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 	)
 
 	if explicit := asMap(payload["dataSchema"]); len(explicit) > 0 {
-		return normalizeExplicitDataSchema(explicit, modelID, modelTitle), nil
+		return ensureDataSchemaRuntimeMetadata(normalizeExplicitDataSchema(explicit, modelID, modelTitle), payload, existing), nil
 	}
 
 	scopeMeta := orderedSubformScopeMeta(payload, defaultView)
@@ -216,7 +217,7 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 		})
 	}
 
-	return map[string]any{
+	return ensureDataSchemaRuntimeMetadata(map[string]any{
 		"modelId":    modelID,
 		"modelTitle": modelTitle,
 		"rootScope": map[string]any{
@@ -225,7 +226,7 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 			"scopeType":     "ROOT",
 		},
 		"subformScopes": subformScopes,
-	}, nil
+	}, payload, existing), nil
 }
 
 func normalizeExplicitDataSchema(explicit map[string]any, modelID string, modelTitle string) map[string]any {
@@ -250,6 +251,7 @@ func normalizeExplicitDataSchema(explicit map[string]any, modelID string, modelT
 		subformScopes = append(subformScopes, map[string]any{
 			"displayName":   chooseString(normalizeString(scope["displayName"]), humanizeIdentifier(scopeID)),
 			"fields":        normalizeDataSchemaFields(asSlice(scope["fields"]), scopeID),
+			"runtime":       normalizeAnyMap(scope["runtime"]),
 			"schemaScopeId": scopeID,
 			"scopeType":     "SUBFORM",
 			"subformType":   chooseString(normalizeString(scope["subformType"]), "DEFAULT"),
@@ -262,6 +264,7 @@ func normalizeExplicitDataSchema(explicit map[string]any, modelID string, modelT
 		"modelTitle": modelTitle,
 		"rootScope": map[string]any{
 			"fields":        rootFields,
+			"runtime":       normalizeAnyMap(rootScope["runtime"]),
 			"schemaScopeId": rootSchemaScopeID,
 			"scopeType":     "ROOT",
 		},
@@ -526,6 +529,7 @@ func normalizeExplicitUISchema(explicit map[string]any, payload map[string]any, 
 	rootScope := map[string]any{
 		"filterDefinitions": normalizeAnyMap(chooseAny(rootRaw["filterDefinitions"], payload["filterDefinitions"])),
 		"nodes":             normalizeScopeNodes(rootSchemaScopeID, asSlice(rootRaw["nodes"]), layoutBlueprint),
+		"runtime":           normalizeAnyMap(rootRaw["runtime"]),
 		"schemaScopeId":     rootSchemaScopeID,
 		"systemFields":      normalizeAnyMap(chooseAny(rootRaw["systemFields"], payload["systemFields"])),
 		"unplacedFieldIds":  normalizeStringList(rootRaw["unplacedFieldIds"]),
@@ -558,6 +562,7 @@ func normalizeExplicitUISchema(explicit map[string]any, payload map[string]any, 
 			"filterDefinitions":   normalizeAnyMap(scope["filterDefinitions"]),
 			"nodes":               normalizeScopeNodes(scopeID, asSlice(scope["nodes"]), layoutBlueprint),
 			"parentSubformNodeId": parentSubformNodeID,
+			"runtime":             normalizeAnyMap(scope["runtime"]),
 			"schemaScopeId":       scopeID,
 			"subformType":         chooseString(normalizeString(scope["subformType"]), chooseString(subformMeta[scopeID].SubformType, "DEFAULT")),
 			"tableKey":            chooseString(normalizeString(scope["tableKey"]), chooseString(subformMeta[scopeID].TableKey, scopeID)),
@@ -577,6 +582,7 @@ func deriveUISchemaFromLegacyPayload(payload map[string]any, dataSchema map[stri
 	rootScope := map[string]any{
 		"filterDefinitions": normalizeAnyMap(legacy.FilterDefinitions),
 		"nodes":             normalizeScopeNodes(rootSchemaScopeID, legacy.Nodes, layoutBlueprint),
+		"runtime":           map[string]any{},
 		"schemaScopeId":     rootSchemaScopeID,
 		"systemFields":      normalizeAnyMap(legacy.SystemFields),
 		"unplacedFieldIds":  []string{},
@@ -598,6 +604,7 @@ func deriveUISchemaFromLegacyPayload(payload map[string]any, dataSchema map[stri
 			"filterDefinitions":   normalizeAnyMap(scope.FilterDefinitions),
 			"nodes":               normalizeScopeNodes(scopeID, scope.Nodes, layoutBlueprint),
 			"parentSubformNodeId": parentSubformNodeID,
+			"runtime":             map[string]any{},
 			"schemaScopeId":       scopeID,
 			"subformType":         chooseString(scope.SubformType, chooseString(subformMeta[scopeID].SubformType, "DEFAULT")),
 			"tableKey":            chooseString(scope.TableKey, chooseString(subformMeta[scopeID].TableKey, scopeID)),
@@ -623,6 +630,7 @@ func buildFreshUISchema(dataSchema map[string]any, layoutBlueprint map[string]an
 		scope := materializeUIScope(scopeID, blueprintScope(layoutBlueprint, scopeID))
 		scope["filterDefinitions"] = map[string]any{}
 		scope["parentSubformNodeId"] = rootAnchorIDs[scopeID]
+		scope["runtime"] = map[string]any{}
 		scope["schemaScopeId"] = scopeID
 		scope["subformType"] = chooseString(subformMeta[scopeID].SubformType, "DEFAULT")
 		scope["tableKey"] = chooseString(subformMeta[scopeID].TableKey, scopeID)
@@ -634,6 +642,7 @@ func buildFreshUISchema(dataSchema map[string]any, layoutBlueprint map[string]an
 		"rootScope": map[string]any{
 			"filterDefinitions": map[string]any{},
 			"nodes":             rootNodes,
+			"runtime":           map[string]any{},
 			"schemaScopeId":     rootSchemaScopeID,
 			"systemFields":      map[string]any{},
 			"unplacedFieldIds":  normalizeStringList(rootScope["unplacedFieldIds"]),

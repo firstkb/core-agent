@@ -301,10 +301,25 @@ export type FormBuilderScopeUiSchema = {
   unplacedFieldIds: ReadonlyArray<string>;
 };
 
+export type FormBuilderDataScopeRuntime = {
+  dataViewName: string;
+  mvTableName?: string;
+  rtAlias: string;
+  tableName: string;
+};
+
+export type FormBuilderViewScopeRuntime = {
+  dataViewName: string;
+  gridViewName: string;
+  viewRtAlias: string;
+};
+
 export type FormBuilderRootScope = {
   dataSchema: {
     fieldIds: ReadonlyArray<string>;
+    runtime?: FormBuilderDataScopeRuntime;
   };
+  runtime?: FormBuilderViewScopeRuntime;
   scopeId: "root";
   scopeType: "ROOT";
   uiSchema: FormBuilderScopeUiSchema;
@@ -313,9 +328,11 @@ export type FormBuilderRootScope = {
 export type FormBuilderSubformScope = {
   dataSchema: {
     fieldIds: ReadonlyArray<string>;
+    runtime?: FormBuilderDataScopeRuntime;
   };
   filterDefinitions: FormBuilderFilterDefinitions;
   parentSubformNodeId: string;
+  runtime?: FormBuilderViewScopeRuntime;
   scopeId: string;
   scopeType: "SUBFORM";
   subformType: FormBuilderSubformType;
@@ -903,11 +920,11 @@ function normalizeGridColumn(
   }
 
   const candidate = value as Partial<FormBuilderGridColumnDefinition>;
+  const fieldId = typeof candidate.fieldId === "string" ? candidate.fieldId : "";
   if (
     typeof candidate.id !== "string" ||
     candidate.id.trim().length === 0 ||
-    typeof candidate.fieldId !== "string" ||
-    !fieldIds.has(candidate.fieldId) ||
+    !isSupportedGridColumnFieldId(fieldId, fieldIds) ||
     typeof candidate.order !== "number" ||
     Number.isNaN(candidate.order)
   ) {
@@ -915,11 +932,26 @@ function normalizeGridColumn(
   }
 
   return {
-    fieldId: candidate.fieldId,
+    fieldId,
     id: candidate.id,
     order: candidate.order,
     visible: typeof candidate.visible === "boolean" ? candidate.visible : true,
   };
+}
+
+function isSupportedGridColumnFieldId(
+  fieldId: string,
+  fieldIds: ReadonlySet<string>,
+) {
+  if (fieldIds.has(fieldId)) {
+    return true;
+  }
+
+  const parts = fieldId.split("::lookup_output::");
+  return parts.length === 2
+    && parts[0].trim().length > 0
+    && parts[1].trim().length > 0
+    && fieldIds.has(parts[0]);
 }
 
 function normalizeGridColumns(
@@ -1153,7 +1185,7 @@ function normalizeViewSettings(
       columns: normalizeGridColumns(list?.columns, fieldIds),
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
-        fieldId: typeof sorting?.fieldId === "string" && fieldIds.has(sorting.fieldId)
+        fieldId: typeof sorting?.fieldId === "string" && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
           ? sorting.fieldId
           : undefined,
       },
@@ -1191,7 +1223,7 @@ function normalizeSubformViewSettings(
       columns: normalizeGridColumns(list?.columns, fieldIds),
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
-        fieldId: typeof sorting?.fieldId === "string" && fieldIds.has(sorting.fieldId)
+        fieldId: typeof sorting?.fieldId === "string" && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
           ? sorting.fieldId
           : undefined,
       },
@@ -1599,8 +1631,65 @@ type FormBuilderFlatWorkspaceState = {
   selectedNodeId: string | null;
 };
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 function dedupeFieldIds(values: ReadonlyArray<string>) {
   return [...new Set(values.filter((value) => value.trim().length > 0))];
+}
+
+export function normalizeDataScopeRuntime(value: unknown): FormBuilderDataScopeRuntime | undefined {
+  if (!isObjectRecord(value)) {
+    return undefined;
+  }
+
+  const rtAlias = typeof value.rtAlias === "string" && value.rtAlias.trim().length > 0
+    ? value.rtAlias.trim()
+    : "";
+  const tableName = typeof value.tableName === "string" && value.tableName.trim().length > 0
+    ? value.tableName.trim()
+    : "";
+  const dataViewName = typeof value.dataViewName === "string" && value.dataViewName.trim().length > 0
+    ? value.dataViewName.trim()
+    : "";
+  const mvTableName = typeof value.mvTableName === "string" && value.mvTableName.trim().length > 0
+    ? value.mvTableName.trim()
+    : undefined;
+
+  if (!rtAlias || !tableName || !dataViewName) {
+    return undefined;
+  }
+
+  return mvTableName
+    ? { dataViewName, mvTableName, rtAlias, tableName }
+    : { dataViewName, rtAlias, tableName };
+}
+
+export function normalizeViewScopeRuntime(value: unknown): FormBuilderViewScopeRuntime | undefined {
+  if (!isObjectRecord(value)) {
+    return undefined;
+  }
+
+  const viewRtAlias = typeof value.viewRtAlias === "string" && value.viewRtAlias.trim().length > 0
+    ? value.viewRtAlias.trim()
+    : "";
+  const dataViewName = typeof value.dataViewName === "string" && value.dataViewName.trim().length > 0
+    ? value.dataViewName.trim()
+    : "";
+  const gridViewName = typeof value.gridViewName === "string" && value.gridViewName.trim().length > 0
+    ? value.gridViewName.trim()
+    : "";
+
+  if (!viewRtAlias || !dataViewName || !gridViewName) {
+    return undefined;
+  }
+
+  return {
+    dataViewName,
+    gridViewName,
+    viewRtAlias,
+  };
 }
 
 function slugifyScopeKey(value: string) {
@@ -1971,12 +2060,14 @@ function createSubformScopeFromNode(
   return {
     dataSchema: {
       fieldIds: existingScope?.dataSchema.fieldIds ?? [],
+      runtime: existingScope?.dataSchema.runtime,
     },
     filterDefinitions: normalizeFilterDefinitions(
       existingScope?.filterDefinitions,
       fieldIds,
     ),
     parentSubformNodeId: subformNode.id,
+    runtime: existingScope?.runtime,
     scopeId: subformNode.id,
     scopeType: "SUBFORM",
     subformType: subformNode.subformType ?? existingScope?.subformType ?? "DEFAULT",
@@ -2032,6 +2123,7 @@ function finalizeScopedDocument(
     return {
       ...scope,
       dataSchema: {
+        ...scope.dataSchema,
         fieldIds,
       },
       filterDefinitions: normalizeFilterDefinitions(scope.filterDefinitions, new Set(fieldIds)),
@@ -2070,6 +2162,7 @@ function finalizeScopedDocument(
     rootScope: {
       ...document.rootScope,
       dataSchema: {
+        ...document.rootScope.dataSchema,
         fieldIds: knownFieldIds.filter((fieldId) => !subformFieldIds.has(fieldId)),
       },
       uiSchema: {
@@ -2264,12 +2357,14 @@ function buildScopedDocumentFromFlatWorkspace(
     return {
       dataSchema: {
         fieldIds,
+        runtime: existingScope?.dataSchema.runtime,
       },
       filterDefinitions: normalizeFilterDefinitions(
         existingScope?.filterDefinitions,
         new Set(fieldIds),
       ),
       parentSubformNodeId: subformNode.id,
+      runtime: existingScope?.runtime,
       scopeId: subformNode.id,
       scopeType: "SUBFORM" as const,
       subformType: subformNode.subformType ?? existingScope?.subformType ?? "DEFAULT",
@@ -2301,8 +2396,10 @@ function buildScopedDocumentFromFlatWorkspace(
     activeScopeId: activeScopeIdCandidate,
     rootScope: {
       dataSchema: {
+        ...baseDocument.rootScope.dataSchema,
         fieldIds: knownFieldIds.filter((fieldId) => !subformFieldIds.has(fieldId)),
       },
+      runtime: baseDocument.rootScope.runtime,
       scopeId: "root",
       scopeType: "ROOT",
       uiSchema: {
@@ -2413,6 +2510,8 @@ export function normalizeFormBuilderDocument(
     candidate.viewKind === "detail" || candidate.viewKind === "form"
       ? candidate.viewKind
       : screen.kind;
+  normalizedDocument.rootScope.dataSchema.runtime = normalizeDataScopeRuntime(candidate.rootScope?.dataSchema?.runtime);
+  normalizedDocument.rootScope.runtime = normalizeViewScopeRuntime(candidate.rootScope?.runtime);
   normalizedDocument.rootScope.uiSchema.unplacedFieldIds = normalizeScopeUnplacedFieldIds(
     {
       nodes: [],
@@ -2445,9 +2544,11 @@ export function normalizeFormBuilderDocument(
         return [{
           dataSchema: {
             fieldIds: normalizedFieldIds,
+            runtime: normalizeDataScopeRuntime(scope.dataSchema?.runtime),
           },
           filterDefinitions: normalizeFilterDefinitions(scope.filterDefinitions, new Set(normalizedFieldIds)),
           parentSubformNodeId: scope.parentSubformNodeId,
+          runtime: normalizeViewScopeRuntime(scope.runtime),
           scopeId: scope.scopeId,
           scopeType: "SUBFORM" as const,
           subformType: isSubformType(scope.subformType) ? scope.subformType : "DEFAULT",

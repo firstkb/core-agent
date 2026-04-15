@@ -53,7 +53,7 @@ Date: 2026-04-13
 - view drift is driven by `modelStructureVersion > lastAlignedModelStructureVersion`
 - `root` may lock `model` and `view` separately
 - a newly added field may still update the model label before first successful `Save`; after that, ordinary canvas rename is view-only
-- Form Builder `Save` is authoring save only; site publication and privileges are deferred to Navigation Builder
+- Form Builder `Save` now targets `save + runtime apply`, but it is still not site publication; Navigation Builder and privileges remain a separate exposure layer
 - each view now carries an explicit `isActive` authoring flag behind the eye indicator in the views list
 - canonical tenant API route naming for authoring state is `/authoring`; legacy `/draft` remains only as a temporary compatibility alias and not the intended user-facing lifecycle language
 
@@ -115,7 +115,29 @@ Current implemented backend-ready slice:
 - the first stable three-schema rollout now makes the `default` view the only blueprint editor; non-default views remain `uiSchema`-only authoring surfaces, but that still includes local UI composition and presentation changes such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields
 - deleting a non-default view removes only that view; deleting a default view promotes a remaining view to `default + active`; deleting the last remaining view is rejected
 - deferred follow-up policy task: harden root-only authoring locks so only `level: 100 root` can toggle model/view lock state; when `lock model` is enabled, non-root users stay limited to creating/managing views while `root` keeps builder access and default-view control; when `lock view` is enabled for a view, non-root users cannot enter that Form Builder workspace while `root` retains access and control
-- publish-time storage generation is still deferred
+- deferred filter follow-up: view filters currently compose saved conditions with `AND`; revisit the filter contract so repeated lookup-like entities can support `OR` within the same logical family, for example `active user = Contact1 OR Contact2` when multiple `DB lookup Contact` fields participate in one view filter set
+- deferred filter cleanup pass: audit and correct authored/runtime filter behavior for `Contact`, `Project`, `Company`, multiselect-backed filters, and `Reported By` so lookup presets and multivalue fields behave consistently in view filters
+- accepted next backend slice: `Save` persists authoring state first and then runs additive runtime apply
+- additive runtime apply may create missing managed tables, add missing columns, and create or deterministically recreate SQL data views and grid SQL views
+- additive runtime apply now also emits lookup-derived SQL view columns for single-value `db_lookup` fields in grid/data views, including preset `contact/company/project` families plus generic managed-model lookup `__label`
+- additive runtime apply now exposes multivalue lookup grid/data outputs `__labels` and `__count` from the shared multivalue bridge table
+- runtime grid views now project system columns plus the visible authored `viewSettings.list.columns` bindings instead of cloning the full canonical data view; empty authored grids fall back to system columns only, plus the parent FK for child scopes
+- runtime SQL view identifiers now use deterministic shortening with a hash suffix when raw canonical/grid view names would exceed PostgreSQL's 63-byte identifier limit; this avoids the collision/truncation issue seen on long subform grid names
+- tenant lookup runtime now has live tenant reference dictionaries `state` and `jobtype`; `company__state` resolves through `state.state_name`, while `jobtype` is prepared for later users/title normalization without changing the current `users_title` text contract yet
+- generated Form Builder managed tables now persist `tenant_id`
+- generated canonical data views and grid views now expose `tenant_id`
+- tenant-scoped lookup joins and multivalue subqueries now include `tenant_id`
+- generated runtime indexes are now tenant-aware: `tenant_id`, `(tenant_id, _guid)`, `(tenant_id, <parent_fk>)`, `(tenant_id, <lookup_fk>)`, and multivalue owner/field composites
+- additive runtime apply must not delete tables, columns, or SQL views
+- if runtime apply fails after authoring save succeeds, the saved authoring state remains persisted and the UI should surface `saved, but runtime apply failed`
+- local tenant DB application is now confirmed for the documented local migrate path: `go run ./cmd/migrate --env ./env/migrate.local.env.example` applied `042_lookup_reference_tables` into `108-demo`, and `public.state` / `public.jobtype` are present
+- current nuance: `jobtype.tenant_id` is populated as `0` during migration bootstrap because the dictionary seed runs outside tenant request context; if per-tenant seeded `jobtype` rows are required, that needs a follow-up tenant-aware seed/backfill slice
+- current PostgreSQL runtime naming risk is reduced for SQL views via deterministic short-name hashing, but physical table names still use readable raw scope-storage keys and may eventually need the same treatment if root or subform keys grow further
+- accepted next naming cutover: Form Builder runtime naming now targets `Runtime Naming Contract v1.1`
+- v1.1 separates logical authoring keys from physical runtime aliases through immutable `model.rtAlias`, `scope.rtAlias`, and `view.rtAlias`
+- v1.1 runtime metadata must be returned in `dataSchema.rootScope.runtime`, every `dataSchema.subformScopes[].runtime`, `uiSchema.rootScope.runtime`, and every `uiSchema.subformScopes[].runtime`
+- accepted v1.1 runtime prefixes are now `ps_` for tables, `vw_` for canonical data views, and `vg_` for grid views
+- accepted v1.1 cutover removes old runtime naming compatibility: on `Save`, backend creates missing runtime metadata if absent and then treats that metadata as canonical; legacy runtime objects are not preserved as a supported compatibility layer
 
 ## Important docs to treat as reference-only
 

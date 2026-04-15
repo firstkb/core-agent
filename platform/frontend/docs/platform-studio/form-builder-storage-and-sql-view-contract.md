@@ -13,6 +13,11 @@ This document defines the concrete V2 draft for:
 - lookup-derived output columns
 - how SQL view outputs should surface back into Form Builder UI
 
+Important:
+
+- naming-specific decisions in this document are superseded by `form-builder-runtime-naming-contract-v1-1.md`
+- continue using this document for the broader storage/query split, not as the latest naming authority
+
 It exists to align:
 
 - Form Builder authoring
@@ -191,10 +196,18 @@ Reason:
 Each managed table should contain:
 
 - `_id`
+- `tenant_id`
 - `_guid`
 - `_created_at`
 - `_updated_at`
 - `_row_version`
+
+Tenant rule:
+
+- generated root/subform tables must persist `tenant_id`
+- canonical data views must project `tenant_id`
+- grid SQL views inherit `tenant_id` from their canonical data view
+- tenant-aware lookup joins must include `tenant_id` when joining tenant-scoped sources such as `users`, `company`, `projects`, or managed Form Builder data views
 
 ## SQL View Generation Model
 
@@ -235,6 +248,39 @@ Reason:
 
 - one model may own multiple Form Builder views
 - grid composition is a UI-view concern, not only a model concern
+
+Identifier-length rule:
+
+- when the raw PostgreSQL identifier would exceed 63 bytes, the runtime must shorten it deterministically and append a hash suffix
+- shortening must preserve uniqueness across sibling runtime views
+- the raw authoring key remains the source identity, while the shortened SQL identifier is only the physical database name
+
+### Grid Projection Rule
+
+Grid SQL views must not be a full `SELECT *` clone of the canonical data view.
+
+Accepted rule:
+
+- always include system columns from the canonical data view:
+  - `_id`
+  - `tenant_id`
+  - `_guid`
+  - `_created_at`
+  - `_updated_at`
+  - `_row_version`
+- child-scope grid SQL views must additionally include the parent foreign key
+- then include only the visible authored bindings from `viewSettings.list.columns`
+
+If a scope has no authored grid columns:
+
+- still generate the grid SQL view
+- project only the system columns and, for child scopes, the parent foreign key
+
+Reason:
+
+- grid composition is view-owned
+- runtime grid width must track authored grid intent
+- system columns remain available for generic backend/query flows even when the UI grid is not configured yet
 
 ### Canonical Rule
 

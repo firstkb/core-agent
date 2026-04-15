@@ -88,6 +88,7 @@ Current active builder direction:
 - `platform-studio/data-schema-storage-rules.md`
 - `platform-studio/form-builder-backend-boundary.md`
 - `platform-studio/form-builder-storage-and-sql-view-contract.md`
+- `platform-studio/form-builder-runtime-naming-contract-v1-1.md`
 - `platform-studio/form-builder-backend-scope-payload-contract.md`
 - `platform-studio/form-builder-backend-api-contract.md`
 - `platform-studio/form-builder-backend-validation-matrix.md`

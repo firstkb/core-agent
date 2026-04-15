@@ -5,7 +5,7 @@ Date: 2026-04-09
 
 ## Purpose
 
-This document defines the publish-time migration policy for Form Builder V2.
+This document defines the runtime-apply migration policy for Form Builder V2.
 
 It answers:
 
@@ -15,7 +15,7 @@ It answers:
 
 It applies to:
 
-- `publishBuilderDraft`
+- the additive runtime-apply contour triggered from `saveBuilderDraft`
 - managed storage generation
 - published model and subform scopes
 - SQL data views
@@ -26,8 +26,8 @@ It applies to:
 
 Accepted first-slice rule:
 
-- `publishBuilderDraft` may apply additive-safe storage changes
-- `publishBuilderDraft` must reject destructive or ambiguous storage changes
+- ordinary `Save` may apply additive-safe storage changes
+- ordinary `Save` must reject destructive or ambiguous storage changes
 - complex storage rewrites are reserved for a future explicit migration mode
 
 Important rule:
@@ -86,6 +86,7 @@ This future mode may later support:
 Important rule:
 
 - `explicit_migration` is not part of the current accepted implementation scope
+- until it exists, the policy in this document is enforced from ordinary `Save`
 
 ## Additive-Safe Changes
 
@@ -252,36 +253,38 @@ Accepted rule:
 | rebind system role to a different published field with same compatible storage | apply | View semantic layer |
 | rebind system role in a way that requires physical rewrite | reject | Future explicit migration only |
 
-## Publish Behavior
+## Runtime-Apply Behavior
 
-When ordinary publish encounters:
+When ordinary `Save` runtime apply encounters:
 
 - `apply`
   - continue and reconcile
 - `recreate`
   - rebuild deterministic query artifacts
 - `reject`
-  - fail publish with structured error
+  - fail runtime apply with structured error
 - `defer`
-  - fail publish with structured error indicating future migration workflow requirement
+  - fail runtime apply with structured error indicating future migration workflow requirement
 
 Recommended error-code mapping:
 
 - ordinary storage incompatibility: `storage_collision`
-- unsupported destructive migration: `publish_failed`
+- unsupported destructive migration: `runtime_apply_failed`
 - future migration required: `migration_mode_required`
 
 ## UI/UX Guidance
 
 The frontend builder should present:
 
-- ordinary save as draft persistence only
-- standard publish as safe additive reconciliation only
-- destructive or restructuring changes as blocked publish outcomes
+- ordinary save as:
+  - authoring persist first
+  - safe additive runtime apply second
+- destructive or restructuring changes as blocked runtime-apply outcomes
 
 Recommended UX language:
 
-- `Safe to publish`
+- `Ready to save`
+- `Runtime apply blocked`
 - `Requires manual migration`
 - `Blocked by destructive change`
 

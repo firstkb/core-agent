@@ -17,6 +17,7 @@ var (
 	ErrInvalidDraft         = errors.New("form builder invalid draft")
 	ErrModelLocked          = errors.New("form builder model locked")
 	ErrModelNotFound        = errors.New("form builder model not found")
+	ErrRuntimeNameConflict  = errors.New("form builder runtime name conflict")
 	ErrTenantMissing        = errors.New("form builder tenant missing")
 	ErrUnauthorized         = errors.New("form builder unauthorized")
 	ErrViewLocked           = errors.New("form builder view locked")
@@ -478,6 +479,9 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	if err != nil {
 		return nil, err
 	}
+	if err := s.validateRuntimeRelationConflicts(ctx, tenant, model.ModelID, currentView.ViewID, modelPayload, viewPayload); err != nil {
+		return nil, err
+	}
 
 	modelChanged := false
 	modelStructureChanged := false
@@ -547,7 +551,99 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 		return nil, err
 	}
 
-	return buildDraftResponse(persistedModel, views, persistedView)
+	response, err := buildDraftResponse(persistedModel, views, persistedView)
+	if err != nil {
+		return nil, err
+	}
+
+	lookupModels, err := s.resolveRuntimeLookupModels(ctx, tenant, modelPayload)
+	if err != nil {
+		return nil, err
+	}
+	runtimePlan := buildRuntimeApplyPlan(persistedModel, views, modelPayload, lookupModels)
+	runtimeSummary, runtimeErr := s.repo.ApplyRuntime(ctx, tenant, runtimePlan)
+	if runtimeErr != nil {
+		response.RuntimeApply = &RuntimeApplySummary{
+			Status:  "failed",
+			Message: runtimeErr.Error(),
+		}
+		response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, ValidationMessage{
+			Code:    "runtime_apply_failed",
+			Message: "Authoring was saved, but runtime apply failed.",
+			Target:  "runtime",
+		})
+		return response, nil
+	}
+
+	response.RuntimeApply = runtimeSummary
+	response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, runtimeApplyWarnings(runtimeSummary)...)
+	return response, nil
+}
+
+func (s *Service) resolveRuntimeLookupModels(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	modelPayload map[string]any,
+) (map[string]runtimeApplyLookupModelRef, error) {
+	dataSchema := asMap(modelPayload["dataSchema"])
+	candidateIDs := make(map[string]struct{})
+
+	rootScope := asMap(dataSchema["rootScope"])
+	appendRuntimeLookupSourceModelIDs(candidateIDs, asSlice(rootScope["fields"]))
+	for _, rawScope := range asSlice(dataSchema["subformScopes"]) {
+		scope := asMap(rawScope)
+		appendRuntimeLookupSourceModelIDs(candidateIDs, asSlice(scope["fields"]))
+	}
+
+	out := make(map[string]runtimeApplyLookupModelRef)
+	for sourceModelID := range candidateIDs {
+		model, err := s.repo.GetModel(ctx, tenant, sourceModelID)
+		if err != nil {
+			return nil, err
+		}
+		if model == nil || strings.TrimSpace(model.StorageKey) == "" {
+			continue
+		}
+		modelPayload := cloneJSONToMap(model.DefinitionJSON)
+		dataViewName := ""
+		if len(modelPayload) > 0 {
+			dataSchema := asMap(modelPayload["dataSchema"])
+			if len(dataSchema) > 0 {
+				dataSchema = ensureDataSchemaRuntimeMetadata(dataSchema, modelPayload, model)
+				rootRuntime := readRuntimeDataScopeMetadata(dataSchemaScope(dataSchema, rootSchemaScopeID))
+				dataViewName = rootRuntime.DataViewName
+			}
+		}
+		if strings.TrimSpace(dataViewName) == "" {
+			dataViewName = buildGeneratedRuntimeDataViewName(buildGeneratedRuntimeModelAlias(model.StorageKey), "")
+		}
+		ref := runtimeApplyLookupModelRef{
+			ModelID:      model.ModelID,
+			ModelKey:     model.ModelKey,
+			StorageKey:   model.StorageKey,
+			DataViewName: dataViewName,
+		}
+		out[model.ModelID] = ref
+		if key := strings.TrimSpace(model.ModelKey); key != "" {
+			out[key] = ref
+		}
+	}
+
+	return out, nil
+}
+
+func appendRuntimeLookupSourceModelIDs(target map[string]struct{}, fields []any) {
+	for _, rawField := range fields {
+		field := asMap(rawField)
+		if normalizeString(field["kind"]) != "db_lookup" {
+			continue
+		}
+		sourceModelID := normalizeString(asMap(field["lookupConfig"])["sourceModel"])
+		if sourceModelID == "" {
+			continue
+		}
+		target[sourceModelID] = struct{}{}
+	}
 }
 
 func (s *Service) requireAuthoringContext(ctx context.Context) (requestctx.TenantInfo, requestctx.ClaimsInfo, error) {
@@ -627,6 +723,8 @@ func (s *Service) createViewRecord(
 		viewPayload = map[string]any{
 			"uiSchema": buildFreshUISchema(asMap(modelPayload["dataSchema"]), asMap(modelPayload["layoutBlueprint"])),
 		}
+	} else {
+		stripUISchemaRuntimeMetadata(asMap(viewPayload["uiSchema"]))
 	}
 	viewPayload["description"] = strings.TrimSpace(req.Description)
 	viewPayload["displayName"] = title
@@ -700,6 +798,7 @@ func (s *Service) createViewRecordFromCopy(
 	}
 
 	viewPayload := cloneJSONToMap(mustCanonicalJSON(sourcePayload))
+	stripUISchemaRuntimeMetadata(asMap(viewPayload["uiSchema"]))
 	viewPayload["description"] = strings.TrimSpace(req.Description)
 	viewPayload["displayName"] = title
 	viewPayload["id"] = viewID
@@ -922,6 +1021,19 @@ func buildDraftResponse(model *ModelRecord, views []ViewRecord, currentView *Vie
 			Warnings:   []ValidationMessage{},
 		},
 	}, nil
+}
+
+func runtimeApplyWarnings(summary *RuntimeApplySummary) []ValidationMessage {
+	if summary == nil || summary.StorageResults == nil {
+		return nil
+	}
+
+	warnings := make([]ValidationMessage, 0)
+	warnings = append(warnings, summary.StorageResults.RootScope.Warnings...)
+	for _, scope := range summary.StorageResults.SubformScopes {
+		warnings = append(warnings, scope.Warnings...)
+	}
+	return warnings
 }
 
 func buildModelDetailResponse(model *ModelRecord, views []ViewRecord, selectedViewID string) *ModelDetailResponse {

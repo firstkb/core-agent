@@ -86,6 +86,7 @@ func (s *Service) validateRuntimeRelationConflicts(
 	existingModelPayload map[string]any,
 	existingViewPayload map[string]any,
 ) error {
+	currentSourceType := normalizeString(modelPayload["sourceType"])
 	currentRefs := append(
 		collectDataSchemaRuntimeRelationRefs(asMap(modelPayload["dataSchema"]), "current model"),
 		collectUISchemaGridRelationRefs(asMap(viewPayload["uiSchema"]), "current view")...,
@@ -154,11 +155,17 @@ func (s *Service) validateRuntimeRelationConflicts(
 	for _, ref := range currentRefs {
 		actualKind, ok := actualRelations[ref.Name]
 		if !ok {
+			if allowsExternalRuntimeSourceReuse(currentSourceType, ref) {
+				return fmt.Errorf("%w: relation name %q for %s references an external source table that does not exist in public", ErrRuntimeNameConflict, ref.Name, ref.Owner)
+			}
 			continue
 		}
 		expectedKind := expectedRuntimeRelationPhysicalKind(ref.Kind)
 		if actualKind != expectedKind {
 			return fmt.Errorf("%w: relation name %q for %s already exists in public as %s, expected %s", ErrRuntimeNameConflict, ref.Name, ref.Owner, actualKind, expectedKind)
+		}
+		if allowsExternalRuntimeSourceReuse(currentSourceType, ref) {
+			continue
 		}
 		if _, ok := ownedByCurrent[ref.Name]; !ok {
 			return fmt.Errorf("%w: relation name %q for %s already exists in public as %s and is not owned by current runtime metadata", ErrRuntimeNameConflict, ref.Name, ref.Owner, actualKind)
@@ -181,4 +188,8 @@ func expectedRuntimeRelationPhysicalKind(kind string) string {
 		return "view"
 	}
 	return "table"
+}
+
+func allowsExternalRuntimeSourceReuse(sourceType string, ref runtimeRelationRef) bool {
+	return isExternalRuntimeSourceType(sourceType) && ref.Kind == "table"
 }

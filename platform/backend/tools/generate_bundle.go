@@ -38,9 +38,10 @@ func main() {
 			OutputPath: "bundle/tenant_schema_full.sql",
 			Required: []bundleRequirement{
 				{Name: "users table", Patterns: []string{"create table if not exists users", "tenant_id"}},
-				{Name: "company table", Patterns: []string{"create table if not exists company", "company_tenant_id"}},
+				{Name: "company table", Patterns: []string{"create table if not exists company", "tenant_id"}},
 				{Name: "public code table", Patterns: []string{"create table if not exists public_code"}},
-				{Name: "events table", Patterns: []string{"create table if not exists events", "events_tenant_id"}},
+				{Name: "events table", Patterns: []string{"create table if not exists events", "tenant_id"}},
+				{Name: "timezone table", Patterns: []string{"create table if not exists timezone"}},
 			},
 		},
 	}

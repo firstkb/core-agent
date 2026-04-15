@@ -17,6 +17,7 @@ Date: 2026-04-13
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
+- `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md`
 - `platform/frontend/docs/platform-studio/v2-foundation-brief.md`
 - `platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md`
 - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
@@ -138,6 +139,8 @@ Current implemented backend-ready slice:
 - v1.1 runtime metadata must be returned in `dataSchema.rootScope.runtime`, every `dataSchema.subformScopes[].runtime`, `uiSchema.rootScope.runtime`, and every `uiSchema.subformScopes[].runtime`
 - accepted v1.1 runtime prefixes are now `ps_` for tables, `vw_` for canonical data views, and `vg_` for grid views
 - accepted v1.1 cutover removes old runtime naming compatibility: on `Save`, backend creates missing runtime metadata if absent and then treats that metadata as canonical; legacy runtime objects are not preserved as a supported compatibility layer
+- static models now have an explicit execution plan in `form-builder-static-models-execution-plan-v1.md`; the current next-step order is schema freeze, `suggest_text` field contract, `users` static-model design, then the remaining static models
+- accepted static-model access restriction: only `root` may see static models or manage their views/schema; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but implement it only after the admin/root rights path is available in tenant app
 
 ## Important docs to treat as reference-only
 

@@ -12,13 +12,6 @@ import (
 )
 
 func (r *repository) ApplyRuntime(ctx context.Context, tenant requestctx.TenantInfo, plan runtimeApplyPlan) (*RuntimeApplySummary, error) {
-	if plan.ModelSourceType != "" && plan.ModelSourceType != "managed" {
-		return &RuntimeApplySummary{
-			Status:  "skipped",
-			Message: "runtime apply currently supports managed models only",
-		}, nil
-	}
-
 	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
 	if err != nil {
 		return nil, fmt.Errorf("form builder: open tenant db for runtime apply: %w", err)
@@ -37,14 +30,14 @@ func (r *repository) ApplyRuntime(ctx context.Context, tenant requestctx.TenantI
 		},
 	}
 
-	rootScopeResult, err := applyRuntimeScopeTx(ctx, tx, plan.RootScope)
+	rootScopeResult, err := applyRuntimeScopeTx(ctx, tx, plan.ModelSourceType, plan.RootScope)
 	if err != nil {
 		return nil, err
 	}
 	summary.StorageResults.RootScope = rootScopeResult
 
 	for _, scope := range plan.SubformScopes {
-		scopeResult, err := applyRuntimeScopeTx(ctx, tx, scope)
+		scopeResult, err := applyRuntimeScopeTx(ctx, tx, plan.ModelSourceType, scope)
 		if err != nil {
 			return nil, err
 		}
@@ -58,28 +51,46 @@ func (r *repository) ApplyRuntime(ctx context.Context, tenant requestctx.TenantI
 	return summary, nil
 }
 
-func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, scope runtimeApplyScopePlan) (RuntimeApplyScopeResult, error) {
+func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string, scope runtimeApplyScopePlan) (RuntimeApplyScopeResult, error) {
 	result := RuntimeApplyScopeResult{
 		ScopeID:       scope.ScopeID,
 		GridViews:     []RuntimeApplyArtifactResult{},
 		LookupOutputs: []RuntimeApplyLookupOutputResult{},
 		Warnings:      []ValidationMessage{},
 	}
+	var err error
 
-	tableExisted, err := relationExistsTx(ctx, tx, scope.TableName)
-	if err != nil {
-		return result, err
-	}
-	if err := ensureManagedTableTx(ctx, tx, scope); err != nil {
-		return result, err
-	}
-	result.Table = &RuntimeApplyArtifactResult{
-		Name:   scope.TableName,
-		Action: chooseRuntimeRelationAction(tableExisted),
+	if isManagedRuntimeSourceType(modelSourceType) {
+		tableExisted, err := relationExistsTx(ctx, tx, scope.TableName)
+		if err != nil {
+			return result, err
+		}
+		if err := ensureManagedTableTx(ctx, tx, scope); err != nil {
+			return result, err
+		}
+		result.Table = &RuntimeApplyArtifactResult{
+			Name:   scope.TableName,
+			Action: chooseRuntimeRelationAction(tableExisted),
+		}
+	} else {
+		if err := ensureExternalSourceTableTx(ctx, tx, scope.TableName); err != nil {
+			return result, err
+		}
+		scope, err = resolveExternalRuntimeScopePlanTx(ctx, tx, scope)
+		if err != nil {
+			return result, err
+		}
+		result.Table = &RuntimeApplyArtifactResult{
+			Name:   scope.TableName,
+			Action: "reuse",
+		}
 	}
 
 	multiValueFields := filterRuntimeMultiValueFields(scope.Fields)
 	if len(multiValueFields) > 0 {
+		if !isManagedRuntimeSourceType(modelSourceType) {
+			return result, fmt.Errorf("form builder: runtime apply for %s does not support multivalue bridge tables yet", modelSourceType)
+		}
 		mvExisted, err := relationExistsTx(ctx, tx, scope.MultiValueTableName)
 		if err != nil {
 			return result, err
@@ -146,7 +157,6 @@ func ensureManagedTableTx(ctx context.Context, tx *sql.Tx, scope runtimeApplySco
 		`"_guid" uuid NOT NULL DEFAULT gen_random_uuid()`,
 		`"_created_at" timestamptz NOT NULL DEFAULT now()`,
 		`"_updated_at" timestamptz NOT NULL DEFAULT now()`,
-		`"_row_version" bigint NOT NULL DEFAULT 1`,
 	}
 	if scope.ParentForeignKey != "" {
 		createColumns = append(createColumns, fmt.Sprintf("%s bigint", quoteIdentifier(scope.ParentForeignKey)))
@@ -200,6 +210,9 @@ func ensureManagedTableTx(ctx context.Context, tx *sql.Tx, scope runtimeApplySco
 		return err
 	}
 	if err := ensureIndexTx(ctx, tx, scope.TableName, runtimeDBObjectName("uidx", scope.TableName, "tenant_id", "_guid"), true, "tenant_id", "_guid"); err != nil {
+		return err
+	}
+	if err := ensureUpdatedAtTriggerTx(ctx, tx, scope.TableName); err != nil {
 		return err
 	}
 
@@ -264,6 +277,122 @@ func relationExistsTx(ctx context.Context, tx *sql.Tx, relationName string) (boo
 	return exists.Valid && strings.TrimSpace(exists.String) != "", nil
 }
 
+func relationKindTx(ctx context.Context, tx *sql.Tx, relationName string) (string, error) {
+	var kind sql.NullString
+	if err := tx.QueryRowContext(ctx, `
+SELECT CASE
+         WHEN c.relkind IN ('r', 'p') THEN 'table'
+         WHEN c.relkind = 'v' THEN 'view'
+         WHEN c.relkind = 'm' THEN 'materialized view'
+         ELSE c.relkind::text
+       END
+  FROM pg_class c
+  JOIN pg_namespace n
+    ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname = $1`, relationName).Scan(&kind); err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", fmt.Errorf("form builder: relation kind check %s: %w", relationName, err)
+	}
+	return normalizeString(kind.String), nil
+}
+
+func ensureExternalSourceTableTx(ctx context.Context, tx *sql.Tx, tableName string) error {
+	kind, err := relationKindTx(ctx, tx, tableName)
+	if err != nil {
+		return err
+	}
+	if kind == "" {
+		return fmt.Errorf("form builder: external source table %s does not exist in public", tableName)
+	}
+	if kind != "table" {
+		return fmt.Errorf("form builder: external source table %s exists as %s, expected table", tableName, kind)
+	}
+	return nil
+}
+
+func resolveExternalRuntimeScopePlanTx(ctx context.Context, tx *sql.Tx, scope runtimeApplyScopePlan) (runtimeApplyScopePlan, error) {
+	columnSet, err := relationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return scope, err
+	}
+
+	scope.SourceIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceIDColumn, "id", scope.TableName+"_id")
+	if scope.SourceIDColumn == "" {
+		return scope, fmt.Errorf("form builder: external source table %s has no usable id column", scope.TableName)
+	}
+	scope.SourceTenantIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceTenantIDColumn, "tenant_id", scope.TableName+"_tenant_id")
+	scope.SourceGUIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceGUIDColumn, "guid", scope.TableName+"_guid")
+	scope.SourceCreatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceCreatedAtColumn, "created_at", scope.TableName+"_created_at")
+	scope.SourceUpdatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceUpdatedAtColumn, "updated_at", scope.TableName+"_updated_at")
+
+	for index := range scope.Fields {
+		field := &scope.Fields[index]
+		if !field.Supported || field.MultiValue || field.ColumnName == "" {
+			continue
+		}
+		field.SourceColumnName = chooseExistingRelationColumn(
+			columnSet,
+			field.SourceColumnName,
+			field.ColumnName,
+			field.StorageKey,
+			scope.TableName+"_"+field.StorageKey,
+			scope.TableName+"_"+field.ColumnName,
+		)
+		if field.SourceColumnName == "" {
+			return scope, fmt.Errorf("form builder: external source table %s has no usable column for field %s", scope.TableName, chooseString(field.FieldID, field.StorageKey))
+		}
+	}
+
+	return scope, nil
+}
+
+func relationColumnsTx(ctx context.Context, tx *sql.Tx, relationName string) (map[string]struct{}, error) {
+	rows, err := tx.QueryContext(ctx, `
+SELECT a.attname
+  FROM pg_attribute a
+  JOIN pg_class c
+    ON c.oid = a.attrelid
+  JOIN pg_namespace n
+    ON n.oid = c.relnamespace
+ WHERE n.nspname = 'public'
+   AND c.relname = $1
+   AND a.attnum > 0
+   AND NOT a.attisdropped`, relationName)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: relation columns lookup %s: %w", relationName, err)
+	}
+	defer rows.Close()
+
+	columnSet := make(map[string]struct{})
+	for rows.Next() {
+		var columnName string
+		if err := rows.Scan(&columnName); err != nil {
+			return nil, fmt.Errorf("form builder: scan relation column for %s: %w", relationName, err)
+		}
+		columnSet[normalizeString(columnName)] = struct{}{}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form builder: relation column rows %s: %w", relationName, err)
+	}
+	return columnSet, nil
+}
+
+func chooseExistingRelationColumn(columnSet map[string]struct{}, candidates ...string) string {
+	for _, candidate := range candidates {
+		candidate = normalizeString(candidate)
+		if candidate == "" {
+			continue
+		}
+		if _, ok := columnSet[candidate]; ok {
+			return candidate
+		}
+	}
+	return ""
+}
+
 func ensureForeignKeyConstraintTx(ctx context.Context, tx *sql.Tx, tableName string, foreignKey string, parentTableName string) error {
 	constraintName := runtimeDBObjectName("fk", tableName, foreignKey, parentTableName)
 	var exists bool
@@ -312,13 +441,52 @@ func ensureIndexTx(ctx context.Context, tx *sql.Tx, tableName string, indexName 
 	return nil
 }
 
+func ensureUpdatedAtTriggerTx(ctx context.Context, tx *sql.Tx, tableName string) error {
+	triggerName, statement := buildSetUpdatedAtTriggerStatement(tableName)
+
+	var exists bool
+	if err := tx.QueryRowContext(ctx, `
+SELECT EXISTS (
+  SELECT 1
+    FROM pg_trigger tg
+    JOIN pg_class c
+      ON c.oid = tg.tgrelid
+    JOIN pg_namespace n
+      ON n.oid = c.relnamespace
+   WHERE n.nspname = 'public'
+     AND c.relname = $1
+     AND tg.tgname = $2
+     AND NOT tg.tgisinternal
+)`, tableName, triggerName).Scan(&exists); err != nil {
+		return fmt.Errorf("form builder: trigger existence check %s on %s: %w", triggerName, tableName, err)
+	}
+	if exists {
+		return nil
+	}
+	if _, err := tx.ExecContext(ctx, statement); err != nil {
+		return fmt.Errorf("form builder: create updated_at trigger %s on %s: %w", triggerName, tableName, err)
+	}
+	return nil
+}
+
+func buildSetUpdatedAtTriggerStatement(tableName string) (string, string) {
+	triggerName := runtimeDBObjectName("trg", tableName, "updated_at")
+	statement := fmt.Sprintf(
+		"CREATE TRIGGER %s BEFORE UPDATE ON %s FOR EACH ROW EXECUTE FUNCTION %s()",
+		quoteIdentifier(triggerName),
+		qualifiedIdentifier(tableName),
+		qualifiedIdentifier("set_updated_at"),
+	)
+	return triggerName, statement
+}
+
 func buildRuntimeScopeDataViewSQL(scope runtimeApplyScopePlan) (string, []RuntimeApplyLookupOutputResult) {
 	selectList := make([]string, 0)
 	joins := make([]string, 0)
 	lookupOutputs := make([]RuntimeApplyLookupOutputResult, 0)
 
-	for _, columnName := range runtimeScopeBaseSelectColumns(scope) {
-		selectList = append(selectList, fmt.Sprintf("t.%s AS %s", quoteIdentifier(columnName), quoteIdentifier(columnName)))
+	for _, expression := range runtimeScopeBaseSelectExpressions(scope) {
+		selectList = append(selectList, expression)
 	}
 
 	for _, field := range scope.Fields {
@@ -331,7 +499,7 @@ func buildRuntimeScopeDataViewSQL(scope runtimeApplyScopePlan) (string, []Runtim
 			lookupOutputs = append(lookupOutputs, fieldOutputs...)
 			continue
 		}
-		fieldJoins, fieldSelects, fieldOutputs := buildRuntimeSingleLookupSelects(field)
+		fieldJoins, fieldSelects, fieldOutputs := buildRuntimeSingleLookupSelects(scope, field)
 		joins = append(joins, fieldJoins...)
 		selectList = append(selectList, fieldSelects...)
 		lookupOutputs = append(lookupOutputs, fieldOutputs...)
@@ -374,34 +542,50 @@ func buildRuntimeGridViewSQL(dataViewName string, gridView runtimeApplyGridViewP
 	)
 }
 
-func runtimeScopeBaseSelectColumns(scope runtimeApplyScopePlan) []string {
-	columns := []string{"_id", "tenant_id", "_guid", "_created_at", "_updated_at", "_row_version"}
+func runtimeScopeBaseSelectExpressions(scope runtimeApplyScopePlan) []string {
+	expressions := []string{
+		runtimeScopeSystemSelectExpression(scope.SourceIDColumn, "_id", "bigint", ""),
+		runtimeScopeSystemSelectExpression(scope.SourceTenantIDColumn, "tenant_id", "bigint", "NULL::bigint"),
+		runtimeScopeSystemSelectExpression(scope.SourceGUIDColumn, "_guid", "uuid", "NULL::uuid"),
+		runtimeScopeSystemSelectExpression(scope.SourceCreatedAtColumn, "_created_at", "timestamptz", "NULL::timestamptz"),
+		runtimeScopeSystemSelectExpression(scope.SourceUpdatedAtColumn, "_updated_at", "timestamptz", "NULL::timestamptz"),
+	}
 	if scope.ParentForeignKey != "" {
-		columns = append(columns, scope.ParentForeignKey)
+		expressions = append(expressions, runtimeScopeSystemSelectExpression(scope.ParentForeignKey, scope.ParentForeignKey, "bigint", "NULL::bigint"))
 	}
 	for _, field := range scope.Fields {
 		if !field.Supported || field.MultiValue || field.ColumnName == "" {
 			continue
 		}
-		columns = append(columns, field.ColumnName)
+		sourceColumn := chooseString(field.SourceColumnName, field.ColumnName)
+		expressions = append(expressions, fmt.Sprintf("t.%s AS %s", quoteIdentifier(sourceColumn), quoteIdentifier(field.ColumnName)))
 	}
-	return columns
+	return expressions
 }
 
-func buildRuntimeSingleLookupSelects(field runtimeApplyFieldPlan) ([]string, []string, []RuntimeApplyLookupOutputResult) {
+func runtimeScopeSystemSelectExpression(sourceColumn string, alias string, _ string, fallbackExpression string) string {
+	sourceColumn = normalizeString(sourceColumn)
+	if sourceColumn != "" {
+		return fmt.Sprintf("t.%s AS %s", quoteIdentifier(sourceColumn), quoteIdentifier(alias))
+	}
+	return fmt.Sprintf("%s AS %s", fallbackExpression, quoteIdentifier(alias))
+}
+
+func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeApplyFieldPlan) ([]string, []string, []RuntimeApplyLookupOutputResult) {
 	if field.ColumnName == "" || field.LookupTargetName == "" || field.LookupTargetIDColumn == "" || len(field.LookupDerivedOutputs) == 0 {
 		return nil, nil, nil
 	}
 
 	baseAlias := runtimeSQLAlias("lk", field.StorageKey)
+	sourceColumnName := chooseString(field.SourceColumnName, field.ColumnName)
 	baseJoin := fmt.Sprintf(
 		"LEFT JOIN %s %s ON t.%s = %s.%s AND %s",
 		qualifiedIdentifier(field.LookupTargetName),
 		quoteIdentifier(baseAlias),
-		quoteIdentifier(field.ColumnName),
+		quoteIdentifier(sourceColumnName),
 		quoteIdentifier(baseAlias),
 		quoteIdentifier(field.LookupTargetIDColumn),
-		runtimeLookupBaseJoinTenantCondition(field, "t", baseAlias),
+		runtimeLookupBaseJoinTenantCondition(scope, field, "t", baseAlias),
 	)
 
 	joins := []string{baseJoin}
@@ -411,50 +595,78 @@ func buildRuntimeSingleLookupSelects(field runtimeApplyFieldPlan) ([]string, []s
 	switch field.Preset {
 	case "contact_lookup":
 		companyAlias := runtimeSQLAlias(baseAlias, "company")
+		jobTypeAlias := runtimeSQLAlias(baseAlias, "job_type")
 		joins = append(joins, fmt.Sprintf(
 			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
 			qualifiedIdentifier("company"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier(baseAlias),
-			quoteIdentifier("users_company_id"),
-			quoteIdentifier(companyAlias),
 			quoteIdentifier("company_id"),
-			quoteIdentifier("t"),
-			quoteIdentifier("tenant_id"),
 			quoteIdentifier(companyAlias),
-			quoteIdentifier("company_tenant_id"),
+			quoteIdentifier("id"),
+			quoteIdentifier("t"),
+			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
+			quoteIdentifier(companyAlias),
+			quoteIdentifier("tenant_id"),
+		))
+		joins = append(joins, fmt.Sprintf(
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			qualifiedIdentifier("jobtype"),
+			quoteIdentifier(jobTypeAlias),
+			quoteIdentifier(baseAlias),
+			quoteIdentifier("job_type_id"),
+			quoteIdentifier(jobTypeAlias),
+			quoteIdentifier("id"),
+			quoteIdentifier("t"),
+			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
+			quoteIdentifier(jobTypeAlias),
+			quoteIdentifier("tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
-			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForContact(baseAlias, companyAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
+			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForContact(baseAlias, companyAlias, jobTypeAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
 			outputs = append(outputs, RuntimeApplyLookupOutputResult{ColumnName: output.ColumnName, Action: "recreate"})
 		}
 	case "company_lookup":
 		mainCompanyAlias := runtimeSQLAlias(baseAlias, "main_company")
 		stateAlias := runtimeSQLAlias(baseAlias, "state")
+		companyTypeAlias := runtimeSQLAlias(baseAlias, "company_type")
 		joins = append(joins, fmt.Sprintf(
 			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
 			qualifiedIdentifier("company"),
 			quoteIdentifier(mainCompanyAlias),
 			quoteIdentifier(baseAlias),
-			quoteIdentifier("company_maincomp"),
+			quoteIdentifier("main_company_id"),
 			quoteIdentifier(mainCompanyAlias),
-			quoteIdentifier("company_id"),
+			quoteIdentifier("id"),
 			quoteIdentifier("t"),
-			quoteIdentifier("tenant_id"),
+			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
 			quoteIdentifier(mainCompanyAlias),
-			quoteIdentifier("company_tenant_id"),
+			quoteIdentifier("tenant_id"),
 		))
 		joins = append(joins, fmt.Sprintf(
 			"LEFT JOIN %s %s ON %s.%s = %s.%s",
 			qualifiedIdentifier("state"),
 			quoteIdentifier(stateAlias),
 			quoteIdentifier(baseAlias),
-			quoteIdentifier("company_state_id"),
-			quoteIdentifier(stateAlias),
 			quoteIdentifier("state_id"),
+			quoteIdentifier(stateAlias),
+			quoteIdentifier("id"),
+		))
+		joins = append(joins, fmt.Sprintf(
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			qualifiedIdentifier("companytype"),
+			quoteIdentifier(companyTypeAlias),
+			quoteIdentifier(baseAlias),
+			quoteIdentifier("company_type_id"),
+			quoteIdentifier(companyTypeAlias),
+			quoteIdentifier("id"),
+			quoteIdentifier("t"),
+			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
+			quoteIdentifier(companyTypeAlias),
+			quoteIdentifier("tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
-			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForCompany(baseAlias, mainCompanyAlias, stateAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
+			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForCompany(baseAlias, mainCompanyAlias, stateAlias, companyTypeAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
 			outputs = append(outputs, RuntimeApplyLookupOutputResult{ColumnName: output.ColumnName, Action: "recreate"})
 		}
 	case "project_lookup":
@@ -464,13 +676,13 @@ func buildRuntimeSingleLookupSelects(field runtimeApplyFieldPlan) ([]string, []s
 			qualifiedIdentifier("company"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier(baseAlias),
-			quoteIdentifier("projects_company_id"),
-			quoteIdentifier(companyAlias),
 			quoteIdentifier("company_id"),
-			quoteIdentifier("t"),
-			quoteIdentifier("tenant_id"),
 			quoteIdentifier(companyAlias),
-			quoteIdentifier("company_tenant_id"),
+			quoteIdentifier("id"),
+			quoteIdentifier("t"),
+			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
+			quoteIdentifier(companyAlias),
+			quoteIdentifier("tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
 			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForProject(baseAlias, companyAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
@@ -543,56 +755,52 @@ func prefixRuntimeJoinClauses(joins []string) string {
 	return " " + strings.Join(joins, " ")
 }
 
-func runtimeLookupBaseJoinTenantCondition(field runtimeApplyFieldPlan, baseAlias string, targetAlias string) string {
+func runtimeLookupBaseJoinTenantCondition(scope runtimeApplyScopePlan, field runtimeApplyFieldPlan, baseAlias string, targetAlias string) string {
 	targetTenantColumn := "tenant_id"
-	switch field.Preset {
-	case "contact_lookup":
-		targetTenantColumn = "users_tenant_id"
-	case "company_lookup":
-		targetTenantColumn = "company_tenant_id"
-	case "project_lookup":
-		targetTenantColumn = "projects_tenant_id"
-	default:
-		if field.LookupTargetKind == "view" {
-			targetTenantColumn = "tenant_id"
-		}
+	baseTenantColumn := runtimeScopeTenantJoinColumn(scope)
+	if baseTenantColumn == "" {
+		return "TRUE"
 	}
 	return fmt.Sprintf(
 		"%s.%s = %s.%s",
 		quoteIdentifier(baseAlias),
-		quoteIdentifier("tenant_id"),
+		quoteIdentifier(baseTenantColumn),
 		quoteIdentifier(targetAlias),
 		quoteIdentifier(targetTenantColumn),
 	)
 }
 
-func runtimeLookupExpressionForContact(userAlias string, companyAlias string, outputKey string) string {
+func runtimeScopeTenantJoinColumn(scope runtimeApplyScopePlan) string {
+	return chooseString(scope.SourceTenantIDColumn, "tenant_id")
+}
+
+func runtimeLookupExpressionForContact(userAlias string, companyAlias string, jobTypeAlias string, outputKey string) string {
 	switch outputKey {
 	case "label":
-		return runtimeConcatWS(" ", runtimeNullableTextColumn(userAlias, "users_firstname"), runtimeNullableTextColumn(userAlias, "users_lastname"))
+		return runtimeConcatWS(" ", runtimeNullableTextColumn(userAlias, "first_name"), runtimeNullableTextColumn(userAlias, "last_name"))
 	case "company_name":
-		return runtimeNullableTextColumn(companyAlias, "company_name")
+		return runtimeNullableTextColumn(companyAlias, "name")
 	case "company_id":
-		return fmt.Sprintf("%s.%s", quoteIdentifier(userAlias), quoteIdentifier("users_company_id"))
+		return fmt.Sprintf("%s.%s", quoteIdentifier(userAlias), quoteIdentifier("company_id"))
 	case "title":
-		return runtimeNullableTextColumn(userAlias, "users_title")
+		return runtimeNullableTextColumn(jobTypeAlias, "name")
 	case "phone":
-		return fmt.Sprintf("COALESCE(%s, %s)", runtimeNullableTextColumn(userAlias, "users_phone"), runtimeNullableTextColumn(userAlias, "users_mobilephone"))
+		return fmt.Sprintf("COALESCE(%s, %s)", runtimeNullableTextColumn(userAlias, "phone"), runtimeNullableTextColumn(userAlias, "mobile_phone"))
 	default:
 		return "NULL"
 	}
 }
 
-func runtimeLookupExpressionForCompany(companyAlias string, mainCompanyAlias string, stateAlias string, outputKey string) string {
+func runtimeLookupExpressionForCompany(companyAlias string, mainCompanyAlias string, stateAlias string, companyTypeAlias string, outputKey string) string {
 	switch outputKey {
 	case "label":
-		return runtimeNullableTextColumn(companyAlias, "company_name")
+		return runtimeNullableTextColumn(companyAlias, "name")
 	case "type":
-		return runtimeNullableTextColumn(companyAlias, "company_type")
+		return runtimeNullableTextColumn(companyTypeAlias, "name")
 	case "main_company_name":
-		return runtimeNullableTextColumn(mainCompanyAlias, "company_name")
+		return runtimeNullableTextColumn(mainCompanyAlias, "name")
 	case "state":
-		return fmt.Sprintf("COALESCE(%s, %s.%s::text)", runtimeNullableTextColumn(stateAlias, "state_name"), quoteIdentifier(companyAlias), quoteIdentifier("company_state_id"))
+		return fmt.Sprintf("COALESCE(%s, %s.%s::text)", runtimeNullableTextColumn(stateAlias, "name"), quoteIdentifier(companyAlias), quoteIdentifier("state_id"))
 	default:
 		return "NULL"
 	}
@@ -601,13 +809,13 @@ func runtimeLookupExpressionForCompany(companyAlias string, mainCompanyAlias str
 func runtimeLookupExpressionForProject(projectAlias string, companyAlias string, outputKey string) string {
 	switch outputKey {
 	case "label":
-		return runtimeConcatWS(", ", runtimeNullableTextColumn(projectAlias, "projects_num"), runtimeNullableTextColumn(projectAlias, "projects_name"))
+		return runtimeConcatWS(", ", runtimeNullableTextColumn(projectAlias, "project_number"), runtimeNullableTextColumn(projectAlias, "name"))
 	case "num":
-		return runtimeNullableTextColumn(projectAlias, "projects_num")
+		return runtimeNullableTextColumn(projectAlias, "project_number")
 	case "name":
-		return runtimeNullableTextColumn(projectAlias, "projects_name")
+		return runtimeNullableTextColumn(projectAlias, "name")
 	case "company_name":
-		return runtimeNullableTextColumn(companyAlias, "company_name")
+		return runtimeNullableTextColumn(companyAlias, "name")
 	default:
 		return "NULL"
 	}

@@ -151,7 +151,6 @@ Each managed root/subform table contains:
 - `_guid`
 - `_created_at`
 - `_updated_at`
-- `_row_version`
 
 Child tables also contain:
 

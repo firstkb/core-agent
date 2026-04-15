@@ -41,7 +41,7 @@ type EventData map[string]interface{}
 // Event represents a single event to be logged
 type Event struct {
 	PrincipalID    *uuid.UUID // nullable canonical actor identity
-	UserBusinessID *int64     // nullable tenant users.users_id for legacy/internal joins
+	UserBusinessID *int64     // nullable tenant users.id for business/user joins
 	Module         string
 	EventType      EventType
 	EventData      EventData

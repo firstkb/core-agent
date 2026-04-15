@@ -200,7 +200,12 @@ Each managed table should contain:
 - `_guid`
 - `_created_at`
 - `_updated_at`
-- `_row_version`
+
+Current runtime rule:
+
+- managed root and subform tables attach the shared tenant trigger function `set_updated_at()`
+- the trigger must update `_updated_at` automatically on every row mutation
+- `_updated_at` is the primary freshness contract
 
 Tenant rule:
 
@@ -267,7 +272,6 @@ Accepted rule:
   - `_guid`
   - `_created_at`
   - `_updated_at`
-  - `_row_version`
 - child-scope grid SQL views must additionally include the parent foreign key
 - then include only the visible authored bindings from `viewSettings.list.columns`
 
@@ -372,8 +376,7 @@ The double underscore makes it clear that:
     "_id",
     "_guid",
     "_created_at",
-    "_updated_at",
-    "_row_version"
+    "_updated_at"
   ],
   "columns": [
     {

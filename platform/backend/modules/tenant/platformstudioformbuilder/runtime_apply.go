@@ -8,6 +8,12 @@ import (
 
 const runtimeParentForeignKey = "_parent_id"
 
+const (
+	runtimeSourceTypeManaged  = "managed"
+	runtimeSourceTypeExternal = "external"
+	runtimeSourceTypeStatic   = "static"
+)
+
 type runtimeApplyPlan struct {
 	ModelID           string
 	ModelRuntimeAlias string
@@ -27,12 +33,18 @@ type runtimeApplyScopePlan struct {
 	ScopeID                   string
 	ScopeType                 string
 	SubformType               string
+	SourceType                string
 	StorageKey                string
 	TableName                 string
 	DataViewName              string
 	GridViews                 []runtimeApplyGridViewPlan
 	ParentTableName           string
 	ParentForeignKey          string
+	SourceIDColumn            string
+	SourceTenantIDColumn      string
+	SourceGUIDColumn          string
+	SourceCreatedAtColumn     string
+	SourceUpdatedAtColumn     string
 	MultiValueTableName       string
 	MultiValueOwnerForeignKey string
 	Fields                    []runtimeApplyFieldPlan
@@ -56,6 +68,7 @@ type runtimeApplyFieldPlan struct {
 	Preset               string
 	SelectionMode        string
 	ColumnName           string
+	SourceColumnName     string
 	PhysicalType         string
 	MultiValue           bool
 	Supported            bool
@@ -92,7 +105,7 @@ func buildRuntimeApplyPlan(
 		ModelSourceType:   chooseString(model.SourceType, normalizeString(modelPayload["sourceType"])),
 	}
 
-	plan.RootScope = buildRuntimeApplyRootScopePlan(plan.ModelRuntimeAlias, views, dataSchema, lookupModels)
+	plan.RootScope = buildRuntimeApplyRootScopePlan(plan.ModelRuntimeAlias, plan.ModelSourceType, views, dataSchema, lookupModels)
 
 	subformScopes := make([]runtimeApplyScopePlan, 0)
 	for _, rawScope := range asSlice(dataSchema["subformScopes"]) {
@@ -101,7 +114,7 @@ func buildRuntimeApplyPlan(
 		if scopeID == "" {
 			continue
 		}
-		subformScopes = append(subformScopes, buildRuntimeApplySubformScopePlan(plan.RootScope.TableName, plan.ModelRuntimeAlias, views, scope, lookupModels))
+		subformScopes = append(subformScopes, buildRuntimeApplySubformScopePlan(plan.RootScope.TableName, plan.ModelRuntimeAlias, plan.ModelSourceType, views, scope, lookupModels))
 	}
 	plan.SubformScopes = subformScopes
 
@@ -110,6 +123,7 @@ func buildRuntimeApplyPlan(
 
 func buildRuntimeApplyRootScopePlan(
 	modelRuntimeAlias string,
+	modelSourceType string,
 	views []ViewRecord,
 	dataSchema map[string]any,
 	lookupModels map[string]runtimeApplyLookupModelRef,
@@ -117,15 +131,23 @@ func buildRuntimeApplyRootScopePlan(
 	rootScope := asMap(dataSchema["rootScope"])
 	rootRuntime := readRuntimeDataScopeMetadata(rootScope)
 	storageKey := chooseString(rootRuntime.RtAlias, modelRuntimeAlias)
-	fields := buildRuntimeApplyFieldPlans(asSlice(rootScope["fields"]), lookupModels)
+	tableName := chooseString(rootRuntime.TableName, buildGeneratedRuntimeTableName(storageKey))
+	fields := buildRuntimeApplyFieldPlans(asSlice(rootScope["fields"]), lookupModels, modelSourceType, tableName)
+	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, tableName)
 	return runtimeApplyScopePlan{
 		ScopeID:                   rootSchemaScopeID,
 		ScopeType:                 "ROOT",
+		SourceType:                modelSourceType,
 		StorageKey:                storageKey,
-		TableName:                 chooseString(rootRuntime.TableName, buildGeneratedRuntimeTableName(storageKey)),
+		TableName:                 tableName,
 		DataViewName:              chooseString(rootRuntime.DataViewName, buildGeneratedRuntimeDataViewName(storageKey, "")),
 		GridViews:                 buildRuntimeGridViews(modelRuntimeAlias, "", rootSchemaScopeID, "", fields, views),
-		MultiValueTableName:       chooseString(rootRuntime.MVTableName, buildGeneratedRuntimeMVTableName(storageKey, "")),
+		SourceIDColumn:            idColumn,
+		SourceTenantIDColumn:      tenantColumn,
+		SourceGUIDColumn:          guidColumn,
+		SourceCreatedAtColumn:     createdAtColumn,
+		SourceUpdatedAtColumn:     updatedAtColumn,
+		MultiValueTableName:       runtimeScopeMultiValueTableName(modelSourceType, rootRuntime.MVTableName, storageKey, ""),
 		MultiValueOwnerForeignKey: storageKey + "_id",
 		Fields:                    fields,
 	}
@@ -134,6 +156,7 @@ func buildRuntimeApplyRootScopePlan(
 func buildRuntimeApplySubformScopePlan(
 	rootTableName string,
 	modelRuntimeAlias string,
+	modelSourceType string,
 	views []ViewRecord,
 	scope map[string]any,
 	lookupModels map[string]runtimeApplyLookupModelRef,
@@ -142,7 +165,9 @@ func buildRuntimeApplySubformScopePlan(
 	scopeRuntime := readRuntimeDataScopeMetadata(scope)
 	scopeStorageKey := chooseString(scopeRuntime.RtAlias, buildGeneratedRuntimeScopeAlias(chooseString(normalizeString(scope["tableKey"]), scopeID)))
 	subformType := chooseString(normalizeString(scope["subformType"]), "DEFAULT")
-	fields := buildRuntimeApplyFieldPlans(asSlice(scope["fields"]), lookupModels)
+	tableName := chooseString(scopeRuntime.TableName, buildGeneratedRuntimeTableName(modelRuntimeAlias, scopeStorageKey))
+	fields := buildRuntimeApplyFieldPlans(asSlice(scope["fields"]), lookupModels, modelSourceType, tableName)
+	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, tableName)
 	gridViews := []runtimeApplyGridViewPlan{}
 	if subformType != "CHECKLIST" {
 		gridViews = buildRuntimeGridViews(modelRuntimeAlias, scopeStorageKey, scopeID, runtimeParentForeignKey, fields, views)
@@ -151,13 +176,19 @@ func buildRuntimeApplySubformScopePlan(
 		ScopeID:                   scopeID,
 		ScopeType:                 chooseString(normalizeString(scope["scopeType"]), "SUBFORM"),
 		SubformType:               subformType,
+		SourceType:                modelSourceType,
 		StorageKey:                scopeStorageKey,
-		TableName:                 chooseString(scopeRuntime.TableName, buildGeneratedRuntimeTableName(modelRuntimeAlias, scopeStorageKey)),
+		TableName:                 tableName,
 		DataViewName:              chooseString(scopeRuntime.DataViewName, buildGeneratedRuntimeDataViewName(modelRuntimeAlias, scopeStorageKey)),
 		GridViews:                 gridViews,
 		ParentTableName:           rootTableName,
 		ParentForeignKey:          runtimeParentForeignKey,
-		MultiValueTableName:       chooseString(scopeRuntime.MVTableName, buildGeneratedRuntimeMVTableName(modelRuntimeAlias, scopeStorageKey)),
+		SourceIDColumn:            idColumn,
+		SourceTenantIDColumn:      tenantColumn,
+		SourceGUIDColumn:          guidColumn,
+		SourceCreatedAtColumn:     createdAtColumn,
+		SourceUpdatedAtColumn:     updatedAtColumn,
+		MultiValueTableName:       runtimeScopeMultiValueTableName(modelSourceType, scopeRuntime.MVTableName, modelRuntimeAlias, scopeStorageKey),
 		MultiValueOwnerForeignKey: scopeStorageKey + "_id",
 		Fields:                    fields,
 	}
@@ -355,7 +386,7 @@ func buildRuntimeGridColumns(
 }
 
 func runtimeGridSystemColumns(parentForeignKey string) []string {
-	columns := []string{"_id", "tenant_id", "_guid", "_created_at", "_updated_at", "_row_version"}
+	columns := []string{"_id", "tenant_id", "_guid", "_created_at", "_updated_at"}
 	if strings.TrimSpace(parentForeignKey) != "" {
 		columns = append(columns, parentForeignKey)
 	}
@@ -434,17 +465,18 @@ func runtimeViewIdentifier(raw string) string {
 	return runtimeIdentifier(raw)
 }
 
-func buildRuntimeApplyFieldPlans(entries []any, lookupModels map[string]runtimeApplyLookupModelRef) []runtimeApplyFieldPlan {
+func buildRuntimeApplyFieldPlans(entries []any, lookupModels map[string]runtimeApplyLookupModelRef, sourceType string, tableName string) []runtimeApplyFieldPlan {
 	plans := make([]runtimeApplyFieldPlan, 0, len(entries))
 	for _, raw := range entries {
 		field := asMap(raw)
-		plans = append(plans, buildRuntimeApplyFieldPlan(field, lookupModels))
+		plans = append(plans, buildRuntimeApplyFieldPlan(field, lookupModels, sourceType, tableName))
 	}
 	return plans
 }
 
-func buildRuntimeApplyFieldPlan(field map[string]any, lookupModels map[string]runtimeApplyLookupModelRef) runtimeApplyFieldPlan {
+func buildRuntimeApplyFieldPlan(field map[string]any, lookupModels map[string]runtimeApplyLookupModelRef, sourceType string, tableName string) runtimeApplyFieldPlan {
 	lookupConfig := asMap(field["lookupConfig"])
+	fieldRuntime := asMap(field["runtime"])
 	plan := runtimeApplyFieldPlan{
 		FieldID:           chooseString(normalizeString(field["fieldId"]), normalizeString(field["id"])),
 		StorageKey:        normalizeString(field["storageKey"]),
@@ -512,7 +544,49 @@ func buildRuntimeApplyFieldPlan(field map[string]any, lookupModels map[string]ru
 		plan.WarningMessage = "field kind is not yet supported by runtime apply"
 	}
 
+	switch {
+	case !plan.Supported || plan.MultiValue:
+	case strings.TrimSpace(normalizeString(fieldRuntime["sourceColumnName"])) != "":
+		plan.SourceColumnName = normalizeString(fieldRuntime["sourceColumnName"])
+	case isExternalRuntimeSourceType(sourceType):
+		plan.SourceColumnName = buildExternalRuntimeFieldSourceColumnName(tableName, plan)
+	default:
+		plan.SourceColumnName = plan.ColumnName
+	}
+
 	return plan
+}
+
+func runtimeScopeMultiValueTableName(sourceType string, configured string, modelRuntimeAlias string, scopeRuntimeAlias string) string {
+	if configured = normalizeString(configured); configured != "" {
+		return configured
+	}
+	if !isManagedRuntimeSourceType(sourceType) {
+		return ""
+	}
+	return buildGeneratedRuntimeMVTableName(modelRuntimeAlias, scopeRuntimeAlias)
+}
+
+func runtimeScopeSourceColumns(sourceType string, tableName string) (string, string, string, string, string) {
+	if !isExternalRuntimeSourceType(sourceType) {
+		return "_id", "tenant_id", "_guid", "_created_at", "_updated_at"
+	}
+	return "id", "tenant_id", "guid", "created_at", "updated_at"
+}
+
+func buildExternalRuntimeFieldSourceColumnName(tableName string, plan runtimeApplyFieldPlan) string {
+	_ = tableName
+	return chooseString(plan.ColumnName, plan.StorageKey)
+}
+
+func isManagedRuntimeSourceType(sourceType string) bool {
+	sourceType = normalizeString(sourceType)
+	return sourceType == "" || sourceType == runtimeSourceTypeManaged
+}
+
+func isExternalRuntimeSourceType(sourceType string) bool {
+	sourceType = normalizeString(sourceType)
+	return sourceType == runtimeSourceTypeExternal || sourceType == runtimeSourceTypeStatic
 }
 
 func applyRuntimeLookupSourceMetadata(plan *runtimeApplyFieldPlan, lookupModels map[string]runtimeApplyLookupModelRef) {
@@ -530,15 +604,15 @@ func applyRuntimeLookupSourceMetadata(plan *runtimeApplyFieldPlan, lookupModels 
 	case "contact_lookup":
 		plan.LookupTargetName = "users"
 		plan.LookupTargetKind = "table"
-		plan.LookupTargetIDColumn = "users_id"
+		plan.LookupTargetIDColumn = "id"
 	case "company_lookup":
 		plan.LookupTargetName = "company"
 		plan.LookupTargetKind = "table"
-		plan.LookupTargetIDColumn = "company_id"
+		plan.LookupTargetIDColumn = "id"
 	case "project_lookup":
 		plan.LookupTargetName = "projects"
 		plan.LookupTargetKind = "table"
-		plan.LookupTargetIDColumn = "projects_id"
+		plan.LookupTargetIDColumn = "id"
 	default:
 		sourceModel := strings.TrimSpace(plan.LookupSourceModel)
 		if sourceModel == "" {

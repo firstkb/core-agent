@@ -21,6 +21,23 @@ type Repo struct {
 	logger *slog.Logger
 }
 
+const insertEventQuery = `
+INSERT INTO events (
+  tenant_id,
+  occurred_at,
+  event,
+  module,
+  text,
+  user_id,
+  principal_guid,
+  user_ip,
+  recipients,
+  data,
+  created_at,
+  updated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+
 func eventAddress(data EventData) interface{} {
 	if data == nil {
 		return nil
@@ -129,24 +146,6 @@ func (r *Repo) insert(ctx context.Context, event Event) error {
 		ipAddr = parsed.String()
 	}
 
-	const query = `
-INSERT INTO events (
-  events_tenant_id,
-  events_date,
-  events_event,
-  events_module,
-  events_text,
-  events_time,
-  events_users_id,
-  events_principal_guid,
-  events_users_ip,
-  events_to,
-  events_data,
-  events_created_at,
-  events_updated_at
-)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
-
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("eventsvc: begin tx: %w", err)
@@ -164,13 +163,12 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 		tenantValue = *tenantID
 	}
 
-	if _, err := tx.ExecContext(ctx, query,
+	if _, err := tx.ExecContext(ctx, insertEventQuery,
 		tenantValue,
-		event.CreatedAt.UTC().Format("2006-01-02"),
+		event.CreatedAt,
 		string(event.EventType),
 		event.Module,
 		eventText(event.EventType, event.EventData),
-		event.CreatedAt,
 		userBusinessID,
 		principalID,
 		ipAddr,

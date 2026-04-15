@@ -196,8 +196,8 @@ With the default local env template, the code is fixed to `999999`.
 After OTP request or verify:
 
 ```bash
-psql -d 108-demo -c "select events_tenant_id, events_event, events_data, events_created_at from events order by events_created_at desc limit 10;"
-psql -d 108-sandbox -c "select events_tenant_id, events_event, events_data, events_created_at from events order by events_created_at desc limit 10;"
+psql -d 108-demo -c "select tenant_id, event, data, created_at from events order by created_at desc limit 10;"
+psql -d 108-sandbox -c "select tenant_id, event, data, created_at from events order by created_at desc limit 10;"
 ```
 
 Expected behavior:

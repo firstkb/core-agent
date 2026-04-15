@@ -45,6 +45,7 @@ Supporting admin docs:
 
 - `backend-api-gateway-http-api-mapping-spec.md`
 - `backend-api-gateway-proxy-routing-policy.md`
+- `backend-admin-tenant-events-mails-overlap-audit-v1.md`
 
 Note:
 
@@ -57,7 +58,9 @@ Note:
 - `backend-schema-tenant-baseline.md`
 - `backend-schema-migrations-baseline.md`
 - `backend-schema-placement-and-naming.md`
-- `backend-tenant-starter-field-targets.md`
+- `backend-tenant-canonical-refactor-contract-v1.md`
+- `backend-tenant-canonical-field-mapping-v1.md`
+- `backend-tenant-import-module-boundary-v1.md`
 
 Supporting schema docs:
 
@@ -70,6 +73,7 @@ Read only when the task explicitly needs rationale or rollout history:
 
 - `backend-admin-module-registry-refactor-plan.md`
 - `backend-auth-cookie-migration-plan.md`
+- `backend-tenant-starter-field-targets.md`
 - `ramp_v_108_backend_standard_v_2.md`
 - `GO_AGENT_RULES.md`
 - `backend-export-architecture-agent-prompt.md`

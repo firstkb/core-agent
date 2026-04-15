@@ -70,7 +70,6 @@ They are not the backend-generated system columns from storage rules such as:
 - `_guid`
 - `_created_at`
 - `_updated_at`
-- `_row_version`
 
 ## Contract Layers
 

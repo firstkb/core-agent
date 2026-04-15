@@ -52,29 +52,29 @@ func (r *tenantUserRepository) FindByEmail(ctx context.Context, tenant requestct
 	}
 
 	const query = `
-SELECT users_guid,
-       users_id,
-       users_tenant_id,
-       users_email,
-       COALESCE(users_firstname, '') AS auth_first_name,
-       COALESCE(users_lastname, '') AS auth_last_name,
-       COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
-       COALESCE(users_access, false) AS auth_access,
-       users_active AS auth_active,
-       (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AS auth_admin,
+SELECT guid,
+       id,
+       tenant_id,
+       email,
+       COALESCE(first_name, '') AS auth_first_name,
+       COALESCE(last_name, '') AS auth_last_name,
+       COALESCE(NULLIF(mobile_phone, ''), NULLIF(phone, '')) AS auth_phone,
+       COALESCE(system_access, false) AS auth_access,
+       active AS auth_active,
+       (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AND COALESCE(users_auth, 0) >= 90 THEN 'owner'
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 'admin'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,
        CASE
-         WHEN COALESCE(users_auth, 0) > 0 THEN users_auth
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 80
+         WHEN COALESCE(auth_level, 0) > 0 THEN auth_level
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 80
          ELSE 20
        END AS auth_level
   FROM users
- WHERE users_tenant_id = current_setting('app.tenant_id', true)::bigint
-   AND users_email = $1
+ WHERE tenant_id = current_setting('app.tenant_id', true)::bigint
+   AND email = $1
  LIMIT 1`
 
 	return r.queryOne(ctx, tenant, query, email)
@@ -87,29 +87,29 @@ func (r *tenantUserRepository) FindByPhone(ctx context.Context, tenant requestct
 	}
 
 	const query = `
-SELECT users_guid,
-       users_id,
-       users_tenant_id,
-       users_email,
-       COALESCE(users_firstname, '') AS auth_first_name,
-       COALESCE(users_lastname, '') AS auth_last_name,
-       COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
-       COALESCE(users_access, false) AS auth_access,
-       users_active AS auth_active,
-       (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AS auth_admin,
+SELECT guid,
+       id,
+       tenant_id,
+       email,
+       COALESCE(first_name, '') AS auth_first_name,
+       COALESCE(last_name, '') AS auth_last_name,
+       COALESCE(NULLIF(mobile_phone, ''), NULLIF(phone, '')) AS auth_phone,
+       COALESCE(system_access, false) AS auth_access,
+       active AS auth_active,
+       (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AND COALESCE(users_auth, 0) >= 90 THEN 'owner'
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 'admin'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,
        CASE
-         WHEN COALESCE(users_auth, 0) > 0 THEN users_auth
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 80
+         WHEN COALESCE(auth_level, 0) > 0 THEN auth_level
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 80
          ELSE 20
        END AS auth_level
   FROM users
- WHERE users_tenant_id = current_setting('app.tenant_id', true)::bigint
-   AND ($1 = users_mobilephone OR $1 = users_phone)
+ WHERE tenant_id = current_setting('app.tenant_id', true)::bigint
+   AND ($1 = mobile_phone OR $1 = phone)
  LIMIT 1`
 
 	return r.queryOne(ctx, tenant, query, phone)
@@ -121,29 +121,29 @@ func (r *tenantUserRepository) GetByID(ctx context.Context, tenant requestctx.Te
 	}
 
 	const query = `
-SELECT users_guid,
-       users_id,
-       users_tenant_id,
-       users_email,
-       COALESCE(users_firstname, '') AS auth_first_name,
-       COALESCE(users_lastname, '') AS auth_last_name,
-       COALESCE(NULLIF(users_mobilephone, ''), NULLIF(users_phone, '')) AS auth_phone,
-       COALESCE(users_access, false) AS auth_access,
-       users_active AS auth_active,
-       (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AS auth_admin,
+SELECT guid,
+       id,
+       tenant_id,
+       email,
+       COALESCE(first_name, '') AS auth_first_name,
+       COALESCE(last_name, '') AS auth_last_name,
+       COALESCE(NULLIF(mobile_phone, ''), NULLIF(phone, '')) AS auth_phone,
+       COALESCE(system_access, false) AS auth_access,
+       active AS auth_active,
+       (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) AND COALESCE(users_auth, 0) >= 90 THEN 'owner'
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 'admin'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,
        CASE
-         WHEN COALESCE(users_auth, 0) > 0 THEN users_auth
-         WHEN (COALESCE(users_admin, false) OR COALESCE(users_etsadmin, 0) > 0) THEN 80
+         WHEN COALESCE(auth_level, 0) > 0 THEN auth_level
+         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 80
          ELSE 20
        END AS auth_level
   FROM users
- WHERE users_tenant_id = current_setting('app.tenant_id', true)::bigint
-   AND users_guid = $1
+ WHERE tenant_id = current_setting('app.tenant_id', true)::bigint
+   AND guid = $1
  LIMIT 1`
 
 	return r.queryOne(ctx, tenant, query, userID)

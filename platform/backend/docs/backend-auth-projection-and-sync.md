@@ -115,11 +115,11 @@ Storage decision:
 Logging decision:
 
 - canonical auth audit table is `events` in both tenant DB and master DB
-- `otp_request` must be logged with raw OTP in `events_text`
-- `login` must be logged with `events_text = OK`
+- `otp_request` must be logged with raw OTP in `text`
+- `login` must be logged with `text = OK`
 - auth failures must be logged
 - extra positive auth events like `otp_verify`, `token_refresh`, and `logout` are intentionally not written
-- `events_data` may contain raw OTP, full email, full phone, and failure reasons
+- `data` may contain raw OTP, full email, full phone, and failure reasons
 
 Cleanup:
 
@@ -170,11 +170,12 @@ Reason:
 Accepted event strategy:
 
 - `events` is the single canonical tenant audit/event table
+- master and tenant now share the same canonical `events` column contract
 - first partitioning candidate is `events`
-- partitioning mode is quarterly range partitioning on `events_created_at`
+- partitioning mode is quarterly range partitioning on `created_at`
 - partitions are created by schema/migration contract, not ad hoc by the app
 
 Required indexes:
 
-- `(events_tenant_id, events_created_at desc)`
-- `(events_tenant_id, events_event, events_created_at desc)`
+- `(tenant_id, created_at desc)`
+- `(tenant_id, event, created_at desc)`

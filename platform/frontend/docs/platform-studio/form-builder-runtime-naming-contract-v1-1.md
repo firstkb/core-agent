@@ -215,7 +215,6 @@ System columns remain:
 - `_guid`
 - `_created_at`
 - `_updated_at`
-- `_row_version`
 
 Examples:
 

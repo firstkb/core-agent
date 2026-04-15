@@ -86,7 +86,11 @@ func (s *EventService) Log(ctx context.Context, module string, eventType EventTy
 	}
 
 	if event.UserBusinessID == nil {
-		switch userBusinessID := event.EventData["users_id"].(type) {
+		rawUserBusinessID, ok := event.EventData["user_business_id"]
+		if !ok {
+			rawUserBusinessID = event.EventData["users_id"]
+		}
+		switch userBusinessID := rawUserBusinessID.(type) {
 		case int64:
 			if userBusinessID > 0 {
 				id := userBusinessID

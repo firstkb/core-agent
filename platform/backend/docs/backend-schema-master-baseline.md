@@ -663,45 +663,85 @@ Purpose:
 
 Columns:
 
-- `events_id bigint not null`
-- `events_guid uuid not null`
-- `events_tenant_id bigint null`
-- `events_date date null`
-- `events_event text not null`
-- `events_module text null`
-- `events_record bigint null`
-- `events_table text null`
-- `events_text text null`
-- `events_time timestamptz null`
-- `events_timezone text null`
-- `events_users_id bigint null`
-- `events_principal_guid uuid null`
-- `events_users_ip inet null`
-- `events_to text null`
-- `events_subject text null`
-- `events_body text null`
-- `events_data jsonb not null`
-- `events_files jsonb null`
-- `events_urls jsonb null`
-- `events_created_at timestamptz not null`
-- `events_updated_at timestamptz not null`
+- `id bigint not null`
+- `guid uuid not null`
+- `tenant_id bigint null`
+- `user_id bigint null`
+- `principal_guid uuid null`
+- `occurred_at timestamptz null`
+- `event text not null`
+- `module text null`
+- `record_id bigint null`
+- `table_name text null`
+- `text text null`
+- `timezone_name text null`
+- `user_ip text null`
+- `recipients text null`
+- `subject text null`
+- `body text null`
+- `data jsonb not null`
+- `files jsonb null`
+- `urls jsonb null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
 
 Keys and indexes:
 
-- primary key: `(events_created_at, events_id)`
-- index: `ix_events_tenant_created (events_tenant_id, events_created_at desc)`
-- index: `ix_events_guid_created (events_guid, events_created_at desc)`
-- index: `ix_events_tenant_event_created (events_tenant_id, events_event, events_created_at desc)`
-- partial index: `ix_events_principal_created (events_principal_guid, events_created_at desc)`
-- index: `ix_events_module_created (events_module, events_created_at desc)`
+- primary key: `(created_at, id)`
+- index: `ix_events_tenant_created (tenant_id, created_at desc)`
+- index: `ix_events_guid_created (guid, created_at desc)`
+- index: `ix_events_tenant_event_created (tenant_id, event, created_at desc)`
+- partial index: `ix_events_principal_created (principal_guid, created_at desc)`
+- index: `ix_events_module_created (module, created_at desc)`
 
 Rules:
 
-- table is partitioned by `RANGE (events_created_at)`
+- table is partitioned by `RANGE (created_at)`
 - quarterly partitions are the accepted baseline
-- `events_users_id` remains nullable and is normally unused in pure master/admin events
-- `events_principal_guid` is the canonical actor UUID for admin/root/control-plane events
-- future tenant-related control-plane events may set `events_tenant_id`
+- `user_id` remains nullable and is normally unused in pure master/admin events
+- `principal_guid` is the canonical actor UUID for admin/root/control-plane events
+- future tenant-related control-plane events may set `tenant_id`
+
+## `mails`
+
+Purpose:
+
+- canonical master-side mail log for auth and future control-plane mail delivery
+
+Columns:
+
+- `id bigint not null`
+- `guid uuid not null`
+- `tenant_id bigint null`
+- `user_id bigint null`
+- `sent_at timestamptz null`
+- `timezone_name text null`
+- `from_address text null`
+- `to_addresses text null`
+- `cc_addresses text null`
+- `bcc_addresses text null`
+- `subject text null`
+- `body text null`
+- `sender_name text null`
+- `files jsonb null`
+- `urls jsonb null`
+- `target_table text null`
+- `target_record_id bigint null`
+- `created_at timestamptz not null`
+- `updated_at timestamptz not null`
+
+Keys and indexes:
+
+- primary key: `mails_pkey (id)`
+- index: `ix_mails_tenant_user (tenant_id, user_id)`
+- index: `ix_mails_tenant_target_record_id (tenant_id, target_record_id)`
+- index: `ix_mails_tenant_sent_at (tenant_id, sent_at desc)`
+- index: `ix_mails_guid_created (guid, created_at desc)`
+
+Rules:
+
+- master `mails` is the control-plane and auth-side mail log
+- tenant `mails` remains available for tenant-local business and Platform Builder mail actions
 
 ## `migration_runs`
 

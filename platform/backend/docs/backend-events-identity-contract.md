@@ -13,16 +13,16 @@ This document fixes the actor identity contract for `events` in both:
 
 `events` keeps three identity-related fields:
 
-- `events_guid`
+- `guid`
   - stable UUID identity of the event row itself
-- `events_users_id`
-  - legacy/internal tenant business row id from `users.users_id`
-- `events_principal_guid`
+- `user_id`
+  - nullable tenant business user id when known
+- `principal_guid`
   - canonical UUID of the acting principal
 
-## Naming decision
+## Naming Decision
 
-`events_actor_guid` is replaced with `events_principal_guid`.
+`principal_guid` is the canonical actor UUID field.
 
 Reason:
 
@@ -30,31 +30,31 @@ Reason:
 - admin users, delegated root access, and future system actors are also principals
 - `principal` is more accurate than `actor_guid` or `users_guid`
 
-## Population rules
+## Population Rules
 
-Tenant legacy event:
+Tenant business event:
 
-- write `events_users_id` when tenant `users.users_id` is known
-- write `events_principal_guid` when tenant UUID identity is also known
+- write `user_id` when tenant `users.id` is known
+- write `principal_guid` when UUID identity is also known
 
 Admin or root event:
 
-- `events_users_id = null`
-- `events_principal_guid = UUID`
+- `user_id = null`
+- `principal_guid = UUID`
 
 Migrated MSSQL event:
 
-- write `events_users_id` from legacy source rows when available
-- `events_principal_guid = null` unless a trustworthy UUID mapping exists
+- write `user_id` from legacy source rows when available
+- `principal_guid = null` unless a trustworthy UUID mapping exists
 
-## Runtime policy
+## Runtime Policy
 
-New auth/control-plane events should prefer `events_principal_guid` as the canonical identity surface.
+New auth and control-plane events should prefer `principal_guid` as the canonical identity surface.
 
-`events_users_id` remains important for:
+`user_id` remains important for:
 
-- legacy joins
 - tenant business reporting
 - imported MSSQL history
+- legacy joins that still rely on business ids during migration
 
-The system must not regress to a `users_id`-only model because `master` and admin events do not have a stable tenant `users_id` reference.
+The system must not regress to a `user_id`-only model because admin and control-plane events do not always have a stable tenant business user id.

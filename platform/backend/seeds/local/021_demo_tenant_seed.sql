@@ -5,22 +5,22 @@
 \endif
 
 INSERT INTO users (
-  users_tenant_id,
-  users_id,
-  users_guid,
-  users_email,
-  users_mobilephone,
-  users_access,
-  users_act,
-  users_admin,
-  users_auth,
-  users_firstname,
-  users_lastname,
-  users_date
+  id,
+  tenant_id,
+  guid,
+  email,
+  mobile_phone,
+  system_access,
+  active,
+  admin_access,
+  auth_level,
+  first_name,
+  last_name,
+  recorded_at
 )
 VALUES (
-  :tenant_id,
   1,
+  :tenant_id,
   '22222222-2222-2222-2222-222222222222',
   'owner@demo.local',
   '+1555000202',
@@ -32,14 +32,15 @@ VALUES (
   'Owner',
   now()
 )
-ON CONFLICT (users_tenant_id, users_id) DO UPDATE
-SET users_guid = EXCLUDED.users_guid,
-    users_email = EXCLUDED.users_email,
-    users_mobilephone = EXCLUDED.users_mobilephone,
-    users_access = EXCLUDED.users_access,
-    users_act = EXCLUDED.users_act,
-    users_admin = EXCLUDED.users_admin,
-    users_auth = EXCLUDED.users_auth,
-    users_firstname = EXCLUDED.users_firstname,
-    users_lastname = EXCLUDED.users_lastname,
-    users_date = EXCLUDED.users_date;
+ON CONFLICT (id) DO UPDATE
+SET tenant_id = EXCLUDED.tenant_id,
+    guid = EXCLUDED.guid,
+    email = EXCLUDED.email,
+    mobile_phone = EXCLUDED.mobile_phone,
+    system_access = EXCLUDED.system_access,
+    active = EXCLUDED.active,
+    admin_access = EXCLUDED.admin_access,
+    auth_level = EXCLUDED.auth_level,
+    first_name = EXCLUDED.first_name,
+    last_name = EXCLUDED.last_name,
+    recorded_at = EXCLUDED.recorded_at;

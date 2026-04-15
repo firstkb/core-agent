@@ -89,6 +89,7 @@ Current active builder direction:
 - `platform-studio/form-builder-backend-boundary.md`
 - `platform-studio/form-builder-storage-and-sql-view-contract.md`
 - `platform-studio/form-builder-runtime-naming-contract-v1-1.md`
+- `platform-studio/form-builder-static-models-integration-v1.md`
 - `platform-studio/form-builder-backend-scope-payload-contract.md`
 - `platform-studio/form-builder-backend-api-contract.md`
 - `platform-studio/form-builder-backend-validation-matrix.md`
@@ -121,6 +122,9 @@ Supporting builder docs:
 
 - `platform-studio/form-builder-backend-execution-plan.md`
 - `platform-studio/form-builder-implementation-backlog.md`
+- `platform-studio/form-builder-static-models-migration-draft-v1.md`
+- `platform-studio/form-builder-static-models-execution-plan-v1.md`
+- `platform-studio/form-builder-static-models-users-field-map-draft-v1.md`
 - `platform-studio/form-builder-approved-frontend-workstream-plan.md`
 - `platform-studio/form-builder-rich-text-editor-workstream-contract.md`
 - `platform-studio/ezform-analysis.md`

@@ -130,7 +130,6 @@ Recommended baseline:
 - `_guid`
 - `_created_at`
 - `_updated_at`
-- `_row_version`
 
 ### Recommended meanings
 
@@ -144,28 +143,20 @@ Recommended baseline:
   - creation timestamp
 - `_updated_at`
   - last update timestamp
-- `_row_version`
-  - optimistic concurrency version
 
-## PostgreSQL Note About Auto-Updating Rowstamp
+## PostgreSQL Updated At Rule
 
-PostgreSQL does not provide a SQL Server-style auto-updating rowstamp column in the same way.
+Managed Form Builder root and subform tables should use the shared tenant trigger function `set_updated_at()`.
 
-If V2 must avoid triggers, the safest early recommendation is:
+Accepted rule:
 
-- keep `_updated_at` and `_row_version`
-- update them in the backend write layer on every mutation
+- keep `_updated_at` as the builder-managed system timestamp
+- attach `set_updated_at()` trigger to every managed root/subform runtime table
+- treat `_updated_at` as the canonical freshness marker
+- do not treat SQL Server-style `rowstamp` as part of the managed storage contract
 
-This means:
-
-- no trigger dependency
-- predictable application behavior
-- easier portability
-
-Recommended V2 rule:
-
-- do not depend on database triggers for normal builder-generated tables
-- let the backend/service layer own automatic maintenance of `_updated_at` and `_row_version`
+Current note:
+- optimistic locking is not currently part of the managed storage contract
 
 ## Indexes
 

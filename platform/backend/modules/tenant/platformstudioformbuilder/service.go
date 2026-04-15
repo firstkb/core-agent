@@ -513,6 +513,13 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	}
 
 	nextModel := *model
+	normalizedNextModel := buildModelRecordFromPayload(modelPayload)
+	nextModel.ModelKey = normalizedNextModel.ModelKey
+	nextModel.StorageKey = normalizedNextModel.StorageKey
+	nextModel.DisplayName = normalizedNextModel.DisplayName
+	nextModel.Description = normalizedNextModel.Description
+	nextModel.SourceType = normalizedNextModel.SourceType
+	nextModel.Status = normalizedNextModel.Status
 	nextModel.IsStructureLocked = modelLocked
 	nextModel.CanEditViewsOnly = modelLocked
 	nextModel.DefinitionJSON = mustCanonicalJSON(modelPayload)
@@ -527,6 +534,14 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	}
 
 	nextView := *currentView
+	normalizedNextView := buildViewRecordFromPayload(currentView.ModelID, currentView.ViewID, viewPayload)
+	nextView.ViewKey = normalizedNextView.ViewKey
+	nextView.DisplayName = normalizedNextView.DisplayName
+	nextView.Description = normalizedNextView.Description
+	nextView.ViewType = normalizedNextView.ViewType
+	nextView.IsDefault = normalizedNextView.IsDefault
+	nextView.IsActive = normalizedNextView.IsActive
+	nextView.Status = normalizedNextView.Status
 	nextView.IsViewLocked = viewLocked
 	nextView.DefinitionJSON = mustCanonicalJSON(viewPayload)
 	nextView.LastAlignedModelStructureVersion = nextModel.StructureVersion

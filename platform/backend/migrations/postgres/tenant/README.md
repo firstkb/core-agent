@@ -5,7 +5,9 @@ This directory is the active source of truth for tenant SQL migrations.
 Current baseline:
 
 - empty tenant databases are bootstrapped from `bundle/tenant_schema_full.sql`
-- after bundle bootstrap, new changes should be added here as incremental `.sql` files
+- the current tenant migration set is intentionally a single canonical baseline:
+  - `000_tenant_baseline.sql`
+- new incremental tenant migrations should be added here only after the canonical baseline is accepted and running
 
 Important:
 

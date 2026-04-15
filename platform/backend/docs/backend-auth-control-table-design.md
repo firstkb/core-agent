@@ -186,24 +186,24 @@ Master-side use:
 
 Required fields for auth logging:
 
-- `events_guid`
-- `events_event`
-- `events_module`
-- `events_text`
-- `events_users_id`
-- `events_principal_guid`
-- `events_users_ip`
-- `events_to`
-- `events_data`
-- `events_created_at`
+- `guid`
+- `event`
+- `module`
+- `text`
+- `user_id`
+- `principal_guid`
+- `user_ip`
+- `recipients`
+- `data`
+- `created_at`
 
 Auth logging requirements:
 
 - success and failure events are both written
-- raw OTP code must be written to `events_text`
-- full email or phone may be written to `events_data`
-- tenant user events should write `events_users_id` when tenant row id is known
-- admin or root events should leave `events_users_id` null and write `events_principal_guid`
+- raw OTP code must be written to `text`
+- full email or phone may be written to `data`
+- tenant user events should write `user_id` when tenant row id is known
+- admin or root events should leave `user_id` null and write `principal_guid`
 
 ## Partitioning
 
@@ -213,12 +213,12 @@ Accepted first partitioned table:
 
 Accepted strategy:
 
-- `PARTITION BY RANGE (events_created_at)`
+- `PARTITION BY RANGE (created_at)`
 - quarterly partitions
 - explicit migration-managed partition creation
 - `DEFAULT` partition as safety net
 
 Required indexes per partition set:
 
-- `(events_tenant_id, events_created_at desc)`
-- `(events_tenant_id, events_event, events_created_at desc)`
+- `(tenant_id, created_at desc)`
+- `(tenant_id, event, created_at desc)`

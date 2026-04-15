@@ -706,6 +706,106 @@ func TestSaveDraftForNonDefaultViewPreservesCanonicalModelSchemas(t *testing.T) 
 	}
 }
 
+func TestSaveDraftForDefaultViewRenamesCanonicalLabelWithoutStructureDrift(t *testing.T) {
+	repo := newMemoryRepository()
+	model, defaultView := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	inheritedView := cloneViewRecord(defaultView)
+	inheritedView.ViewID = "view-inherited"
+	inheritedView.ViewKey = "inherited"
+	inheritedView.DisplayName = "Inherited"
+	inheritedView.IsDefault = false
+	inheritedView.Version = 1
+	inheritedView.LastAlignedModelStructureVersion = model.StructureVersion
+	inheritedPayload := mustDecodeJSONMap(t, inheritedView.DefinitionJSON)
+	inheritedPayload["id"] = inheritedView.ViewID
+	inheritedPayload["key"] = inheritedView.ViewKey
+	inheritedPayload["displayName"] = inheritedView.DisplayName
+	inheritedPayload["title"] = inheritedView.DisplayName
+	inheritedPayload["name"] = inheritedView.DisplayName
+	inheritedPayload["isDefault"] = false
+	setRootFieldNodeTitle(inheritedPayload, "site-name", "Site Name")
+	inheritedView.DefinitionJSON = mustCanonicalJSON(inheritedPayload)
+	repo.views[model.ModelID][inheritedView.ViewID] = &inheritedView
+
+	overrideView := cloneViewRecord(defaultView)
+	overrideView.ViewID = "view-override"
+	overrideView.ViewKey = "override"
+	overrideView.DisplayName = "Override"
+	overrideView.IsDefault = false
+	overrideView.Version = 1
+	overrideView.LastAlignedModelStructureVersion = model.StructureVersion
+	overridePayload := mustDecodeJSONMap(t, overrideView.DefinitionJSON)
+	overridePayload["id"] = overrideView.ViewID
+	overridePayload["key"] = overrideView.ViewKey
+	overridePayload["displayName"] = overrideView.DisplayName
+	overridePayload["title"] = overrideView.DisplayName
+	overridePayload["name"] = overrideView.DisplayName
+	overridePayload["isDefault"] = false
+	setRootFieldNodeTitle(overridePayload, "site-name", "Local Site")
+	overrideView.DefinitionJSON = mustCanonicalJSON(overridePayload)
+	repo.views[model.ModelID][overrideView.ViewID] = &overrideView
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	rootFields := asSlice(asMap(asMap(modelPayload["dataSchema"])["rootScope"])["fields"])
+	for _, rawField := range rootFields {
+		field := asMap(rawField)
+		if normalizeString(field["id"]) != "site-name" {
+			continue
+		}
+		field["label"] = "Location Name"
+		field["displayName"] = "Location Name"
+	}
+
+	defaultPayload := mustDecodeJSONMap(t, defaultView.DefinitionJSON)
+	setRootFieldNodeTitle(defaultPayload, "site-name", "Location Name")
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, defaultView.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, defaultPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(defaultView.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	if repo.models[model.ModelID].StructureVersion != model.StructureVersion {
+		t.Fatalf("structure version = %d, want %d", repo.models[model.ModelID].StructureVersion, model.StructureVersion)
+	}
+	savedModel := mustDecodeJSONMap(t, out.Draft.Model)
+	if got := getInt64Value(savedModel, "modelStructureVersion", 0); got != model.StructureVersion {
+		t.Fatalf("draft model structure version = %d, want %d", got, model.StructureVersion)
+	}
+	if repo.views[model.ModelID][inheritedView.ViewID].LastAlignedModelStructureVersion != model.StructureVersion {
+		t.Fatalf("inherited view aligned version = %d, want %d", repo.views[model.ModelID][inheritedView.ViewID].LastAlignedModelStructureVersion, model.StructureVersion)
+	}
+	if repo.views[model.ModelID][overrideView.ViewID].LastAlignedModelStructureVersion != model.StructureVersion {
+		t.Fatalf("override view aligned version = %d, want %d", repo.views[model.ModelID][overrideView.ViewID].LastAlignedModelStructureVersion, model.StructureVersion)
+	}
+
+	if repo.views[model.ModelID][inheritedView.ViewID].Version != 2 {
+		t.Fatalf("expected inherited view version bump, got %d", repo.views[model.ModelID][inheritedView.ViewID].Version)
+	}
+	if repo.views[model.ModelID][overrideView.ViewID].Version != 1 {
+		t.Fatalf("expected override view version unchanged, got %d", repo.views[model.ModelID][overrideView.ViewID].Version)
+	}
+
+	inheritedSaved := mustDecodeJSONMap(t, repo.views[model.ModelID][inheritedView.ViewID].DefinitionJSON)
+	if title := rootFieldNodeTitle(inheritedSaved, "site-name"); title != "Location Name" {
+		t.Fatalf("expected inherited title to follow canonical rename, got %q", title)
+	}
+	overrideSaved := mustDecodeJSONMap(t, repo.views[model.ModelID][overrideView.ViewID].DefinitionJSON)
+	if title := rootFieldNodeTitle(overrideSaved, "site-name"); title != "Local Site" {
+		t.Fatalf("expected local override title to remain unchanged, got %q", title)
+	}
+}
+
 func TestDeleteViewRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)
@@ -3110,6 +3210,38 @@ func mustDecodeJSONMap(t *testing.T, raw json.RawMessage) map[string]any {
 		t.Fatalf("decode json map: %v", err)
 	}
 	return out
+}
+
+func setRootFieldNodeTitle(viewPayload map[string]any, fieldID, title string) {
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	for _, rawNode := range asSlice(rootScope["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "field" {
+			continue
+		}
+		if normalizeString(node["fieldId"]) != fieldID {
+			continue
+		}
+		node["title"] = title
+		return
+	}
+}
+
+func rootFieldNodeTitle(viewPayload map[string]any, fieldID string) string {
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	for _, rawNode := range asSlice(rootScope["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "field" {
+			continue
+		}
+		if normalizeString(node["fieldId"]) != fieldID {
+			continue
+		}
+		return normalizeString(node["title"])
+	}
+	return ""
 }
 
 func containsValidationCode(messages []ValidationMessage, code string) bool {

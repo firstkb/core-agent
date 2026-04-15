@@ -118,6 +118,12 @@ That means the builder should store:
 - logical field key
 - optional physical storage key override
 
+For services that consume `dataSchema`, physical column naming must be derived from field semantics, not guessed from labels:
+
+- scalar/single-value fields persist into the base table as `<storageKey>`
+- single lookup fields persist the foreign key into the base table as `<storageKey>_id`
+- multi-value fields persist through the scope multivalue table instead of a single base-table column
+
 The builder UI should not force users to think in raw PostgreSQL column names unless they intentionally open advanced settings.
 
 ## System Columns

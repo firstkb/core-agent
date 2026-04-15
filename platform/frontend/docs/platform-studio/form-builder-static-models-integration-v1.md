@@ -15,6 +15,10 @@ It defines:
 - what migration and implementation steps are required
 - how `projectsaccess` should be handled through a dedicated custom widget instead of a normal subform
 
+Companion frozen payload contract:
+
+- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
+
 ## Accepted Static Model Set
 
 The following existing tables are accepted for Static Models Integration v1:
@@ -26,6 +30,7 @@ The following existing tables are accepted for Static Models Integration v1:
 - `mails`
 - `projects`
 - `state`
+- `timezone`
 - `users`
 
 ## Explicitly Excluded From v1
@@ -164,6 +169,12 @@ Purpose:
 
 - lookup/reference source
 
+### `timezone`
+
+Purpose:
+
+- lookup/reference source for timezone selection
+
 ### `users`
 
 Purpose:
@@ -254,6 +265,7 @@ Freeze the initial v1 list:
 - `mails`
 - `projects`
 - `state`
+- `timezone`
 - `users`
 
 Keep `projectsaccess` out of the first static migration.
@@ -321,8 +333,9 @@ Before seeding final JSON, confirm which fields are lookups between:
 
 - `company` and `companytype`
 - `users` and `company`
+- `users` and `timezone`
 - `projects` and `company`
-- any other existing foreign-key links in these 8 tables
+- any other existing foreign-key links in the accepted static-model set
 
 These must be represented in `dataSchema` so grid/form behavior is stable from day one.
 
@@ -359,7 +372,7 @@ Required slices:
 Accepted order:
 
 1. external/static model backend contract
-2. migration for the 8 accepted static models
+2. migration for the accepted static models
 3. smoke test and contract fixes
 4. `users` custom widget contract
 5. `projectsaccess` bulk-assignment widget implementation
@@ -368,7 +381,7 @@ Accepted order:
 
 The next concrete outputs should be:
 
-1. migration plan for the 8 static models
+1. migration plan for the static models
 2. per-table field mapping draft
 3. default UI schema draft for each table
 4. separate widget contract for `project_access_manager`

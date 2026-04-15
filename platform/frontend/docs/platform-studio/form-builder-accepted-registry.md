@@ -81,6 +81,7 @@ Accepted ready-made presets:
 - `email`
 - `phone`
 - `url`
+- `suggest_text`
 - `date_today`
 - `tags`
 - `radio_group`
@@ -184,6 +185,7 @@ Accepted content nodes:
 - `Email`
 - `Phone`
 - `URL`
+- `Suggest text`
 - `Tags`
 - `Date today`
 - `Radio group`

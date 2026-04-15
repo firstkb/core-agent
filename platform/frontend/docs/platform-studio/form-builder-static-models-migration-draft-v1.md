@@ -13,11 +13,7 @@ It is not yet an active SQL migration because per-table field maps are still pen
 
 ## Target Migration Slot
 
-Suggested future tenant migration file:
-
-- `043_platform_studio_static_models_seed.sql`
-
-This number is provisional until the next migration is finalized.
+The file number should be assigned only when the live tenant migration is created.
 
 ## Accepted Scope
 
@@ -30,6 +26,7 @@ The migration will seed Form Builder metadata for:
 - `mails`
 - `projects`
 - `state`
+- `timezone`
 - `users`
 
 The migration will not seed:
@@ -62,6 +59,10 @@ Special case:
 - `users` requires two initial views, not one:
   - `Contacts`
   - `List of Accounts`
+
+Companion frozen schema contract:
+
+- [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
 
 ## Runtime Targets Per Static Model
 
@@ -107,6 +108,12 @@ Special case:
 - `dataViewName = vw_state`
 - `gridViewName = vg_state__default`
 
+### `timezone`
+
+- `tableName = timezone`
+- `dataViewName = vw_timezone`
+- `gridViewName = vg_timezone__default`
+
 ### `users`
 
 - `tableName = users`
@@ -127,7 +134,12 @@ Detailed field-map draft:
   "rtAlias": "users",
   "tableName": "users",
   "mvTableName": "",
-  "dataViewName": "vw_users"
+  "dataViewName": "vw_users",
+  "sourceIdColumn": "id",
+  "sourceTenantIdColumn": "tenant_id",
+  "sourceGuidColumn": "guid",
+  "sourceCreatedAtColumn": "created_at",
+  "sourceUpdatedAtColumn": "updated_at"
 }
 ```
 
@@ -147,59 +159,63 @@ These mappings are required so runtime apply can build `vw_*` over external tabl
 
 ### `company`
 
-- `_id -> company_id`
-- `tenant_id -> company_tenant_id`
-- `_guid -> company_guid`
-- `_created_at -> company_created_at`
-- `_updated_at -> company_updated_at`
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `companytype`
 
-- `_id -> companytype_id`
-- `tenant_id -> companytype_tenant_id`
-- `_guid -> companytype_guid`
-- `_created_at -> companytype_created_at`
-- `_updated_at -> companytype_updated_at`
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `events`
 
-- `_id -> events_id`
-- `tenant_id -> events_tenant_id`
-- `_guid -> events_guid`
-- `_created_at -> events_created_at`
-- `_updated_at -> events_updated_at`
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `jobtype`
 
-- `_id -> jobtype_id`
+- `_id -> id`
 - `tenant_id -> tenant_id`
-- `_guid -> jobtype_guid`
-- `_created_at -> jobtype_created_at`
-- `_updated_at -> jobtype_updated_at`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `mails`
 
-- `_id -> mails_id`
-- `tenant_id -> mails_tenant_id`
-- `_guid -> NULL::uuid`
-- `_created_at -> mails_created_at`
-- `_updated_at -> mails_updated_at`
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `projects`
 
-- `_id -> projects_id`
-- `tenant_id -> projects_tenant_id`
-- `_guid -> projects_guid`
-- `_created_at -> projects_created_at`
-- `_updated_at -> projects_updated_at`
-
-Note:
-
-- confirm `projects_created_at` and `projects_updated_at` in the source table during field-map pass
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 ### `state`
 
-- `_id -> state_id`
+- `_id -> id`
+- `tenant_id -> NULL::bigint`
+- `_guid -> NULL::uuid`
+- `_created_at -> NULL::timestamptz`
+- `_updated_at -> NULL::timestamptz`
+
+### `timezone`
+
+- `_id -> id`
 - `tenant_id -> NULL::bigint`
 - `_guid -> NULL::uuid`
 - `_created_at -> NULL::timestamptz`
@@ -207,15 +223,15 @@ Note:
 
 ### `users`
 
-- `_id -> users_id`
-- `tenant_id -> users_tenant_id`
-- `_guid -> users_guid`
-- `_created_at -> users_created_at`
-- `_updated_at -> users_updated_at`
+- `_id -> id`
+- `tenant_id -> tenant_id`
+- `_guid -> guid`
+- `_created_at -> created_at`
+- `_updated_at -> updated_at`
 
 Special rule:
 
-- `users_password` stays in the physical table
+- `users.password` stays in the physical table
 - it must not be added to `dataSchema.fields`
 - it must not be added to `uiSchema`
 - `users` also seeds two initial views:
@@ -326,7 +342,7 @@ Before turning the draft into a live SQL migration, we need:
 
 1. exact field map for each table
 2. exact default grid columns for each model
-3. exact lookup relationships between the 8 static models
+3. exact lookup relationships between the static models
 4. explicit exclusion list for sensitive or internal columns
 
 ## Immediate Decisions Already Locked
@@ -337,7 +353,7 @@ These points are already fixed and do not need reopening:
 2. source tables are reused
 3. `vw_*` and `vg_*` remain managed by Form Builder
 4. `projectsaccess` stays out of the migration
-5. `users_password` is excluded from the schema
+5. `users.password` is excluded from the schema
 
 ## Next Step After This Draft
 

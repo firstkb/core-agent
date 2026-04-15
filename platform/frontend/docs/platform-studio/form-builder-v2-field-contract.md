@@ -120,6 +120,7 @@ Examples:
 - `email`
 - `phone`
 - `url`
+- `suggest_text`
 - `date_today`
 - `tags`
 - `radio_group`

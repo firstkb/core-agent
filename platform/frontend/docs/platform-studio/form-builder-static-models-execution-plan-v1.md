@@ -42,8 +42,10 @@ Why this stays accepted:
 Important label rule:
 
 - SQL view columns must be generated from stable canonical field/runtime aliases, not from UI labels
-- if a label change on the default view is accepted as a global field rename, the canonical label in `dataSchema` must change too
-- if a label change is only local to one authored view, it stays in `uiSchema` and does not affect the canonical SQL surface
+- title changes in the default view may update canonical `dataSchema.label`
+- default-view label-only rename must not create structure drift for other views
+- title changes in non-default views stay local in `uiSchema`
+- local title changes do not affect the canonical SQL surface
 
 ## Priority Order
 
@@ -58,6 +60,10 @@ Before any new seed migration is written, confirm the final payload contract for
 - exact field ownership split between `dataSchema` and `uiSchema`
 - explicit exclusion of sensitive fields such as `users.password`
 - exact authored-view count per model
+
+This contract is now fixed in:
+
+- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
 
 #### 2. Lock the SQL view strategy
 
@@ -88,6 +94,10 @@ Minimum behavior:
 - results are returned through ajax
 - custom values are allowed
 - no lookup FK is stored
+
+This contract is now fixed in:
+
+- `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md`
 
 ### P1. Design the static models one by one
 

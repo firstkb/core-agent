@@ -560,6 +560,11 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	if err != nil {
 		return nil, err
 	}
+	if currentView.IsDefault {
+		if err := s.propagateDefaultViewFieldLabelRenames(ctx, tenant, persistedModel, views, currentView.ViewID, existingModelPayload, modelPayload); err != nil {
+			return nil, err
+		}
+	}
 
 	views, err = s.repo.ListViews(ctx, tenant, persistedModel.ModelID)
 	if err != nil {
@@ -593,6 +598,120 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	response.RuntimeApply = runtimeSummary
 	response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, runtimeApplyWarnings(runtimeSummary)...)
 	return response, nil
+}
+
+type fieldLabelRename struct {
+	Old string
+	New string
+}
+
+func (s *Service) propagateDefaultViewFieldLabelRenames(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	model *ModelRecord,
+	views []ViewRecord,
+	defaultViewID string,
+	previousModelPayload map[string]any,
+	nextModelPayload map[string]any,
+) error {
+	renames := diffCanonicalFieldLabelRenames(previousModelPayload, nextModelPayload)
+	if len(renames) == 0 {
+		return nil
+	}
+
+	for _, candidate := range views {
+		if candidate.ViewID == defaultViewID {
+			continue
+		}
+
+		viewPayload, err := buildCanonicalViewPayload(model, &candidate, views, previousModelPayload)
+		if err != nil {
+			return err
+		}
+		if !applyFieldLabelRenamesToViewPayload(viewPayload, renames) {
+			continue
+		}
+
+		nextView := candidate
+		nextView.DefinitionJSON = mustCanonicalJSON(viewPayload)
+		nextView.Version = candidate.Version + 1
+		if _, err := s.repo.UpdateView(ctx, tenant, nextView, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func diffCanonicalFieldLabelRenames(previousModelPayload map[string]any, nextModelPayload map[string]any) map[string]fieldLabelRename {
+	previousLabels := canonicalFieldLabels(asMap(previousModelPayload["dataSchema"]))
+	nextLabels := canonicalFieldLabels(asMap(nextModelPayload["dataSchema"]))
+	renames := make(map[string]fieldLabelRename)
+
+	for fieldID, nextLabel := range nextLabels {
+		previousLabel, ok := previousLabels[fieldID]
+		if !ok || previousLabel == nextLabel {
+			continue
+		}
+		renames[fieldID] = fieldLabelRename{Old: previousLabel, New: nextLabel}
+	}
+
+	return renames
+}
+
+func canonicalFieldLabels(dataSchema map[string]any) map[string]string {
+	labels := make(map[string]string)
+	for _, rawField := range flattenDataSchemaFields(dataSchema) {
+		field := asMap(rawField)
+		fieldID := chooseString(
+			normalizeString(field["fieldId"]),
+			chooseString(normalizeString(field["id"]), normalizeString(field["key"])),
+		)
+		if fieldID == "" {
+			continue
+		}
+		labels[fieldID] = chooseString(
+			normalizeString(field["label"]),
+			chooseString(normalizeString(field["displayName"]), humanizeIdentifier(fieldID)),
+		)
+	}
+	return labels
+}
+
+func applyFieldLabelRenamesToViewPayload(viewPayload map[string]any, renames map[string]fieldLabelRename) bool {
+	uiSchema := asMap(viewPayload["uiSchema"])
+	changed := applyFieldLabelRenamesToScope(asMap(uiSchema["rootScope"]), renames)
+	for _, rawScope := range asSlice(uiSchema["subformScopes"]) {
+		if applyFieldLabelRenamesToScope(asMap(rawScope), renames) {
+			changed = true
+		}
+	}
+	return changed
+}
+
+func applyFieldLabelRenamesToScope(scope map[string]any, renames map[string]fieldLabelRename) bool {
+	changed := false
+	for _, rawNode := range asSlice(scope["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "field" {
+			continue
+		}
+		fieldID := normalizeString(node["fieldId"])
+		rename, ok := renames[fieldID]
+		if !ok {
+			continue
+		}
+		title := normalizeString(node["title"])
+		if title != "" && title != rename.Old {
+			continue
+		}
+		if title == rename.New {
+			continue
+		}
+		node["title"] = rename.New
+		changed = true
+	}
+	return changed
 }
 
 func (s *Service) resolveRuntimeLookupModels(
@@ -1473,6 +1592,8 @@ func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, 
 		"isStructureLocked",
 		"description",
 		"displayName",
+		"label",
+		"modelTitle",
 		"name",
 		"title",
 	})
@@ -1487,6 +1608,8 @@ func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, 
 		"isStructureLocked",
 		"description",
 		"displayName",
+		"label",
+		"modelTitle",
 		"name",
 		"title",
 	})

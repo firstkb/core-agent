@@ -5,7 +5,7 @@ Date: 2026-04-15
 
 ## Purpose
 
-This document fixes the first concrete field-map draft for the external/static `users` model.
+This document fixes the first concrete field-map draft for the static `users` model.
 
 It defines:
 
@@ -19,14 +19,13 @@ It defines:
 
 This draft is based on:
 
-- tenant dump: `/Users/andrew/Downloads/public_new.sql`
+- canonical tenant schema contract:
+  - [backend-tenant-canonical-refactor-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md)
 - UI screenshots for:
   - `List of Accounts`
   - `Contacts`
-- legacy reference surfaces:
-  - [ExtDBmdlU.htm](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/EXTDB/Template/ExtDBmdlU.htm)
-  - [default.asp](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/EXTDB/default.asp)
-  - [MdlAccess.htm](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/EXTDB/Template/MdlAccess.htm)
+- static-model schema freeze:
+  - [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
 
 ## Model Scope
 
@@ -77,82 +76,86 @@ The root `users` model should seed the following v1 union.
 
 | Label | Storage Key | Source Column | Kind | Notes |
 | --- | --- | --- | --- | --- |
-| `Id` | system | `users_id` | system/view-only | Use root record id, not a persisted editable field. |
-| `First Name` | `first_name` | `users_firstname` | `short_text` | Present in both views. |
-| `Middle Name` | `middle_name` | `users_middlename` | `short_text` | Used by `Contacts`. |
-| `Last Name` | `last_name` | `users_lastname` | `short_text` | Present in both views. |
-| `System Access` | `system_access` | `users_access` | `boolean` or yes/no select | Used by `List of Accounts`. |
-| `ADMIN Access` | `admin_access` | `users_admin` | `boolean` or yes/no select | Used by `List of Accounts`. |
-| `ETS Admin` | `ets_admin` | `users_etsadmin` | `boolean` or yes/no select | Source is `int4`; coerce to boolean-like UI. |
-| `Job Type` | `job_type` | `users_title` | text-backed controlled select | Source is text, not FK. |
-| `Email` | `email` | `users_email` | `short_text` with email mode | Present in both views. |
-| `Business Unit` | `business_unit` | `users_company_id` | `db_lookup` single | Lookup to `company.company_id`, label `company_name`. |
+| `Id` | system | `id` | system/view-only | Use root record id, not a persisted editable field. |
+| `First Name` | `first_name` | `first_name` | `short_text` | Present in both views. |
+| `Middle Name` | `middle_name` | `middle_name` | `short_text` | Used by `Contacts`. |
+| `Last Name` | `last_name` | `last_name` | `short_text` | Present in both views. |
+| `System Access` | `system_access` | `system_access` | `boolean` | Used by `List of Accounts`. |
+| `ADMIN Access` | `admin_access` | `admin_access` | `boolean` | Used by `List of Accounts`. |
+| `ETS Admin` | `ets_admin` | `ets_admin` | `boolean` | Used by `List of Accounts`. |
+| `Job Type` | `job_type_id` | `job_type_id` | `db_lookup` single | Lookup to `jobtype.id`, label `name`. |
+| `Email` | `email` | `email` | `short_text` with email mode | Present in both views. |
+| `Business Unit` | `company_id` | `company_id` | `db_lookup` single | Lookup to `company.id`, label `name`. |
 | `Project Access List` | `project_access_manager` | none | `custom_widget` | `users`-hosted relation manager over `projectsaccess`. |
-| `Employee Sex` | `employee_sex` | `users_sex` | text-backed controlled select | Used by `Contacts`. |
-| `Employee ID` | `employee_id` | `users_num` | `short_text` | Used by `Contacts`. |
-| `Employee Occupation` | `employee_occupation` | `users_occupation` | `short_text` | Used by `Contacts`. |
-| `Gross Wages/Salary($)` | `gross_wages_salary` | `users_salery` | `decimal` or `currency` | Used by `Contacts`. |
-| `Gross Wages/Salary(Per)` | `gross_wages_salary_per` | `users_saleryper` | `decimal` | Confirm business meaning before labeling final. |
-| `Date of Birth` | `date_of_birth` | `users_dob` | `date` | Used by `Contacts`. |
-| `Date of Hire` | `date_of_hire` | `users_hiredate` | `date` | Used by `Contacts`. |
-| `Phone` | `phone` | `users_phone` | `short_text` | Used by `Contacts`. |
-| `Mobile Phone` | `mobile_phone` | `users_mobilephone` | `short_text` | Used by `Contacts`. |
-| `Messenger App` | `messenger_app` | `users_pushapp` | `short_text` or controlled select | Used by `Contacts`. |
-| `Messenger Account` | `messenger_account` | `users_pushacc` | `short_text` | Used by `Contacts`. |
-| `City` | `city` | `users_city` | `short_text` | Used by `Contacts`. |
-| `State` | `state` | `users_state` | text-backed controlled select | Stored as text, not FK. |
-| `Zip` | `zip` | `users_zip` | `short_text` | Used by `Contacts`. |
-| `Address` | `address` | `users_address` | `long_text` | Used by `Contacts`. |
-| `Add. Info.` | `additional_info` | `users_desc` | `long_text` | Used by `Contacts`. |
-| `Status` | `status` | `users_status` | `short_text` or controlled select | Used by `Contacts`. |
-| `Active` | `active` | `users_act` | `boolean` or yes/no select | Root activity flag. |
+| `Employee Sex` | `sex` | `sex` | `short_text` or controlled select | Used by `Contacts`. |
+| `Employee ID` | `employee_number` | `employee_number` | `short_text` | Used by `Contacts`. |
+| `Employee Occupation` | `occupation` | `occupation` | `short_text` | Used by `Contacts`. |
+| `Gross Wages/Salary($)` | `salary_amount` | `salary_amount` | `currency` | Used by `Contacts`. |
+| `Gross Wages/Salary(Per)` | `salary_rate` | `salary_rate` | `short_text` | Used by `Contacts`; keep scalar until the business enum is fixed. |
+| `Date of Birth` | `date_of_birth` | `date_of_birth` | `date` | Used by `Contacts`. |
+| `Date of Hire` | `hire_date` | `hire_date` | `date` | Used by `Contacts`. |
+| `Phone` | `phone` | `phone` | `short_text` | Used by `Contacts`. |
+| `Mobile Phone` | `mobile_phone` | `mobile_phone` | `short_text` | Used by `Contacts`. |
+| `Messenger App` | `messenger_app` | `messenger_app` | `short_text` or controlled select | Used by `Contacts`. |
+| `Messenger Account` | `messenger_account` | `messenger_account` | `short_text` | Used by `Contacts`. |
+| `City` | `city` | `city` | `suggest_text` | First accepted consumer of the new preset. |
+| `State` | `state_id` | `state_id` | `db_lookup` single | Lookup to global `state.id`, primary label `name`. |
+| `Timezone` | `timezone_id` | `timezone_id` | `db_lookup` single | Lookup to global `timezone.id`, primary label `name`. Not present in the initial two views. |
+| `Zip` | `zip` | `zip` | `short_text` | Used by `Contacts`. |
+| `Address` | `address_line_1` | `address_line_1` | `long_text` | Used by `Contacts`. |
+| `Add. Info.` | `notes` | `notes` | `long_text` | Used by `Contacts`. |
+| `Status` | `status` | `status` | `short_text` or controlled select | Used by `Contacts`. |
+| `Active` | `active` | `active` | `boolean` | Root activity flag. |
 
 ## Explicitly Excluded Physical Columns
 
 The following physical columns must stay out of v1 Form Builder schema for `users` unless a later slice explicitly adds them:
 
-- `users_password`
-- `users_ssn`
-- `users_rowstamp`
-- `users_tourread`
-- `users_username`
-- `users_supervisor`
-- `users_foreman`
-- `users_rehiredate`
-- `users_lastwork`
-- `users_termwork`
-- `users_pcode`
-- `users_last`
-- `users_lastmodule`
-- `users_lastaction`
-- `users_lastpage`
-- `users_lastwizard`
-- `users_timezone`
-- `users_pwddate`
-- `users_terms`
-- `users_pwdchanged`
-- `users_demo`
-- `users_reason`
-- `users_systemid`
-- `users_auth`
-- `users_sysid`
-- `users_site`
-- `users_usersid`
-- `users_1027_super`
-- `users_1042_dep`
-- `users_1042_super1`
-- `users_1042_super2`
-- `users_1042_super3`
-- `users_wccode`
-- `users_wcdesc`
-- `users_covidcheck`
-- `users_honorific`
-- `users_pincode`
-- `users_codes`
+- `password`
+- `ssn`
+- `tour_read`
+- `username`
+- `supervisor_user_id`
+- `foreman_user_id`
+- `rehire_date`
+- `last_work_date`
+- `termination_date`
+- `pcode`
+- `last_seen_at`
+- `last_module`
+- `last_action`
+- `last_page`
+- `last_wizard`
+- `password_changed_at`
+- `terms_accepted`
+- `password_changed_count`
+- `demo`
+- `reason`
+- `system_id`
+- `auth_level`
+- `sys_id`
+- `site`
+- `legacy_user_id`
+- `supervisor_1027_user_id`
+- `department_1042`
+- `supervisor_1042_user_id_1`
+- `supervisor_1042_user_id_2`
+- `supervisor_1042_user_id_3`
+- `wc_code`
+- `wc_description`
+- `covid_check`
+- `honorific`
+- `pin_code`
+- `codes`
+- `guid`
+- `tenant_id`
+- `recorded_at`
+- `created_at`
+- `updated_at`
 
 Rule:
 
-- v1 imports only the fields evidenced by the accepted `Contacts` and `List of Accounts` views, plus the `Project Access List` custom widget placeholder
+- v1 imports only the fields evidenced by the accepted `Contacts` and `List of Accounts` views, plus the `Project Access List` custom widget placeholder and the normalized lookup/FK fields required by the canonical tenant schema
 
 ## Shared Field Rules
 
@@ -162,10 +165,10 @@ Rule:
 
 Mapping:
 
-- source FK: `users_company_id`
+- source FK: `company_id`
 - target model: `company`
-- target key: `company_id`
-- primary display: `company_name`
+- target key: `id`
+- primary display: `name`
 
 Authoring rule:
 
@@ -174,29 +177,50 @@ Authoring rule:
 
 ### Job Type
 
-`Job Type` is stored in `users_title` as text.
+`Job Type` is a real lookup in the canonical tenant schema.
 
-This is not a physical FK in the source table.
+Mapping:
 
-v1 recommendation:
+- source FK: `job_type_id`
+- target model: `jobtype`
+- target key: `id`
+- primary display: `name`
 
-- model it as a controlled text field
-- source the option set from `jobtype.jobtype_name`
-- keep write-back as plain text to `users_title`
+Authoring rule:
 
-Do not fake a FK-based lookup here in v1.
+- do not keep the old text-backed `users_title` behavior in the new static-model contract
 
 ### State
 
-`State` is stored in `users_state` as text.
+`State` is a real lookup in the canonical tenant schema.
 
-v1 recommendation:
+Mapping:
 
-- model it as a controlled text field
-- source the option set from `state.state_name`
-- keep write-back as plain text to `users_state`
+- source FK: `state_id`
+- target model: `state`
+- target key: `id`
+- primary display: `name`
 
-Do not convert it to a FK contract in v1.
+Authoring rule:
+
+- use the canonical global reference table
+- do not keep the old text-backed `users_state` behavior in the new static-model contract
+
+### Timezone
+
+`Timezone` is a real lookup in the canonical tenant schema.
+
+Mapping:
+
+- source FK: `timezone_id`
+- target model: `timezone`
+- target key: `id`
+- primary display: `name`
+
+v1 note:
+
+- keep the field in the `users` model union
+- do not place it on the first two authored views until there is evidence for the right placement
 
 ### Access Flags
 
@@ -209,14 +233,24 @@ The following fields must render as yes/no UI values:
 
 Source columns:
 
-- `users_access`
-- `users_admin`
-- `users_etsadmin`
-- `users_act`
+- `system_access`
+- `admin_access`
+- `ets_admin`
+- `active`
 
 Implementation note:
 
-- `users_etsadmin` is `int4` in the source table and needs explicit coercion
+- all four are canonical boolean fields now and must share one yes/no UI contract
+
+### City
+
+`City` should use the newly accepted `suggest_text` preset.
+
+Reason:
+
+- it stays plain text
+- users may need both existing values and new custom values
+- it is the clearest current first-slice consumer of the `suggest_text` contract
 
 ## View A: `Contacts`
 
@@ -245,7 +279,8 @@ Recommended `Contacts` grid order:
 
 Implementation detail:
 
-- `Business Unit` grid column should resolve to the company label, not raw `users_company_id`
+- `Business Unit` grid column should resolve to the company label, not raw `company_id`
+- `Job Type` grid column should resolve to the jobtype label, not raw `job_type_id`
 
 ### Form Layout
 
@@ -296,21 +331,23 @@ Recommended role:
 
 ### Grid Columns
 
-Recommended `List of Accounts` grid order:
+Recommended `List of Accounts` grid order for v1:
 
-1. `User`
-2. `Job Type`
-3. `Email`
-4. `Business Unit`
-5. `Access`
-6. `ADMIN`
-7. `ETS Admin`
-8. `Active`
+1. `First Name`
+2. `Last Name`
+3. `Job Type`
+4. `Email`
+5. `Business Unit`
+6. `System Access`
+7. `ADMIN Access`
+8. `ETS Admin`
+9. `Active`
 
-Important note:
+Accepted v1 note:
 
-- `User` is not a raw physical column
-- it should be rendered as a derived display value from `First Name` + `Last Name`
+- do not introduce a derived `User` grid column in this step
+- keep the grid explicit with `First Name` + `Last Name`
+- revisit a combined display column only if it becomes a separately accepted grid-derived contract
 
 ### Form Layout
 
@@ -348,44 +385,37 @@ Recommended widget key:
 
 ## Gaps That Must Be Handled Explicitly
 
-### Derived `User` Grid Column
+### Suggest Endpoint For City
 
-`List of Accounts` needs a single `User` column, but the source table stores:
+`City` is now the first concrete `suggest_text` candidate.
 
-- `users_firstname`
-- `users_lastname`
+This requires:
 
-There is no physical `users_name` column.
+- ajax suggestions from distinct existing `users.city` values
+- tenant scoping
+- custom typed values to remain valid
 
-Accepted implementation options:
+### Salary Rate Vocabulary
 
-1. add a canonical computed projection like `full_name` to `vw_users`
-2. add a grid-only derived binding for concatenated names
+`Gross Wages/Salary(Per)` still needs a cleaner business contract.
 
-Rejected option:
+Current v1 position:
 
-- silently changing the grid to separate first/last columns, because that no longer matches the legacy surface being reproduced
+- keep `salary_rate` as scalar text
+- do not force a fake enum before the source vocabulary is reviewed
 
-### Text-Backed Controlled Lists
+### Timezone Placement
 
-These two fields are source-text columns, not FK relations:
+`timezone_id` exists in the canonical tenant schema, but it is not evidenced on the two accepted legacy views.
 
-- `Job Type`
-- `State`
+Current v1 position:
 
-They need a deliberate external-option-source rule instead of pretending they are ordinary FK lookups.
-
-### Mixed Boolean Storage
-
-`users_access`, `users_admin`, and `users_act` are boolean.
-
-`users_etsadmin` is integer.
-
-All four must normalize to the same yes/no UI contract.
+- keep it in the model union
+- do not place it on `Contacts` or `List of Accounts` until its correct surface is confirmed
 
 ## Migration Impact
 
-The earlier generic migration draft must treat `users` as a special case:
+The generic static-model migration draft must treat `users` as a special case:
 
 - seed one `ps_model` row for `users`
 - seed two `ps_view` rows:
@@ -400,8 +430,9 @@ The earlier generic migration draft must treat `users` as a special case:
 
 ## Next Steps
 
-1. Confirm the `users` default view should be `Contacts`.
-2. Confirm `List of Accounts` secondary `viewRtAlias = accounts`.
-3. Decide how to implement derived `User` grid binding.
-4. Decide the v1 option-source rule for text-backed `Job Type` and `State`.
-5. After those confirmations, convert this draft into concrete migration seed JSON for `ps_model` and `ps_view`.
+1. Use this `users` draft as the first concrete static-model seed target.
+2. Build the exact `dataSchema` payload for `users`.
+3. Build the exact `uiSchema` payloads for:
+   - `Contacts`
+   - `List of Accounts`
+4. After `users`, move to the remaining static models in the already accepted plan order.

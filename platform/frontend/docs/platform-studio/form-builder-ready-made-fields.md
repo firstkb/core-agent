@@ -29,6 +29,7 @@ The accepted `Ready-made fields` section contains exactly:
 - `Email`
 - `Phone`
 - `URL`
+- `Suggest text`
 - `Tags`
 - `Date today`
 - `Radio group`
@@ -93,6 +94,32 @@ Locked settings:
 - `inputMode = url`
 - `displayFormat`
 - `validation = url`
+
+### `Suggest text`
+
+Function:
+
+- quick text field with ajax suggestions from the same field domain while still allowing a custom typed value
+
+Compile target:
+
+- `baseType = short_text`
+- `fieldPreset = suggest_text`
+
+Locked settings:
+
+- `suggestConfig.sourceMode`
+  - current accepted value: `same_field_distinct_values`
+- `suggestConfig.searchMode`
+  - `contains`
+  - `prefix`
+- `suggestConfig.minQueryLength`
+- `suggestConfig.maxResults`
+- `suggestConfig.allowCustomValue`
+
+Detailed contract is locked in:
+
+- `form-builder-suggest-text-field-contract-v1.md`
 
 ### `Date today`
 

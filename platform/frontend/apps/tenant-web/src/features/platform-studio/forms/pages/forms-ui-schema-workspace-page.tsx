@@ -2054,6 +2054,94 @@ function findFormBuilderNodeByFieldId(
     ?? null;
 }
 
+function syncFieldNodeTitlesWithModel(
+  document: ReturnType<typeof useFormBuilderDocument>["document"],
+  model: FormsPlaceholderModel,
+) {
+  const fieldLabelById = new Map(
+    model.fields.map((field) => [field.id, getModelFieldLabel(field)] as const),
+  );
+  let hasChanges = false;
+
+  const syncNodes = (nodes: ReadonlyArray<FormBuilderNode>) => {
+    let nodesChanged = false;
+    const nextNodes = nodes.map((node) => {
+      if (node.type !== "field" || !node.fieldId) {
+        return node;
+      }
+
+      const nextTitle = fieldLabelById.get(node.fieldId);
+      if (!nextTitle || node.title === nextTitle) {
+        return node;
+      }
+
+      nodesChanged = true;
+      hasChanges = true;
+      return {
+        ...node,
+        title: nextTitle,
+      };
+    });
+
+    return nodesChanged ? nextNodes : nodes;
+  };
+
+  const nextRootNodes = syncNodes(document.rootScope.uiSchema.nodes);
+  const nextSubformScopes = document.subformScopes.map((scope) => {
+    const nextNodes = syncNodes(scope.uiSchema.nodes);
+    if (nextNodes === scope.uiSchema.nodes) {
+      return scope;
+    }
+
+    return {
+      ...scope,
+      uiSchema: {
+        ...scope.uiSchema,
+        nodes: nextNodes,
+      },
+    };
+  });
+
+  if (!hasChanges) {
+    return document;
+  }
+
+  return {
+    ...document,
+    rootScope: {
+      ...document.rootScope,
+      uiSchema: {
+        ...document.rootScope.uiSchema,
+        nodes: nextRootNodes,
+      },
+    },
+    subformScopes: nextSubformScopes,
+  };
+}
+
+function pruneStructureMetadata(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => pruneStructureMetadata(entry));
+  }
+  if (!value || typeof value !== "object") {
+    return value;
+  }
+
+  const record = value as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  Object.entries(record).forEach(([key, entry]) => {
+    if (key === "displayName" || key === "label" || key === "modelTitle") {
+      return;
+    }
+    out[key] = pruneStructureMetadata(entry);
+  });
+  return out;
+}
+
+function buildDataSchemaStructureSignature(dataSchema: Record<string, unknown>) {
+  return JSON.stringify(pruneStructureMetadata(dataSchema));
+}
+
 function getFilterOperatorOptions(
   field: FormsPlaceholderField,
 ): ReadonlyArray<FormBuilderFilterOperator> {
@@ -4156,9 +4244,12 @@ export function FormsViewWorkspacePage() {
           nextModel,
           nextView,
         );
+        const nextCanonicalDocument = isDefaultView
+          ? syncFieldNodeTitlesWithModel(nextDocument, nextModel)
+          : nextDocument;
         const nextModelWithScopes = cloneFormsPlaceholderModel({
           ...nextModel,
-          schemaScopes: deriveModelSchemaScopes(nextModel, nextDocument),
+          schemaScopes: deriveModelSchemaScopes(nextModel, nextCanonicalDocument),
         });
         const shouldMarkModelAsDirty =
           JSON.stringify(nextModelWithScopes.schemaScopes ?? [])
@@ -4174,14 +4265,14 @@ export function FormsViewWorkspacePage() {
         const shouldEnforceCanonicalFieldPlacements =
           (nextModelWithScopes.modelStructureVersion ?? 1) > lastKnownAlignedStructureVersion;
         const reconciledDocument = reconcileFormBuilderDocumentWithModel(
-          nextDocument,
+          nextCanonicalDocument,
           nextModelWithScopes,
           nextLayoutBlueprint,
           {
             enforceCanonicalFieldPlacements: shouldEnforceCanonicalFieldPlacements,
           },
         );
-        const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextDocument);
+        const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextCanonicalDocument);
 
         setHydratedDraftSignature(draftSignature);
         replaceModel(nextModelWithScopes);
@@ -4189,7 +4280,7 @@ export function FormsViewWorkspacePage() {
         setSavedModelDraft(shouldMarkModelAsDirty ? nextModel : nextModelWithScopes);
         setLayoutBlueprintDraft(nextLayoutBlueprint);
         setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
-        hydrateDocumentRef.current(nextDocument);
+        hydrateDocumentRef.current(nextCanonicalDocument);
         if (shouldMarkReconciledAsDirty) {
           setDocument(reconciledDocument);
         }
@@ -5447,7 +5538,7 @@ export function FormsViewWorkspacePage() {
 
   async function handleSave() {
     const structureChanged = isDefaultView && (
-      JSON.stringify(currentDataSchema) !== JSON.stringify(savedDataSchema)
+      buildDataSchemaStructureSignature(currentDataSchema) !== buildDataSchemaStructureSignature(savedDataSchema)
       || JSON.stringify(currentLayoutBlueprint) !== JSON.stringify(savedLayoutBlueprintDraft)
     );
     const previousModelStructureVersion = savedModelDraft.modelStructureVersion ?? 1;
@@ -5494,15 +5585,18 @@ export function FormsViewWorkspacePage() {
         ? ((savedModelDraft.version ?? previousModelStructureVersion) + 1)
         : (currentModel.version ?? savedModelDraft.version ?? previousModelStructureVersion),
     });
+    const documentForSave = isDefaultView
+      ? syncFieldNodeTitlesWithModel(document, nextModel)
+      : document;
     const nextView = findFormsPlaceholderScreenById(nextModel.screens, currentView.id) ?? currentView;
     const nextDataSchema = isDefaultView
       ? buildCanonicalDataSchema({
         ...nextModel,
         schemaScopes: currentModelSchemaScopes,
-      }, document)
+      }, documentForSave)
       : savedDataSchema;
     const nextLayoutBlueprint = isDefaultView ? currentLayoutBlueprint : savedLayoutBlueprintDraft;
-    const nextUiSchema = currentUiSchema;
+    const nextUiSchema = buildCanonicalUiSchema(documentForSave);
     const expectedVersions = {
       model: savedModelDraft.version ?? previousModelStructureVersion,
       view: previousCurrentView.viewVersion ?? currentView.viewVersion ?? 1,
@@ -5591,7 +5685,11 @@ export function FormsViewWorkspacePage() {
         savedModelWithView,
         savedLayoutBlueprint,
       );
-      commitSavedDraft(savedModelWithView, savedDocument, savedLayoutBlueprint);
+      commitSavedDraft(
+        savedModelWithView,
+        isDefaultView ? syncFieldNodeTitlesWithModel(savedDocument, savedModelWithView) : savedDocument,
+        savedLayoutBlueprint,
+      );
     } catch (error) {
       if (isUnauthorizedApiError(error)) {
         void signOut();
@@ -5599,7 +5697,7 @@ export function FormsViewWorkspacePage() {
       }
 
       if (isDraftEndpointUnavailable(error)) {
-        commitSavedDraft(nextModel, document, nextLayoutBlueprint);
+        commitSavedDraft(nextModel, documentForSave, nextLayoutBlueprint);
         return;
       }
 
@@ -6112,6 +6210,7 @@ export function FormsViewWorkspacePage() {
                                       {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
                                     </Label>
                                     <Input
+                                      disabled={Boolean(selectedField && isDefaultView && !canEditModelDefinition)}
                                       id="tenant-platform-studio-node-title"
                                       onChange={(event) => {
                                         const nextTitle = event.target.value;
@@ -6120,7 +6219,7 @@ export function FormsViewWorkspacePage() {
                                           return;
                                         }
 
-                                        if (!isPersistedModelField(selectedField)) {
+                                        if (canEditModelDefinition) {
                                           updateFieldById(selectedField.id, (field) => {
                                             const nextModelLabel = nextTitle.trim() || getModelFieldLabel(field);
 
@@ -6128,15 +6227,19 @@ export function FormsViewWorkspacePage() {
                                               ...field,
                                               displayName: nextModelLabel,
                                               label: nextModelLabel,
-                                              storageKey: createUniqueFormsPlaceholderStorageKey(
-                                                nextModelLabel,
-                                                field.id,
-                                                currentModel.fields,
-                                                {
-                                                  excludeFieldId: field.id,
-                                                  schemaScopeKey: field.schemaScopeKey,
-                                                },
-                                              ),
+                                              ...(!isPersistedModelField(field)
+                                                ? {
+                                                    storageKey: createUniqueFormsPlaceholderStorageKey(
+                                                      nextModelLabel,
+                                                      field.id,
+                                                      currentModel.fields,
+                                                      {
+                                                        excludeFieldId: field.id,
+                                                        schemaScopeKey: field.schemaScopeKey,
+                                                      },
+                                                    ),
+                                                  }
+                                                : {}),
                                             };
                                           });
                                         }

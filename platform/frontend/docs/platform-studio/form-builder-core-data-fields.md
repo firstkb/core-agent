@@ -147,6 +147,7 @@ Compatible field presets:
 - `email`
 - `phone`
 - `url`
+- `suggest_text`
 
 Compatible runtime presets:
 

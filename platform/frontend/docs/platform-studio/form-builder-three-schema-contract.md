@@ -430,6 +430,13 @@ When the default view saves:
 - `ps_model.definition_json.layoutBlueprint` may change
 - `ps_view.definition_json.uiSchema` for the default view may also change
 
+Important rename rule:
+
+- in the `default` view, field-title editing is the accepted editor for the canonical `dataSchema.label`
+- label-only rename from the `default` view is a model metadata change, not a structure-drift change
+- label-only rename must not advance `modelStructureVersion` or mark other views out of sync
+- in non-default views, field-title editing stays view-local and must not rewrite `dataSchema.label`
+
 ### Non-default views
 
 Non-default views are view-specific presentation surfaces.

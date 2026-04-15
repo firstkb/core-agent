@@ -90,6 +90,7 @@ Current active builder direction:
 - `platform-studio/form-builder-storage-and-sql-view-contract.md`
 - `platform-studio/form-builder-runtime-naming-contract-v1-1.md`
 - `platform-studio/form-builder-static-models-integration-v1.md`
+- `platform-studio/form-builder-static-models-schema-contract-v1.md`
 - `platform-studio/form-builder-backend-scope-payload-contract.md`
 - `platform-studio/form-builder-backend-api-contract.md`
 - `platform-studio/form-builder-backend-validation-matrix.md`
@@ -102,6 +103,7 @@ Current active builder direction:
 - `platform-studio/form-builder-section-tree.md`
 - `platform-studio/form-builder-core-data-fields.md`
 - `platform-studio/form-builder-choice-fields.md`
+- `platform-studio/form-builder-suggest-text-field-contract-v1.md`
 - `platform-studio/form-builder-multivalue-storage-contract.md`
 - `platform-studio/form-builder-choice-preset-inspector-schema.md`
 - `platform-studio/form-builder-advanced-fields.md`

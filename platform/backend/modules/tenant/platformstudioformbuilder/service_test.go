@@ -1,7 +1,9 @@
 package platformstudioformbuilder
 
 import (
+	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -13,11 +15,15 @@ import (
 )
 
 type memoryRepository struct {
-	models           map[string]*ModelRecord
-	views            map[string]map[string]*ViewRecord
-	runtimeRelations map[string]string
-	lastRuntimePlan  *runtimeApplyPlan
-	runtimeApplyErr  error
+	models                  map[string]*ModelRecord
+	views                   map[string]map[string]*ViewRecord
+	runtimeRelations        map[string]string
+	lastRuntimePlan         *runtimeApplyPlan
+	lastExportRelationName  string
+	lastExportColumnNames   []string
+	lastExportOrderByColumn string
+	exportRows              [][]string
+	runtimeApplyErr         error
 }
 
 func newMemoryRepository() *memoryRepository {
@@ -69,6 +75,18 @@ func (r *memoryRepository) GetView(_ context.Context, _ requestctx.TenantInfo, m
 		return &clone, nil
 	}
 	return nil, nil
+}
+
+func (r *memoryRepository) ExportDataRows(_ context.Context, _ requestctx.TenantInfo, relationName string, columnNames []string, orderByColumn string) ([][]string, error) {
+	r.lastExportRelationName = relationName
+	r.lastExportColumnNames = append([]string(nil), columnNames...)
+	r.lastExportOrderByColumn = orderByColumn
+
+	rows := make([][]string, 0, len(r.exportRows))
+	for _, row := range r.exportRows {
+		rows = append(rows, append([]string(nil), row...))
+	}
+	return rows, nil
 }
 
 func (r *memoryRepository) ListExistingRuntimeRelations(_ context.Context, _ requestctx.TenantInfo, names []string) (map[string]string, error) {
@@ -304,11 +322,13 @@ func contextWithActor(level int, role string) context.Context {
 	ctx = requestctx.WithClaims(ctx, requestctx.ClaimsInfo{
 		TenantID: "101",
 		UserID:   "11111111-1111-1111-1111-111111111111",
+		Email:    "root@example.com",
 		Level:    level,
 		Role:     role,
 	})
 	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
 		ID:             "101",
+		Name:           "Demo Tenant",
 		DBName:         "108-demo",
 		DBInstanceCode: "default",
 	})
@@ -1953,6 +1973,244 @@ func TestGetModelRejectsStaticModelForNonRoot(t *testing.T) {
 	_, err := svc.GetModel(testContext(), staticModel.ModelID)
 	if !errors.Is(err, ErrModelNotFound) {
 		t.Fatalf("expected ErrModelNotFound for non-root static model detail, got %v", err)
+	}
+}
+
+func TestExportModelDataUsesCanonicalLabelsAndRawTableColumns(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedCanonicalModelAndDefaultView(t, repo)
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	rootScope := asMap(asMap(modelPayload["dataSchema"])["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayFields": []any{"Full name", "Email"},
+		"id":            "reported-by",
+		"kind":          "db_lookup",
+		"label":         "Reported By",
+		"preset":        "contact_lookup",
+		"selectionMode": "single",
+		"storageKey":    "reported_by",
+	})
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+	repo.models[model.ModelID] = model
+
+	repo.exportRows = [][]string{
+		{"101", "Plant A", "42"},
+		{"102", "Plant B", "84"},
+	}
+
+	svc := NewService(repo)
+	out, err := svc.ExportModelData(testContext(), model.ModelID)
+	if err != nil {
+		t.Fatalf("ExportModelData returned error: %v", err)
+	}
+
+	if repo.lastExportRelationName != "ps_site_audit" {
+		t.Fatalf("export relation = %q, want %q", repo.lastExportRelationName, "ps_site_audit")
+	}
+	if repo.lastExportOrderByColumn != "_id" {
+		t.Fatalf("export order by = %q, want %q", repo.lastExportOrderByColumn, "_id")
+	}
+	if !reflect.DeepEqual(repo.lastExportColumnNames, []string{"_id", "site_name", "reported_by_id"}) {
+		t.Fatalf("export columns = %#v, want %#v", repo.lastExportColumnNames, []string{"_id", "site_name", "reported_by_id"})
+	}
+	if out.FileName != "site-audit-data.csv" {
+		t.Fatalf("export file name = %q, want %q", out.FileName, "site-audit-data.csv")
+	}
+	if out.ContentType != "text/csv; charset=utf-8" {
+		t.Fatalf("export content type = %q, want csv", out.ContentType)
+	}
+
+	reader := csv.NewReader(bytes.NewReader(out.Content))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("ReadAll returned error: %v", err)
+	}
+	expected := [][]string{
+		{"Doc.id", "Site Name", "Reported By"},
+		{"101", "Plant A", "42"},
+		{"102", "Plant B", "84"},
+	}
+	if !reflect.DeepEqual(records, expected) {
+		t.Fatalf("csv records = %#v, want %#v", records, expected)
+	}
+}
+
+func TestExportModelDataUsesExternalSourceColumns(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedExternalModelAndDefaultView(t, repo, "mail-log")
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["storageKey"] = "mails"
+	modelPayload["displayName"] = "Mails"
+	modelPayload["title"] = "Mails"
+	modelPayload["name"] = "Mails"
+
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["runtime"] = map[string]any{
+		"dataViewName":          "vw_mails",
+		"rtAlias":               "mails",
+		"sourceCreatedAtColumn": "created_at",
+		"sourceGuidColumn":      "guid",
+		"sourceIdColumn":        "id",
+		"sourceTenantIdColumn":  "tenant_id",
+		"sourceUpdatedAtColumn": "updated_at",
+		"tableName":             "mails",
+		"tenantScoped":          true,
+	}
+	rootField := asMap(asSlice(rootScope["fields"])[0])
+	rootField["runtime"] = map[string]any{"sourceColumnName": "site_nm"}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+	repo.models[model.ModelID] = model
+	repo.exportRows = [][]string{{"17", "Plant A"}}
+
+	svc := NewService(repo)
+	out, err := svc.ExportModelData(rootTestContext(), model.ModelID)
+	if err != nil {
+		t.Fatalf("ExportModelData returned error: %v", err)
+	}
+
+	if repo.lastExportRelationName != "mails" {
+		t.Fatalf("export relation = %q, want %q", repo.lastExportRelationName, "mails")
+	}
+	if repo.lastExportOrderByColumn != "id" {
+		t.Fatalf("export order by = %q, want %q", repo.lastExportOrderByColumn, "id")
+	}
+	if !reflect.DeepEqual(repo.lastExportColumnNames, []string{"id", "site_nm"}) {
+		t.Fatalf("export columns = %#v, want %#v", repo.lastExportColumnNames, []string{"id", "site_nm"})
+	}
+
+	reader := csv.NewReader(bytes.NewReader(out.Content))
+	records, err := reader.ReadAll()
+	if err != nil {
+		t.Fatalf("ReadAll returned error: %v", err)
+	}
+	expected := [][]string{
+		{"Doc.id", "Site Name"},
+		{"17", "Plant A"},
+	}
+	if !reflect.DeepEqual(records, expected) {
+		t.Fatalf("csv records = %#v, want %#v", records, expected)
+	}
+}
+
+func TestExportModelBundleIncludesCanonicalModelAndAllViews(t *testing.T) {
+	repo := newMemoryRepository()
+	model, defaultView := seedCanonicalModelAndDefaultView(t, repo)
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	rootScope := asMap(asMap(modelPayload["dataSchema"])["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayFields": []any{"Full name", "Email"},
+		"id":            "reported-by",
+		"kind":          "db_lookup",
+		"label":         "Reported By",
+		"preset":        "contact_lookup",
+		"selectionMode": "single",
+		"storageKey":    "reported_by",
+	})
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+	repo.models[model.ModelID] = model
+
+	secondaryView := cloneViewRecord(defaultView)
+	secondaryView.ViewID = "view-operations"
+	secondaryView.ViewKey = "operations"
+	secondaryView.DisplayName = "Operations"
+	secondaryView.IsDefault = false
+	viewPayload := mustDecodeJSONMap(t, secondaryView.DefinitionJSON)
+	viewPayload["id"] = secondaryView.ViewID
+	viewPayload["key"] = secondaryView.ViewKey
+	viewPayload["displayName"] = secondaryView.DisplayName
+	viewPayload["title"] = secondaryView.DisplayName
+	viewPayload["name"] = secondaryView.DisplayName
+	viewPayload["isDefault"] = false
+	secondaryView.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][secondaryView.ViewID] = &secondaryView
+
+	svc := NewService(repo)
+	out, err := svc.ExportModelBundle(rootTestContext(), model.ModelID)
+	if err != nil {
+		t.Fatalf("ExportModelBundle returned error: %v", err)
+	}
+	if out.FileName != "site-audit-model.json" {
+		t.Fatalf("export file name = %q, want %q", out.FileName, "site-audit-model.json")
+	}
+
+	bundle := mustDecodeJSONMap(t, out.Content)
+	if got := normalizeString(bundle["exportKind"]); got != "form_builder_model" {
+		t.Fatalf("exportKind = %q, want %q", got, "form_builder_model")
+	}
+	if got := normalizeString(bundle["formatVersion"]); got != "v1" {
+		t.Fatalf("formatVersion = %q, want %q", got, "v1")
+	}
+	exportMeta := asMap(bundle["exportMeta"])
+	if got := normalizeString(exportMeta["sourceTenantId"]); got != "101" {
+		t.Fatalf("sourceTenantId = %q, want %q", got, "101")
+	}
+	if got := normalizeString(exportMeta["sourceTenantName"]); got != "Demo Tenant" {
+		t.Fatalf("sourceTenantName = %q, want %q", got, "Demo Tenant")
+	}
+	exportedBy := asMap(exportMeta["exportedBy"])
+	if got := normalizeString(exportedBy["userId"]); got != "11111111-1111-1111-1111-111111111111" {
+		t.Fatalf("exportedBy.userId = %q, want root user id", got)
+	}
+	if got := normalizeString(exportedBy["email"]); got != "root@example.com" {
+		t.Fatalf("exportedBy.email = %q, want %q", got, "root@example.com")
+	}
+
+	importPolicy := asMap(bundle["importPolicy"])
+	if got := normalizeString(importPolicy["conflictMode"]); got != "reject" {
+		t.Fatalf("conflictMode = %q, want %q", got, "reject")
+	}
+
+	runtimePolicy := asMap(bundle["runtimePolicy"])
+	if got := normalizeString(runtimePolicy["sourceType"]); got != "managed" {
+		t.Fatalf("runtimePolicy.sourceType = %q, want %q", got, "managed")
+	}
+	if got := normalizeString(runtimePolicy["onImport"]); got != "reapply_runtime" {
+		t.Fatalf("runtimePolicy.onImport = %q, want %q", got, "reapply_runtime")
+	}
+
+	dependencies := asMap(bundle["dependencies"])
+	if !reflect.DeepEqual(dependencies["models"], []any{
+		map[string]any{
+			"modelId":  "users",
+			"reasons":  []any{"contact_lookup"},
+			"required": true,
+		},
+	}) {
+		t.Fatalf("dependencies.models = %#v, want users/contact_lookup", dependencies["models"])
+	}
+
+	exportedModel := asMap(bundle["model"])
+	if len(asMap(exportedModel["dataSchema"])) == 0 || len(asMap(exportedModel["layoutBlueprint"])) == 0 {
+		t.Fatalf("expected exported model payload with dataSchema/layoutBlueprint, got %#v", exportedModel)
+	}
+
+	exportedViews := asSlice(bundle["views"])
+	if len(exportedViews) != 2 {
+		t.Fatalf("expected all views in export bundle, got %#v", exportedViews)
+	}
+	for _, rawView := range exportedViews {
+		exportedView := asMap(rawView)
+		if len(asMap(exportedView["uiSchema"])) == 0 {
+			t.Fatalf("expected exported view payload with uiSchema, got %#v", exportedView)
+		}
+	}
+}
+
+func TestExportModelBundleRejectsLockedViewForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	view.IsViewLocked = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+	svc := NewService(repo)
+
+	_, err := svc.ExportModelBundle(testContext(), model.ModelID)
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked when non-root exports model with locked view, got %v", err)
 	}
 }
 

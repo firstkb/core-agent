@@ -17,6 +17,7 @@ Date: 2026-04-13
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
@@ -155,6 +156,7 @@ Current implemented backend-ready slice:
 - Atlas task prompt for the static-model rollout is now fixed in `form-builder-static-models-atlas-task-v1.md`; it must start with reference tables (`state`, `timezone`, `companytype`, `jobtype`) and `company` before `users`
 - static lookup fields now have an accepted naming policy in `form-builder-static-lookup-naming-policy-v1.md`; for static/external lookup-backed fields, `storageKey` stays logical (`user`, `company`, `state`) while the raw source FK column remains in `runtime.sourceColumnName` (`user_id`, `company_id`, `state_id`)
 - accepted static-model access restriction: only `root` may see static models or manage their views/schema; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but implement it only after the admin/root rights path is available in tenant app
+- current accepted import-bundle planning contract now lives in `form-builder-import-bundle-contract-v1.md`; the current `Export model` JSON is sufficient as the source file for future cross-tenant import of `managed` models and their views, importer must normalize lifecycle/version fields and ignore source-tenant noise, and export now includes baseline `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy` sections while richer `external/static` portability detail remains a follow-up
 
 ## Important docs to treat as reference-only
 

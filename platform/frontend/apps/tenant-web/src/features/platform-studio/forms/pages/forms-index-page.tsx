@@ -112,6 +112,23 @@ function getViewStatusKey(isActive: boolean) {
     : "tenant.platformStudio.forms.viewInactive";
 }
 
+function triggerBrowserDownload(file: {
+  blob: Blob;
+  fileName: string;
+}) {
+  const objectUrl = globalThis.URL.createObjectURL(file.blob);
+  const link = globalThis.document.createElement("a");
+  link.href = objectUrl;
+  link.download = file.fileName;
+  link.style.display = "none";
+  globalThis.document.body.append(link);
+  link.click();
+  link.remove();
+  globalThis.setTimeout(() => {
+    globalThis.URL.revokeObjectURL(objectUrl);
+  }, 0);
+}
+
 function resolveMutationSelectedViewRouteId(
   model: Pick<FormsPlaceholderModel, "screens">,
   selectedViewId: string | null,
@@ -165,6 +182,8 @@ export function FormsPage() {
     deleteModel,
     deleteView,
     ensureModel,
+    exportModelBundle,
+    exportModelData,
     isLoadingModels,
     models,
     modelsError,
@@ -179,14 +198,18 @@ export function FormsPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeletingView, setIsDeletingView] = useState(false);
   const [isDeletingModel, setIsDeletingModel] = useState(false);
+  const [isExportingModelBundle, setIsExportingModelBundle] = useState(false);
+  const [isExportingModelData, setIsExportingModelData] = useState(false);
   const [isLoadingSelectedModel, setIsLoadingSelectedModel] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState("");
+  const [modelActionError, setModelActionError] = useState<string | null>(null);
   const [selectedModelError, setSelectedModelError] = useState<string | null>(null);
   const selectedModel = getFormsPlaceholderModel(params.modelId, models);
   const hasModelParam = Boolean(params.modelId);
   const pageAccess = getFormsAuthoringAccess(currentActor);
   const selectedModelAccess = getFormsAuthoringAccess(currentActor, selectedModel);
   const sortedViews = selectedModel ? sortFormsPlaceholderViews(selectedModel.screens) : [];
+  const canExportModelBundle = currentActor.isRoot || !sortedViews.some((view) => view.isViewLocked);
   const filteredModels = useMemo(() => {
     const normalizedQuery = modelSearchQuery.trim().toLowerCase();
     if (!normalizedQuery) {
@@ -253,6 +276,10 @@ export function FormsPage() {
   }, [ensureModel, navigate, params.modelId, t]);
 
   useEffect(() => {
+    setModelActionError(null);
+  }, [selectedModel?.id]);
+
+  useEffect(() => {
     if (!deleteIntent || !selectedModel) {
       return;
     }
@@ -295,6 +322,42 @@ export function FormsPage() {
       modelId: getFormsPlaceholderModelRouteId(model),
       title: "",
     });
+  }
+
+  async function handleExportModelData(model: FormsPlaceholderModel) {
+    setModelActionError(null);
+    setIsExportingModelData(true);
+
+    try {
+      const file = await exportModelData(model.id);
+      triggerBrowserDownload(file);
+    } catch (error) {
+      setModelActionError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.mutationError"),
+      );
+    } finally {
+      setIsExportingModelData(false);
+    }
+  }
+
+  async function handleExportModelBundle(model: FormsPlaceholderModel) {
+    setModelActionError(null);
+    setIsExportingModelBundle(true);
+
+    try {
+      const file = await exportModelBundle(model.id);
+      triggerBrowserDownload(file);
+    } catch (error) {
+      setModelActionError(
+        error instanceof Error
+          ? error.message
+          : t("tenant.platformStudio.forms.mutationError"),
+      );
+    } finally {
+      setIsExportingModelBundle(false);
+    }
   }
 
   function openCopyViewDialog(model: FormsPlaceholderModel, view: FormsPlaceholderView) {
@@ -596,10 +659,17 @@ export function FormsPage() {
                       </MenuTrigger>
                       <MenuContent className="tenant-web__platform-studio-menu">
                         <MenuItem
-                          disabled
-                          title={t("tenant.platformStudio.forms.placeholderActionTitle")}
+                          disabled={isExportingModelData}
+                          onClick={() => void handleExportModelData(selectedModel)}
                         >
                           {t("tenant.platformStudio.forms.exportData")}
+                        </MenuItem>
+                        <MenuItem
+                          disabled={!canExportModelBundle || isExportingModelBundle}
+                          onClick={() => void handleExportModelBundle(selectedModel)}
+                          title={canExportModelBundle ? undefined : t("tenant.platformStudio.forms.permission.viewLocked")}
+                        >
+                          {t("tenant.platformStudio.forms.exportModel")}
                         </MenuItem>
                         <MenuSeparator />
                         <MenuItem
@@ -634,6 +704,12 @@ export function FormsPage() {
                     {selectedModelError ? (
                       <div className="tenant-web__platform-studio-inline-help">
                         <span>{selectedModelError}</span>
+                      </div>
+                    ) : null}
+
+                    {modelActionError ? (
+                      <div className="tenant-web__platform-studio-inline-help">
+                        <span>{modelActionError}</span>
                       </div>
                     ) : null}
 
@@ -732,12 +808,6 @@ export function FormsPage() {
                                 </button>
                               </MenuTrigger>
                             <MenuContent className="tenant-web__platform-studio-menu">
-                              <MenuItem
-                                disabled
-                                title={t("tenant.platformStudio.forms.placeholderActionTitle")}
-                              >
-                                {t("tenant.platformStudio.forms.exportView")}
-                              </MenuItem>
                               <MenuItem
                                 disabled={!viewAccess.canCopyView || isSubmittingDialog}
                                 onClick={() => openCopyViewDialog(selectedModel, view)}

@@ -201,6 +201,12 @@ type FormBuilderViewDetail = {
   view: FormBuilderViewSummary;
 };
 
+type FormBuilderDownloadedFile = {
+  blob: Blob;
+  contentType: string;
+  fileName: string;
+};
+
 type FormBuilderCreateModelInput = {
   description?: string;
   key?: string;
@@ -287,6 +293,8 @@ type TenantFormBuilderAuthoringClient = {
   ) => Promise<FormBuilderModelDetail>;
   deleteModel: (accessToken: string, modelId: string) => Promise<{ deletedModelId: string }>;
   deleteView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderModelDetail>;
+  exportModelBundle: (accessToken: string, modelId: string) => Promise<FormBuilderDownloadedFile>;
+  exportModelData: (accessToken: string, modelId: string) => Promise<FormBuilderDownloadedFile>;
   getModel: (accessToken: string, modelId: string) => Promise<FormBuilderModelDetail>;
   getView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderViewDetail>;
   listModels: (accessToken: string) => Promise<FormBuilderModelSummary[]>;
@@ -526,6 +534,129 @@ async function requestEnvelope<T>(
     }
 
     return envelope;
+  } finally {
+    completeRequestActivity();
+  }
+}
+
+function parseContentDispositionFileName(headerValue: string | null) {
+  if (!headerValue) {
+    return undefined;
+  }
+
+  const utf8Match = headerValue.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) {
+    try {
+      return decodeURIComponent(utf8Match[1]);
+    } catch {
+      return utf8Match[1];
+    }
+  }
+
+  const quotedMatch = headerValue.match(/filename="([^"]+)"/i);
+  if (quotedMatch?.[1]) {
+    return quotedMatch[1];
+  }
+
+  const plainMatch = headerValue.match(/filename=([^;]+)/i);
+  if (plainMatch?.[1]) {
+    return plainMatch[1].trim();
+  }
+
+  return undefined;
+}
+
+async function requestFile(
+  baseUrl: string,
+  path: string,
+  options?: {
+    accessToken?: string;
+    credentials?: RequestCredentials;
+    fallbackFileName?: string;
+    method?: string;
+    timeoutMs?: number;
+  },
+): Promise<FormBuilderDownloadedFile> {
+  const completeRequestActivity = beginApiClientRequestActivity();
+  const headers = new Headers();
+
+  if (options?.accessToken) {
+    headers.set("Authorization", `Bearer ${options.accessToken}`);
+  }
+
+  let response: Response;
+  let didTimeout = false;
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  const controller = typeof AbortController !== "undefined"
+    ? new AbortController()
+    : null;
+
+  if (
+    controller &&
+    typeof options?.timeoutMs === "number" &&
+    Number.isFinite(options.timeoutMs) &&
+    options.timeoutMs > 0
+  ) {
+    timeoutId = globalThis.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, options.timeoutMs);
+  }
+
+  try {
+    try {
+      response = await fetch(`${normalizeBaseUrl(baseUrl)}${path}`, {
+        credentials: options?.credentials,
+        headers,
+        method: options?.method ?? "GET",
+        signal: controller?.signal,
+      });
+    } catch (error) {
+      if (didTimeout) {
+        throw new ApiClientError("Request timed out.", {
+          code: "request_timeout",
+        });
+      }
+
+      const message = error instanceof Error ? error.message : "Network request failed.";
+      throw new ApiClientError(message, { code: "network_error" });
+    } finally {
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
+    }
+
+    if (!response.ok) {
+      const responseContentType = response.headers.get("Content-Type") ?? "";
+      if (responseContentType.toLowerCase().includes("application/json")) {
+        const payload = await parseJsonBody(response);
+        const envelope = normalizeEnvelope<unknown>(payload, response);
+        throw new ApiClientError(
+          normalizeMessage(response.status, envelope.message),
+          {
+            code: envelope.code,
+            payload: envelope.data ?? payload,
+            responseStatus: envelope.status,
+            statusCode: response.status,
+          },
+        );
+      }
+
+      const responseText = await response.text();
+      throw new ApiClientError(normalizeMessage(response.status, responseText.trim()), {
+        payload: responseText,
+        statusCode: response.status,
+      });
+    }
+
+    const blob = await response.blob();
+    return {
+      blob,
+      contentType: response.headers.get("Content-Type")?.trim() || blob.type || "application/octet-stream",
+      fileName: parseContentDispositionFileName(response.headers.get("Content-Disposition"))
+        ?? options?.fallbackFileName
+        ?? "download",
+    };
   } finally {
     completeRequestActivity();
   }
@@ -1117,6 +1248,30 @@ function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuil
 
       return normalizeFormBuilderModelDetail(envelope.data);
     },
+    async exportModelBundle(accessToken: string, modelId: string) {
+      return requestFile(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/export/model`,
+        {
+          accessToken,
+          fallbackFileName: `${modelId}-model.json`,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+    },
+    async exportModelData(accessToken: string, modelId: string) {
+      return requestFile(
+        baseUrl,
+        `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/export/data`,
+        {
+          accessToken,
+          fallbackFileName: `${modelId}-data.csv`,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+    },
     async getModel(accessToken: string, modelId: string) {
       const envelope = await requestEnvelope<unknown>(
         baseUrl,
@@ -1311,6 +1466,7 @@ export type {
   FormBuilderCreateModelInput,
   FormBuilderCreateViewInput,
   FormBuilderCopyViewInput,
+  FormBuilderDownloadedFile,
   FormBuilderModelDetail,
   FormBuilderModelFieldSummary,
   FormBuilderModelSummary,

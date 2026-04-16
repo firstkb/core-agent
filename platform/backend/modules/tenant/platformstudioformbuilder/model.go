@@ -137,6 +137,12 @@ type DeleteModelResponse struct {
 	DeletedModelID string `json:"deletedModelId"`
 }
 
+type ExportFile struct {
+	FileName    string
+	ContentType string
+	Content     []byte
+}
+
 type ModelSummary struct {
 	ID                    string `json:"id"`
 	GUID                  string `json:"guid,omitempty"`

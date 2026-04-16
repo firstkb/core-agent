@@ -77,6 +77,7 @@ export const tenantEnglishMessages = {
         deleteModel: "Delete model",
         deleteView: "Delete view",
         exportData: "Export data",
+        exportModel: "Export model",
         exportView: "Export view",
         fieldLocked: "Field locked",
         fieldsDescription: "Structure stays visible here while real authoring remains out of scope in this pass.",

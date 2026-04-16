@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
@@ -47,6 +48,36 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		return info, nil
 	}, srv.logger)
 
+	exportModelDataHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		info, err := srv.platformStudioFormBuilderHTTP.ExportModelData(r.Context(), r, struct{}{})
+		if err != nil {
+			writePlatformStudioFormBuilderError(w, err)
+			return
+		}
+
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+info.FileName+`"`)
+		w.Header().Set("Content-Type", info.ContentType)
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(info.Content)
+	})
+
+	exportModelBundleHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		info, err := srv.platformStudioFormBuilderHTTP.ExportModelBundle(r.Context(), r, struct{}{})
+		if err != nil {
+			writePlatformStudioFormBuilderError(w, err)
+			return
+		}
+
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+info.FileName+`"`)
+		w.Header().Set("Content-Type", info.ContentType)
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(info.Content)
+	})
+
 	register(
 		"FORM_BUILDER_MODEL_LIST",
 		http.MethodGet,
@@ -87,6 +118,20 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 			}
 			return info, nil
 		}, srv.logger),
+	)
+
+	register(
+		"FORM_BUILDER_MODEL_EXPORT_DATA",
+		http.MethodGet,
+		"/app/platform-studio/forms/models/{modelId}/export/data",
+		exportModelDataHandler,
+	)
+
+	register(
+		"FORM_BUILDER_MODEL_EXPORT_BUNDLE",
+		http.MethodGet,
+		"/app/platform-studio/forms/models/{modelId}/export/model",
+		exportModelBundleHandler,
 	)
 
 	register(
@@ -200,4 +245,15 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/draft",
 		saveAuthoringStateHandler,
 	)
+}
+
+func writePlatformStudioFormBuilderError(w http.ResponseWriter, err error) {
+	appErr := apperr.ToHTTP(err)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(appErr.StatusCode)
+	_ = json.NewEncoder(w).Encode(handler.Response{
+		Status:  "error",
+		Code:    appErr.Code,
+		Message: appErr.Message,
+	})
 }

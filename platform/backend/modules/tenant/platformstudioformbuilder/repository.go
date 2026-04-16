@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 	"dtriton.com/platform/backend/internal/platform/postgres"
@@ -25,6 +26,7 @@ type Repository interface {
 	GetModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) (*ModelRecord, error)
 	ListViews(ctx context.Context, tenant requestctx.TenantInfo, modelID string) ([]ViewRecord, error)
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) (*ViewRecord, error)
+	ExportDataRows(ctx context.Context, tenant requestctx.TenantInfo, relationName string, columnNames []string, orderByColumn string) ([][]string, error)
 	ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error)
 	CreateModelWithFirstView(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, firstView ViewRecord) (*ModelRecord, *ViewRecord, error)
 	CreateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord) (*ViewRecord, error)
@@ -152,6 +154,109 @@ func (r *repository) GetView(ctx context.Context, tenant requestctx.TenantInfo, 
 		return nil, fmt.Errorf("form builder: commit get view tx: %w", err)
 	}
 	return record, nil
+}
+
+func (r *repository) ExportDataRows(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	relationName string,
+	columnNames []string,
+	orderByColumn string,
+) ([][]string, error) {
+	relationName = strings.TrimSpace(relationName)
+	columnNames = normalizeExportColumnNames(columnNames)
+	orderByColumn = strings.TrimSpace(orderByColumn)
+	if relationName == "" {
+		return nil, fmt.Errorf("form builder: export relation name is required")
+	}
+	if len(columnNames) == 0 {
+		return [][]string{}, nil
+	}
+
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("form builder: begin export data tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	selectList := make([]string, 0, len(columnNames))
+	for _, columnName := range columnNames {
+		selectList = append(selectList, fmt.Sprintf(
+			"COALESCE(t.%s::text, '') AS %s",
+			quoteIdentifier(columnName),
+			quoteIdentifier(columnName),
+		))
+	}
+
+	query := fmt.Sprintf(
+		`SELECT %s
+   FROM %s t`,
+		strings.Join(selectList, ", "),
+		qualifiedIdentifier(relationName),
+	)
+	if orderByColumn != "" {
+		query += fmt.Sprintf(
+			`
+  ORDER BY t.%s ASC NULLS LAST`,
+			quoteIdentifier(orderByColumn),
+		)
+	}
+
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: export data rows: %w", err)
+	}
+	defer rows.Close()
+
+	records := make([][]string, 0)
+	values := make([]sql.NullString, len(columnNames))
+	scanTargets := make([]any, len(columnNames))
+	for index := range values {
+		scanTargets[index] = &values[index]
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(scanTargets...); err != nil {
+			return nil, fmt.Errorf("form builder: scan export row: %w", err)
+		}
+		record := make([]string, len(columnNames))
+		for index, value := range values {
+			if value.Valid {
+				record[index] = value.String
+			}
+		}
+		records = append(records, record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form builder: export data rows result: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form builder: commit export data tx: %w", err)
+	}
+
+	return records, nil
+}
+
+func normalizeExportColumnNames(columnNames []string) []string {
+	normalized := make([]string, 0, len(columnNames))
+	seen := make(map[string]struct{}, len(columnNames))
+	for _, columnName := range columnNames {
+		columnName = strings.TrimSpace(columnName)
+		if columnName == "" {
+			continue
+		}
+		if _, ok := seen[columnName]; ok {
+			continue
+		}
+		seen[columnName] = struct{}{}
+		normalized = append(normalized, columnName)
+	}
+	return normalized
 }
 
 func (r *repository) ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error) {

@@ -77,6 +77,7 @@ export const tenantSpanishMessages = {
         deleteModel: "Eliminar modelo",
         deleteView: "Eliminar vista",
         exportData: "Exportar datos",
+        exportModel: "Exportar modelo",
         exportView: "Exportar vista",
         fieldLocked: "Campo bloqueado",
         fieldsDescription: "La estructura sigue visible aqui mientras la authoring logic real queda fuera de alcance en este paso.",

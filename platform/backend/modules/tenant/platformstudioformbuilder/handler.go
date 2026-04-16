@@ -49,6 +49,22 @@ func (h *Handler) GetModel(ctx context.Context, r *http.Request, _ struct{}) (*M
 	return out, nil
 }
 
+func (h *Handler) ExportModelData(ctx context.Context, r *http.Request, _ struct{}) (*ExportFile, error) {
+	out, err := h.service.ExportModelData(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) ExportModelBundle(ctx context.Context, r *http.Request, _ struct{}) (*ExportFile, error) {
+	out, err := h.service.ExportModelBundle(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) ListViews(ctx context.Context, r *http.Request, _ struct{}) (*ListViewsResponse, error) {
 	out, err := h.service.ListViews(ctx, strings.TrimSpace(r.PathValue("modelId")))
 	if err != nil {

@@ -18,6 +18,7 @@ import {
   type FormBuilderCopyViewInput,
   type FormBuilderCreateModelInput,
   type FormBuilderCreateViewInput,
+  type FormBuilderDownloadedFile,
   type FormBuilderModelDetail,
   type FormBuilderModelFieldSummary,
   type FormBuilderModelSummary,
@@ -55,6 +56,8 @@ type FormBuilderAuthoringContextValue = {
   deleteModel: (modelId: string) => Promise<void>;
   deleteView: (modelId: string, viewId: string) => Promise<FormBuilderModelMutationResult>;
   ensureModel: (modelId: string) => Promise<FormsPlaceholderModel | null>;
+  exportModelBundle: (modelId: string) => Promise<FormBuilderDownloadedFile>;
+  exportModelData: (modelId: string) => Promise<FormBuilderDownloadedFile>;
   isLoadingModels: boolean;
   models: ReadonlyArray<FormsPlaceholderModel>;
   modelsError: string | null;
@@ -375,6 +378,24 @@ export function FormBuilderAuthoringProvider({
     return commitMutation((accessToken) => authoringClient.deleteView(accessToken, modelId, viewId));
   }, [authoringClient, commitMutation]);
 
+  const exportModelData = useCallback(async (modelId: string) => {
+    const trimmedModelId = modelId.trim();
+    if (!trimmedModelId) {
+      throw new Error("Model id is required.");
+    }
+
+    return requestWithSession((accessToken) => authoringClient.exportModelData(accessToken, trimmedModelId));
+  }, [authoringClient, requestWithSession]);
+
+  const exportModelBundle = useCallback(async (modelId: string) => {
+    const trimmedModelId = modelId.trim();
+    if (!trimmedModelId) {
+      throw new Error("Model id is required.");
+    }
+
+    return requestWithSession((accessToken) => authoringClient.exportModelBundle(accessToken, trimmedModelId));
+  }, [authoringClient, requestWithSession]);
+
   useEffect(() => {
     void refreshModels().catch(() => {});
   }, [refreshModels]);
@@ -388,6 +409,8 @@ export function FormBuilderAuthoringProvider({
         deleteModel,
         deleteView,
         ensureModel,
+        exportModelBundle,
+        exportModelData,
         isLoadingModels,
         models,
         modelsError,

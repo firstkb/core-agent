@@ -239,12 +239,210 @@ function createEmptyLayoutBlueprint(model: FormsPlaceholderModel) {
   } satisfies Record<string, unknown>;
 }
 
+function compactSchemaValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const nextItems = value
+      .map((entry) => compactSchemaValue(entry))
+      .filter((entry) => entry !== undefined);
+    return nextItems.length > 0 ? nextItems : undefined;
+  }
+
+  if (isRecord(value)) {
+    const nextRecord: Record<string, unknown> = {};
+    Object.entries(value).forEach(([key, entry]) => {
+      const compactedEntry = compactSchemaValue(entry);
+      if (typeof compactedEntry === "undefined") {
+        return;
+      }
+
+      nextRecord[key] = compactedEntry;
+    });
+
+    return Object.keys(nextRecord).length > 0 ? nextRecord : undefined;
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0 ? value : undefined;
+  }
+
+  if (value === null || typeof value === "undefined") {
+    return undefined;
+  }
+
+  return value;
+}
+
+function compactSchemaRecord(value: Record<string, unknown>) {
+  const compacted = compactSchemaValue(value);
+  return isRecord(compacted) ? compacted : {};
+}
+
 function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
-  return {
+  const serializedField: Record<string, unknown> = {
     ...field,
-    fieldId: field.id,
-    schemaScopeId: getFieldSchemaScopeId(field),
   };
+
+  delete serializedField.displayName;
+  delete serializedField.fieldId;
+  delete serializedField.isPersisted;
+  delete serializedField.key;
+  delete serializedField.schemaScopeId;
+  delete serializedField.schemaScopeKey;
+
+  if (serializedField.autocomplete === "on") {
+    delete serializedField.autocomplete;
+  }
+  if (serializedField.isLocked === false) {
+    delete serializedField.isLocked;
+  }
+  if (serializedField.status === "persisted") {
+    delete serializedField.status;
+  }
+
+  return compactSchemaRecord(serializedField);
+}
+
+function compactNodeRulesForUiSchema(rules: unknown) {
+  if (!isRecord(rules)) {
+    return undefined;
+  }
+
+  const nextRules: Record<string, unknown> = {};
+  if (Array.isArray(rules.requirementRules) && rules.requirementRules.length > 0) {
+    nextRules.requirementRules = rules.requirementRules;
+  }
+  if (Array.isArray(rules.visibilityRules) && rules.visibilityRules.length > 0) {
+    nextRules.visibilityRules = rules.visibilityRules;
+  }
+
+  return Object.keys(nextRules).length > 0 ? nextRules : undefined;
+}
+
+function compactFilterDefinitionsForUiSchema(filterDefinitions: unknown) {
+  if (!isRecord(filterDefinitions)) {
+    return undefined;
+  }
+
+  const defaultFilters = isRecord(filterDefinitions.defaultFilters)
+    ? filterDefinitions.defaultFilters
+    : null;
+  const hasDefaultConditions = Array.isArray(defaultFilters?.conditions) && defaultFilters.conditions.length > 0;
+  const quickFilters = Array.isArray(filterDefinitions.quickFilters) ? filterDefinitions.quickFilters : [];
+  if (!hasDefaultConditions && quickFilters.length === 0) {
+    return undefined;
+  }
+
+  return compactSchemaRecord({
+    defaultFilters,
+    quickFilters,
+    version: filterDefinitions.version,
+  });
+}
+
+function compactViewSettingsForUiSchema(viewSettings: unknown) {
+  if (!isRecord(viewSettings)) {
+    return undefined;
+  }
+
+  const nextSettings: Record<string, unknown> = {};
+  const actions = isRecord(viewSettings.actions) ? viewSettings.actions : null;
+  if (actions) {
+    const actionValues = Object.values(actions);
+    const allTrue = actionValues.length > 0 && actionValues.every((value) => value === true);
+    if (!allTrue) {
+      nextSettings.actions = actions;
+    }
+  }
+
+  const correctiveAction = isRecord(viewSettings.correctiveAction)
+    ? viewSettings.correctiveAction
+    : null;
+  if (correctiveAction?.enabled === true) {
+    nextSettings.correctiveAction = correctiveAction;
+  }
+
+  const list = isRecord(viewSettings.list) ? viewSettings.list : null;
+  if (list) {
+    const nextList: Record<string, unknown> = {};
+    if (Array.isArray(list.columns) && list.columns.length > 0) {
+      nextList.columns = list.columns.map((column) => {
+        const nextColumn = isRecord(column) ? { ...column } : {};
+        if (nextColumn.visible === true) {
+          delete nextColumn.visible;
+        }
+        return compactSchemaRecord(nextColumn);
+      });
+    }
+
+    const sorting = isRecord(list.sorting) ? { ...list.sorting } : null;
+    if (sorting) {
+      if (sorting.direction === "asc") {
+        delete sorting.direction;
+      }
+      const nextSorting = compactSchemaRecord(sorting);
+      if (Object.keys(nextSorting).length > 0) {
+        nextList.sorting = nextSorting;
+      }
+    }
+
+    if (Object.keys(nextList).length > 0) {
+      nextSettings.list = nextList;
+    }
+  }
+
+  return Object.keys(nextSettings).length > 0 ? nextSettings : undefined;
+}
+
+function compactSystemFieldsForUiSchema(systemFields: unknown) {
+  if (!isRecord(systemFields)) {
+    return undefined;
+  }
+
+  const nextSystemFields = compactSchemaRecord(systemFields);
+  const keys = Object.keys(nextSystemFields).filter((key) => key !== "version");
+  return keys.length > 0 ? nextSystemFields : undefined;
+}
+
+function compactUiNodeForSchema(
+  node: FormBuilderNode,
+  fieldLabelById: ReadonlyMap<string, string>,
+) {
+  const nextNode: Record<string, unknown> = { ...node };
+
+  if (nextNode.helperText === "") {
+    delete nextNode.helperText;
+  }
+  if (nextNode.parentId === null) {
+    delete nextNode.parentId;
+  }
+  if (nextNode.required === false) {
+    delete nextNode.required;
+  }
+  if (nextNode.visibility === "visible") {
+    delete nextNode.visibility;
+  }
+
+  const nextRules = compactNodeRulesForUiSchema(nextNode.rules);
+  if (nextRules) {
+    nextNode.rules = nextRules;
+  } else {
+    delete nextNode.rules;
+  }
+
+  if (
+    node.type === "field"
+    && typeof node.fieldId === "string"
+    && typeof nextNode.title === "string"
+    && nextNode.title.trim() === fieldLabelById.get(node.fieldId)
+  ) {
+    delete nextNode.title;
+  }
+
+  if (nextNode.title === "") {
+    delete nextNode.title;
+  }
+
+  return compactSchemaRecord(nextNode);
 }
 
 function buildCanonicalDataSchema(
@@ -267,7 +465,6 @@ function buildCanonicalDataSchema(
       ? { runtime: subformDataRuntimeByTableKey.get(scope.key) }
       : {}),
     schemaScopeId: scope.key,
-    scopeType: "SUBFORM",
     subformType: scope.subformType,
     tableKey: scope.key,
   }));
@@ -281,7 +478,6 @@ function buildCanonicalDataSchema(
         ? { runtime: document.rootScope.dataSchema.runtime }
         : {}),
       schemaScopeId: "root",
-      scopeType: "ROOT",
     },
     subformScopes,
   } satisfies Record<string, unknown>;
@@ -473,7 +669,11 @@ function compileAuthoringScope(
 
 function buildCanonicalUiSchema(
   document: ReturnType<typeof useFormBuilderDocument>["document"],
+  model: Pick<FormsPlaceholderModel, "fields">,
 ) {
+  const fieldLabelById = new Map(
+    model.fields.map((field) => [field.id, getModelFieldLabel(field)] as const),
+  );
   const rootScope = compileAuthoringScope(
     "root",
     document.rootScope.uiSchema.nodes,
@@ -486,25 +686,39 @@ function buildCanonicalUiSchema(
       scope.uiSchema.unplacedFieldIds,
     );
 
-    return {
+    return compactSchemaRecord({
       ...compiled.uiScope,
-      filterDefinitions: scope.filterDefinitions,
+      nodes: compiled.uiScope.nodes
+        .map((node) => compactUiNodeForSchema(node as FormBuilderNode, fieldLabelById)),
+      ...(compactFilterDefinitionsForUiSchema(scope.filterDefinitions)
+        ? { filterDefinitions: compactFilterDefinitionsForUiSchema(scope.filterDefinitions) }
+        : {}),
       parentSubformNodeId: scope.parentSubformNodeId,
       ...(scope.runtime ? { runtime: scope.runtime } : {}),
       subformType: scope.subformType,
       tableKey: scope.tableKey,
-      viewSettings: scope.viewSettings,
-    };
+      ...(compactViewSettingsForUiSchema(scope.viewSettings)
+        ? { viewSettings: compactViewSettingsForUiSchema(scope.viewSettings) }
+        : {}),
+    });
   });
 
   return {
-    rootScope: {
+    rootScope: compactSchemaRecord({
       ...rootScope.uiScope,
-      filterDefinitions: document.filterDefinitions,
+      nodes: rootScope.uiScope.nodes
+        .map((node) => compactUiNodeForSchema(node as FormBuilderNode, fieldLabelById)),
+      ...(compactFilterDefinitionsForUiSchema(document.filterDefinitions)
+        ? { filterDefinitions: compactFilterDefinitionsForUiSchema(document.filterDefinitions) }
+        : {}),
       ...(document.rootScope.runtime ? { runtime: document.rootScope.runtime } : {}),
-      systemFields: document.systemFields,
-      viewSettings: document.viewSettings,
-    },
+      ...(compactSystemFieldsForUiSchema(document.systemFields)
+        ? { systemFields: compactSystemFieldsForUiSchema(document.systemFields) }
+        : {}),
+      ...(compactViewSettingsForUiSchema(document.viewSettings)
+        ? { viewSettings: compactViewSettingsForUiSchema(document.viewSettings) }
+        : {}),
+    }),
     subformScopes,
   } satisfies Record<string, unknown>;
 }
@@ -3196,23 +3410,92 @@ function getSummaryText(
   return t(summaryKey);
 }
 
+function buildCompiledRuntimeFieldMappings(
+  fields: ReadonlyArray<FormsPlaceholderField>,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  return fields.map((field) => {
+    const storageKey = field.storageKey ?? toStorageKey(field.id);
+    const selectionMode = field.selectionMode ?? "single";
+    const storageMode = field.kind === "db_lookup" && selectionMode === "multiple"
+      ? "multi_value"
+      : "column";
+
+    return {
+      fieldId: field.id,
+      kind: field.kind,
+      storageKey,
+      storageMode,
+      physicalColumnName: storageMode === "multi_value"
+        ? null
+        : field.kind === "db_lookup"
+          ? `${storageKey}_id`
+          : storageKey,
+      dataViewColumnName: storageKey,
+      lookupOutputColumns: field.kind === "db_lookup"
+        ? Object.fromEntries(
+            getLookupDerivedOutputDefinitions(field, t).map((output) => [output.outputKey, output.columnName] as const),
+          )
+        : {},
+    };
+  });
+}
+
+function buildCompiledRuntimeMapping(
+  document: ReturnType<typeof useFormBuilderDocument>["document"],
+  model: Pick<FormsPlaceholderModel, "fields">,
+  t: ReturnType<typeof useTranslation>["t"],
+) {
+  const rootFields = model.fields.filter((field) => getFieldSchemaScopeId(field) === "root");
+
+  return {
+    dataScopes: [
+      {
+        schemaScopeId: "root",
+        ...document.rootScope.dataSchema.runtime,
+        fields: buildCompiledRuntimeFieldMappings(rootFields, t),
+      },
+      ...document.subformScopes.map((scope) => ({
+        schemaScopeId: scope.tableKey,
+        ...scope.dataSchema.runtime,
+        fields: buildCompiledRuntimeFieldMappings(
+          model.fields.filter((field) => getFieldSchemaScopeId(field) === scope.tableKey),
+          t,
+        ),
+      })),
+    ],
+    viewScopes: [
+      {
+        schemaScopeId: "root",
+        ...document.rootScope.runtime,
+      },
+      ...document.subformScopes.map((scope) => ({
+        schemaScopeId: scope.tableKey,
+        ...scope.runtime,
+      })),
+    ],
+  } satisfies Record<string, unknown>;
+}
+
 function compileDebugSchemas(
   document: ReturnType<typeof useFormBuilderDocument>["document"],
   model: FormsPlaceholderModel,
   view: FormsPlaceholderView,
   layoutBlueprint: Record<string, unknown>,
+  t: ReturnType<typeof useTranslation>["t"],
 ) {
   return {
     modelSchema: {
       dataSchema: buildCanonicalDataSchema(model, document),
       layoutBlueprint,
     },
+    compiledRuntime: buildCompiledRuntimeMapping(document, model, t),
     uiSchema: {
       isDefault: view.isDefault,
       isActive: view.isActive,
       viewId: view.id,
       viewKey: view.key,
-      ...buildCanonicalUiSchema(document),
+      ...buildCanonicalUiSchema(document, model),
     },
   };
 }
@@ -4091,8 +4374,8 @@ export function FormsViewWorkspacePage() {
     : (activeScope.scopeType === "SUBFORM" ? "subform" : null);
   const canPlaceFieldAtCurrentLevel = getAllowedChildNodeTypes(currentScopeContainerType).includes("field");
   const currentUiSchema = useMemo(
-    () => buildCanonicalUiSchema(document),
-    [document],
+    () => buildCanonicalUiSchema(document, currentModel),
+    [currentModel, document],
   );
   const currentLayoutBlueprint = useMemo(
     () => (isDefaultView ? buildCanonicalLayoutBlueprint(document) : layoutBlueprintDraft),
@@ -4157,8 +4440,9 @@ export function FormsViewWorkspacePage() {
       },
       currentView,
       currentLayoutBlueprint,
+      t,
     ),
-    [currentLayoutBlueprint, currentModel, currentModelSchemaScopes, currentView, document],
+    [currentLayoutBlueprint, currentModel, currentModelSchemaScopes, currentView, document, t],
   );
 
   function cycleNodeVisibility(currentVisibility: FormBuilderNode["visibility"]): FormBuilderNode["visibility"] {
@@ -4351,6 +4635,10 @@ export function FormsViewWorkspacePage() {
   const debugDataSchema = useMemo(
     () => JSON.stringify(compiledDebugSchemas.modelSchema, null, 2),
     [compiledDebugSchemas.modelSchema],
+  );
+  const debugCompiledRuntime = useMemo(
+    () => JSON.stringify(compiledDebugSchemas.compiledRuntime, null, 2),
+    [compiledDebugSchemas.compiledRuntime],
   );
   const debugUiSchema = useMemo(
     () => JSON.stringify(compiledDebugSchemas.uiSchema, null, 2),
@@ -5596,7 +5884,7 @@ export function FormsViewWorkspacePage() {
       }, documentForSave)
       : savedDataSchema;
     const nextLayoutBlueprint = isDefaultView ? currentLayoutBlueprint : savedLayoutBlueprintDraft;
-    const nextUiSchema = buildCanonicalUiSchema(documentForSave);
+    const nextUiSchema = buildCanonicalUiSchema(documentForSave, nextModel);
     const expectedVersions = {
       model: savedModelDraft.version ?? previousModelStructureVersion,
       view: previousCurrentView.viewVersion ?? currentView.viewVersion ?? 1,
@@ -8469,6 +8757,18 @@ export function FormsViewWorkspacePage() {
                 </CardHeader>
                 <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
                   <pre className="tenant-web__platform-studio-debug-schema-pre">{debugUiSchema}</pre>
+                </CardContent>
+              </Card>
+
+              <Card className="tenant-web__platform-studio-debug-schema-card">
+                <CardHeader>
+                  <div>
+                    <CardTitle>Compiled Runtime</CardTitle>
+                    <CardDescription>Derived storage and SQL mapping for scopes and fields.</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
+                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugCompiledRuntime}</pre>
                 </CardContent>
               </Card>
             </div>

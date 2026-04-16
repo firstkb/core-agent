@@ -584,6 +584,23 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     }),
   },
   {
+    idBase: "suggest-text",
+    labelKey: "tenant.platformStudio.forms.builder.fieldPreset.suggest_text",
+    searchTerms: ["suggest text", "combobox", "autocomplete text", "city", "department"],
+    section: "readyMadeFields",
+    template: createFieldTemplate("preset", "short_text", "Suggest text", {
+      placeholder: "Start typing",
+      preset: "suggest_text",
+      suggestConfig: {
+        allowCustomValue: true,
+        maxResults: 20,
+        minQueryLength: 1,
+        searchMode: "contains",
+        sourceMode: "same_field_distinct_values",
+      },
+    }),
+  },
+  {
     idBase: "tags",
     labelKey: "tenant.platformStudio.forms.builder.fieldPreset.tags",
     searchTerms: ["tags", "chips"],

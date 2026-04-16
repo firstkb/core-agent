@@ -90,9 +90,10 @@ type ListViewsResponse struct {
 
 type ModelDetailResponse struct {
 	ModelSummary
-	Fields         []ModelFieldSummary `json:"fields"`
-	Views          []ViewSummary       `json:"views"`
-	SelectedViewID string              `json:"selectedViewId,omitempty"`
+	Fields         []ModelFieldSummary  `json:"fields"`
+	Views          []ViewSummary        `json:"views"`
+	SelectedViewID string               `json:"selectedViewId,omitempty"`
+	RuntimeApply   *RuntimeApplySummary `json:"runtimeApply,omitempty"`
 }
 
 type ViewDetailResponse struct {

@@ -16,6 +16,7 @@ Date: 2026-04-13
 - `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
@@ -55,7 +56,10 @@ Date: 2026-04-13
 - the first backend-facing Form Builder pass uses integer `modelStructureVersion`
 - view drift is driven by `modelStructureVersion > lastAlignedModelStructureVersion`
 - `root` may lock `model` and `view` separately
-- a newly added field may still update the model label before first successful `Save`; after that, ordinary canvas rename is view-only
+- a newly added field may still update the model label before first successful `Save`
+- after the first successful `Save`, the `default` view may still update canonical field labels
+- default-view label-only rename is metadata-only and must not create structure drift
+- non-default views keep rename as view-only
 - Form Builder `Save` now targets `save + runtime apply`, but it is still not site publication; Navigation Builder and privileges remain a separate exposure layer
 - each view now carries an explicit `isActive` authoring flag behind the eye indicator in the views list
 - canonical tenant API route naming for authoring state is `/authoring`; legacy `/draft` remains only as a temporary compatibility alias and not the intended user-facing lifecycle language

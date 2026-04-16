@@ -305,7 +305,7 @@ func (s *Service) CreateView(ctx context.Context, modelID string, req CreateView
 		return nil, err
 	}
 
-	return buildModelDetailResponse(model, views, viewRecord.ViewID), nil
+	return s.buildModelDetailResponseWithRuntime(ctx, tenant, model, views, viewRecord.ViewID)
 }
 
 func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req CopyViewRequest) (*ModelDetailResponse, error) {
@@ -337,7 +337,7 @@ func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req Copy
 		return nil, err
 	}
 
-	return buildModelDetailResponse(model, views, viewRecord.ViewID), nil
+	return s.buildModelDetailResponseWithRuntime(ctx, tenant, model, views, viewRecord.ViewID)
 }
 
 func (s *Service) DeleteView(ctx context.Context, modelID, viewID string) (*ModelDetailResponse, error) {
@@ -1168,6 +1168,41 @@ func runtimeApplyWarnings(summary *RuntimeApplySummary) []ValidationMessage {
 		warnings = append(warnings, scope.Warnings...)
 	}
 	return warnings
+}
+
+func (s *Service) buildModelDetailResponseWithRuntime(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	model *ModelRecord,
+	views []ViewRecord,
+	selectedViewID string,
+) (*ModelDetailResponse, error) {
+	response := buildModelDetailResponse(model, views, selectedViewID)
+	if response == nil || model == nil {
+		return response, nil
+	}
+
+	modelPayload, err := buildCanonicalModelPayload(model, views)
+	if err != nil {
+		return nil, err
+	}
+	lookupModels, err := s.resolveRuntimeLookupModels(ctx, tenant, modelPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	runtimePlan := buildRuntimeApplyPlan(model, views, modelPayload, lookupModels)
+	runtimeSummary, runtimeErr := s.repo.ApplyRuntime(ctx, tenant, runtimePlan)
+	if runtimeErr != nil {
+		response.RuntimeApply = &RuntimeApplySummary{
+			Status:  "failed",
+			Message: runtimeErr.Error(),
+		}
+		return response, nil
+	}
+
+	response.RuntimeApply = runtimeSummary
+	return response, nil
 }
 
 func buildModelDetailResponse(model *ModelRecord, views []ViewRecord, selectedViewID string) *ModelDetailResponse {

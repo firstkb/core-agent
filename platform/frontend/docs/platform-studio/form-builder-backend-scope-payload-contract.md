@@ -21,7 +21,9 @@ Use `form-builder-backend-execution-plan.md` as the staged execution companion.
 The first draft API must expose enough state to support the agreed authoring lifecycle:
 
 - a new field may still update model label before the first successful `Save`
-- after the first successful `Save`, ordinary canvas rename is view-only
+- in the `default` view, field rename may still update canonical model label after the first successful `Save`
+- default-view label-only rename is metadata-only and must not advance `modelStructureVersion`
+- in non-default views, ordinary canvas rename stays view-only
 - remove from canvas is not delete from model
 - model structure drift is driven by integer `modelStructureVersion`
 - a view warning state is derived from:

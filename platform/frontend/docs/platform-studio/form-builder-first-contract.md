@@ -142,7 +142,9 @@ The first contract must keep these behaviors explicit:
 - if a field was added and has not yet been saved, renaming it updates:
   - the model field default label
   - the current view node title
-- after the first successful `Save`, ordinary rename in canvas updates only the current view
+- after the first successful `Save`, rename in the `default` view may still update the canonical model label
+- label-only rename in the `default` view is metadata-only and must not create view drift
+- in non-default views, ordinary rename in canvas updates only the current view
 - view drift is driven by integer structure versions:
   - `modelStructureVersion`
   - `lastAlignedModelStructureVersion`
@@ -160,7 +162,8 @@ The first integrated save path should follow these rules:
   - current view metadata
   - the current layout draft
 - the first successful save fixes newly added fields in the model
-- after a field is fixed, ordinary canvas rename must not silently rewrite the model field label or storage identity
+- after a field is fixed, non-default views must not silently rewrite the model field label or storage identity
+- the `default` view may still rewrite the canonical field label, but label-only rename must not advance `modelStructureVersion`
 - the response returns the stored model payload, the stored view payload, and updated versions or concurrency tokens
 - lock state echoed by the server wins over stale client assumptions
 - version mismatch must be treated as an edit conflict, not as silent overwrite

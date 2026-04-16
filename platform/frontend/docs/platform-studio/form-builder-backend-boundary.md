@@ -43,7 +43,9 @@ The boundary must already support these locked rules:
 - removing a field from canvas changes only the current view
 - deleting a field from the model is a separate structure action
 - if a field is new and has not yet been saved, rename in canvas updates model label plus current view title
-- after the first successful `Save`, ordinary rename in canvas updates only the current view
+- after the first successful `Save`, rename in the `default` view may still update canonical model label
+- default-view label-only rename must not advance `modelStructureVersion`
+- in non-default views, ordinary rename in canvas updates only the current view
 - use integer `modelStructureVersion`; do not use fractional values such as `0.1`
 - if `modelStructureVersion > lastAlignedModelStructureVersion`, the UI may show the yellow view-drift warning
 - `root` may lock `model` and `view` separately

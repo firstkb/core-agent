@@ -60,6 +60,7 @@ export type FormsPlaceholderReadyMadePreset =
   | "email"
   | "phone"
   | "radio_group"
+  | "suggest_text"
   | "tags"
   | "url";
 
@@ -79,6 +80,7 @@ export const formsPlaceholderReadyMadePresets: ReadonlySet<FormsPlaceholderReady
   "email",
   "phone",
   "radio_group",
+  "suggest_text",
   "tags",
   "url",
 ]);

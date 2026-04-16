@@ -131,7 +131,10 @@ func normalizeViewPayloadForStorage(
 	if err != nil {
 		return nil, err
 	}
-	uiSchema = ensureUISchemaRuntimeMetadata(uiSchema, dataSchema, out, model, existing)
+	uiSchema = compactUISchemaForStorage(
+		ensureUISchemaRuntimeMetadata(uiSchema, dataSchema, out, model, existing),
+		dataSchema,
+	)
 
 	delete(out, "currentParentId")
 	delete(out, "guid")
@@ -170,7 +173,9 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 	)
 
 	if explicit := asMap(payload["dataSchema"]); len(explicit) > 0 {
-		return ensureDataSchemaRuntimeMetadata(normalizeExplicitDataSchema(explicit, modelID, modelTitle), payload, existing), nil
+		return compactDataSchemaForStorage(
+			ensureDataSchemaRuntimeMetadata(normalizeExplicitDataSchema(explicit, modelID, modelTitle), payload, existing),
+		), nil
 	}
 
 	scopeMeta := orderedSubformScopeMeta(payload, defaultView)
@@ -217,7 +222,7 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 		})
 	}
 
-	return ensureDataSchemaRuntimeMetadata(map[string]any{
+	return compactDataSchemaForStorage(ensureDataSchemaRuntimeMetadata(map[string]any{
 		"modelId":    modelID,
 		"modelTitle": modelTitle,
 		"rootScope": map[string]any{
@@ -226,7 +231,7 @@ func normalizeDataSchemaPayload(payload map[string]any, existing *ModelRecord, d
 			"scopeType":     "ROOT",
 		},
 		"subformScopes": subformScopes,
-	}, payload, existing), nil
+	}, payload, existing)), nil
 }
 
 func normalizeExplicitDataSchema(explicit map[string]any, modelID string, modelTitle string) map[string]any {
@@ -638,7 +643,7 @@ func buildFreshUISchema(dataSchema map[string]any, layoutBlueprint map[string]an
 		subformScopes = append(subformScopes, scope)
 	}
 
-	return map[string]any{
+	return compactUISchemaForStorage(map[string]any{
 		"rootScope": map[string]any{
 			"filterDefinitions": map[string]any{},
 			"nodes":             rootNodes,
@@ -649,7 +654,7 @@ func buildFreshUISchema(dataSchema map[string]any, layoutBlueprint map[string]an
 			"viewSettings":      map[string]any{},
 		},
 		"subformScopes": subformScopes,
-	}
+	}, dataSchema)
 }
 
 func materializeUIScope(scopeID string, blueprint map[string]any) map[string]any {
@@ -870,7 +875,7 @@ func validateAuthoringSchemas(dataSchema map[string]any, layoutBlueprint map[str
 func injectCompatibilityFields(payload map[string]any) map[string]any {
 	out := cloneJSONToMap(mustCanonicalJSON(payload))
 	dataSchema := asMap(out["dataSchema"])
-	out["fields"] = flattenDataSchemaFields(dataSchema)
+	out["fields"] = flattenCompatibilityDataSchemaFields(dataSchema)
 	out["schemaScopes"] = dataSchemaSchemaScopes(dataSchema)
 	return out
 }
@@ -994,14 +999,17 @@ func normalizeLegacyFlatFields(entries []any) []map[string]any {
 	out := make([]map[string]any, 0)
 	for _, raw := range entries {
 		field := asMap(raw)
-		normalized := normalizeDataSchemaFields([]any{field}, chooseString(
+		scopeID := chooseString(
 			normalizeString(field["schemaScopeId"]),
 			chooseString(normalizeString(field["schemaScopeKey"]), rootSchemaScopeID),
-		))
+		)
+		normalized := normalizeDataSchemaFields([]any{field}, scopeID)
 		if len(normalized) == 0 {
 			continue
 		}
-		out = append(out, asMap(normalized[0]))
+		nextField := asMap(normalized[0])
+		nextField["schemaScopeId"] = scopeID
+		out = append(out, nextField)
 	}
 	return out
 }
@@ -1041,31 +1049,54 @@ func normalizeDataSchemaFields(entries []any, scopeID string) []any {
 		}
 		seen[fieldID] = struct{}{}
 		normalized := cloneJSONToMap(mustCanonicalJSON(field))
-		normalized["displayName"] = chooseString(normalizeString(normalized["displayName"]), chooseString(normalizeString(normalized["label"]), fieldID))
 		normalized["id"] = fieldID
-		normalized["isLocked"] = getBoolValue(normalized, "isLocked", false)
-		normalized["isPersisted"] = getBoolValue(normalized, "isPersisted", true)
-		normalized["key"] = chooseString(normalizeString(normalized["key"]), fieldID)
-		normalized["label"] = chooseString(normalizeString(normalized["label"]), normalized["displayName"].(string))
-		normalized["schemaScopeId"] = scopeID
-		normalized["status"] = normalizeString(normalized["status"])
+		normalized["label"] = chooseString(
+			normalizeString(normalized["label"]),
+			chooseString(normalizeString(normalized["displayName"]), fieldID),
+		)
 		normalized["storageKey"] = uniqueFieldStorageKey(
 			chooseString(
 				normalizeString(normalized["storageKey"]),
 				chooseString(
 					normalizeString(normalized["label"]),
-					chooseString(
-						normalized["displayName"].(string),
-						fieldID,
-					),
+					fieldID,
 				),
 			),
 			seenStorageKeys,
 		)
+		status := chooseString(
+			normalizeString(normalized["status"]),
+			chooseString(statusFromPersistedFlag(normalized["isPersisted"]), "persisted"),
+		)
+		if status != "persisted" {
+			normalized["status"] = status
+		} else {
+			delete(normalized, "status")
+		}
+		if getBoolValue(normalized, "isLocked", false) {
+			normalized["isLocked"] = true
+		} else {
+			delete(normalized, "isLocked")
+		}
+		if normalizeString(normalized["autocomplete"]) == "on" {
+			delete(normalized, "autocomplete")
+		}
+		delete(normalized, "displayName")
+		delete(normalized, "fieldId")
+		delete(normalized, "isPersisted")
+		delete(normalized, "key")
+		delete(normalized, "schemaScopeId")
 		delete(normalized, "schemaScopeKey")
-		out = append(out, normalized)
+		out = append(out, pruneEmptyMapsAndStrings(normalized))
 	}
 	return out
+}
+
+func statusFromPersistedFlag(value any) string {
+	if persisted, ok := value.(bool); ok && !persisted {
+		return "draft"
+	}
+	return ""
 }
 
 func orderedSubformScopeMeta(payload map[string]any, defaultView *ViewRecord) map[string]subformScopeMeta {
@@ -1393,17 +1424,333 @@ func mergeMissingFieldIDs(rawUnplaced any, rawPlacements any, known map[string]s
 	return unplaced
 }
 
+func compactDataSchemaForStorage(dataSchema map[string]any) map[string]any {
+	rootScope := compactDataSchemaScopeForStorage(asMap(dataSchema["rootScope"]), rootSchemaScopeID)
+	subformScopes := make([]any, 0)
+	for _, raw := range asSlice(dataSchema["subformScopes"]) {
+		scope := compactDataSchemaScopeForStorage(asMap(raw), normalizeString(asMap(raw)["schemaScopeId"]))
+		if len(scope) == 0 {
+			continue
+		}
+		subformScopes = append(subformScopes, scope)
+	}
+
+	return map[string]any{
+		"modelId":       normalizeString(dataSchema["modelId"]),
+		"modelTitle":    normalizeString(dataSchema["modelTitle"]),
+		"rootScope":     rootScope,
+		"subformScopes": subformScopes,
+	}
+}
+
+func compactDataSchemaScopeForStorage(scope map[string]any, scopeID string) map[string]any {
+	fields := make([]any, 0)
+	for _, raw := range asSlice(scope["fields"]) {
+		field := pruneEmptyMapsAndStrings(cloneJSONToMap(mustCanonicalJSON(asMap(raw))))
+		if len(field) == 0 {
+			continue
+		}
+		fields = append(fields, field)
+	}
+
+	out := map[string]any{
+		"fields":        fields,
+		"schemaScopeId": chooseString(scopeID, normalizeString(scope["schemaScopeId"])),
+	}
+	if runtime := pruneEmptyMapsAndStrings(normalizeAnyMap(scope["runtime"])); len(runtime) > 0 {
+		out["runtime"] = runtime
+	}
+	if scopeID != rootSchemaScopeID {
+		out["displayName"] = chooseString(normalizeString(scope["displayName"]), humanizeIdentifier(scopeID))
+		out["subformType"] = chooseString(normalizeString(scope["subformType"]), "DEFAULT")
+		out["tableKey"] = chooseString(normalizeString(scope["tableKey"]), scopeID)
+	}
+	return pruneEmptyMapsAndStrings(out)
+}
+
+func compactUISchemaForStorage(uiSchema map[string]any, dataSchema map[string]any) map[string]any {
+	rootScope := compactUIScopeForStorage(asMap(uiSchema["rootScope"]), dataSchema, rootSchemaScopeID)
+	subformScopes := make([]any, 0)
+	for _, raw := range asSlice(uiSchema["subformScopes"]) {
+		scope := asMap(raw)
+		scopeID := normalizeString(scope["schemaScopeId"])
+		if scopeID == "" {
+			continue
+		}
+		subform := compactUIScopeForStorage(scope, dataSchema, scopeID)
+		if len(subform) == 0 {
+			continue
+		}
+		subformScopes = append(subformScopes, subform)
+	}
+	return map[string]any{
+		"rootScope":     rootScope,
+		"subformScopes": subformScopes,
+	}
+}
+
+func compactUIScopeForStorage(scope map[string]any, dataSchema map[string]any, scopeID string) map[string]any {
+	fieldLabelByID := fieldLabelsByID(dataSchema, scopeID)
+	nodes := make([]any, 0)
+	for _, raw := range asSlice(scope["nodes"]) {
+		node := compactUIScopeNodeForStorage(asMap(raw), fieldLabelByID)
+		if len(node) == 0 {
+			continue
+		}
+		nodes = append(nodes, node)
+	}
+
+	out := map[string]any{
+		"nodes":         nodes,
+		"schemaScopeId": scopeID,
+	}
+	if filterDefinitions := compactFilterDefinitionsForStorage(normalizeAnyMap(scope["filterDefinitions"])); len(filterDefinitions) > 0 {
+		out["filterDefinitions"] = filterDefinitions
+	}
+	if runtime := pruneEmptyMapsAndStrings(normalizeAnyMap(scope["runtime"])); len(runtime) > 0 {
+		out["runtime"] = runtime
+	}
+	if systemFields := pruneEmptyMapsAndStrings(normalizeAnyMap(scope["systemFields"])); len(systemFields) > 0 {
+		out["systemFields"] = systemFields
+	}
+	if unplaced := normalizeStringList(scope["unplacedFieldIds"]); len(unplaced) > 0 {
+		out["unplacedFieldIds"] = unplaced
+	}
+	if viewSettings := compactViewSettingsForStorage(normalizeAnyMap(scope["viewSettings"])); len(viewSettings) > 0 {
+		out["viewSettings"] = viewSettings
+	}
+	if scopeID != rootSchemaScopeID {
+		out["parentSubformNodeId"] = normalizeString(scope["parentSubformNodeId"])
+		out["subformType"] = chooseString(normalizeString(scope["subformType"]), "DEFAULT")
+		out["tableKey"] = chooseString(normalizeString(scope["tableKey"]), scopeID)
+	}
+	return pruneEmptyMapsAndStrings(out)
+}
+
+func compactUIScopeNodeForStorage(node map[string]any, fieldLabelByID map[string]string) map[string]any {
+	out := cloneJSONToMap(mustCanonicalJSON(node))
+	if normalizeString(out["helperText"]) == "" {
+		delete(out, "helperText")
+	}
+	if getBoolValue(out, "required", false) {
+		out["required"] = true
+	} else {
+		delete(out, "required")
+	}
+	if normalizeString(out["visibility"]) == "visible" {
+		delete(out, "visibility")
+	}
+	if normalizeString(out["parentId"]) == "" {
+		delete(out, "parentId")
+	}
+	if rules := compactNodeRulesForStorage(normalizeAnyMap(out["rules"])); len(rules) > 0 {
+		out["rules"] = rules
+	} else {
+		delete(out, "rules")
+	}
+	if normalizeString(out["type"]) == "field" {
+		fieldID := normalizeString(out["fieldId"])
+		if fieldID != "" && normalizeString(out["title"]) == fieldLabelByID[fieldID] {
+			delete(out, "title")
+		}
+	}
+	if normalizeString(out["title"]) == "" {
+		delete(out, "title")
+	}
+	return pruneEmptyMapsAndStrings(out)
+}
+
+func compactNodeRulesForStorage(rules map[string]any) map[string]any {
+	out := map[string]any{}
+	if requirements := asSlice(rules["requirementRules"]); len(requirements) > 0 {
+		out["requirementRules"] = requirements
+	}
+	if visibility := asSlice(rules["visibilityRules"]); len(visibility) > 0 {
+		out["visibilityRules"] = visibility
+	}
+	return out
+}
+
+func compactFilterDefinitionsForStorage(filterDefinitions map[string]any) map[string]any {
+	defaultFilters := asMap(filterDefinitions["defaultFilters"])
+	quickFilters := asSlice(filterDefinitions["quickFilters"])
+	if len(asSlice(defaultFilters["conditions"])) == 0 && len(quickFilters) == 0 {
+		return map[string]any{}
+	}
+	out := map[string]any{}
+	if len(defaultFilters) > 0 {
+		out["defaultFilters"] = pruneEmptyMapsAndStrings(defaultFilters)
+	}
+	if len(quickFilters) > 0 {
+		out["quickFilters"] = quickFilters
+	}
+	if version := getInt64Value(filterDefinitions, "version", 0); version > 0 {
+		out["version"] = version
+	}
+	return pruneEmptyMapsAndStrings(out)
+}
+
+func compactViewSettingsForStorage(viewSettings map[string]any) map[string]any {
+	out := cloneJSONToMap(mustCanonicalJSON(viewSettings))
+	if actions := asMap(out["actions"]); actionsAllTrue(actions) {
+		delete(out, "actions")
+	}
+	if correctiveAction := asMap(out["correctiveAction"]); !getBoolValue(correctiveAction, "enabled", false) {
+		delete(out, "correctiveAction")
+	}
+	list := asMap(out["list"])
+	if len(list) > 0 {
+		columns := make([]any, 0)
+		for _, raw := range asSlice(list["columns"]) {
+			column := cloneJSONToMap(mustCanonicalJSON(asMap(raw)))
+			if getBoolValue(column, "visible", true) {
+				delete(column, "visible")
+			}
+			columns = append(columns, pruneEmptyMapsAndStrings(column))
+		}
+		if len(columns) > 0 {
+			list["columns"] = columns
+		} else {
+			delete(list, "columns")
+		}
+		sorting := asMap(list["sorting"])
+		if len(sorting) > 0 {
+			if normalizeString(sorting["direction"]) == "asc" {
+				delete(sorting, "direction")
+			}
+			sorting = pruneEmptyMapsAndStrings(sorting)
+			if len(sorting) > 0 {
+				list["sorting"] = sorting
+			} else {
+				delete(list, "sorting")
+			}
+		}
+		list = pruneEmptyMapsAndStrings(list)
+		if len(list) > 0 {
+			out["list"] = list
+		} else {
+			delete(out, "list")
+		}
+	}
+	return pruneEmptyMapsAndStrings(out)
+}
+
+func actionsAllTrue(actions map[string]any) bool {
+	if len(actions) == 0 {
+		return true
+	}
+	for _, value := range actions {
+		boolValue, ok := value.(bool)
+		if !ok || !boolValue {
+			return false
+		}
+	}
+	return true
+}
+
+func fieldLabelsByID(dataSchema map[string]any, scopeID string) map[string]string {
+	labels := make(map[string]string)
+	for _, raw := range asSlice(dataSchemaScope(dataSchema, scopeID)["fields"]) {
+		field := asMap(raw)
+		fieldID := normalizeString(field["id"])
+		if fieldID == "" {
+			continue
+		}
+		labels[fieldID] = chooseString(normalizeString(field["label"]), fieldID)
+	}
+	return labels
+}
+
+func pruneEmptyMapsAndStrings(value map[string]any) map[string]any {
+	out := make(map[string]any, len(value))
+	for key, entry := range value {
+		switch typed := entry.(type) {
+		case map[string]any:
+			pruned := pruneEmptyMapsAndStrings(typed)
+			if len(pruned) > 0 {
+				out[key] = pruned
+			}
+		case []any:
+			prunedItems := make([]any, 0, len(typed))
+			for _, item := range typed {
+				switch nested := item.(type) {
+				case map[string]any:
+					pruned := pruneEmptyMapsAndStrings(nested)
+					if len(pruned) > 0 {
+						prunedItems = append(prunedItems, pruned)
+					}
+				case string:
+					if normalizeString(nested) != "" {
+						prunedItems = append(prunedItems, nested)
+					}
+				default:
+					if item != nil {
+						prunedItems = append(prunedItems, item)
+					}
+				}
+			}
+			if len(prunedItems) > 0 {
+				out[key] = prunedItems
+			}
+		case string:
+			if normalizeString(typed) != "" {
+				out[key] = normalizeString(typed)
+			}
+		default:
+			if entry != nil {
+				out[key] = entry
+			}
+		}
+	}
+	return out
+}
+
+func flattenCompatibilityDataSchemaFields(dataSchema map[string]any) []any {
+	out := make([]any, 0)
+	for _, raw := range flattenDataSchemaFields(dataSchema) {
+		field := asMap(raw)
+		scopeID := chooseString(
+			normalizeString(field["schemaScopeId"]),
+			rootSchemaScopeID,
+		)
+		out = append(out, compatibilityDataSchemaField(field, scopeID))
+	}
+	return out
+}
+
 func flattenDataSchemaFields(dataSchema map[string]any) []any {
 	out := make([]any, 0)
 	for _, raw := range asSlice(asMap(dataSchema["rootScope"])["fields"]) {
-		out = append(out, raw)
+		field := cloneJSONToMap(mustCanonicalJSON(asMap(raw)))
+		field["schemaScopeId"] = rootSchemaScopeID
+		out = append(out, field)
 	}
 	for _, rawScope := range asSlice(dataSchema["subformScopes"]) {
 		scope := asMap(rawScope)
+		scopeID := normalizeString(scope["schemaScopeId"])
 		for _, rawField := range asSlice(scope["fields"]) {
-			out = append(out, rawField)
+			field := cloneJSONToMap(mustCanonicalJSON(asMap(rawField)))
+			field["schemaScopeId"] = scopeID
+			out = append(out, field)
 		}
 	}
+	return out
+}
+
+func compatibilityDataSchemaField(field map[string]any, scopeID string) map[string]any {
+	out := cloneJSONToMap(mustCanonicalJSON(field))
+	fieldID := normalizeString(out["id"])
+	label := chooseString(normalizeString(out["label"]), fieldID)
+	status := chooseString(normalizeString(out["status"]), "persisted")
+	out["displayName"] = label
+	out["fieldId"] = fieldID
+	out["isLocked"] = getBoolValue(out, "isLocked", false)
+	out["isPersisted"] = status != "draft"
+	out["key"] = fieldID
+	out["label"] = label
+	out["schemaScopeId"] = scopeID
+	out["schemaScopeKey"] = scopeID
+	out["status"] = status
 	return out
 }
 

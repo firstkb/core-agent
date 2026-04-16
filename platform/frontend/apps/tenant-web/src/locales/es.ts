@@ -379,6 +379,7 @@ export const tenantSpanishMessages = {
             project_lookup: "Project",
             projects_lookup: "Projects",
             radio_group: "Radio group",
+            suggest_text: "Suggest text",
             tags: "Tags",
             url: "URL",
           },

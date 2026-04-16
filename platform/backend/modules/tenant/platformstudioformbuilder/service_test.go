@@ -570,7 +570,19 @@ func TestCopyViewClonesSourceUISchemaExactly(t *testing.T) {
 	}
 
 	copiedPayload := mustDecodeJSONMap(t, copiedView.DefinitionJSON)
-	sourceUISchema := cloneJSONToMap(mustCanonicalJSON(asMap(sourcePayload["uiSchema"])))
+	views, err := repo.ListViews(testContext(), requestctx.TenantInfo{}, model.ModelID)
+	if err != nil {
+		t.Fatalf("ListViews returned error: %v", err)
+	}
+	modelPayload, err := buildCanonicalModelPayload(model, views)
+	if err != nil {
+		t.Fatalf("buildCanonicalModelPayload returned error: %v", err)
+	}
+	canonicalSourcePayload, err := buildCanonicalViewPayload(model, sourceView, views, modelPayload)
+	if err != nil {
+		t.Fatalf("buildCanonicalViewPayload returned error: %v", err)
+	}
+	sourceUISchema := cloneJSONToMap(mustCanonicalJSON(asMap(canonicalSourcePayload["uiSchema"])))
 	copiedUISchema := cloneJSONToMap(mustCanonicalJSON(asMap(copiedPayload["uiSchema"])))
 	stripUISchemaRuntimeMetadata(sourceUISchema)
 	stripUISchemaRuntimeMetadata(copiedUISchema)
@@ -803,6 +815,69 @@ func TestSaveDraftForDefaultViewRenamesCanonicalLabelWithoutStructureDrift(t *te
 	overrideSaved := mustDecodeJSONMap(t, repo.views[model.ModelID][overrideView.ViewID].DefinitionJSON)
 	if title := rootFieldNodeTitle(overrideSaved, "site-name"); title != "Local Site" {
 		t.Fatalf("expected local override title to remain unchanged, got %q", title)
+	}
+}
+
+func TestSaveDraftStoresSparseSchemasButReturnsCompatibilityFields(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+
+	storedModel := mustDecodeJSONMap(t, repo.models[model.ModelID].DefinitionJSON)
+	storedRootFields := asSlice(asMap(asMap(storedModel["dataSchema"])["rootScope"])["fields"])
+	if len(storedRootFields) == 0 {
+		t.Fatalf("expected stored root fields, got %#v", storedModel["dataSchema"])
+	}
+	storedField := asMap(storedRootFields[0])
+	for _, key := range []string{"displayName", "fieldId", "isPersisted", "key", "schemaScopeId", "schemaScopeKey"} {
+		if _, ok := storedField[key]; ok {
+			t.Fatalf("expected sparse stored field without %q, got %#v", key, storedField)
+		}
+	}
+
+	storedView := mustDecodeJSONMap(t, repo.views[model.ModelID][view.ViewID].DefinitionJSON)
+	storedRootScope := asMap(asMap(storedView["uiSchema"])["rootScope"])
+	for _, key := range []string{"filterDefinitions", "systemFields", "viewSettings", "unplacedFieldIds"} {
+		if _, ok := storedRootScope[key]; ok {
+			t.Fatalf("expected sparse stored root ui scope without %q, got %#v", key, storedRootScope)
+		}
+	}
+	storedNodes := asSlice(storedRootScope["nodes"])
+	if len(storedNodes) == 0 {
+		t.Fatalf("expected stored ui nodes, got %#v", storedRootScope)
+	}
+	storedNode := asMap(storedNodes[0])
+	for _, key := range []string{"helperText", "parentId", "required", "rules", "visibility"} {
+		if _, ok := storedNode[key]; ok {
+			t.Fatalf("expected sparse stored ui node without %q, got %#v", key, storedNode)
+		}
+	}
+
+	draftModel := mustDecodeJSONMap(t, out.Draft.Model)
+	compatFields := asSlice(draftModel["fields"])
+	if len(compatFields) == 0 {
+		t.Fatalf("expected compatibility fields in draft model, got %#v", draftModel)
+	}
+	compatField := asMap(compatFields[0])
+	if compatField["displayName"] != "Site Name" || compatField["fieldId"] != "site-name" || compatField["schemaScopeId"] != "root" {
+		t.Fatalf("expected compatibility field metadata in draft response, got %#v", compatField)
 	}
 }
 
@@ -1750,6 +1825,62 @@ func TestRuntimeViewNamesForModelIncludesGridAndDataViews(t *testing.T) {
 	}
 	if !reflect.DeepEqual(names, want) {
 		t.Fatalf("runtime view names = %#v, want %#v", names, want)
+	}
+}
+
+func TestCreateViewAppliesRuntimeImmediately(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	out, err := svc.CreateView(testContext(), model.ModelID, CreateViewRequest{Title: "Operations"})
+	if err != nil {
+		t.Fatalf("CreateView returned error: %v", err)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
+		t.Fatalf("expected applied runtime summary, got %#v", out.RuntimeApply)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be applied on create view")
+	}
+	if !containsGridViewPlan(repo.lastRuntimePlan.RootScope.GridViews, "vg_site_audit__operations") {
+		t.Fatalf("expected operations root grid view, got %#v", repo.lastRuntimePlan.RootScope.GridViews)
+	}
+
+	scopeRtAlias := buildGeneratedRuntimeScopeAlias("pb_info")
+	if len(repo.lastRuntimePlan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope, got %#v", repo.lastRuntimePlan.SubformScopes)
+	}
+	if !containsGridViewPlan(repo.lastRuntimePlan.SubformScopes[0].GridViews, "vg_site_audit__"+scopeRtAlias+"__operations") {
+		t.Fatalf("expected operations subform grid view, got %#v", repo.lastRuntimePlan.SubformScopes[0].GridViews)
+	}
+}
+
+func TestCopyViewAppliesRuntimeImmediately(t *testing.T) {
+	repo := newMemoryRepository()
+	model, sourceView := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	out, err := svc.CopyView(testContext(), model.ModelID, sourceView.ViewID, CopyViewRequest{Title: "Copied"})
+	if err != nil {
+		t.Fatalf("CopyView returned error: %v", err)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
+		t.Fatalf("expected applied runtime summary, got %#v", out.RuntimeApply)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be applied on copy view")
+	}
+	if !containsGridViewPlan(repo.lastRuntimePlan.RootScope.GridViews, "vg_site_audit__copied") {
+		t.Fatalf("expected copied root grid view, got %#v", repo.lastRuntimePlan.RootScope.GridViews)
+	}
+
+	scopeRtAlias := buildGeneratedRuntimeScopeAlias("pb_info")
+	if len(repo.lastRuntimePlan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope, got %#v", repo.lastRuntimePlan.SubformScopes)
+	}
+	if !containsGridViewPlan(repo.lastRuntimePlan.SubformScopes[0].GridViews, "vg_site_audit__"+scopeRtAlias+"__copied") {
+		t.Fatalf("expected copied subform grid view, got %#v", repo.lastRuntimePlan.SubformScopes[0].GridViews)
 	}
 }
 

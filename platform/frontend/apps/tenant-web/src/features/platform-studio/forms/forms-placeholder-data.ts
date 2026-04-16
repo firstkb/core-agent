@@ -49,6 +49,15 @@ export type FormsPlaceholderLookupConfig = {
   storedTextFields?: ReadonlyArray<string>;
   storedValueField?: string;
 };
+export type FormsPlaceholderSuggestSearchMode = "contains" | "prefix";
+export type FormsPlaceholderSuggestSourceMode = "same_field_distinct_values";
+export type FormsPlaceholderSuggestConfig = {
+  allowCustomValue?: boolean;
+  maxResults?: number;
+  minQueryLength?: number;
+  searchMode?: FormsPlaceholderSuggestSearchMode;
+  sourceMode?: FormsPlaceholderSuggestSourceMode;
+};
 
 export type FormsPlaceholderSchemaScope = {
   displayName: string;
@@ -83,6 +92,7 @@ export type FormsPlaceholderField = {
   semanticRole?: FormsPlaceholderFieldSemanticRole;
   selectionMode?: FormsPlaceholderSelectionMode;
   schemaScopeKey?: string;
+  suggestConfig?: FormsPlaceholderSuggestConfig;
   sourceFilters?: ReadonlyArray<string>;
   sourceLabel?: string;
   status?: FormsPlaceholderFieldStatus;
@@ -693,6 +703,7 @@ function isFieldPreset(value: unknown): value is FormsPlaceholderFieldPreset {
     value === "phone" ||
     value === "project_lookup" ||
     value === "radio_group" ||
+    value === "suggest_text" ||
     value === "tags" ||
     value === "url"
   );
@@ -1254,6 +1265,10 @@ export function getFormsPlaceholderFieldIconKey(field: FormsPlaceholderField) {
 
   if (field.preset === "tags") {
     return "tags";
+  }
+
+  if (field.preset === "suggest_text") {
+    return "short_text";
   }
 
   if (field.preset === "contact_lookup" || field.preset === "company_lookup" || field.preset === "project_lookup") {

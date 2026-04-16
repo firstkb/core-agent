@@ -46,7 +46,7 @@ import {
 
 import {
   getFormsAuthoringAccess,
-  getFormsPlaceholderActor,
+  getFormsAuthoringActor,
 } from "../forms-actors";
 import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
@@ -62,6 +62,7 @@ import {
 import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
+import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
 
 function ScreenActionsIcon() {
   return (
@@ -166,7 +167,8 @@ export function FormsPage() {
     models,
     modelsError,
   } = useFormBuilderAuthoring();
-  const currentActor = getFormsPlaceholderActor(undefined);
+  const workspaceUser = useTenantWorkspaceUser();
+  const currentActor = getFormsAuthoringActor(workspaceUser);
   const [dialogState, setDialogState] = useState<AuthoringDialogState | null>(null);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [isSubmittingDialog, setIsSubmittingDialog] = useState(false);
@@ -657,11 +659,19 @@ export function FormsPage() {
                               {view.isActive ? <EyeIcon /> : <EyeOffIcon />}
                             </span>
                             <Button
-                              onClick={() => navigate(platformStudioPaths.view(
-                                getFormsPlaceholderModelRouteId(selectedModel),
-                                getFormsPlaceholderViewRouteId(view),
-                              ))}
+                              disabled={!viewAccess.canOpenWorkspace}
+                              onClick={() => {
+                                if (!viewAccess.canOpenWorkspace) {
+                                  return;
+                                }
+
+                                navigate(platformStudioPaths.view(
+                                  getFormsPlaceholderModelRouteId(selectedModel),
+                                  getFormsPlaceholderViewRouteId(view),
+                                ));
+                              }}
                               size="sm"
+                              title={viewAccess.canOpenWorkspace ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewLocked")}
                               variant="secondary"
                             >
                               {t("tenant.platformStudio.forms.openWorkspace")}

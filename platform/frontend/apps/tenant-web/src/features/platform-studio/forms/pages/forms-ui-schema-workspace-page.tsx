@@ -130,7 +130,7 @@ import {
 } from "../forms-builder-state";
 import {
   getFormsAuthoringAccess,
-  getFormsPlaceholderActor,
+  getFormsAuthoringActor,
 } from "../forms-actors";
 import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
@@ -164,6 +164,7 @@ import {
   isDefaultFormsPlaceholderView,
 } from "../forms-route-helpers";
 import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
+import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
 
 type InspectorTab = "grid" | "selection" | "view";
 
@@ -4052,7 +4053,8 @@ export function FormsViewWorkspacePage() {
     models,
     replaceModel,
   } = useFormBuilderAuthoring();
-  const currentActor = getFormsPlaceholderActor(undefined);
+  const workspaceUser = useTenantWorkspaceUser();
+  const currentActor = getFormsAuthoringActor(workspaceUser);
   const model = getFormsPlaceholderModel(params.modelId, models);
   const view = getFormsPlaceholderView(params.modelId, params.viewId, models);
   const fallbackView = useMemo(
@@ -4351,8 +4353,8 @@ export function FormsViewWorkspacePage() {
   const selectedFieldIsTags = selectedField?.preset === "tags";
   const selectedFieldAutocompleteChecked = selectedField ? selectedField.autocomplete !== "off" : true;
   const canEditModelDefinition = access.canManageStructure && isDefaultView;
-  const canToggleModelLocks = access.canManageStructure && isDefaultView;
-  const canToggleViewLocks = access.canManageStructure;
+  const canToggleModelLocks = currentActor.isRoot && isDefaultView;
+  const canToggleViewLocks = currentActor.isRoot;
   const selectedFieldDefaultAutocompleteValue = useMemo(() => {
     if (!selectedField) {
       return "on";
@@ -7569,54 +7571,56 @@ export function FormsViewWorkspacePage() {
                                   size="sm"
                                 />
                               </div>
-                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                <div>
-                                  <p className="tenant-web__platform-studio-compact-row-label">
-                                    {t("tenant.platformStudio.forms.builder.locking.model")}
-                                  </p>
-                                  <p className="tenant-web__platform-studio-compact-row-summary">
-                                    {currentModel.isStructureLocked
-                                      ? t("tenant.platformStudio.forms.builder.locking.locked")
-                                      : t("tenant.platformStudio.forms.builder.locking.unlocked")}
-                                  </p>
-                                </div>
-                                <Switch
-                                  checked={currentModel.isStructureLocked}
-                                  disabled={!canToggleModelLocks}
-                                  onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
-                                    ...currentModelDraft,
-                                    isStructureLocked: checked,
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                <div>
-                                  <p className="tenant-web__platform-studio-compact-row-label">
-                                    {t("tenant.platformStudio.forms.builder.locking.view")}
-                                  </p>
-                                  <p className="tenant-web__platform-studio-compact-row-summary">
-                                    {currentView.isViewLocked
-                                      ? t("tenant.platformStudio.forms.builder.locking.locked")
-                                      : t("tenant.platformStudio.forms.builder.locking.unlocked")}
-                                  </p>
-                                </div>
-                                <Switch
-                                  checked={currentView.isViewLocked ?? false}
-                                  disabled={!canToggleViewLocks}
-                                  onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
-                                    ...viewEntry,
-                                    isViewLocked: checked,
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                              {!canToggleModelLocks ? (
-                                <p className="tenant-web__platform-studio-inline-help">
-                                  {t(isDefaultView
-                                    ? "tenant.platformStudio.forms.builder.locking.ownerOnly"
-                                    : "tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice")}
-                                </p>
+                              {currentActor.isRoot ? (
+                                <>
+                                  <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                    <div>
+                                      <p className="tenant-web__platform-studio-compact-row-label">
+                                        {t("tenant.platformStudio.forms.builder.locking.model")}
+                                      </p>
+                                      <p className="tenant-web__platform-studio-compact-row-summary">
+                                        {currentModel.isStructureLocked
+                                          ? t("tenant.platformStudio.forms.builder.locking.locked")
+                                          : t("tenant.platformStudio.forms.builder.locking.unlocked")}
+                                      </p>
+                                    </div>
+                                    <Switch
+                                      checked={currentModel.isStructureLocked}
+                                      disabled={!canToggleModelLocks}
+                                      onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
+                                        ...currentModelDraft,
+                                        isStructureLocked: checked,
+                                      }))}
+                                      size="sm"
+                                    />
+                                  </div>
+                                  <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                    <div>
+                                      <p className="tenant-web__platform-studio-compact-row-label">
+                                        {t("tenant.platformStudio.forms.builder.locking.view")}
+                                      </p>
+                                      <p className="tenant-web__platform-studio-compact-row-summary">
+                                        {currentView.isViewLocked
+                                          ? t("tenant.platformStudio.forms.builder.locking.locked")
+                                          : t("tenant.platformStudio.forms.builder.locking.unlocked")}
+                                      </p>
+                                    </div>
+                                    <Switch
+                                      checked={currentView.isViewLocked ?? false}
+                                      disabled={!canToggleViewLocks}
+                                      onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
+                                        ...viewEntry,
+                                        isViewLocked: checked,
+                                      }))}
+                                      size="sm"
+                                    />
+                                  </div>
+                                  {!canToggleModelLocks ? (
+                                    <p className="tenant-web__platform-studio-inline-help">
+                                      {t("tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice")}
+                                    </p>
+                                  ) : null}
+                                </>
                               ) : null}
                             </div>
                           </div>

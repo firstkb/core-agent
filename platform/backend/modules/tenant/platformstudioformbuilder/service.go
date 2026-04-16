@@ -33,7 +33,7 @@ func NewService(repo Repository) *Service {
 }
 
 func (s *Service) ListModels(ctx context.Context) (*ListModelsResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +45,9 @@ func (s *Service) ListModels(ctx context.Context) (*ListModelsResponse, error) {
 
 	items := make([]ModelSummary, 0, len(models))
 	for _, model := range models {
+		if isStaticModelRestrictedForActor(claims, &model) {
+			continue
+		}
 		items = append(items, buildModelSummary(&model))
 	}
 
@@ -52,7 +55,7 @@ func (s *Service) ListModels(ctx context.Context) (*ListModelsResponse, error) {
 }
 
 func (s *Service) GetModel(ctx context.Context, modelID string) (*ModelDetailResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +70,9 @@ func (s *Service) GetModel(ctx context.Context, modelID string) (*ModelDetailRes
 		return nil, err
 	}
 	if model == nil {
+		return nil, ErrModelNotFound
+	}
+	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
 	}
 
@@ -178,7 +184,7 @@ func (s *Service) CreateModel(ctx context.Context, req CreateModelRequest) (*Mod
 }
 
 func (s *Service) DeleteModel(ctx context.Context, modelID string) (*DeleteModelResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -195,6 +201,9 @@ func (s *Service) DeleteModel(ctx context.Context, modelID string) (*DeleteModel
 	if model == nil {
 		return nil, ErrModelNotFound
 	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
+	}
 
 	if err := s.repo.DeleteModel(ctx, tenant, model.ModelID); err != nil {
 		return nil, err
@@ -204,7 +213,7 @@ func (s *Service) DeleteModel(ctx context.Context, modelID string) (*DeleteModel
 }
 
 func (s *Service) ListViews(ctx context.Context, modelID string) (*ListViewsResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +228,9 @@ func (s *Service) ListViews(ctx context.Context, modelID string) (*ListViewsResp
 		return nil, err
 	}
 	if model == nil {
+		return nil, ErrModelNotFound
+	}
+	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
 	}
 
@@ -236,7 +248,7 @@ func (s *Service) ListViews(ctx context.Context, modelID string) (*ListViewsResp
 }
 
 func (s *Service) GetView(ctx context.Context, modelID, viewID string) (*ViewDetailResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -254,6 +266,9 @@ func (s *Service) GetView(ctx context.Context, modelID, viewID string) (*ViewDet
 	if model == nil {
 		return nil, ErrModelNotFound
 	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
+	}
 
 	view, err := s.repo.GetView(ctx, tenant, model.ModelID, viewID)
 	if err != nil {
@@ -261,6 +276,9 @@ func (s *Service) GetView(ctx context.Context, modelID, viewID string) (*ViewDet
 	}
 	if view == nil {
 		return nil, ErrViewNotFound
+	}
+	if !canAccessViewAuthoring(claims, view) {
+		return nil, ErrViewLocked
 	}
 
 	views, err := s.repo.ListViews(ctx, tenant, model.ModelID)
@@ -285,7 +303,7 @@ func (s *Service) GetView(ctx context.Context, modelID, viewID string) (*ViewDet
 }
 
 func (s *Service) CreateView(ctx context.Context, modelID string, req CreateViewRequest) (*ModelDetailResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -293,6 +311,9 @@ func (s *Service) CreateView(ctx context.Context, modelID string, req CreateView
 	model, err := s.resolveModel(ctx, tenant, modelID)
 	if err != nil {
 		return nil, err
+	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
 	}
 
 	viewRecord, err := s.createViewRecord(ctx, tenant, model, req, false)
@@ -309,7 +330,7 @@ func (s *Service) CreateView(ctx context.Context, modelID string, req CreateView
 }
 
 func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req CopyViewRequest) (*ModelDetailResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -318,6 +339,9 @@ func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req Copy
 	if err != nil {
 		return nil, err
 	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
+	}
 
 	sourceView, err := s.repo.GetView(ctx, tenant, model.ModelID, viewID)
 	if err != nil {
@@ -325,6 +349,9 @@ func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req Copy
 	}
 	if sourceView == nil {
 		return nil, ErrViewNotFound
+	}
+	if !canAccessViewAuthoring(claims, sourceView) {
+		return nil, ErrViewLocked
 	}
 
 	viewRecord, err := s.createViewRecordFromCopy(ctx, tenant, model, sourceView, req)
@@ -341,7 +368,7 @@ func (s *Service) CopyView(ctx context.Context, modelID, viewID string, req Copy
 }
 
 func (s *Service) DeleteView(ctx context.Context, modelID, viewID string) (*ModelDetailResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -349,6 +376,19 @@ func (s *Service) DeleteView(ctx context.Context, modelID, viewID string) (*Mode
 	model, err := s.resolveModel(ctx, tenant, modelID)
 	if err != nil {
 		return nil, err
+	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
+	}
+	view, err := s.repo.GetView(ctx, tenant, model.ModelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+	if view == nil {
+		return nil, ErrViewNotFound
+	}
+	if !canAccessViewAuthoring(claims, view) {
+		return nil, ErrViewLocked
 	}
 
 	if err := s.repo.DeleteView(ctx, tenant, model.ModelID, viewID); err != nil {
@@ -369,7 +409,7 @@ func (s *Service) DeleteView(ctx context.Context, modelID, viewID string) (*Mode
 }
 
 func (s *Service) LoadDraft(ctx context.Context, modelID string, viewID string) (*LoadDraftResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -387,6 +427,9 @@ func (s *Service) LoadDraft(ctx context.Context, modelID string, viewID string) 
 	if model == nil {
 		return nil, ErrModelNotFound
 	}
+	if isStaticModelRestrictedForActor(claims, model) {
+		return nil, ErrModelNotFound
+	}
 
 	view, err := s.repo.GetView(ctx, tenant, model.ModelID, viewID)
 	if err != nil {
@@ -394,6 +437,9 @@ func (s *Service) LoadDraft(ctx context.Context, modelID string, viewID string) 
 	}
 	if view == nil {
 		return nil, ErrViewNotFound
+	}
+	if !canAccessViewAuthoring(claims, view) {
+		return nil, ErrViewLocked
 	}
 
 	views, err := s.repo.ListViews(ctx, tenant, model.ModelID)
@@ -502,8 +548,16 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 
 	modelLocked := getBoolFallback(incomingModel, "isStructureLocked", "modelLocked", model.IsStructureLocked)
 	viewLocked := getBoolFallback(incomingView, "isViewLocked", "viewLocked", currentView.IsViewLocked)
+	modelLockChanged := modelLocked != model.IsStructureLocked
+	viewLockChanged := viewLocked != currentView.IsViewLocked
 
 	if !isRootActor(claims) {
+		if modelLockChanged {
+			return nil, ErrModelLocked
+		}
+		if viewLockChanged || currentView.IsViewLocked {
+			return nil, ErrViewLocked
+		}
 		if modelLocked && modelStructureChanged {
 			return nil, ErrModelLocked
 		}
@@ -1769,6 +1823,19 @@ func pruneValue(value any, blocked map[string]struct{}) any {
 }
 
 func isRootActor(claims requestctx.ClaimsInfo) bool {
-	role := strings.ToLower(strings.TrimSpace(claims.Role))
-	return claims.Level >= 90 || role == "owner" || role == "root"
+	return claims.Level == 100
+}
+
+func canAccessViewAuthoring(claims requestctx.ClaimsInfo, view *ViewRecord) bool {
+	if view == nil {
+		return false
+	}
+	return isRootActor(claims) || !view.IsViewLocked
+}
+
+func isStaticModelRestrictedForActor(claims requestctx.ClaimsInfo, model *ModelRecord) bool {
+	if model == nil {
+		return false
+	}
+	return !isRootActor(claims) && isExternalRuntimeSourceType(model.SourceType)
 }

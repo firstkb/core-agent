@@ -35,13 +35,7 @@ import { PrivateApp } from "./private-app";
 import { TenantRuntimeConfigProvider } from "./tenant-runtime-config-context";
 import type { TenantRuntimeConfig } from "./tenant-runtime-config";
 import { TenantBrandImage } from "./tenant-brand-image";
-
-type TenantWorkspaceUserSession = {
-  displayName: string;
-  initial: string;
-  isRoot: boolean;
-  secondaryLabel: string;
-};
+import type { TenantWorkspaceUserSession } from "./tenant-workspace-user-session";
 
 function formatRoleLabel(role?: string) {
   if (!role?.trim()) {
@@ -61,8 +55,12 @@ function buildTenantWorkspaceUserSession(profile: TenantProfile): TenantWorkspac
     .filter(Boolean)
     .join(" ");
   const contactLabel = profile.user.email?.trim() || profile.user.phone?.trim() || "";
+  const level = typeof profile.user.level === "number" && Number.isFinite(profile.user.level)
+    ? Math.trunc(profile.user.level)
+    : 0;
+  const role = profile.user.role?.trim() || "";
   const roleLabel = formatRoleLabel(profile.user.role) || "Tenant User";
-  const isRoot = profile.user.role?.trim().toLowerCase() === "root";
+  const isRoot = level === 100;
   const tenantLabel = profile.tenant.name?.trim() || profile.tenant.host?.trim() || "";
   const displayName = fullName || contactLabel || roleLabel;
   const secondaryLabel = contactLabel || [roleLabel, tenantLabel].filter(Boolean).join(" · ") || profile.user.id;
@@ -72,6 +70,8 @@ function buildTenantWorkspaceUserSession(profile: TenantProfile): TenantWorkspac
     displayName,
     initial,
     isRoot,
+    level,
+    role,
     secondaryLabel,
   };
 }
@@ -478,4 +478,4 @@ export function App({
   );
 }
 
-export type { TenantRuntimeConfig, TenantWorkspaceUserSession };
+export type { TenantRuntimeConfig };

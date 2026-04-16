@@ -292,12 +292,20 @@ func cloneViewRecord(record *ViewRecord) ViewRecord {
 }
 
 func testContext() context.Context {
+	return contextWithActor(20, "member")
+}
+
+func rootTestContext() context.Context {
+	return contextWithActor(100, "root")
+}
+
+func contextWithActor(level int, role string) context.Context {
 	ctx := context.Background()
 	ctx = requestctx.WithClaims(ctx, requestctx.ClaimsInfo{
 		TenantID: "101",
 		UserID:   "11111111-1111-1111-1111-111111111111",
-		Level:    20,
-		Role:     "member",
+		Level:    level,
+		Role:     role,
 	})
 	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
 		ID:             "101",
@@ -596,6 +604,23 @@ func TestCopyViewClonesSourceUISchemaExactly(t *testing.T) {
 	}
 }
 
+func TestCopyViewBlocksLockedViewForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	view.IsViewLocked = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+	svc := NewService(repo)
+
+	_, err := svc.CopyView(testContext(), model.ModelID, view.ViewID, CopyViewRequest{Title: "Blocked copy"})
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked when non-root copies locked view, got %v", err)
+	}
+}
+
 func TestLoadDraftRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)
@@ -615,6 +640,40 @@ func TestGetViewRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
 	_, err := svc.GetView(testContext(), model.ModelID, view.ViewKey)
 	if !errors.Is(err, ErrViewNotFound) {
 		t.Fatalf("expected ErrViewNotFound when opening by view key, got %v", err)
+	}
+}
+
+func TestLoadDraftBlocksLockedViewForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	view.IsViewLocked = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+	svc := NewService(repo)
+
+	_, err := svc.LoadDraft(testContext(), model.ModelID, view.ViewID)
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked when non-root loads locked view, got %v", err)
+	}
+}
+
+func TestGetViewBlocksLockedViewForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	view.IsViewLocked = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+	svc := NewService(repo)
+
+	_, err := svc.GetView(testContext(), model.ModelID, view.ViewID)
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked when non-root opens locked view detail, got %v", err)
 	}
 }
 
@@ -918,6 +977,23 @@ func TestDeleteViewRejectsViewKeyWhenViewIDDiffers(t *testing.T) {
 	}
 	if len(repo.views[model.ModelID]) != 2 {
 		t.Fatalf("delete by view key should leave both views intact, got %#v", repo.views[model.ModelID])
+	}
+}
+
+func TestDeleteViewBlocksLockedViewForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	view.IsViewLocked = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+	repo.views[model.ModelID][view.ViewID] = view
+	svc := NewService(repo)
+
+	_, err := svc.DeleteView(testContext(), model.ModelID, view.ViewID)
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked when non-root deletes locked view, got %v", err)
 	}
 }
 
@@ -1548,6 +1624,56 @@ func TestSaveDraftBlocksLockedModelStructureChange(t *testing.T) {
 	}
 }
 
+func TestSaveDraftRejectsNonRootModelLockToggle(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["isStructureLocked"] = true
+	modelPayload["modelLocked"] = true
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrModelLocked) {
+		t.Fatalf("expected ErrModelLocked for non-root lock toggle, got %v", err)
+	}
+}
+
+func TestSaveDraftRejectsNonRootViewLockToggle(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["isViewLocked"] = true
+	viewPayload["viewLocked"] = true
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrViewLocked) {
+		t.Fatalf("expected ErrViewLocked for non-root view lock toggle, got %v", err)
+	}
+}
+
 func TestSaveDraftLockingModelDoesNotAdvanceStructureVersion(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{
@@ -1637,7 +1763,7 @@ func TestSaveDraftLockingModelDoesNotAdvanceStructureVersion(t *testing.T) {
 	}
 	svc := NewService(repo)
 
-	out, err := svc.SaveDraft(testContext(), "site-audit", "view-default", SaveDraftRequest{
+	out, err := svc.SaveDraft(rootTestContext(), "site-audit", "view-default", SaveDraftRequest{
 		Draft: DraftPayload{
 			Model: mustJSON(t, map[string]any{
 				"canEditViewsOnly":      false,
@@ -1771,6 +1897,62 @@ func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	}
 	if !out.Views[0].IsDefault || !out.Views[0].IsActive {
 		t.Fatalf("remaining view should be promoted to active default: %#v", out.Views[0])
+	}
+}
+
+func TestListModelsHidesStaticModelsForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	managedModel, _ := seedCanonicalModelAndDefaultView(t, repo)
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	out, err := svc.ListModels(testContext())
+	if err != nil {
+		t.Fatalf("ListModels returned error: %v", err)
+	}
+	if len(out.Items) != 1 {
+		t.Fatalf("expected only managed model for non-root, got %#v", out.Items)
+	}
+	if out.Items[0].ID != managedModel.ModelID {
+		t.Fatalf("visible model id = %q, want %q", out.Items[0].ID, managedModel.ModelID)
+	}
+	for _, item := range out.Items {
+		if item.ID == staticModel.ModelID {
+			t.Fatalf("static model %q should be hidden from non-root", staticModel.ModelID)
+		}
+	}
+}
+
+func TestListModelsShowsStaticModelsForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	managedModel, _ := seedCanonicalModelAndDefaultView(t, repo)
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	out, err := svc.ListModels(rootTestContext())
+	if err != nil {
+		t.Fatalf("ListModels returned error: %v", err)
+	}
+	if len(out.Items) != 2 {
+		t.Fatalf("expected managed and static models for root, got %#v", out.Items)
+	}
+	ids := []string{out.Items[0].ID, out.Items[1].ID}
+	sort.Strings(ids)
+	expected := []string{managedModel.ModelID, staticModel.ModelID}
+	sort.Strings(expected)
+	if !reflect.DeepEqual(ids, expected) {
+		t.Fatalf("visible model ids = %#v, want %#v", ids, expected)
+	}
+}
+
+func TestGetModelRejectsStaticModelForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	_, err := svc.GetModel(testContext(), staticModel.ModelID)
+	if !errors.Is(err, ErrModelNotFound) {
+		t.Fatalf("expected ErrModelNotFound for non-root static model detail, got %v", err)
 	}
 }
 
@@ -1940,6 +2122,17 @@ func TestDeleteModelRemovesModelAndViews(t *testing.T) {
 	}
 	if _, ok := repo.views["site-audit"]; ok {
 		t.Fatalf("views were not removed with deleted model")
+	}
+}
+
+func TestDeleteModelRejectsStaticModelForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	_, err := svc.DeleteModel(testContext(), staticModel.ModelID)
+	if !errors.Is(err, ErrModelNotFound) {
+		t.Fatalf("expected ErrModelNotFound when non-root deletes static model, got %v", err)
 	}
 }
 
@@ -4183,6 +4376,37 @@ func seedCanonicalModelAndDefaultView(t *testing.T, repo *memoryRepository) (*Mo
 		repo.views[model.ModelID] = map[string]*ViewRecord{}
 	}
 	repo.views[model.ModelID][view.ViewID] = view
+	return model, view
+}
+
+func seedExternalModelAndDefaultView(t *testing.T, repo *memoryRepository, modelID string) (*ModelRecord, *ViewRecord) {
+	t.Helper()
+
+	tempRepo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, tempRepo)
+
+	model.ModelID = modelID
+	model.ModelKey = modelID
+	model.StorageKey = strings.ReplaceAll(modelID, "-", "_")
+	model.DisplayName = modelID
+	model.SourceType = "external"
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["id"] = modelID
+	modelPayload["key"] = modelID
+	modelPayload["storageKey"] = model.StorageKey
+	modelPayload["displayName"] = modelID
+	modelPayload["title"] = modelID
+	modelPayload["name"] = modelID
+	modelPayload["sourceType"] = "external"
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	view.ModelID = modelID
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["modelId"] = modelID
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	repo.models[model.ModelID] = model
+	repo.views[model.ModelID] = map[string]*ViewRecord{view.ViewID: view}
 	return model, view
 }
 

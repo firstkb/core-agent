@@ -52,8 +52,9 @@ import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
 } from "../widgets/tenant-rail-utility-sheet/tenant-rail-utility-sheet";
-import type { TenantWorkspaceUserSession } from "./app";
 import { TenantBrandImage } from "./tenant-brand-image";
+import { TenantWorkspaceUserProvider } from "./tenant-workspace-user-context";
+import type { TenantWorkspaceUserSession } from "./tenant-workspace-user-session";
 import "./app.css";
 
 declare global {
@@ -269,12 +270,13 @@ export function PrivateApp({
   }
 
   return (
-    <>
-      <TopLoader controller={tenantShellTopLoaderController} />
-      <WorkspaceShell
-        brand={shellBrand}
-        enableCollapsedRailHoverPreview
-        headerActions={
+    <TenantWorkspaceUserProvider value={userSession}>
+      <>
+        <TopLoader controller={tenantShellTopLoaderController} />
+        <WorkspaceShell
+          brand={shellBrand}
+          enableCollapsedRailHoverPreview
+          headerActions={
           <div className="workspace-shell__header-utility-bar">
             <Menu align="end">
               <MenuTrigger>
@@ -467,20 +469,21 @@ export function PrivateApp({
         )}
         surfaceIcon={<BuildingOfficeIcon />}
         surfaceLabel={t("tenant.shell.surfaceLabel")}
-        surfaceTone="workspace"
-      >
-        <Outlet />
-      </WorkspaceShell>
+          surfaceTone="workspace"
+        >
+          <Outlet />
+        </WorkspaceShell>
 
-      <TenantRailUtilitySheet
-        onOpenChange={(open) => {
-          if (!open) {
-            setUtilityPanel(null);
-          }
-        }}
-        onScrollToSection={(sectionId) => openDashboard(sectionId)}
-        panel={utilityPanel}
-      />
-    </>
+        <TenantRailUtilitySheet
+          onOpenChange={(open) => {
+            if (!open) {
+              setUtilityPanel(null);
+            }
+          }}
+          onScrollToSection={(sectionId) => openDashboard(sectionId)}
+          panel={utilityPanel}
+        />
+      </>
+    </TenantWorkspaceUserProvider>
   );
 }

@@ -2,12 +2,16 @@ import type {
   FormsPlaceholderModel,
   FormsPlaceholderView,
 } from "./forms-placeholder-data";
+import type { TenantWorkspaceUserSession } from "../../../app/tenant-workspace-user-session";
 
 export type FormsActorRole = "schemaOwner" | "viewEditor" | "readonly";
 
-export type FormsPlaceholderActor = {
+export type FormsAuthoringActor = {
   id: string;
+  isRoot: boolean;
+  level: number;
   role: FormsActorRole;
+  userRole: string;
 };
 
 type FormsPermissionSummaryVariant = "brand" | "info" | "neutral" | "warning";
@@ -27,18 +31,27 @@ export type FormsAuthoringAccess = {
   viewRestrictionKey: string | null;
 };
 
-export const formsPlaceholderActors: ReadonlyArray<FormsPlaceholderActor> = [
+export const formsPlaceholderActors: ReadonlyArray<FormsAuthoringActor> = [
   {
     id: "model-owner",
+    isRoot: true,
+    level: 100,
     role: "schemaOwner",
+    userRole: "root",
   },
   {
     id: "view-only-editor",
+    isRoot: false,
+    level: 20,
     role: "viewEditor",
+    userRole: "member",
   },
   {
     id: "readonly-user",
+    isRoot: false,
+    level: 0,
     role: "readonly",
+    userRole: "readonly",
   },
 ] as const;
 
@@ -54,17 +67,45 @@ export function getFormsPlaceholderActor(actorId: string | undefined) {
   return formsPlaceholderActors.find((actor) => actor.id === actorId) ?? getDefaultFormsActor();
 }
 
+export function getFormsAuthoringActor(
+  session: Pick<TenantWorkspaceUserSession, "isRoot" | "level" | "role"> | null | undefined,
+): FormsAuthoringActor {
+  const level = typeof session?.level === "number" && Number.isFinite(session.level)
+    ? Math.trunc(session.level)
+    : 0;
+  const isRoot = level === 100 || Boolean(session?.isRoot);
+  const userRole = session?.role?.trim() || "";
+
+  if (isRoot) {
+    return {
+      id: "root-user",
+      isRoot: true,
+      level,
+      role: "schemaOwner",
+      userRole,
+    };
+  }
+
+  return {
+    id: level > 0 ? "tenant-member" : "readonly-user",
+    isRoot: false,
+    level,
+    role: level > 0 ? "viewEditor" : "readonly",
+    userRole,
+  };
+}
+
 export function getFormsAuthoringAccess(
-  actor: FormsPlaceholderActor,
+  actor: FormsAuthoringActor,
   model?: FormsPlaceholderModel | null,
   view?: FormsPlaceholderView | null,
 ): FormsAuthoringAccess {
-  const isModelOwner = actor.role === "schemaOwner";
+  const isRootActor = actor.isRoot;
   const isReadonlyUser = actor.role === "readonly";
-  const modelAllowsViewOnlyEditing = model?.canEditViewsOnly ?? true;
-  const viewLockedForActor = Boolean(view?.isViewLocked) && !isModelOwner;
-  const canManageStructure = isModelOwner;
-  const canEditViews = (isModelOwner || (actor.role === "viewEditor" && modelAllowsViewOnlyEditing)) && !viewLockedForActor;
+  const viewLockedForActor = Boolean(view?.isViewLocked) && !isRootActor;
+  const structureLockedForActor = Boolean(model?.isStructureLocked) && !isRootActor;
+  const canManageStructure = !isReadonlyUser && !viewLockedForActor && !structureLockedForActor;
+  const canEditViews = !isReadonlyUser && !viewLockedForActor;
 
   let summaryKey = "tenant.platformStudio.forms.permissionSummary.manageAll";
   let summaryVariant: FormsPermissionSummaryVariant = "brand";
@@ -75,10 +116,7 @@ export function getFormsAuthoringAccess(
   } else if (viewLockedForActor) {
     summaryKey = "tenant.platformStudio.forms.permissionSummary.viewLocked";
     summaryVariant = "warning";
-  } else if (!canEditViews) {
-    summaryKey = "tenant.platformStudio.forms.permissionSummary.viewAccessUnavailable";
-    summaryVariant = "warning";
-  } else if (!canManageStructure) {
+  } else if (structureLockedForActor) {
     summaryKey = "tenant.platformStudio.forms.canEditViewsOnly";
     summaryVariant = "info";
   }
@@ -87,7 +125,7 @@ export function getFormsAuthoringAccess(
   if (!canManageStructure) {
     structureRestrictionKey = isReadonlyUser
       ? "tenant.platformStudio.forms.permission.readonly"
-      : model?.isStructureLocked
+      : structureLockedForActor
         ? "tenant.platformStudio.forms.permission.lockedModelOwnerOnly"
         : "tenant.platformStudio.forms.permission.ownerOnlyStructure";
   }
@@ -103,13 +141,13 @@ export function getFormsAuthoringAccess(
 
   return {
     canCopyView: canEditViews,
-    canDeleteLockedModel: isModelOwner,
+    canDeleteLockedModel: isRootActor,
     canDeleteModel: canManageStructure,
     canDeleteView: canEditViews,
     canEditViews,
     canManageStructure,
     canMutate: canManageStructure || canEditViews,
-    canOpenWorkspace: true,
+    canOpenWorkspace: !viewLockedForActor,
     structureRestrictionKey,
     summaryKey,
     summaryVariant,

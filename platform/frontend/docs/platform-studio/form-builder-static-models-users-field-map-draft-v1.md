@@ -11,8 +11,8 @@ It defines:
 
 - the v1 field union for `users`
 - the excluded physical columns that must stay out of Form Builder
-- the two authored views currently required for `users`
-- the grid column sets for those views
+- the three authored views currently required for `users`
+- the grid and form composition for those views
 - the known implementation gaps that must be handled deliberately
 
 ## Source Evidence
@@ -22,8 +22,8 @@ This draft is based on:
 - canonical tenant schema contract:
   - [backend-tenant-canonical-refactor-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md)
 - UI screenshots for:
-  - `List of Accounts`
   - `Contacts`
+  - `List of Accounts`
 - static-model schema freeze:
   - [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
 
@@ -48,26 +48,30 @@ Runtime root:
 
 Recommended initial views:
 
-1. `Contacts`
-2. `List of Accounts`
+1. `Users`
+2. `Contacts`
+3. `List of Accounts`
 
 Recommended default:
 
-- `Contacts`
+- `Users`
 
 Reason:
 
-- `Contacts` is the broader canonical people/contact record
-- `List of Accounts` is a narrower account-access admin surface over the same source table
+- `Users` is the neutral full baseline over the same source table
+- `Contacts` is the specialized contact-maintenance surface
+- `List of Accounts` is the specialized account-access administration surface
 
 Recommended runtime aliases:
 
-- `Contacts` -> default view -> `viewRtAlias = default`
+- `Users` -> default view -> `viewRtAlias = default`
+- `Contacts` -> secondary view -> `viewRtAlias = contacts`
 - `List of Accounts` -> secondary view -> `viewRtAlias = accounts`
 
 Expected grid views:
 
 - `vg_users__default`
+- `vg_users__contacts`
 - `vg_users__accounts`
 
 ## V1 Root Field Union
@@ -77,35 +81,35 @@ The root `users` model should seed the following v1 union.
 | Label | Storage Key | Source Column | Kind | Notes |
 | --- | --- | --- | --- | --- |
 | `Id` | system | `id` | system/view-only | Use root record id, not a persisted editable field. |
-| `First Name` | `first_name` | `first_name` | `short_text` | Present in both views. |
-| `Middle Name` | `middle_name` | `middle_name` | `short_text` | Used by `Contacts`. |
-| `Last Name` | `last_name` | `last_name` | `short_text` | Present in both views. |
-| `System Access` | `system_access` | `system_access` | `boolean` | Used by `List of Accounts`. |
-| `ADMIN Access` | `admin_access` | `admin_access` | `boolean` | Used by `List of Accounts`. |
-| `ETS Admin` | `ets_admin` | `ets_admin` | `boolean` | Used by `List of Accounts`. |
+| `First Name` | `first_name` | `first_name` | `short_text` | Used by `Users`, `Contacts`, `List of Accounts`. |
+| `Middle Name` | `middle_name` | `middle_name` | `short_text` | Used by `Users` and `Contacts`. |
+| `Last Name` | `last_name` | `last_name` | `short_text` | Used by `Users`, `Contacts`, `List of Accounts`. |
+| `System Access` | `system_access` | `system_access` | `boolean` | Used by `Users` and `List of Accounts`. |
+| `ADMIN Access` | `admin_access` | `admin_access` | `boolean` | Used by `Users` and `List of Accounts`. |
+| `ETS Admin` | `ets_admin` | `ets_admin` | `boolean` | Used by `Users` and `List of Accounts`. |
 | `Job Type` | `job_type_id` | `job_type_id` | `db_lookup` single | Lookup to `jobtype.id`, label `name`. |
-| `Email` | `email` | `email` | `short_text` with email mode | Present in both views. |
+| `Email` | `email` | `email` | `short_text` with email mode | Used by all three views. |
 | `Business Unit` | `company_id` | `company_id` | `db_lookup` single | Lookup to `company.id`, label `name`. |
-| `Project Access List` | `project_access_manager` | none | `custom_widget` | `users`-hosted relation manager over `projectsaccess`. |
-| `Employee Sex` | `sex` | `sex` | `short_text` or controlled select | Used by `Contacts`. |
-| `Employee ID` | `employee_number` | `employee_number` | `short_text` | Used by `Contacts`. |
-| `Employee Occupation` | `occupation` | `occupation` | `short_text` | Used by `Contacts`. |
-| `Gross Wages/Salary($)` | `salary_amount` | `salary_amount` | `currency` | Used by `Contacts`. |
-| `Gross Wages/Salary(Per)` | `salary_rate` | `salary_rate` | `short_text` | Used by `Contacts`; keep scalar until the business enum is fixed. |
-| `Date of Birth` | `date_of_birth` | `date_of_birth` | `date` | Used by `Contacts`. |
-| `Date of Hire` | `hire_date` | `hire_date` | `date` | Used by `Contacts`. |
-| `Phone` | `phone` | `phone` | `short_text` | Used by `Contacts`. |
-| `Mobile Phone` | `mobile_phone` | `mobile_phone` | `short_text` | Used by `Contacts`. |
-| `Messenger App` | `messenger_app` | `messenger_app` | `short_text` or controlled select | Used by `Contacts`. |
-| `Messenger Account` | `messenger_account` | `messenger_account` | `short_text` | Used by `Contacts`. |
-| `City` | `city` | `city` | `suggest_text` | First accepted consumer of the new preset. |
+| `Project Access List` | `project_access_manager` | none | `custom_widget` | `users`-hosted relation manager over `projectsaccess`. Used by `Users` and `List of Accounts`. |
+| `Employee Sex` | `sex` | `sex` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
+| `Employee ID` | `employee_number` | `employee_number` | `short_text` | Used by `Users` and `Contacts`. |
+| `Employee Occupation` | `occupation` | `occupation` | `short_text` | Used by `Users` and `Contacts`. |
+| `Gross Wages/Salary($)` | `salary_amount` | `salary_amount` | `currency` | Used by `Users` and `Contacts`. |
+| `Gross Wages/Salary(Per)` | `salary_rate` | `salary_rate` | `short_text` | Used by `Users` and `Contacts`; keep scalar until the business enum is fixed. |
+| `Date of Birth` | `date_of_birth` | `date_of_birth` | `date` | Used by `Users` and `Contacts`. |
+| `Date of Hire` | `hire_date` | `hire_date` | `date` | Used by `Users` and `Contacts`. |
+| `Phone` | `phone` | `phone` | `short_text` | Used by `Users` and `Contacts`. |
+| `Mobile Phone` | `mobile_phone` | `mobile_phone` | `short_text` | Used by `Users` and `Contacts`. |
+| `Messenger App` | `messenger_app` | `messenger_app` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
+| `Messenger Account` | `messenger_account` | `messenger_account` | `short_text` | Used by `Users` and `Contacts`. |
+| `City` | `city` | `city` | `suggest_text` | First accepted consumer of the new preset. Used by `Users` and `Contacts`. |
 | `State` | `state_id` | `state_id` | `db_lookup` single | Lookup to global `state.id`, primary label `name`. |
-| `Timezone` | `timezone_id` | `timezone_id` | `db_lookup` single | Lookup to global `timezone.id`, primary label `name`. Not present in the initial two views. |
-| `Zip` | `zip` | `zip` | `short_text` | Used by `Contacts`. |
-| `Address` | `address_line_1` | `address_line_1` | `long_text` | Used by `Contacts`. |
-| `Add. Info.` | `notes` | `notes` | `long_text` | Used by `Contacts`. |
-| `Status` | `status` | `status` | `short_text` or controlled select | Used by `Contacts`. |
-| `Active` | `active` | `active` | `boolean` | Root activity flag. |
+| `Timezone` | `timezone_id` | `timezone_id` | `db_lookup` single | Lookup to global `timezone.id`, primary label `name`. Not placed on the first three authored views yet. |
+| `Zip` | `zip` | `zip` | `short_text` | Used by `Users` and `Contacts`. |
+| `Address` | `address_line_1` | `address_line_1` | `long_text` | Used by `Users` and `Contacts`. |
+| `Add. Info.` | `notes` | `notes` | `long_text` | Used by `Users` and `Contacts`. |
+| `Status` | `status` | `status` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
+| `Active` | `active` | `active` | `boolean` | Used by all three views. |
 
 ## Explicitly Excluded Physical Columns
 
@@ -155,7 +159,7 @@ The following physical columns must stay out of v1 Form Builder schema for `user
 
 Rule:
 
-- v1 imports only the fields evidenced by the accepted `Contacts` and `List of Accounts` views, plus the `Project Access List` custom widget placeholder and the normalized lookup/FK fields required by the canonical tenant schema
+- v1 imports only the fields evidenced by the accepted `Contacts` and `List of Accounts` views, plus the `Users` baseline that merges them, the `Project Access List` custom widget placeholder, and the normalized lookup/FK fields required by the canonical tenant schema
 
 ## Shared Field Rules
 
@@ -220,7 +224,7 @@ Mapping:
 v1 note:
 
 - keep the field in the `users` model union
-- do not place it on the first two authored views until there is evidence for the right placement
+- do not place it on the first three authored views until there is evidence for the right placement
 
 ### Access Flags
 
@@ -252,7 +256,83 @@ Reason:
 - users may need both existing values and new custom values
 - it is the clearest current first-slice consumer of the `suggest_text` contract
 
-## View A: `Contacts`
+## View A: `Users` (Default)
+
+Recommended title:
+
+- `Users`
+
+Recommended role:
+
+- default neutral baseline over the full `users` record
+- source view for future copies and future default-only structure work
+
+### Grid Columns
+
+Recommended `Users` grid order:
+
+1. `Id`
+2. `First Name`
+3. `Middle Name`
+4. `Last Name`
+5. `Job Type`
+6. `Business Unit`
+7. `Employee ID`
+8. `Email`
+9. `Status`
+10. `System Access`
+11. `ADMIN Access`
+12. `ETS Admin`
+13. `Active`
+
+Implementation detail:
+
+- `Business Unit` grid column should resolve to the company label, not raw `company_id`
+- `Job Type` grid column should resolve to the jobtype label, not raw `job_type_id`
+
+### Form Layout
+
+Recommended `Users` form order:
+
+1. `Id`
+2. `First Name`
+3. `Middle Name`
+4. `Last Name`
+5. `System Access`
+6. `ADMIN Access`
+7. `ETS Admin`
+8. `Job Type`
+9. `Business Unit`
+10. `Project Access List`
+11. `Employee Sex`
+12. `Employee ID`
+13. `Employee Occupation`
+14. `Gross Wages/Salary($)`
+15. `Gross Wages/Salary(Per)`
+16. `Date of Birth`
+17. `Date of Hire`
+18. `Email`
+19. `Phone`
+20. `Mobile Phone`
+21. `Messenger App`
+22. `Messenger Account`
+23. `City`
+24. `State`
+25. `Zip`
+26. `Address`
+27. `Add. Info.`
+28. `Status`
+29. `Active`
+
+Recommended section grouping:
+
+- Identity: `Id`, `First Name`, `Middle Name`, `Last Name`, `Email`
+- Access and Projects: `System Access`, `ADMIN Access`, `ETS Admin`, `Project Access List`
+- Employment: `Job Type`, `Business Unit`, `Employee Sex`, `Employee ID`, `Employee Occupation`, wage fields, hire/birth dates
+- Contact and Location: `Phone`, `Mobile Phone`, messenger fields, `City`, `State`, `Zip`, `Address`, `Add. Info.`
+- Record Status: `Status`, `Active`
+
+## View B: `Contacts`
 
 Recommended title:
 
@@ -260,7 +340,7 @@ Recommended title:
 
 Recommended role:
 
-- default user/contact maintenance surface
+- specialized user/contact maintenance surface
 
 ### Grid Columns
 
@@ -319,7 +399,7 @@ Recommended section grouping:
 - Contact: `Email`, `Phone`, `Mobile Phone`, messenger fields
 - Location and Status: `City`, `State`, `Zip`, `Address`, `Add. Info.`, `Status`, `Active`
 
-## View B: `List of Accounts`
+## View C: `List of Accounts`
 
 Recommended title:
 
@@ -362,6 +442,7 @@ Recommended `List of Accounts` form order:
 7. `Email`
 8. `Business Unit`
 9. `Project Access List`
+10. `Active`
 
 Recommended section grouping:
 
@@ -376,6 +457,7 @@ Recommended section grouping:
 
 v1 placement:
 
+- present on `Users`
 - present on `List of Accounts`
 - not present on `Contacts`
 
@@ -406,26 +488,28 @@ Current v1 position:
 
 ### Timezone Placement
 
-`timezone_id` exists in the canonical tenant schema, but it is not evidenced on the two accepted legacy views.
+`timezone_id` exists in the canonical tenant schema, but it is not evidenced on the accepted legacy screens.
 
 Current v1 position:
 
 - keep it in the model union
-- do not place it on `Contacts` or `List of Accounts` until its correct surface is confirmed
+- do not place it on `Users`, `Contacts`, or `List of Accounts` until its correct surface is confirmed
 
 ## Migration Impact
 
 The generic static-model migration draft must treat `users` as a special case:
 
 - seed one `ps_model` row for `users`
-- seed two `ps_view` rows:
+- seed three `ps_view` rows:
+  - `Users`
   - `Contacts`
   - `List of Accounts`
 - keep one shared canonical root runtime block:
   - `tableName = users`
   - `dataViewName = vw_users`
-- create two managed grid views:
+- create three managed grid views:
   - `vg_users__default`
+  - `vg_users__contacts`
   - `vg_users__accounts`
 
 ## Next Steps
@@ -433,6 +517,7 @@ The generic static-model migration draft must treat `users` as a special case:
 1. Use this `users` draft as the first concrete static-model seed target.
 2. Build the exact `dataSchema` payload for `users`.
 3. Build the exact `uiSchema` payloads for:
+   - `Users`
    - `Contacts`
    - `List of Accounts`
 4. After `users`, move to the remaining static models in the already accepted plan order.

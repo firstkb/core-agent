@@ -391,7 +391,8 @@ Example:
 - `users`
   - canonical data view: `vw_users`
   - authored views:
-    - `Contacts` -> `vg_users__default`
+    - `Users` -> `vg_users__default`
+    - `Contacts` -> `vg_users__contacts`
     - `List of Accounts` -> `vg_users__accounts`
 
 ## Contract Freeze For The Current Slice

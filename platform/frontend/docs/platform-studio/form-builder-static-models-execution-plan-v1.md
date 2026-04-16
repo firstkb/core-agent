@@ -107,8 +107,9 @@ Design work starts with `users`, because it is the richest static model and alre
 
 Locked notes:
 
-- `Contacts` is the default authored view for `users`
-- `List of Accounts` is a second authored view for `users`
+- `Users` is the default authored view for `users`
+- `Contacts` is a second authored view for `users`
+- `List of Accounts` is a third authored view for `users`
 - `users.password` must not enter `dataSchema`, `uiSchema`, or grid definitions
 - `Project Access List` stays a separate custom widget track
 

@@ -56,7 +56,8 @@ For each accepted table:
 
 Special case:
 
-- `users` requires two initial views, not one:
+- `users` requires three initial views, not one:
+  - `Users`
   - `Contacts`
   - `List of Accounts`
 
@@ -118,7 +119,8 @@ Companion frozen schema contract:
 
 - `tableName = users`
 - `dataViewName = vw_users`
-- `gridViewName = vg_users__default` for `Contacts`
+- `gridViewName = vg_users__default` for `Users`
+- `gridViewName = vg_users__contacts` for `Contacts`
 - `gridViewName = vg_users__accounts` for `List of Accounts`
 
 Detailed field-map draft:
@@ -234,8 +236,9 @@ Special rule:
 - `users.password` stays in the physical table
 - it must not be added to `dataSchema.fields`
 - it must not be added to `uiSchema`
-- `users` also seeds two initial views:
-  - `Contacts` as default
+- `users` also seeds three initial views:
+  - `Users` as default
+  - `Contacts` as secondary `contacts`
   - `List of Accounts` as secondary `accounts`
 
 ## Draft Migration Shape

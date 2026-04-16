@@ -1,19 +1,37 @@
 # Static Models Migration Draft v1
 
-Status: draft
+Status: partially implemented
 Date: 2026-04-15
 
 ## Purpose
 
-This document defines the draft for the first tenant migration that seeds Form Builder metadata for the accepted static models.
+This document defines the tenant-migration plan for seeding Form Builder metadata for the accepted static models.
 
-This is a draft only.
+Implemented first slice:
 
-It is not yet an active SQL migration because per-table field maps are still pending.
+- active tenant migration:
+  - `platform/backend/migrations/postgres/tenant/001_platform_studio_static_models_seed_reference_and_logs.sql`
+- seeded subset:
+  - `state`
+  - `timezone`
+  - `companytype`
+  - `jobtype`
+  - `events`
+  - `mails`
+
+Still pending in follow-up migration work:
+
+- `company`
+- `projects`
+- `users`
 
 ## Target Migration Slot
 
-The file number should be assigned only when the live tenant migration is created.
+The first active slot is now:
+
+- `001_platform_studio_static_models_seed_reference_and_logs.sql`
+
+Additional tenant migration slots are still required for the remaining static models.
 
 ## Accepted Scope
 
@@ -32,6 +50,11 @@ The migration will seed Form Builder metadata for:
 The migration will not seed:
 
 - `projectsaccess`
+
+Current implementation note:
+
+- the active `001_*` migration seeds only the implemented subset listed above
+- the remaining accepted tables stay in this document as pending follow-up scope
 
 ## Ownership Model
 
@@ -64,6 +87,28 @@ Special case:
 Companion frozen schema contract:
 
 - [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
+
+Current exclusions in the active `001_*` migration:
+
+- `events.data` is excluded from seeded `dataSchema`
+- `events.files` is excluded from seeded `dataSchema`
+- `events.urls` is excluded from seeded `dataSchema`
+- `mails.files` is excluded from seeded `dataSchema`
+- `mails.urls` is excluded from seeded `dataSchema`
+
+Reason:
+
+- the accepted first-slice static-model field contract does not yet define a canonical JSON authoring field kind for these external JSONB payload columns
+
+Active naming shape in the bundled `001_*` seed:
+
+- `events.user_id` source column is now modeled as logical lookup field `user`
+- `mails.user_id` source column is now modeled as logical lookup field `user`
+- `runtime.sourceColumnName` remains `user_id`
+
+Companion naming policy:
+
+- [form-builder-static-lookup-naming-policy-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md)
 
 ## Runtime Targets Per Static Model
 
@@ -278,15 +323,7 @@ VALUES (
   false,
   '<canonical model json>'
 )
-ON CONFLICT (model_id) DO UPDATE
-SET
-  model_key = EXCLUDED.model_key,
-  storage_key = EXCLUDED.storage_key,
-  display_name = EXCLUDED.display_name,
-  description = EXCLUDED.description,
-  source_type = EXCLUDED.source_type,
-  definition_json = EXCLUDED.definition_json,
-  updated_at = now();
+ON CONFLICT (model_id) DO NOTHING;
 ```
 
 ```sql
@@ -326,18 +363,14 @@ VALUES (
   '<canonical default view json>',
   '{}'::jsonb
 )
-ON CONFLICT (model_id, view_id) DO UPDATE
-SET
-  view_key = EXCLUDED.view_key,
-  display_name = EXCLUDED.display_name,
-  description = EXCLUDED.description,
-  view_type = EXCLUDED.view_type,
-  is_default = EXCLUDED.is_default,
-  is_active = EXCLUDED.is_active,
-  view_locked = EXCLUDED.view_locked,
-  definition_json = EXCLUDED.definition_json,
-  updated_at = now();
+ON CONFLICT (model_id, view_id) DO NOTHING;
 ```
+
+Why the active migration uses `DO NOTHING`:
+
+- new tenant DBs can receive the same rows from the regenerated tenant bundle before incremental tenant migrations run
+- existing tenant DBs may already contain local Form Builder authoring edits
+- the seed must be additive and must not overwrite tenant-local metadata silently
 
 ## Migration Preconditions
 

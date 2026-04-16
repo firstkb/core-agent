@@ -27,6 +27,7 @@ type runtimeApplyLookupModelRef struct {
 	ModelKey     string
 	StorageKey   string
 	DataViewName string
+	TenantScoped bool
 }
 
 type runtimeApplyScopePlan struct {
@@ -62,23 +63,24 @@ type runtimeApplyGridColumnProjection struct {
 }
 
 type runtimeApplyFieldPlan struct {
-	FieldID              string
-	StorageKey           string
-	Kind                 string
-	Preset               string
-	SelectionMode        string
-	ColumnName           string
-	SourceColumnName     string
-	PhysicalType         string
-	MultiValue           bool
-	Supported            bool
-	WarningMessage       string
-	LookupSourceModel    string
-	LookupTargetName     string
-	LookupTargetKind     string
-	LookupTargetIDColumn string
-	DisplayFields        []string
-	LookupDerivedOutputs []runtimeApplyLookupOutputPlan
+	FieldID                  string
+	StorageKey               string
+	Kind                     string
+	Preset                   string
+	SelectionMode            string
+	ColumnName               string
+	SourceColumnName         string
+	PhysicalType             string
+	MultiValue               bool
+	Supported                bool
+	WarningMessage           string
+	LookupSourceModel        string
+	LookupTargetName         string
+	LookupTargetKind         string
+	LookupTargetIDColumn     string
+	LookupTargetTenantScoped bool
+	DisplayFields            []string
+	LookupDerivedOutputs     []runtimeApplyLookupOutputPlan
 }
 
 type runtimeApplyLookupOutputPlan struct {
@@ -133,7 +135,7 @@ func buildRuntimeApplyRootScopePlan(
 	storageKey := chooseString(rootRuntime.RtAlias, modelRuntimeAlias)
 	tableName := chooseString(rootRuntime.TableName, buildGeneratedRuntimeTableName(storageKey))
 	fields := buildRuntimeApplyFieldPlans(asSlice(rootScope["fields"]), lookupModels, modelSourceType, tableName)
-	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, tableName)
+	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, rootRuntime)
 	return runtimeApplyScopePlan{
 		ScopeID:                   rootSchemaScopeID,
 		ScopeType:                 "ROOT",
@@ -167,7 +169,7 @@ func buildRuntimeApplySubformScopePlan(
 	subformType := chooseString(normalizeString(scope["subformType"]), "DEFAULT")
 	tableName := chooseString(scopeRuntime.TableName, buildGeneratedRuntimeTableName(modelRuntimeAlias, scopeStorageKey))
 	fields := buildRuntimeApplyFieldPlans(asSlice(scope["fields"]), lookupModels, modelSourceType, tableName)
-	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, tableName)
+	idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn := runtimeScopeSourceColumns(modelSourceType, scopeRuntime)
 	gridViews := []runtimeApplyGridViewPlan{}
 	if subformType != "CHECKLIST" {
 		gridViews = buildRuntimeGridViews(modelRuntimeAlias, scopeStorageKey, scopeID, runtimeParentForeignKey, fields, views)
@@ -567,11 +569,30 @@ func runtimeScopeMultiValueTableName(sourceType string, configured string, model
 	return buildGeneratedRuntimeMVTableName(modelRuntimeAlias, scopeRuntimeAlias)
 }
 
-func runtimeScopeSourceColumns(sourceType string, tableName string) (string, string, string, string, string) {
+func runtimeScopeSourceColumns(sourceType string, runtime runtimeDataScopeMetadata) (string, string, string, string, string) {
 	if !isExternalRuntimeSourceType(sourceType) {
 		return "_id", "tenant_id", "_guid", "_created_at", "_updated_at"
 	}
-	return "id", "tenant_id", "guid", "created_at", "updated_at"
+
+	tenantScoped := true
+	if runtime.TenantScoped != nil {
+		tenantScoped = *runtime.TenantScoped
+	}
+
+	idColumn := chooseString(runtime.SourceIDColumn, "id")
+	tenantColumn := strings.TrimSpace(runtime.SourceTenantIDColumn)
+	guidColumn := strings.TrimSpace(runtime.SourceGUIDColumn)
+	createdAtColumn := strings.TrimSpace(runtime.SourceCreatedAtColumn)
+	updatedAtColumn := strings.TrimSpace(runtime.SourceUpdatedAtColumn)
+
+	if tenantScoped {
+		tenantColumn = chooseString(tenantColumn, "tenant_id")
+		guidColumn = chooseString(guidColumn, "guid")
+		createdAtColumn = chooseString(createdAtColumn, "created_at")
+		updatedAtColumn = chooseString(updatedAtColumn, "updated_at")
+	}
+
+	return idColumn, tenantColumn, guidColumn, createdAtColumn, updatedAtColumn
 }
 
 func buildExternalRuntimeFieldSourceColumnName(tableName string, plan runtimeApplyFieldPlan) string {
@@ -605,14 +626,17 @@ func applyRuntimeLookupSourceMetadata(plan *runtimeApplyFieldPlan, lookupModels 
 		plan.LookupTargetName = "users"
 		plan.LookupTargetKind = "table"
 		plan.LookupTargetIDColumn = "id"
+		plan.LookupTargetTenantScoped = true
 	case "company_lookup":
 		plan.LookupTargetName = "company"
 		plan.LookupTargetKind = "table"
 		plan.LookupTargetIDColumn = "id"
+		plan.LookupTargetTenantScoped = true
 	case "project_lookup":
 		plan.LookupTargetName = "projects"
 		plan.LookupTargetKind = "table"
 		plan.LookupTargetIDColumn = "id"
+		plan.LookupTargetTenantScoped = true
 	default:
 		sourceModel := strings.TrimSpace(plan.LookupSourceModel)
 		if sourceModel == "" {
@@ -627,6 +651,7 @@ func applyRuntimeLookupSourceMetadata(plan *runtimeApplyFieldPlan, lookupModels 
 		plan.LookupTargetName = sourceRef.DataViewName
 		plan.LookupTargetKind = "view"
 		plan.LookupTargetIDColumn = "_id"
+		plan.LookupTargetTenantScoped = sourceRef.TenantScoped
 		if len(plan.DisplayFields) == 0 {
 			plan.DisplayFields = []string{"_guid"}
 		}

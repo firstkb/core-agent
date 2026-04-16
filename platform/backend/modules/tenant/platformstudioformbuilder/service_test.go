@@ -2380,6 +2380,136 @@ func TestSaveDraftAllowsExternalSourceTableReuse(t *testing.T) {
 	if repo.lastRuntimePlan.RootScope.TableName != "users" {
 		t.Fatalf("runtime table name = %q, want %q", repo.lastRuntimePlan.RootScope.TableName, "users")
 	}
+	if repo.lastRuntimePlan.RootScope.SourceTenantIDColumn != "tenant_id" {
+		t.Fatalf("runtime tenant source column = %q, want %q", repo.lastRuntimePlan.RootScope.SourceTenantIDColumn, "tenant_id")
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
+		t.Fatalf("runtime apply summary = %#v, want applied", out.RuntimeApply)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyPlanForExternalGlobalSourceTable(t *testing.T) {
+	repo := newMemoryRepository()
+	model := &ModelRecord{
+		ModelID:          "state-model",
+		ModelKey:         "state-model",
+		StorageKey:       "state",
+		DisplayName:      "State",
+		SourceType:       "managed",
+		Version:          1,
+		StructureVersion: 1,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":          "state-model",
+			"key":         "state-model",
+			"storageKey":  "state",
+			"displayName": "State",
+			"sourceType":  "managed",
+			"dataSchema": map[string]any{
+				"modelId":    "state-model",
+				"modelTitle": "State",
+				"rootScope": map[string]any{
+					"fields": []any{
+						map[string]any{"displayName": "Name", "id": "name", "key": "name", "kind": "short_text", "label": "Name", "schemaScopeId": "root", "storageKey": "name"},
+					},
+					"schemaScopeId": "root",
+					"scopeType":     "ROOT",
+				},
+				"subformScopes": []any{},
+			},
+			"layoutBlueprint": emptyLayoutBlueprint(),
+		}),
+	}
+	view := &ViewRecord{
+		ModelID:                          model.ModelID,
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      "State",
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        true,
+		Version:                          1,
+		LastAlignedModelStructureVersion: 1,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":          "view-default",
+			"key":         "default",
+			"modelId":     "state-model",
+			"displayName": "State",
+			"kind":        "form",
+			"isDefault":   true,
+			"isActive":    true,
+			"uiSchema": map[string]any{
+				"rootScope": map[string]any{
+					"schemaScopeId": "root",
+					"nodes":         []any{},
+				},
+				"subformScopes": []any{},
+			},
+		}),
+	}
+	repo.models[model.ModelID] = model
+	repo.views[model.ModelID] = map[string]*ViewRecord{view.ViewID: view}
+	repo.runtimeRelations["state"] = "table"
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["sourceType"] = "external"
+	rootScope := asMap(asMap(modelPayload["dataSchema"])["rootScope"])
+	rootScope["runtime"] = map[string]any{
+		"rtAlias":        "state",
+		"tableName":      "state",
+		"dataViewName":   "vw_state",
+		"tenantScoped":   false,
+		"sourceIdColumn": "id",
+	}
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	asMap(asMap(viewPayload["uiSchema"])["rootScope"])["runtime"] = map[string]any{
+		"viewRtAlias":  "default",
+		"dataViewName": "vw_state",
+		"gridViewName": "vg_state__default",
+	}
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+	if repo.lastRuntimePlan.RootScope.SourceIDColumn != "id" {
+		t.Fatalf("runtime id source column = %q, want %q", repo.lastRuntimePlan.RootScope.SourceIDColumn, "id")
+	}
+	if repo.lastRuntimePlan.RootScope.SourceTenantIDColumn != "" {
+		t.Fatalf("runtime tenant source column = %q, want empty", repo.lastRuntimePlan.RootScope.SourceTenantIDColumn)
+	}
+	if repo.lastRuntimePlan.RootScope.SourceGUIDColumn != "" {
+		t.Fatalf("runtime guid source column = %q, want empty", repo.lastRuntimePlan.RootScope.SourceGUIDColumn)
+	}
+	if repo.lastRuntimePlan.RootScope.SourceCreatedAtColumn != "" {
+		t.Fatalf("runtime created_at source column = %q, want empty", repo.lastRuntimePlan.RootScope.SourceCreatedAtColumn)
+	}
+	if repo.lastRuntimePlan.RootScope.SourceUpdatedAtColumn != "" {
+		t.Fatalf("runtime updated_at source column = %q, want empty", repo.lastRuntimePlan.RootScope.SourceUpdatedAtColumn)
+	}
+
+	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	savedRuntime := asMap(asMap(asMap(savedModelPayload["dataSchema"])["rootScope"])["runtime"])
+	tenantScoped, ok := savedRuntime["tenantScoped"].(bool)
+	if !ok || tenantScoped {
+		t.Fatalf("saved tenantScoped = %#v, want false", savedRuntime["tenantScoped"])
+	}
+	if _, ok := savedRuntime["sourceTenantIdColumn"]; ok {
+		t.Fatalf("saved runtime unexpectedly retained sourceTenantIdColumn: %#v", savedRuntime)
+	}
 	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
 		t.Fatalf("runtime apply summary = %#v, want applied", out.RuntimeApply)
 	}
@@ -2528,6 +2658,42 @@ func TestBuildRuntimeScopeDataViewSQLForExternalTableAliasesCanonicalColumns(t *
 		`t."updated_at" AS "_updated_at"`,
 		`t."first_name" AS "firstname"`,
 		`t."company_id" AS "company_id"`,
+	} {
+		if !strings.Contains(statement, fragment) {
+			t.Fatalf("runtime data view SQL missing fragment %q:\n%s", fragment, statement)
+		}
+	}
+}
+
+func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColumns(t *testing.T) {
+	scope := runtimeApplyScopePlan{
+		ScopeID:        "root",
+		SourceType:     "external",
+		TableName:      "state",
+		DataViewName:   "vw_state",
+		SourceIDColumn: "id",
+		Fields: []runtimeApplyFieldPlan{
+			{
+				FieldID:          "name",
+				StorageKey:       "name",
+				Kind:             "short_text",
+				ColumnName:       "name",
+				SourceColumnName: "name",
+				Supported:        true,
+			},
+		},
+	}
+
+	statement, _ := buildRuntimeScopeDataViewSQL(scope)
+
+	for _, fragment := range []string{
+		`CREATE OR REPLACE VIEW "public"."vw_state" AS SELECT`,
+		`t."id" AS "_id"`,
+		`NULL::bigint AS "tenant_id"`,
+		`NULL::uuid AS "_guid"`,
+		`NULL::timestamptz AS "_created_at"`,
+		`NULL::timestamptz AS "_updated_at"`,
+		`t."name" AS "name"`,
 	} {
 		if !strings.Contains(statement, fragment) {
 			t.Fatalf("runtime data view SQL missing fragment %q:\n%s", fragment, statement)
@@ -3001,6 +3167,137 @@ func TestSaveDraftBuildsRuntimeApplyLookupOutputsForManagedModelLookup(t *testin
 	}
 	if !containsRuntimeLookupOutputResult(out.RuntimeApply.StorageResults.RootScope.LookupOutputs, "vendor_company__label") {
 		t.Fatalf("expected vendor_company__label in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.LookupOutputs)
+	}
+}
+
+func TestSaveDraftBuildsRuntimeApplyLookupOutputsForGlobalLookupModel(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	repo.models["state-directory"] = &ModelRecord{
+		ModelID:          "state-directory",
+		ModelKey:         "state-directory",
+		StorageKey:       "state",
+		DisplayName:      "State",
+		SourceType:       "external",
+		Version:          1,
+		StructureVersion: 1,
+		DefinitionJSON: mustJSON(t, map[string]any{
+			"id":          "state-directory",
+			"key":         "state-directory",
+			"storageKey":  "state",
+			"displayName": "State",
+			"sourceType":  "external",
+			"dataSchema": map[string]any{
+				"modelId":    "state-directory",
+				"modelTitle": "State",
+				"rootScope": map[string]any{
+					"fields": []any{
+						map[string]any{"displayName": "Name", "id": "name", "key": "name", "kind": "short_text", "label": "Name", "schemaScopeId": "root", "storageKey": "name"},
+					},
+					"schemaScopeId": "root",
+					"scopeType":     "ROOT",
+					"runtime": map[string]any{
+						"rtAlias":        "state",
+						"tableName":      "state",
+						"dataViewName":   "vw_state",
+						"tenantScoped":   false,
+						"sourceIdColumn": "id",
+					},
+				},
+				"subformScopes": []any{},
+			},
+			"layoutBlueprint": emptyLayoutBlueprint(),
+		}),
+	}
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"displayFields": []any{"name"},
+		"displayName":   "State",
+		"id":            "state",
+		"key":           "state",
+		"kind":          "db_lookup",
+		"label":         "State",
+		"lookupConfig": map[string]any{
+			"displayMode":      "search_select",
+			"searchFields":     []any{"name"},
+			"sourceModel":      "state-directory",
+			"storedValueField": "doc_id",
+		},
+		"schemaScopeId": "root",
+		"selectionMode": "single",
+		"storageKey":    "state",
+	})
+	layoutBlueprint := asMap(modelPayload["layoutBlueprint"])
+	rootBlueprint := asMap(layoutBlueprint["rootScope"])
+	rootBlueprint["fieldPlacements"] = append(asSlice(rootBlueprint["fieldPlacements"]), map[string]any{
+		"containerKey": scopeRootPlacementKey,
+		"fieldId":      "state",
+		"order":        1,
+	})
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"fieldId":    "state",
+		"id":         "field-state",
+		"order":      2,
+		"parentId":   nil,
+		"title":      "State",
+		"type":       "field",
+		"visibility": "visible",
+	})
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+
+	field := findRuntimeFieldPlanByID(repo.lastRuntimePlan.RootScope.Fields, "state")
+	if field == nil {
+		t.Fatalf("expected state field in runtime plan, got %#v", repo.lastRuntimePlan.RootScope.Fields)
+	}
+	if field.LookupTargetName != "vw_state" {
+		t.Fatalf("state lookup target = %q, want %q", field.LookupTargetName, "vw_state")
+	}
+	if field.LookupTargetTenantScoped {
+		t.Fatalf("state lookup target tenant scope = %v, want false", field.LookupTargetTenantScoped)
+	}
+
+	viewSQL, lookupOutputs := buildRuntimeScopeDataViewSQL(repo.lastRuntimePlan.RootScope)
+	if !strings.Contains(viewSQL, `"public"."vw_state" "lk_state"`) {
+		t.Fatalf("expected global lookup join in data view SQL, got %s", viewSQL)
+	}
+	if strings.Contains(viewSQL, `"t"."tenant_id" = "lk_state"."tenant_id"`) {
+		t.Fatalf("expected no tenant-scoped lookup join for global state lookup, got %s", viewSQL)
+	}
+	if !strings.Contains(viewSQL, `"lk_state"."name"`) || !strings.Contains(viewSQL, `"state__label"`) {
+		t.Fatalf("expected state label expression in data view SQL, got %s", viewSQL)
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "state__label") {
+		t.Fatalf("expected state__label runtime output, got %#v", lookupOutputs)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.StorageResults == nil {
+		t.Fatalf("expected runtime apply summary, got %#v", out.RuntimeApply)
+	}
+	if !containsRuntimeLookupOutputResult(out.RuntimeApply.StorageResults.RootScope.LookupOutputs, "state__label") {
+		t.Fatalf("expected state__label in runtime summary, got %#v", out.RuntimeApply.StorageResults.RootScope.LookupOutputs)
 	}
 }
 

@@ -1,7 +1,7 @@
 # Current State
 
 Status: active snapshot
-Snapshot date: 2026-04-13
+Snapshot date: 2026-04-15
 
 Confidence classes:
 - `code-confirmed` = directly observed in code, config, imports, or repository tree
@@ -114,6 +114,9 @@ Confidence classes:
 - Form Builder accepted runtime naming direction is now `Runtime Naming Contract v1.1`: logical authoring keys stay separate from immutable physical runtime aliases, with runtime metadata returned in both canonical `dataSchema` scopes and canonical `uiSchema` scopes.
 - Accepted v1.1 naming prefixes are `ps_` for tables, `vw_` for canonical data views, and `vg_` for grid views.
 - Accepted v1.1 cutover is non-compatibility: if runtime metadata is absent during `Save`, backend creates and returns it; after that, the runtime metadata is canonical, and old runtime naming is not preserved as a supported compatibility layer.
+- static-model phase 1 reference-table schema design now has a concrete draft in `platform/frontend/docs/platform-studio/form-builder-static-models-phase-1-reference-schema-pack-v1.md`; it defines exact schema packages for `state`, `timezone`, `companytype`, and `jobtype`, keeps `state` / `timezone` as global external references, keeps `companytype` / `jobtype` tenant-scoped, and makes the shared FE/BE runtime patch explicit instead of patching runtime first
+- tenant migration `platform/backend/migrations/postgres/tenant/001_platform_studio_static_models_seed_reference_and_logs.sql` now seeds `ps_model` / `ps_view` metadata for `state`, `timezone`, `companytype`, `jobtype`, `events`, and `mails`; it is intentionally insert-if-missing so regenerated tenant bundles and existing tenant-local authoring edits do not overwrite each other, and its bundled `events` / `mails` schemas now directly use the accepted static-lookup contract: logical field `user`, physical source column `runtime.sourceColumnName = user_id`, and the full canonical field payload
+- follow-up bundle requirement: static-model rollout is expected to ship both canonical data-view runtime (`vw_*`) and grid-view runtime (`vg_*`) for static tables, not only `ps_model` / `ps_view` authoring metadata
 - Local tenant DB application is now confirmed for the documented local migrate path: `go run ./cmd/migrate --env ./env/migrate.local.env.example` applied `042_lookup_reference_tables` into `108-demo`, and `public.state` / `public.jobtype` are present.
 - Current nuance: `jobtype.tenant_id` is seeded as `0` during migration bootstrap because that seed runs outside tenant request context; if sandbox/demo require tenant-owned `jobtype` rows with tenant IDs like `100/101`, that needs a dedicated tenant-aware seed/backfill slice.
 - Current PostgreSQL runtime naming risk is reduced for SQL views, but physical table names still use readable raw scope-storage keys and may need the same deterministic shortening approach later if authoring keys get longer.

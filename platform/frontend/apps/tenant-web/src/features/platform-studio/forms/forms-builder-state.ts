@@ -305,7 +305,13 @@ export type FormBuilderDataScopeRuntime = {
   dataViewName: string;
   mvTableName?: string;
   rtAlias: string;
+  sourceCreatedAtColumn?: string;
+  sourceGuidColumn?: string;
+  sourceIdColumn?: string;
+  sourceTenantIdColumn?: string;
+  sourceUpdatedAtColumn?: string;
   tableName: string;
+  tenantScoped?: boolean;
 };
 
 export type FormBuilderViewScopeRuntime = {
@@ -1656,14 +1662,58 @@ export function normalizeDataScopeRuntime(value: unknown): FormBuilderDataScopeR
   const mvTableName = typeof value.mvTableName === "string" && value.mvTableName.trim().length > 0
     ? value.mvTableName.trim()
     : undefined;
+  const sourceIdColumn = typeof value.sourceIdColumn === "string" && value.sourceIdColumn.trim().length > 0
+    ? value.sourceIdColumn.trim()
+    : undefined;
+  const sourceTenantIdColumn = typeof value.sourceTenantIdColumn === "string" && value.sourceTenantIdColumn.trim().length > 0
+    ? value.sourceTenantIdColumn.trim()
+    : undefined;
+  const sourceGuidColumn = typeof value.sourceGuidColumn === "string" && value.sourceGuidColumn.trim().length > 0
+    ? value.sourceGuidColumn.trim()
+    : undefined;
+  const sourceCreatedAtColumn = typeof value.sourceCreatedAtColumn === "string" && value.sourceCreatedAtColumn.trim().length > 0
+    ? value.sourceCreatedAtColumn.trim()
+    : undefined;
+  const sourceUpdatedAtColumn = typeof value.sourceUpdatedAtColumn === "string" && value.sourceUpdatedAtColumn.trim().length > 0
+    ? value.sourceUpdatedAtColumn.trim()
+    : undefined;
+  const tenantScoped = typeof value.tenantScoped === "boolean"
+    ? value.tenantScoped
+    : undefined;
 
   if (!rtAlias || !tableName || !dataViewName) {
     return undefined;
   }
 
-  return mvTableName
-    ? { dataViewName, mvTableName, rtAlias, tableName }
-    : { dataViewName, rtAlias, tableName };
+  const runtime: FormBuilderDataScopeRuntime = {
+    dataViewName,
+    rtAlias,
+    tableName,
+  };
+
+  if (mvTableName) {
+    runtime.mvTableName = mvTableName;
+  }
+  if (sourceIdColumn) {
+    runtime.sourceIdColumn = sourceIdColumn;
+  }
+  if (sourceTenantIdColumn) {
+    runtime.sourceTenantIdColumn = sourceTenantIdColumn;
+  }
+  if (sourceGuidColumn) {
+    runtime.sourceGuidColumn = sourceGuidColumn;
+  }
+  if (sourceCreatedAtColumn) {
+    runtime.sourceCreatedAtColumn = sourceCreatedAtColumn;
+  }
+  if (sourceUpdatedAtColumn) {
+    runtime.sourceUpdatedAtColumn = sourceUpdatedAtColumn;
+  }
+  if (tenantScoped !== undefined) {
+    runtime.tenantScoped = tenantScoped;
+  }
+
+  return runtime;
 }
 
 export function normalizeViewScopeRuntime(value: unknown): FormBuilderViewScopeRuntime | undefined {

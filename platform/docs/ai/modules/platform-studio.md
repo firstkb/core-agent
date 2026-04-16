@@ -150,6 +150,7 @@ Current implemented backend-ready slice:
 - static models now have an explicit execution plan in `form-builder-static-models-execution-plan-v1.md`; the current next-step order is schema freeze, `suggest_text` field contract, `users` static-model design, then the remaining static models
 - `users` static-model design now assumes three authored views: `Users` as the default full baseline, plus `Contacts` and `List of Accounts` as specialized secondary views
 - Atlas task prompt for the static-model rollout is now fixed in `form-builder-static-models-atlas-task-v1.md`; it must start with reference tables (`state`, `timezone`, `companytype`, `jobtype`) and `company` before `users`
+- static lookup fields now have an accepted naming policy in `form-builder-static-lookup-naming-policy-v1.md`; for static/external lookup-backed fields, `storageKey` stays logical (`user`, `company`, `state`) while the raw source FK column remains in `runtime.sourceColumnName` (`user_id`, `company_id`, `state_id`)
 - accepted static-model access restriction: only `root` may see static models or manage their views/schema; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but implement it only after the admin/root rights path is available in tenant app
 
 ## Important docs to treat as reference-only

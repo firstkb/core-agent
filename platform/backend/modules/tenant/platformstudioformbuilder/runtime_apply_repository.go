@@ -323,10 +323,18 @@ func resolveExternalRuntimeScopePlanTx(ctx context.Context, tx *sql.Tx, scope ru
 	if scope.SourceIDColumn == "" {
 		return scope, fmt.Errorf("form builder: external source table %s has no usable id column", scope.TableName)
 	}
-	scope.SourceTenantIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceTenantIDColumn, "tenant_id", scope.TableName+"_tenant_id")
-	scope.SourceGUIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceGUIDColumn, "guid", scope.TableName+"_guid")
-	scope.SourceCreatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceCreatedAtColumn, "created_at", scope.TableName+"_created_at")
-	scope.SourceUpdatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceUpdatedAtColumn, "updated_at", scope.TableName+"_updated_at")
+	if scope.SourceTenantIDColumn != "" {
+		scope.SourceTenantIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceTenantIDColumn, "tenant_id", scope.TableName+"_tenant_id")
+	}
+	if scope.SourceGUIDColumn != "" {
+		scope.SourceGUIDColumn = chooseExistingRelationColumn(columnSet, scope.SourceGUIDColumn, "guid", scope.TableName+"_guid")
+	}
+	if scope.SourceCreatedAtColumn != "" {
+		scope.SourceCreatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceCreatedAtColumn, "created_at", scope.TableName+"_created_at")
+	}
+	if scope.SourceUpdatedAtColumn != "" {
+		scope.SourceUpdatedAtColumn = chooseExistingRelationColumn(columnSet, scope.SourceUpdatedAtColumn, "updated_at", scope.TableName+"_updated_at")
+	}
 
 	for index := range scope.Fields {
 		field := &scope.Fields[index]
@@ -597,30 +605,24 @@ func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeA
 		companyAlias := runtimeSQLAlias(baseAlias, "company")
 		jobTypeAlias := runtimeSQLAlias(baseAlias, "job_type")
 		joins = append(joins, fmt.Sprintf(
-			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s",
 			qualifiedIdentifier("company"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier(baseAlias),
 			quoteIdentifier("company_id"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier("id"),
-			quoteIdentifier("t"),
-			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
-			quoteIdentifier(companyAlias),
-			quoteIdentifier("tenant_id"),
+			runtimeTenantScopedJoinCondition(scope, "t", companyAlias, "tenant_id"),
 		))
 		joins = append(joins, fmt.Sprintf(
-			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s",
 			qualifiedIdentifier("jobtype"),
 			quoteIdentifier(jobTypeAlias),
 			quoteIdentifier(baseAlias),
 			quoteIdentifier("job_type_id"),
 			quoteIdentifier(jobTypeAlias),
 			quoteIdentifier("id"),
-			quoteIdentifier("t"),
-			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
-			quoteIdentifier(jobTypeAlias),
-			quoteIdentifier("tenant_id"),
+			runtimeTenantScopedJoinCondition(scope, "t", jobTypeAlias, "tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
 			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForContact(baseAlias, companyAlias, jobTypeAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
@@ -631,17 +633,14 @@ func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeA
 		stateAlias := runtimeSQLAlias(baseAlias, "state")
 		companyTypeAlias := runtimeSQLAlias(baseAlias, "company_type")
 		joins = append(joins, fmt.Sprintf(
-			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s",
 			qualifiedIdentifier("company"),
 			quoteIdentifier(mainCompanyAlias),
 			quoteIdentifier(baseAlias),
 			quoteIdentifier("main_company_id"),
 			quoteIdentifier(mainCompanyAlias),
 			quoteIdentifier("id"),
-			quoteIdentifier("t"),
-			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
-			quoteIdentifier(mainCompanyAlias),
-			quoteIdentifier("tenant_id"),
+			runtimeTenantScopedJoinCondition(scope, "t", mainCompanyAlias, "tenant_id"),
 		))
 		joins = append(joins, fmt.Sprintf(
 			"LEFT JOIN %s %s ON %s.%s = %s.%s",
@@ -653,17 +652,14 @@ func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeA
 			quoteIdentifier("id"),
 		))
 		joins = append(joins, fmt.Sprintf(
-			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s",
 			qualifiedIdentifier("companytype"),
 			quoteIdentifier(companyTypeAlias),
 			quoteIdentifier(baseAlias),
 			quoteIdentifier("company_type_id"),
 			quoteIdentifier(companyTypeAlias),
 			quoteIdentifier("id"),
-			quoteIdentifier("t"),
-			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
-			quoteIdentifier(companyTypeAlias),
-			quoteIdentifier("tenant_id"),
+			runtimeTenantScopedJoinCondition(scope, "t", companyTypeAlias, "tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
 			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForCompany(baseAlias, mainCompanyAlias, stateAlias, companyTypeAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
@@ -672,17 +668,14 @@ func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeA
 	case "project_lookup":
 		companyAlias := runtimeSQLAlias(baseAlias, "company")
 		joins = append(joins, fmt.Sprintf(
-			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s.%s = %s.%s",
+			"LEFT JOIN %s %s ON %s.%s = %s.%s AND %s",
 			qualifiedIdentifier("company"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier(baseAlias),
 			quoteIdentifier("company_id"),
 			quoteIdentifier(companyAlias),
 			quoteIdentifier("id"),
-			quoteIdentifier("t"),
-			quoteIdentifier(runtimeScopeTenantJoinColumn(scope)),
-			quoteIdentifier(companyAlias),
-			quoteIdentifier("tenant_id"),
+			runtimeTenantScopedJoinCondition(scope, "t", companyAlias, "tenant_id"),
 		))
 		for _, output := range field.LookupDerivedOutputs {
 			selects = append(selects, fmt.Sprintf("%s AS %s", runtimeLookupExpressionForProject(baseAlias, companyAlias, output.OutputKey), quoteIdentifier(output.ColumnName)))
@@ -756,10 +749,16 @@ func prefixRuntimeJoinClauses(joins []string) string {
 }
 
 func runtimeLookupBaseJoinTenantCondition(scope runtimeApplyScopePlan, field runtimeApplyFieldPlan, baseAlias string, targetAlias string) string {
-	targetTenantColumn := "tenant_id"
+	if !field.LookupTargetTenantScoped {
+		return "TRUE"
+	}
+	return runtimeTenantScopedJoinCondition(scope, baseAlias, targetAlias, "tenant_id")
+}
+
+func runtimeTenantScopedJoinCondition(scope runtimeApplyScopePlan, baseAlias string, targetAlias string, targetTenantColumn string) string {
 	baseTenantColumn := runtimeScopeTenantJoinColumn(scope)
 	if baseTenantColumn == "" {
-		return "TRUE"
+		return "FALSE"
 	}
 	return fmt.Sprintf(
 		"%s.%s = %s.%s",
@@ -771,6 +770,9 @@ func runtimeLookupBaseJoinTenantCondition(scope runtimeApplyScopePlan, field run
 }
 
 func runtimeScopeTenantJoinColumn(scope runtimeApplyScopePlan) string {
+	if isExternalRuntimeSourceType(scope.SourceType) {
+		return strings.TrimSpace(scope.SourceTenantIDColumn)
+	}
 	return chooseString(scope.SourceTenantIDColumn, "tenant_id")
 }
 

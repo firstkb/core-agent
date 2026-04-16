@@ -31,8 +31,9 @@ Read and follow these source-of-truth docs first:
 4. platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md
 5. platform/frontend/docs/platform-studio/form-builder-static-models-users-field-map-draft-v1.md
 6. platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md
-7. platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md
-8. platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md
+7. platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md
+8. platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md
+9. platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md
 
 Goal:
 
@@ -47,6 +48,10 @@ Mandatory runtime rules:
 - no per-authored-view canonical vw_*
 - static models reuse the real source table but still own managed vw_* and vg_*
 - static models are root-scope only in the first slice
+- the external runtime patch for explicit source-column metadata is already in place
+- global external reference tables must set tenantScoped = false explicitly
+- global external reference tables must omit sourceTenantIdColumn/sourceGuidColumn/sourceCreatedAtColumn/sourceUpdatedAtColumn entirely
+- tenant-scoped external tables keep canonical sourceTenantIdColumn/sourceGuidColumn/sourceCreatedAtColumn/sourceUpdatedAtColumn defaults
 
 Mandatory authoring rules:
 
@@ -97,6 +102,20 @@ Expected deliverables for each table:
    - uiSchema.rootScope.runtime for each view
 5. migration-ready notes for ps_model / ps_view seed rows
 6. explicit exclusions and open questions
+
+Scope classification:
+
+- tenantScoped = false:
+  - state
+  - timezone
+- tenantScoped = true:
+  - companytype
+  - jobtype
+  - company
+  - users
+  - projects
+  - events
+  - mails
 
 Expected delivery style:
 
@@ -183,5 +202,6 @@ Minimum expectation:
 - [form-builder-static-models-execution-plan-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md)
 - [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
 - [form-builder-static-models-migration-draft-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md)
+- [form-builder-static-lookup-naming-policy-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md)
 - [form-builder-static-models-users-field-map-draft-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-users-field-map-draft-v1.md)
 - [backend-tenant-canonical-refactor-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md)

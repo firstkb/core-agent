@@ -751,11 +751,20 @@ func (s *Service) resolveRuntimeLookupModels(
 		if strings.TrimSpace(dataViewName) == "" {
 			dataViewName = buildGeneratedRuntimeDataViewName(buildGeneratedRuntimeModelAlias(model.StorageKey), "")
 		}
+		tenantScoped := true
+		if isExternalRuntimeSourceType(model.SourceType) && len(modelPayload) > 0 {
+			dataSchema := asMap(modelPayload["dataSchema"])
+			rootRuntime := readRuntimeDataScopeMetadata(dataSchemaScope(dataSchema, rootSchemaScopeID))
+			if rootRuntime.TenantScoped != nil {
+				tenantScoped = *rootRuntime.TenantScoped
+			}
+		}
 		ref := runtimeApplyLookupModelRef{
 			ModelID:      model.ModelID,
 			ModelKey:     model.ModelKey,
 			StorageKey:   model.StorageKey,
 			DataViewName: dataViewName,
+			TenantScoped: tenantScoped,
 		}
 		out[model.ModelID] = ref
 		if key := strings.TrimSpace(model.ModelKey); key != "" {

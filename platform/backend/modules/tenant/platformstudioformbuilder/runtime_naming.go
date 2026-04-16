@@ -15,10 +15,16 @@ const (
 )
 
 type runtimeDataScopeMetadata struct {
-	RtAlias      string
-	TableName    string
-	MVTableName  string
-	DataViewName string
+	RtAlias               string
+	TableName             string
+	MVTableName           string
+	DataViewName          string
+	SourceIDColumn        string
+	SourceTenantIDColumn  string
+	SourceGUIDColumn      string
+	SourceCreatedAtColumn string
+	SourceUpdatedAtColumn string
+	TenantScoped          *bool
 }
 
 type runtimeViewScopeMetadata struct {
@@ -31,18 +37,21 @@ func ensureDataSchemaRuntimeMetadata(dataSchema map[string]any, modelPayload map
 	rootScope := dataSchemaScope(dataSchema, rootSchemaScopeID)
 	rootRuntime := readRuntimeDataScopeMetadata(rootScope)
 	existingRootRuntime, existingScopeRuntime := existingDataSchemaRuntimeMetadata(existing)
+	sourceType := chooseString(normalizeString(modelPayload["sourceType"]), existingSourceType(existing))
 
 	modelSeed := chooseString(
 		normalizeString(modelPayload["storageKey"]),
 		chooseString(existingStorageKey(existing), toStorageKey(chooseString(normalizeString(modelPayload["id"]), normalizeString(modelPayload["key"])))),
 	)
 	modelRtAlias := chooseFirstNonEmpty(rootRuntime.RtAlias, existingRootRuntime.RtAlias, buildGeneratedRuntimeModelAlias(modelSeed))
-	rootScope["runtime"] = map[string]any{
+	rootRuntimeMap := map[string]any{
 		"rtAlias":      modelRtAlias,
 		"tableName":    chooseFirstNonEmpty(rootRuntime.TableName, existingRootRuntime.TableName, buildGeneratedRuntimeTableName(modelRtAlias)),
 		"mvTableName":  chooseFirstNonEmpty(rootRuntime.MVTableName, existingRootRuntime.MVTableName, buildGeneratedRuntimeMVTableName(modelRtAlias, "")),
 		"dataViewName": chooseFirstNonEmpty(rootRuntime.DataViewName, existingRootRuntime.DataViewName, buildGeneratedRuntimeDataViewName(modelRtAlias, "")),
 	}
+	applyExternalRuntimeDataScopeMetadata(rootRuntimeMap, sourceType, rootRuntime, existingRootRuntime)
+	rootScope["runtime"] = rootRuntimeMap
 
 	for _, rawScope := range asSlice(dataSchema["subformScopes"]) {
 		scope := asMap(rawScope)
@@ -54,12 +63,14 @@ func ensureDataSchemaRuntimeMetadata(dataSchema map[string]any, modelPayload map
 		existingRuntime := existingScopeRuntime[scopeID]
 		scopeSeed := chooseString(normalizeString(scope["tableKey"]), scopeID)
 		scopeRtAlias := chooseFirstNonEmpty(scopeRuntime.RtAlias, existingRuntime.RtAlias, buildGeneratedRuntimeScopeAlias(scopeSeed))
-		scope["runtime"] = map[string]any{
+		scopeRuntimeMap := map[string]any{
 			"rtAlias":      scopeRtAlias,
 			"tableName":    chooseFirstNonEmpty(scopeRuntime.TableName, existingRuntime.TableName, buildGeneratedRuntimeTableName(modelRtAlias, scopeRtAlias)),
 			"mvTableName":  chooseFirstNonEmpty(scopeRuntime.MVTableName, existingRuntime.MVTableName, buildGeneratedRuntimeMVTableName(modelRtAlias, scopeRtAlias)),
 			"dataViewName": chooseFirstNonEmpty(scopeRuntime.DataViewName, existingRuntime.DataViewName, buildGeneratedRuntimeDataViewName(modelRtAlias, scopeRtAlias)),
 		}
+		applyExternalRuntimeDataScopeMetadata(scopeRuntimeMap, sourceType, scopeRuntime, existingRuntime)
+		scope["runtime"] = scopeRuntimeMap
 	}
 
 	return dataSchema
@@ -117,11 +128,21 @@ func stripUISchemaRuntimeMetadata(uiSchema map[string]any) {
 
 func readRuntimeDataScopeMetadata(scope map[string]any) runtimeDataScopeMetadata {
 	runtime := asMap(scope["runtime"])
+	var tenantScoped *bool
+	if value, ok := runtime["tenantScoped"].(bool); ok {
+		tenantScoped = boolPtr(value)
+	}
 	return runtimeDataScopeMetadata{
-		RtAlias:      normalizeString(runtime["rtAlias"]),
-		TableName:    normalizeString(runtime["tableName"]),
-		MVTableName:  normalizeString(runtime["mvTableName"]),
-		DataViewName: normalizeString(runtime["dataViewName"]),
+		RtAlias:               normalizeString(runtime["rtAlias"]),
+		TableName:             normalizeString(runtime["tableName"]),
+		MVTableName:           normalizeString(runtime["mvTableName"]),
+		DataViewName:          normalizeString(runtime["dataViewName"]),
+		SourceIDColumn:        normalizeString(runtime["sourceIdColumn"]),
+		SourceTenantIDColumn:  normalizeString(runtime["sourceTenantIdColumn"]),
+		SourceGUIDColumn:      normalizeString(runtime["sourceGuidColumn"]),
+		SourceCreatedAtColumn: normalizeString(runtime["sourceCreatedAtColumn"]),
+		SourceUpdatedAtColumn: normalizeString(runtime["sourceUpdatedAtColumn"]),
+		TenantScoped:          tenantScoped,
 	}
 }
 
@@ -339,6 +360,70 @@ func existingUISchemaRuntimeMetadata(existing *ViewRecord) (runtimeViewScopeMeta
 		scopeRuntime[scopeID] = readRuntimeViewScopeMetadata(scope)
 	}
 	return rootRuntime, scopeRuntime
+}
+
+func applyExternalRuntimeDataScopeMetadata(
+	target map[string]any,
+	sourceType string,
+	current runtimeDataScopeMetadata,
+	existing runtimeDataScopeMetadata,
+) {
+	if !isExternalRuntimeSourceType(sourceType) {
+		return
+	}
+
+	tenantScoped := chooseOptionalBool(current.TenantScoped, existing.TenantScoped)
+	if tenantScoped == nil {
+		tenantScoped = boolPtr(true)
+	}
+	target["tenantScoped"] = *tenantScoped
+	target["sourceIdColumn"] = chooseFirstNonEmpty(current.SourceIDColumn, existing.SourceIDColumn, "id")
+
+	sourceTenantIDColumn := chooseFirstNonEmpty(current.SourceTenantIDColumn, existing.SourceTenantIDColumn)
+	sourceGUIDColumn := chooseFirstNonEmpty(current.SourceGUIDColumn, existing.SourceGUIDColumn)
+	sourceCreatedAtColumn := chooseFirstNonEmpty(current.SourceCreatedAtColumn, existing.SourceCreatedAtColumn)
+	sourceUpdatedAtColumn := chooseFirstNonEmpty(current.SourceUpdatedAtColumn, existing.SourceUpdatedAtColumn)
+
+	if *tenantScoped {
+		target["sourceTenantIdColumn"] = chooseFirstNonEmpty(sourceTenantIDColumn, "tenant_id")
+		target["sourceGuidColumn"] = chooseFirstNonEmpty(sourceGUIDColumn, "guid")
+		target["sourceCreatedAtColumn"] = chooseFirstNonEmpty(sourceCreatedAtColumn, "created_at")
+		target["sourceUpdatedAtColumn"] = chooseFirstNonEmpty(sourceUpdatedAtColumn, "updated_at")
+		return
+	}
+
+	if sourceTenantIDColumn != "" {
+		target["sourceTenantIdColumn"] = sourceTenantIDColumn
+	}
+	if sourceGUIDColumn != "" {
+		target["sourceGuidColumn"] = sourceGUIDColumn
+	}
+	if sourceCreatedAtColumn != "" {
+		target["sourceCreatedAtColumn"] = sourceCreatedAtColumn
+	}
+	if sourceUpdatedAtColumn != "" {
+		target["sourceUpdatedAtColumn"] = sourceUpdatedAtColumn
+	}
+}
+
+func chooseOptionalBool(values ...*bool) *bool {
+	for _, value := range values {
+		if value != nil {
+			return boolPtr(*value)
+		}
+	}
+	return nil
+}
+
+func boolPtr(value bool) *bool {
+	return &value
+}
+
+func existingSourceType(existing *ModelRecord) string {
+	if existing == nil {
+		return ""
+	}
+	return strings.TrimSpace(existing.SourceType)
 }
 
 func modelStorageKey(model *ModelRecord) string {

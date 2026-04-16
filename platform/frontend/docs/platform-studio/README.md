@@ -92,6 +92,7 @@ Current active builder direction:
 - `platform-studio/form-builder-runtime-naming-contract-v1-1.md`
 - `platform-studio/form-builder-static-models-integration-v1.md`
 - `platform-studio/form-builder-static-models-schema-contract-v1.md`
+- `platform-studio/form-builder-static-lookup-naming-policy-v1.md`
 - `platform-studio/form-builder-backend-scope-payload-contract.md`
 - `platform-studio/form-builder-backend-api-contract.md`
 - `platform-studio/form-builder-backend-validation-matrix.md`

@@ -101,11 +101,28 @@ This contract is now fixed in:
 
 ### P1. Design the static models one by one
 
-#### 4. Start schema design with `users`
+#### 4. Start schema design with phase 1 reference tables
 
-Design work starts with `users`, because it is the richest static model and already has legacy UI references.
+Design work starts with the reference and lookup tables that `users` depends on.
 
 Locked notes:
+
+- `state` seeds first
+- `timezone` seeds second
+- `companytype` seeds third
+- `jobtype` seeds fourth
+- each of those tables has exactly one authored view: `default`
+- `state` and `timezone` are global external reference tables
+- `companytype` and `jobtype` are tenant-scoped external tables
+
+#### 5. Continue with lookup-backed and rich models
+
+After phase 1, continue with:
+
+- `company`
+- `users`
+
+Locked notes for `users`:
 
 - `Users` is the default authored view for `users`
 - `Contacts` is a second authored view for `users`
@@ -113,24 +130,15 @@ Locked notes:
 - `users.password` must not enter `dataSchema`, `uiSchema`, or grid definitions
 - `Project Access List` stays a separate custom widget track
 
-#### 5. Continue table-by-table with the remaining static models
+#### 6. Continue table-by-table with the remaining static models
 
-After `users`, continue with:
+After `company` and `users`, continue with:
 
-- `company`
-- `companytype`
-- `jobtype`
-- `state`
-- `timezone`
 - `projects`
 - `events`
 - `mails`
 
-Note:
-
-- this is the design order, not the physical migration dependency order
-
-#### 6. Use dependency order when writing DB migrations
+#### 7. Use dependency order when writing DB migrations
 
 When the static-model seed migration starts, the physical dependency order must be:
 

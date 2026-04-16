@@ -218,8 +218,11 @@ func TestGetNavigationReturnsGrantedSectionsForNonRoot(t *testing.T) {
 	if len(out.Modules) != 1 || out.Modules[0].ModuleKey != "tenant" {
 		t.Fatalf("unexpected modules: %+v", out.Modules)
 	}
-	if len(out.Favorites) != 0 {
-		t.Fatalf("expected no navigation favorites for unmapped tenant collection favorite, got %+v", out.Favorites)
+	if len(out.Favorites) != 1 {
+		t.Fatalf("expected one tenant favorite, got %+v", out.Favorites)
+	}
+	if out.Favorites[0].ModuleKey != "tenant" || out.Favorites[0].SectionKey != "list_of_tenants" {
+		t.Fatalf("unexpected tenant favorite %+v", out.Favorites[0])
 	}
 	if out.Modules[0].Sections[0].Access != "read" {
 		t.Fatalf("expected read grant, got %q", out.Modules[0].Sections[0].Access)

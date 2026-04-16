@@ -16,11 +16,14 @@ func WrapAndLog(
 	err error,
 	kv ...any,
 ) *AppError {
-	fields := append([]any{"code", code, "error", err}, kv...)
-	logger.Error(msg, fields...)
-
 	var appErr *AppError
+	fields := []any{"code", code, "error", err}
 	if errors.As(err, &appErr) && appErr != nil {
+		if appErr.Err != nil {
+			fields = append(fields, "cause", appErr.Err)
+		}
+		fields = append(fields, kv...)
+		logger.Error(msg, fields...)
 		return &AppError{
 			Code:       appErr.Code,
 			Message:    appErr.Message,
@@ -29,5 +32,7 @@ func WrapAndLog(
 		}
 	}
 
+	fields = append(fields, kv...)
+	logger.Error(msg, fields...)
 	return Wrap(err, code, status, msg)
 }

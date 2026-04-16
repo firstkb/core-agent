@@ -210,6 +210,49 @@ func TestCreateSavedFilterRequiresLabel(t *testing.T) {
 	}
 }
 
+func TestQueryGroupsRepeatedContainsFiltersOnSameFieldAsOr(t *testing.T) {
+	repo := &fakeRepository{
+		modules: []ModuleRecord{
+			{
+				ID:          1,
+				GUID:        uuid.MustParse("2c3c4255-c4d1-472d-b911-d26776f1f952"),
+				ModuleKey:   "tenant",
+				Title:       "Tenant",
+				Description: "Tenant control-plane management",
+				Status:      "active",
+				SortOrder:   200,
+				UpdatedAt:   time.Date(2026, 4, 1, 10, 0, 0, 0, time.UTC),
+			},
+			{
+				ID:          2,
+				GUID:        uuid.MustParse("4cbba650-ecb9-46d0-a4e2-f04459090211"),
+				ModuleKey:   "employees",
+				Title:       "Employees",
+				Description: "Admin user directory",
+				Status:      "planned",
+				SortOrder:   300,
+				UpdatedAt:   time.Date(2026, 4, 2, 10, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+	svc := NewService(repo, &fakePreferences{}, &fakeManager{}, testLogger())
+
+	out, err := svc.Query(rootContext(), QueryRequest{
+		Page:     1,
+		PageSize: 25,
+		QuickFilters: []QuickFilter{
+			{FieldID: "module_title", Operator: "contains", Value: "Tenant"},
+			{FieldID: "module_title", Operator: "contains", Value: "Employees"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.TotalItems != 2 || len(out.Rows) != 2 {
+		t.Fatalf("expected both rows to match grouped OR filters, got %+v", out)
+	}
+}
+
 func TestLoadMetaExposesFrontendEditAndBulkStateActions(t *testing.T) {
 	svc := NewService(&fakeRepository{}, &fakePreferences{}, &fakeManager{}, testLogger())
 

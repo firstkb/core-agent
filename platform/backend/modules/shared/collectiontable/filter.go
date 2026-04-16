@@ -67,3 +67,60 @@ func MatchDate(field time.Time, operator, value string) (bool, error) {
 		return false, ErrInvalidQuery
 	}
 }
+
+func MatchQuickFilters(filters []QuickFilter, match func(QuickFilter) (bool, error)) (bool, error) {
+	if len(filters) == 0 {
+		return true, nil
+	}
+
+	for _, group := range groupQuickFilters(filters) {
+		groupMatched := false
+
+		for _, filter := range group {
+			matched, err := match(filter)
+			if err != nil {
+				return false, err
+			}
+			if matched {
+				groupMatched = true
+				break
+			}
+		}
+
+		if !groupMatched {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func groupQuickFilters(filters []QuickFilter) [][]QuickFilter {
+	groups := make([][]QuickFilter, 0, len(filters))
+	containsGroupIndexes := make(map[string]int)
+
+	for _, filter := range filters {
+		fieldID := strings.TrimSpace(filter.FieldID)
+		operator := strings.TrimSpace(filter.Operator)
+		value := strings.TrimSpace(filter.Value)
+		normalizedFilter := QuickFilter{
+			FieldID:  fieldID,
+			Operator: operator,
+			Value:    value,
+		}
+
+		if operator == "contains" {
+			groupKey := fieldID + "\x00" + operator
+			if existingIndex, ok := containsGroupIndexes[groupKey]; ok {
+				groups[existingIndex] = append(groups[existingIndex], normalizedFilter)
+				continue
+			}
+
+			containsGroupIndexes[groupKey] = len(groups)
+		}
+
+		groups = append(groups, []QuickFilter{normalizedFilter})
+	}
+
+	return groups
+}

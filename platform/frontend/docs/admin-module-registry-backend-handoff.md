@@ -128,7 +128,35 @@ Frontend rule:
 - only `root` should see and use Module Registry UI
 - non-root admin users should not get Module Registry entries in sidebar
 
-### 2. Current Non-Root Rollout Slice
+### 2. Root-only Tenant Inventory
+
+This feature is implemented and backend-ready.
+
+Current page route:
+
+- `/admin/tenants`
+
+Root-only collection-table endpoints:
+
+- `GET /app/admin/tenants/list/meta`
+- `POST /app/admin/tenants/list/query`
+- `GET /app/admin/tenants/list/search-suggestions`
+- `POST /app/admin/tenants/list/favorite/toggle`
+- `POST /app/admin/tenants/list/saved-filters`
+
+Current frontend-observed runtime behavior for this surface:
+
+- effective request URLs are `${adminApiUrl}/app/admin/tenants/list/...`
+- backend create action stays hidden because tenant creation remains owned by onboarding
+- backend favorite binding uses surface id `tenant.list`
+- tenant inventory is a collection-table surface, not a custom workbench route
+
+Frontend rule:
+
+- `root` may see and use Tenant inventory
+- non-root admin users must not get this section in sidebar until a non-root list slice is explicitly approved
+
+### 3. Current Non-Root Rollout Slice
 
 The current approved non-root admin slice is:
 
@@ -203,7 +231,7 @@ Notes:
 - `favorites[]` is per-user, not system-wide
 - `favorites[]` is filtered through the same backend route coverage and grant rules as `modules[].sections[]`
 - `favorites[]` is sourced from `admin_collection_favorite` through backend surface bindings
-- current first bound favorite surface is `module-registry.list`
+- current bound collection favorite surfaces include `module-registry.list`, `tenant.list`, and `employees.list`
 - menu-only sections such as onboarding stay in `modules[].sections[]` and future section/topbar actions, not in collection favorites by default
 
 Important semantics:
@@ -230,6 +258,7 @@ Root receives all backend-covered active sections.
 That currently includes:
 
 - Module Registry
+- Tenant inventory at `/admin/tenants`
 - current covered admin sections such as tenant onboarding
 
 ### Non-root
@@ -246,8 +275,9 @@ This means:
 
 Current example:
 
-- `tenant.list_of_tenants` is not part of the current approved rollout slice
-- it is intentionally hidden from navigation
+- `tenant.list_of_tenants` is not part of the current approved non-root rollout slice
+- it is intentionally hidden from navigation for non-root users
+- `root` receives it as a normal root-only collection-table surface
 - frontend must not hardcode it into sidebar for non-root users
 
 ## Collection Table Guidance

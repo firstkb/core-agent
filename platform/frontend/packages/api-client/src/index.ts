@@ -377,6 +377,16 @@ function subscribeApiClientRequestActivity(listener: () => void) {
   };
 }
 
+async function trackApiClientRequestActivity<T>(operation: () => Promise<T>) {
+  const completeRequestActivity = beginApiClientRequestActivity();
+
+  try {
+    return await operation();
+  } finally {
+    completeRequestActivity();
+  }
+}
+
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.replace(/\/+$/, "");
 }
@@ -1271,6 +1281,7 @@ export {
   isUnauthorizedApiError,
   requestWithUnauthorizedRetry,
   subscribeApiClientRequestActivity,
+  trackApiClientRequestActivity,
 };
 export type {
   AdminEmployee,

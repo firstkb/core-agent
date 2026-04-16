@@ -137,6 +137,9 @@ Current implemented backend-ready slice:
 - generated runtime indexes are now tenant-aware: `tenant_id`, `(tenant_id, _guid)`, `(tenant_id, <parent_fk>)`, `(tenant_id, <lookup_fk>)`, and multivalue owner/field composites
 - additive runtime apply must not delete tables, columns, or SQL views
 - if runtime apply fails after authoring save succeeds, the saved authoring state remains persisted and the UI should surface `saved, but runtime apply failed`
+- backend authoring/runtime responses should prefer anticipatory diagnostic context over generic failure text; when runtime apply or similar post-save execution fails, the response should include enough context to avoid guesswork, at minimum `tenant_id`, affected `model_id`, affected `view_id`, and the underlying error text
+- current runtime-apply failure responses now include structured context in `runtimeApply.context` plus a contextual message/warning payload so backend and UI can identify the failing tenant/model/view directly
+- planned next UX follow-up: tenant app should visibly surface contextual `runtimeApply` failures in the workspace UI instead of relying on users to inspect network responses
 - local tenant DB application is now confirmed for the documented local migrate path: `go run ./cmd/migrate --env ./env/migrate.local.env.example` applied `042_lookup_reference_tables` into `108-demo`, and `public.state` / `public.jobtype` are present
 - current nuance: `jobtype.tenant_id` is populated as `0` during migration bootstrap because the dictionary seed runs outside tenant request context; if per-tenant seeded `jobtype` rows are required, that needs a follow-up tenant-aware seed/backfill slice
 - current PostgreSQL runtime naming risk is reduced for SQL views via deterministic short-name hashing, but physical table names still use readable raw scope-storage keys and may eventually need the same treatment if root or subform keys grow further

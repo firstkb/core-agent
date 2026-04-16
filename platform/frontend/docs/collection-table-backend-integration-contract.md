@@ -382,12 +382,21 @@ Frontend calls this when:
 - `quickFilters`: active quick-filter tokens from search shell
 - `sort.columnId`: current column/field id used for sorting
 - `sort.direction`: `asc` or `desc`
+- repeated `contains` filters on the same `fieldId` must be treated as one OR-group while different fields and non-grouped operators still compose with AND
 
 ### `quickFilters[]` Item
 
 - `fieldId`: searchable field id or `all`
 - `operator`: one of the allowed search operators
 - `value`: comparison value; may be empty only for `is_empty` and `is_not_empty`
+
+Grouped `contains` rule:
+
+- frontend may send multiple `quickFilters[]` items with the same `fieldId` and `operator = "contains"`
+- backend must interpret those repeated same-field `contains` items as:
+  - `(field CONTAINS value1 OR field CONTAINS value2 OR ...)`
+- this is not an `IN`/exact-match shortcut; substring semantics must stay aligned with the `contains` operator
+- saved filter sets persist these repeated entries exactly and expect the same grouped behavior when reapplied
 
 ### Response
 

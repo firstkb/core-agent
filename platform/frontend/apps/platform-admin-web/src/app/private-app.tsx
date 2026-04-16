@@ -1,5 +1,9 @@
 import { Fragment, Suspense, lazy, useEffect, useState } from "react";
-import type { AdminNavigation } from "@platform/api-client";
+import {
+  getApiClientRequestActivitySnapshot,
+  subscribeApiClientRequestActivity,
+  type AdminNavigation,
+} from "@platform/api-client";
 import {
   BellIcon,
   Breadcrumb,
@@ -18,6 +22,8 @@ import {
   PlusIcon,
   ShieldKeyIcon,
   StarIcon,
+  TopLoader,
+  createTopLoaderController,
 } from "@platform/ui-kit";
 import {
   getAppBuildMetadata,
@@ -34,6 +40,7 @@ import { AdminEmployeesListPage } from "../pages/employees-list/page";
 import { AdminModuleEditPage } from "../pages/modules-edit/page";
 import { AdminModulesListPage } from "../pages/modules-list/page";
 import { AdminRuntimeSectionPage } from "../pages/runtime-section/page";
+import { AdminTenantsListPage } from "../pages/tenants-list/page";
 import {
   AdminRailUtilitySheet,
   type AdminRailUtilityPanel,
@@ -53,6 +60,7 @@ const adminThemeStorageKey = "platform-admin-theme";
 const adminSidebarCollapsedStorageKey = "platform-admin-sidebar-collapsed";
 const modulesListResetPath = "/modules/list?reset=1";
 const appBuild = getAppBuildMetadata();
+const adminShellTopLoaderController = createTopLoaderController();
 const AdminUiLabPage = lazy(async () => {
   const module = await import("../internal/ui-lab");
   return { default: module.AdminUiLabPage };
@@ -154,6 +162,23 @@ export function PrivateApp({
     window.localStorage.setItem(adminThemeStorageKey, themeMode);
   }, [themeMode]);
 
+  useEffect(() => {
+    function syncTransportActivity() {
+      const snapshot = getApiClientRequestActivitySnapshot();
+
+      if (snapshot.activeRequestCount > 0) {
+        adminShellTopLoaderController.start();
+        return;
+      }
+
+      adminShellTopLoaderController.done();
+    }
+
+    syncTransportActivity();
+
+    return subscribeApiClientRequestActivity(syncTransportActivity);
+  }, []);
+
   function renderProfileMenuItems() {
     return (
       <>
@@ -203,24 +228,27 @@ export function PrivateApp({
   if (isUiLabRoute) {
     return (
       <AdminNavigationRefreshProvider onNavigationRefresh={onNavigationRefresh}>
-        <Suspense
-          fallback={
-            <main className="admin-web__ui-lab-loading-shell">
-              <div className="admin-web__ui-lab-loading-card">
-                <p className="admin-web__ui-lab-loading-eyebrow">{t("admin.loaders.uiLabEyebrow")}</p>
-                <h1 className="admin-web__ui-lab-loading-title">{t("admin.loaders.uiLabTitle")}</h1>
-                <p className="admin-web__ui-lab-loading-copy">
-                  {t("admin.loaders.uiLabCopy")}
-                </p>
-              </div>
-            </main>
-          }
-        >
-          <Routes>
-            <Route element={<AdminUiLabPage />} path="/root/ui-lab" />
-            <Route element={<Navigate replace to="/root/ui-lab" />} path="*" />
-          </Routes>
-        </Suspense>
+        <>
+          <TopLoader controller={adminShellTopLoaderController} />
+          <Suspense
+            fallback={
+              <main className="admin-web__ui-lab-loading-shell">
+                <div className="admin-web__ui-lab-loading-card">
+                  <p className="admin-web__ui-lab-loading-eyebrow">{t("admin.loaders.uiLabEyebrow")}</p>
+                  <h1 className="admin-web__ui-lab-loading-title">{t("admin.loaders.uiLabTitle")}</h1>
+                  <p className="admin-web__ui-lab-loading-copy">
+                    {t("admin.loaders.uiLabCopy")}
+                  </p>
+                </div>
+              </main>
+            }
+          >
+            <Routes>
+              <Route element={<AdminUiLabPage />} path="/root/ui-lab" />
+              <Route element={<Navigate replace to="/root/ui-lab" />} path="*" />
+            </Routes>
+          </Suspense>
+        </>
       </AdminNavigationRefreshProvider>
     );
   }
@@ -228,6 +256,7 @@ export function PrivateApp({
   return (
     <AdminNavigationRefreshProvider onNavigationRefresh={onNavigationRefresh}>
       <>
+        <TopLoader controller={adminShellTopLoaderController} />
         <WorkspaceShell
           brand={t("admin.shell.brand")}
           enableCollapsedRailHoverPreview
@@ -383,6 +412,7 @@ export function PrivateApp({
             <Route element={<AdminModulesListPage />} path="/modules/list" />
             <Route element={<AdminEmployeesListPage />} path="/admin/employees" />
             <Route element={<AdminEmployeesListPage />} path="/admin/users" />
+            <Route element={<AdminTenantsListPage />} path="/admin/tenants" />
             <Route element={<AdminEmployeeEditPage adminApiUrl={adminApiUrl} />} path="/admin/users/edit/:userId" />
             <Route element={<AdminEmployeeEditPage adminApiUrl={adminApiUrl} />} path="/admin/employees/edit/:userId" />
             <Route element={<AdminModuleEditPage />} path="/modules/edit/:moduleId" />

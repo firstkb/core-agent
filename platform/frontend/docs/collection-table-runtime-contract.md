@@ -257,9 +257,12 @@ Planned interaction rule:
 - after `Enter`, the input is cleared
 - after date selection, the date field is cleared
 - `contains` is hidden in the token label
+- repeated `contains` filters on the same field collapse into one visual token and preserve insertion order in the label, for example `[Module] Emp, Tenant`
+- repeated `contains` filters on the same field keep their individual quick-filter entries in state and saved-filter storage, but the runtime treats them as one OR-group for display and query semantics
 - comparison operators are rendered as symbols
 - token examples:
   - `[Location] dock`
+  - `[Module] Emp, Tenant`
   - `[Status] = Complete`
 
 ### Empty And Loading States
@@ -288,6 +291,7 @@ Planned interaction rule:
   - two buttons
 - saving is blocked when the name is empty or duplicates an existing saved filter name
 - saved filters appear in the overflow menu
+- saved filter sets persist the underlying `quickFilters[]` entries exactly as authored; grouped `contains` tokens are rebuilt by the runtime when the set is reapplied
 
 ### Favorite UX
 

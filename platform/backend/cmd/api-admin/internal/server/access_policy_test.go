@@ -74,6 +74,11 @@ func TestRoutePolicyForAdminAPI(t *testing.T) {
 		t.Fatalf("expected root-only policy for employees list route")
 	}
 
+	tenantsList := routePolicyForAdminAPI("ADMIN_TENANTS_LIST_META_GET")
+	if tenantsList == nil || tenantsList.requirement == nil || tenantsList.requirement.Kind != adminaccesspolicy.RequirementRootOnly {
+		t.Fatalf("expected root-only policy for tenant list route")
+	}
+
 	employeesUpdate := routePolicyForAdminAPI("ADMIN_EMPLOYEES_UPDATE")
 	if employeesUpdate == nil || employeesUpdate.requirement == nil || employeesUpdate.requirement.Kind != adminaccesspolicy.RequirementRootOnly {
 		t.Fatalf("expected root-only policy for employees update route")

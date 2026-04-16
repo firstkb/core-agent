@@ -260,6 +260,20 @@ function resolveEmployeesListParentMeta(
   };
 }
 
+function resolveBackendSectionParentPath(section: AdminNavigationSectionRoute) {
+  const normalizedSectionPath = normalizePath(section.path);
+
+  if (normalizedSectionPath === modulesListPath) {
+    return modulesListResetPath;
+  }
+
+  if (section.sectionKey === "list_of_users" || section.sectionKey === "list_of_tenants") {
+    return normalizedSectionPath;
+  }
+
+  return undefined;
+}
+
 export function getAdminNavigation(
   pathname: string,
   navigation: AdminNavigation,
@@ -411,9 +425,7 @@ export function getAdminRouteMeta(
       label: activeBackendSection.sectionTitle,
       note: activeBackendSection.sectionDescription || activeBackendSection.moduleDescription,
       parentLabel: activeBackendSection.moduleTitle,
-      parentPath: normalizePath(activeBackendSection.path) === modulesListPath
-        ? modulesListResetPath
-        : undefined,
+      parentPath: resolveBackendSectionParentPath(activeBackendSection),
       path: activeBackendSection.path,
     };
   }

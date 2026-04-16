@@ -583,19 +583,12 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	runtimePlan := buildRuntimeApplyPlan(persistedModel, views, modelPayload, lookupModels)
 	runtimeSummary, runtimeErr := s.repo.ApplyRuntime(ctx, tenant, runtimePlan)
 	if runtimeErr != nil {
-		response.RuntimeApply = &RuntimeApplySummary{
-			Status:  "failed",
-			Message: runtimeErr.Error(),
-		}
-		response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, ValidationMessage{
-			Code:    "runtime_apply_failed",
-			Message: "Authoring was saved, but runtime apply failed.",
-			Target:  "runtime",
-		})
+		response.RuntimeApply = buildFailedRuntimeApplySummary(tenant, persistedModel.ModelID, currentView.ViewID, runtimeErr)
+		response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, buildRuntimeApplyFailedWarning(response.RuntimeApply))
 		return response, nil
 	}
 
-	response.RuntimeApply = runtimeSummary
+	response.RuntimeApply = withRuntimeApplyContext(runtimeSummary, tenant, persistedModel.ModelID, currentView.ViewID)
 	response.ValidationSummary.Warnings = append(response.ValidationSummary.Warnings, runtimeApplyWarnings(runtimeSummary)...)
 	return response, nil
 }
@@ -1179,6 +1172,79 @@ func runtimeApplyWarnings(summary *RuntimeApplySummary) []ValidationMessage {
 	return warnings
 }
 
+func withRuntimeApplyContext(
+	summary *RuntimeApplySummary,
+	tenant requestctx.TenantInfo,
+	modelID string,
+	viewID string,
+) *RuntimeApplySummary {
+	if summary == nil {
+		return nil
+	}
+
+	next := *summary
+	next.Context = &RuntimeApplyContext{
+		TenantID: strings.TrimSpace(tenant.ID),
+		ModelID:  strings.TrimSpace(modelID),
+		ViewID:   strings.TrimSpace(viewID),
+	}
+	return &next
+}
+
+func buildFailedRuntimeApplySummary(
+	tenant requestctx.TenantInfo,
+	modelID string,
+	viewID string,
+	err error,
+) *RuntimeApplySummary {
+	context := RuntimeApplyContext{
+		TenantID: strings.TrimSpace(tenant.ID),
+		ModelID:  strings.TrimSpace(modelID),
+		ViewID:   strings.TrimSpace(viewID),
+	}
+
+	return &RuntimeApplySummary{
+		Status:  "failed",
+		Message: formatRuntimeApplyFailureMessage(context, err),
+		Context: &context,
+	}
+}
+
+func buildRuntimeApplyFailedWarning(summary *RuntimeApplySummary) ValidationMessage {
+	message := "Authoring was saved, but runtime apply failed."
+	if summary != nil && strings.TrimSpace(summary.Message) != "" {
+		message = fmt.Sprintf("Authoring was saved, but %s", summary.Message)
+	}
+
+	return ValidationMessage{
+		Code:    "runtime_apply_failed",
+		Message: message,
+		Target:  "runtime",
+	}
+}
+
+func formatRuntimeApplyFailureMessage(context RuntimeApplyContext, err error) string {
+	parts := make([]string, 0, 3)
+	if context.TenantID != "" {
+		parts = append(parts, fmt.Sprintf("tenant_id=%s", context.TenantID))
+	}
+	if context.ModelID != "" {
+		parts = append(parts, fmt.Sprintf("model_id=%s", context.ModelID))
+	}
+	if context.ViewID != "" {
+		parts = append(parts, fmt.Sprintf("view_id=%s", context.ViewID))
+	}
+
+	message := "runtime apply failed"
+	if len(parts) > 0 {
+		message = fmt.Sprintf("%s for %s", message, strings.Join(parts, " "))
+	}
+	if err == nil {
+		return message
+	}
+	return fmt.Sprintf("%s: %s", message, err.Error())
+}
+
 func (s *Service) buildModelDetailResponseWithRuntime(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,
@@ -1203,14 +1269,11 @@ func (s *Service) buildModelDetailResponseWithRuntime(
 	runtimePlan := buildRuntimeApplyPlan(model, views, modelPayload, lookupModels)
 	runtimeSummary, runtimeErr := s.repo.ApplyRuntime(ctx, tenant, runtimePlan)
 	if runtimeErr != nil {
-		response.RuntimeApply = &RuntimeApplySummary{
-			Status:  "failed",
-			Message: runtimeErr.Error(),
-		}
+		response.RuntimeApply = buildFailedRuntimeApplySummary(tenant, model.ModelID, selectedViewID, runtimeErr)
 		return response, nil
 	}
 
-	response.RuntimeApply = runtimeSummary
+	response.RuntimeApply = withRuntimeApplyContext(runtimeSummary, tenant, model.ModelID, selectedViewID)
 	return response, nil
 }
 

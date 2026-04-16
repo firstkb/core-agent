@@ -2159,14 +2159,14 @@ func TestSaveDraftBuildsRuntimeApplyPlanForManagedCompactSubformPayload(t *testi
 			"rootScope": map[string]any{
 				"containers": []any{
 					map[string]any{
-						"containerKey": "root.subform.list",
-						"order":        int64(5),
-						"title":        "List",
-						"type":         "subform",
-						"displayName":  "List",
+						"containerKey":  "root.subform.list",
+						"order":         int64(5),
+						"title":         "List",
+						"type":          "subform",
+						"displayName":   "List",
 						"schemaScopeId": "subform-1776345591409-hhu9uz",
-						"subformType":  "DEFAULT",
-						"tableKey":     "subform-1776345591409-hhu9uz",
+						"subformType":   "DEFAULT",
+						"tableKey":      "subform-1776345591409-hhu9uz",
 					},
 				},
 				"fieldPlacements": []any{
@@ -2248,7 +2248,7 @@ func TestSaveDraftBuildsRuntimeApplyPlanForManagedCompactSubformPayload(t *testi
 						map[string]any{"id": "field-sub-1", "order": int64(0), "type": "field", "fieldId": "email"},
 						map[string]any{"id": "field-sub-2", "order": int64(1), "type": "field", "fieldId": "phone"},
 					},
-					"schemaScopeId":     "subform-1776345591409-hhu9uz",
+					"schemaScopeId":       "subform-1776345591409-hhu9uz",
 					"parentSubformNodeId": "subform-1776345591409-hhu9uz",
 					"runtime": map[string]any{
 						"dataViewName": "vw_test_inspection__sf_9bcecc",
@@ -2963,15 +2963,15 @@ func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColu
 
 func TestBuildRuntimeScopeDataViewSQLKeepsLookupOutputsBeforeLaterAddedScalarFields(t *testing.T) {
 	scope := runtimeApplyScopePlan{
-		ScopeID:                "root",
-		SourceType:             "managed",
-		TableName:              "ps_test_inspection",
-		DataViewName:           "vw_test_inspection",
-		SourceIDColumn:         "_id",
-		SourceTenantIDColumn:   "tenant_id",
-		SourceGUIDColumn:       "_guid",
-		SourceCreatedAtColumn:  "_created_at",
-		SourceUpdatedAtColumn:  "_updated_at",
+		ScopeID:               "root",
+		SourceType:            "managed",
+		TableName:             "ps_test_inspection",
+		DataViewName:          "vw_test_inspection",
+		SourceIDColumn:        "_id",
+		SourceTenantIDColumn:  "tenant_id",
+		SourceGUIDColumn:      "_guid",
+		SourceCreatedAtColumn: "_created_at",
+		SourceUpdatedAtColumn: "_updated_at",
 		Fields: []runtimeApplyFieldPlan{
 			{
 				FieldID:      "short-text",
@@ -3925,8 +3925,32 @@ func TestSaveDraftReturnsSuccessWhenRuntimeApplyFails(t *testing.T) {
 	if out.RuntimeApply.Status != "failed" {
 		t.Fatalf("runtime apply status = %q, want %q", out.RuntimeApply.Status, "failed")
 	}
+	if out.RuntimeApply.Context == nil {
+		t.Fatalf("expected runtime apply context in save response")
+	}
+	if out.RuntimeApply.Context.TenantID != "101" {
+		t.Fatalf("runtime tenant id = %q, want %q", out.RuntimeApply.Context.TenantID, "101")
+	}
+	if out.RuntimeApply.Context.ModelID != model.ModelID {
+		t.Fatalf("runtime model id = %q, want %q", out.RuntimeApply.Context.ModelID, model.ModelID)
+	}
+	if out.RuntimeApply.Context.ViewID != view.ViewID {
+		t.Fatalf("runtime view id = %q, want %q", out.RuntimeApply.Context.ViewID, view.ViewID)
+	}
+	if !strings.Contains(out.RuntimeApply.Message, "tenant_id=101") {
+		t.Fatalf("runtime apply message = %q, want tenant context", out.RuntimeApply.Message)
+	}
+	if !strings.Contains(out.RuntimeApply.Message, "model_id="+model.ModelID) {
+		t.Fatalf("runtime apply message = %q, want model context", out.RuntimeApply.Message)
+	}
+	if !strings.Contains(out.RuntimeApply.Message, "view_id="+view.ViewID) {
+		t.Fatalf("runtime apply message = %q, want view context", out.RuntimeApply.Message)
+	}
 	if !containsValidationCode(out.ValidationSummary.Warnings, "runtime_apply_failed") {
 		t.Fatalf("expected runtime apply warning in validation summary, got %#v", out.ValidationSummary.Warnings)
+	}
+	if !containsValidationMessage(out.ValidationSummary.Warnings, "tenant_id=101") {
+		t.Fatalf("expected runtime apply warning message with tenant context, got %#v", out.ValidationSummary.Warnings)
 	}
 
 	persistedModel := repo.models[model.ModelID]
@@ -3995,6 +4019,15 @@ func rootFieldNodeTitle(viewPayload map[string]any, fieldID string) string {
 func containsValidationCode(messages []ValidationMessage, code string) bool {
 	for _, message := range messages {
 		if message.Code == code {
+			return true
+		}
+	}
+	return false
+}
+
+func containsValidationMessage(messages []ValidationMessage, needle string) bool {
+	for _, message := range messages {
+		if strings.Contains(message.Message, needle) {
 			return true
 		}
 	}

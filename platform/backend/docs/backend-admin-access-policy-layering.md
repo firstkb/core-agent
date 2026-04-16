@@ -118,6 +118,12 @@ This prevents cases like:
 
 In that case, the section stays hidden until route coverage is real.
 
+Current root-only example:
+
+- `tenant.list_of_tenants` now has an explicit root-only route family at `/app/admin/tenants/list/*`
+- that route coverage is what allows `/admin/tenants` to appear in root navigation and favorites
+- the non-root rule does not change: no non-root sidebar exposure without secure route coverage
+
 ## Frontend Grants UI
 
 The future admin-user grants UI should remain database-driven:

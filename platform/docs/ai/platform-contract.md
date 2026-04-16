@@ -43,6 +43,7 @@ Documented as future-target, not yet present in code:
 - migrations are owned by `cmd/migrate`, not by API startup
 - multi-tenant isolation is mandatory
 - admin and tenant semantics must stay explicit
+- when backend execution fails after a user action is accepted or partially persisted, responses should prefer anticipatory diagnostic context over generic failure text; return enough context for support and UI surfacing to identify the failing tenant, module object, and underlying error without guesswork
 
 ## 3. Frontend contract
 

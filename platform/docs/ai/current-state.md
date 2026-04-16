@@ -24,6 +24,7 @@ Confidence classes:
   - `tenant/profile`
   - `tenant/platformstudioformbuilder`
 - Shared backend areas observed in code include authentication, sessions, collection-table helpers, collection preferences, audit, notifications, and forms.
+- Cross-module backend direction now prefers anticipatory failure diagnostics over generic post-action errors: when execution fails after a user action is accepted or partially persisted, responses should carry enough context to identify the failing tenant, target object, and underlying error without guesswork.
 
 ### Frontend
 
@@ -71,7 +72,8 @@ Confidence classes:
 - Module Registry backend phases 1–5 are documented as completed.
 - Admin navigation exists as a first-class backend contract and remains separate from profile bootstrap.
 - Current non-root rollout slice is tenant onboarding.
-- Root-only admin list surfaces now include Module Registry and Employees.
+- Root-only admin list surfaces now include Module Registry, Employees, and Tenant inventory.
+- Tenant inventory now has a real root-only collection-table surface under `/app/admin/tenants/list/*`, plus the admin-app host page at `/admin/tenants`; non-root rollout remains onboarding-only.
 
 ### Schema and tenancy baseline
 
@@ -102,6 +104,8 @@ Confidence classes:
 - `tenant-web` Form Builder now consumes the real backend model/view authoring endpoints for Add Model, Add View, Copy View, Delete View, list/detail loading, direct workspace entry, and canonical `/authoring` load/save transport without publish-time DDL; `/draft` route naming remains only as a temporary compatibility alias, not product lifecycle.
 - `tenant-web` no longer falls back to bundled mock Form Builder model/view records when backend-backed cache is empty; empty model/view state now stays genuinely empty until backend data is loaded.
 - `tenant-web` private shell now mounts the shared `ui-kit` `TopLoader` and drives it from `@platform/api-client` inflight request activity, so viewport-level transport feedback runs during tenant API requests without replacing local loading/empty/error states.
+- `platform-admin-web` private shell now mounts the shared `ui-kit` `TopLoader` and drives it from shared request-activity tracking; admin collection-table transport also joins that activity stream so module and employee list requests show the same viewport-level feedback as the tenant app without replacing local loading/empty/error states.
+- `@platform/collection-table` quick-filter semantics now support implicit OR groups for repeated `contains` filters on the same field: the runtime displays one grouped token such as `[Module] Emp, Tenant`, preserves the underlying `quickFilters[]` entries for persistence, and backend admin collection-table services evaluate those same-field `contains` entries as OR within the field and AND across the remaining filter groups.
 - `tenant-web` Form Builder now loads and saves the explicit three-schema payload, treats backend-issued `containerKey` values as canonical during reconcile, renders explicit per-scope `Unplaced fields`, and exposes `Data Schema`, `Layout Blueprint`, and `UI Schema` in the debug modal.
 - the first stable three-schema rollout now restricts model and blueprint editing to the `default` view; non-default views remain `uiSchema`-only authoring surfaces and may still perform view-local UI composition and presentation changes such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields, as long as model-owned `dataSchema + layoutBlueprint` remain untouched.
 - deleting a non-default view removes only that view; deleting a default view promotes one remaining view to `default + active`; deleting the last remaining view is rejected.

@@ -1,7 +1,7 @@
 # Module Memory — Admin Control Plane
 
 Status: active
-Date: 2026-04-06
+Date: 2026-04-16
 
 ## Read this when
 
@@ -17,6 +17,7 @@ Date: 2026-04-06
 - `platform/backend/modules/admin/navigation`
 - `platform/backend/modules/admin/profile`
 - `platform/backend/modules/admin/tenantmanagement`
+- `platform/backend/modules/admin/tenantlist`
 - `platform/backend/modules/admin/employeeslist`
 - `platform/backend/modules/admin/accesspolicy`
 - `platform/backend/modules/admin/moduleregistrylist`
@@ -27,12 +28,14 @@ Date: 2026-04-06
 
 - `platform/frontend/apps/platform-admin-web/src/shared/navigation.ts`
 - `platform/frontend/apps/platform-admin-web/src/pages/employees-list/page.tsx`
+- `platform/frontend/apps/platform-admin-web/src/pages/tenants-list/page.tsx`
 - admin shell bootstrap files under `platform-admin-web/src/app/*`
 
 ## Locked invariants
 
 - `Module registry` is root-only
 - `Employees` directory is root-only
+- `Tenant inventory` stays root-only until secured non-root list coverage exists
 - non-root admin access is section-level only
 - access model is allow-only
 - current access values are `read` and `write`
@@ -61,6 +64,14 @@ Documented as planned / cleanup phase:
 - `tenant.onboarding`
 - current route path: `/admin/tenants/onboarding`
 - current backend create endpoint: `POST /app/admin/tenants`
+
+## Current root-only tenant inventory surface
+
+- `tenant.list_of_tenants`
+- current route path: `/admin/tenants`
+- current secure route family: `/app/admin/tenants/list/*`
+- projected in navigation and favorites for `root` only
+- non-root remains hidden until a secured list route is explicitly approved and mapped
 
 ## Important docs
 

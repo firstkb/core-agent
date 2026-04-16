@@ -59,6 +59,14 @@ const navigationFixture: AdminNavigation = {
       sections: [
         {
           access: "write",
+          description: "Tenant inventory and registry operations.",
+          id: "tenant-list",
+          route_path: "/admin/tenants",
+          section_key: "list_of_tenants",
+          title: "List of tenants",
+        },
+        {
+          access: "write",
           description: "Tenant provisioning and onboarding flow.",
           icon: "route",
           id: "tenant-onboarding",
@@ -90,7 +98,7 @@ describe("admin navigation", () => {
 
     expect(navigation.map((item) => item.label)).toEqual(["admin.navigation.dashboard.label", "Module registry", "Tenant"]);
     expect(navigation[0]?.active).toBe(false);
-    expect(navigation[2]?.children?.[0]?.active).toBe(true);
+    expect(navigation[2]?.children?.[1]?.active).toBe(true);
   });
 
   it("maps module icon tokens but does not inherit them into child sections", () => {
@@ -104,7 +112,7 @@ describe("admin navigation", () => {
 
   it("uses a section icon only when the section payload explicitly provides one", () => {
     const navigation = getAdminNavigation("/admin/tenants/onboarding", navigationFixture, translate);
-    const tenantSection = navigation[2]?.children?.[0];
+    const tenantSection = navigation[2]?.children?.[1];
 
     expect(tenantSection?.icon).toMatchObject({ type: RoutePathIcon });
   });
@@ -181,6 +189,16 @@ describe("admin navigation", () => {
     expect(routeMeta.path).toBe("/admin/tenants/onboarding");
   });
 
+  it("resolves tenant list metadata from route_path", () => {
+    const routeMeta = getAdminRouteMeta("/admin/tenants", navigationFixture, translate);
+
+    expect(routeMeta.kind).toBe("backend-section");
+    expect(routeMeta.label).toBe("List of tenants");
+    expect(routeMeta.parentLabel).toBe("Tenant");
+    expect(routeMeta.parentPath).toBe("/admin/tenants");
+    expect(routeMeta.path).toBe("/admin/tenants");
+  });
+
   it("keeps module edit pages attached to the module registry parent route", () => {
     const routeMeta = getAdminRouteMeta("/modules/edit/123", navigationFixture, translate);
 
@@ -253,6 +271,7 @@ describe("admin navigation", () => {
     expect(navigation[1]?.children?.[0]?.label).toBe("List of Employees");
     expect(routeMeta.label).toBe("List of Employees");
     expect(routeMeta.parentLabel).toBe("Employees");
+    expect(routeMeta.parentPath).toBe("/admin/users");
     expect(backendSection?.moduleTitle).toBe("Employees");
     expect(backendSection?.sectionTitle).toBe("List of Employees");
   });

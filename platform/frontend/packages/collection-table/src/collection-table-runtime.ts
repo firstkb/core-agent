@@ -37,6 +37,14 @@ export type CollectionTableQuickFilterLabels = {
   isNotEmpty: string;
 };
 
+export type CollectionTableQuickFilterGroup = {
+  fieldId: string;
+  filters: ReadonlyArray<CollectionTableQuickFilter>;
+  id: string;
+  operator: CollectionTableSearchOperator;
+  values: ReadonlyArray<string>;
+};
+
 const DEFAULT_OPERATOR: CollectionTableSearchOperator = "contains";
 const ACTIONS_COLUMN_ID = "actions";
 const DEFAULT_ACTIONS_COLUMN_WIDTH = "var(--admin-web-collection-action-column-width, 14rem)";
@@ -387,6 +395,68 @@ export function formatAppliedQuickFilterLabel(
   } satisfies Partial<Record<CollectionTableSearchOperator, string>>;
 
   return `${fieldToken} ${operatorToken[filter.operator] ?? ""} ${normalizedQuery}`.trim();
+}
+
+export function groupCollectionTableQuickFilters(
+  filters: ReadonlyArray<CollectionTableQuickFilter>,
+): ReadonlyArray<CollectionTableQuickFilterGroup> {
+  const groupedFilters: CollectionTableQuickFilterGroup[] = [];
+  const containsGroupIndexes = new Map<string, number>();
+
+  for (const filter of filters) {
+    const normalizedValue = filter.value.trim();
+
+    if (filter.operator === "contains") {
+      const groupKey = `${filter.fieldId}:${filter.operator}`;
+      const existingIndex = containsGroupIndexes.get(groupKey);
+
+      if (existingIndex !== undefined) {
+        const existingGroup = groupedFilters[existingIndex];
+        const nextFilters = [...existingGroup.filters, filter];
+        groupedFilters[existingIndex] = {
+          ...existingGroup,
+          filters: nextFilters,
+          id: createFilterSignature(nextFilters),
+          values: nextFilters.map((entry) => entry.value.trim()).filter((value) => value.length > 0),
+        };
+        continue;
+      }
+
+      containsGroupIndexes.set(groupKey, groupedFilters.length);
+    }
+
+    groupedFilters.push({
+      fieldId: filter.fieldId,
+      filters: [filter],
+      id: filter.id,
+      operator: filter.operator,
+      values: normalizedValue.length > 0 ? [normalizedValue] : [],
+    });
+  }
+
+  return groupedFilters;
+}
+
+export function formatAppliedQuickFilterGroupLabel(
+  group: CollectionTableQuickFilterGroup,
+  searchFieldOptions: ReadonlyArray<SearchFieldOption>,
+  labels: CollectionTableQuickFilterLabels,
+) {
+  const primaryFilter = group.filters[0];
+
+  if (!primaryFilter) {
+    return "";
+  }
+
+  if (group.operator !== "contains" || group.filters.length <= 1) {
+    return formatAppliedQuickFilterLabel(primaryFilter, searchFieldOptions, labels);
+  }
+
+  const fieldLabel = searchFieldOptions.find((option) => option.id === group.fieldId)?.label ?? labels.allField;
+  const fieldToken = `[${fieldLabel}]`;
+  const groupedValues = group.values.join(", ");
+
+  return groupedValues.length > 0 ? `${fieldToken} ${groupedValues}` : fieldToken;
 }
 
 export function buildAppliedQuickFilter(

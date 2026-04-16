@@ -65,9 +65,16 @@ type RuntimeApplyStorageResults struct {
 	SubformScopes []RuntimeApplyScopeResult `json:"subformScopes,omitempty"`
 }
 
+type RuntimeApplyContext struct {
+	TenantID string `json:"tenantId,omitempty"`
+	ModelID  string `json:"modelId,omitempty"`
+	ViewID   string `json:"viewId,omitempty"`
+}
+
 type RuntimeApplySummary struct {
 	Status         string                      `json:"status"`
 	Message        string                      `json:"message,omitempty"`
+	Context        *RuntimeApplyContext        `json:"context,omitempty"`
 	StorageResults *RuntimeApplyStorageResults `json:"storageResults,omitempty"`
 }
 

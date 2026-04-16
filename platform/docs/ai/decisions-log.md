@@ -180,6 +180,20 @@ Primary sources:
 
 - `platform/docs/ai/modules/admin-control-plane.md`
 
+### 2026-04-16 — Tenant inventory list remains root-only in the first collection-table rollout
+
+Status: active  
+Decision:
+
+- `tenant.list_of_tenants` is implemented as a root-only collection-table surface
+- secure route family is `/app/admin/tenants/list/*`
+- non-root admin rollout remains limited to `tenant.onboarding` until a dedicated non-root list slice is approved
+
+Primary sources:
+
+- `platform/docs/ai/modules/admin-control-plane.md`
+- `platform/backend/docs/backend-admin-access-policy-layering.md`
+
 ### 2026-03-20 — No dedicated `tenant-pwa` runtime yet
 
 Status: active  
@@ -237,6 +251,21 @@ Primary sources:
 - `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 
 ### 2026-04-13 — Form Builder authoring lifecycle is stable-key based and publish-agnostic
+
+### 2026-04-16 — Backend failure responses must carry actionable diagnostic context
+
+Status: active  
+Decision:
+
+- when backend execution fails after a user action is accepted or partially persisted, do not return generic failure text alone
+- backend responses should include actionable diagnostic context that lets UI, support, and developers identify the failing tenant and target object without guessing
+- the minimum expected context is the relevant tenant identifier, the affected module object identifiers, and the underlying error text
+- module-local payload shape may vary, but this policy is cross-module and should be applied proactively where post-save, post-apply, background execution, or partial-success flows exist
+
+Primary sources:
+
+- `platform/docs/ai/platform-contract.md`
+- `platform/docs/ai/modules/platform-studio.md`
 
 Status: active  
 Decision:

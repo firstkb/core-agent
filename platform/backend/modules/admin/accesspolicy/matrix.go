@@ -40,6 +40,15 @@ var adminRouteBindings = []RouteBinding{
 		},
 	},
 	{
+		PrefixRouteID: "ADMIN_TENANTS_LIST_",
+		Requirement: Requirement{
+			Kind:       RequirementRootOnly,
+			ModuleKey:  "tenant",
+			SectionKey: "list_of_tenants",
+			Access:     "write",
+		},
+	},
+	{
 		PrefixRouteID: "ADMIN_EMPLOYEES_",
 		Requirement: Requirement{
 			Kind:       RequirementRootOnly,
@@ -49,6 +58,16 @@ var adminRouteBindings = []RouteBinding{
 		},
 	},
 }
+
+var adminNavigationRequirements = buildNavigationRequirements(
+	adminRouteBindings,
+	Requirement{
+		Kind:       RequirementRootOnly,
+		ModuleKey:  "tenant",
+		SectionKey: "list_of_tenants",
+		Access:     "write",
+	},
+)
 
 func RequirementForRoute(routeID string) *Requirement {
 	routeID = strings.TrimSpace(routeID)
@@ -74,8 +93,7 @@ func AllowsSectionNavigation(moduleKey, sectionKey, grantedAccess string, isRoot
 		return false
 	}
 
-	for _, binding := range adminRouteBindings {
-		req := binding.Requirement
+	for _, req := range adminNavigationRequirements {
 		if !strings.EqualFold(strings.TrimSpace(req.ModuleKey), moduleKey) || !strings.EqualFold(strings.TrimSpace(req.SectionKey), sectionKey) {
 			continue
 		}
@@ -96,6 +114,22 @@ func AllowsSectionNavigation(moduleKey, sectionKey, grantedAccess string, isRoot
 	}
 
 	return false
+}
+
+func buildNavigationRequirements(routeBindings []RouteBinding, extras ...Requirement) []Requirement {
+	requirements := make([]Requirement, 0, len(routeBindings)+len(extras))
+
+	for _, binding := range routeBindings {
+		req := binding.Requirement
+		if strings.TrimSpace(req.ModuleKey) == "" || strings.TrimSpace(req.SectionKey) == "" {
+			continue
+		}
+		requirements = append(requirements, req)
+	}
+
+	requirements = append(requirements, extras...)
+
+	return requirements
 }
 
 func accessSatisfies(grantedAccess, requiredAccess string) bool {

@@ -19,6 +19,7 @@ import (
 	moduleregistrymanage "dtriton.com/platform/backend/modules/admin/moduleregistrymanage"
 	adminnavigationsvc "dtriton.com/platform/backend/modules/admin/navigation"
 	adminprofilesvc "dtriton.com/platform/backend/modules/admin/profile"
+	tenantlist "dtriton.com/platform/backend/modules/admin/tenantlist"
 	tenantmanagement "dtriton.com/platform/backend/modules/admin/tenantmanagement"
 )
 
@@ -75,6 +76,7 @@ type Server struct {
 	moduleRegistryListHT   *moduleregistrylist.Handler
 	moduleRegistryGrantHT  *moduleregistrygrants.Handler
 	moduleRegistryManageHT *moduleregistrymanage.Handler
+	tenantListHT           *tenantlist.Handler
 	tenantManagementHT     *tenantmanagement.Handler
 }
 

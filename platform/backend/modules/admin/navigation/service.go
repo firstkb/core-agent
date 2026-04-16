@@ -157,6 +157,11 @@ var collectionFavoriteBindings = []collectionFavoriteBinding{
 		SectionKey: "modules_list",
 	},
 	{
+		SurfaceID:  "tenant.list",
+		ModuleKey:  "tenant",
+		SectionKey: "list_of_tenants",
+	},
+	{
 		SurfaceID:  "employees.list",
 		ModuleKey:  "users",
 		SectionKey: "list_of_users",

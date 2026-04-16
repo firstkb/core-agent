@@ -408,18 +408,13 @@ func applyQuickFilters(rows []registryRow, filters []QuickFilter) ([]registryRow
 
 	filtered := make([]registryRow, 0, len(rows))
 	for _, row := range rows {
-		matches := true
-		for _, filter := range filters {
-			ok, err := rowMatchesQuickFilter(row, filter)
-			if err != nil {
-				return nil, err
-			}
-			if !ok {
-				matches = false
-				break
-			}
+		matched, err := collectiontable.MatchQuickFilters(filters, func(filter QuickFilter) (bool, error) {
+			return rowMatchesQuickFilter(row, filter)
+		})
+		if err != nil {
+			return nil, err
 		}
-		if matches {
+		if matched {
 			filtered = append(filtered, row)
 		}
 	}

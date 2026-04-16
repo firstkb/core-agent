@@ -55,6 +55,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	server.moduleRegistryGrantHT = buildModuleRegistryGrantModule(server.sqlClient)
 	server.moduleRegistryManageHT = moduleRegistryManage.Handler
 	server.moduleRegistryListHT = buildModuleRegistryListModule(server.sqlClient, moduleRegistryManage.Service, logger)
+	server.tenantListHT = buildTenantListModule(server.sqlClient)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()

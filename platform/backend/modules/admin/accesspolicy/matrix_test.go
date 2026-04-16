@@ -27,6 +27,14 @@ func TestRequirementForRouteMatchesExactAndPrefixBindings(t *testing.T) {
 		t.Fatalf("unexpected employees list requirement: %+v", requirement)
 	}
 
+	requirement = RequirementForRoute("ADMIN_TENANTS_LIST_META_GET")
+	if requirement == nil {
+		t.Fatalf("expected tenant list requirement")
+	}
+	if requirement.Kind != RequirementRootOnly || requirement.ModuleKey != "tenant" || requirement.SectionKey != "list_of_tenants" {
+		t.Fatalf("unexpected tenant list requirement: %+v", requirement)
+	}
+
 	requirement = RequirementForRoute("ADMIN_EMPLOYEES_UPDATE")
 	if requirement == nil {
 		t.Fatalf("expected employees update requirement")
@@ -59,7 +67,10 @@ func TestAllowsSectionNavigationHonorsCoverageAndAccess(t *testing.T) {
 	if AllowsSectionNavigation("tenant", "onboarding", "read", false) {
 		t.Fatalf("expected onboarding to stay hidden for non-root read grant")
 	}
+	if !AllowsSectionNavigation("tenant", "list_of_tenants", "write", true) {
+		t.Fatalf("expected root tenant list section to be visible for root")
+	}
 	if AllowsSectionNavigation("tenant", "list_of_tenants", "write", false) {
-		t.Fatalf("expected uncovered tenant list section to stay hidden")
+		t.Fatalf("expected root-only tenant list section to stay hidden for non-root")
 	}
 }

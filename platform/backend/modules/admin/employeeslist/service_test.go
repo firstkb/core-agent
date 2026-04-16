@@ -261,6 +261,46 @@ func TestCreateSavedFilterUsesEmployeesSurface(t *testing.T) {
 	}
 }
 
+func TestQueryGroupsRepeatedContainsFiltersOnSameFieldAsOr(t *testing.T) {
+	currentAdminID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	repo := &fakeRepository{
+		employees: []EmployeeRecord{
+			{
+				ID:        currentAdminID,
+				Email:     "alice@example.com",
+				Name:      "Alice Admin",
+				Level:     80,
+				Status:    "active",
+				CreatedAt: time.Date(2026, 4, 1, 10, 0, 0, 0, time.UTC),
+			},
+			{
+				ID:        uuid.MustParse("22222222-2222-2222-2222-222222222222"),
+				Email:     "bob@example.com",
+				Name:      "Bob Root",
+				Level:     100,
+				Status:    "disabled",
+				CreatedAt: time.Date(2026, 4, 2, 10, 0, 0, 0, time.UTC),
+			},
+		},
+	}
+	svc := NewService(repo, &fakePreferences{})
+
+	out, err := svc.Query(rootContextWithUserID(currentAdminID), QueryRequest{
+		Page:     1,
+		PageSize: 25,
+		QuickFilters: []QuickFilter{
+			{FieldID: "status", Operator: "contains", Value: "Active"},
+			{FieldID: "status", Operator: "contains", Value: "Disabled"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out.TotalItems != 2 || len(out.Rows) != 2 {
+		t.Fatalf("expected both rows to match grouped OR filters, got %+v", out)
+	}
+}
+
 func TestRunBulkActionDisablesEmployees(t *testing.T) {
 	first := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	second := uuid.MustParse("22222222-2222-2222-2222-222222222222")

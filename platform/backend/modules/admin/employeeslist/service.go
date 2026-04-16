@@ -411,18 +411,13 @@ func applyQuickFilters(rows []employeeRow, filters []QuickFilter) ([]employeeRow
 
 	filtered := make([]employeeRow, 0, len(rows))
 	for _, row := range rows {
-		matchedAll := true
-		for _, filter := range filters {
-			matched, err := matchesQuickFilter(row, filter)
-			if err != nil {
-				return nil, err
-			}
-			if !matched {
-				matchedAll = false
-				break
-			}
+		matched, err := collectiontable.MatchQuickFilters(filters, func(filter QuickFilter) (bool, error) {
+			return matchesQuickFilter(row, filter)
+		})
+		if err != nil {
+			return nil, err
 		}
-		if matchedAll {
+		if matched {
 			filtered = append(filtered, row)
 		}
 	}

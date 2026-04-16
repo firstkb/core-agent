@@ -399,9 +399,11 @@ Status notes:
   - `ADMIN_PROFILE_GET` -> self
   - `ADMIN_NAVIGATION_GET` -> self
   - `ADMIN_MODULE_REGISTRY_*` -> module `module_registry`, section `modules_list`, access `write`, root-only
+  - `ADMIN_TENANTS_LIST_*` -> module `tenant`, section `list_of_tenants`, access `write`, root-only
   - `ADMIN_TENANT_CREATE` -> module `tenant`, section `onboarding`, access `write`
 - navigation now filters section visibility through the same route matrix used by middleware policy lookup
-- seeded sections without backend route coverage, such as `tenant.list_of_tenants`, remain hidden from navigation until their secured route mapping is implemented
+- seeded sections without backend route coverage remain hidden from non-root navigation until their secured route mapping is implemented
+- `tenant.list_of_tenants` is now covered for root through `/app/admin/tenants/list/*`, while non-root coverage is still pending
 - current rollout was verified end-to-end for a granted non-root admin:
   - visible sidebar section
   - allowed secure route

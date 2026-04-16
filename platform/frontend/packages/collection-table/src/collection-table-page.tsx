@@ -67,12 +67,13 @@ import {
   doesSearchOperatorRequireValue,
   filterCompatibleSearchSuggestionGroups,
   filterSearchSuggestionGroups,
-  formatAppliedQuickFilterLabel,
+  formatAppliedQuickFilterGroupLabel,
   getAllowedSearchOperators,
   getCellText,
   getCollectionTableRowLabel,
   getDefaultSearchOperator,
   getSearchFieldKind,
+  groupCollectionTableQuickFilters,
   normalizeCollectionRows,
   reconcileSelectedRowIds,
   resolveCollectionStateForMeta,
@@ -704,24 +705,30 @@ export function CollectionTablePage({
   }, [highlightedSearchSuggestionOptionId, isSearchSuggestionOpen]);
 
   const activeTokens = useMemo<ReadonlyArray<QuickFilterToken>>(() => {
-    return collectionState.query.quickFilters.map((filter) => ({
-      id: filter.id,
-      label: formatAppliedQuickFilterLabel(filter, searchFieldOptions, {
-        allField: t("admin.collectionTable.search.all"),
-        isEmpty: t("admin.collectionTable.operators.isEmpty"),
-        isNotEmpty: t("admin.collectionTable.operators.isNotEmpty"),
-      }),
-      onRemove: () => {
-        setState((currentValue) => ({
-          ...currentValue,
-          query: {
-            ...currentValue.query,
-            page: 1,
-            quickFilters: currentValue.query.quickFilters.filter((currentFilter) => currentFilter.id !== filter.id),
-          },
-        }));
-      },
-    }));
+    return groupCollectionTableQuickFilters(collectionState.query.quickFilters).map((group) => {
+      const groupFilterIds = new Set(group.filters.map((filter) => filter.id));
+
+      return {
+        id: group.id,
+        label: formatAppliedQuickFilterGroupLabel(group, searchFieldOptions, {
+          allField: t("admin.collectionTable.search.all"),
+          isEmpty: t("admin.collectionTable.operators.isEmpty"),
+          isNotEmpty: t("admin.collectionTable.operators.isNotEmpty"),
+        }),
+        onRemove: () => {
+          setState((currentValue) => ({
+            ...currentValue,
+            query: {
+              ...currentValue.query,
+              page: 1,
+              quickFilters: currentValue.query.quickFilters.filter(
+                (currentFilter) => !groupFilterIds.has(currentFilter.id),
+              ),
+            },
+          }));
+        },
+      };
+    });
   }, [collectionState.query.quickFilters, searchFieldOptions, t]);
 
   const currentFilterSignature = useMemo(

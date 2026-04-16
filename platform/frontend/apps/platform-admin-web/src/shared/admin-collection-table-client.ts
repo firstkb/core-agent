@@ -1,5 +1,8 @@
-import { ApiClientError } from "@platform/api-client";
-import { isUnauthorizedApiError } from "@platform/api-client";
+import {
+  ApiClientError,
+  isUnauthorizedApiError,
+  trackApiClientRequestActivity,
+} from "@platform/api-client";
 
 import type {
   CollectionTableAdapter,
@@ -177,68 +180,70 @@ async function requestAdminCollectionTable<T>(
     method?: string;
   },
 ): Promise<T> {
-  const adminApiUrl = readAdminApiUrlFromStorage();
-  const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${options.accessToken}`,
-  });
-
-  let body: BodyInit | undefined;
-
-  if (options.body !== undefined) {
-    headers.set("Content-Type", "application/json");
-    body = JSON.stringify(options.body);
-  }
-
-  let response: Response;
-
-  try {
-    response = await fetch(`${normalizeBaseUrl(adminApiUrl)}${path}`, {
-      body,
-      headers,
-      method: options.method ?? (body ? "POST" : "GET"),
+  return trackApiClientRequestActivity(async () => {
+    const adminApiUrl = readAdminApiUrlFromStorage();
+    const headers = new Headers({
+      Accept: "application/json",
+      Authorization: `Bearer ${options.accessToken}`,
     });
-  } catch (error) {
-    throw new ApiClientError(
-      error instanceof Error ? error.message : "Network request failed.",
-      { code: "network_error" },
-    );
-  }
 
-  const payload = await parseJsonBody(response);
+    let body: BodyInit | undefined;
 
-  if (response.ok && payload === null && options.allowEmptySuccess) {
-    return undefined as T;
-  }
-
-  if (isRecord(payload)) {
-    const envelope = payload as BackendEnvelope<T>;
-
-    if ("status" in envelope || "data" in envelope || "message" in envelope || "code" in envelope) {
-      if (!response.ok || envelope.status !== "ok") {
-        throw new ApiClientError(
-          normalizeMessage(response.status, envelope.message),
-          {
-            code: envelope.code,
-            payload: envelope.data ?? payload,
-            responseStatus: envelope.status,
-            statusCode: response.status,
-          },
-        );
-      }
-
-      return envelope.data as T;
+    if (options.body !== undefined) {
+      headers.set("Content-Type", "application/json");
+      body = JSON.stringify(options.body);
     }
-  }
 
-  if (!response.ok) {
-    throw new ApiClientError(normalizeMessage(response.status), {
-      payload,
-      statusCode: response.status,
-    });
-  }
+    let response: Response;
 
-  return payload as T;
+    try {
+      response = await fetch(`${normalizeBaseUrl(adminApiUrl)}${path}`, {
+        body,
+        headers,
+        method: options.method ?? (body ? "POST" : "GET"),
+      });
+    } catch (error) {
+      throw new ApiClientError(
+        error instanceof Error ? error.message : "Network request failed.",
+        { code: "network_error" },
+      );
+    }
+
+    const payload = await parseJsonBody(response);
+
+    if (response.ok && payload === null && options.allowEmptySuccess) {
+      return undefined as T;
+    }
+
+    if (isRecord(payload)) {
+      const envelope = payload as BackendEnvelope<T>;
+
+      if ("status" in envelope || "data" in envelope || "message" in envelope || "code" in envelope) {
+        if (!response.ok || envelope.status !== "ok") {
+          throw new ApiClientError(
+            normalizeMessage(response.status, envelope.message),
+            {
+              code: envelope.code,
+              payload: envelope.data ?? payload,
+              responseStatus: envelope.status,
+              statusCode: response.status,
+            },
+          );
+        }
+
+        return envelope.data as T;
+      }
+    }
+
+    if (!response.ok) {
+      throw new ApiClientError(normalizeMessage(response.status), {
+        payload,
+        statusCode: response.status,
+      });
+    }
+
+    return payload as T;
+  });
 }
 
 function openDownloadUrl(downloadUrl?: string) {

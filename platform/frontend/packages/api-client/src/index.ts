@@ -148,6 +148,7 @@ type FormBuilderDraftVersions = {
 
 type FormBuilderModelSummary = {
   canEditViewsOnly: boolean;
+  dataCount?: number;
   description?: string;
   displayName: string;
   guid?: string;
@@ -156,6 +157,7 @@ type FormBuilderModelSummary = {
   key: string;
   modelStructureVersion: number;
   name: string;
+  sourceType?: string;
   storageKey?: string;
   title: string;
   version: number;
@@ -758,12 +760,21 @@ function normalizeOptionalPositiveInteger(value: unknown, fieldName: string) {
   return assertPositiveInteger(value, fieldName);
 }
 
+function normalizeOptionalNonNegativeInteger(value: unknown, fieldName: string) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  return assertNonNegativeInteger(value, fieldName);
+}
+
 function normalizeFormBuilderModelSummary(payload: unknown, fieldName: string): FormBuilderModelSummary {
   const record = normalizeJsonRecord(payload, fieldName);
   const displayName = assertString(record.displayName, `${fieldName}.displayName`);
 
   return {
     canEditViewsOnly: assertBoolean(record.canEditViewsOnly, `${fieldName}.canEditViewsOnly`),
+    dataCount: normalizeOptionalNonNegativeInteger(record.dataCount, `${fieldName}.dataCount`),
     description: normalizeOptionalString(record.description),
     displayName,
     guid: normalizeOptionalString(record.guid),
@@ -772,6 +783,7 @@ function normalizeFormBuilderModelSummary(payload: unknown, fieldName: string): 
     key: assertString(record.key, `${fieldName}.key`),
     modelStructureVersion: assertPositiveInteger(record.modelStructureVersion, `${fieldName}.modelStructureVersion`),
     name: normalizeOptionalString(record.name) ?? displayName,
+    sourceType: normalizeOptionalString(record.sourceType),
     storageKey: normalizeOptionalString(record.storageKey),
     title: normalizeOptionalString(record.title) ?? displayName,
     version: normalizeOptionalPositiveInteger(record.version, `${fieldName}.version`) ?? 1,

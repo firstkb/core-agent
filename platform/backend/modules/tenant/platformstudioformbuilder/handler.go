@@ -138,6 +138,10 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_TENANT_MISSING", http.StatusForbidden, "tenant context missing")
 	case errors.Is(err, ErrInvalidDraft):
 		return apperr.New("FORM_BUILDER_INVALID", http.StatusBadRequest, "invalid payload")
+	case errors.Is(err, ErrDeleteUnsupported):
+		return apperr.New("FORM_BUILDER_DELETE_UNSUPPORTED", http.StatusBadRequest, "delete is not supported for this model type")
+	case errors.Is(err, ErrExportUnsupported):
+		return apperr.New("FORM_BUILDER_EXPORT_UNSUPPORTED", http.StatusBadRequest, "export is not supported for this model type")
 	case errors.Is(err, ErrModelLocked):
 		return apperr.New("FORM_BUILDER_MODEL_LOCKED", http.StatusForbidden, "model is locked")
 	case errors.Is(err, ErrViewLocked):

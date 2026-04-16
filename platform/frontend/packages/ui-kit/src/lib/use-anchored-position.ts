@@ -1,4 +1,11 @@
-import { useEffect, useState, type CSSProperties, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
 
 export type OverlaySide = "top" | "right" | "bottom" | "left";
 export type OverlayAlign = "start" | "center" | "end";
@@ -12,6 +19,8 @@ type UseAnchoredPositionOptions = {
   sideOffset?: number;
   viewportPadding?: number;
 };
+
+const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 function clamp(value: number, min: number, max: number) {
   if (max < min) {
@@ -139,57 +148,85 @@ export function useAnchoredPosition({
     top: viewportPadding,
   });
 
+  const updatePosition = useCallback(() => {
+    const anchorElement = anchorRef.current;
+    const contentElement = contentRef.current;
+
+    if (!anchorElement || !contentElement) {
+      return;
+    }
+
+    const anchorRect = anchorElement.getBoundingClientRect();
+    const contentRect = contentElement.getBoundingClientRect();
+    const preferredSide = fitsPreferredSide(
+      side,
+      anchorRect,
+      contentRect,
+      sideOffset,
+      viewportPadding,
+    )
+      ? side
+      : getOppositeSide(side);
+    const nextPosition = resolvePosition(
+      preferredSide,
+      align,
+      anchorRect,
+      contentRect,
+      sideOffset,
+      viewportPadding,
+    );
+
+    setStyle({
+      left: nextPosition.left,
+      minWidth: anchorRect.width,
+      position: "fixed",
+      top: nextPosition.top,
+    });
+  }, [align, anchorRef, contentRef, side, sideOffset, viewportPadding]);
+
+  useClientLayoutEffect(() => {
+    if (!open || typeof window === "undefined") {
+      return;
+    }
+
+    updatePosition();
+  }, [open, updatePosition]);
+
   useEffect(() => {
     if (!open || typeof window === "undefined") {
       return;
     }
 
-    function updatePosition() {
-      const anchorElement = anchorRef.current;
-      const contentElement = contentRef.current;
+    updatePosition();
+    const frameId = window.requestAnimationFrame(() => {
+      updatePosition();
+    });
+    let resizeObserver: ResizeObserver | null = null;
 
-      if (!anchorElement || !contentElement) {
-        return;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updatePosition();
+      });
+
+      if (anchorRef.current) {
+        resizeObserver.observe(anchorRef.current);
       }
 
-      const anchorRect = anchorElement.getBoundingClientRect();
-      const contentRect = contentElement.getBoundingClientRect();
-      const preferredSide = fitsPreferredSide(
-        side,
-        anchorRect,
-        contentRect,
-        sideOffset,
-        viewportPadding,
-      )
-        ? side
-        : getOppositeSide(side);
-      const nextPosition = resolvePosition(
-        preferredSide,
-        align,
-        anchorRect,
-        contentRect,
-        sideOffset,
-        viewportPadding,
-      );
-
-      setStyle({
-        left: nextPosition.left,
-        minWidth: anchorRect.width,
-        position: "fixed",
-        top: nextPosition.top,
-      });
+      if (contentRef.current) {
+        resizeObserver.observe(contentRef.current);
+      }
     }
-
-    updatePosition();
 
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
 
     return () => {
+      window.cancelAnimationFrame(frameId);
+      resizeObserver?.disconnect();
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [align, anchorRef, contentRef, open, side, sideOffset, viewportPadding]);
+  }, [anchorRef, contentRef, open, updatePosition]);
 
   return style;
 }

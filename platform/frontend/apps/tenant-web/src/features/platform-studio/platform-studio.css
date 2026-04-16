@@ -158,6 +158,7 @@
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
 .tenant-web__platform-studio-debug-surface {
@@ -245,8 +246,17 @@
   padding-left: 0.35rem;
   padding-bottom: 1rem;
   padding-right: 0.35rem;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   scrollbar-color: transparent transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll--models .tenant-web__platform-studio-panel-scroll-viewport {
+  scrollbar-gutter: stable both-edges;
+}
+
+.tenant-web__platform-studio-panel-scroll--views .tenant-web__platform-studio-panel-scroll-viewport {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .tenant-web__platform-studio-panel-scroll-viewport > .tenant-web__platform-studio-object-list,
@@ -418,6 +428,39 @@
   cursor: pointer;
 }
 
+.tenant-web__platform-studio-object-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.tenant-web__platform-studio-object-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 78%, white 22%);
+  color: color-mix(in srgb, var(--color-accent-primary) 72%, var(--color-text-primary) 28%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+}
+
+.tenant-web__platform-studio-object-icon svg {
+  width: 1.08rem;
+  height: 1.08rem;
+  display: block;
+}
+
+.tenant-web__platform-studio-object-icon--static {
+  background: color-mix(in srgb, var(--color-warning-100) 82%, white 18%);
+  color: color-mix(in srgb, var(--color-warning-700) 82%, var(--color-text-primary) 18%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-warning-600) 18%, transparent);
+}
+
 .tenant-web__platform-studio-object-item:hover,
 .tenant-web__platform-studio-screen-item:hover {
   transform: translateY(-1px);
@@ -430,9 +473,30 @@
   background: color-mix(in srgb, var(--color-accent-primary-soft) 58%, var(--color-bg-surface-elevated));
 }
 
-.tenant-web__platform-studio-object-copy,
+.tenant-web__platform-studio-object-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-object-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-count-badge {
+  min-width: 2rem;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .tenant-web__platform-studio-screen-copy {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
@@ -448,6 +512,7 @@
   align-items: center;
   gap: 0.8rem;
   flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .tenant-web__platform-studio-object-title,
@@ -456,6 +521,8 @@
   margin: 0;
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
+  font-size: 0.95rem;
+  line-height: 1.25;
 }
 
 .tenant-web__platform-studio-screen-description {
@@ -552,7 +619,8 @@
 }
 
 .tenant-web__platform-studio-menu {
-  min-width: 12.5rem;
+  min-width: 9rem;
+  width: max-content;
 }
 
 .tenant-web__platform-studio-field-list {

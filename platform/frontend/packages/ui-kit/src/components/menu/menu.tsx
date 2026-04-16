@@ -9,6 +9,7 @@ import {
   useId,
   useMemo,
   useRef,
+  useState,
   type ButtonHTMLAttributes,
   type HTMLAttributes,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -176,6 +177,7 @@ export type MenuContentProps = HTMLAttributes<HTMLDivElement>;
 export function MenuContent({ children, className, onKeyDown, ...props }: MenuContentProps) {
   const { align, contentId, contentRef, open, setOpen, side, sideOffset, triggerRef } =
     useMenuContext();
+  const [positionReady, setPositionReady] = useState(false);
   const style = useAnchoredPosition({
     align,
     anchorRef: triggerRef,
@@ -184,6 +186,21 @@ export function MenuContent({ children, className, onKeyDown, ...props }: MenuCo
     side,
     sideOffset,
   });
+
+  useEffect(() => {
+    if (!open || typeof window === "undefined") {
+      setPositionReady(false);
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setPositionReady(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -252,7 +269,11 @@ export function MenuContent({ children, className, onKeyDown, ...props }: MenuCo
       })}
       ref={contentRef}
       role="menu"
-      style={style}
+      style={{
+        ...style,
+        pointerEvents: positionReady ? "auto" : "none",
+        visibility: positionReady ? "visible" : "hidden",
+      }}
       tabIndex={-1}
     >
       {children}

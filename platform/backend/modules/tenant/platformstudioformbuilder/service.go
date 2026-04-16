@@ -18,8 +18,10 @@ var (
 	ErrCannotDeleteLastView = errors.New("form builder cannot delete last view")
 	ErrDraftConflict        = errors.New("form builder draft version conflict")
 	ErrInvalidDraft         = errors.New("form builder invalid draft")
+	ErrDeleteUnsupported    = errors.New("form builder delete unsupported")
 	ErrModelLocked          = errors.New("form builder model locked")
 	ErrModelNotFound        = errors.New("form builder model not found")
+	ErrExportUnsupported    = errors.New("form builder export unsupported")
 	ErrRuntimeNameConflict  = errors.New("form builder runtime name conflict")
 	ErrTenantMissing        = errors.New("form builder tenant missing")
 	ErrUnauthorized         = errors.New("form builder unauthorized")
@@ -51,7 +53,11 @@ func (s *Service) ListModels(ctx context.Context) (*ListModelsResponse, error) {
 		if isStaticModelRestrictedForActor(claims, &model) {
 			continue
 		}
-		items = append(items, buildModelSummary(&model))
+		summary := buildModelSummary(&model)
+		if dataCount, ok := s.loadModelDataCount(ctx, tenant, &model); ok {
+			summary.DataCount = &dataCount
+		}
+		items = append(items, summary)
 	}
 
 	return &ListModelsResponse{Items: items}, nil
@@ -77,6 +83,9 @@ func (s *Service) GetModel(ctx context.Context, modelID string) (*ModelDetailRes
 	}
 	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
+	}
+	if dataCount, ok := s.loadModelDataCount(ctx, tenant, model); ok {
+		model.DataCount = &dataCount
 	}
 
 	views, err := s.repo.ListViews(ctx, tenant, model.ModelID)
@@ -107,6 +116,9 @@ func (s *Service) ExportModelData(ctx context.Context, modelID string) (*ExportF
 	}
 	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
+	}
+	if !isManagedRuntimeSourceType(model.SourceType) {
+		return nil, ErrExportUnsupported
 	}
 
 	views, err := s.repo.ListViews(ctx, tenant, model.ModelID)
@@ -176,6 +188,9 @@ func (s *Service) ExportModelBundle(ctx context.Context, modelID string) (*Expor
 	}
 	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
+	}
+	if !isManagedRuntimeSourceType(model.SourceType) {
+		return nil, ErrExportUnsupported
 	}
 
 	views, err := s.repo.ListViews(ctx, tenant, model.ModelID)
@@ -467,6 +482,9 @@ func (s *Service) DeleteModel(ctx context.Context, modelID string) (*DeleteModel
 	}
 	if isStaticModelRestrictedForActor(claims, model) {
 		return nil, ErrModelNotFound
+	}
+	if !isManagedRuntimeSourceType(model.SourceType) {
+		return nil, ErrDeleteUnsupported
 	}
 
 	if err := s.repo.DeleteModel(ctx, tenant, model.ModelID); err != nil {
@@ -1720,6 +1738,7 @@ func buildModelSummary(model *ModelRecord) ModelSummary {
 
 	return ModelSummary{
 		CanEditViewsOnly:      model.CanEditViewsOnly,
+		DataCount:             model.DataCount,
 		Description:           model.Description,
 		DisplayName:           model.DisplayName,
 		GUID:                  model.GUID,
@@ -1728,11 +1747,56 @@ func buildModelSummary(model *ModelRecord) ModelSummary {
 		Key:                   model.ModelKey,
 		ModelStructureVersion: model.StructureVersion,
 		Name:                  model.DisplayName,
+		SourceType:            model.SourceType,
 		StorageKey:            model.StorageKey,
 		Title:                 model.DisplayName,
 		Version:               model.Version,
 	}
 }
+
+func (s *Service) loadModelDataCount(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	model *ModelRecord,
+) (int64, bool) {
+	relationName := resolveModelDataCountRelationName(model)
+	if relationName == "" {
+		return 0, false
+	}
+
+	count, err := s.repo.CountRelationRows(ctx, tenant, relationName)
+	if err != nil {
+		return 0, false
+	}
+
+	return count, true
+}
+
+func resolveModelDataCountRelationName(model *ModelRecord) string {
+	if model == nil {
+		return ""
+	}
+
+	modelPayload := cloneJSONToMap(model.DefinitionJSON)
+	if len(modelPayload) > 0 {
+		dataSchema := asMap(modelPayload["dataSchema"])
+		if len(dataSchema) > 0 {
+			dataSchema = ensureDataSchemaRuntimeMetadata(dataSchema, modelPayload, model)
+			rootRuntime := readRuntimeDataScopeMetadata(dataSchemaScope(dataSchema, rootSchemaScopeID))
+			if relationName := strings.TrimSpace(rootRuntime.TableName); relationName != "" {
+				return relationName
+			}
+		}
+	}
+
+	if !isManagedRuntimeSourceType(model.SourceType) {
+		return ""
+	}
+
+	modelAlias := buildGeneratedRuntimeModelAlias(chooseString(modelStorageKey(model), model.ModelID))
+	return buildGeneratedRuntimeTableName(modelAlias)
+}
+
 
 func buildViewSummary(view *ViewRecord) ViewSummary {
 	if view == nil {

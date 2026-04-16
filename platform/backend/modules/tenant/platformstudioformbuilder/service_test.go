@@ -17,6 +17,7 @@ import (
 type memoryRepository struct {
 	models                  map[string]*ModelRecord
 	views                   map[string]map[string]*ViewRecord
+	relationRowCounts       map[string]int64
 	runtimeRelations        map[string]string
 	lastRuntimePlan         *runtimeApplyPlan
 	lastExportRelationName  string
@@ -28,9 +29,10 @@ type memoryRepository struct {
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{
-		models:           map[string]*ModelRecord{},
-		views:            map[string]map[string]*ViewRecord{},
-		runtimeRelations: map[string]string{},
+		models:            map[string]*ModelRecord{},
+		views:             map[string]map[string]*ViewRecord{},
+		relationRowCounts: map[string]int64{},
+		runtimeRelations:  map[string]string{},
 	}
 }
 
@@ -75,6 +77,10 @@ func (r *memoryRepository) GetView(_ context.Context, _ requestctx.TenantInfo, m
 		return &clone, nil
 	}
 	return nil, nil
+}
+
+func (r *memoryRepository) CountRelationRows(_ context.Context, _ requestctx.TenantInfo, relationName string) (int64, error) {
+	return r.relationRowCounts[relationName], nil
 }
 
 func (r *memoryRepository) ExportDataRows(_ context.Context, _ requestctx.TenantInfo, relationName string, columnNames []string, orderByColumn string) ([][]string, error) {
@@ -289,6 +295,10 @@ func cloneModelRecord(record *ModelRecord) ModelRecord {
 		return ModelRecord{}
 	}
 	clone := *record
+	if record.DataCount != nil {
+		value := *record.DataCount
+		clone.DataCount = &value
+	}
 	if len(record.DefinitionJSON) > 0 {
 		clone.DefinitionJSON = append(json.RawMessage(nil), record.DefinitionJSON...)
 	}
@@ -1947,6 +1957,8 @@ func TestListModelsShowsStaticModelsForRoot(t *testing.T) {
 	repo := newMemoryRepository()
 	managedModel, _ := seedCanonicalModelAndDefaultView(t, repo)
 	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	repo.relationRowCounts[resolveModelDataCountRelationName(managedModel)] = 12
+	repo.relationRowCounts[resolveModelDataCountRelationName(staticModel)] = 64
 	svc := NewService(repo)
 
 	out, err := svc.ListModels(rootTestContext())
@@ -1963,6 +1975,34 @@ func TestListModelsShowsStaticModelsForRoot(t *testing.T) {
 	if !reflect.DeepEqual(ids, expected) {
 		t.Fatalf("visible model ids = %#v, want %#v", ids, expected)
 	}
+	counts := map[string]int64{}
+	for _, item := range out.Items {
+		if item.DataCount == nil {
+			t.Fatalf("model %q missing dataCount", item.ID)
+		}
+		counts[item.ID] = *item.DataCount
+	}
+	if counts[managedModel.ModelID] != 12 {
+		t.Fatalf("managed model dataCount = %d, want %d", counts[managedModel.ModelID], 12)
+	}
+	if counts[staticModel.ModelID] != 64 {
+		t.Fatalf("static model dataCount = %d, want %d", counts[staticModel.ModelID], 64)
+	}
+}
+
+func TestGetModelIncludesDataCountWhenAvailable(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedCanonicalModelAndDefaultView(t, repo)
+	repo.relationRowCounts[resolveModelDataCountRelationName(model)] = 7
+	svc := NewService(repo)
+
+	out, err := svc.GetModel(rootTestContext(), model.ModelID)
+	if err != nil {
+		t.Fatalf("GetModel returned error: %v", err)
+	}
+	if out.DataCount == nil || *out.DataCount != 7 {
+		t.Fatalf("detail dataCount = %#v, want %d", out.DataCount, 7)
+	}
 }
 
 func TestGetModelRejectsStaticModelForNonRoot(t *testing.T) {
@@ -1973,6 +2013,23 @@ func TestGetModelRejectsStaticModelForNonRoot(t *testing.T) {
 	_, err := svc.GetModel(testContext(), staticModel.ModelID)
 	if !errors.Is(err, ErrModelNotFound) {
 		t.Fatalf("expected ErrModelNotFound for non-root static model detail, got %v", err)
+	}
+}
+
+func TestGetModelAllowsStaticModelForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	out, err := svc.GetModel(rootTestContext(), staticModel.ModelID)
+	if err != nil {
+		t.Fatalf("GetModel returned error: %v", err)
+	}
+	if out.ID != staticModel.ModelID {
+		t.Fatalf("model id = %q, want %q", out.ID, staticModel.ModelID)
+	}
+	if out.SourceType != "external" {
+		t.Fatalf("model source type = %q, want %q", out.SourceType, "external")
 	}
 }
 
@@ -2035,61 +2092,25 @@ func TestExportModelDataUsesCanonicalLabelsAndRawTableColumns(t *testing.T) {
 	}
 }
 
-func TestExportModelDataUsesExternalSourceColumns(t *testing.T) {
+func TestExportModelDataRejectsStaticModel(t *testing.T) {
 	repo := newMemoryRepository()
-	model, _ := seedExternalModelAndDefaultView(t, repo, "mail-log")
-	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
-	modelPayload["storageKey"] = "mails"
-	modelPayload["displayName"] = "Mails"
-	modelPayload["title"] = "Mails"
-	modelPayload["name"] = "Mails"
-
-	dataSchema := asMap(modelPayload["dataSchema"])
-	rootScope := asMap(dataSchema["rootScope"])
-	rootScope["runtime"] = map[string]any{
-		"dataViewName":          "vw_mails",
-		"rtAlias":               "mails",
-		"sourceCreatedAtColumn": "created_at",
-		"sourceGuidColumn":      "guid",
-		"sourceIdColumn":        "id",
-		"sourceTenantIdColumn":  "tenant_id",
-		"sourceUpdatedAtColumn": "updated_at",
-		"tableName":             "mails",
-		"tenantScoped":          true,
-	}
-	rootField := asMap(asSlice(rootScope["fields"])[0])
-	rootField["runtime"] = map[string]any{"sourceColumnName": "site_nm"}
-	model.DefinitionJSON = mustJSON(t, modelPayload)
-	repo.models[model.ModelID] = model
-	repo.exportRows = [][]string{{"17", "Plant A"}}
-
+	model, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
 	svc := NewService(repo)
-	out, err := svc.ExportModelData(rootTestContext(), model.ModelID)
-	if err != nil {
-		t.Fatalf("ExportModelData returned error: %v", err)
-	}
 
-	if repo.lastExportRelationName != "mails" {
-		t.Fatalf("export relation = %q, want %q", repo.lastExportRelationName, "mails")
+	_, err := svc.ExportModelData(rootTestContext(), model.ModelID)
+	if !errors.Is(err, ErrExportUnsupported) {
+		t.Fatalf("ExportModelData error = %v, want %v", err, ErrExportUnsupported)
 	}
-	if repo.lastExportOrderByColumn != "id" {
-		t.Fatalf("export order by = %q, want %q", repo.lastExportOrderByColumn, "id")
-	}
-	if !reflect.DeepEqual(repo.lastExportColumnNames, []string{"id", "site_nm"}) {
-		t.Fatalf("export columns = %#v, want %#v", repo.lastExportColumnNames, []string{"id", "site_nm"})
-	}
+}
 
-	reader := csv.NewReader(bytes.NewReader(out.Content))
-	records, err := reader.ReadAll()
-	if err != nil {
-		t.Fatalf("ReadAll returned error: %v", err)
-	}
-	expected := [][]string{
-		{"Doc.id", "Site Name"},
-		{"17", "Plant A"},
-	}
-	if !reflect.DeepEqual(records, expected) {
-		t.Fatalf("csv records = %#v, want %#v", records, expected)
+func TestExportModelBundleRejectsStaticModel(t *testing.T) {
+	repo := newMemoryRepository()
+	model, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	_, err := svc.ExportModelBundle(rootTestContext(), model.ModelID)
+	if !errors.Is(err, ErrExportUnsupported) {
+		t.Fatalf("ExportModelBundle error = %v, want %v", err, ErrExportUnsupported)
 	}
 }
 
@@ -2391,6 +2412,17 @@ func TestDeleteModelRejectsStaticModelForNonRoot(t *testing.T) {
 	_, err := svc.DeleteModel(testContext(), staticModel.ModelID)
 	if !errors.Is(err, ErrModelNotFound) {
 		t.Fatalf("expected ErrModelNotFound when non-root deletes static model, got %v", err)
+	}
+}
+
+func TestDeleteModelRejectsStaticModelForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	_, err := svc.DeleteModel(rootTestContext(), staticModel.ModelID)
+	if !errors.Is(err, ErrDeleteUnsupported) {
+		t.Fatalf("expected ErrDeleteUnsupported when root deletes static model, got %v", err)
 	}
 }
 

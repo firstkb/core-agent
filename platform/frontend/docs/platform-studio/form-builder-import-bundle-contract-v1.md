@@ -51,6 +51,19 @@ The main remaining gaps are:
 - explicit import lifecycle policy
 - explicit source/runtime portability rules for `external` and `static` models
 
+## Current export scope
+
+Current product scope is intentionally narrower than a universal import/export surface.
+
+Today:
+
+- `Export model` is supported only for `managed` models
+- `Export data` is supported only for `managed` models
+- `external` and `static` models do not expose either export action in tenant-web
+- backend also rejects direct export calls for non-managed model types
+
+This contract should therefore be treated as the active source format for future `managed` `Import model`, not as a final all-model transport format.
+
 ## Accepted bundle root
 
 Importer accepts:
@@ -396,6 +409,17 @@ Accepted current rule:
 - importer must ignore source-tenant noise such as owner/audit/export metadata
 - current export now includes baseline `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy`
 - before general `external/static` import is considered complete, those sections may still need richer dependency and portability detail
+
+## Planned follow-up scope
+
+Explicit planned next steps:
+
+- implement `Import model` for `managed` bundles that follow this contract
+- implement `Import data` for `managed` models
+- make a final product decision for `Export data` semantics:
+  - export raw values from the real managed table
+  - export human-readable values from the authored/runtime SQL view
+  - or support both through separate export actions
 
 ## Source-of-truth links
 

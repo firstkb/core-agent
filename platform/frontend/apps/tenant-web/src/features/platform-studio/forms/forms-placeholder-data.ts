@@ -118,6 +118,7 @@ export type FormsPlaceholderScreen = {
 
 export type FormsPlaceholderObject = {
   canEditViewsOnly: boolean;
+  dataCount?: number;
   description: string;
   displayName?: string;
   fields: ReadonlyArray<FormsPlaceholderField>;
@@ -129,6 +130,7 @@ export type FormsPlaceholderObject = {
   owner: string;
   schemaScopes?: ReadonlyArray<FormsPlaceholderSchemaScope>;
   screens: ReadonlyArray<FormsPlaceholderScreen>;
+  sourceType?: string;
   title: string;
   version?: number;
 };
@@ -1050,6 +1052,10 @@ function normalizeStoredObjects(value: unknown) {
               ? screen.lastAlignedModelStructureVersion
               : normalizedModelStructureVersion,
         })),
+        sourceType:
+          typeof candidate.sourceType === "string" && candidate.sourceType.trim().length > 0
+            ? candidate.sourceType.trim()
+            : fallback.sourceType,
         version: normalizedVersion,
       };
     }),

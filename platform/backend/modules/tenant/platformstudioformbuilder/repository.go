@@ -26,6 +26,7 @@ type Repository interface {
 	GetModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) (*ModelRecord, error)
 	ListViews(ctx context.Context, tenant requestctx.TenantInfo, modelID string) ([]ViewRecord, error)
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) (*ViewRecord, error)
+	CountRelationRows(ctx context.Context, tenant requestctx.TenantInfo, relationName string) (int64, error)
 	ExportDataRows(ctx context.Context, tenant requestctx.TenantInfo, relationName string, columnNames []string, orderByColumn string) ([][]string, error)
 	ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error)
 	CreateModelWithFirstView(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, firstView ViewRecord) (*ModelRecord, *ViewRecord, error)
@@ -240,6 +241,39 @@ func (r *repository) ExportDataRows(
 	}
 
 	return records, nil
+}
+
+func (r *repository) CountRelationRows(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	relationName string,
+) (int64, error) {
+	relationName = strings.TrimSpace(relationName)
+	if relationName == "" {
+		return 0, nil
+	}
+
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return 0, fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return 0, fmt.Errorf("form builder: begin count relation rows tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var count int64
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM %s`, qualifiedIdentifier(relationName))
+	if err := tx.QueryRowContext(ctx, query).Scan(&count); err != nil {
+		return 0, fmt.Errorf("form builder: count relation rows %s: %w", relationName, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("form builder: commit count relation rows tx: %w", err)
+	}
+
+	return count, nil
 }
 
 func normalizeExportColumnNames(columnNames []string) []string {

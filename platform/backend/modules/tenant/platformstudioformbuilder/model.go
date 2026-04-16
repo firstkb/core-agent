@@ -151,6 +151,8 @@ type ModelSummary struct {
 	Title                 string `json:"title"`
 	DisplayName           string `json:"displayName"`
 	Description           string `json:"description,omitempty"`
+	DataCount             *int64 `json:"dataCount,omitempty"`
+	SourceType            string `json:"sourceType,omitempty"`
 	StorageKey            string `json:"storageKey,omitempty"`
 	IsStructureLocked     bool   `json:"isStructureLocked"`
 	CanEditViewsOnly      bool   `json:"canEditViewsOnly"`
@@ -193,6 +195,7 @@ type ModelRecord struct {
 	StorageKey        string
 	DisplayName       string
 	Description       string
+	DataCount         *int64
 	SourceType        string
 	Status            string
 	Version           int64

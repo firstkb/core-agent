@@ -29,6 +29,7 @@ import {
   DialogTitle,
   EyeIcon,
   EyeOffIcon,
+  FormIcon,
   Input,
   Label,
   LockIcon,
@@ -92,6 +93,35 @@ function ViewWarningIcon() {
   );
 }
 
+function DatabaseModelIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <ellipse
+        cx="12"
+        cy="6"
+        rx="6.5"
+        ry="2.75"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M5.5 6v5.8c0 1.52 2.9 2.75 6.5 2.75s6.5-1.23 6.5-2.75V6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M5.5 11.6v6.4c0 1.52 2.9 2.75 6.5 2.75s6.5-1.23 6.5-2.75v-6.4"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 function createCopiedViewTitle(title: string, existingTitles: ReadonlyArray<string>) {
   const baseTitle = `${title} Copy`;
   if (!existingTitles.includes(baseTitle)) {
@@ -110,6 +140,10 @@ function getViewStatusKey(isActive: boolean) {
   return isActive
     ? "tenant.platformStudio.forms.viewActive"
     : "tenant.platformStudio.forms.viewInactive";
+}
+
+function isStaticFormsModel(model: Pick<FormsPlaceholderModel, "sourceType"> | null | undefined) {
+  return Boolean(model?.sourceType && model.sourceType !== "managed");
 }
 
 function triggerBrowserDownload(file: {
@@ -208,8 +242,9 @@ export function FormsPage() {
   const hasModelParam = Boolean(params.modelId);
   const pageAccess = getFormsAuthoringAccess(currentActor);
   const selectedModelAccess = getFormsAuthoringAccess(currentActor, selectedModel);
+  const selectedModelIsStatic = isStaticFormsModel(selectedModel);
   const sortedViews = selectedModel ? sortFormsPlaceholderViews(selectedModel.screens) : [];
-  const canExportModelBundle = currentActor.isRoot || !sortedViews.some((view) => view.isViewLocked);
+  const canExportModelBundle = !selectedModelIsStatic && (currentActor.isRoot || !sortedViews.some((view) => view.isViewLocked));
   const filteredModels = useMemo(() => {
     const normalizedQuery = modelSearchQuery.trim().toLowerCase();
     if (!normalizedQuery) {
@@ -561,7 +596,10 @@ export function FormsPage() {
               </div>
             </div>
 
-            <PlatformStudioPanelScroll aria-label={t("tenant.platformStudio.forms.modelsTitle")}>
+            <PlatformStudioPanelScroll
+              aria-label={t("tenant.platformStudio.forms.modelsTitle")}
+              className="tenant-web__platform-studio-panel-scroll--models"
+            >
               <div className="tenant-web__platform-studio-object-list">
                 {modelsError ? (
                   <div className="tenant-web__platform-studio-inline-help">
@@ -595,6 +633,7 @@ export function FormsPage() {
 
                 {filteredModels.map((model) => {
                   const isActive = selectedModel?.id === model.id;
+                  const modelIsStatic = isStaticFormsModel(model);
 
                   return (
                     <button
@@ -603,24 +642,43 @@ export function FormsPage() {
                       onClick={() => navigate(platformStudioPaths.model(getFormsPlaceholderModelRouteId(model)))}
                       type="button"
                     >
-                      <span className="tenant-web__platform-studio-object-copy">
-                        <span className="tenant-web__platform-studio-object-title">{model.title}</span>
-                        {model.description ? (
-                          <span className="tenant-web__platform-studio-screen-description">{model.description}</span>
+                      <span className="tenant-web__platform-studio-object-main">
+                        <span className={`tenant-web__platform-studio-object-icon${modelIsStatic ? " tenant-web__platform-studio-object-icon--static" : ""}`}>
+                          {modelIsStatic ? <DatabaseModelIcon /> : <FormIcon />}
+                        </span>
+                        <span className="tenant-web__platform-studio-object-copy">
+                          <span className="tenant-web__platform-studio-object-title">{model.title}</span>
+                          {model.description ? (
+                            <span className="tenant-web__platform-studio-screen-description">{model.description}</span>
+                          ) : null}
+                        </span>
+                      </span>
+                      <span className="tenant-web__platform-studio-object-meta">
+                        {typeof model.dataCount === "number" ? (
+                          <Badge
+                            appearance="soft"
+                            aria-label={t("tenant.platformStudio.forms.modelDataCount", { count: model.dataCount })}
+                            className="tenant-web__platform-studio-count-badge"
+                            size="sm"
+                            title={t("tenant.platformStudio.forms.modelDataCount", { count: model.dataCount })}
+                            variant="neutral"
+                          >
+                            {model.dataCount}
+                          </Badge>
+                        ) : null}
+                        {model.isStructureLocked ? (
+                          <Badge
+                            appearance="soft"
+                            aria-label={t("tenant.platformStudio.forms.structureLocked")}
+                            className="tenant-web__platform-studio-lock-badge"
+                            size="sm"
+                            title={t("tenant.platformStudio.forms.structureLocked")}
+                            variant="warning"
+                          >
+                            <LockIcon />
+                          </Badge>
                         ) : null}
                       </span>
-                      {model.isStructureLocked ? (
-                        <Badge
-                          appearance="soft"
-                          aria-label={t("tenant.platformStudio.forms.structureLocked")}
-                          className="tenant-web__platform-studio-lock-badge"
-                          size="sm"
-                          title={t("tenant.platformStudio.forms.structureLocked")}
-                          variant="warning"
-                        >
-                          <LockIcon />
-                        </Badge>
-                      ) : null}
                     </button>
                   );
                 })}
@@ -647,46 +705,50 @@ export function FormsPage() {
                     >
                       {t("tenant.platformStudio.forms.addView")}
                     </Button>
-                    <Menu align="end">
-                      <MenuTrigger>
-                        <button
-                          aria-label={t("tenant.platformStudio.forms.modelActions")}
-                          className="tenant-web__platform-studio-menu-trigger"
-                          type="button"
-                        >
-                          <ScreenActionsIcon />
-                        </button>
-                      </MenuTrigger>
-                      <MenuContent className="tenant-web__platform-studio-menu">
-                        <MenuItem
-                          disabled={isExportingModelData}
-                          onClick={() => void handleExportModelData(selectedModel)}
-                        >
-                          {t("tenant.platformStudio.forms.exportData")}
-                        </MenuItem>
-                        <MenuItem
-                          disabled={!canExportModelBundle || isExportingModelBundle}
-                          onClick={() => void handleExportModelBundle(selectedModel)}
-                          title={canExportModelBundle ? undefined : t("tenant.platformStudio.forms.permission.viewLocked")}
-                        >
-                          {t("tenant.platformStudio.forms.exportModel")}
-                        </MenuItem>
-                        <MenuSeparator />
-                        <MenuItem
-                          disabled={!selectedModelAccess.canDeleteModel || isDeletingModel}
-                          onClick={() => handleDeleteModelIntent(selectedModel)}
-                          title={selectedModelAccess.canDeleteModel ? undefined : t(selectedModelAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure")}
-                          tone="danger"
-                        >
-                          {t("tenant.platformStudio.forms.deleteModel")}
-                        </MenuItem>
-                      </MenuContent>
-                    </Menu>
+                    {!selectedModelIsStatic ? (
+                      <Menu align="end">
+                        <MenuTrigger>
+                          <button
+                            aria-label={t("tenant.platformStudio.forms.modelActions")}
+                            className="tenant-web__platform-studio-menu-trigger"
+                            type="button"
+                          >
+                            <ScreenActionsIcon />
+                          </button>
+                        </MenuTrigger>
+                        <MenuContent className="tenant-web__platform-studio-menu">
+                          <>
+                            <MenuItem
+                              disabled={isExportingModelData}
+                              onClick={() => void handleExportModelData(selectedModel)}
+                            >
+                              {t("tenant.platformStudio.forms.exportData")}
+                            </MenuItem>
+                            <MenuItem
+                              disabled={!canExportModelBundle || isExportingModelBundle}
+                              onClick={() => void handleExportModelBundle(selectedModel)}
+                              title={canExportModelBundle ? undefined : t("tenant.platformStudio.forms.permission.viewLocked")}
+                            >
+                              {t("tenant.platformStudio.forms.exportModel")}
+                            </MenuItem>
+                            <MenuSeparator />
+                            <MenuItem
+                              disabled={!selectedModelAccess.canDeleteModel || isDeletingModel}
+                              onClick={() => handleDeleteModelIntent(selectedModel)}
+                              title={selectedModelAccess.canDeleteModel ? undefined : t(selectedModelAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure")}
+                              tone="danger"
+                            >
+                              {t("tenant.platformStudio.forms.deleteModel")}
+                            </MenuItem>
+                          </>
+                        </MenuContent>
+                      </Menu>
+                    ) : null}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="tenant-web__platform-studio-panel-content">
-                <PlatformStudioPanelScroll>
+                <PlatformStudioPanelScroll className="tenant-web__platform-studio-panel-scroll--views">
                   <div className="tenant-web__platform-studio-screen-list">
                     <div className="tenant-web__platform-studio-badge-row tenant-web__platform-studio-content-badges">
                       {selectedModel.isStructureLocked ? (

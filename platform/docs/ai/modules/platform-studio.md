@@ -122,7 +122,10 @@ Current implemented backend-ready slice:
 - `tenant-web` workspace now hydrates and saves the explicit three-schema payload, shows a three-pane debug modal for `Data Schema`, `Layout Blueprint`, and `UI Schema`, and treats backend-issued `containerKey` values as canonical during reconcile
 - the first stable three-schema rollout now makes the `default` view the only blueprint editor; non-default views remain `uiSchema`-only authoring surfaces, but that still includes local UI composition and presentation changes such as visibility, rules, grid/filter settings, local reorder, and placement of already-existing fields
 - deleting a non-default view removes only that view; deleting a default view promotes a remaining view to `default + active`; deleting the last remaining view is rejected
-- deferred follow-up policy task: harden root-only authoring locks so only `level: 100 root` can toggle model/view lock state; when `lock model` is enabled, non-root users stay limited to creating/managing views while `root` keeps builder access and default-view control; when `lock view` is enabled for a view, non-root users cannot enter that Form Builder workspace while `root` retains access and control
+- Form Builder lock and access policy is now hardened around real root identity: only `level: 100` root may toggle `Lock model structure` and `Lock this view`
+- when `lock model` is enabled, non-root users may still create/manage allowed views but may not change model-owned `dataSchema + layoutBlueprint`
+- when `lock view` is enabled, non-root users may not open that Form Builder workspace and may not save/copy/delete that locked view; backend hard-deny is now the source of truth, with tenant-web aligned to hide or disable the corresponding actions
+- static/external Form Builder models are now root-only in practice: non-root users do not see them in model lists and backend denies direct load/save/delete/view-management access
 - deferred filter follow-up: view filters currently compose saved conditions with `AND`; revisit the filter contract so repeated lookup-like entities can support `OR` within the same logical family, for example `active user = Contact1 OR Contact2` when multiple `DB lookup Contact` fields participate in one view filter set
 - deferred filter cleanup pass: audit and correct authored/runtime filter behavior for `Contact`, `Project`, `Company`, multiselect-backed filters, and `Reported By` so lookup presets and multivalue fields behave consistently in view filters
 - accepted next backend slice: `Save` persists authoring state first and then runs additive runtime apply
@@ -157,6 +160,14 @@ Current implemented backend-ready slice:
 - static lookup fields now have an accepted naming policy in `form-builder-static-lookup-naming-policy-v1.md`; for static/external lookup-backed fields, `storageKey` stays logical (`user`, `company`, `state`) while the raw source FK column remains in `runtime.sourceColumnName` (`user_id`, `company_id`, `state_id`)
 - accepted static-model access restriction: only `root` may see static models or manage their views/schema; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but implement it only after the admin/root rights path is available in tenant app
 - current accepted import-bundle planning contract now lives in `form-builder-import-bundle-contract-v1.md`; the current `Export model` JSON is sufficient as the source file for future cross-tenant import of `managed` models and their views, importer must normalize lifecycle/version fields and ignore source-tenant noise, and export now includes baseline `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy` sections while richer `external/static` portability detail remains a follow-up
+- current Form Builder model list behavior is now part of the active UX contract: the left panel supports local search by model title/display/key, static models render with a database icon, managed models render with the form icon, and static models keep a reduced action surface
+- current export policy is now explicit: `Export model` and `Export data` are supported only for `managed` models; static/external models do not expose those actions in tenant-web and backend rejects direct export calls for them
+- current `Export model` bundle is designed as the future source file for `Import model`; it exports model-owned `dataSchema + layoutBlueprint`, all view `uiSchema` payloads, and minimal `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy`
+- current `Export data` policy is intentionally narrower and unresolved long-term: it exports from the real managed root table with CSV headers derived from field labels and a leading `Doc.id` column, but there is a planned follow-up decision to determine whether Form Builder should keep raw-table export, add a separate view-based human-readable export, or support both modes
+- planned next import/export follow-ups are now explicit:
+  - `Import model` from the managed export bundle
+  - `Import data` for managed models
+  - final product decision on whether `Export data` should export from the real table, the authored view/runtime SQL view, or both through separate actions
 
 ## Important docs to treat as reference-only
 

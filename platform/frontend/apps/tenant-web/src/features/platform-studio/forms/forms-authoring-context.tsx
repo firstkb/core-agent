@@ -164,6 +164,7 @@ function mapModelSummaryToPlaceholder(
 ): FormsPlaceholderModel {
   return cloneFormsPlaceholderModel({
     canEditViewsOnly: summary.canEditViewsOnly,
+    dataCount: summary.dataCount ?? existing?.dataCount,
     description: summary.description ?? existing?.description ?? "",
     displayName: summary.displayName,
     fields: existing?.fields ?? [],
@@ -175,6 +176,7 @@ function mapModelSummaryToPlaceholder(
     owner: existing?.owner ?? "",
     schemaScopes: existing?.schemaScopes,
     screens: existing?.screens ?? [],
+    sourceType: summary.sourceType ?? existing?.sourceType,
     title: summary.title,
     version: summary.version,
   });

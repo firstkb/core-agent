@@ -2061,6 +2061,266 @@ func TestSaveDraftBuildsRuntimeApplyPlanForManagedRootAndSubformScopes(t *testin
 	}
 }
 
+func TestSaveDraftBuildsRuntimeApplyPlanForManagedCompactSubformPayload(t *testing.T) {
+	repo := newMemoryRepository()
+	svc := NewService(repo)
+
+	modelPayload := map[string]any{
+		"id":          "test-inspection",
+		"key":         "test-inspection",
+		"storageKey":  "test_inspection",
+		"displayName": "Test Inspection",
+		"sourceType":  "managed",
+		"dataSchema": map[string]any{
+			"modelId":    "test-inspection",
+			"modelTitle": "Test Inspection",
+			"rootScope": map[string]any{
+				"fields": []any{
+					map[string]any{"id": "short-text", "kind": "short_text", "label": "First Name", "storageKey": "first_name"},
+					map[string]any{"id": "short-text-2", "kind": "short_text", "label": "Last Name", "storageKey": "last_name"},
+					map[string]any{"id": "long-text", "kind": "long_text", "label": "Information", "storageKey": "long_text"},
+					map[string]any{
+						"id":            "reported-by",
+						"kind":          "db_lookup",
+						"label":         "Reported By",
+						"preset":        "contact_lookup",
+						"selectionMode": "single",
+						"semanticRole":  "reportedBy",
+						"storageKey":    "reported_by",
+						"displayFields": []any{"Full name", "Email"},
+						"sourceFilters": []any{"Only active contacts"},
+						"sourceLabel":   "Contacts",
+					},
+					map[string]any{
+						"id":          "suggest-text",
+						"kind":        "short_text",
+						"label":       "City",
+						"preset":      "suggest_text",
+						"storageKey":  "city",
+						"placeholder": "Start typing",
+						"suggestConfig": map[string]any{
+							"allowCustomValue": true,
+							"maxResults":       int64(20),
+							"minQueryLength":   int64(1),
+							"searchMode":       "contains",
+							"sourceMode":       "same_field_distinct_values",
+						},
+					},
+				},
+				"runtime": map[string]any{
+					"dataViewName": "vw_test_inspection",
+					"rtAlias":      "test_inspection",
+					"tableName":    "ps_test_inspection",
+					"mvTableName":  "ps_test_inspection__mv",
+				},
+				"schemaScopeId": "root",
+			},
+			"subformScopes": []any{
+				map[string]any{
+					"displayName": "List",
+					"fields": []any{
+						map[string]any{
+							"id":           "email",
+							"kind":         "short_text",
+							"label":        "Email",
+							"autocomplete": "email",
+							"inputMode":    "email",
+							"placeholder":  "name@example.com",
+							"preset":       "email",
+							"storageKey":   "email",
+							"validation":   "email",
+						},
+						map[string]any{
+							"id":           "phone",
+							"kind":         "short_text",
+							"label":        "Phone",
+							"autocomplete": "tel",
+							"inputMode":    "tel",
+							"mask":         "(999) 999-9999",
+							"placeholder":  "(555) 555-5555",
+							"preset":       "phone",
+							"storageKey":   "phone",
+							"validation":   "phone",
+						},
+					},
+					"runtime": map[string]any{
+						"dataViewName": "vw_test_inspection__sf_9bcecc",
+						"rtAlias":      "sf_9bcecc",
+						"tableName":    "ps_test_inspection__sf_9bcecc",
+						"mvTableName":  "ps_test_inspection__sf_9bcecc__mv",
+					},
+					"schemaScopeId": "subform-1776345591409-hhu9uz",
+					"subformType":   "DEFAULT",
+					"tableKey":      "subform-1776345591409-hhu9uz",
+				},
+			},
+		},
+		"layoutBlueprint": map[string]any{
+			"rootScope": map[string]any{
+				"containers": []any{
+					map[string]any{
+						"containerKey": "root.subform.list",
+						"order":        int64(5),
+						"title":        "List",
+						"type":         "subform",
+						"displayName":  "List",
+						"schemaScopeId": "subform-1776345591409-hhu9uz",
+						"subformType":  "DEFAULT",
+						"tableKey":     "subform-1776345591409-hhu9uz",
+					},
+				},
+				"fieldPlacements": []any{
+					map[string]any{"containerKey": "__scope_root__", "fieldId": "short-text", "order": int64(0)},
+					map[string]any{"containerKey": "__scope_root__", "fieldId": "short-text-2", "order": int64(1)},
+					map[string]any{"containerKey": "__scope_root__", "fieldId": "long-text", "order": int64(2)},
+					map[string]any{"containerKey": "__scope_root__", "fieldId": "reported-by", "order": int64(3)},
+					map[string]any{"containerKey": "__scope_root__", "fieldId": "suggest-text", "order": int64(4)},
+				},
+				"schemaScopeId": "root",
+			},
+			"subformScopes": []any{
+				map[string]any{
+					"containers": []any{},
+					"fieldPlacements": []any{
+						map[string]any{"containerKey": "__scope_root__", "fieldId": "email", "order": int64(0)},
+						map[string]any{"containerKey": "__scope_root__", "fieldId": "phone", "order": int64(1)},
+					},
+					"schemaScopeId": "subform-1776345591409-hhu9uz",
+				},
+			},
+		},
+	}
+	viewPayload := map[string]any{
+		"id":          "view-default",
+		"key":         "default",
+		"modelId":     "test-inspection",
+		"displayName": "Test Inspection",
+		"kind":        "form",
+		"isDefault":   true,
+		"isActive":    true,
+		"uiSchema": map[string]any{
+			"rootScope": map[string]any{
+				"nodes": []any{
+					map[string]any{"fieldId": "short-text", "id": "field-1", "order": int64(0), "type": "field"},
+					map[string]any{"fieldId": "short-text-2", "id": "field-2", "order": int64(1), "type": "field"},
+					map[string]any{"fieldId": "long-text", "id": "field-3", "order": int64(2), "type": "field"},
+					map[string]any{"fieldId": "reported-by", "id": "field-4", "order": int64(3), "type": "field"},
+					map[string]any{"fieldId": "suggest-text", "id": "field-5", "order": int64(4), "type": "field"},
+					map[string]any{
+						"containerKey":  "root.subform.list",
+						"id":            "subform-1776345591409-hhu9uz",
+						"order":         int64(5),
+						"schemaScopeId": "subform-1776345591409-hhu9uz",
+						"subformType":   "DEFAULT",
+						"tableKey":      "subform-1776345591409-hhu9uz",
+						"title":         "List",
+						"type":          "subform",
+					},
+				},
+				"schemaScopeId": "root",
+				"runtime": map[string]any{
+					"dataViewName": "vw_test_inspection",
+					"gridViewName": "vg_test_inspection__default",
+					"viewRtAlias":  "default",
+				},
+				"systemFields": map[string]any{
+					"reportedBy": map[string]any{"fieldId": "reported-by"},
+					"version":    int64(1),
+				},
+				"viewSettings": map[string]any{
+					"list": map[string]any{
+						"columns": []any{
+							map[string]any{"fieldId": "short-text", "id": "grid-column-1", "order": int64(0)},
+							map[string]any{"fieldId": "short-text-2", "id": "grid-column-2", "order": int64(1)},
+							map[string]any{"fieldId": "long-text", "id": "grid-column-3", "order": int64(2)},
+							map[string]any{"fieldId": "reported-by", "id": "grid-column-4", "order": int64(3)},
+							map[string]any{"fieldId": "reported-by::lookup_output::label", "id": "grid-column-5", "order": int64(4)},
+							map[string]any{"fieldId": "reported-by::lookup_output::title", "id": "grid-column-6", "order": int64(5)},
+							map[string]any{"fieldId": "reported-by::lookup_output::phone", "id": "grid-column-7", "order": int64(6)},
+							map[string]any{"fieldId": "suggest-text", "id": "grid-column-8", "order": int64(7)},
+						},
+					},
+				},
+			},
+			"subformScopes": []any{
+				map[string]any{
+					"nodes": []any{
+						map[string]any{"id": "field-sub-1", "order": int64(0), "type": "field", "fieldId": "email"},
+						map[string]any{"id": "field-sub-2", "order": int64(1), "type": "field", "fieldId": "phone"},
+					},
+					"schemaScopeId":     "subform-1776345591409-hhu9uz",
+					"parentSubformNodeId": "subform-1776345591409-hhu9uz",
+					"runtime": map[string]any{
+						"dataViewName": "vw_test_inspection__sf_9bcecc",
+						"gridViewName": "vg_test_inspection__sf_9bcecc__default",
+						"viewRtAlias":  "default",
+					},
+					"subformType": "DEFAULT",
+					"tableKey":    "subform-1776345591409-hhu9uz",
+				},
+			},
+		},
+	}
+
+	model := &ModelRecord{
+		ModelID:          "test-inspection",
+		ModelKey:         "test-inspection",
+		StorageKey:       "test_inspection",
+		DisplayName:      "Test Inspection",
+		SourceType:       "managed",
+		Version:          1,
+		StructureVersion: 1,
+		DefinitionJSON:   mustJSON(t, modelPayload),
+	}
+	view := &ViewRecord{
+		ModelID:                          model.ModelID,
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      "Test Inspection",
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        true,
+		Version:                          1,
+		LastAlignedModelStructureVersion: 1,
+		DefinitionJSON:                   mustJSON(t, viewPayload),
+	}
+	repo.models[model.ModelID] = model
+	repo.views[model.ModelID] = map[string]*ViewRecord{view.ViewID: view}
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
+		t.Fatalf("runtime apply summary = %#v, want applied", out.RuntimeApply)
+	}
+	if repo.lastRuntimePlan == nil {
+		t.Fatalf("expected runtime plan to be captured")
+	}
+	if len(repo.lastRuntimePlan.SubformScopes) != 1 {
+		t.Fatalf("expected one subform scope, got %#v", repo.lastRuntimePlan.SubformScopes)
+	}
+	subform := repo.lastRuntimePlan.SubformScopes[0]
+	if subform.TableName != "ps_test_inspection__sf_9bcecc" {
+		t.Fatalf("subform table name = %q, want %q", subform.TableName, "ps_test_inspection__sf_9bcecc")
+	}
+	if subform.DataViewName != "vw_test_inspection__sf_9bcecc" {
+		t.Fatalf("subform data view = %q, want %q", subform.DataViewName, "vw_test_inspection__sf_9bcecc")
+	}
+	if !containsGridViewPlan(subform.GridViews, "vg_test_inspection__sf_9bcecc__default") {
+		t.Fatalf("expected default subform grid view, got %#v", subform.GridViews)
+	}
+}
+
 func TestSaveDraftPreservesPersistedRuntimeMetadataWhenRequestOmitsRuntime(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)
@@ -2698,6 +2958,66 @@ func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColu
 		if !strings.Contains(statement, fragment) {
 			t.Fatalf("runtime data view SQL missing fragment %q:\n%s", fragment, statement)
 		}
+	}
+}
+
+func TestBuildRuntimeScopeDataViewSQLKeepsLookupOutputsBeforeLaterAddedScalarFields(t *testing.T) {
+	scope := runtimeApplyScopePlan{
+		ScopeID:                "root",
+		SourceType:             "managed",
+		TableName:              "ps_test_inspection",
+		DataViewName:           "vw_test_inspection",
+		SourceIDColumn:         "_id",
+		SourceTenantIDColumn:   "tenant_id",
+		SourceGUIDColumn:       "_guid",
+		SourceCreatedAtColumn:  "_created_at",
+		SourceUpdatedAtColumn:  "_updated_at",
+		Fields: []runtimeApplyFieldPlan{
+			{
+				FieldID:      "short-text",
+				StorageKey:   "first_name",
+				Kind:         "short_text",
+				ColumnName:   "first_name",
+				PhysicalType: "text",
+				Supported:    true,
+			},
+			{
+				FieldID:              "reported-by",
+				StorageKey:           "reported_by",
+				Kind:                 "db_lookup",
+				Preset:               "contact_lookup",
+				SelectionMode:        "single",
+				ColumnName:           "reported_by_id",
+				PhysicalType:         "bigint",
+				Supported:            true,
+				LookupTargetName:     "users",
+				LookupTargetKind:     "table",
+				LookupTargetIDColumn: "id",
+				LookupDerivedOutputs: buildRuntimeLookupOutputPlans(runtimeApplyFieldPlan{
+					StorageKey: "reported_by",
+					Kind:       "db_lookup",
+					Preset:     "contact_lookup",
+				}),
+			},
+			{
+				FieldID:      "suggest-text",
+				StorageKey:   "city",
+				Kind:         "short_text",
+				ColumnName:   "city",
+				PhysicalType: "text",
+				Supported:    true,
+			},
+		},
+	}
+
+	statement, _ := buildRuntimeScopeDataViewSQL(scope)
+	reportedByLabelPos := strings.Index(statement, `"reported_by__label"`)
+	cityPos := strings.Index(statement, `"city"`)
+	if reportedByLabelPos == -1 || cityPos == -1 {
+		t.Fatalf("expected reported_by__label and city in data view SQL, got %s", statement)
+	}
+	if reportedByLabelPos > cityPos {
+		t.Fatalf("expected lookup outputs to stay before later-added city column, got %s", statement)
 	}
 }
 

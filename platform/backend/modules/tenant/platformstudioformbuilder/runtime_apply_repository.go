@@ -493,14 +493,19 @@ func buildRuntimeScopeDataViewSQL(scope runtimeApplyScopePlan) (string, []Runtim
 	joins := make([]string, 0)
 	lookupOutputs := make([]RuntimeApplyLookupOutputResult, 0)
 
-	for _, expression := range runtimeScopeBaseSelectExpressions(scope) {
+	for _, expression := range runtimeScopeSystemSelectExpressions(scope) {
 		selectList = append(selectList, expression)
 	}
 
 	for _, field := range scope.Fields {
+		if field.Supported && !field.MultiValue && field.ColumnName != "" {
+			selectList = append(selectList, runtimeScopeFieldSelectExpression(field))
+		}
+
 		if field.Kind != "db_lookup" || field.Preset == "db_lookup_value" {
 			continue
 		}
+
 		if field.SelectionMode == "multiple" {
 			fieldSelects, fieldOutputs := buildRuntimeMultiValueLookupSelects(scope, field)
 			selectList = append(selectList, fieldSelects...)
@@ -550,7 +555,7 @@ func buildRuntimeGridViewSQL(dataViewName string, gridView runtimeApplyGridViewP
 	)
 }
 
-func runtimeScopeBaseSelectExpressions(scope runtimeApplyScopePlan) []string {
+func runtimeScopeSystemSelectExpressions(scope runtimeApplyScopePlan) []string {
 	expressions := []string{
 		runtimeScopeSystemSelectExpression(scope.SourceIDColumn, "_id", "bigint", ""),
 		runtimeScopeSystemSelectExpression(scope.SourceTenantIDColumn, "tenant_id", "bigint", "NULL::bigint"),
@@ -561,14 +566,12 @@ func runtimeScopeBaseSelectExpressions(scope runtimeApplyScopePlan) []string {
 	if scope.ParentForeignKey != "" {
 		expressions = append(expressions, runtimeScopeSystemSelectExpression(scope.ParentForeignKey, scope.ParentForeignKey, "bigint", "NULL::bigint"))
 	}
-	for _, field := range scope.Fields {
-		if !field.Supported || field.MultiValue || field.ColumnName == "" {
-			continue
-		}
-		sourceColumn := chooseString(field.SourceColumnName, field.ColumnName)
-		expressions = append(expressions, fmt.Sprintf("t.%s AS %s", quoteIdentifier(sourceColumn), quoteIdentifier(field.ColumnName)))
-	}
 	return expressions
+}
+
+func runtimeScopeFieldSelectExpression(field runtimeApplyFieldPlan) string {
+	sourceColumn := chooseString(field.SourceColumnName, field.ColumnName)
+	return fmt.Sprintf("t.%s AS %s", quoteIdentifier(sourceColumn), quoteIdentifier(field.ColumnName))
 }
 
 func runtimeScopeSystemSelectExpression(sourceColumn string, alias string, _ string, fallbackExpression string) string {

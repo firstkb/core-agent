@@ -4531,13 +4531,6 @@ export function FormsViewWorkspacePage() {
         const nextCanonicalDocument = isDefaultView
           ? syncFieldNodeTitlesWithModel(nextDocument, nextModel)
           : nextDocument;
-        const nextModelWithScopes = cloneFormsPlaceholderModel({
-          ...nextModel,
-          schemaScopes: deriveModelSchemaScopes(nextModel, nextCanonicalDocument),
-        });
-        const shouldMarkModelAsDirty =
-          JSON.stringify(nextModelWithScopes.schemaScopes ?? [])
-          !== JSON.stringify(nextModel.schemaScopes ?? []);
         const alignedStructureVersions = [
           resolvedView.lastAlignedModelStructureVersion,
           hydratedView.lastAlignedModelStructureVersion,
@@ -4545,9 +4538,13 @@ export function FormsViewWorkspacePage() {
         ].filter((value): value is number => typeof value === "number");
         const lastKnownAlignedStructureVersion = alignedStructureVersions.length > 0
           ? Math.min(...alignedStructureVersions)
-          : (nextModelWithScopes.modelStructureVersion ?? 1);
+          : (nextModel.modelStructureVersion ?? 1);
         const shouldEnforceCanonicalFieldPlacements =
-          (nextModelWithScopes.modelStructureVersion ?? 1) > lastKnownAlignedStructureVersion;
+          (nextModel.modelStructureVersion ?? 1) > lastKnownAlignedStructureVersion;
+        const nextModelWithScopes = cloneFormsPlaceholderModel({
+          ...nextModel,
+          schemaScopes: deriveModelSchemaScopes(nextModel, nextCanonicalDocument),
+        });
         const reconciledDocument = reconcileFormBuilderDocumentWithModel(
           nextCanonicalDocument,
           nextModelWithScopes,
@@ -4556,18 +4553,23 @@ export function FormsViewWorkspacePage() {
             enforceCanonicalFieldPlacements: shouldEnforceCanonicalFieldPlacements,
           },
         );
-        const shouldMarkReconciledAsDirty = JSON.stringify(reconciledDocument) !== JSON.stringify(nextCanonicalDocument);
+        const baselineDocument = JSON.stringify(reconciledDocument) !== JSON.stringify(nextCanonicalDocument)
+          ? reconciledDocument
+          : nextCanonicalDocument;
+        const baselineModel = cloneFormsPlaceholderModel({
+          ...nextModelWithScopes,
+          schemaScopes: deriveModelSchemaScopes(nextModelWithScopes, baselineDocument),
+        });
 
         setHydratedDraftSignature(draftSignature);
-        replaceModel(nextModelWithScopes);
-        setModelDraft(nextModelWithScopes);
-        setSavedModelDraft(shouldMarkModelAsDirty ? nextModel : nextModelWithScopes);
+        replaceModel(baselineModel);
+        setModelDraft(baselineModel);
+        setSavedModelDraft(baselineModel);
         setLayoutBlueprintDraft(nextLayoutBlueprint);
         setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
-        hydrateDocumentRef.current(nextCanonicalDocument);
-        if (shouldMarkReconciledAsDirty) {
-          setDocument(reconciledDocument);
-        }
+        // Treat the frontend-normalized workspace state as the clean baseline after load.
+        // Otherwise Save becomes active immediately when reconciliation adds canonical nodes.
+        hydrateDocumentRef.current(baselineDocument);
       })
       .catch((error: unknown) => {
         if (!isActive) {

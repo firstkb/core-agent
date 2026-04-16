@@ -242,8 +242,10 @@
 
 .tenant-web__platform-studio-panel-scroll-viewport {
   height: 100%;
+  padding-left: 0.35rem;
   padding-bottom: 1rem;
-  padding-right: 0.3rem;
+  padding-right: 0.35rem;
+  scrollbar-gutter: stable both-edges;
   scrollbar-color: transparent transparent;
 }
 
@@ -389,6 +391,7 @@
 
 .tenant-web__platform-studio-object-item,
 .tenant-web__platform-studio-screen-item {
+  box-sizing: border-box;
   width: 100%;
   display: flex;
   align-items: center;

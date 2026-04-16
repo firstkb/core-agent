@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -37,6 +38,7 @@ import {
   MenuSeparator,
   MenuTrigger,
   PlusIcon,
+  SearchIcon,
   StarIcon,
 } from "@platform/ui-kit";
 import {
@@ -178,12 +180,29 @@ export function FormsPage() {
   const [isDeletingView, setIsDeletingView] = useState(false);
   const [isDeletingModel, setIsDeletingModel] = useState(false);
   const [isLoadingSelectedModel, setIsLoadingSelectedModel] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState("");
   const [selectedModelError, setSelectedModelError] = useState<string | null>(null);
   const selectedModel = getFormsPlaceholderModel(params.modelId, models);
   const hasModelParam = Boolean(params.modelId);
   const pageAccess = getFormsAuthoringAccess(currentActor);
   const selectedModelAccess = getFormsAuthoringAccess(currentActor, selectedModel);
   const sortedViews = selectedModel ? sortFormsPlaceholderViews(selectedModel.screens) : [];
+  const filteredModels = useMemo(() => {
+    const normalizedQuery = modelSearchQuery.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return models;
+    }
+
+    return models.filter((model) => {
+      const candidates = [
+        model.title,
+        model.displayName,
+        model.key,
+      ];
+
+      return candidates.some((value) => value?.toLowerCase().includes(normalizedQuery));
+    });
+  }, [modelSearchQuery, models]);
 
   useEffect(() => {
     if (!params.modelId) {
@@ -461,7 +480,24 @@ export function FormsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="tenant-web__platform-studio-panel-content">
+          <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
+            <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
+              <div className="tenant-web__platform-studio-search">
+                <div className="tenant-web__platform-studio-search-field">
+                  <span className="tenant-web__platform-studio-search-icon">
+                    <SearchIcon />
+                  </span>
+                  <Input
+                    aria-label={t("tenant.platformStudio.forms.modelSearchPlaceholder")}
+                    className="tenant-web__platform-studio-search-input"
+                    onChange={(event) => setModelSearchQuery(event.target.value)}
+                    placeholder={t("tenant.platformStudio.forms.modelSearchPlaceholder")}
+                    value={modelSearchQuery}
+                  />
+                </div>
+              </div>
+            </div>
+
             <PlatformStudioPanelScroll aria-label={t("tenant.platformStudio.forms.modelsTitle")}>
               <div className="tenant-web__platform-studio-object-list">
                 {modelsError ? (
@@ -485,7 +521,16 @@ export function FormsPage() {
                   </div>
                 ) : null}
 
-                {models.map((model) => {
+                {!isLoadingModels && models.length > 0 && filteredModels.length === 0 ? (
+                  <div className="tenant-web__platform-studio-builder-empty">
+                    <p className="tenant-web__platform-studio-empty-title">
+                      {t("tenant.platformStudio.forms.emptyModelSearchTitle")}
+                    </p>
+                    <p>{t("tenant.platformStudio.forms.emptyModelSearchDescription")}</p>
+                  </div>
+                ) : null}
+
+                {filteredModels.map((model) => {
                   const isActive = selectedModel?.id === model.id;
 
                   return (

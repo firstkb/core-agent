@@ -107,7 +107,10 @@ func (s *ServiceTenantProvider) validatePublicTenant(ctx context.Context, routeI
 	var tenant *Tenant
 	var err error
 	switch routeID {
-	case router.RouteID("LOGIN_TEST_GET"), router.RouteID("OTP_REQUEST"), router.RouteID("OTP_VERIFY"):
+	case router.RouteID("LOGIN_TEST_GET"),
+		router.RouteID("OTP_REQUEST"),
+		router.RouteID("OTP_VERIFY"),
+		router.RouteID("DELEGATED_TENANT_ROOT_LOGIN_GET"):
 		if routeInfo.Domain == "" {
 			return nil, ErrOriginMissing
 		}

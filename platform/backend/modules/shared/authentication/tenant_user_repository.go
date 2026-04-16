@@ -63,7 +63,6 @@ SELECT guid,
        active AS auth_active,
        (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
          WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,
@@ -98,7 +97,6 @@ SELECT guid,
        active AS auth_active,
        (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
          WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,
@@ -132,7 +130,6 @@ SELECT guid,
        active AS auth_active,
        (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AS auth_admin,
        CASE
-         WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) AND COALESCE(auth_level, 0) >= 90 THEN 'owner'
          WHEN (COALESCE(admin_access, false) OR COALESCE(ets_admin, false)) THEN 'admin'
          ELSE 'member'
        END AS auth_role,

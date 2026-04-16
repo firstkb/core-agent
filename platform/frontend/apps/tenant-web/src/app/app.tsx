@@ -39,6 +39,7 @@ import { TenantBrandImage } from "./tenant-brand-image";
 type TenantWorkspaceUserSession = {
   displayName: string;
   initial: string;
+  isRoot: boolean;
   secondaryLabel: string;
 };
 
@@ -61,6 +62,7 @@ function buildTenantWorkspaceUserSession(profile: TenantProfile): TenantWorkspac
     .join(" ");
   const contactLabel = profile.user.email?.trim() || profile.user.phone?.trim() || "";
   const roleLabel = formatRoleLabel(profile.user.role) || "Tenant User";
+  const isRoot = profile.user.role?.trim().toLowerCase() === "root";
   const tenantLabel = profile.tenant.name?.trim() || profile.tenant.host?.trim() || "";
   const displayName = fullName || contactLabel || roleLabel;
   const secondaryLabel = contactLabel || [roleLabel, tenantLabel].filter(Boolean).join(" · ") || profile.user.id;
@@ -69,6 +71,7 @@ function buildTenantWorkspaceUserSession(profile: TenantProfile): TenantWorkspac
   return {
     displayName,
     initial,
+    isRoot,
     secondaryLabel,
   };
 }

@@ -28,7 +28,9 @@ type BackendEnvelope<T> = {
 
 type AdminCollectionTableActionResult = {
   downloadUrl?: string;
+  launchUrl?: string;
   ok?: boolean;
+  openIn?: "new_tab" | "same_tab";
 };
 
 type AdminCollectionTableSessionClient = {
@@ -246,12 +248,22 @@ async function requestAdminCollectionTable<T>(
   });
 }
 
-function openDownloadUrl(downloadUrl?: string) {
-  if (!downloadUrl || typeof window === "undefined") {
+function openActionUrl(result?: AdminCollectionTableActionResult | void) {
+  if (!result || typeof window === "undefined") {
     return;
   }
 
-  window.open(downloadUrl, "_blank", "noopener,noreferrer");
+  const actionUrl = result.launchUrl?.trim() || result.downloadUrl?.trim() || "";
+  if (!actionUrl) {
+    return;
+  }
+
+  if (result.openIn === "same_tab") {
+    window.location.assign(actionUrl);
+    return;
+  }
+
+  window.open(actionUrl, "_blank", "noopener,noreferrer");
 }
 
 export function createAdminCollectionTableAdapter(options: {
@@ -291,7 +303,7 @@ export function createAdminCollectionTableAdapter(options: {
         const result = await runWithAdminSession((accessToken) =>
           options.client.exportXls!(accessToken, request),
         );
-        openDownloadUrl(result?.downloadUrl);
+        openActionUrl(result);
       }
       : undefined,
     loadMeta: async () =>
@@ -309,7 +321,7 @@ export function createAdminCollectionTableAdapter(options: {
         const result = await runWithAdminSession((accessToken) =>
           options.client.runRowAction!(accessToken, input),
         );
-        openDownloadUrl(result?.downloadUrl);
+        openActionUrl(result);
       }
       : undefined,
     toggleFavorite: async () =>

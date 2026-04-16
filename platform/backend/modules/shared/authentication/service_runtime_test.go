@@ -139,6 +139,18 @@ func TestNormalizeTenantUserDefaults(t *testing.T) {
 	}
 }
 
+func TestNormalizeTenantUserOwnerRoleMapsToAdmin(t *testing.T) {
+	user := &TenantUser{Admin: true, Level: 90, Role: "owner"}
+	normalizeTenantUser(user)
+
+	if user.Role != "admin" {
+		t.Fatalf("normalizeTenantUser role = %q, want %q", user.Role, "admin")
+	}
+	if user.Level != 90 {
+		t.Fatalf("normalizeTenantUser level = %d, want %d", user.Level, 90)
+	}
+}
+
 func TestRefreshFailureReason(t *testing.T) {
 	if reason := refreshFailureReason(nil, sessions.ErrRefreshTokenNotFound); reason != "token_not_found" {
 		t.Fatalf("refreshFailureReason(not found) = %q, want %q", reason, "token_not_found")
@@ -253,6 +265,9 @@ func TestShouldLogAuthEventPolicy(t *testing.T) {
 	}
 	if !shouldLogAuthEvent(eventsvc.EventTypeLogin) {
 		t.Fatal("login should be logged")
+	}
+	if !shouldLogAuthEvent(eventsvc.EventTypeDelegatedRootLogin) {
+		t.Fatal("delegated_root_login should be logged")
 	}
 	if !shouldLogAuthEvent(eventsvc.EventTypeSessionReuse) {
 		t.Fatal("session_reuse_detected should be logged as security anomaly")

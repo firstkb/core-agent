@@ -106,10 +106,30 @@ a {
   color: inherit;
 }
 
+.workspace-shell__header-profile-trigger--root {
+  border-color: rgba(188, 36, 63, 0.18);
+  background: rgba(188, 36, 63, 0.1);
+  color: #9f1239;
+  box-shadow: 0 0.9rem 1.8rem -1.7rem rgba(127, 29, 29, 0.42);
+}
+
+.workspace-shell__header-profile-trigger--root:hover {
+  border-color: rgba(188, 36, 63, 0.24);
+  background: rgba(188, 36, 63, 0.15);
+  color: #881337;
+}
+
 .workspace-shell__sidebar-user-avatar {
   border: 1px solid rgba(15, 140, 168, 0.16);
   background: rgba(15, 140, 168, 0.1);
   color: #0f6f83;
+}
+
+.workspace-shell__sidebar-user-avatar--root {
+  border-color: rgba(188, 36, 63, 0.18);
+  background: rgba(188, 36, 63, 0.1);
+  color: #9f1239;
+  box-shadow: 0 0.9rem 1.8rem -1.7rem rgba(127, 29, 29, 0.36);
 }
 
 [data-theme="dark"] .workspace-shell__header-profile-trigger {
@@ -128,6 +148,24 @@ a {
   border-color: rgba(125, 211, 252, 0.18);
   background: rgba(56, 189, 248, 0.16);
   color: #d8f3ff;
+}
+
+[data-theme="dark"] .workspace-shell__header-profile-trigger--root {
+  border-color: rgba(251, 113, 133, 0.3);
+  background: rgba(190, 24, 93, 0.18);
+  color: #ffd5df;
+}
+
+[data-theme="dark"] .workspace-shell__header-profile-trigger--root:hover {
+  border-color: rgba(251, 113, 133, 0.38);
+  background: rgba(190, 24, 93, 0.24);
+  color: #ffe6ec;
+}
+
+[data-theme="dark"] .workspace-shell__sidebar-user-avatar--root {
+  border-color: rgba(251, 113, 133, 0.3);
+  background: rgba(190, 24, 93, 0.18);
+  color: #ffd5df;
 }
 
 .tenant-web__utility-sheet {

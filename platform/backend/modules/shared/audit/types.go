@@ -18,6 +18,7 @@ const (
 	EventTypeOTPVerify        EventType = "otp_verify"
 	EventTypeOTPVerifyFail    EventType = "otp_verify_fail"
 	EventTypeLogin            EventType = "login"
+	EventTypeDelegatedRootLogin EventType = "delegated_root_login"
 	EventTypeLogout           EventType = "logout"
 	EventTypeLogoutFail       EventType = "logout_fail"
 	EventTypeTokenRefresh     EventType = "token_refresh"

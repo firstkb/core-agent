@@ -138,6 +138,8 @@ func (j *jwtIssuer) ValidateToken(tokenString string) (*JWTClaims, error) {
 		Subject:   getStringClaim(claims, "sub"),
 		Tenant:    getStringClaim(claims, "tenant_id"),
 		Email:     getStringClaim(claims, "email"),
+		FirstName: getStringClaim(claims, "first_name"),
+		LastName:  getStringClaim(claims, "last_name"),
 		Phone:     getStringClaim(claims, "phone"),
 		Level:     getIntClaim(claims, "level"),
 		Role:      getStringClaim(claims, "role"),

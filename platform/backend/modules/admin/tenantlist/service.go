@@ -11,21 +11,24 @@ import (
 
 	authpkg "dtriton.com/platform/backend/internal/platform/auth"
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	authsvc "dtriton.com/platform/backend/modules/shared/authentication"
 	collectionprefs "dtriton.com/platform/backend/modules/shared/collectionprefs"
 	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 var (
-	ErrUnauthorized = errors.New("tenant list unauthorized")
-	ErrForbidden    = errors.New("tenant list forbidden")
-	ErrInvalidQuery = errors.New("tenant list invalid query")
+	ErrUnauthorized  = errors.New("tenant list unauthorized")
+	ErrForbidden     = errors.New("tenant list forbidden")
+	ErrInvalidAction = errors.New("tenant list invalid action")
+	ErrInvalidQuery  = errors.New("tenant list invalid query")
 )
 
 var allowedPageSizes = []int{25, 50, 100}
 
 type Service struct {
-	repo  Repository
-	prefs Preferences
+	repo     Repository
+	prefs    Preferences
+	launcher TenantRootLauncher
 }
 
 type Preferences interface {
@@ -34,8 +37,12 @@ type Preferences interface {
 	CreateSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, req collectiontable.CreateSavedFilterInput) (*collectiontable.SavedFilterSet, error)
 }
 
-func NewService(repo Repository, prefs Preferences) *Service {
-	return &Service{repo: repo, prefs: prefs}
+type TenantRootLauncher interface {
+	BuildLaunchURL(input authsvc.DelegatedTenantRootLaunchInput) (string, error)
+}
+
+func NewService(repo Repository, prefs Preferences, launcher TenantRootLauncher) *Service {
+	return &Service{repo: repo, prefs: prefs, launcher: launcher}
 }
 
 func (s *Service) LoadMeta(ctx context.Context) (*MetaResponse, error) {
@@ -58,6 +65,14 @@ func (s *Service) LoadMeta(ctx context.Context) (*MetaResponse, error) {
 		},
 		Fields:  tenantFields(),
 		Columns: tenantColumns(),
+		RowActions: []RowActionDefinition{
+			{
+				Execution: "backend",
+				ID:        "open_as_root",
+				Kind:      "button",
+				Label:     "Enter Tenant",
+			},
+		},
 		Actions: PageActions{
 			Create: VisibilityAction{Visible: false},
 			Reload: VisibilityAction{Visible: true},
@@ -225,6 +240,47 @@ func (s *Service) CreateSavedFilter(ctx context.Context, req CreateSavedFilterIn
 	}
 
 	return s.prefs.CreateSavedFilter(ctx, adminUserID, SurfaceID, req)
+}
+
+func (s *Service) RunRowAction(ctx context.Context, actionID string, input RowActionInput, scheme string) (*MutationResult, error) {
+	adminUserID, err := s.requireRoot(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.TrimSpace(actionID) != "open_as_root" || strings.TrimSpace(input.RowID) == "" {
+		return nil, ErrInvalidAction
+	}
+	if s.launcher == nil {
+		return nil, errors.New("tenant root launcher is not configured")
+	}
+
+	tenantID, err := strconv.ParseInt(strings.TrimSpace(input.RowID), 10, 64)
+	if err != nil || tenantID <= 0 {
+		return nil, ErrInvalidAction
+	}
+
+	record, err := s.repo.GetTenantByID(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	launchURL, err := s.launcher.BuildLaunchURL(authsvc.DelegatedTenantRootLaunchInput{
+		AdminUserID: adminUserID,
+		ReturnTo:    "/",
+		Scheme:      scheme,
+		TenantHost:  record.Host,
+		TenantID:    strconv.FormatInt(record.ID, 10),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &MutationResult{
+		LaunchURL: launchURL,
+		OK:        true,
+		OpenIn:    "new_tab",
+	}, nil
 }
 
 type tenantRow struct {

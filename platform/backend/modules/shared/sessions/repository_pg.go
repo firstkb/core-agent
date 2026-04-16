@@ -23,9 +23,10 @@ var (
 )
 
 const (
-	RefreshSurfaceUnknown = "unknown"
-	RefreshSurfaceTenant  = "tenant"
-	RefreshSurfaceAdmin   = "admin"
+	RefreshSurfaceUnknown              = "unknown"
+	RefreshSurfaceTenant               = "tenant"
+	RefreshSurfaceAdmin                = "admin"
+	RefreshSurfaceTenantRootDelegation = "tenant_root_delegate"
 )
 
 type RefreshTokenState string

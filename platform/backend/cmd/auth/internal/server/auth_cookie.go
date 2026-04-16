@@ -2,6 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"html"
 	"net/http"
 	"strings"
 	"time"
@@ -56,6 +59,20 @@ func (srv *Server) handleAdminOTPVerifyCookie() http.Handler {
 
 		srv.writeRefreshTokenCookie(w, r, info)
 		writeJSONOK(w, info.PublicResponse())
+	})
+}
+
+func (srv *Server) handleDelegatedTenantRootLogin() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		code := strings.TrimSpace(r.PathValue("code"))
+		info, err := srv.authService.CompleteDelegatedTenantRootLogin(r.Context(), r, code)
+		if err != nil {
+			writeDelegatedTenantRootLoginError(w, authsvcMapError(err))
+			return
+		}
+
+		srv.writeRefreshTokenCookie(w, r, info.Tokens)
+		writeDelegatedTenantRootLoginBootstrap(w, info.RedirectTo)
 	})
 }
 
@@ -142,6 +159,86 @@ func writeJSON(w http.ResponseWriter, status int, body httpjson.Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
+}
+
+func writeDelegatedTenantRootLoginBootstrap(w http.ResponseWriter, redirectTo string) {
+	redirectTo = authsvc.NormalizeDelegatedTenantRootReturnTo(redirectTo)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = fmt.Fprintf(w, `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opening tenant workspace</title>
+</head>
+<body>
+  <script>
+    (function () {
+      try {
+        var prefix = "tenant-workspace-auth:";
+        localStorage.removeItem(prefix + "accessToken");
+        localStorage.removeItem(prefix + "expiresAt");
+        localStorage.removeItem(prefix + "refreshToken");
+        localStorage.removeItem(prefix + "idToken");
+        localStorage.removeItem(prefix + "refreshLock");
+        localStorage.removeItem(prefix + "userId");
+        localStorage.setItem(prefix + "sessionHint", "1");
+      } catch (error) {}
+      window.location.replace(%q);
+    })();
+  </script>
+  <p>Opening tenant workspace...</p>
+</body>
+</html>`, redirectTo)
+}
+
+func writeDelegatedTenantRootLoginError(w http.ResponseWriter, err *apperr.AppError) {
+	if err == nil {
+		err = apperr.New("AUTH_INTERNAL", http.StatusInternalServerError, "internal error")
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(err.StatusCode)
+	_, _ = fmt.Fprintf(w, `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unable to open tenant workspace</title>
+</head>
+<body>
+  <h1>Unable to open tenant workspace</h1>
+  <p>%s</p>
+</body>
+</html>`, html.EscapeString(err.Message))
+}
+
+func authsvcMapError(err error) *apperr.AppError {
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, authsvc.ErrRateLimited):
+		return apperr.New("AUTH_RATE_LIMIT", http.StatusTooManyRequests, "rate limit exceeded")
+	case errors.Is(err, authsvc.ErrInvalidInput):
+		return apperr.New("AUTH_INVALID_INPUT", http.StatusBadRequest, "invalid input")
+	case errors.Is(err, authsvc.ErrTenantMissing):
+		return apperr.New("AUTH_TENANT_MISSING", http.StatusBadRequest, "tenant not found")
+	case errors.Is(err, authsvc.ErrUserNotFound):
+		return apperr.New("AUTH_USER_NOT_FOUND", http.StatusNotFound, "user not found")
+	case errors.Is(err, authsvc.ErrUserAccess):
+		return apperr.New("AUTH_USER_ACCESS_DISABLED", http.StatusForbidden, "user access denied")
+	case errors.Is(err, authsvc.ErrUserInactive):
+		return apperr.New("AUTH_USER_INACTIVE", http.StatusForbidden, "user inactive")
+	case errors.Is(err, authsvc.ErrOTPInvalid):
+		return apperr.New("AUTH_OTP_INVALID", http.StatusForbidden, "invalid code")
+	case errors.Is(err, authsvc.ErrUnauthorized):
+		return apperr.New("AUTH_UNAUTHORIZED", http.StatusUnauthorized, "unauthorized")
+	default:
+		return apperr.New("AUTH_INTERNAL", http.StatusInternalServerError, "internal error")
+	}
 }
 
 func (srv *Server) writeRefreshTokenCookie(w http.ResponseWriter, r *http.Request, tokens *authsvc.IssuedTokens) {

@@ -151,7 +151,10 @@ type CreateSavedFilterInput struct {
 }
 
 type MutationResult struct {
-	OK bool `json:"ok"`
+	DownloadURL string `json:"downloadUrl,omitempty"`
+	LaunchURL   string `json:"launchUrl,omitempty"`
+	OK          bool   `json:"ok"`
+	OpenIn      string `json:"openIn,omitempty"`
 }
 
 type BulkActionInput struct {

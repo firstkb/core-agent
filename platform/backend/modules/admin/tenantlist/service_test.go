@@ -2,18 +2,31 @@ package tenantlist
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	authsvc "dtriton.com/platform/backend/modules/shared/authentication"
 	collectionprefs "dtriton.com/platform/backend/modules/shared/collectionprefs"
 	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 type fakeRepository struct {
 	tenants []TenantRecord
+}
+
+func (f *fakeRepository) GetTenantByID(_ context.Context, tenantID int64) (*TenantRecord, error) {
+	for _, tenant := range f.tenants {
+		if tenant.ID == tenantID {
+			record := tenant
+			return &record, nil
+		}
+	}
+
+	return nil, fmt.Errorf("tenant not found")
 }
 
 func (f *fakeRepository) ListTenants(context.Context) ([]TenantRecord, error) {
@@ -47,6 +60,19 @@ func (f *fakePreferences) CreateSavedFilter(_ context.Context, _ uuid.UUID, surf
 	}, nil
 }
 
+type fakeLauncher struct {
+	lastInput authsvc.DelegatedTenantRootLaunchInput
+	url       string
+}
+
+func (f *fakeLauncher) BuildLaunchURL(input authsvc.DelegatedTenantRootLaunchInput) (string, error) {
+	f.lastInput = input
+	if f.url != "" {
+		return f.url, nil
+	}
+	return "https://demo.platform.local/auth/v1/auth/delegated-root/code", nil
+}
+
 func rootContext() context.Context {
 	return requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{
 		UserID: uuid.NewString(),
@@ -62,7 +88,7 @@ func TestLoadMetaUsesTenantSurface(t *testing.T) {
 			IsFavorite: true,
 		},
 	}
-	svc := NewService(&fakeRepository{}, prefs)
+	svc := NewService(&fakeRepository{}, prefs, nil)
 
 	meta, err := svc.LoadMeta(rootContext())
 	if err != nil {
@@ -80,8 +106,11 @@ func TestLoadMetaUsesTenantSurface(t *testing.T) {
 	if meta.Selection.Enabled {
 		t.Fatalf("expected tenant list selection to stay disabled")
 	}
-	if len(meta.RowActions) != 0 {
-		t.Fatalf("expected no row actions, got %+v", meta.RowActions)
+	if len(meta.RowActions) != 1 || meta.RowActions[0].ID != "open_as_root" {
+		t.Fatalf("expected delegated root row action, got %+v", meta.RowActions)
+	}
+	if meta.RowActions[0].Label != "Enter Tenant" {
+		t.Fatalf("expected delegated root row action label, got %+v", meta.RowActions[0])
 	}
 }
 
@@ -112,7 +141,7 @@ func TestQueryReturnsFilteredRows(t *testing.T) {
 			},
 		},
 	}
-	svc := NewService(repo, &fakePreferences{})
+	svc := NewService(repo, &fakePreferences{}, nil)
 
 	out, err := svc.Query(rootContext(), QueryRequest{
 		Page:     1,
@@ -157,7 +186,7 @@ func TestLoadSearchSuggestionsBuildsTenantGroups(t *testing.T) {
 			},
 		},
 	}
-	svc := NewService(repo, &fakePreferences{})
+	svc := NewService(repo, &fakePreferences{}, nil)
 
 	out, err := svc.LoadSearchSuggestions(rootContext())
 	if err != nil {
@@ -170,7 +199,7 @@ func TestLoadSearchSuggestionsBuildsTenantGroups(t *testing.T) {
 
 func TestCreateSavedFilterUsesTenantSurface(t *testing.T) {
 	prefs := &fakePreferences{}
-	svc := NewService(&fakeRepository{}, prefs)
+	svc := NewService(&fakeRepository{}, prefs, nil)
 
 	_, err := svc.CreateSavedFilter(rootContext(), CreateSavedFilterInput{
 		Label: "Production",
@@ -183,5 +212,28 @@ func TestCreateSavedFilterUsesTenantSurface(t *testing.T) {
 	}
 	if prefs.lastSurfaceID != SurfaceID {
 		t.Fatalf("expected surface %q, got %q", SurfaceID, prefs.lastSurfaceID)
+	}
+}
+
+func TestRunRowActionBuildsDelegatedTenantLaunchURL(t *testing.T) {
+	launcher := &fakeLauncher{}
+	svc := NewService(&fakeRepository{
+		tenants: []TenantRecord{
+			{ID: 101, Host: "demo.platform.local"},
+		},
+	}, &fakePreferences{}, launcher)
+
+	out, err := svc.RunRowAction(rootContext(), "open_as_root", RowActionInput{RowID: "101"}, "https")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !out.OK || out.OpenIn != "new_tab" {
+		t.Fatalf("unexpected row action result %+v", out)
+	}
+	if launcher.lastInput.TenantID != "101" || launcher.lastInput.TenantHost != "demo.platform.local" {
+		t.Fatalf("unexpected launch input %+v", launcher.lastInput)
+	}
+	if launcher.lastInput.ReturnTo != "/" || launcher.lastInput.Scheme != "https" {
+		t.Fatalf("unexpected launch routing %+v", launcher.lastInput)
 	}
 }

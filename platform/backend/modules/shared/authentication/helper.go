@@ -22,6 +22,9 @@ func normalizeTenantUser(user *TenantUser) {
 	}
 
 	user.Role = strings.TrimSpace(user.Role)
+	if strings.EqualFold(user.Role, "owner") {
+		user.Role = "admin"
+	}
 	if user.Role == "" {
 		if user.Admin {
 			user.Role = "admin"
@@ -37,6 +40,20 @@ func normalizeTenantUser(user *TenantUser) {
 			user.Level = 20
 		}
 	}
+}
+
+func splitAuthDisplayName(value string) (string, string) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "", ""
+	}
+
+	parts := strings.Fields(value)
+	if len(parts) == 1 {
+		return parts[0], ""
+	}
+
+	return parts[0], strings.Join(parts[1:], " ")
 }
 
 func tenantUserBlockReason(user *TenantUser, policy TenantAuthPolicy) string {

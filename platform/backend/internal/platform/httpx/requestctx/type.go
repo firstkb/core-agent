@@ -49,6 +49,8 @@ type ClaimsInfo struct {
 	TenantID string
 	UserID   string
 	Email    string
+	FirstName string
+	LastName  string
 	Phone    string
 	Level    int
 	Role     string

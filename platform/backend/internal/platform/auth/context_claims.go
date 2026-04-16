@@ -18,6 +18,8 @@ type Claim struct {
 	TenantID string
 	UserID   string
 	Email    string
+	FirstName string
+	LastName  string
 	Phone    string
 	Level    int
 	Role     string
@@ -45,6 +47,8 @@ func GetClaim(ctx context.Context) (*Claim, error) {
 			TenantID: rc.TenantID,
 			UserID:   rc.UserID,
 			Email:    rc.Email,
+			FirstName: rc.FirstName,
+			LastName:  rc.LastName,
 			Phone:    rc.Phone,
 			Level:    int(rc.Level),
 			Role:     string(rc.Role),
@@ -99,6 +103,8 @@ func CreateContextWithClaim(r *http.Request) (context.Context, error) {
 		TenantID: claim.TenantID,
 		UserID:   claim.UserID,
 		Email:    claim.Email,
+		FirstName: claim.FirstName,
+		LastName:  claim.LastName,
 		Phone:    claim.Phone,
 		Level:    claim.Level,
 		Role:     claim.Role,
@@ -135,6 +141,8 @@ func CreateContextWithTrustedHeaders(r *http.Request) (context.Context, error) {
 		TenantID: tenantID,
 		UserID:   userID,
 		Email:    email,
+		FirstName: "",
+		LastName:  "",
 		Phone:    phone,
 		Level:    level,
 		Role:     strings.TrimSpace(r.Header.Get(HeaderAuthRole)),
@@ -154,6 +162,8 @@ func buildClaim(jwtClaims jwtlegacy.MapClaims) (*Claim, error) {
 		TenantID: tenantID,
 		UserID:   userID,
 		Email:    email,
+		FirstName: stringClaim(jwtClaims, "first_name"),
+		LastName:  stringClaim(jwtClaims, "last_name"),
 		Phone:    phone,
 		Level:    level,
 		Role:     role,

@@ -38,26 +38,27 @@ var (
 const defaultOTPMaxAttempts = 5
 
 type AuthService struct {
-	otpRepo     OTPRepository
-	refreshRepo sessions.RefreshTokenRepository
-	tenantUsers TenantUserRepository
-	adminUsers  AdminUserRepository
-	policyRepo  TenantAuthPolicyRepository
-	jwtIssuer   auth.JWTIssuer
-	notifySvc   *notifysvc.NotifyService
-	eventSvc    *eventsvc.EventService
-	rateLimiter auth.RateLimiter
-	tenants     *tenantsvc.ServiceTenantProvider
-	otpTTL      time.Duration
-	otpLength   int
-	refreshTTL  time.Duration
-	accessTTL   time.Duration
-	audience    string
-	issuer      string
-	logger      *slog.Logger
-	jwksTTL     time.Duration
-	runtimeEnv  appenv.Environment
-	devFixedOTP string
+	otpRepo                   OTPRepository
+	refreshRepo               sessions.RefreshTokenRepository
+	tenantUsers               TenantUserRepository
+	adminUsers                AdminUserRepository
+	policyRepo                TenantAuthPolicyRepository
+	jwtIssuer                 auth.JWTIssuer
+	notifySvc                 *notifysvc.NotifyService
+	eventSvc                  *eventsvc.EventService
+	rateLimiter               auth.RateLimiter
+	tenants                   *tenantsvc.ServiceTenantProvider
+	delegatedTenantRootTokens *DelegatedTenantRootTokenService
+	otpTTL                    time.Duration
+	otpLength                 int
+	refreshTTL                time.Duration
+	accessTTL                 time.Duration
+	audience                  string
+	issuer                    string
+	logger                    *slog.Logger
+	jwksTTL                   time.Duration
+	runtimeEnv                appenv.Environment
+	devFixedOTP               string
 }
 
 type Config struct {
@@ -161,28 +162,33 @@ func NewService(sqlClient *postgres.Client, cfg *config.Config, logger *slog.Log
 	rlCfg := parseRateLimit(c.Auth.RateLimitIP, 30, time.Minute)
 	rateLimiter := auth.NewRateLimiter(rlCfg)
 	runtimeEnv := appenv.Normalize(c.Runtime.Environment)
+	delegatedTenantRootTokens, err := NewDelegatedTenantRootTokenService(cfg)
+	if err != nil {
+		return nil, err
+	}
 
 	return &AuthService{
-		otpRepo:     otpRepo,
-		refreshRepo: refreshRepo,
-		tenantUsers: tenantUsers,
-		adminUsers:  adminUsers,
-		policyRepo:  policyRepo,
-		jwtIssuer:   jwtIssuer,
-		notifySvc:   notifySvc,
-		eventSvc:    eventSvc,
-		rateLimiter: rateLimiter,
-		tenants:     tenants,
-		otpTTL:      parseDuration(c.Auth.OTPTTL, 10*time.Minute),
-		otpLength:   c.Auth.OTPLength,
-		refreshTTL:  parseDuration(c.Auth.RefreshTTL, 30*24*time.Hour),
-		accessTTL:   parseDuration(c.Auth.AccessTTL, 15*time.Minute),
-		audience:    c.Auth.Audience,
-		issuer:      c.Auth.Issuer,
-		jwksTTL:     parseDuration(c.Auth.JWKSCacheTTL, 10*time.Minute),
-		logger:      logger,
-		runtimeEnv:  runtimeEnv,
-		devFixedOTP: strings.TrimSpace(c.Auth.Dev.FixedOTP),
+		otpRepo:                   otpRepo,
+		refreshRepo:               refreshRepo,
+		tenantUsers:               tenantUsers,
+		adminUsers:                adminUsers,
+		policyRepo:                policyRepo,
+		jwtIssuer:                 jwtIssuer,
+		notifySvc:                 notifySvc,
+		eventSvc:                  eventSvc,
+		rateLimiter:               rateLimiter,
+		tenants:                   tenants,
+		delegatedTenantRootTokens: delegatedTenantRootTokens,
+		otpTTL:                    parseDuration(c.Auth.OTPTTL, 10*time.Minute),
+		otpLength:                 c.Auth.OTPLength,
+		refreshTTL:                parseDuration(c.Auth.RefreshTTL, 30*24*time.Hour),
+		accessTTL:                 parseDuration(c.Auth.AccessTTL, 15*time.Minute),
+		audience:                  c.Auth.Audience,
+		issuer:                    c.Auth.Issuer,
+		jwksTTL:                   parseDuration(c.Auth.JWKSCacheTTL, 10*time.Minute),
+		logger:                    logger,
+		runtimeEnv:                runtimeEnv,
+		devFixedOTP:               strings.TrimSpace(c.Auth.Dev.FixedOTP),
 	}, nil
 }
 
@@ -538,6 +544,8 @@ func (s *AuthService) VerifyOTP(ctx context.Context, r *http.Request, req OTPVer
 	_ = s.otpRepo.DeleteOTPsByAddress(ctx, tenantID, OTPChannel(channel), address)
 
 	claims := auth.NewJWTClaims(s.issuer, s.audience, user.ID, tenantID, user.Email, user.Phone, user.Level, user.Role, auth.AccessScopeTenantAPI)
+	claims.FirstName = user.FirstName
+	claims.LastName = user.LastName
 	claims.ExpiresAt = time.Now().Add(s.accessTTL).Unix()
 
 	accessToken, err := s.jwtIssuer.IssueToken(claims)
@@ -760,6 +768,9 @@ func (s *AuthService) Refresh(ctx context.Context, r *http.Request, req RefreshR
 	if token.TenantID == platformAuthTenantID {
 		return s.refreshAdminToken(ctx, token, tokenHash, req)
 	}
+	if token.Surface == sessions.RefreshSurfaceTenantRootDelegation {
+		return s.refreshDelegatedTenantRootToken(ctx, r, token, tokenHash, req)
+	}
 
 	return s.refreshTenantToken(ctx, r, token, tokenHash, req)
 }
@@ -807,7 +818,12 @@ func (s *AuthService) Logout(ctx context.Context, r *http.Request, req LogoutReq
 			logoutCtx = requestctx.WithUser(tenantCtx, requestctx.UserInfo{
 				ID: token.UserID.String(),
 			})
-			if s.tenantUsers != nil {
+			if token.Surface == sessions.RefreshSurfaceTenantRootDelegation && s.adminUsers != nil {
+				if user, uerr := s.adminUsers.GetByID(ctx, token.UserID); uerr == nil && user != nil {
+					normalizeAdminUser(user)
+					logoutCtx = delegatedTenantRootUserContext(tenantCtx, user)
+				}
+			} else if s.tenantUsers != nil {
 				if user, uerr := s.tenantUsers.GetByID(tenantCtx, tenantInfo, token.UserID); uerr == nil && user != nil {
 					logoutCtx = requestctx.WithUser(tenantCtx, requestctx.UserInfo{
 						ID:         user.ID.String(),
@@ -1016,6 +1032,7 @@ func shouldLogAuthEvent(eventType eventsvc.EventType) bool {
 	switch eventType {
 	case eventsvc.EventTypeOTPRequest,
 		eventsvc.EventTypeLogin,
+		eventsvc.EventTypeDelegatedRootLogin,
 		eventsvc.EventTypeSessionReuse,
 		eventsvc.EventTypeOTPRequestFail,
 		eventsvc.EventTypeOTPVerifyFail,
@@ -1145,6 +1162,8 @@ func (s *AuthService) refreshTenantToken(ctx context.Context, r *http.Request, t
 	})
 
 	claims := auth.NewJWTClaims(s.issuer, s.audience, token.UserID, token.TenantID, user.Email, user.Phone, user.Level, user.Role, auth.AccessScopeTenantAPI)
+	claims.FirstName = user.FirstName
+	claims.LastName = user.LastName
 	claims.ExpiresAt = time.Now().Add(s.accessTTL).Unix()
 
 	accessToken, err := s.jwtIssuer.IssueToken(claims)

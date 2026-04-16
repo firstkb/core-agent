@@ -26,6 +26,8 @@ func TestGetProfileSuccess(t *testing.T) {
 			Email:     "user@example.com",
 			FirstName: "Demo",
 			LastName:  "User",
+			Level:     90,
+			Role:      "admin",
 		},
 	})
 
@@ -61,11 +63,54 @@ func TestGetProfileSuccess(t *testing.T) {
 	if profile.User.LastName != "User" {
 		t.Fatalf("user last_name = %q, want %q", profile.User.LastName, "User")
 	}
+	if profile.User.Level != 90 {
+		t.Fatalf("user level = %d, want %d", profile.User.Level, 90)
+	}
+	if profile.User.Role != "admin" {
+		t.Fatalf("user role = %q, want %q", profile.User.Role, "admin")
+	}
 	if profile.Tenant.ID != "101" {
 		t.Fatalf("tenant id = %q, want %q", profile.Tenant.ID, "101")
 	}
 	if profile.Tenant.Name != "Demo Tenant" {
 		t.Fatalf("tenant name = %q, want %q", profile.Tenant.Name, "Demo Tenant")
+	}
+}
+
+func TestGetProfileUsesClaimNamesWithoutLookup(t *testing.T) {
+	service := NewService(tenantUserReaderStub{
+		err: errors.New("should not lookup tenant user"),
+	})
+
+	ctx := requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{
+		TenantID:  "101",
+		UserID:    "5cba301e-df78-4691-9d7a-818e1d68ad20",
+		Email:     "admin@platform.local",
+		FirstName: "Local",
+		LastName:  "Platform Admin",
+		Level:     100,
+		Role:      "root",
+	})
+	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
+		ID:     "101",
+		Name:   "Demo Tenant",
+		Host:   "demo.dtriton.local",
+		Plan:   "sandbox",
+		Status: "active",
+	})
+
+	profile, err := service.GetProfile(ctx)
+	if err != nil {
+		t.Fatalf("GetProfile returned error: %v", err)
+	}
+	if profile.User.FirstName != "Local" {
+		t.Fatalf("user first_name = %q, want %q", profile.User.FirstName, "Local")
+	}
+	if profile.User.LastName != "Platform Admin" {
+		t.Fatalf("user last_name = %q, want %q", profile.User.LastName, "Platform Admin")
+	}
+	if profile.User.Role != "root" {
+		t.Fatalf("user role = %q, want %q", profile.User.Role, "root")
 	}
 }
 

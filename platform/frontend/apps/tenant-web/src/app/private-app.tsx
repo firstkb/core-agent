@@ -372,7 +372,7 @@ export function PrivateApp({
             <MenuTrigger>
               <button
                 aria-label={t("tenant.shell.aria.openUserMenu")}
-                className="workspace-shell__header-profile-trigger workspace-shell__rail-user-trigger"
+                className={`workspace-shell__header-profile-trigger workspace-shell__rail-user-trigger${userSession.isRoot ? " workspace-shell__header-profile-trigger--root" : ""}`}
                 type="button"
               >
                 <span className="workspace-shell__header-profile-initial">
@@ -434,7 +434,7 @@ export function PrivateApp({
               >
                 <div
                   aria-hidden="true"
-                  className="workspace-shell__sidebar-user-avatar"
+                  className={`workspace-shell__sidebar-user-avatar${userSession.isRoot ? " workspace-shell__sidebar-user-avatar--root" : ""}`}
                 >
                   {userSession.initial}
                 </div>

@@ -74,7 +74,7 @@ func WithClaims(ctx context.Context, claims ClaimsInfo) context.Context {
 func Claims(ctx context.Context) (ClaimsInfo, bool) {
 	if rc := from(ctx); rc != nil {
 		c := rc.Claims
-		if c.TenantID != "" || c.UserID != "" || c.Email != "" || c.Phone != "" || c.Scope != "" {
+		if c.TenantID != "" || c.UserID != "" || c.Email != "" || c.FirstName != "" || c.LastName != "" || c.Phone != "" || c.Scope != "" {
 			return c, true
 		}
 	}

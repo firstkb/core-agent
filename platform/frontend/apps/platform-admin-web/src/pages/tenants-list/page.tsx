@@ -14,6 +14,7 @@ export function AdminTenantsListPage() {
   const client = useMemo(
     () => createAdminCollectionTableClient({
       pathPrefix: "/app/admin/tenants/list",
+      supportsRowActions: true,
     }),
     [],
   );

@@ -42,11 +42,13 @@ func (s *Service) GetProfile(ctx context.Context) (*Profile, error) {
 	userProfile := UserProfile{
 		ID:    claims.UserID,
 		Email: claims.Email,
+		FirstName: strings.TrimSpace(claims.FirstName),
+		LastName: strings.TrimSpace(claims.LastName),
 		Level: claims.Level,
 		Role:  claims.Role,
 	}
 
-	if s.users != nil {
+	if s.users != nil && (userProfile.FirstName == "" || userProfile.LastName == "" || userProfile.Email == "") {
 		if userID, err := uuid.Parse(strings.TrimSpace(claims.UserID)); err == nil {
 			if user, err := s.users.GetByID(ctx, tenant, userID); err == nil && user != nil {
 				if strings.TrimSpace(user.Email) != "" {
@@ -54,6 +56,12 @@ func (s *Service) GetProfile(ctx context.Context) (*Profile, error) {
 				}
 				userProfile.FirstName = strings.TrimSpace(user.FirstName)
 				userProfile.LastName = strings.TrimSpace(user.LastName)
+				if user.Level > 0 {
+					userProfile.Level = user.Level
+				}
+				if role := strings.TrimSpace(user.Role); role != "" {
+					userProfile.Role = role
+				}
 			}
 		}
 	}

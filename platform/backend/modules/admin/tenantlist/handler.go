@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
 	collectionprefs "dtriton.com/platform/backend/modules/shared/collectionprefs"
@@ -57,12 +58,27 @@ func (h *Handler) CreateSavedFilter(ctx context.Context, _ *http.Request, req Cr
 	return out, nil
 }
 
+func (h *Handler) RunRowAction(ctx context.Context, r *http.Request, req RowActionInput) (*MutationResult, error) {
+	out, err := h.service.RunRowAction(
+		ctx,
+		strings.TrimSpace(r.PathValue("actionId")),
+		req,
+		resolveRequestScheme(r),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func mapError(err error) *apperr.AppError {
 	switch {
 	case errors.Is(err, ErrUnauthorized):
 		return apperr.New("TENANT_LIST_UNAUTHORIZED", http.StatusUnauthorized, "unauthorized")
 	case errors.Is(err, ErrForbidden):
 		return apperr.New("TENANT_LIST_FORBIDDEN", http.StatusForbidden, "forbidden")
+	case errors.Is(err, ErrInvalidAction):
+		return apperr.New("TENANT_LIST_INVALID_ACTION", http.StatusBadRequest, "invalid action")
 	case errors.Is(err, ErrInvalidQuery):
 		return apperr.New("TENANT_LIST_INVALID_QUERY", http.StatusBadRequest, "invalid query")
 	case errors.Is(err, collectionprefs.ErrLabelRequired):
@@ -72,4 +88,20 @@ func mapError(err error) *apperr.AppError {
 	default:
 		return apperr.Wrap(err, "TENANT_LIST_INTERNAL", http.StatusInternalServerError, "internal error")
 	}
+}
+
+func resolveRequestScheme(r *http.Request) string {
+	if r == nil {
+		return "https"
+	}
+	if r.TLS != nil {
+		return "https"
+	}
+
+	forwardedProto := strings.TrimSpace(strings.Split(r.Header.Get("X-Forwarded-Proto"), ",")[0])
+	if strings.EqualFold(forwardedProto, "http") {
+		return "http"
+	}
+
+	return "https"
 }

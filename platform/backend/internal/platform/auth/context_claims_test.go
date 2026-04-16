@@ -54,6 +54,42 @@ func TestCreateContextWithClaimAcceptsPhoneOnlyToken(t *testing.T) {
 	}
 }
 
+func TestCreateContextWithClaimReadsOptionalNames(t *testing.T) {
+	token := jwtlegacy.NewWithClaims(jwtlegacy.SigningMethodHS256, jwtlegacy.MapClaims{
+		"tenant_id":  "42",
+		"sub":        "user-123",
+		"level":      100,
+		"email":      "admin@platform.local",
+		"first_name": "Local",
+		"last_name":  "Platform Admin",
+		"role":       "root",
+		"scope":      AccessScopeTenantAPI,
+	})
+	tokenString, err := token.SignedString([]byte("secret"))
+	if err != nil {
+		t.Fatalf("SignedString: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/profile", nil)
+	req.Header.Set("Authorization", "Bearer "+tokenString)
+
+	ctx, err := CreateContextWithClaim(req)
+	if err != nil {
+		t.Fatalf("CreateContextWithClaim: %v", err)
+	}
+
+	claims, ok := requestctx.Claims(ctx)
+	if !ok {
+		t.Fatalf("claims not found in context")
+	}
+	if claims.FirstName != "Local" {
+		t.Fatalf("unexpected first_name %q", claims.FirstName)
+	}
+	if claims.LastName != "Platform Admin" {
+		t.Fatalf("unexpected last_name %q", claims.LastName)
+	}
+}
+
 func TestCreateContextWithClaimRejectsTokenWithoutContact(t *testing.T) {
 	token := jwtlegacy.NewWithClaims(jwtlegacy.SigningMethodHS256, jwtlegacy.MapClaims{
 		"tenant_id": "42",

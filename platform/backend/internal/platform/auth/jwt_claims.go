@@ -21,6 +21,8 @@ type JWTClaims struct {
 	Subject string `json:"sub"`             // user_id (UUID)
 	Tenant  string `json:"tenant_id"`       // tenant_id (numeric string)
 	Email   string `json:"email"`           // email
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
 	Phone   string `json:"phone,omitempty"` // phone (E.164, optional)
 	Level   int    `json:"level"`           // access level
 	Role    string `json:"role,omitempty"`  // role (optional)
@@ -49,6 +51,14 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 
 	if c.Email != "" {
 		claims["email"] = c.Email
+	}
+
+	if c.FirstName != "" {
+		claims["first_name"] = c.FirstName
+	}
+
+	if c.LastName != "" {
+		claims["last_name"] = c.LastName
 	}
 
 	if c.Phone != "" {

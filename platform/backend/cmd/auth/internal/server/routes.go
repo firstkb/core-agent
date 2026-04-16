@@ -73,6 +73,8 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 		}, srv.logger))
 	b.Handle("ADMIN_OTP_VERIFY", "POST", "/auth/admin/otp/verify", router.TierPublic,
 		srv.handleAdminOTPVerifyCookie())
+	b.Handle("DELEGATED_TENANT_ROOT_LOGIN_GET", "GET", "/auth/delegated-root/{code}", router.TierPublicTenant,
+		srv.handleDelegatedTenantRootLogin())
 	b.Handle("REFRESH", "POST", "/auth/refresh", router.TierPublic,
 		srv.handleRefreshCookie())
 	b.Handle("LOGOUT", "POST", "/auth/logout", router.TierPublic,

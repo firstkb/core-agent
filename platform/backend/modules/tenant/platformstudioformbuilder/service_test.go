@@ -22,6 +22,7 @@ type memoryRepository struct {
 	runtimeRelations                   map[string]string
 	runtimeQueryRows                   map[string][]runtimeRelationQueryRow
 	runtimeSuggestions                 map[string]map[string][]runtimeRelationSuggestion
+	runtimeFavorites                   map[string]RuntimeFavoriteRecord
 	runtimeSavedFilters                map[string][]collectiontable.SavedFilterSet
 	lastRuntimePlan                    *runtimeApplyPlan
 	lastExportRelationName             string
@@ -36,6 +37,10 @@ type memoryRepository struct {
 	lastRuntimeSavedFilterLabel        string
 	lastRuntimeSavedFilterQuickFilters []collectiontable.QuickFilter
 	lastRuntimeDeletedSavedFilterID    string
+	lastRuntimeFavoritePrincipal       string
+	lastRuntimeFavoriteSurface         string
+	lastRuntimeFavoriteModelID         string
+	lastRuntimeFavoriteViewID          string
 	lastRuntimeOrderByColumn           string
 	lastRuntimeOrderDirection          string
 	exportRows                         [][]string
@@ -50,6 +55,7 @@ func newMemoryRepository() *memoryRepository {
 		runtimeRelations:    map[string]string{},
 		runtimeQueryRows:    map[string][]runtimeRelationQueryRow{},
 		runtimeSuggestions:  map[string]map[string][]runtimeRelationSuggestion{},
+		runtimeFavorites:    map[string]RuntimeFavoriteRecord{},
 		runtimeSavedFilters: map[string][]collectiontable.SavedFilterSet{},
 	}
 }
@@ -177,6 +183,73 @@ func (r *memoryRepository) LoadRuntimeSuggestions(
 	out := make([]runtimeRelationSuggestion, 0, len(items))
 	out = append(out, items...)
 	return out, nil
+}
+
+func (r *memoryRepository) GetRuntimeFavoriteState(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+	surfaceID string,
+) (bool, error) {
+	r.lastRuntimeFavoritePrincipal = principalID
+	r.lastRuntimeFavoriteSurface = surfaceID
+	_, ok := r.runtimeFavorites[surfaceID]
+	return ok, nil
+}
+
+func (r *memoryRepository) ToggleRuntimeFavorite(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+	surfaceID string,
+	modelID string,
+	viewID string,
+) (bool, error) {
+	r.lastRuntimeFavoritePrincipal = principalID
+	r.lastRuntimeFavoriteSurface = surfaceID
+	r.lastRuntimeFavoriteModelID = modelID
+	r.lastRuntimeFavoriteViewID = viewID
+	if _, ok := r.runtimeFavorites[surfaceID]; ok {
+		delete(r.runtimeFavorites, surfaceID)
+		return false, nil
+	}
+
+	modelTitle := modelID
+	if record := r.models[modelID]; record != nil && strings.TrimSpace(record.DisplayName) != "" {
+		modelTitle = strings.TrimSpace(record.DisplayName)
+	}
+	viewTitle := viewID
+	if modelViews := r.views[modelID]; modelViews != nil {
+		if record := modelViews[viewID]; record != nil && strings.TrimSpace(record.DisplayName) != "" {
+			viewTitle = strings.TrimSpace(record.DisplayName)
+		}
+	}
+
+	r.runtimeFavorites[surfaceID] = RuntimeFavoriteRecord{
+		ID:         "favorite-1",
+		ModelID:    modelID,
+		ModelTitle: modelTitle,
+		SurfaceID:  surfaceID,
+		ViewID:     viewID,
+		ViewTitle:  viewTitle,
+	}
+	return true, nil
+}
+
+func (r *memoryRepository) ListRuntimeFavorites(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+) ([]RuntimeFavoriteRecord, error) {
+	r.lastRuntimeFavoritePrincipal = principalID
+	items := make([]RuntimeFavoriteRecord, 0, len(r.runtimeFavorites))
+	for _, item := range r.runtimeFavorites {
+		items = append(items, item)
+	}
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].ID < items[j].ID
+	})
+	return append([]RuntimeFavoriteRecord(nil), items...), nil
 }
 
 func (r *memoryRepository) ListRuntimeSavedFilters(

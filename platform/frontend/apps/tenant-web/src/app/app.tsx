@@ -407,7 +407,7 @@ export function App({
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId/view/:docGuid" />
               <Route
                 element={<FormsRuntimeListPage entryContext="preview" />}
-                path="app/platform-studio/forms/models/:modelId/views/:viewId"
+                path="app/platform-studio/forms/:modelId/views/:viewId"
               />
               {renderPlatformStudioRoutes()}
               <Route element={<PublishedAppRoutePage />} path="app/:routeKey/*" />

@@ -57,7 +57,7 @@ Accepted real runtime route:
 
 Accepted Platform Studio preview route:
 
-- `/app/platform-studio/forms/models/:modelId/views/:viewId`
+- `/app/platform-studio/forms/:modelId/views/:viewId`
 
 Meaning:
 
@@ -75,7 +75,7 @@ Accepted rule:
 That means:
 
 - requests serving `/app/forms/:modelId/views/:viewId` use runtime/view grants
-- requests serving `/app/platform-studio/forms/models/:modelId/views/:viewId` use Platform Studio access rules
+- requests serving `/app/platform-studio/forms/:modelId/views/:viewId` use Platform Studio access rules
 
 Important implementation rule:
 
@@ -143,7 +143,7 @@ Implemented direction:
 That means:
 
 - Form Builder preview should open:
-  - `/app/platform-studio/forms/models/:modelId/views/:viewId`
+  - `/app/platform-studio/forms/:modelId/views/:viewId`
 - Navigation Builder and favorites should continue to open:
   - `/app/forms/:modelId/views/:viewId`
 
@@ -157,7 +157,7 @@ Accepted preview API direction:
 - runtime API:
   - `/app/forms/:modelId/views/:viewId/*`
 - Platform Studio preview API:
-  - `/app/platform-studio/forms/models/:modelId/views/:viewId/runtime/*`
+  - `/app/platform-studio/forms/:modelId/views/:viewId/runtime/*`
 
 This API split is the preferred way to enforce the two future guards without adding a `source` flag to request payloads.
 
@@ -202,7 +202,7 @@ Accepted:
 - runtime route:
   - `/app/forms/:modelId/views/:viewId`
 - Platform Studio preview route:
-  - `/app/platform-studio/forms/models/:modelId/views/:viewId`
+  - `/app/platform-studio/forms/:modelId/views/:viewId`
 - backend enforcement:
   - route namespace determines access context
 - Navigation Builder:

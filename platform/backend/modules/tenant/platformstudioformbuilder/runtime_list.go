@@ -50,6 +50,10 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 	if err != nil {
 		return nil, err
 	}
+	isFavorite, err := s.repo.GetRuntimeFavoriteState(ctx, tenant, claims.UserID, runtimeContext.SurfaceID)
+	if err != nil {
+		return nil, err
+	}
 	savedFilterSets, err := s.repo.ListRuntimeSavedFilters(ctx, tenant, claims.UserID, runtimeContext.SurfaceID)
 	if err != nil {
 		return nil, err
@@ -60,7 +64,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 			Create:    collectiontable.VisibilityAction{Visible: false},
 			Reload:    collectiontable.VisibilityAction{Visible: true},
 			ExportXLS: collectiontable.VisibilityAction{Visible: false},
-			Favorite:  collectiontable.FavoriteAction{Visible: false, IsFavorite: false},
+			Favorite:  collectiontable.FavoriteAction{Visible: true, IsFavorite: isFavorite},
 		},
 		BulkActions: []collectiontable.BulkActionDefinition{},
 		Columns:     runtimeContext.ColumnDefinitions,

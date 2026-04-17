@@ -95,6 +95,38 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		return info, nil
 	}, srv.logger)
 
+	toggleRuntimeViewFavoriteHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListFavoriteToggleResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.ToggleRuntimeViewFavorite(ctx, r, struct{}{})
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_FAVORITE_TOGGLE",
+				http.StatusInternalServerError,
+				"cannot toggle form builder runtime favorite",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	listRuntimeFavoritesHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeFavoritesResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.ListRuntimeFavorites(ctx, r, struct{}{})
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_FAVORITES_LIST",
+				http.StatusInternalServerError,
+				"cannot list form builder runtime favorites",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
 	queryRuntimeViewListHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formbuilder.RuntimeViewListQueryRequest) (*formbuilder.RuntimeViewListQueryResponse, error) {
 		info, err := srv.platformStudioFormBuilderHTTP.QueryRuntimeViewList(ctx, r, req)
 		if err != nil {
@@ -221,6 +253,13 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	// request payload source flag. Until that ACL model exists, keep runtime routes on the
 	// current tenant-auth baseline; do not invent a temporary grants policy.
 	register(
+		"FORM_BUILDER_RUNTIME_FAVORITES_LIST",
+		http.MethodGet,
+		"/app/me/favorites",
+		listRuntimeFavoritesHandler,
+	)
+
+	register(
 		"FORM_BUILDER_RUNTIME_LIST_META",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/meta",
@@ -230,8 +269,22 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_META",
 		http.MethodGet,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/meta",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/meta",
 		loadRuntimeViewListMetaHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_FAVORITE_TOGGLE",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/favorite/toggle",
+		toggleRuntimeViewFavoriteHandler,
+	)
+
+	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_FAVORITE_TOGGLE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/favorite/toggle",
+		toggleRuntimeViewFavoriteHandler,
 	)
 
 	register(
@@ -244,7 +297,7 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_QUERY",
 		http.MethodPost,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/query",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/query",
 		queryRuntimeViewListHandler,
 	)
 
@@ -258,7 +311,7 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SEARCH_SUGGESTIONS",
 		http.MethodGet,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/search-suggestions",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/search-suggestions",
 		loadRuntimeViewListSearchSuggestionsHandler,
 	)
 
@@ -272,7 +325,7 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SAVED_FILTER_CREATE",
 		http.MethodPost,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/saved-filters",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/saved-filters",
 		createRuntimeViewListSavedFilterHandler,
 	)
 
@@ -293,7 +346,7 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SAVED_FILTER_DELETE",
 		http.MethodDelete,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/saved-filters/{savedFilterId}",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/saved-filters/{savedFilterId}",
 		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListDeleteSavedFilterResponse, error) {
 			info, err := srv.platformStudioFormBuilderHTTP.DeleteRuntimeViewListSavedFilter(ctx, r, struct{}{})
 			if err != nil {
@@ -314,12 +367,12 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register(
 		"FORM_BUILDER_PREVIEW_RUNTIME_RECORD_DETAIL",
 		http.MethodGet,
-		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/records/{docGuid}",
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}",
 		loadRuntimeViewRecordHandler,
 	)
 
 	// TODO(form-builder-preview-access-v1): enforce Platform Studio access on the mirrored preview
-	// runtime endpoints under `/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/*`.
+	// runtime endpoints under `/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/*`.
 	// Keep that guard attached to the preview API namespace. Do not multiplex preview vs runtime
 	// access through an extra request-source parameter; the API route namespace is the contract.
 	// If a future helper seam such as `authorizeRuntimeViewAccess(...)` is added before the full

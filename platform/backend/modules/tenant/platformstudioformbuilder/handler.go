@@ -79,6 +79,26 @@ func (h *Handler) LoadRuntimeViewListMeta(ctx context.Context, r *http.Request, 
 	return out, nil
 }
 
+func (h *Handler) ToggleRuntimeViewFavorite(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewListFavoriteToggleResponse, error) {
+	out, err := h.service.ToggleRuntimeViewFavorite(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) ListRuntimeFavorites(ctx context.Context, _ *http.Request, _ struct{}) (*RuntimeFavoritesResponse, error) {
+	out, err := h.service.ListRuntimeFavorites(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) QueryRuntimeViewList(ctx context.Context, r *http.Request, req RuntimeViewListQueryRequest) (*RuntimeViewListQueryResponse, error) {
 	out, err := h.service.QueryRuntimeViewList(
 		ctx,

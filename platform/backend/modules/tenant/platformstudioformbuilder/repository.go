@@ -44,6 +44,25 @@ type Repository interface {
 		whereArgs []any,
 		limit int,
 	) ([]runtimeRelationSuggestion, error)
+	GetRuntimeFavoriteState(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+		surfaceID string,
+	) (bool, error)
+	ToggleRuntimeFavorite(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+		surfaceID string,
+		modelID string,
+		viewID string,
+	) (bool, error)
+	ListRuntimeFavorites(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+	) ([]RuntimeFavoriteRecord, error)
 	ListRuntimeSavedFilters(
 		ctx context.Context,
 		tenant requestctx.TenantInfo,

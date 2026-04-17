@@ -47,6 +47,20 @@ type TenantProfile = {
   };
 };
 
+type TenantFavoriteShortcut = {
+  id: string;
+  model_id: string;
+  model_title: string;
+  route_path: string;
+  target_type: string;
+  title: string;
+  view_id: string;
+};
+
+type TenantFavoritesClient = {
+  getFavorites: (accessToken: string) => Promise<TenantFavoriteShortcut[]>;
+};
+
 type AdminProfile = {
   user: {
     email?: string;
@@ -944,6 +958,36 @@ function normalizeTenantProfile(payload: unknown): TenantProfile {
   };
 }
 
+function normalizeTenantFavoriteShortcut(payload: unknown): TenantFavoriteShortcut {
+  if (!isRecord(payload)) {
+    throw new ApiClientError("Invalid tenant favorite payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    id: assertString(payload.id, "favorites[].id"),
+    model_id: assertString(payload.modelId, "favorites[].modelId"),
+    model_title: assertString(payload.modelTitle, "favorites[].modelTitle"),
+    route_path: assertString(payload.routePath, "favorites[].routePath"),
+    target_type: assertString(payload.targetType, "favorites[].targetType"),
+    title: assertString(payload.title, "favorites[].title"),
+    view_id: assertString(payload.viewId, "favorites[].viewId"),
+  };
+}
+
+function normalizeTenantFavorites(payload: unknown): TenantFavoriteShortcut[] {
+  if (!isRecord(payload) || !Array.isArray(payload.items)) {
+    throw new ApiClientError("Invalid tenant favorites payload received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return payload.items.map((item) => normalizeTenantFavoriteShortcut(item));
+}
+
 function normalizeAdminProfile(payload: unknown): AdminProfile {
   if (!isRecord(payload) || !isRecord(payload.user)) {
     throw new ApiClientError("Invalid admin profile payload received from API.", {
@@ -1200,6 +1244,20 @@ function createTenantProfileClient(baseUrl: string): TenantProfileClient {
   };
 }
 
+function createTenantFavoritesClient(baseUrl: string): TenantFavoritesClient {
+  return {
+    async getFavorites(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/me/favorites", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeTenantFavorites(envelope.data);
+    },
+  };
+}
+
 function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuilderAuthoringClient {
   return {
     async copyView(accessToken: string, modelId: string, viewId: string, input?: FormBuilderCopyViewInput) {
@@ -1449,6 +1507,7 @@ export {
   createAdminProfileClient,
   createApiClient,
   createAuthClient,
+  createTenantFavoritesClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
   getApiClientRequestActivitySnapshot,
@@ -1495,6 +1554,8 @@ export type {
   FormBuilderValidationSummary,
   FormBuilderViewDetail,
   FormBuilderViewSummary,
+  TenantFavoriteShortcut,
+  TenantFavoritesClient,
   TenantProfile,
   TenantFormBuilderAuthoringClient,
   TenantFormBuilderDraftClient,

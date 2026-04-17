@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   getAppBuildMetadata,
@@ -6,8 +6,11 @@ import {
   WorkspaceShell,
 } from "@platform/app-shell";
 import {
+  createTenantFavoritesClient,
   getApiClientRequestActivitySnapshot,
+  isUnauthorizedApiError,
   subscribeApiClientRequestActivity,
+  type TenantFavoriteShortcut,
 } from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
@@ -47,12 +50,14 @@ import {
   getTenantShellHeaderMeta,
   getTenantShellHeaderTitle,
 } from "../shared/navigation";
+import { TenantFavoritesRefreshProvider } from "../shared/tenant-favorites-refresh";
 import { TenantSidebarNavigation } from "../shared/tenant-sidebar-navigation";
 import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
 } from "../widgets/tenant-rail-utility-sheet/tenant-rail-utility-sheet";
 import { TenantBrandImage } from "./tenant-brand-image";
+import { useTenantRuntimeConfig } from "./tenant-runtime-config-context";
 import { TenantWorkspaceUserProvider } from "./tenant-workspace-user-context";
 import type { TenantWorkspaceUserSession } from "./tenant-workspace-user-session";
 import "./app.css";
@@ -107,11 +112,17 @@ export function PrivateApp({
   userSession: TenantWorkspaceUserSession;
 }) {
   const { t } = useTranslation();
-  const { signOut } = useAuth();
+  const runtimeConfig = useTenantRuntimeConfig();
+  const favoritesClient = useMemo(
+    () => createTenantFavoritesClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
+  const { getAccessToken, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const shellBrand = tenantName?.trim() ? tenantName : t("tenant.shell.brand");
   const [, setPlatformStudioHeaderVersion] = useState(0);
+  const [favoriteShortcuts, setFavoriteShortcuts] = useState<TenantFavoriteShortcut[]>([]);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -190,6 +201,10 @@ export function PrivateApp({
   }, []);
 
   useEffect(() => {
+    void refreshFavoriteShortcuts();
+  }, [favoritesClient, getAccessToken, signOut]);
+
+  useEffect(() => {
     function syncTransportActivity() {
       const snapshot = getApiClientRequestActivitySnapshot();
 
@@ -227,6 +242,22 @@ export function PrivateApp({
     }
 
     navigate(nextPath);
+  }
+
+  async function refreshFavoriteShortcuts() {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      const nextFavorites = await favoritesClient.getFavorites(accessToken);
+      setFavoriteShortcuts(nextFavorites);
+    } catch (favoritesError) {
+      if (isUnauthorizedApiError(favoritesError)) {
+        void signOut();
+      }
+    }
   }
 
   function openDashboard(sectionId?: string) {
@@ -271,6 +302,7 @@ export function PrivateApp({
 
   return (
     <TenantWorkspaceUserProvider value={userSession}>
+      <TenantFavoritesRefreshProvider onFavoritesRefresh={refreshFavoriteShortcuts}>
       <>
         <TopLoader controller={tenantShellTopLoaderController} />
         <WorkspaceShell
@@ -404,6 +436,10 @@ export function PrivateApp({
             onSelect: () => setUtilityPanel("tasks"),
           },
           {
+            badge:
+              favoriteShortcuts.length > 0
+                ? String(favoriteShortcuts.length)
+                : undefined,
             icon: <StarIcon />,
             label: t("tenant.shell.menu.favorites"),
             onSelect: () => setUtilityPanel("favorites"),
@@ -475,6 +511,10 @@ export function PrivateApp({
         </WorkspaceShell>
 
         <TenantRailUtilitySheet
+          favorites={favoriteShortcuts}
+          onNavigate={(path) => {
+            void guardedNavigate(path);
+          }}
           onOpenChange={(open) => {
             if (!open) {
               setUtilityPanel(null);
@@ -484,6 +524,7 @@ export function PrivateApp({
           panel={utilityPanel}
         />
       </>
+      </TenantFavoritesRefreshProvider>
     </TenantWorkspaceUserProvider>
   );
 }

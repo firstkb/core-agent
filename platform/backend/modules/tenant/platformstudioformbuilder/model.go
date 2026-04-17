@@ -151,9 +151,24 @@ type RuntimeViewListMetaResponse = collectiontable.MetaResponse
 type RuntimeViewListQueryRequest = collectiontable.QueryRequest
 type RuntimeViewListQueryResponse = collectiontable.QueryResponse
 type RuntimeViewListSearchSuggestionsResponse = collectiontable.SearchSuggestionsResponse
+type RuntimeViewListFavoriteToggleResponse = collectiontable.FavoriteToggleResponse
 type RuntimeViewListSavedFilterSet = collectiontable.SavedFilterSet
 type RuntimeViewListCreateSavedFilterInput = collectiontable.CreateSavedFilterInput
 type RuntimeViewListDeleteSavedFilterResponse = collectiontable.MutationResult
+
+type RuntimeFavoriteShortcut struct {
+	ID         string `json:"id"`
+	ModelID    string `json:"modelId"`
+	ModelTitle string `json:"modelTitle"`
+	RoutePath  string `json:"routePath"`
+	TargetType string `json:"targetType"`
+	Title      string `json:"title"`
+	ViewID     string `json:"viewId"`
+}
+
+type RuntimeFavoritesResponse struct {
+	Items []RuntimeFavoriteShortcut `json:"items"`
+}
 
 type RuntimeViewRecordField struct {
 	ID    string `json:"id"`
@@ -256,4 +271,13 @@ type ViewRecord struct {
 	LastAlignedModelStructureVersion int64
 	DefinitionJSON                   json.RawMessage
 	PublishedArtifactsJSON           json.RawMessage
+}
+
+type RuntimeFavoriteRecord struct {
+	ID         string
+	ModelID    string
+	ModelTitle string
+	SurfaceID  string
+	ViewID     string
+	ViewTitle  string
 }

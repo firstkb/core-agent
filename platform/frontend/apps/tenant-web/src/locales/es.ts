@@ -819,8 +819,12 @@ export const tenantSpanishMessages = {
         notifications: "Notificaciones",
         openDashboard: "Abrir panel",
         operatorNotes: "{{count}} notas de operador siguen fijadas",
-        reviewFavorites: "Revisar maquetas guardadas",
+        reviewFavorites: "Revisar favoritos",
         tasksCenter: "Centro de tareas",
+      },
+      favoritesPanel: {
+        emptyDescription: "Marca una vista runtime como favorita desde la tabla y aparecera aqui.",
+        emptyTitle: "Aun no hay favoritos",
       },
       searchPanel: {
         description: "La busqueda del espacio y la paleta de comandos quedan separadas de las utilidades de Help Center.",

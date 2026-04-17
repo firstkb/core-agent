@@ -1,10 +1,12 @@
 import {
+  Badge,
   Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
+  DataTableIcon,
   Dialog,
   DialogBody,
   DialogContent,
@@ -13,12 +15,15 @@ import {
   DialogTitle,
 } from "@platform/ui-kit";
 import { useTranslation } from "@platform/i18n";
+import type { TenantFavoriteShortcut } from "@platform/api-client";
 
 import { tenantDashboardSectionIds } from "../../pages/dashboard/page";
 
 type TenantRailUtilityPanel = "favorites" | "help" | "search" | "tasks";
 
 type TenantRailUtilitySheetProps = {
+  favorites: TenantFavoriteShortcut[];
+  onNavigate: (path: string) => void;
   onOpenChange: (open: boolean) => void;
   onScrollToSection: (sectionId?: string) => void;
   panel: TenantRailUtilityPanel | null;
@@ -32,7 +37,7 @@ const panelCopy: Record<
   }
 > = {
   favorites: {
-    description: "Pinned shortcuts stay centered on the dashboard mock while tenant modules are still represented by loading-state surfaces.",
+    description: "",
     title: "Favorites",
   },
   help: {
@@ -50,6 +55,8 @@ const panelCopy: Record<
 };
 
 export function TenantRailUtilitySheet({
+  favorites,
+  onNavigate,
   onOpenChange,
   onScrollToSection,
   panel,
@@ -65,19 +72,30 @@ export function TenantRailUtilitySheet({
     onOpenChange(false);
   }
 
+  function handleRoute(path: string) {
+    onNavigate(path);
+    onOpenChange(false);
+  }
+
+  const isFavoritesPanel = panel === "favorites";
+
   return (
     <Dialog onOpenChange={onOpenChange} open={panel !== null}>
-      <DialogContent className="tenant-web__utility-sheet">
+      <DialogContent className={`tenant-web__utility-sheet${isFavoritesPanel ? " tenant-web__utility-sheet--favorites" : ""}`}>
         <DialogHeader>
           <div>
             <DialogTitle>{panel === "search" ? t("tenant.shell.searchPanel.title") : panelCopy[panel].title}</DialogTitle>
-            <DialogDescription>
-              {panel === "search" ? t("tenant.shell.searchPanel.description") : panelCopy[panel].description}
-            </DialogDescription>
+            {(panel === "search"
+              ? t("tenant.shell.searchPanel.description")
+              : panelCopy[panel].description) ? (
+              <DialogDescription>
+                {panel === "search" ? t("tenant.shell.searchPanel.description") : panelCopy[panel].description}
+              </DialogDescription>
+            ) : null}
           </div>
         </DialogHeader>
 
-        <DialogBody className="tenant-web__utility-sheet-body">
+        <DialogBody className={`tenant-web__utility-sheet-body${isFavoritesPanel ? " tenant-web__utility-sheet-body--favorites" : ""}`}>
           {panel === "tasks" ? (
             <>
               <Card>
@@ -120,41 +138,46 @@ export function TenantRailUtilitySheet({
 
           {panel === "favorites" ? (
             <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Dashboard surface</CardTitle>
-                  <CardDescription>The single retained route now acts as the primary tenant shell review destination.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect()} variant="outline">
-                    Open dashboard
-                  </Button>
-                </CardContent>
-              </Card>
+              {favorites.length ? (
+                <div className="tenant-web__favorites-grid" role="list">
+                  {favorites.map((favorite) => (
+                    <button
+                      className="tenant-web__favorite-tile"
+                      key={favorite.id}
+                      onClick={() => handleRoute(favorite.route_path)}
+                      role="listitem"
+                      type="button"
+                    >
+                      <div className="tenant-web__favorite-tile-head">
+                        <div className="tenant-web__favorite-tile-badges">
+                          <Badge size="sm" variant="brand">{favorite.model_title}</Badge>
+                        </div>
+                      </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Activity stream</CardTitle>
-                  <CardDescription>Use the denser activity placeholder to verify table rhythm and shell spacing on desktop.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.activity)} variant="outline">
-                    Review activity stream
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sync queue canvas</CardTitle>
-                  <CardDescription>Return to the lower queue block when you want to review longer-scroll placeholder composition.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.queue)} variant="outline">
-                    Review sync queue
-                  </Button>
-                </CardContent>
-              </Card>
+                      <div className="tenant-web__favorite-tile-body">
+                        <span aria-hidden="true" className="tenant-web__favorite-tile-icon">
+                          <DataTableIcon />
+                        </span>
+                        <div className="tenant-web__favorite-tile-copy">
+                          <h3 className="tenant-web__favorite-tile-title">{favorite.title}</h3>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("tenant.shell.favoritesPanel.emptyTitle")}</CardTitle>
+                    <CardDescription>{t("tenant.shell.favoritesPanel.emptyDescription")}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button onClick={() => handleSelect()} variant="outline">
+                      {t("tenant.shell.searchPanel.primaryAction")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </>
           ) : null}
 

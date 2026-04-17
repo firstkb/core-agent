@@ -11,6 +11,7 @@ import type {
   CollectionTableQueryRequest,
   CollectionTableQueryResponse,
   CollectionTableRowData,
+  CollectionTableFavoriteToggleResult,
   CollectionTableSavedFilterSet,
   CollectionTableSavedFilterSetCreateInput,
   CollectionTableSearchSuggestionGroup,
@@ -34,6 +35,7 @@ type FormRuntimeCollectionTableSessionClient = {
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
+  toggleFavorite: (accessToken: string) => Promise<CollectionTableFavoriteToggleResult>;
   query: (
     accessToken: string,
     request: CollectionTableQueryRequest,
@@ -207,7 +209,7 @@ export function createFormRuntimeCollectionTableClient(options: {
   viewId: string;
 }): FormRuntimeCollectionTableSessionClient {
   const pathPrefix = options.routeContext === "preview"
-    ? `/app/platform-studio/forms/models/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}/runtime`
+    ? `/app/platform-studio/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}/runtime`
     : `/app/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}`;
 
   return {
@@ -265,6 +267,16 @@ export function createFormRuntimeCollectionTableClient(options: {
 
       return normalizeSearchSuggestionsResponse(response);
     },
+    async toggleFavorite(accessToken) {
+      return requestTenantCollectionTable<CollectionTableFavoriteToggleResult>(
+        options.baseUrl,
+        `${pathPrefix}/favorite/toggle`,
+        {
+          accessToken,
+          method: "POST",
+        },
+      );
+    },
     async query(accessToken, request) {
       return requestTenantCollectionTable<CollectionTableQueryResponse>(
         options.baseUrl,
@@ -314,6 +326,8 @@ export function createFormRuntimeCollectionTableAdapter(options: {
     loadMeta: async () => runWithTenantSession((accessToken) => options.client.loadMeta(accessToken)),
     loadSearchSuggestions: async () =>
       runWithTenantSession((accessToken) => options.client.loadSearchSuggestions(accessToken)),
+    toggleFavorite: async () =>
+      runWithTenantSession((accessToken) => options.client.toggleFavorite(accessToken)),
     query: async (request) =>
       runWithTenantSession((accessToken) => options.client.query(accessToken, request)),
   };

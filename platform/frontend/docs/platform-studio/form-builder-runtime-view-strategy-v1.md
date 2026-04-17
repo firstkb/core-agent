@@ -90,7 +90,7 @@ Recommended route shape:
 
 Accepted Platform Studio preview route:
 
-- `/app/platform-studio/forms/models/:modelId/views/:viewId`
+- `/app/platform-studio/forms/:modelId/views/:viewId`
 
 Recommended child routes:
 

@@ -819,8 +819,12 @@ export const tenantEnglishMessages = {
         notifications: "Notifications",
         openDashboard: "Open dashboard",
         operatorNotes: "{{count}} operator notes still pinned",
-        reviewFavorites: "Review saved mockups",
+        reviewFavorites: "Review favorites",
         tasksCenter: "Tasks center",
+      },
+      favoritesPanel: {
+        emptyDescription: "Favorite a runtime view from the table toolbar and it will appear here.",
+        emptyTitle: "No favorites yet",
       },
       searchPanel: {
         description: "Workspace search and command palette wiring stays separate from Help Center utilities.",

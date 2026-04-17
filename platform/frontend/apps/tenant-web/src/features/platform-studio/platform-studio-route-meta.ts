@@ -17,7 +17,7 @@ const platformStudioRoutePatterns = {
   legacyObjectScreen: "/builder/forms/:objectId/screens/:screenId",
   legacyView: "/builder/forms/:modelId/screens/:viewId",
   model: "/builder/forms/:modelId",
-  previewRuntimeView: "/app/platform-studio/forms/models/:modelId/views/:viewId",
+  previewRuntimeView: "/app/platform-studio/forms/:modelId/views/:viewId",
   root: "/builder",
   view: "/builder/forms/:modelId/views/:viewId",
 } as const;
@@ -28,7 +28,7 @@ export const platformStudioPaths = {
     return `${platformStudioPaths.forms}/${encodeURIComponent(modelId)}`;
   },
   previewRuntimeView(modelId: string, viewId: string) {
-    return `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`;
+    return `/app/platform-studio/forms/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`;
   },
   root: platformStudioRoutePatterns.root,
   view(modelId: string, viewId: string) {

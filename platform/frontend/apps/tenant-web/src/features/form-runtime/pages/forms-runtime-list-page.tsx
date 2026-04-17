@@ -21,6 +21,7 @@ import {
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { useTenantRuntimeConfig } from "../../../app/tenant-runtime-config-context";
+import { useTenantFavoritesRefresh } from "../../../shared/tenant-favorites-refresh";
 import {
   createFormRuntimeCollectionTableAdapter,
   createFormRuntimeCollectionTableClient,
@@ -184,6 +185,7 @@ export function FormsRuntimeListPage({
   const routeDocGuid = params.docGuid?.trim() ?? "";
   const navigate = useNavigate();
   const runtimeConfig = useTenantRuntimeConfig();
+  const onFavoritesRefresh = useTenantFavoritesRefresh();
   const { getAccessToken, signOut } = useAuth();
   const [activeDocGuid, setActiveDocGuid] = useState(routeDocGuid);
   const [record, setRecord] = useState<FormRuntimeRecordResponse | null>(null);
@@ -279,11 +281,13 @@ export function FormsRuntimeListPage({
       <CollectionTablePage
         adapter={adapter}
         isIgnorableError={isUnauthorizedApiError}
+        key={`${entryContext}:${modelId}:${viewId}`}
         onFrontendRowAction={(action, row) => {
           if (action.id === "view") {
             setActiveDocGuid(row.id);
           }
         }}
+        onFavoriteToggleSuccess={onFavoritesRefresh}
         tableId={`form-runtime:${modelId}:${viewId}`}
       />
       <Dialog

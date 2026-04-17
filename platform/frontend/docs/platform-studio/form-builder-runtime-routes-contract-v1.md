@@ -43,7 +43,7 @@ Important rule:
 
 Accepted Platform Studio preview base:
 
-- `/app/platform-studio/forms/models/:modelId/views/:viewId`
+- `/app/platform-studio/forms/:modelId/views/:viewId`
 
 Important preview rule:
 
@@ -220,7 +220,7 @@ Form Builder preview actions such as `View data` should resolve to the same runt
 Accepted rule:
 
 - preview entry from Form Builder opens:
-  - `/app/platform-studio/forms/models/:modelId/views/:viewId`
+  - `/app/platform-studio/forms/:modelId/views/:viewId`
 
 Optional later actions may open:
 
@@ -274,4 +274,4 @@ Accepted Navigation Builder behavior:
 - `form_builder_view` resolves to:
   - `/app/forms/:modelId/views/:viewId`
 - Platform Studio preview resolves separately to:
-  - `/app/platform-studio/forms/models/:modelId/views/:viewId`
+  - `/app/platform-studio/forms/:modelId/views/:viewId`

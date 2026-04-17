@@ -73,7 +73,7 @@ export function getFormsAuthoringActor(
   const level = typeof session?.level === "number" && Number.isFinite(session.level)
     ? Math.trunc(session.level)
     : 0;
-  const isRoot = level === 100 || Boolean(session?.isRoot);
+  const isRoot = level === 100;
   const userRole = session?.role?.trim() || "";
 
   if (isRoot) {
@@ -103,8 +103,9 @@ export function getFormsAuthoringAccess(
   const isRootActor = actor.isRoot;
   const isReadonlyUser = actor.role === "readonly";
   const viewLockedForActor = Boolean(view?.isViewLocked) && !isRootActor;
-  const structureLockedForActor = Boolean(model?.isStructureLocked) && !isRootActor;
-  const canManageStructure = !isReadonlyUser && !viewLockedForActor && !structureLockedForActor;
+  const structureReadOnlyForActor = isStaticStructureReadOnlyModel(model)
+    || (Boolean(model?.isStructureLocked) && !isRootActor);
+  const canManageStructure = !isReadonlyUser && !viewLockedForActor && !structureReadOnlyForActor;
   const canEditViews = !isReadonlyUser && !viewLockedForActor;
 
   let summaryKey = "tenant.platformStudio.forms.permissionSummary.manageAll";
@@ -116,7 +117,7 @@ export function getFormsAuthoringAccess(
   } else if (viewLockedForActor) {
     summaryKey = "tenant.platformStudio.forms.permissionSummary.viewLocked";
     summaryVariant = "warning";
-  } else if (structureLockedForActor) {
+  } else if (structureReadOnlyForActor) {
     summaryKey = "tenant.platformStudio.forms.canEditViewsOnly";
     summaryVariant = "info";
   }
@@ -125,7 +126,9 @@ export function getFormsAuthoringAccess(
   if (!canManageStructure) {
     structureRestrictionKey = isReadonlyUser
       ? "tenant.platformStudio.forms.permission.readonly"
-      : structureLockedForActor
+      : isStaticStructureReadOnlyModel(model)
+        ? "tenant.platformStudio.forms.permission.staticModelReadOnly"
+        : (Boolean(model?.isStructureLocked) && !isRootActor)
         ? "tenant.platformStudio.forms.permission.lockedModelOwnerOnly"
         : "tenant.platformStudio.forms.permission.ownerOnlyStructure";
   }
@@ -153,4 +156,13 @@ export function getFormsAuthoringAccess(
     summaryVariant,
     viewRestrictionKey,
   };
+}
+
+function isStaticStructureReadOnlyModel(model?: FormsPlaceholderModel | null) {
+  if (!model) {
+    return false;
+  }
+  return typeof model.sourceType === "string"
+    && model.sourceType.trim().length > 0
+    && model.sourceType !== "managed";
 }

@@ -70,7 +70,10 @@ func normalizeModelPayloadForStorage(payload map[string]any, existing *ModelReco
 	out["sourceType"] = chooseString(normalizeString(out["sourceType"]), existing.SourceType)
 	out["isStructureLocked"] = getBoolFallback(out, "isStructureLocked", "modelLocked", existing.IsStructureLocked)
 	out["modelLocked"] = out["isStructureLocked"]
-	out["canEditViewsOnly"] = out["isStructureLocked"].(bool)
+	out["canEditViewsOnly"] = effectiveCanEditViewsOnlyForSourceType(
+		normalizeString(out["sourceType"]),
+		out["isStructureLocked"].(bool),
+	)
 
 	dataSchema, err := normalizeDataSchemaPayload(source, existing, defaultView)
 	if err != nil {

@@ -142,6 +142,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_DELETE_UNSUPPORTED", http.StatusBadRequest, "delete is not supported for this model type")
 	case errors.Is(err, ErrExportUnsupported):
 		return apperr.New("FORM_BUILDER_EXPORT_UNSUPPORTED", http.StatusBadRequest, "export is not supported for this model type")
+	case errors.Is(err, ErrModelStructureReadOnly):
+		return apperr.New("FORM_BUILDER_MODEL_STRUCTURE_READ_ONLY", http.StatusForbidden, "model structure is read-only for this model type")
 	case errors.Is(err, ErrModelLocked):
 		return apperr.New("FORM_BUILDER_MODEL_LOCKED", http.StatusForbidden, "model is locked")
 	case errors.Is(err, ErrViewLocked):

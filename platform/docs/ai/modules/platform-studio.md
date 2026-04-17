@@ -18,6 +18,8 @@ Date: 2026-04-13
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
@@ -158,12 +160,15 @@ Current implemented backend-ready slice:
 - `users` static-model design now assumes three authored views: `Users` as the default full baseline, plus `Contacts` and `List of Accounts` as specialized secondary views
 - Atlas task prompt for the static-model rollout is now fixed in `form-builder-static-models-atlas-task-v1.md`; it must start with reference tables (`state`, `timezone`, `companytype`, `jobtype`) and `company` before `users`
 - static lookup fields now have an accepted naming policy in `form-builder-static-lookup-naming-policy-v1.md`; for static/external lookup-backed fields, `storageKey` stays logical (`user`, `company`, `state`) while the raw source FK column remains in `runtime.sourceColumnName` (`user_id`, `company_id`, `state_id`)
-- accepted static-model access restriction: only `root` may see static models or manage their views/schema; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but implement it only after the admin/root rights path is available in tenant app
+- accepted static-model access restriction: only `root` may see static models; static/external model schema is now treated as read-only even for `root`, while `root` may still manage static-model views; keep the capability split explicit as `canSeeStaticModels`, `canEditStaticModelViews`, and `canEditStaticModelSchema`, but `canEditStaticModelSchema` is currently enforced as false in tenant app/backend for static models
 - current accepted import-bundle planning contract now lives in `form-builder-import-bundle-contract-v1.md`; the current `Export model` JSON is sufficient as the source file for future cross-tenant import of `managed` models and their views, importer must normalize lifecycle/version fields and ignore source-tenant noise, and export now includes baseline `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy` sections while richer `external/static` portability detail remains a follow-up
 - current Form Builder model list behavior is now part of the active UX contract: the left panel supports local search by model title/display/key, static models render with a database icon, managed models render with the form icon, and static models keep a reduced action surface
 - current export policy is now explicit: `Export model` and `Export data` are supported only for `managed` models; static/external models do not expose those actions in tenant-web and backend rejects direct export calls for them
 - current `Export model` bundle is designed as the future source file for `Import model`; it exports model-owned `dataSchema + layoutBlueprint`, all view `uiSchema` payloads, and minimal `dependencies`, `importPolicy`, `exportMeta`, and `runtimePolicy`
 - current `Export data` policy is intentionally narrower and unresolved long-term: it exports from the real managed root table with CSV headers derived from field labels and a leading `Doc.id` column, but there is a planned follow-up decision to determine whether Form Builder should keep raw-table export, add a separate view-based human-readable export, or support both modes
+- current runtime-view strategy is now fixed in `form-builder-runtime-view-strategy-v1.md`; authored Form Builder `view` is the canonical runtime entrypoint, runtime delivery is per-view rather than per-model, builder preview and future sidebar/navigation must open the same `form_builder_view` target, and a separate model-only viewer is explicitly rejected
+- current runtime-view route direction is `/app/forms/:modelId/views/:viewId`; external record routes use `guid`, with create at `/new`, edit at `/edit/:docGuid`, and canonical record-read target at `/view/:docGuid`, while the final detail presentation may still be either a page or a route-driven modal
+- current runtime-routes contract is now fixed in `form-builder-runtime-routes-contract-v1.md`; Navigation Builder resolves `form_builder_view` to the list route only, record-specific paths remain runtime-internal transitions, and v1 query params are intentionally limited to `returnTo` plus `presentation=page|modal` on the read route
 - planned next import/export follow-ups are now explicit:
   - `Import model` from the managed export bundle
   - `Import data` for managed models

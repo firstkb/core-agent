@@ -4147,6 +4147,9 @@ export function FormsViewWorkspacePage() {
   const currentModel = modelDraft;
   const currentView = findFormsPlaceholderScreenById(currentModel.screens, resolvedView.id) ?? resolvedView;
   const isDefaultView = isDefaultFormsPlaceholderView(currentView);
+  const isStaticModel = typeof currentModel.sourceType === "string"
+    && currentModel.sourceType.trim().length > 0
+    && currentModel.sourceType !== "managed";
   const currentModelRouteId = getFormsPlaceholderModelRouteId(currentModel);
   const [pendingDefaultFilterFieldId, setPendingDefaultFilterFieldId] = useState(
     () => currentModel.fields[0]?.id ?? "",
@@ -4192,6 +4195,7 @@ export function FormsViewWorkspacePage() {
     [modelDraft, savedModelDraft],
   );
   const hasUnsavedChanges = hasUnsavedDocumentChanges || hasUnsavedModelChanges;
+  const isSaveButtonDisabled = !hasUnsavedChanges || savePulse || isSavingDraft || isDraftSyncing;
   const currentModelSchemaScopes = useMemo(
     () => deriveModelSchemaScopes(currentModel, document),
     [currentModel, document],
@@ -4353,7 +4357,7 @@ export function FormsViewWorkspacePage() {
   const selectedFieldIsTags = selectedField?.preset === "tags";
   const selectedFieldAutocompleteChecked = selectedField ? selectedField.autocomplete !== "off" : true;
   const canEditModelDefinition = access.canManageStructure && isDefaultView;
-  const canToggleModelLocks = currentActor.isRoot && isDefaultView;
+  const canToggleModelLocks = currentActor.isRoot && !isStaticModel;
   const canToggleViewLocks = currentActor.isRoot;
   const selectedFieldDefaultAutocompleteValue = useMemo(() => {
     if (!selectedField) {
@@ -5823,6 +5827,12 @@ export function FormsViewWorkspacePage() {
   const canDragItems = workspaceAccess.canMoveItems && currentNodes.length > 1;
   const selectedNodeLabel = selectedNode ? getFormBuilderDisplayLabel(selectedNode, currentModel) : "";
 
+  useEffect(() => {
+    if (hasUnsavedChanges && savePulse) {
+      setSavePulse(false);
+    }
+  }, [hasUnsavedChanges, savePulse]);
+
   function triggerSavePulse() {
     setSavePulse(true);
     window.setTimeout(() => setSavePulse(false), 1200);
@@ -6086,7 +6096,7 @@ export function FormsViewWorkspacePage() {
       <PlatformStudioTabs onFormsNavigate={() => requestNavigate(platformStudioPaths.forms)} />
 
       <div className="tenant-web__platform-studio-workspace-topline">
-        <div className="tenant-web__platform-studio-panel-actions">
+        <div className="tenant-web__platform-studio-panel-actions tenant-web__platform-studio-panel-actions--workspace-primary">
           <Button
             leadingIcon={<BackArrowIcon />}
             onClick={() => requestNavigate(platformStudioPaths.model(currentModelRouteId))}
@@ -6094,15 +6104,17 @@ export function FormsViewWorkspacePage() {
           >
             {t("tenant.platformStudio.forms.backToModel")}
           </Button>
+          {currentActor.isRoot ? (
+            <Button
+              onClick={() => setDebugOpen(true)}
+              size="sm"
+              variant="outline"
+            >
+              {t("tenant.platformStudio.forms.builder.debugAction")}
+            </Button>
+          ) : null}
           <Button
-            onClick={() => setDebugOpen(true)}
-            size="sm"
-            variant="outline"
-          >
-            {t("tenant.platformStudio.forms.builder.debugAction")}
-          </Button>
-          <Button
-            disabled={((!hasUnsavedChanges && !savePulse) || isSavingDraft || isDraftSyncing)}
+            disabled={isSaveButtonDisabled}
             onClick={() => {
               void handleSave();
             }}
@@ -7573,27 +7585,29 @@ export function FormsViewWorkspacePage() {
                               </div>
                               {currentActor.isRoot ? (
                                 <>
-                                  <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                    <div>
-                                      <p className="tenant-web__platform-studio-compact-row-label">
-                                        {t("tenant.platformStudio.forms.builder.locking.model")}
-                                      </p>
-                                      <p className="tenant-web__platform-studio-compact-row-summary">
-                                        {currentModel.isStructureLocked
-                                          ? t("tenant.platformStudio.forms.builder.locking.locked")
-                                          : t("tenant.platformStudio.forms.builder.locking.unlocked")}
-                                      </p>
+                                  {!isStaticModel ? (
+                                    <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
+                                      <div>
+                                        <p className="tenant-web__platform-studio-compact-row-label">
+                                          {t("tenant.platformStudio.forms.builder.locking.model")}
+                                        </p>
+                                        <p className="tenant-web__platform-studio-compact-row-summary">
+                                          {currentModel.isStructureLocked
+                                            ? t("tenant.platformStudio.forms.builder.locking.locked")
+                                            : t("tenant.platformStudio.forms.builder.locking.unlocked")}
+                                        </p>
+                                      </div>
+                                      <Switch
+                                        checked={currentModel.isStructureLocked}
+                                        disabled={!canToggleModelLocks}
+                                        onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
+                                          ...currentModelDraft,
+                                          isStructureLocked: checked,
+                                        }))}
+                                        size="sm"
+                                      />
                                     </div>
-                                    <Switch
-                                      checked={currentModel.isStructureLocked}
-                                      disabled={!canToggleModelLocks}
-                                      onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
-                                        ...currentModelDraft,
-                                        isStructureLocked: checked,
-                                      }))}
-                                      size="sm"
-                                    />
-                                  </div>
+                                  ) : null}
                                   <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
                                     <div>
                                       <p className="tenant-web__platform-studio-compact-row-label">

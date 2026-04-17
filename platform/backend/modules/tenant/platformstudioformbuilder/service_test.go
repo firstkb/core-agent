@@ -2031,6 +2031,25 @@ func TestGetModelAllowsStaticModelForRoot(t *testing.T) {
 	if out.SourceType != "external" {
 		t.Fatalf("model source type = %q, want %q", out.SourceType, "external")
 	}
+	if !out.CanEditViewsOnly {
+		t.Fatalf("static model should always expose canEditViewsOnly=true")
+	}
+}
+
+func TestLoadDraftForRootForcesViewsOnlyForStaticModel(t *testing.T) {
+	repo := newMemoryRepository()
+	staticModel, view := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	out, err := svc.LoadDraft(rootTestContext(), staticModel.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadDraft returned error: %v", err)
+	}
+
+	modelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	if !getBoolValue(modelPayload, "canEditViewsOnly", false) {
+		t.Fatalf("draft model should expose canEditViewsOnly=true for static model")
+	}
 }
 
 func TestExportModelDataUsesCanonicalLabelsAndRawTableColumns(t *testing.T) {
@@ -2423,6 +2442,68 @@ func TestDeleteModelRejectsStaticModelForRoot(t *testing.T) {
 	_, err := svc.DeleteModel(rootTestContext(), staticModel.ModelID)
 	if !errors.Is(err, ErrDeleteUnsupported) {
 		t.Fatalf("expected ErrDeleteUnsupported when root deletes static model, got %v", err)
+	}
+}
+
+func TestSaveDraftRejectsStaticModelSchemaChangesForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "state-directory")
+	repo.runtimeRelations[model.StorageKey] = "table"
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Renamed directory"
+	modelPayload["title"] = "Renamed directory"
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	_, err := svc.SaveDraft(rootTestContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if !errors.Is(err, ErrModelStructureReadOnly) {
+		t.Fatalf("expected ErrModelStructureReadOnly when root changes static model schema, got %v", err)
+	}
+}
+
+func TestSaveDraftAllowsStaticModelViewChangesForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "state-directory")
+	repo.runtimeRelations[model.StorageKey] = "table"
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Directory View"
+	viewPayload["title"] = "Directory View"
+
+	out, err := svc.SaveDraft(rootTestContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if !repo.models[model.ModelID].CanEditViewsOnly {
+		t.Fatalf("static model should remain views-only after view save")
+	}
+	if repo.views[model.ModelID][view.ViewID].DisplayName != "Directory View" {
+		t.Fatalf("view display name = %q, want Directory View", repo.views[model.ModelID][view.ViewID].DisplayName)
+	}
+	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	if !getBoolValue(savedModelPayload, "canEditViewsOnly", false) {
+		t.Fatalf("saved draft model should expose canEditViewsOnly=true for static model")
 	}
 }
 
@@ -4697,6 +4778,148 @@ func seedExternalModelAndDefaultView(t *testing.T, repo *memoryRepository, model
 
 	repo.models[model.ModelID] = model
 	repo.views[model.ModelID] = map[string]*ViewRecord{view.ViewID: view}
+	return model, view
+}
+
+func seedRootOnlyExternalModelAndDefaultView(t *testing.T, repo *memoryRepository, modelID string) (*ModelRecord, *ViewRecord) {
+	t.Helper()
+
+	storageKey := strings.ReplaceAll(modelID, "-", "_")
+	modelPayload := map[string]any{
+		"id":                    modelID,
+		"key":                   modelID,
+		"displayName":           modelID,
+		"title":                 modelID,
+		"name":                  modelID,
+		"description":           "",
+		"storageKey":            storageKey,
+		"sourceType":            "external",
+		"isStructureLocked":     false,
+		"canEditViewsOnly":      false,
+		"modelStructureVersion": 1,
+		"version":               1,
+		"dataSchema": map[string]any{
+			"modelId":    modelID,
+			"modelTitle": modelID,
+			"rootScope": map[string]any{
+				"schemaScopeId": "root",
+				"fields": []any{
+					map[string]any{
+						"id":         "state-name",
+						"kind":       "short_text",
+						"label":      "State Name",
+						"storageKey": "state_name",
+					},
+				},
+				"runtime": map[string]any{
+					"tableName":            storageKey,
+					"dataViewName":         "vw_" + storageKey,
+					"rtAlias":              storageKey,
+					"sourceIdColumn":       "id",
+					"tenantScoped":         false,
+					"sourceTenantIdColumn": "",
+				},
+			},
+			"subformScopes": []any{},
+		},
+		"layoutBlueprint": map[string]any{
+			"rootScope": map[string]any{
+				"schemaScopeId": "root",
+				"containers":    []any{},
+				"fieldPlacements": []any{
+					map[string]any{
+						"containerKey": "__scope_root__",
+						"fieldId":      "state-name",
+						"order":        0,
+					},
+				},
+				"unplacedFieldIds": []any{},
+			},
+			"subformScopes": []any{},
+		},
+	}
+	viewPayload := map[string]any{
+		"id":                               "view-default",
+		"key":                              "default",
+		"modelId":                          modelID,
+		"displayName":                      modelID,
+		"title":                            modelID,
+		"name":                             modelID,
+		"description":                      "",
+		"kind":                             "form",
+		"isDefault":                        true,
+		"isActive":                         true,
+		"isViewLocked":                     false,
+		"lastAlignedModelStructureVersion": 1,
+		"viewVersion":                      1,
+		"version":                          1,
+		"uiSchema": map[string]any{
+			"isDefault": true,
+			"isActive":  true,
+			"viewId":    "view-default",
+			"viewKey":   "default",
+			"rootScope": map[string]any{
+				"schemaScopeId": "root",
+				"nodes": []any{
+					map[string]any{
+						"id":      "field-state-name",
+						"type":    "field",
+						"fieldId": "state-name",
+						"order":   0,
+					},
+				},
+				"runtime": map[string]any{
+					"dataViewName": "vw_" + storageKey,
+					"gridViewName": "vg_" + storageKey + "__default",
+					"viewRtAlias":  "default",
+				},
+				"viewSettings": map[string]any{
+					"list": map[string]any{
+						"columns": []any{
+							map[string]any{
+								"id":      "column-state-name",
+								"fieldId": "state-name",
+								"order":   0,
+							},
+						},
+					},
+				},
+			},
+			"subformScopes": []any{},
+		},
+	}
+
+	model := &ModelRecord{
+		ModelID:          modelID,
+		ModelKey:         modelID,
+		StorageKey:       storageKey,
+		DisplayName:      modelID,
+		SourceType:       "external",
+		Status:           "draft",
+		Version:          1,
+		StructureVersion: 1,
+		DefinitionJSON:   mustJSON(t, modelPayload),
+	}
+	view := &ViewRecord{
+		ModelID:                          modelID,
+		ViewID:                           "view-default",
+		ViewKey:                          "default",
+		DisplayName:                      modelID,
+		ViewType:                         "form",
+		IsActive:                         true,
+		IsDefault:                        true,
+		Status:                           "draft",
+		Version:                          1,
+		LastAlignedModelStructureVersion: 1,
+		DefinitionJSON:                   mustJSON(t, viewPayload),
+		PublishedArtifactsJSON:           mustJSON(t, map[string]any{}),
+	}
+
+	repo.models[model.ModelID] = model
+	if repo.views[model.ModelID] == nil {
+		repo.views[model.ModelID] = map[string]*ViewRecord{}
+	}
+	repo.views[model.ModelID][view.ViewID] = view
 	return model, view
 }
 

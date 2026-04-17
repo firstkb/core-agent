@@ -161,6 +161,10 @@
   margin-left: auto;
 }
 
+.tenant-web__platform-studio-panel-actions--workspace-primary {
+  margin-left: 0;
+}
+
 .tenant-web__platform-studio-debug-surface {
   max-width: min(78rem, calc(100vw - 2rem));
 }

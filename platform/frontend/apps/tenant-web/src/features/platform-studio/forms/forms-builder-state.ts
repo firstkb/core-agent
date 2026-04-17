@@ -1293,8 +1293,10 @@ export function getFormsWorkspaceAccess(
   object: FormsPlaceholderObject,
   screen?: FormsPlaceholderScreen | null,
 ): FormBuilderWorkspaceAccess {
-  const viewLockedForActor = Boolean(screen?.isViewLocked) && !access.canManageStructure;
+  const viewLockedForActor = Boolean(screen?.isViewLocked) && !access.canEditViews;
+  const structureReadOnlyForActor = Boolean(object.canEditViewsOnly) && !access.canManageStructure;
   const structureLockedForActor = object.isStructureLocked && !access.canManageStructure;
+  const structureBlockedForActor = structureReadOnlyForActor || structureLockedForActor;
   const canEditSettings = access.canEditViews && !viewLockedForActor;
   const viewLockReasonKey = viewLockedForActor
     ? "tenant.platformStudio.forms.builder.lockedViewNotice"
@@ -1303,13 +1305,15 @@ export function getFormsWorkspaceAccess(
       : (access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly"));
   const structureLockReasonKey = viewLockedForActor
     ? viewLockReasonKey
-    : structureLockedForActor
+    : structureReadOnlyForActor
+      ? access.structureRestrictionKey
+      : structureLockedForActor
       ? "tenant.platformStudio.forms.builder.lockedStructureNotice"
       : access.structureRestrictionKey;
 
   return {
     canAddElementItems: canEditSettings,
-    canAddFieldItems: canEditSettings && !structureLockedForActor,
+    canAddFieldItems: canEditSettings && !structureBlockedForActor,
     canEditSettings,
     canMoveItems: canEditSettings,
     canRemoveItems: canEditSettings,

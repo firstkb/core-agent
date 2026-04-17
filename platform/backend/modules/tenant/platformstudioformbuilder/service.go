@@ -15,18 +15,19 @@ import (
 )
 
 var (
-	ErrCannotDeleteLastView = errors.New("form builder cannot delete last view")
-	ErrDraftConflict        = errors.New("form builder draft version conflict")
-	ErrInvalidDraft         = errors.New("form builder invalid draft")
-	ErrDeleteUnsupported    = errors.New("form builder delete unsupported")
-	ErrModelLocked          = errors.New("form builder model locked")
-	ErrModelNotFound        = errors.New("form builder model not found")
-	ErrExportUnsupported    = errors.New("form builder export unsupported")
-	ErrRuntimeNameConflict  = errors.New("form builder runtime name conflict")
-	ErrTenantMissing        = errors.New("form builder tenant missing")
-	ErrUnauthorized         = errors.New("form builder unauthorized")
-	ErrViewLocked           = errors.New("form builder view locked")
-	ErrViewNotFound         = errors.New("form builder view not found")
+	ErrCannotDeleteLastView   = errors.New("form builder cannot delete last view")
+	ErrDraftConflict          = errors.New("form builder draft version conflict")
+	ErrInvalidDraft           = errors.New("form builder invalid draft")
+	ErrDeleteUnsupported      = errors.New("form builder delete unsupported")
+	ErrModelLocked            = errors.New("form builder model locked")
+	ErrModelStructureReadOnly = errors.New("form builder model structure read only")
+	ErrModelNotFound          = errors.New("form builder model not found")
+	ErrExportUnsupported      = errors.New("form builder export unsupported")
+	ErrRuntimeNameConflict    = errors.New("form builder runtime name conflict")
+	ErrTenantMissing          = errors.New("form builder tenant missing")
+	ErrUnauthorized           = errors.New("form builder unauthorized")
+	ErrViewLocked             = errors.New("form builder view locked")
+	ErrViewNotFound           = errors.New("form builder view not found")
 )
 
 type Service struct {
@@ -832,6 +833,11 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	viewLocked := getBoolFallback(incomingView, "isViewLocked", "viewLocked", currentView.IsViewLocked)
 	modelLockChanged := modelLocked != model.IsStructureLocked
 	viewLockChanged := viewLocked != currentView.IsViewLocked
+	modelStructureReadOnly := isModelStructureReadOnly(model)
+
+	if currentView.IsDefault && modelStructureReadOnly && (modelChanged || modelStructureChanged || modelLockChanged) {
+		return nil, ErrModelStructureReadOnly
+	}
 
 	if !isRootActor(claims) {
 		if modelLockChanged {
@@ -857,7 +863,7 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	nextModel.SourceType = normalizedNextModel.SourceType
 	nextModel.Status = normalizedNextModel.Status
 	nextModel.IsStructureLocked = modelLocked
-	nextModel.CanEditViewsOnly = modelLocked
+	nextModel.CanEditViewsOnly = effectiveCanEditViewsOnlyForSourceType(nextModel.SourceType, modelLocked)
 	nextModel.DefinitionJSON = mustCanonicalJSON(modelPayload)
 	if modelChanged {
 		nextModel.Version = model.Version + 1
@@ -1737,7 +1743,7 @@ func buildModelSummary(model *ModelRecord) ModelSummary {
 	}
 
 	return ModelSummary{
-		CanEditViewsOnly:      model.CanEditViewsOnly,
+		CanEditViewsOnly:      effectiveCanEditViewsOnly(model),
 		DataCount:             model.DataCount,
 		Description:           model.Description,
 		DisplayName:           model.DisplayName,
@@ -1796,7 +1802,6 @@ func resolveModelDataCountRelationName(model *ModelRecord) string {
 	modelAlias := buildGeneratedRuntimeModelAlias(chooseString(modelStorageKey(model), model.ModelID))
 	return buildGeneratedRuntimeTableName(modelAlias)
 }
-
 
 func buildViewSummary(view *ViewRecord) ViewSummary {
 	if view == nil {
@@ -1863,7 +1868,7 @@ func buildFieldSummaries(raw json.RawMessage) []ModelFieldSummary {
 func buildModelDraftForResponse(model *ModelRecord, views []ViewRecord, canonicalPayload map[string]any) map[string]any {
 	payload := injectCompatibilityFields(canonicalPayload)
 
-	payload["canEditViewsOnly"] = model.CanEditViewsOnly
+	payload["canEditViewsOnly"] = effectiveCanEditViewsOnly(model)
 	payload["description"] = model.Description
 	payload["displayName"] = model.DisplayName
 	payload["id"] = model.ModelID
@@ -1949,8 +1954,11 @@ func buildModelRecordFromPayload(payload map[string]any) ModelRecord {
 		PublishedVersion:  getInt64Value(payload, "publishedVersion", 0),
 		StructureVersion:  getInt64Value(payload, "modelStructureVersion", 1),
 		IsStructureLocked: getBoolValue(payload, "isStructureLocked", getBoolValue(payload, "modelLocked", false)),
-		CanEditViewsOnly:  getBoolValue(payload, "canEditViewsOnly", getBoolValue(payload, "isStructureLocked", false)),
-		DefinitionJSON:    mustCanonicalJSON(payload),
+		CanEditViewsOnly: effectiveCanEditViewsOnlyForSourceType(
+			chooseString(normalizeString(payload["sourceType"]), "managed"),
+			getBoolValue(payload, "canEditViewsOnly", getBoolValue(payload, "isStructureLocked", false)),
+		),
+		DefinitionJSON: mustCanonicalJSON(payload),
 	}
 }
 
@@ -2258,4 +2266,22 @@ func isStaticModelRestrictedForActor(claims requestctx.ClaimsInfo, model *ModelR
 		return false
 	}
 	return !isRootActor(claims) && isExternalRuntimeSourceType(model.SourceType)
+}
+
+func isModelStructureReadOnly(model *ModelRecord) bool {
+	if model == nil {
+		return false
+	}
+	return isExternalRuntimeSourceType(model.SourceType)
+}
+
+func effectiveCanEditViewsOnly(model *ModelRecord) bool {
+	if model == nil {
+		return false
+	}
+	return effectiveCanEditViewsOnlyForSourceType(model.SourceType, model.CanEditViewsOnly || model.IsStructureLocked)
+}
+
+func effectiveCanEditViewsOnlyForSourceType(sourceType string, configured bool) bool {
+	return isExternalRuntimeSourceType(sourceType) || configured
 }

@@ -103,6 +103,7 @@ export const tenantSpanishMessages = {
           lockedModelOwnerOnly: "Solo el owner del modelo puede eliminar un modelo bloqueado.",
           ownerOnlyStructure: "Solo los owners del modelo pueden cambiar la estructura del modelo.",
           readonly: "Los usuarios readonly no pueden hacer cambios.",
+          staticModelReadOnly: "La estructura del modelo estatico es de solo lectura. Puede editar solo vistas.",
           viewAccessDisabled: "La edicion solo de vistas no esta habilitada para este modelo.",
           viewLocked: "Esta vista esta bloqueada para usuarios que no son owner.",
         },

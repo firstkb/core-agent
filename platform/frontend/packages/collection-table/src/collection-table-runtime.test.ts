@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createDefaultCollectionState,
+  formatCollectionTableCellValue,
   formatAppliedQuickFilterGroupLabel,
   groupCollectionTableQuickFilters,
+  resolveCollectionStateForMeta,
 } from "./collection-table-runtime";
-import type { CollectionTableQuickFilter } from "./collection-table-contract";
+import type { CollectionTableMetaResponse, CollectionTableQuickFilter } from "./collection-table-contract";
 
 describe("collection-table quick filter grouping", () => {
   const labels = {
@@ -49,5 +52,68 @@ describe("collection-table quick filter grouping", () => {
     expect(
       formatAppliedQuickFilterGroupLabel(groupedFilters[0], searchFieldOptions, labels),
     ).toBe("[Module] Emp, Tenant");
+  });
+
+  it("formats date values in en-US format", () => {
+    expect(formatCollectionTableCellValue("2026-04-16", "date")).toBe("04/16/2026");
+  });
+
+  it("formats date time values in en-US format", () => {
+    expect(formatCollectionTableCellValue("2026-04-16T13:46:17.09608-04:00", "date_time"))
+      .toBe("04/16/2026, 1:46:17 PM");
+  });
+
+  it("uses explicit meta default sort when building default state", () => {
+    const meta: CollectionTableMetaResponse = {
+      surfaceId: "test",
+      title: "Test",
+      search: { defaultFieldId: "all" },
+      defaultSort: { columnId: "occurred_at", direction: "desc" },
+      fields: [
+        { id: "occurred_at", label: "Occurred At", type: "date_time", searchable: true, sortable: true, suggestable: false },
+      ],
+      columns: [
+        { id: "occurred_at", label: "Occurred At", type: "date_time", fieldId: "occurred_at", defaultVisible: true },
+      ],
+    };
+
+    const state = createDefaultCollectionState(meta);
+    expect(state.query.sortColumnId).toBe("occurred_at");
+    expect(state.query.sortDirection).toBe("desc");
+  });
+
+  it("prefers explicit meta default sort over persisted sort on hydrate", () => {
+    const meta: CollectionTableMetaResponse = {
+      surfaceId: "test",
+      title: "Test",
+      search: { defaultFieldId: "all" },
+      defaultSort: { columnId: "occurred_at", direction: "desc" },
+      fields: [
+        { id: "occurred_at", label: "Occurred At", type: "date_time", searchable: true, sortable: true, suggestable: false },
+        { id: "user", label: "User", type: "text", searchable: true, sortable: true, suggestable: true },
+      ],
+      columns: [
+        { id: "occurred_at", label: "Occurred At", type: "date_time", fieldId: "occurred_at", defaultVisible: true },
+        { id: "user", label: "User", type: "text", fieldId: "user", defaultVisible: true },
+      ],
+    };
+    const baseState = createDefaultCollectionState(meta);
+    const resolved = resolveCollectionStateForMeta(
+      meta,
+      baseState,
+      {
+        draftSearchFieldId: "all",
+        draftSearchOperator: "contains",
+        queryState: {
+          ...baseState.query,
+          sortColumnId: "user",
+          sortDirection: "asc",
+        },
+      },
+      false,
+    );
+
+    expect(resolved.query.sortColumnId).toBe("occurred_at");
+    expect(resolved.query.sortDirection).toBe("desc");
   });
 });

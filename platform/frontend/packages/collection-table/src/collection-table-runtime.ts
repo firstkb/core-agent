@@ -48,6 +48,20 @@ export type CollectionTableQuickFilterGroup = {
 const DEFAULT_OPERATOR: CollectionTableSearchOperator = "contains";
 const ACTIONS_COLUMN_ID = "actions";
 const DEFAULT_ACTIONS_COLUMN_WIDTH = "var(--admin-web-collection-action-column-width, 14rem)";
+const collectionTableDateFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+const collectionTableDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+  day: "2-digit",
+  hour: "numeric",
+  hour12: true,
+  minute: "2-digit",
+  month: "2-digit",
+  second: "2-digit",
+  year: "numeric",
+});
 
 function normalizeSearchSuggestionId(fieldId: string, value: string) {
   return `${fieldId}:${value.trim().toLowerCase()}`;
@@ -74,7 +88,7 @@ export function getAllowedSearchOperators(kind: SearchFieldKind) {
 export function getSearchFieldKind(
   fieldType: CollectionTableFieldType,
 ): Exclude<SearchFieldKind, "all"> {
-  return fieldType === "date" ? "date" : "text";
+  return fieldType === "date" || fieldType === "date_time" ? "date" : "text";
 }
 
 export function buildSearchFieldOptions(
@@ -178,6 +192,46 @@ export function getCellText(cell?: CollectionTableRowCell) {
   return String(cell.value);
 }
 
+function parseCollectionTableDateValue(value: string, type: CollectionTableFieldType) {
+  const normalizedValue = value.trim();
+  if (!normalizedValue) {
+    return null;
+  }
+
+  if (type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(normalizedValue)) {
+    const [year, month, day] = normalizedValue.split("-").map((segment) => Number(segment));
+    const parsedDate = new Date(year, month - 1, day);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
+  const parsedDate = new Date(normalizedValue);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return null;
+  }
+
+  return parsedDate;
+}
+
+export function formatCollectionTableCellValue(
+  value: string,
+  type: CollectionTableFieldType,
+) {
+  if (type !== "date" && type !== "date_time") {
+    return value;
+  }
+
+  const parsedDate = parseCollectionTableDateValue(value, type);
+  if (!parsedDate) {
+    return value;
+  }
+
+  return type === "date"
+    ? collectionTableDateFormatter.format(parsedDate)
+    : collectionTableDateTimeFormatter.format(parsedDate);
+}
+
 function getFieldDefinition(
   fieldDefinitions: ReadonlyArray<CollectionTableFieldDefinition>,
   fieldId: string,
@@ -221,7 +275,8 @@ export function createDefaultCollectionState(
 ): CollectionTableState {
   return createCollectionTableState({
     columns: getRuntimeCollectionColumns(meta),
-    defaultSortColumnId: resolveDefaultSortColumnId(meta),
+    defaultSortColumnId: meta.defaultSort?.columnId ?? resolveDefaultSortColumnId(meta),
+    defaultSortDirection: meta.defaultSort?.direction ?? "asc",
     pageSizeOptions: meta.pageSizeOptions,
   });
 }
@@ -311,13 +366,24 @@ export function resolveCollectionStateForMeta(
     query: {
       ...baseState.query,
       ...sourceState.query,
+      ...(meta.defaultSort
+        ? {
+            sortColumnId: baseState.query.sortColumnId,
+            sortDirection: baseState.query.sortDirection,
+          }
+        : {}),
       pageSize:
         allowedPageSizes.length === 0 || allowedPageSizes.includes(sourceState.query.pageSize)
           ? sourceState.query.pageSize
           : baseState.query.pageSize,
-      sortColumnId: isSortableColumn(meta, sourceState.query.sortColumnId)
-        ? sourceState.query.sortColumnId
-        : baseState.query.sortColumnId,
+      sortColumnId: meta.defaultSort
+        ? baseState.query.sortColumnId
+        : (isSortableColumn(meta, sourceState.query.sortColumnId)
+          ? sourceState.query.sortColumnId
+          : baseState.query.sortColumnId),
+      sortDirection: meta.defaultSort
+        ? baseState.query.sortDirection
+        : sourceState.query.sortDirection,
     },
     visibleColumnIds: normalizeVisibleColumnIds(meta, currentState.visibleColumnIds),
   } satisfies CollectionTableState;

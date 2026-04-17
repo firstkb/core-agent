@@ -54,6 +54,7 @@ type PersistedCollectionTableSuggestions = {
 export type CollectionTableStateConfig = {
   columns: ReadonlyArray<Pick<CollectionTableColumnDefinition, "defaultVisible" | "id">>;
   defaultSortColumnId?: string | null;
+  defaultSortDirection?: CollectionTableSortDirection;
   pageSizeOptions?: readonly number[];
   presetId?: string;
 };
@@ -137,7 +138,7 @@ export function createCollectionTableState(
       presetId,
       quickFilters: [],
       sortColumnId: config.defaultSortColumnId ?? config.columns[0]?.id ?? null,
-      sortDirection: "asc",
+      sortDirection: config.defaultSortDirection ?? "asc",
     },
     visibleColumnIds: config.columns
       .filter((column) => column.defaultVisible !== false)

@@ -1,3 +1,5 @@
+import "./collection-table.css";
+
 export * from "./collection-page";
 export * from "./collection-page-surface";
 export * from "./collection-table-contract";

@@ -89,6 +89,9 @@ importers:
       '@platform/auth-core':
         specifier: workspace:*
         version: link:../../packages/auth-core
+      '@platform/collection-table':
+        specifier: workspace:*
+        version: link:../../packages/collection-table
       '@platform/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

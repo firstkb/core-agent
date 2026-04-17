@@ -1,6 +1,90 @@
 import type { LocaleResourceTree } from "@platform/i18n";
 
 export const tenantSpanishMessages = {
+  admin: {
+    collectionTable: {
+      actions: {
+        clear: "Limpiar",
+        exportXls: "Exportar XLS",
+        favorite: "Favorito",
+        reload: "Recargar",
+        resetFilters: "Restablecer filtros",
+        saveFilterSet: "Guardar filtro",
+        saved: "Guardado",
+        setActive: "Activar",
+        setInactive: "Desactivar",
+        startNew: "Iniciar nuevo",
+      },
+      dialog: {
+        cancel: "Cancelar",
+        placeholder: "Nombre del filtro",
+        save: "Guardar",
+        title: "Asignar nombre al filtro",
+        validation: {
+          duplicate: "Ya existe un filtro guardado con este nombre.",
+          empty: "Introduce un nombre para el filtro.",
+        },
+      },
+      empty: {
+        noRecords: "No se encontraron registros",
+      },
+      errors: {
+        remoteAdapter: "Adaptador remoto",
+        remoteMetadata: "El adaptador remoto de colecciones no devolvio metadatos. Vuelve a cargar el contrato del backend.",
+        requestFailed: "Fallo la solicitud de la coleccion",
+        retryRequest: "Reintentar solicitud",
+      },
+      favorite: {
+        add: "Agregar a favoritos",
+        remove: "Quitar de favoritos",
+      },
+      menu: {
+        moreActions: "Mas acciones",
+        noSavedFilters: "Aun no hay filtros guardados",
+        openSavedFilters: "Abrir filtros guardados",
+        openTableActions: "Abrir acciones de la tabla",
+        savedFilters: "Filtros guardados",
+      },
+      operators: {
+        contains: "Contiene",
+        isEmpty: "esta vacio",
+        isEqualTo: "Es igual a",
+        isGreaterOrEqualTo: "Es mayor o igual que",
+        isGreaterThan: "Es mayor que",
+        isLessOrEqualTo: "Es menor o igual que",
+        isLessThan: "Es menor que",
+        isNotEmpty: "no esta vacio",
+        isNotEqualTo: "No es igual a",
+      },
+      pagination: {
+        entries: "registros",
+        entry: "registro",
+        rowsPerPage: "Filas por pagina",
+      },
+      rowActions: {
+        edit: "Editar",
+        moreActions: "Mas acciones",
+        pdf: "PDF",
+        openActions: "Abrir acciones de la fila",
+        view: "Ver",
+      },
+      search: {
+        all: "Todos",
+        fieldAria: "Campo de busqueda",
+        inputAria: "Buscar registros",
+        operatorAria: "Operador de busqueda",
+        placeholder: "Buscar...",
+        pressEnter: "Pulsa Enter para aplicar",
+        selectDate: "Seleccionar fecha",
+      },
+      selection: {
+        bulkActions: "Acciones masivas",
+        selectAllVisible: "Seleccionar todas las filas visibles",
+        selectedCount: "{{count}} seleccionados",
+        selectRow: "Seleccionar {{label}}",
+      },
+    },
+  },
   tenant: {
     auth: {
       descriptionCode: "Introduce el codigo de autorizacion enviado a {{identifier}}.",
@@ -27,6 +111,14 @@ export const tenantSpanishMessages = {
         label: "Panel",
         note: "Resumen del espacio de trabajo",
       },
+      runtime: {
+        forms: {
+          headerMeta: "Formularios",
+          headerTitle: "Formularios",
+          viewHeaderMeta: "Formularios / {{modelLabel}} / {{viewLabel}}",
+        },
+        headerTitle: "Runtime",
+      },
       platformStudio: {
         headerMeta: "Platform Studio",
         forms: {
@@ -40,6 +132,19 @@ export const tenantSpanishMessages = {
         label: "Platform Studio",
         navigation: {
           label: "Navigation Builder",
+        },
+      },
+    },
+    runtime: {
+      forms: {
+        record: {
+          empty: "No hay campos visibles para mostrar.",
+          emptySubtable: "Sin filas",
+          loadFailed: "No se pudo cargar este registro.",
+          loading: "Cargando registro…",
+          notFound: "No se pudo encontrar este registro.",
+          print: "Imprimir",
+          title: "Ver registro",
         },
       },
     },
@@ -122,6 +227,7 @@ export const tenantSpanishMessages = {
         titleLabel: "Titulo",
         titlePlaceholder: "Introduce un titulo",
         titleRequired: "Introduce un titulo antes de continuar.",
+        viewData: "Ver datos",
         viewActions: "Acciones de vista",
         viewsTitle: "Vistas",
         structureLocked: "Estructura bloqueada",

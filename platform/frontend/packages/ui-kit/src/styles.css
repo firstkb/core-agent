@@ -5971,9 +5971,11 @@
 .ui-app-shell__content {
   display: flex;
   flex: 1;
+  min-width: 0;
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-6);
+  overflow-x: hidden;
 }
 
 .ui-auth-shell,

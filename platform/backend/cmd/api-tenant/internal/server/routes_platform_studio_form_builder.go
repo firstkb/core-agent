@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
 	"dtriton.com/platform/backend/internal/platform/httpx/handler"
@@ -42,7 +43,7 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 				http.StatusInternalServerError,
 				"cannot save form builder authoring state",
 				err,
-				srv.FieldsForLog(ctx, r, req)...,
+				srv.FieldsForLog(ctx, r, summarizeFormBuilderSaveDraftRequest(r, req))...,
 			)
 		}
 		return info, nil
@@ -77,6 +78,70 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(info.Content)
 	})
+
+	loadRuntimeViewListMetaHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListMetaResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.LoadRuntimeViewListMeta(ctx, r, struct{}{})
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_LIST_META",
+				http.StatusInternalServerError,
+				"cannot load form builder runtime list meta",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	queryRuntimeViewListHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formbuilder.RuntimeViewListQueryRequest) (*formbuilder.RuntimeViewListQueryResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.QueryRuntimeViewList(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_LIST_QUERY",
+				http.StatusInternalServerError,
+				"cannot query form builder runtime list",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	loadRuntimeViewListSearchSuggestionsHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListSearchSuggestionsResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.LoadRuntimeViewListSearchSuggestions(ctx, r, struct{}{})
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_LIST_SEARCH_SUGGESTIONS",
+				http.StatusInternalServerError,
+				"cannot load form builder runtime search suggestions",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	loadRuntimeViewRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewRecordResponse, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.LoadRuntimeViewRecord(ctx, r, struct{}{})
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_RECORD_DETAIL",
+				http.StatusInternalServerError,
+				"cannot load form builder runtime record detail",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_BUILDER_MODEL_LIST",
@@ -132,6 +197,34 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		http.MethodGet,
 		"/app/platform-studio/forms/models/{modelId}/export/model",
 		exportModelBundleHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_LIST_META",
+		http.MethodGet,
+		"/app/forms/{modelId}/views/{viewId}/meta",
+		loadRuntimeViewListMetaHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_LIST_QUERY",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/query",
+		queryRuntimeViewListHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_LIST_SEARCH_SUGGESTIONS",
+		http.MethodGet,
+		"/app/forms/{modelId}/views/{viewId}/search-suggestions",
+		loadRuntimeViewListSearchSuggestionsHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_RECORD_DETAIL",
+		http.MethodGet,
+		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}",
+		loadRuntimeViewRecordHandler,
 	)
 
 	register(
@@ -256,4 +349,16 @@ func writePlatformStudioFormBuilderError(w http.ResponseWriter, err error) {
 		Code:    appErr.Code,
 		Message: appErr.Message,
 	})
+}
+
+func summarizeFormBuilderSaveDraftRequest(r *http.Request, req formbuilder.SaveDraftRequest) map[string]any {
+	summary := map[string]any{
+		"expectedVersions": req.ExpectedVersions,
+		"modelBytes":       len(req.Draft.Model),
+		"modelId":          strings.TrimSpace(r.PathValue("modelId")),
+		"viewBytes":        len(req.Draft.View),
+		"viewId":           strings.TrimSpace(r.PathValue("viewId")),
+	}
+
+	return summary
 }

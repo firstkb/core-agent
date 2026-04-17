@@ -1,4 +1,4 @@
-export type CollectionTableFieldType = "badge" | "date" | "html" | "text";
+export type CollectionTableFieldType = "badge" | "date" | "date_time" | "html" | "text";
 export type CollectionTableColumnType = CollectionTableFieldType | "actions";
 export type CollectionTableBadgeTone =
   | "brand"
@@ -57,6 +57,11 @@ export type CollectionTableSearchMeta = {
   placeholder?: string;
 };
 
+export type CollectionTableSort = {
+  columnId: string | null;
+  direction: CollectionTableSortDirection;
+};
+
 export type CollectionTableBuiltInActionMeta = {
   label?: string;
   visible: boolean;
@@ -102,6 +107,7 @@ export type CollectionTableMetaResponse = {
   actions?: CollectionTableActionsMeta;
   bulkActions?: ReadonlyArray<CollectionTableBulkActionDefinition>;
   columns: ReadonlyArray<CollectionTableColumnDefinition>;
+  defaultSort?: CollectionTableSort;
   fields: ReadonlyArray<CollectionTableFieldDefinition>;
   pageSizeOptions?: readonly number[];
   rowActions?: ReadonlyArray<CollectionTableRowActionDefinition>;
@@ -125,11 +131,6 @@ export type CollectionTableRowData = {
   cells: Record<string, CollectionTableRowCell>;
   id: string;
   selectable?: boolean;
-};
-
-export type CollectionTableSort = {
-  columnId: string | null;
-  direction: CollectionTableSortDirection;
 };
 
 export type CollectionTableQueryRequest = {

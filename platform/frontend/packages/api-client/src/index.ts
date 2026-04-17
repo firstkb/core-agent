@@ -1068,8 +1068,16 @@ function normalizeAdminNavigation(payload: unknown): AdminNavigation {
 }
 
 function isUnauthorizedApiError(error: unknown): error is ApiClientError {
-  return error instanceof ApiClientError &&
-    (error.statusCode === 401 || error.statusCode === 403);
+  if (!(error instanceof ApiClientError)) {
+    return false;
+  }
+
+  if (error.statusCode === 401) {
+    return true;
+  }
+
+  return error.responseStatus === "unauthorized"
+    || typeof error.code === "string" && error.code.endsWith("_UNAUTHORIZED");
 }
 
 async function requestWithUnauthorizedRetry<T>(

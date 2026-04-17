@@ -19,20 +19,26 @@ type memoryRepository struct {
 	views                   map[string]map[string]*ViewRecord
 	relationRowCounts       map[string]int64
 	runtimeRelations        map[string]string
+	runtimeQueryRows        map[string][]runtimeRelationQueryRow
+	runtimeSuggestions      map[string]map[string][]runtimeRelationSuggestion
 	lastRuntimePlan         *runtimeApplyPlan
 	lastExportRelationName  string
 	lastExportColumnNames   []string
 	lastExportOrderByColumn string
+	lastRuntimeOrderByColumn string
+	lastRuntimeOrderDirection string
 	exportRows              [][]string
 	runtimeApplyErr         error
 }
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{
-		models:            map[string]*ModelRecord{},
-		views:             map[string]map[string]*ViewRecord{},
-		relationRowCounts: map[string]int64{},
-		runtimeRelations:  map[string]string{},
+		models:             map[string]*ModelRecord{},
+		views:              map[string]map[string]*ViewRecord{},
+		relationRowCounts:  map[string]int64{},
+		runtimeRelations:   map[string]string{},
+		runtimeQueryRows:   map[string][]runtimeRelationQueryRow{},
+		runtimeSuggestions: map[string]map[string][]runtimeRelationSuggestion{},
 	}
 }
 
@@ -93,6 +99,66 @@ func (r *memoryRepository) ExportDataRows(_ context.Context, _ requestctx.Tenant
 		rows = append(rows, append([]string(nil), row...))
 	}
 	return rows, nil
+}
+
+func (r *memoryRepository) QueryRuntimeRows(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	relationName string,
+	_ []string,
+	_ string,
+	_ []any,
+	orderByColumn string,
+	orderDirection string,
+	page int,
+	pageSize int,
+) ([]runtimeRelationQueryRow, int, error) {
+	r.lastRuntimeOrderByColumn = orderByColumn
+	r.lastRuntimeOrderDirection = orderDirection
+	rows := r.runtimeQueryRows[relationName]
+	totalItems := len(rows)
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = totalItems
+	}
+	start := (page - 1) * pageSize
+	if start > totalItems {
+		return []runtimeRelationQueryRow{}, totalItems, nil
+	}
+	end := start + pageSize
+	if end > totalItems {
+		end = totalItems
+	}
+	items := make([]runtimeRelationQueryRow, 0, end-start)
+	for _, row := range rows[start:end] {
+		items = append(items, runtimeRelationQueryRow{
+			ID:    row.ID,
+			Cells: cloneStringMap(row.Cells),
+		})
+	}
+	return items, totalItems, nil
+}
+
+func (r *memoryRepository) LoadRuntimeSuggestions(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	relationName string,
+	columnName string,
+	limit int,
+) ([]runtimeRelationSuggestion, error) {
+	columns := r.runtimeSuggestions[relationName]
+	if columns == nil {
+		return nil, nil
+	}
+	items := columns[columnName]
+	if limit > 0 && len(items) > limit {
+		items = items[:limit]
+	}
+	out := make([]runtimeRelationSuggestion, 0, len(items))
+	out = append(out, items...)
+	return out, nil
 }
 
 func (r *memoryRepository) ListExistingRuntimeRelations(_ context.Context, _ requestctx.TenantInfo, names []string) (map[string]string, error) {
@@ -317,6 +383,17 @@ func cloneViewRecord(record *ViewRecord) ViewRecord {
 		clone.PublishedArtifactsJSON = append(json.RawMessage(nil), record.PublishedArtifactsJSON...)
 	}
 	return clone
+}
+
+func cloneStringMap(source map[string]string) map[string]string {
+	if len(source) == 0 {
+		return map[string]string{}
+	}
+	out := make(map[string]string, len(source))
+	for key, value := range source {
+		out[key] = value
+	}
+	return out
 }
 
 func testContext() context.Context {
@@ -2445,7 +2522,7 @@ func TestDeleteModelRejectsStaticModelForRoot(t *testing.T) {
 	}
 }
 
-func TestSaveDraftRejectsStaticModelSchemaChangesForRoot(t *testing.T) {
+func TestSaveDraftIgnoresStaticModelSchemaChangesForRoot(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "state-directory")
 	repo.runtimeRelations[model.StorageKey] = "table"
@@ -2456,7 +2533,7 @@ func TestSaveDraftRejectsStaticModelSchemaChangesForRoot(t *testing.T) {
 	modelPayload["title"] = "Renamed directory"
 	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
 
-	_, err := svc.SaveDraft(rootTestContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+	out, err := svc.SaveDraft(rootTestContext(), model.ModelID, view.ViewID, SaveDraftRequest{
 		Draft: DraftPayload{
 			Model: mustJSON(t, modelPayload),
 			View:  mustJSON(t, viewPayload),
@@ -2466,8 +2543,15 @@ func TestSaveDraftRejectsStaticModelSchemaChangesForRoot(t *testing.T) {
 			View:  int64Ptr(view.Version),
 		},
 	})
-	if !errors.Is(err, ErrModelStructureReadOnly) {
-		t.Fatalf("expected ErrModelStructureReadOnly when root changes static model schema, got %v", err)
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.models[model.ModelID].DisplayName != model.DisplayName {
+		t.Fatalf("static model display name changed to %q, want %q", repo.models[model.ModelID].DisplayName, model.DisplayName)
+	}
+	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	if got := normalizeString(savedModelPayload["displayName"]); got != model.DisplayName {
+		t.Fatalf("saved draft model display name = %q, want %q", got, model.DisplayName)
 	}
 }
 
@@ -2478,6 +2562,10 @@ func TestSaveDraftAllowsStaticModelViewChangesForRoot(t *testing.T) {
 	svc := NewService(repo)
 
 	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["dataCount"] = 27
+	modelPayload["displayName"] = "Hydrated Events"
+	modelPayload["title"] = "Hydrated Events"
+	modelPayload["owner"] = ""
 	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
 	viewPayload["displayName"] = "Directory View"
 	viewPayload["title"] = "Directory View"
@@ -2501,9 +2589,448 @@ func TestSaveDraftAllowsStaticModelViewChangesForRoot(t *testing.T) {
 	if repo.views[model.ModelID][view.ViewID].DisplayName != "Directory View" {
 		t.Fatalf("view display name = %q, want Directory View", repo.views[model.ModelID][view.ViewID].DisplayName)
 	}
+	if repo.models[model.ModelID].DisplayName != model.DisplayName {
+		t.Fatalf("static model display name changed to %q, want %q", repo.models[model.ModelID].DisplayName, model.DisplayName)
+	}
 	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
 	if !getBoolValue(savedModelPayload, "canEditViewsOnly", false) {
 		t.Fatalf("saved draft model should expose canEditViewsOnly=true for static model")
+	}
+}
+
+func TestLoadRuntimeViewListMetaPreservesDateTimeFieldType(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Events"
+	modelPayload["title"] = "Events"
+	modelPayload["dataSchema"] = map[string]any{
+		"modelId":    "events",
+		"modelTitle": "Events",
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"fields": []any{
+				map[string]any{
+					"id":         "occurred_at",
+					"kind":       "date_time",
+					"label":      "Occurred At",
+					"storageKey": "occurred_at",
+					"runtime": map[string]any{
+						"sourceColumnName": "occurred_at",
+						"sourceValueKind":  "scalar",
+					},
+				},
+			},
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"rtAlias":      "events",
+				"tableName":    "events",
+			},
+		},
+		"subformScopes": []any{},
+	}
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "occurred_at",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "occurred_at",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Events"
+	viewPayload["title"] = "Events"
+	viewPayload["uiSchema"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"gridViewName": "vg_events__default",
+				"viewRtAlias":  "default",
+			},
+			"nodes": []any{
+				map[string]any{
+					"id":      "field-occurred-at",
+					"type":    "field",
+					"fieldId": "occurred_at",
+					"order":   0,
+				},
+			},
+			"viewSettings": map[string]any{
+				"list": map[string]any{
+					"columns": []any{
+						map[string]any{
+							"fieldId": "occurred_at",
+							"id":      "grid-column-occurred-at",
+							"order":   0,
+						},
+					},
+				},
+			},
+		},
+		"subformScopes": []any{},
+	}
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if len(out.Fields) != 1 {
+		t.Fatalf("field count = %d, want 1", len(out.Fields))
+	}
+	if out.Fields[0].Type != "date_time" {
+		t.Fatalf("field type = %q, want %q", out.Fields[0].Type, "date_time")
+	}
+	if len(out.Columns) != 1 {
+		t.Fatalf("column count = %d, want 1", len(out.Columns))
+	}
+	if out.Columns[0].Type != "date_time" {
+		t.Fatalf("column type = %q, want %q", out.Columns[0].Type, "date_time")
+	}
+}
+
+func TestLoadRuntimeViewListMetaUsesViewFieldTitleOverride(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Events"
+	modelPayload["title"] = "Events"
+	modelPayload["dataSchema"] = map[string]any{
+		"modelId":    "events",
+		"modelTitle": "Events",
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"fields": []any{
+				map[string]any{
+					"id":         "occurred_at",
+					"kind":       "date_time",
+					"label":      "Occurred At",
+					"storageKey": "occurred_at",
+					"runtime": map[string]any{
+						"sourceColumnName": "occurred_at",
+						"sourceValueKind":  "scalar",
+					},
+				},
+			},
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"rtAlias":      "events",
+				"tableName":    "events",
+			},
+		},
+		"subformScopes": []any{},
+	}
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "occurred_at",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Events"
+	viewPayload["title"] = "Events"
+	viewPayload["uiSchema"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"gridViewName": "vg_events__default",
+				"viewRtAlias":  "default",
+			},
+			"nodes": []any{
+				map[string]any{
+					"id":      "field-occurred-at",
+					"type":    "field",
+					"fieldId": "occurred_at",
+					"title":   "When happened",
+					"order":   0,
+				},
+			},
+			"viewSettings": map[string]any{
+				"list": map[string]any{
+					"columns": []any{
+						map[string]any{
+							"fieldId": "occurred_at",
+							"id":      "grid-column-occurred-at",
+							"order":   0,
+						},
+					},
+				},
+			},
+		},
+		"subformScopes": []any{},
+	}
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if len(out.Fields) != 1 {
+		t.Fatalf("field count = %d, want 1", len(out.Fields))
+	}
+	if out.Fields[0].Label != "When happened" {
+		t.Fatalf("field label = %q, want %q", out.Fields[0].Label, "When happened")
+	}
+	if len(out.Columns) != 1 {
+		t.Fatalf("column count = %d, want 1", len(out.Columns))
+	}
+	if out.Columns[0].Label != "When happened" {
+		t.Fatalf("column label = %q, want %q", out.Columns[0].Label, "When happened")
+	}
+}
+
+func TestLoadRuntimeViewListMetaAddsViewRowActionWhenCanViewEnabled(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Events"
+	modelPayload["title"] = "Events"
+	modelPayload["dataSchema"] = map[string]any{
+		"modelId":    "events",
+		"modelTitle": "Events",
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"fields": []any{
+				map[string]any{
+					"id":         "event",
+					"kind":       "short_text",
+					"label":      "Event",
+					"storageKey": "event",
+					"runtime": map[string]any{
+						"sourceColumnName": "event",
+						"sourceValueKind":  "scalar",
+					},
+				},
+			},
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"rtAlias":      "events",
+				"tableName":    "events",
+			},
+		},
+		"subformScopes": []any{},
+	}
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "event",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Events"
+	viewPayload["title"] = "Events"
+	viewPayload["uiSchema"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"gridViewName": "vg_events__default",
+				"viewRtAlias":  "default",
+			},
+			"nodes": []any{
+				map[string]any{
+					"id":      "field-event",
+					"type":    "field",
+					"fieldId": "event",
+					"order":   0,
+				},
+			},
+			"viewSettings": map[string]any{
+				"actions": map[string]any{
+					"canView": true,
+				},
+				"list": map[string]any{
+					"columns": []any{
+						map[string]any{
+							"fieldId": "event",
+							"id":      "grid-column-event",
+							"order":   0,
+						},
+					},
+				},
+			},
+		},
+		"subformScopes": []any{},
+	}
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if len(out.RowActions) != 1 {
+		t.Fatalf("row action count = %d, want 1", len(out.RowActions))
+	}
+	if out.RowActions[0].ID != "view" {
+		t.Fatalf("row action id = %q, want %q", out.RowActions[0].ID, "view")
+	}
+	if out.RowActions[0].Execution != "frontend" {
+		t.Fatalf("row action execution = %q, want %q", out.RowActions[0].Execution, "frontend")
+	}
+}
+
+func TestBuildRuntimeViewListDefaultSortUsesViewSorting(t *testing.T) {
+	uiSchema := map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"viewSettings": map[string]any{
+				"list": map[string]any{
+					"sorting": map[string]any{
+						"fieldId":   "occurred_at",
+						"direction": "desc",
+					},
+				},
+			},
+		},
+	}
+	fields := []runtimeApplyFieldPlan{
+		{
+			FieldID:    "occurred_at",
+			ColumnName: "occurred_at",
+			StorageKey: "occurred_at",
+			Kind:       "date_time",
+			Supported:  true,
+		},
+	}
+
+	column, direction := buildRuntimeViewListDefaultSort(uiSchema, fields)
+	if column != "occurred_at" {
+		t.Fatalf("column = %q, want %q", column, "occurred_at")
+	}
+	if direction != "desc" {
+		t.Fatalf("direction = %q, want %q", direction, "desc")
+	}
+}
+
+func TestBuildRuntimeViewRecordFieldsAndSubtablesUseVisibleNodesOnly(t *testing.T) {
+	rootScope := map[string]any{
+		"nodes": []any{
+			map[string]any{"id": "field-visible", "type": "field", "fieldId": "visible_field", "title": "Visible Override", "order": 0},
+			map[string]any{"id": "field-hidden", "type": "field", "fieldId": "hidden_field", "visibility": "hidden", "order": 1},
+			map[string]any{"id": "subform-notes", "type": "subform", "schemaScopeId": "notes_scope", "title": "Notes", "order": 2},
+		},
+	}
+	rootFields := []runtimeApplyFieldPlan{
+		{FieldID: "visible_field", ColumnName: "visible_field", StorageKey: "visible_field", Kind: "short_text", Supported: true},
+		{FieldID: "hidden_field", ColumnName: "hidden_field", StorageKey: "hidden_field", Kind: "short_text", Supported: true},
+	}
+	rootLabels := map[string]string{
+		"visible_field": "Visible Label",
+		"hidden_field":  "Hidden Label",
+	}
+
+	fields := buildRuntimeViewRecordFields(rootScope, rootFields, rootLabels)
+	if len(fields) != 1 {
+		t.Fatalf("record field count = %d, want 1", len(fields))
+	}
+	if fields[0].FieldID != "visible_field" {
+		t.Fatalf("record field id = %q, want %q", fields[0].FieldID, "visible_field")
+	}
+	if fields[0].Label != "Visible Override" {
+		t.Fatalf("record field label = %q, want %q", fields[0].Label, "Visible Override")
+	}
+
+	uiSchema := map[string]any{
+		"rootScope": rootScope,
+		"subformScopes": []any{
+			map[string]any{
+				"schemaScopeId": "notes_scope",
+				"nodes": []any{
+					map[string]any{"id": "field-note", "type": "field", "fieldId": "note_text", "title": "Note", "order": 0},
+					map[string]any{"id": "field-secret", "type": "field", "fieldId": "secret_note", "visibility": "hidden", "order": 1},
+				},
+			},
+		},
+	}
+	dataSchema := map[string]any{
+		"subformScopes": []any{
+			map[string]any{
+				"schemaScopeId": "notes_scope",
+				"fields": []any{
+					map[string]any{"id": "note_text", "label": "Note Text"},
+					map[string]any{"id": "secret_note", "label": "Secret Note"},
+				},
+			},
+		},
+	}
+	subtables := buildRuntimeViewRecordSubtables(uiSchema, dataSchema, []runtimeApplyScopePlan{
+		{
+			ScopeID:      "notes_scope",
+			DataViewName: "vw_example__notes",
+			Fields: []runtimeApplyFieldPlan{
+				{FieldID: "note_text", ColumnName: "note_text", StorageKey: "note_text", Kind: "long_text", Supported: true},
+				{FieldID: "secret_note", ColumnName: "secret_note", StorageKey: "secret_note", Kind: "long_text", Supported: true},
+			},
+		},
+	})
+	if len(subtables) != 1 {
+		t.Fatalf("subtable count = %d, want 1", len(subtables))
+	}
+	if subtables[0].Title != "Notes" {
+		t.Fatalf("subtable title = %q, want %q", subtables[0].Title, "Notes")
+	}
+	if len(subtables[0].Columns) != 1 {
+		t.Fatalf("subtable column count = %d, want 1", len(subtables[0].Columns))
+	}
+	if subtables[0].Columns[0].FieldID != "note_text" {
+		t.Fatalf("subtable column fieldId = %q, want %q", subtables[0].Columns[0].FieldID, "note_text")
 	}
 }
 

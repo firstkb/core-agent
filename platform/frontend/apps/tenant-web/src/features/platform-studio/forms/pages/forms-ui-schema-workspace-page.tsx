@@ -4357,6 +4357,7 @@ export function FormsViewWorkspacePage() {
   const selectedFieldIsTags = selectedField?.preset === "tags";
   const selectedFieldAutocompleteChecked = selectedField ? selectedField.autocomplete !== "off" : true;
   const canEditModelDefinition = access.canManageStructure && isDefaultView;
+  const shouldSyncFieldNodeTitlesWithModel = isDefaultView && !isStaticModel;
   const canToggleModelLocks = currentActor.isRoot && !isStaticModel;
   const canToggleViewLocks = currentActor.isRoot;
   const selectedFieldDefaultAutocompleteValue = useMemo(() => {
@@ -4534,7 +4535,7 @@ export function FormsViewWorkspacePage() {
           nextModel,
           nextView,
         );
-        const nextCanonicalDocument = isDefaultView
+        const nextCanonicalDocument = shouldSyncFieldNodeTitlesWithModel
           ? syncFieldNodeTitlesWithModel(nextDocument, nextModel)
           : nextDocument;
         const alignedStructureVersions = [
@@ -5887,7 +5888,7 @@ export function FormsViewWorkspacePage() {
         ? ((savedModelDraft.version ?? previousModelStructureVersion) + 1)
         : (currentModel.version ?? savedModelDraft.version ?? previousModelStructureVersion),
     });
-    const documentForSave = isDefaultView
+    const documentForSave = shouldSyncFieldNodeTitlesWithModel
       ? syncFieldNodeTitlesWithModel(document, nextModel)
       : document;
     const nextView = findFormsPlaceholderScreenById(nextModel.screens, currentView.id) ?? currentView;
@@ -5989,7 +5990,7 @@ export function FormsViewWorkspacePage() {
       );
       commitSavedDraft(
         savedModelWithView,
-        isDefaultView ? syncFieldNodeTitlesWithModel(savedDocument, savedModelWithView) : savedDocument,
+        shouldSyncFieldNodeTitlesWithModel ? syncFieldNodeTitlesWithModel(savedDocument, savedModelWithView) : savedDocument,
         savedLayoutBlueprint,
       );
     } catch (error) {
@@ -6514,7 +6515,12 @@ export function FormsViewWorkspacePage() {
                                       {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
                                     </Label>
                                     <Input
-                                      disabled={Boolean(selectedField && isDefaultView && !canEditModelDefinition)}
+                                      disabled={Boolean(
+                                        selectedField
+                                        && isDefaultView
+                                        && !canEditModelDefinition
+                                        && !isStaticModel,
+                                      )}
                                       id="tenant-platform-studio-node-title"
                                       onChange={(event) => {
                                         const nextTitle = event.target.value;

@@ -66,6 +66,7 @@ import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
 import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
+import { formRuntimePaths } from "../../../form-runtime/form-runtime-route-meta";
 
 function ScreenActionsIcon() {
   return (
@@ -870,6 +871,15 @@ export function FormsPage() {
                                 </button>
                               </MenuTrigger>
                             <MenuContent className="tenant-web__platform-studio-menu">
+                              <MenuItem
+                                onClick={() => navigate(formRuntimePaths.list(
+                                  getFormsPlaceholderModelRouteId(selectedModel),
+                                  getFormsPlaceholderViewRouteId(view),
+                                ))}
+                              >
+                                {t("tenant.platformStudio.forms.viewData")}
+                              </MenuItem>
+                              <MenuSeparator />
                               <MenuItem
                                 disabled={!viewAccess.canCopyView || isSubmittingDialog}
                                 onClick={() => openCopyViewDialog(selectedModel, view)}

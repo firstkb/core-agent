@@ -1,6 +1,10 @@
 package platformstudioformbuilder
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
+)
 
 type ExpectedVersions struct {
 	Model *int64 `json:"model,omitempty"`
@@ -141,6 +145,32 @@ type ExportFile struct {
 	FileName    string
 	ContentType string
 	Content     []byte
+}
+
+type RuntimeViewListMetaResponse = collectiontable.MetaResponse
+type RuntimeViewListQueryRequest = collectiontable.QueryRequest
+type RuntimeViewListQueryResponse = collectiontable.QueryResponse
+type RuntimeViewListSearchSuggestionsResponse = collectiontable.SearchSuggestionsResponse
+
+type RuntimeViewRecordField struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type RuntimeViewRecordSubtable struct {
+	ID      string                             `json:"id"`
+	Title   string                             `json:"title"`
+	Columns []collectiontable.ColumnDefinition `json:"columns"`
+	Rows    []collectiontable.TableRow         `json:"rows"`
+}
+
+type RuntimeViewRecordResponse struct {
+	Fields    []RuntimeViewRecordField    `json:"fields"`
+	Subtables []RuntimeViewRecordSubtable `json:"subtables,omitempty"`
+	SurfaceID string                      `json:"surfaceId"`
+	Title     string                      `json:"title"`
 }
 
 type ModelSummary struct {

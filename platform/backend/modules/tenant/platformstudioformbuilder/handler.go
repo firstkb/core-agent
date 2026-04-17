@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 type Handler struct {
@@ -59,6 +60,56 @@ func (h *Handler) ExportModelData(ctx context.Context, r *http.Request, _ struct
 
 func (h *Handler) ExportModelBundle(ctx context.Context, r *http.Request, _ struct{}) (*ExportFile, error) {
 	out, err := h.service.ExportModelBundle(ctx, strings.TrimSpace(r.PathValue("modelId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadRuntimeViewListMeta(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewListMetaResponse, error) {
+	out, err := h.service.LoadRuntimeViewListMeta(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) QueryRuntimeViewList(ctx context.Context, r *http.Request, req RuntimeViewListQueryRequest) (*RuntimeViewListQueryResponse, error) {
+	out, err := h.service.QueryRuntimeViewList(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadRuntimeViewListSearchSuggestions(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewListSearchSuggestionsResponse, error) {
+	out, err := h.service.LoadRuntimeViewListSearchSuggestions(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadRuntimeViewRecord(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewRecordResponse, error) {
+	out, err := h.service.LoadRuntimeViewRecord(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
+	)
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -138,6 +189,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_TENANT_MISSING", http.StatusForbidden, "tenant context missing")
 	case errors.Is(err, ErrInvalidDraft):
 		return apperr.New("FORM_BUILDER_INVALID", http.StatusBadRequest, "invalid payload")
+	case errors.Is(err, collectiontable.ErrInvalidQuery):
+		return apperr.New("FORM_BUILDER_RUNTIME_INVALID_QUERY", http.StatusBadRequest, "invalid query")
 	case errors.Is(err, ErrDeleteUnsupported):
 		return apperr.New("FORM_BUILDER_DELETE_UNSUPPORTED", http.StatusBadRequest, "delete is not supported for this model type")
 	case errors.Is(err, ErrExportUnsupported):
@@ -154,6 +207,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_MODEL_NOT_FOUND", http.StatusNotFound, "model not found")
 	case errors.Is(err, ErrViewNotFound):
 		return apperr.New("FORM_BUILDER_VIEW_NOT_FOUND", http.StatusNotFound, "view not found")
+	case errors.Is(err, ErrRecordNotFound):
+		return apperr.New("FORM_BUILDER_RECORD_NOT_FOUND", http.StatusNotFound, "record not found")
 	case errors.Is(err, ErrCannotDeleteLastView):
 		return apperr.New("FORM_BUILDER_VIEW_DELETE_BLOCKED", http.StatusConflict, "cannot delete last view")
 	default:

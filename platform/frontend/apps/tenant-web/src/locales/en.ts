@@ -1,6 +1,90 @@
 import type { LocaleResourceTree } from "@platform/i18n";
 
 export const tenantEnglishMessages = {
+  admin: {
+    collectionTable: {
+      actions: {
+        clear: "Clear",
+        exportXls: "Export XLS",
+        favorite: "Favorite",
+        reload: "Reload",
+        resetFilters: "Reset filters",
+        saveFilterSet: "Save filter set",
+        saved: "Saved",
+        setActive: "Set active",
+        setInactive: "Set inactive",
+        startNew: "Start New",
+      },
+      dialog: {
+        cancel: "Cancel",
+        placeholder: "Filter name",
+        save: "Save",
+        title: "Set Filter Name",
+        validation: {
+          duplicate: "A saved filter with this name already exists.",
+          empty: "Enter a filter name.",
+        },
+      },
+      empty: {
+        noRecords: "No records found",
+      },
+      errors: {
+        remoteAdapter: "Remote adapter",
+        remoteMetadata: "The remote collection adapter did not return metadata. Retry to reload the backend contract.",
+        requestFailed: "Collection request failed",
+        retryRequest: "Retry request",
+      },
+      favorite: {
+        add: "Add to favorites",
+        remove: "Remove from favorites",
+      },
+      menu: {
+        moreActions: "More actions",
+        noSavedFilters: "No saved filters yet",
+        openSavedFilters: "Open saved filters",
+        openTableActions: "Open table actions",
+        savedFilters: "Saved filters",
+      },
+      operators: {
+        contains: "Contains",
+        isEmpty: "is empty",
+        isEqualTo: "Is equal to",
+        isGreaterOrEqualTo: "Is greater or equal to",
+        isGreaterThan: "Is greater than",
+        isLessOrEqualTo: "Is less or equal to",
+        isLessThan: "Is less than",
+        isNotEmpty: "is not empty",
+        isNotEqualTo: "Is not equal to",
+      },
+      pagination: {
+        entries: "entries",
+        entry: "entry",
+        rowsPerPage: "Rows per page",
+      },
+      rowActions: {
+        edit: "Edit",
+        moreActions: "More actions",
+        pdf: "PDF",
+        openActions: "Open row actions",
+        view: "View",
+      },
+      search: {
+        all: "All",
+        fieldAria: "Search field",
+        inputAria: "Search records",
+        operatorAria: "Search operator",
+        placeholder: "Search...",
+        pressEnter: "Press Enter to apply",
+        selectDate: "Select date",
+      },
+      selection: {
+        bulkActions: "Bulk actions",
+        selectAllVisible: "Select all visible rows",
+        selectedCount: "{{count}} selected",
+        selectRow: "Select {{label}}",
+      },
+    },
+  },
   tenant: {
     auth: {
       descriptionCode: "Enter the Authorization Code sent to {{identifier}}.",
@@ -27,6 +111,14 @@ export const tenantEnglishMessages = {
         label: "Dashboard",
         note: "Workspace overview",
       },
+      runtime: {
+        forms: {
+          headerMeta: "Forms",
+          headerTitle: "Forms",
+          viewHeaderMeta: "Forms / {{modelLabel}} / {{viewLabel}}",
+        },
+        headerTitle: "Runtime",
+      },
       platformStudio: {
         headerMeta: "Platform Studio",
         forms: {
@@ -40,6 +132,19 @@ export const tenantEnglishMessages = {
         label: "Platform Studio",
         navigation: {
           label: "Navigation Builder",
+        },
+      },
+    },
+    runtime: {
+      forms: {
+        record: {
+          empty: "No visible fields to display.",
+          emptySubtable: "No rows",
+          loadFailed: "Unable to load this record.",
+          loading: "Loading record…",
+          notFound: "This record could not be found.",
+          print: "Print",
+          title: "View record",
         },
       },
     },
@@ -122,6 +227,7 @@ export const tenantEnglishMessages = {
         titleLabel: "Title",
         titlePlaceholder: "Enter a title",
         titleRequired: "Enter a title before continuing.",
+        viewData: "View data",
         viewActions: "View actions",
         viewsTitle: "Views",
         structureLocked: "Structure locked",

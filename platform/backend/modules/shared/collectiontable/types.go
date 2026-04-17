@@ -4,6 +4,7 @@ type MetaResponse struct {
 	SurfaceID       string                 `json:"surfaceId"`
 	Title           string                 `json:"title"`
 	Search          SearchMeta             `json:"search"`
+	DefaultSort     SortRequest            `json:"defaultSort,omitempty"`
 	Fields          []FieldDefinition      `json:"fields"`
 	Columns         []ColumnDefinition     `json:"columns"`
 	RowLayout       RowLayout              `json:"rowLayout"`

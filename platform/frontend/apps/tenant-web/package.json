@@ -7,6 +7,7 @@
     "@platform/api-client": "workspace:*",
     "@platform/app-shell": "workspace:*",
     "@platform/auth-core": "workspace:*",
+    "@platform/collection-table": "workspace:*",
     "@platform/i18n": "workspace:*",
     "@platform/platform-studio-core": "workspace:*",
     "@platform/tenant-core": "workspace:*",

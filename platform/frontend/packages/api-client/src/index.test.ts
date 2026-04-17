@@ -163,6 +163,29 @@ describe("api-client unauthorized recovery", () => {
     expect(request).toHaveBeenNthCalledWith(1, "stale-token");
     expect(request).toHaveBeenNthCalledWith(2, "fresh-token");
   });
+
+  it("does not retry for domain-level forbidden errors", async () => {
+    const request = vi.fn(async () => {
+      throw new ApiClientError("model structure is read-only for this model type", {
+        code: "FORM_BUILDER_MODEL_STRUCTURE_READ_ONLY",
+        statusCode: 403,
+      });
+    });
+    const recoverUnauthorized = vi.fn(async () => "fresh-token");
+
+    await expect(
+      requestWithUnauthorizedRetry(request, {
+        accessToken: "stale-token",
+        onUnauthorized: recoverUnauthorized,
+      }),
+    ).rejects.toMatchObject({
+      code: "FORM_BUILDER_MODEL_STRUCTURE_READ_ONLY",
+      statusCode: 403,
+    });
+
+    expect(recoverUnauthorized).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("api-client tenant form builder draft", () => {

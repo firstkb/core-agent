@@ -94,11 +94,17 @@ export type CollectionTablePageRowActionPathResolver = (
   row: CollectionTableRenderRow,
 ) => string | null;
 
+export type CollectionTablePageFrontendRowActionHandler = (
+  action: CollectionTableRowActionDefinition,
+  row: CollectionTableRenderRow,
+) => void | Promise<void>;
+
 type CollectionTablePageProps = {
   adapter: CollectionTableAdapter;
   getCreatePath?: () => string | null;
   isIgnorableError?: (error: unknown) => boolean;
   onFavoriteToggleSuccess?: (event: CollectionTableFavoriteToggleEvent) => Promise<void> | void;
+  onFrontendRowAction?: CollectionTablePageFrontendRowActionHandler;
   resolveFrontendRowActionPath?: CollectionTablePageRowActionPathResolver;
   tableId: string;
 };
@@ -184,6 +190,7 @@ export function CollectionTablePage({
   getCreatePath,
   isIgnorableError,
   onFavoriteToggleSuccess,
+  onFrontendRowAction,
   resolveFrontendRowActionPath,
   tableId,
 }: CollectionTablePageProps) {
@@ -372,6 +379,11 @@ export function CollectionTablePage({
     row: CollectionTableRenderRow,
   ) {
     if (action.execution === "frontend") {
+      if (onFrontendRowAction) {
+        await onFrontendRowAction(action, row);
+        return;
+      }
+
       const targetPath = resolveFrontendRowActionPath?.(action, row) ?? null;
 
       if (targetPath) {
@@ -464,12 +476,13 @@ export function CollectionTablePage({
       }
 
       const targetPath = resolveFrontendRowActionPath?.(action, row) ?? null;
+      const canRun = Boolean(targetPath) || Boolean(onFrontendRowAction);
 
       return {
-        disabled: !targetPath,
+        disabled: !canRun,
         id: action.id,
         label: resolveRowActionLabel(action),
-        onSelect: targetPath
+        onSelect: canRun
           ? () => {
             void handleRunRowAction(action, row);
           }

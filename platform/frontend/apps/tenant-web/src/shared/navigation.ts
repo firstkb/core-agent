@@ -3,6 +3,11 @@ import {
   getPlatformStudioHeaderTitle,
   isPlatformStudioPath,
 } from "../features/platform-studio/platform-studio-route-meta";
+import {
+  getFormRuntimeHeaderMeta,
+  getFormRuntimeHeaderTitle,
+  isFormRuntimePath,
+} from "../features/form-runtime/form-runtime-route-meta";
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -52,6 +57,10 @@ export function getTenantSidebarActiveItemId(pathname: string) {
     return "";
   }
 
+  if (isFormRuntimePath(pathname)) {
+    return "";
+  }
+
   const publishedRouteKey = getPublishedRuntimeRouteKeyFromPathname(pathname);
   if (publishedRouteKey) {
     return getPublishedRuntimeItemId(publishedRouteKey);
@@ -88,6 +97,11 @@ export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname
     return platformStudioHeaderTitle;
   }
 
+  const formRuntimeHeaderTitle = getFormRuntimeHeaderTitle(translate, pathname);
+  if (formRuntimeHeaderTitle) {
+    return formRuntimeHeaderTitle;
+  }
+
   if (pathname === "/app" || pathname.startsWith("/app/")) {
     return translate("tenant.navigation.runtime.headerTitle");
   }
@@ -99,6 +113,11 @@ export function getTenantShellHeaderMeta(translate: TranslateFunction, pathname:
   const platformStudioHeaderMeta = getPlatformStudioHeaderMeta(translate, pathname);
   if (platformStudioHeaderMeta) {
     return platformStudioHeaderMeta;
+  }
+
+  const formRuntimeHeaderMeta = getFormRuntimeHeaderMeta(translate, pathname);
+  if (formRuntimeHeaderMeta) {
+    return formRuntimeHeaderMeta;
   }
 
   return null;

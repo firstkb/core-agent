@@ -18,6 +18,7 @@ import type {
   CollectionTableRowActionDefinition,
 } from "./collection-table-contract";
 import {
+  formatCollectionTableCellValue,
   type CollectionTableRenderRow,
   getCellText,
   getRuntimeCollectionColumns,
@@ -176,7 +177,11 @@ function buildRenderColumns(
           );
         }
 
-        return <TextCell value={getCellText(cell)} />;
+        const textColumnType = column.type === "date" || column.type === "date_time"
+          ? column.type
+          : "text";
+
+        return <TextCell value={formatCollectionTableCellValue(getCellText(cell), textColumnType)} />;
       },
       sortable: fieldDefinition?.sortable ?? false,
       width: column.width,

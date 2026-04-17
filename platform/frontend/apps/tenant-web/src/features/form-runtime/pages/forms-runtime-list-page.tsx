@@ -172,7 +172,11 @@ function RuntimeRecordDialogBody({
   );
 }
 
-export function FormsRuntimeListPage() {
+export function FormsRuntimeListPage({
+  entryContext = "runtime",
+}: {
+  entryContext?: "preview" | "runtime";
+}) {
   const { t } = useTranslation();
   const params = useParams();
   const modelId = params.modelId?.trim() ?? "";
@@ -191,10 +195,11 @@ export function FormsRuntimeListPage() {
       ? createFormRuntimeCollectionTableClient({
         baseUrl: runtimeConfig.tenantApiUrl,
         modelId,
+        routeContext: entryContext,
         viewId,
       })
       : null,
-    [modelId, runtimeConfig.tenantApiUrl, viewId],
+    [entryContext, modelId, runtimeConfig.tenantApiUrl, viewId],
   );
   const adapter = useMemo(
     () => client

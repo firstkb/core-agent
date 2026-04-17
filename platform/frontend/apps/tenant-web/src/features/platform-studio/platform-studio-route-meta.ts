@@ -17,6 +17,7 @@ const platformStudioRoutePatterns = {
   legacyObjectScreen: "/builder/forms/:objectId/screens/:screenId",
   legacyView: "/builder/forms/:modelId/screens/:viewId",
   model: "/builder/forms/:modelId",
+  previewRuntimeView: "/app/platform-studio/forms/models/:modelId/views/:viewId",
   root: "/builder",
   view: "/builder/forms/:modelId/views/:viewId",
 } as const;
@@ -25,6 +26,9 @@ export const platformStudioPaths = {
   forms: platformStudioRoutePatterns.forms,
   model(modelId: string) {
     return `${platformStudioPaths.forms}/${encodeURIComponent(modelId)}`;
+  },
+  previewRuntimeView(modelId: string, viewId: string) {
+    return `/app/platform-studio/forms/models/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`;
   },
   root: platformStudioRoutePatterns.root,
   view(modelId: string, viewId: string) {
@@ -65,18 +69,21 @@ export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRout
   }
 
   const canonicalViewMatch = matchPath(platformStudioRoutePatterns.view, pathname) as PathMatch<"modelId" | "viewId"> | null;
+  const previewRuntimeViewMatch = matchPath(platformStudioRoutePatterns.previewRuntimeView, pathname) as PathMatch<"modelId" | "viewId"> | null;
   const legacyViewMatch = matchPath(platformStudioRoutePatterns.legacyView, pathname) as PathMatch<"modelId" | "viewId"> | null;
   const legacyObjectViewMatch = matchPath(platformStudioRoutePatterns.legacyObjectView, pathname) as PathMatch<"objectId" | "screenId"> | null;
   const legacyObjectScreenMatch = matchPath(platformStudioRoutePatterns.legacyObjectScreen, pathname) as PathMatch<"objectId" | "screenId"> | null;
-  if (canonicalViewMatch || legacyViewMatch || legacyObjectViewMatch || legacyObjectScreenMatch) {
+  if (canonicalViewMatch || previewRuntimeViewMatch || legacyViewMatch || legacyObjectViewMatch || legacyObjectScreenMatch) {
     const modelId =
       canonicalViewMatch?.params.modelId ??
+      previewRuntimeViewMatch?.params.modelId ??
       legacyViewMatch?.params.modelId ??
       legacyObjectViewMatch?.params.objectId ??
       legacyObjectScreenMatch?.params.objectId ??
       "";
     const viewId =
       canonicalViewMatch?.params.viewId ??
+      previewRuntimeViewMatch?.params.viewId ??
       legacyViewMatch?.params.viewId ??
       legacyObjectViewMatch?.params.screenId ??
       legacyObjectScreenMatch?.params.screenId ??

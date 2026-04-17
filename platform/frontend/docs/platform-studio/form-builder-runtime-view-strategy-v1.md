@@ -8,7 +8,7 @@ Date: 2026-04-16
 This document fixes the runtime delivery strategy for Form Builder so that:
 
 - runtime work is not implemented twice
-- Form Builder preview and future tenant navigation share one execution path
+- Form Builder preview and future tenant navigation share one runtime engine
 - view-level authoring stays the source of truth for list and form runtime
 
 It answers four questions:
@@ -25,13 +25,19 @@ Accepted strategy:
 - Form Builder runtime is `per-view`, not `per-model`
 - each authored Form Builder `view` is a future runtime screen
 - Form Builder should not build a separate model-only data viewer
-- Form Builder should not build one runtime path for builder preview and another for future sidebar/navigation
+- Form Builder should not build two different runtime engines for builder preview and future sidebar/navigation
 
 There is one runtime engine and multiple entrypoints into it:
 
 - Form Builder preview shortcut such as `View data`
 - future sidebar module entry
 - future direct deep link
+
+Important nuance:
+
+- runtime engine is shared
+- route entry context is not
+- runtime navigation and Platform Studio preview use different route namespaces
 
 ## Canonical runtime entrypoint
 
@@ -82,6 +88,10 @@ Recommended route shape:
 
 - `/app/forms/:modelId/views/:viewId`
 
+Accepted Platform Studio preview route:
+
+- `/app/platform-studio/forms/models/:modelId/views/:viewId`
+
 Recommended child routes:
 
 - list runtime: `/app/forms/:modelId/views/:viewId`
@@ -93,6 +103,7 @@ Important rule:
 
 - Navigation Builder should not persist raw URLs as the source of truth
 - route strings are resolved from the typed runtime target
+- Platform Studio preview route is not a second target type and not a Navigation Builder target
 
 External record identity rule:
 
@@ -189,13 +200,15 @@ Form Builder should expose runtime through a preview shortcut on each authored v
 Accepted direction:
 
 - add `View data` or `Open runtime` on a view
-- this action opens the same runtime target that future Navigation Builder modules will open
+- this action opens the same authored runtime engine through the Platform Studio preview route
 
-This preview is not a separate product mode.
+Preview is therefore:
 
-It is only:
-
-- another entrypoint into the same runtime screen
+- the same runtime engine
+- a different route context
+- not a second target type
+- not a favorite target
+- not a Navigation Builder target
 
 ## Navigation Builder integration rule
 
@@ -205,6 +218,7 @@ Accepted rule:
 
 - a navigation module points to `targetType = form_builder_view`
 - it does not create a second screen definition for the same Form Builder view
+- it does not use the Platform Studio preview route as the runtime target
 
 That means future module settings should bind:
 

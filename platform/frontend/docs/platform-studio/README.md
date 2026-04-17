@@ -88,6 +88,7 @@ Current active builder direction:
 - `platform-studio/form-builder-package-boundary-plan-v1.md`
 - `platform-studio/form-builder-runtime-view-strategy-v1.md`
 - `platform-studio/form-builder-runtime-routes-contract-v1.md`
+- `platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
 - `platform-studio/v2-foundation-brief.md`
 - `platform-studio/forms-foundation-a-technical-map.md`
 - `platform-studio/data-schema-storage-rules.md`

@@ -215,10 +215,22 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		exportModelBundleHandler,
 	)
 
+	// TODO(form-builder-runtime-access-v1): after Navigation Builder ACL exists, enforce
+	// runtime/navigation grants on the `/app/forms/...` runtime endpoints below. Keep that guard
+	// attached to the runtime route namespace and the `form_builder_view` target, not to a
+	// request payload source flag. Until that ACL model exists, keep runtime routes on the
+	// current tenant-auth baseline; do not invent a temporary grants policy.
 	register(
 		"FORM_BUILDER_RUNTIME_LIST_META",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/meta",
+		loadRuntimeViewListMetaHandler,
+	)
+
+	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_META",
+		http.MethodGet,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/meta",
 		loadRuntimeViewListMetaHandler,
 	)
 
@@ -230,6 +242,13 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_QUERY",
+		http.MethodPost,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/query",
+		queryRuntimeViewListHandler,
+	)
+
+	register(
 		"FORM_BUILDER_RUNTIME_LIST_SEARCH_SUGGESTIONS",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/search-suggestions",
@@ -237,9 +256,23 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SEARCH_SUGGESTIONS",
+		http.MethodGet,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/search-suggestions",
+		loadRuntimeViewListSearchSuggestionsHandler,
+	)
+
+	register(
 		"FORM_BUILDER_RUNTIME_LIST_SAVED_FILTER_CREATE",
 		http.MethodPost,
 		"/app/forms/{modelId}/views/{viewId}/saved-filters",
+		createRuntimeViewListSavedFilterHandler,
+	)
+
+	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SAVED_FILTER_CREATE",
+		http.MethodPost,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/saved-filters",
 		createRuntimeViewListSavedFilterHandler,
 	)
 
@@ -258,11 +291,39 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_LIST_SAVED_FILTER_DELETE",
+		http.MethodDelete,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/saved-filters/{savedFilterId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListDeleteSavedFilterResponse, error) {
+			info, err := srv.platformStudioFormBuilderHTTP.DeleteRuntimeViewListSavedFilter(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "FORM_BUILDER_PREVIEW_RUNTIME_LIST_SAVED_FILTER_DELETE",
+					http.StatusInternalServerError, "cannot delete form builder preview runtime saved filter", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
 		"FORM_BUILDER_RUNTIME_RECORD_DETAIL",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}",
 		loadRuntimeViewRecordHandler,
 	)
+
+	register(
+		"FORM_BUILDER_PREVIEW_RUNTIME_RECORD_DETAIL",
+		http.MethodGet,
+		"/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/records/{docGuid}",
+		loadRuntimeViewRecordHandler,
+	)
+
+	// TODO(form-builder-preview-access-v1): enforce Platform Studio access on the mirrored preview
+	// runtime endpoints under `/app/platform-studio/forms/models/{modelId}/views/{viewId}/runtime/*`.
+	// Keep that guard attached to the preview API namespace. Do not multiplex preview vs runtime
+	// access through an extra request-source parameter; the API route namespace is the contract.
+	// If a future helper seam such as `authorizeRuntimeViewAccess(...)` is added before the full
+	// ACL model lands, keep it allow-by-default rather than inventing a temporary policy.
 
 	register(
 		"FORM_BUILDER_MODEL_DELETE",

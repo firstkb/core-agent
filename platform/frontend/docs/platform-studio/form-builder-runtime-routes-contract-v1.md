@@ -7,13 +7,14 @@ Date: 2026-04-16
 
 This document fixes the route contract for Form Builder runtime screens.
 
-It answers five questions:
+It answers six questions:
 
 1. what the canonical runtime paths are
 2. how list, create, read, and edit routes are split
 3. how record detail may render as a page or a modal
 4. which query params are allowed in v1
 5. how Navigation Builder resolves a `form_builder_view` target into a URL
+6. how Platform Studio preview enters the same runtime engine without becoming a second target type
 
 ## Current conclusion
 
@@ -24,6 +25,7 @@ Accepted direction:
 - external record identity uses `guid` only
 - Navigation Builder resolves a `form_builder_view` target to the list route
 - record-level routes are runtime-internal navigation, not navigation-module targets
+- Platform Studio preview uses a separate route namespace for the same runtime engine
 
 ## Canonical route base
 
@@ -38,6 +40,15 @@ Important rule:
 - `modelId` is the stable Form Builder model identity
 - `viewId` is the stable authored view identity
 - route resolution must not use `view.key`, title, SQL object names, or temporary UI ids
+
+Accepted Platform Studio preview base:
+
+- `/app/platform-studio/forms/models/:modelId/views/:viewId`
+
+Important preview rule:
+
+- this preview base is not a second runtime target type
+- it exists only for Platform Studio entry context
 
 ## Canonical route set
 
@@ -204,11 +215,12 @@ Why this is accepted:
 
 ## Builder preview rule
 
-Form Builder preview actions such as `View data` should resolve to the same route family.
+Form Builder preview actions such as `View data` should resolve to the same runtime engine through the Platform Studio preview route family.
 
 Accepted rule:
 
-- preview entry from Form Builder opens the canonical list route for the selected authored view
+- preview entry from Form Builder opens:
+  - `/app/platform-studio/forms/models/:modelId/views/:viewId`
 
 Optional later actions may open:
 
@@ -216,14 +228,14 @@ Optional later actions may open:
 - read route
 - edit route
 
-but they must still stay inside the same route family defined here.
+but they must still stay attached to the same authored `form_builder_view` target.
 
 ## Redirect rules
 
 Minimum accepted redirect direction:
 
 - open from Navigation Builder module -> list route
-- open from Form Builder preview -> list route
+- open from Form Builder preview -> Platform Studio preview route
 - cancel/close from `new`/`view`/`edit`:
   - use `returnTo` if present
   - otherwise fall back to the canonical list route for the same `modelId/viewId`
@@ -259,5 +271,7 @@ Accepted v1 query params:
 
 Accepted Navigation Builder behavior:
 
-- resolve `form_builder_view` to the list route
-- do not store record-specific routes in module config
+- `form_builder_view` resolves to:
+  - `/app/forms/:modelId/views/:viewId`
+- Platform Studio preview resolves separately to:
+  - `/app/platform-studio/forms/models/:modelId/views/:viewId`

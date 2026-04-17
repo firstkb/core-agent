@@ -405,6 +405,10 @@ export function App({
               <Route element={<TenantDashboardPage />} path="dashboard" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId/view/:docGuid" />
+              <Route
+                element={<FormsRuntimeListPage entryContext="preview" />}
+                path="app/platform-studio/forms/models/:modelId/views/:viewId"
+              />
               {renderPlatformStudioRoutes()}
               <Route element={<PublishedAppRoutePage />} path="app/:routeKey/*" />
               <Route element={<Navigate replace to="/dashboard" />} path="*" />

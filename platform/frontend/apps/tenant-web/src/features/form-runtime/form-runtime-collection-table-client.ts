@@ -203,9 +203,12 @@ async function requestTenantCollectionTable<T>(
 export function createFormRuntimeCollectionTableClient(options: {
   baseUrl: string;
   modelId: string;
+  routeContext?: "preview" | "runtime";
   viewId: string;
 }): FormRuntimeCollectionTableSessionClient {
-  const pathPrefix = `/app/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}`;
+  const pathPrefix = options.routeContext === "preview"
+    ? `/app/platform-studio/forms/models/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}/runtime`
+    : `/app/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}`;
 
   return {
     async createSavedFilterSet(accessToken, input) {

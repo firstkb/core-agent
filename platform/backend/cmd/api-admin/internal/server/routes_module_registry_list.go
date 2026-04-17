@@ -65,6 +65,16 @@ func (srv *Server) registerModuleRegistryListRoutes(b *router.Builder) {
 			return info, nil
 		}, srv.logger))
 
+	register("ADMIN_MODULE_REGISTRY_SAVED_FILTER_DELETE", http.MethodDelete, "/app/admin/module-registry/list/saved-filters/{savedFilterId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*moduleregistrylist.DeleteSavedFilterResponse, error) {
+			info, err := srv.moduleRegistryListHT.DeleteSavedFilter(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_MODULE_REGISTRY_SAVED_FILTER_DELETE",
+					http.StatusInternalServerError, "cannot delete module registry saved filter", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger))
+
 	register("ADMIN_MODULE_REGISTRY_BULK_ACTION", http.MethodPost, "/app/admin/module-registry/list/bulk-actions/{actionId}",
 		handler.HandleJson(func(ctx context.Context, r *http.Request, req moduleregistrylist.BulkActionInput) (*moduleregistrylist.MutationResult, error) {
 			info, err := srv.moduleRegistryListHT.RunBulkAction(ctx, r, req)

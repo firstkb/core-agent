@@ -151,6 +151,9 @@ type RuntimeViewListMetaResponse = collectiontable.MetaResponse
 type RuntimeViewListQueryRequest = collectiontable.QueryRequest
 type RuntimeViewListQueryResponse = collectiontable.QueryResponse
 type RuntimeViewListSearchSuggestionsResponse = collectiontable.SearchSuggestionsResponse
+type RuntimeViewListSavedFilterSet = collectiontable.SavedFilterSet
+type RuntimeViewListCreateSavedFilterInput = collectiontable.CreateSavedFilterInput
+type RuntimeViewListDeleteSavedFilterResponse = collectiontable.MutationResult
 
 type RuntimeViewRecordField struct {
 	ID    string `json:"id"`

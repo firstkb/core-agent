@@ -37,6 +37,7 @@ type fakePreferences struct {
 	state         *collectionprefs.State
 	toggleValue   bool
 	lastSurfaceID string
+	lastDeletedID string
 }
 
 func (f *fakePreferences) LoadState(context.Context, uuid.UUID, string) (*collectionprefs.State, error) {
@@ -58,6 +59,12 @@ func (f *fakePreferences) CreateSavedFilter(_ context.Context, _ uuid.UUID, surf
 		Label:        req.Label,
 		QuickFilters: req.QuickFilters,
 	}, nil
+}
+
+func (f *fakePreferences) DeleteSavedFilter(_ context.Context, _ uuid.UUID, surfaceID string, savedFilterID string) error {
+	f.lastSurfaceID = surfaceID
+	f.lastDeletedID = savedFilterID
+	return nil
 }
 
 type fakeLauncher struct {
@@ -212,6 +219,25 @@ func TestCreateSavedFilterUsesTenantSurface(t *testing.T) {
 	}
 	if prefs.lastSurfaceID != SurfaceID {
 		t.Fatalf("expected surface %q, got %q", SurfaceID, prefs.lastSurfaceID)
+	}
+}
+
+func TestDeleteSavedFilterUsesTenantSurface(t *testing.T) {
+	prefs := &fakePreferences{}
+	svc := NewService(&fakeRepository{}, prefs, nil)
+
+	out, err := svc.DeleteSavedFilter(rootContext(), "saved-filter-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out == nil || !out.OK {
+		t.Fatalf("unexpected delete response %+v", out)
+	}
+	if prefs.lastSurfaceID != SurfaceID {
+		t.Fatalf("expected surface %q, got %q", SurfaceID, prefs.lastSurfaceID)
+	}
+	if prefs.lastDeletedID != "saved-filter-1" {
+		t.Fatalf("expected delete id saved-filter-1, got %q", prefs.lastDeletedID)
 	}
 }
 

@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	ErrLabelRequired      = errors.New("collection prefs label required")
-	ErrInvalidSavedFilter = errors.New("collection prefs invalid saved filter")
+	ErrLabelRequired       = errors.New("collection prefs label required")
+	ErrInvalidSavedFilter  = errors.New("collection prefs invalid saved filter")
+	ErrSavedFilterNotFound = errors.New("collection prefs saved filter not found")
 )
 
 type State struct {
@@ -25,6 +26,7 @@ type Repository interface {
 	ToggleFavorite(ctx context.Context, principalID uuid.UUID, surfaceID string) (bool, error)
 	ListSavedFilters(ctx context.Context, principalID uuid.UUID, surfaceID string) ([]collectiontable.SavedFilterSet, error)
 	CreateSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, label string, quickFilters []collectiontable.QuickFilter) (*collectiontable.SavedFilterSet, error)
+	DeleteSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, savedFilterID string) error
 }
 
 type Service struct {
@@ -64,4 +66,11 @@ func (s *Service) CreateSavedFilter(ctx context.Context, principalID uuid.UUID, 
 	}
 
 	return s.repo.CreateSavedFilter(ctx, principalID, surfaceID, req.Label, req.QuickFilters)
+}
+
+func (s *Service) DeleteSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, savedFilterID string) error {
+	if strings.TrimSpace(savedFilterID) == "" {
+		return ErrSavedFilterNotFound
+	}
+	return s.repo.DeleteSavedFilter(ctx, principalID, surfaceID, savedFilterID)
 }

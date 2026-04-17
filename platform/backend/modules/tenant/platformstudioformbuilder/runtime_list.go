@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	collectionprefs "dtriton.com/platform/backend/modules/shared/collectionprefs"
 	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
@@ -18,6 +19,7 @@ var runtimeViewListPageSizeOptions = []int{10, 25, 50}
 
 type runtimeViewListContext struct {
 	CanView           bool
+	DefaultFilters    map[string]any
 	FieldDefinitions  []collectiontable.FieldDefinition
 	Fields            []runtimeViewListFieldMeta
 	GridViewName      string
@@ -30,19 +32,25 @@ type runtimeViewListContext struct {
 }
 
 type runtimeViewListFieldMeta struct {
-	ColumnName string
-	FieldID    string
-	Label      string
-	Type       string
+	AuthoringFieldID string
+	ColumnName       string
+	FieldID          string
+	Label            string
+	QueryKind        string
+	Type             string
 }
 
 func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, viewID string) (*RuntimeViewListMetaResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	runtimeContext, err := s.loadRuntimeViewListContext(ctx, tenant, modelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+	savedFilterSets, err := s.repo.ListRuntimeSavedFilters(ctx, tenant, claims.UserID, runtimeContext.SurfaceID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +62,8 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 			ExportXLS: collectiontable.VisibilityAction{Visible: false},
 			Favorite:  collectiontable.FavoriteAction{Visible: false, IsFavorite: false},
 		},
-		BulkActions:     []collectiontable.BulkActionDefinition{},
-		Columns:         runtimeContext.ColumnDefinitions,
+		BulkActions: []collectiontable.BulkActionDefinition{},
+		Columns:     runtimeContext.ColumnDefinitions,
 		DefaultSort: collectiontable.SortRequest{
 			ColumnID:  runtimeContext.DefaultSortColumn,
 			Direction: collectiontable.NormalizeSortDirection(runtimeContext.DefaultSortDir),
@@ -64,7 +72,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 		PageSizeOptions: append([]int(nil), runtimeViewListPageSizeOptions...),
 		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView),
 		RowLayout:       collectiontable.RowLayout{},
-		SavedFilterSets: []collectiontable.SavedFilterSet{},
+		SavedFilterSets: savedFilterSets,
 		Search: collectiontable.SearchMeta{
 			DefaultFieldID: runtimeContext.DefaultFieldID,
 			Placeholder:    "Search rows",
@@ -75,6 +83,74 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 		SurfaceID: runtimeContext.SurfaceID,
 		Title:     runtimeContext.Title,
 	}, nil
+}
+
+func (s *Service) CreateRuntimeViewListSavedFilter(
+	ctx context.Context,
+	modelID string,
+	viewID string,
+	req RuntimeViewListCreateSavedFilterInput,
+) (*RuntimeViewListSavedFilterSet, error) {
+	tenant, claims, err := s.requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(req.Label) == "" {
+		return nil, collectionprefs.ErrLabelRequired
+	}
+	if err := collectiontable.ValidateQuickFilters(req.QuickFilters); err != nil {
+		return nil, collectionprefs.ErrInvalidSavedFilter
+	}
+
+	runtimeContext, err := s.loadRuntimeViewListContext(ctx, tenant, modelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+
+	out, err := s.repo.CreateRuntimeSavedFilter(
+		ctx,
+		tenant,
+		claims.UserID,
+		runtimeContext.SurfaceID,
+		req.Label,
+		req.QuickFilters,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (s *Service) DeleteRuntimeViewListSavedFilter(
+	ctx context.Context,
+	modelID string,
+	viewID string,
+	savedFilterID string,
+) (*RuntimeViewListDeleteSavedFilterResponse, error) {
+	tenant, claims, err := s.requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if strings.TrimSpace(savedFilterID) == "" {
+		return nil, collectionprefs.ErrSavedFilterNotFound
+	}
+
+	runtimeContext, err := s.loadRuntimeViewListContext(ctx, tenant, modelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.DeleteRuntimeSavedFilter(
+		ctx,
+		tenant,
+		claims.UserID,
+		runtimeContext.SurfaceID,
+		savedFilterID,
+	); err != nil {
+		return nil, err
+	}
+
+	return &RuntimeViewListDeleteSavedFilterResponse{OK: true}, nil
 }
 
 func (s *Service) QueryRuntimeViewList(
@@ -101,7 +177,12 @@ func (s *Service) QueryRuntimeViewList(
 		page = 1
 	}
 	pageSize := collectiontable.NormalizePageSize(req.PageSize, runtimeViewListPageSizeOptions, runtimeViewListDefaultPageSize)
-	whereClause, whereArgs, err := buildRuntimeViewListWhereClause(req.QuickFilters, runtimeContext.FieldDefinitions)
+	whereClause, whereArgs, err := buildRuntimeViewListWhereClause(
+		req.QuickFilters,
+		runtimeContext.DefaultFilters,
+		runtimeContext.FieldDefinitions,
+		runtimeContext.Fields,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -178,6 +259,15 @@ func (s *Service) LoadRuntimeViewListSearchSuggestions(
 	if err != nil {
 		return nil, err
 	}
+	whereClause, whereArgs, err := buildRuntimeViewListWhereClause(
+		nil,
+		runtimeContext.DefaultFilters,
+		runtimeContext.FieldDefinitions,
+		runtimeContext.Fields,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	groups := make([]collectiontable.SearchSuggestionGroup, 0)
 	for _, field := range runtimeContext.FieldDefinitions {
@@ -189,6 +279,8 @@ func (s *Service) LoadRuntimeViewListSearchSuggestions(
 			tenant,
 			runtimeContext.GridViewName,
 			field.ID,
+			whereClause,
+			whereArgs,
 			collectiontable.SuggestionGroupLimit,
 		)
 		if err != nil {
@@ -312,6 +404,7 @@ func (s *Service) loadRuntimeViewListContext(
 
 	return &runtimeViewListContext{
 		CanView:           readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
+		DefaultFilters:    readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
 		FieldDefinitions:  fieldDefinitions,
 		Fields:            fields,
 		GridViewName:      gridViewName,
@@ -352,7 +445,9 @@ func buildRuntimeViewListFields(
 		return nil
 	}
 
+	fieldAuthoringIDs := make(map[string]string, len(fields)*2)
 	fieldLabels := make(map[string]string, len(fields)*2)
+	fieldQueryKinds := make(map[string]string, len(fields)*2)
 	fieldTypes := make(map[string]string, len(fields)*2)
 	rootFields := asSlice(asMap(dataSchema["rootScope"])["fields"])
 	fieldSchemaByID := make(map[string]map[string]any, len(rootFields))
@@ -378,22 +473,30 @@ func buildRuntimeViewListFields(
 				chooseString(normalizeString(schemaField["displayName"]), humanizeIdentifier(field.StorageKey)),
 			),
 		)
+		fieldAuthoringIDs[field.ColumnName] = field.FieldID
 		fieldTypes[field.ColumnName] = runtimeViewListFieldType(field.Kind)
 		fieldLabels[field.ColumnName] = label
+		fieldQueryKinds[field.ColumnName] = runtimeViewListFieldQueryKind(field.Kind)
 
 		defaultAlias := runtimeGridDefaultAliasForField(field)
 		defaultColumn := runtimeGridDefaultColumnForField(field)
 		if defaultAlias != "" {
+			fieldAuthoringIDs[defaultAlias] = field.FieldID
 			fieldTypes[defaultAlias] = runtimeViewListFieldType(field.Kind)
 			fieldLabels[defaultAlias] = label
+			fieldQueryKinds[defaultAlias] = runtimeViewListFieldQueryKind(field.Kind)
 		}
 		if defaultColumn != "" {
+			fieldAuthoringIDs[defaultColumn] = field.FieldID
 			fieldTypes[defaultColumn] = runtimeViewListFieldType(field.Kind)
 			fieldLabels[defaultColumn] = label
+			fieldQueryKinds[defaultColumn] = runtimeViewListFieldQueryKind(field.Kind)
 		}
 		for _, output := range field.LookupDerivedOutputs {
+			fieldAuthoringIDs[output.ColumnName] = buildRuntimeLookupOutputBindingID(field.FieldID, output.OutputKey)
 			fieldTypes[output.ColumnName] = runtimeViewListLookupOutputType(output.OutputKey, output.DataType)
 			fieldLabels[output.ColumnName] = strings.TrimSpace(label + " " + humanizeIdentifier(output.OutputKey))
+			fieldQueryKinds[output.ColumnName] = runtimeViewListLookupOutputQueryKind(output.DataType)
 		}
 	}
 
@@ -404,10 +507,12 @@ func buildRuntimeViewListFields(
 			continue
 		}
 		out = append(out, runtimeViewListFieldMeta{
-			ColumnName: columnName,
-			FieldID:    columnName,
-			Label:      chooseString(fieldLabels[columnName], humanizeIdentifier(columnName)),
-			Type:       chooseString(fieldTypes[columnName], "text"),
+			AuthoringFieldID: chooseString(fieldAuthoringIDs[columnName], columnName),
+			ColumnName:       columnName,
+			FieldID:          columnName,
+			Label:            chooseString(fieldLabels[columnName], humanizeIdentifier(columnName)),
+			QueryKind:        chooseString(fieldQueryKinds[columnName], "text"),
+			Type:             chooseString(fieldTypes[columnName], "text"),
 		})
 	}
 	return out
@@ -434,6 +539,12 @@ func buildRuntimeViewListFieldTitlesByID(uiSchema map[string]any) map[string]str
 		out[fieldID] = title
 	}
 	return out
+}
+
+func readRuntimeViewListDefaultFilters(uiSchema map[string]any) map[string]any {
+	rootScope := uiScope(uiSchema, rootSchemaScopeID)
+	filterDefinitions := asMap(rootScope["filterDefinitions"])
+	return asMap(filterDefinitions["defaultFilters"])
 }
 
 func buildRuntimeViewListDefaultSort(
@@ -480,6 +591,21 @@ func runtimeViewListFieldType(kind string) string {
 	}
 }
 
+func runtimeViewListFieldQueryKind(kind string) string {
+	switch strings.TrimSpace(kind) {
+	case "boolean":
+		return "boolean"
+	case "currency", "decimal", "integer":
+		return "number"
+	case "date":
+		return "date"
+	case "date_time":
+		return "date_time"
+	default:
+		return "text"
+	}
+}
+
 func runtimeViewListLookupOutputType(outputKey string, dataType string) string {
 	switch strings.TrimSpace(dataType) {
 	case "timestamp":
@@ -493,6 +619,23 @@ func runtimeViewListLookupOutputType(outputKey string, dataType string) string {
 	return "text"
 }
 
+func runtimeViewListLookupOutputQueryKind(dataType string) string {
+	switch strings.TrimSpace(dataType) {
+	case "bigint", "decimal", "double precision", "integer", "numeric", "real", "smallint":
+		return "number"
+	case "date":
+		return "date"
+	case "timestamp", "timestamp with time zone", "timestamp without time zone", "timestamptz":
+		return "date_time"
+	default:
+		return "text"
+	}
+}
+
+func buildRuntimeLookupOutputBindingID(fieldID string, outputKey string) string {
+	return strings.TrimSpace(fieldID) + "::lookup_output::" + strings.TrimSpace(outputKey)
+}
+
 func isRuntimeViewListSystemColumn(columnName string) bool {
 	switch strings.TrimSpace(columnName) {
 	case "_id", "tenant_id", "_guid", "_created_at", "_updated_at", runtimeParentForeignKey:
@@ -500,113 +643,4 @@ func isRuntimeViewListSystemColumn(columnName string) bool {
 	default:
 		return false
 	}
-}
-
-func buildRuntimeViewListWhereClause(
-	filters []collectiontable.QuickFilter,
-	fields []collectiontable.FieldDefinition,
-) (string, []any, error) {
-	if len(filters) == 0 {
-		return "", nil, nil
-	}
-
-	fieldsByID := make(map[string]collectiontable.FieldDefinition, len(fields))
-	for _, field := range fields {
-		fieldsByID[strings.TrimSpace(field.ID)] = field
-	}
-
-	filterGroups := groupRuntimeViewListQuickFilters(filters)
-	clauses := make([]string, 0, len(filterGroups))
-	args := make([]any, 0)
-	for _, group := range filterGroups {
-		groupClauses := make([]string, 0, len(group))
-		for _, filter := range group {
-			fieldID := strings.TrimSpace(filter.FieldID)
-			field, ok := fieldsByID[fieldID]
-			if !ok || !field.Searchable {
-				return "", nil, collectiontable.ErrInvalidQuery
-			}
-			clause, clauseArgs, err := buildRuntimeViewListFilterClause(field, filter, len(args)+1)
-			if err != nil {
-				return "", nil, err
-			}
-			groupClauses = append(groupClauses, clause)
-			args = append(args, clauseArgs...)
-		}
-		if len(groupClauses) == 1 {
-			clauses = append(clauses, groupClauses[0])
-			continue
-		}
-		clauses = append(clauses, "("+strings.Join(groupClauses, " OR ")+")")
-	}
-
-	return strings.Join(clauses, " AND "), args, nil
-}
-
-func buildRuntimeViewListFilterClause(
-	field collectiontable.FieldDefinition,
-	filter collectiontable.QuickFilter,
-	argIndex int,
-) (string, []any, error) {
-	columnName := quoteIdentifier(strings.TrimSpace(field.ID))
-	operator := strings.TrimSpace(filter.Operator)
-	value := strings.TrimSpace(filter.Value)
-
-	if field.Type == "date" || field.Type == "date_time" {
-		switch operator {
-		case "is_empty":
-			return fmt.Sprintf("t.%s IS NULL", columnName), nil, nil
-		case "is_not_empty":
-			return fmt.Sprintf("t.%s IS NOT NULL", columnName), nil, nil
-		case "is_equal_to":
-			return fmt.Sprintf("t.%s::date = $%d::date", columnName, argIndex), []any{value}, nil
-		case "is_less_than":
-			return fmt.Sprintf("t.%s::date < $%d::date", columnName, argIndex), []any{value}, nil
-		case "is_less_or_equal_to":
-			return fmt.Sprintf("t.%s::date <= $%d::date", columnName, argIndex), []any{value}, nil
-		case "is_greater_than":
-			return fmt.Sprintf("t.%s::date > $%d::date", columnName, argIndex), []any{value}, nil
-		case "is_greater_or_equal_to":
-			return fmt.Sprintf("t.%s::date >= $%d::date", columnName, argIndex), []any{value}, nil
-		default:
-			return "", nil, collectiontable.ErrInvalidQuery
-		}
-	}
-
-	switch operator {
-	case "contains":
-		return fmt.Sprintf("LOWER(COALESCE(t.%s::text, '')) LIKE $%d", columnName, argIndex), []any{"%" + strings.ToLower(value) + "%"}, nil
-	case "is_equal_to":
-		return fmt.Sprintf("LOWER(COALESCE(t.%s::text, '')) = $%d", columnName, argIndex), []any{strings.ToLower(value)}, nil
-	case "is_not_equal_to":
-		return fmt.Sprintf("LOWER(COALESCE(t.%s::text, '')) <> $%d", columnName, argIndex), []any{strings.ToLower(value)}, nil
-	case "is_empty":
-		return fmt.Sprintf("NULLIF(BTRIM(COALESCE(t.%s::text, '')), '') IS NULL", columnName), nil, nil
-	case "is_not_empty":
-		return fmt.Sprintf("NULLIF(BTRIM(COALESCE(t.%s::text, '')), '') IS NOT NULL", columnName), nil, nil
-	default:
-		return "", nil, collectiontable.ErrInvalidQuery
-	}
-}
-
-func groupRuntimeViewListQuickFilters(filters []collectiontable.QuickFilter) [][]collectiontable.QuickFilter {
-	groups := make([][]collectiontable.QuickFilter, 0, len(filters))
-	containsGroupIndexes := make(map[string]int)
-	for _, filter := range filters {
-		normalized := collectiontable.QuickFilter{
-			FieldID:  strings.TrimSpace(filter.FieldID),
-			Operator: strings.TrimSpace(filter.Operator),
-			Value:    strings.TrimSpace(filter.Value),
-		}
-		if normalized.Operator == "contains" {
-			groupKey := normalized.FieldID + "\x00" + normalized.Operator
-			if existingIndex, ok := containsGroupIndexes[groupKey]; ok {
-				groups[existingIndex] = append(groups[existingIndex], normalized)
-				continue
-			}
-			containsGroupIndexes[groupKey] = len(groups)
-		}
-		groups = append(groups, []collectiontable.QuickFilter{normalized})
-	}
-	return groups
 }

@@ -151,3 +151,29 @@ RETURNING guid`
 		QuickFilters: quickFilters,
 	}, nil
 }
+
+func (r *adminRepository) DeleteSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, savedFilterID string) error {
+	db, err := r.client.OpenDBMaster(ctx)
+	if err != nil {
+		return fmt.Errorf("collection prefs: open master db: %w", err)
+	}
+
+	const query = `
+DELETE FROM admin_collection_saved_filter
+WHERE admin_user_id = $1
+  AND surface_id = $2
+  AND guid = $3::uuid`
+
+	result, err := db.Exec(query, principalID, strings.TrimSpace(surfaceID), strings.TrimSpace(savedFilterID))
+	if err != nil {
+		return fmt.Errorf("collection prefs: delete saved filter: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("collection prefs: read deleted saved filter rows affected: %w", err)
+	}
+	if affected == 0 {
+		return ErrSavedFilterNotFound
+	}
+	return nil
+}

@@ -223,6 +223,7 @@ export function CollectionTablePage({
   const [savedFilterSets, setSavedFilterSets] = useState<ReadonlyArray<CollectionTableSavedFilterSet>>(
     initialMeta.savedFilterSets ?? [],
   );
+  const [deletingSavedFilterId, setDeletingSavedFilterId] = useState<string | null>(null);
   const [searchSuggestionGroups, setSearchSuggestionGroups] = useState<ReadonlyArray<CollectionTableSearchSuggestionGroup>>([]);
   const [isSearchSuggestionOpen, setIsSearchSuggestionOpen] = useState(false);
   const [highlightedSuggestionKey, setHighlightedSuggestionKey] = useState<string | null>(null);
@@ -258,6 +259,14 @@ export function CollectionTablePage({
           const createdFilterSet = await adapter.createSavedFilterSet!(input);
           setSavedFilterSets((currentValue) => [createdFilterSet, ...currentValue]);
           return createdFilterSet;
+        }
+        : undefined,
+      deleteSavedFilterSet: adapter.deleteSavedFilterSet
+        ? async (savedFilterId) => {
+          await adapter.deleteSavedFilterSet!(savedFilterId);
+          setSavedFilterSets((currentValue) =>
+            currentValue.filter((savedFilterSet) => savedFilterSet.id !== savedFilterId),
+          );
         }
         : undefined,
     }),
@@ -1150,6 +1159,21 @@ export function CollectionTablePage({
     }
   }
 
+  async function handleDeleteSavedFilterSet(savedFilterId: string) {
+    if (!tableAdapter.deleteSavedFilterSet || !savedFilterId || deletingSavedFilterId === savedFilterId) {
+      return;
+    }
+
+    setDeletingSavedFilterId(savedFilterId);
+    try {
+      await tableAdapter.deleteSavedFilterSet(savedFilterId);
+    } catch (requestError) {
+      reportCollectionError(requestError);
+    } finally {
+      setDeletingSavedFilterId((currentValue) => (currentValue === savedFilterId ? null : currentValue));
+    }
+  }
+
   async function handleToggleFavorite() {
     let result: Awaited<ReturnType<NonNullable<CollectionTableAdapter["toggleFavorite"]>>> | undefined;
 
@@ -1203,9 +1227,30 @@ export function CollectionTablePage({
 
   const savedFilterMenuItems = savedFilterSets.length > 0 ? (
     savedFilterSets.map((savedFilterSet) => (
-      <MenuItem key={savedFilterSet.id} onClick={() => handleApplySavedFilterSet(savedFilterSet)}>
-        {savedFilterSet.label}
-      </MenuItem>
+      <div className="admin-web__collection-saved-filter-row" key={savedFilterSet.id}>
+        <MenuItem
+          className="admin-web__collection-saved-filter-apply"
+          onClick={() => handleApplySavedFilterSet(savedFilterSet)}
+        >
+          {savedFilterSet.label}
+        </MenuItem>
+        {tableAdapter.deleteSavedFilterSet ? (
+          <button
+            aria-label={t("admin.collectionTable.menu.deleteSavedFilter", { label: savedFilterSet.label })}
+            className="admin-web__collection-saved-filter-delete"
+            disabled={deletingSavedFilterId === savedFilterSet.id}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void handleDeleteSavedFilterSet(savedFilterSet.id);
+            }}
+            title={t("admin.collectionTable.menu.deleteSavedFilter", { label: savedFilterSet.label })}
+            type="button"
+          >
+            <CloseIcon className="admin-web__collection-saved-filter-delete-icon" />
+          </button>
+        ) : null}
+      </div>
     ))
   ) : (
     <MenuItem disabled>

@@ -127,6 +127,22 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		return info, nil
 	}, srv.logger)
 
+	createRuntimeViewListSavedFilterHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formbuilder.RuntimeViewListCreateSavedFilterInput) (*formbuilder.RuntimeViewListSavedFilterSet, error) {
+		info, err := srv.platformStudioFormBuilderHTTP.CreateRuntimeViewListSavedFilter(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_BUILDER_RUNTIME_LIST_SAVED_FILTER_CREATE",
+				http.StatusInternalServerError,
+				"cannot create form builder runtime saved filter",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
 	loadRuntimeViewRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewRecordResponse, error) {
 		info, err := srv.platformStudioFormBuilderHTTP.LoadRuntimeViewRecord(ctx, r, struct{}{})
 		if err != nil {
@@ -218,6 +234,27 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/search-suggestions",
 		loadRuntimeViewListSearchSuggestionsHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_LIST_SAVED_FILTER_CREATE",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/saved-filters",
+		createRuntimeViewListSavedFilterHandler,
+	)
+
+	register(
+		"FORM_BUILDER_RUNTIME_LIST_SAVED_FILTER_DELETE",
+		http.MethodDelete,
+		"/app/forms/{modelId}/views/{viewId}/saved-filters/{savedFilterId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.RuntimeViewListDeleteSavedFilterResponse, error) {
+			info, err := srv.platformStudioFormBuilderHTTP.DeleteRuntimeViewListSavedFilter(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "FORM_BUILDER_RUNTIME_LIST_SAVED_FILTER_DELETE",
+					http.StatusInternalServerError, "cannot delete form builder runtime saved filter", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger),
 	)
 
 	register(

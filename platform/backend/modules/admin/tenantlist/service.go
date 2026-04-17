@@ -35,6 +35,7 @@ type Preferences interface {
 	LoadState(ctx context.Context, principalID uuid.UUID, surfaceID string) (*collectionprefs.State, error)
 	ToggleFavorite(ctx context.Context, principalID uuid.UUID, surfaceID string) (bool, error)
 	CreateSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, req collectiontable.CreateSavedFilterInput) (*collectiontable.SavedFilterSet, error)
+	DeleteSavedFilter(ctx context.Context, principalID uuid.UUID, surfaceID string, savedFilterID string) error
 }
 
 type TenantRootLauncher interface {
@@ -240,6 +241,17 @@ func (s *Service) CreateSavedFilter(ctx context.Context, req CreateSavedFilterIn
 	}
 
 	return s.prefs.CreateSavedFilter(ctx, adminUserID, SurfaceID, req)
+}
+
+func (s *Service) DeleteSavedFilter(ctx context.Context, savedFilterID string) (*DeleteSavedFilterResponse, error) {
+	adminUserID, err := s.requireRoot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.prefs.DeleteSavedFilter(ctx, adminUserID, SurfaceID, savedFilterID); err != nil {
+		return nil, err
+	}
+	return &DeleteSavedFilterResponse{OK: true}, nil
 }
 
 func (s *Service) RunRowAction(ctx context.Context, actionID string, input RowActionInput, scheme string) (*MutationResult, error) {

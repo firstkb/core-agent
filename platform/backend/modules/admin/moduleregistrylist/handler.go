@@ -59,6 +59,14 @@ func (h *Handler) CreateSavedFilter(ctx context.Context, _ *http.Request, req Cr
 	return out, nil
 }
 
+func (h *Handler) DeleteSavedFilter(ctx context.Context, r *http.Request, _ struct{}) (*DeleteSavedFilterResponse, error) {
+	out, err := h.service.DeleteSavedFilter(ctx, strings.TrimSpace(r.PathValue("savedFilterId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) RunBulkAction(ctx context.Context, r *http.Request, req BulkActionInput) (*MutationResult, error) {
 	out, err := h.service.RunBulkAction(ctx, strings.TrimSpace(r.PathValue("actionId")), req)
 	if err != nil {
@@ -97,6 +105,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("MODULE_REGISTRY_LABEL_REQUIRED", http.StatusBadRequest, "label required")
 	case errors.Is(err, collectionprefs.ErrInvalidSavedFilter):
 		return apperr.New("MODULE_REGISTRY_INVALID_SAVED_FILTER", http.StatusBadRequest, "invalid saved filter")
+	case errors.Is(err, collectionprefs.ErrSavedFilterNotFound):
+		return apperr.New("MODULE_REGISTRY_SAVED_FILTER_NOT_FOUND", http.StatusNotFound, "saved filter not found")
 	case errors.Is(err, moduleregistrymanage.ErrInvalidInput),
 		errors.Is(err, moduleregistrymanage.ErrModuleNotFound),
 		errors.Is(err, moduleregistrymanage.ErrSectionNotFound),

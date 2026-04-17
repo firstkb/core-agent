@@ -259,10 +259,13 @@ func (r *repository) LoadRuntimeSuggestions(
 	tenant requestctx.TenantInfo,
 	relationName string,
 	columnName string,
+	whereClause string,
+	whereArgs []any,
 	limit int,
 ) ([]runtimeRelationSuggestion, error) {
 	relationName = strings.TrimSpace(relationName)
 	columnName = strings.TrimSpace(columnName)
+	whereClause = strings.TrimSpace(whereClause)
 	if relationName == "" || columnName == "" {
 		return nil, nil
 	}
@@ -286,16 +289,22 @@ func (r *repository) LoadRuntimeSuggestions(
    FROM (
          SELECT NULLIF(BTRIM(t.%s::text), '') AS value
            FROM %s t
-        ) src
+`,
+		quoteIdentifier(columnName),
+		qualifiedIdentifier(relationName),
+	)
+	if whereClause != "" {
+		query += "\n          WHERE " + whereClause
+	}
+	query += fmt.Sprintf(
+		`        ) src
   WHERE value IS NOT NULL
   GROUP BY value
   ORDER BY count(*) DESC, LOWER(value) ASC
   LIMIT %d`,
-		quoteIdentifier(columnName),
-		qualifiedIdentifier(relationName),
 		limit,
 	)
-	rows, err := tx.QueryContext(ctx, query)
+	rows, err := tx.QueryContext(ctx, query, whereArgs...)
 	if err != nil {
 		return nil, fmt.Errorf("form builder: query runtime suggestions %s.%s: %w", relationName, columnName, err)
 	}

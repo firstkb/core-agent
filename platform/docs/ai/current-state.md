@@ -148,7 +148,10 @@ Confidence classes:
 - Cross-app Collection Table adoption is still a direction, but the frontend package extraction itself is now in place for admin-app consumers.
 - Collection Table still has deferred shared-capability work for FE/BE `XLS export`, `view`, and `pdf` support.
 - Navigation Builder and Action Builder remain planned Platform Studio tools; implementation has not started yet.
-- Form Builder still has deferred filter work: current view filters compose conditions with `AND` only; the contract still needs an `OR` path for repeated lookup-family entities such as multiple `DB lookup Contact` fields, plus a cleanup pass for `Contact`, `Project`, `Company`, multiselect-based filters, and `Reported By`.
+- Form Builder now has an accepted backend package-boundary plan: `platformstudioformbuilder` remains the authoring/control-plane package, while larger runtime record work should extract into `platformstudioformruntime` and post-submit side effects into `platformstudioformactions` before those slices become large.
+- Form Builder runtime list now applies authored `filterDefinitions.defaultFilters` to both the grid query and `search-suggestions`, so default-filtered views keep suggestions in the same runtime scope as the visible table.
+- Form Builder `View data` runtime now supports saved filters through the shared Collection Table flow; saved filters persist per tenant user and per `form_builder_view` surface in tenant storage, while favorites are still not part of tenant runtime parity.
+- Form Builder still has deferred filter work: current view filters compose conditions with `AND` only; the contract still needs an `OR` path for repeated lookup-family entities such as multiple `DB lookup Contact` fields, plus a cleanup pass for `Contact`, `Project`, `Company`, multiselect-based filters, `Reported By`, and the unfinished lookup/token filter compiler path for lookup-family authored filters.
 - Form Builder still has deferred import/export follow-up work for `Import model`, `Import data`, and the final product decision on whether `Export data` should represent the real table, the authored/runtime view, or two distinct export actions.
 
 ## Active workstreams

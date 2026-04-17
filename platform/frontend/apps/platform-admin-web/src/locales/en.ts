@@ -65,6 +65,7 @@ export const adminEnglishMessages = {
         remove: "Remove from favorites",
       },
       menu: {
+        deleteSavedFilter: "Delete saved filter {{label}}",
         moreActions: "More actions",
         noSavedFilters: "No saved filters yet",
         openSavedFilters: "Open saved filters",

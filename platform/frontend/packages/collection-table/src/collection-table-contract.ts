@@ -201,6 +201,7 @@ export type CollectionTableAdapter = {
   createSavedFilterSet?: (
     input: CollectionTableSavedFilterSetCreateInput,
   ) => Promise<CollectionTableSavedFilterSet>;
+  deleteSavedFilterSet?: (savedFilterId: string) => Promise<void>;
   exportXls?: (request: CollectionTableExportRequest) => Promise<void>;
   loadMeta: () => Promise<CollectionTableMetaResponse>;
   loadSearchSuggestions?: () => Promise<CollectionTableSearchSuggestionsResponse>;

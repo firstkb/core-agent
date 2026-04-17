@@ -12,33 +12,45 @@ import (
 	"testing"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 type memoryRepository struct {
-	models                  map[string]*ModelRecord
-	views                   map[string]map[string]*ViewRecord
-	relationRowCounts       map[string]int64
-	runtimeRelations        map[string]string
-	runtimeQueryRows        map[string][]runtimeRelationQueryRow
-	runtimeSuggestions      map[string]map[string][]runtimeRelationSuggestion
-	lastRuntimePlan         *runtimeApplyPlan
-	lastExportRelationName  string
-	lastExportColumnNames   []string
-	lastExportOrderByColumn string
-	lastRuntimeOrderByColumn string
-	lastRuntimeOrderDirection string
-	exportRows              [][]string
-	runtimeApplyErr         error
+	models                             map[string]*ModelRecord
+	views                              map[string]map[string]*ViewRecord
+	relationRowCounts                  map[string]int64
+	runtimeRelations                   map[string]string
+	runtimeQueryRows                   map[string][]runtimeRelationQueryRow
+	runtimeSuggestions                 map[string]map[string][]runtimeRelationSuggestion
+	runtimeSavedFilters                map[string][]collectiontable.SavedFilterSet
+	lastRuntimePlan                    *runtimeApplyPlan
+	lastExportRelationName             string
+	lastExportColumnNames              []string
+	lastExportOrderByColumn            string
+	lastRuntimeWhereArgs               []any
+	lastRuntimeWhereClause             string
+	lastRuntimeSuggestionArgs          []any
+	lastRuntimeSuggestionWhere         string
+	lastRuntimeSavedFilterPrincipal    string
+	lastRuntimeSavedFilterSurface      string
+	lastRuntimeSavedFilterLabel        string
+	lastRuntimeSavedFilterQuickFilters []collectiontable.QuickFilter
+	lastRuntimeDeletedSavedFilterID    string
+	lastRuntimeOrderByColumn           string
+	lastRuntimeOrderDirection          string
+	exportRows                         [][]string
+	runtimeApplyErr                    error
 }
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{
-		models:             map[string]*ModelRecord{},
-		views:              map[string]map[string]*ViewRecord{},
-		relationRowCounts:  map[string]int64{},
-		runtimeRelations:   map[string]string{},
-		runtimeQueryRows:   map[string][]runtimeRelationQueryRow{},
-		runtimeSuggestions: map[string]map[string][]runtimeRelationSuggestion{},
+		models:              map[string]*ModelRecord{},
+		views:               map[string]map[string]*ViewRecord{},
+		relationRowCounts:   map[string]int64{},
+		runtimeRelations:    map[string]string{},
+		runtimeQueryRows:    map[string][]runtimeRelationQueryRow{},
+		runtimeSuggestions:  map[string]map[string][]runtimeRelationSuggestion{},
+		runtimeSavedFilters: map[string][]collectiontable.SavedFilterSet{},
 	}
 }
 
@@ -106,8 +118,8 @@ func (r *memoryRepository) QueryRuntimeRows(
 	_ requestctx.TenantInfo,
 	relationName string,
 	_ []string,
-	_ string,
-	_ []any,
+	whereClause string,
+	whereArgs []any,
 	orderByColumn string,
 	orderDirection string,
 	page int,
@@ -115,6 +127,8 @@ func (r *memoryRepository) QueryRuntimeRows(
 ) ([]runtimeRelationQueryRow, int, error) {
 	r.lastRuntimeOrderByColumn = orderByColumn
 	r.lastRuntimeOrderDirection = orderDirection
+	r.lastRuntimeWhereClause = whereClause
+	r.lastRuntimeWhereArgs = append([]any(nil), whereArgs...)
 	rows := r.runtimeQueryRows[relationName]
 	totalItems := len(rows)
 	if page < 1 {
@@ -146,8 +160,12 @@ func (r *memoryRepository) LoadRuntimeSuggestions(
 	_ requestctx.TenantInfo,
 	relationName string,
 	columnName string,
+	whereClause string,
+	whereArgs []any,
 	limit int,
 ) ([]runtimeRelationSuggestion, error) {
+	r.lastRuntimeSuggestionWhere = whereClause
+	r.lastRuntimeSuggestionArgs = append([]any(nil), whereArgs...)
 	columns := r.runtimeSuggestions[relationName]
 	if columns == nil {
 		return nil, nil
@@ -159,6 +177,63 @@ func (r *memoryRepository) LoadRuntimeSuggestions(
 	out := make([]runtimeRelationSuggestion, 0, len(items))
 	out = append(out, items...)
 	return out, nil
+}
+
+func (r *memoryRepository) ListRuntimeSavedFilters(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+	surfaceID string,
+) ([]collectiontable.SavedFilterSet, error) {
+	r.lastRuntimeSavedFilterPrincipal = principalID
+	r.lastRuntimeSavedFilterSurface = surfaceID
+	items := r.runtimeSavedFilters[surfaceID]
+	out := make([]collectiontable.SavedFilterSet, 0, len(items))
+	out = append(out, items...)
+	return out, nil
+}
+
+func (r *memoryRepository) CreateRuntimeSavedFilter(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+	surfaceID string,
+	label string,
+	quickFilters []collectiontable.QuickFilter,
+) (*collectiontable.SavedFilterSet, error) {
+	r.lastRuntimeSavedFilterPrincipal = principalID
+	r.lastRuntimeSavedFilterSurface = surfaceID
+	r.lastRuntimeSavedFilterLabel = label
+	r.lastRuntimeSavedFilterQuickFilters = append([]collectiontable.QuickFilter(nil), quickFilters...)
+	created := collectiontable.SavedFilterSet{
+		ID:           "saved-filter-1",
+		Label:        label,
+		QuickFilters: append([]collectiontable.QuickFilter(nil), quickFilters...),
+	}
+	r.runtimeSavedFilters[surfaceID] = append([]collectiontable.SavedFilterSet{created}, r.runtimeSavedFilters[surfaceID]...)
+	return &created, nil
+}
+
+func (r *memoryRepository) DeleteRuntimeSavedFilter(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	principalID string,
+	surfaceID string,
+	savedFilterID string,
+) error {
+	r.lastRuntimeSavedFilterPrincipal = principalID
+	r.lastRuntimeSavedFilterSurface = surfaceID
+	r.lastRuntimeDeletedSavedFilterID = savedFilterID
+	items := r.runtimeSavedFilters[surfaceID]
+	filtered := items[:0]
+	for _, item := range items {
+		if item.ID == savedFilterID {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	r.runtimeSavedFilters[surfaceID] = append([]collectiontable.SavedFilterSet(nil), filtered...)
+	return nil
 }
 
 func (r *memoryRepository) ListExistingRuntimeRelations(_ context.Context, _ requestctx.TenantInfo, names []string) (map[string]string, error) {

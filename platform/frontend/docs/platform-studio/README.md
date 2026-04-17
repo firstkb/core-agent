@@ -85,6 +85,7 @@ Current active builder direction:
 - `platform-studio/form-builder-three-schema-contract.md`
 - `platform-studio/form-builder-schema-cleanup-contract-v1.md`
 - `platform-studio/form-builder-import-bundle-contract-v1.md`
+- `platform-studio/form-builder-package-boundary-plan-v1.md`
 - `platform-studio/form-builder-runtime-view-strategy-v1.md`
 - `platform-studio/form-builder-runtime-routes-contract-v1.md`
 - `platform-studio/v2-foundation-brief.md`

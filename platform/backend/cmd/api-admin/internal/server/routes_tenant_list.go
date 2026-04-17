@@ -65,6 +65,16 @@ func (srv *Server) registerTenantListRoutes(b *router.Builder) {
 			return info, nil
 		}, srv.logger))
 
+	register("ADMIN_TENANTS_LIST_SAVED_FILTER_DELETE", http.MethodDelete, "/app/admin/tenants/list/saved-filters/{savedFilterId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*tenantlist.DeleteSavedFilterResponse, error) {
+			info, err := srv.tenantListHT.DeleteSavedFilter(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_TENANTS_LIST_SAVED_FILTER_DELETE",
+					http.StatusInternalServerError, "cannot delete tenant list saved filter", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger))
+
 	register("ADMIN_TENANTS_LIST_ROW_ACTION", http.MethodPost, "/app/admin/tenants/list/row-actions/{actionId}",
 		handler.HandleJson(func(ctx context.Context, r *http.Request, req tenantlist.RowActionInput) (*tenantlist.MutationResult, error) {
 			info, err := srv.tenantListHT.RunRowAction(ctx, r, req)

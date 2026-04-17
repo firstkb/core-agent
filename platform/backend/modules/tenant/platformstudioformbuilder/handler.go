@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
+	collectionprefs "dtriton.com/platform/backend/modules/shared/collectionprefs"
 	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
@@ -103,6 +104,32 @@ func (h *Handler) LoadRuntimeViewListSearchSuggestions(ctx context.Context, r *h
 	return out, nil
 }
 
+func (h *Handler) CreateRuntimeViewListSavedFilter(ctx context.Context, r *http.Request, req RuntimeViewListCreateSavedFilterInput) (*RuntimeViewListSavedFilterSet, error) {
+	out, err := h.service.CreateRuntimeViewListSavedFilter(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) DeleteRuntimeViewListSavedFilter(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewListDeleteSavedFilterResponse, error) {
+	out, err := h.service.DeleteRuntimeViewListSavedFilter(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("savedFilterId")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) LoadRuntimeViewRecord(ctx context.Context, r *http.Request, _ struct{}) (*RuntimeViewRecordResponse, error) {
 	out, err := h.service.LoadRuntimeViewRecord(
 		ctx,
@@ -191,6 +218,12 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_INVALID", http.StatusBadRequest, "invalid payload")
 	case errors.Is(err, collectiontable.ErrInvalidQuery):
 		return apperr.New("FORM_BUILDER_RUNTIME_INVALID_QUERY", http.StatusBadRequest, "invalid query")
+	case errors.Is(err, collectionprefs.ErrLabelRequired):
+		return apperr.New("FORM_BUILDER_RUNTIME_LABEL_REQUIRED", http.StatusBadRequest, "label required")
+	case errors.Is(err, collectionprefs.ErrInvalidSavedFilter):
+		return apperr.New("FORM_BUILDER_RUNTIME_INVALID_SAVED_FILTER", http.StatusBadRequest, "invalid saved filter")
+	case errors.Is(err, collectionprefs.ErrSavedFilterNotFound):
+		return apperr.New("FORM_BUILDER_RUNTIME_SAVED_FILTER_NOT_FOUND", http.StatusNotFound, "saved filter not found")
 	case errors.Is(err, ErrDeleteUnsupported):
 		return apperr.New("FORM_BUILDER_DELETE_UNSUPPORTED", http.StatusBadRequest, "delete is not supported for this model type")
 	case errors.Is(err, ErrExportUnsupported):

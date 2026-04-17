@@ -18,6 +18,7 @@ Date: 2026-04-13
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
@@ -169,6 +170,10 @@ Current implemented backend-ready slice:
 - current runtime-view strategy is now fixed in `form-builder-runtime-view-strategy-v1.md`; authored Form Builder `view` is the canonical runtime entrypoint, runtime delivery is per-view rather than per-model, builder preview and future sidebar/navigation must open the same `form_builder_view` target, and a separate model-only viewer is explicitly rejected
 - current runtime-view route direction is `/app/forms/:modelId/views/:viewId`; external record routes use `guid`, with create at `/new`, edit at `/edit/:docGuid`, and canonical record-read target at `/view/:docGuid`, while the final detail presentation may still be either a page or a route-driven modal
 - current runtime-routes contract is now fixed in `form-builder-runtime-routes-contract-v1.md`; Navigation Builder resolves `form_builder_view` to the list route only, record-specific paths remain runtime-internal transitions, and v1 query params are intentionally limited to `returnTo` plus `presentation=page|modal` on the read route
+- current Form Builder runtime list now applies authored `filterDefinitions.defaultFilters` both to the table query and to `search-suggestions`, so search suggestions stay inside the same default-filter context as the visible grid
+- current Form Builder `View data` runtime now supports saved filters with the same collection-table UX pattern as admin panel; saved filters are stored per tenant user and per runtime `form_builder_view` surface in tenant storage, while `favorite` remains admin-only for now
+- accepted backend package split plan now lives in `form-builder-package-boundary-plan-v1.md`; `platformstudioformbuilder` remains the authoring/control-plane owner, runtime list/record and future create/edit/save should move into a dedicated `platformstudioformruntime` package, and post-submit side effects should land in `platformstudioformactions` instead of continuing to expand the builder package
+- deferred runtime filter follow-up: the lookup/token filter slice is still unfinished; lookup-oriented authored filters still need a dedicated runtime compiler path before lookup-heavy filter sets for `Contact`, `Project`, `Company`, `Reported By`, and similar presets can be considered complete
 - planned next import/export follow-ups are now explicit:
   - `Import model` from the managed export bundle
   - `Import data` for managed models

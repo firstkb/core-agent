@@ -24,6 +24,8 @@ type fakePreferences struct {
 	toggleFavoriteOut bool
 	createdFilter     *collectiontable.SavedFilterSet
 	createErr         error
+	deleteErr         error
+	lastDeletedID     string
 }
 
 type fakeManager struct {
@@ -64,6 +66,11 @@ func (f *fakePreferences) CreateSavedFilter(context.Context, uuid.UUID, string, 
 		return nil, f.createErr
 	}
 	return f.createdFilter, nil
+}
+
+func (f *fakePreferences) DeleteSavedFilter(_ context.Context, _ uuid.UUID, _ string, savedFilterID string) error {
+	f.lastDeletedID = savedFilterID
+	return f.deleteErr
 }
 
 func (f *fakeManager) ArchiveModule(_ context.Context, moduleID string) (*MutationResult, error) {
@@ -207,6 +214,22 @@ func TestCreateSavedFilterRequiresLabel(t *testing.T) {
 
 	if _, err := svc.CreateSavedFilter(rootContext(), CreateSavedFilterInput{}); err != collectionprefs.ErrLabelRequired {
 		t.Fatalf("expected collectionprefs.ErrLabelRequired, got %v", err)
+	}
+}
+
+func TestDeleteSavedFilterUsesModuleRegistrySurface(t *testing.T) {
+	prefs := &fakePreferences{}
+	svc := NewService(&fakeRepository{}, prefs, &fakeManager{}, testLogger())
+
+	out, err := svc.DeleteSavedFilter(rootContext(), "saved-filter-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if out == nil || !out.OK {
+		t.Fatalf("unexpected delete response %+v", out)
+	}
+	if prefs.lastDeletedID != "saved-filter-1" {
+		t.Fatalf("expected delete id saved-filter-1, got %q", prefs.lastDeletedID)
 	}
 }
 

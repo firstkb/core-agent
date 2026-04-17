@@ -5,6 +5,7 @@ import (
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 	"dtriton.com/platform/backend/internal/platform/postgres"
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 type repository struct {
@@ -39,8 +40,31 @@ type Repository interface {
 		tenant requestctx.TenantInfo,
 		relationName string,
 		columnName string,
+		whereClause string,
+		whereArgs []any,
 		limit int,
 	) ([]runtimeRelationSuggestion, error)
+	ListRuntimeSavedFilters(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+		surfaceID string,
+	) ([]collectiontable.SavedFilterSet, error)
+	CreateRuntimeSavedFilter(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+		surfaceID string,
+		label string,
+		quickFilters []collectiontable.QuickFilter,
+	) (*collectiontable.SavedFilterSet, error)
+	DeleteRuntimeSavedFilter(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		principalID string,
+		surfaceID string,
+		savedFilterID string,
+	) error
 	ListExistingRuntimeRelations(ctx context.Context, tenant requestctx.TenantInfo, names []string) (map[string]string, error)
 	CreateModelWithFirstView(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, firstView ViewRecord) (*ModelRecord, *ViewRecord, error)
 	CreateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord) (*ViewRecord, error)

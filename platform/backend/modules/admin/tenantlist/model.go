@@ -29,5 +29,6 @@ type SearchSuggestionGroup = collectiontable.SearchSuggestionGroup
 type SearchSuggestionItem = collectiontable.SearchSuggestionItem
 type FavoriteToggleResponse = collectiontable.FavoriteToggleResponse
 type CreateSavedFilterInput = collectiontable.CreateSavedFilterInput
+type DeleteSavedFilterResponse = collectiontable.MutationResult
 type MutationResult = collectiontable.MutationResult
 type RowActionInput = collectiontable.RowActionInput

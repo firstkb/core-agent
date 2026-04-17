@@ -11,6 +11,8 @@ import type {
   CollectionTableQueryRequest,
   CollectionTableQueryResponse,
   CollectionTableRowData,
+  CollectionTableSavedFilterSet,
+  CollectionTableSavedFilterSetCreateInput,
   CollectionTableSearchSuggestionGroup,
   CollectionTableSearchSuggestionItem,
   CollectionTableSearchSuggestionsResponse,
@@ -24,6 +26,11 @@ type BackendEnvelope<T> = {
 };
 
 type FormRuntimeCollectionTableSessionClient = {
+  createSavedFilterSet: (
+    accessToken: string,
+    input: CollectionTableSavedFilterSetCreateInput,
+  ) => Promise<CollectionTableSavedFilterSet>;
+  deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
@@ -201,6 +208,27 @@ export function createFormRuntimeCollectionTableClient(options: {
   const pathPrefix = `/app/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}`;
 
   return {
+    async createSavedFilterSet(accessToken, input) {
+      return requestTenantCollectionTable<CollectionTableSavedFilterSet>(
+        options.baseUrl,
+        `${pathPrefix}/saved-filters`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+    },
+    async deleteSavedFilterSet(accessToken, savedFilterId) {
+      await requestTenantCollectionTable<void>(
+        options.baseUrl,
+        `${pathPrefix}/saved-filters/${encodeURIComponent(savedFilterId)}`,
+        {
+          accessToken,
+          method: "DELETE",
+        },
+      );
+    },
     async loadMeta(accessToken) {
       return requestTenantCollectionTable<CollectionTableMetaResponse>(
         options.baseUrl,
@@ -276,6 +304,10 @@ export function createFormRuntimeCollectionTableAdapter(options: {
   }
 
   return {
+    createSavedFilterSet: async (input) =>
+      runWithTenantSession((accessToken) => options.client.createSavedFilterSet(accessToken, input)),
+    deleteSavedFilterSet: async (savedFilterId) =>
+      runWithTenantSession((accessToken) => options.client.deleteSavedFilterSet(accessToken, savedFilterId)),
     loadMeta: async () => runWithTenantSession((accessToken) => options.client.loadMeta(accessToken)),
     loadSearchSuggestions: async () =>
       runWithTenantSession((accessToken) => options.client.loadSearchSuggestions(accessToken)),

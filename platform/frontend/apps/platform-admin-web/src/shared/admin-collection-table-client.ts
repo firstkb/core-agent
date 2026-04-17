@@ -38,6 +38,7 @@ type AdminCollectionTableSessionClient = {
     accessToken: string,
     input: CollectionTableSavedFilterSetCreateInput,
   ) => Promise<CollectionTableSavedFilterSet>;
+  deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
   exportXls?: (
     accessToken: string,
     input: { query: CollectionTableQueryRequest },
@@ -298,6 +299,8 @@ export function createAdminCollectionTableAdapter(options: {
   return {
     createSavedFilterSet: async (input) =>
       runWithAdminSession((accessToken) => options.client.createSavedFilterSet(accessToken, input)),
+    deleteSavedFilterSet: async (savedFilterId) =>
+      runWithAdminSession((accessToken) => options.client.deleteSavedFilterSet(accessToken, savedFilterId)),
     exportXls: options.client.exportXls
       ? async (request) => {
         const result = await runWithAdminSession((accessToken) =>
@@ -345,6 +348,15 @@ export function createAdminCollectionTableClient(options: {
           accessToken,
           body: input,
           method: "POST",
+        },
+      );
+    },
+    async deleteSavedFilterSet(accessToken, savedFilterId) {
+      await requestAdminCollectionTable<void>(
+        `${pathPrefix}/saved-filters/${encodeURIComponent(savedFilterId)}`,
+        {
+          accessToken,
+          method: "DELETE",
         },
       );
     },

@@ -14,11 +14,13 @@ type fakeRepository struct {
 	toggleFavoriteOut bool
 	savedFilters      []collectiontable.SavedFilterSet
 	createdFilter     *collectiontable.SavedFilterSet
+	deleteErr         error
 
-	lastPrincipalID uuid.UUID
-	lastSurfaceID   string
-	lastLabel       string
-	lastQuickFilter []collectiontable.QuickFilter
+	lastPrincipalID     uuid.UUID
+	lastSurfaceID       string
+	lastLabel           string
+	lastQuickFilter     []collectiontable.QuickFilter
+	lastDeletedFilterID string
 }
 
 func (f *fakeRepository) GetFavoriteState(_ context.Context, principalID uuid.UUID, surfaceID string) (bool, error) {
@@ -45,6 +47,13 @@ func (f *fakeRepository) CreateSavedFilter(_ context.Context, principalID uuid.U
 	f.lastLabel = label
 	f.lastQuickFilter = quickFilters
 	return f.createdFilter, nil
+}
+
+func (f *fakeRepository) DeleteSavedFilter(_ context.Context, principalID uuid.UUID, surfaceID string, savedFilterID string) error {
+	f.lastPrincipalID = principalID
+	f.lastSurfaceID = surfaceID
+	f.lastDeletedFilterID = savedFilterID
+	return f.deleteErr
 }
 
 func TestLoadStateReturnsFavoriteAndFilters(t *testing.T) {
@@ -88,5 +97,13 @@ func TestCreateSavedFilterValidatesQuickFilters(t *testing.T) {
 	})
 	if err != ErrInvalidSavedFilter {
 		t.Fatalf("expected ErrInvalidSavedFilter, got %v", err)
+	}
+}
+
+func TestDeleteSavedFilterRequiresID(t *testing.T) {
+	svc := NewService(&fakeRepository{})
+
+	if err := svc.DeleteSavedFilter(context.Background(), uuid.New(), "module-registry.list", ""); err != ErrSavedFilterNotFound {
+		t.Fatalf("expected ErrSavedFilterNotFound, got %v", err)
 	}
 }

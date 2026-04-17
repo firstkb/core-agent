@@ -65,6 +65,7 @@ export const adminSpanishMessages = {
         remove: "Quitar de favoritos",
       },
       menu: {
+        deleteSavedFilter: "Eliminar filtro guardado {{label}}",
         moreActions: "Mas acciones",
         noSavedFilters: "Aun no hay filtros guardados",
         openSavedFilters: "Abrir filtros guardados",

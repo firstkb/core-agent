@@ -19,6 +19,7 @@ describe("admin-collection-table-client", () => {
     const adapter = createAdminCollectionTableAdapter({
       client: {
         createSavedFilterSet: vi.fn(),
+        deleteSavedFilterSet: vi.fn(),
         loadMeta: vi.fn(),
         loadSearchSuggestions: vi.fn(),
         query: vi.fn(),

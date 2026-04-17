@@ -65,6 +65,16 @@ func (srv *Server) registerEmployeesListRoutes(b *router.Builder) {
 			return info, nil
 		}, srv.logger))
 
+	register("ADMIN_EMPLOYEES_LIST_SAVED_FILTER_DELETE", http.MethodDelete, "/app/admin/employees/list/saved-filters/{savedFilterId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*employeeslist.DeleteSavedFilterResponse, error) {
+			info, err := srv.employeesListHT.DeleteSavedFilter(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "ADMIN_EMPLOYEES_LIST_SAVED_FILTER_DELETE",
+					http.StatusInternalServerError, "cannot delete employees list saved filter", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger))
+
 	register("ADMIN_EMPLOYEES_LIST_BULK_ACTION", http.MethodPost, "/app/admin/employees/list/bulk-actions/{actionId}",
 		handler.HandleJson(func(ctx context.Context, r *http.Request, req employeeslist.BulkActionInput) (*employeeslist.MutationResult, error) {
 			info, err := srv.employeesListHT.RunBulkAction(ctx, r, req)

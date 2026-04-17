@@ -58,6 +58,14 @@ func (h *Handler) CreateSavedFilter(ctx context.Context, _ *http.Request, req Cr
 	return out, nil
 }
 
+func (h *Handler) DeleteSavedFilter(ctx context.Context, r *http.Request, _ struct{}) (*DeleteSavedFilterResponse, error) {
+	out, err := h.service.DeleteSavedFilter(ctx, strings.TrimSpace(r.PathValue("savedFilterId")))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) RunRowAction(ctx context.Context, r *http.Request, req RowActionInput) (*MutationResult, error) {
 	out, err := h.service.RunRowAction(
 		ctx,
@@ -85,6 +93,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("TENANT_LIST_LABEL_REQUIRED", http.StatusBadRequest, "label required")
 	case errors.Is(err, collectionprefs.ErrInvalidSavedFilter):
 		return apperr.New("TENANT_LIST_INVALID_SAVED_FILTER", http.StatusBadRequest, "invalid saved filter")
+	case errors.Is(err, collectionprefs.ErrSavedFilterNotFound):
+		return apperr.New("TENANT_LIST_SAVED_FILTER_NOT_FOUND", http.StatusNotFound, "saved filter not found")
 	default:
 		return apperr.Wrap(err, "TENANT_LIST_INTERNAL", http.StatusInternalServerError, "internal error")
 	}

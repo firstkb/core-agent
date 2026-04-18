@@ -4406,6 +4406,43 @@ func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColu
 	}
 }
 
+func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesConfiguredGuidColumn(t *testing.T) {
+	scope := runtimeApplyScopePlan{
+		ScopeID:          "root",
+		SourceType:       "external",
+		TableName:        "state",
+		DataViewName:     "vw_state",
+		SourceIDColumn:   "id",
+		SourceGUIDColumn: "guid",
+		Fields: []runtimeApplyFieldPlan{
+			{
+				FieldID:          "name",
+				StorageKey:       "name",
+				Kind:             "short_text",
+				ColumnName:       "name",
+				SourceColumnName: "name",
+				Supported:        true,
+			},
+		},
+	}
+
+	statement, _ := buildRuntimeScopeDataViewSQL(scope)
+
+	for _, fragment := range []string{
+		`CREATE OR REPLACE VIEW "public"."vw_state" AS SELECT`,
+		`t."id" AS "_id"`,
+		`NULL::bigint AS "tenant_id"`,
+		`t."guid" AS "_guid"`,
+		`NULL::timestamptz AS "_created_at"`,
+		`NULL::timestamptz AS "_updated_at"`,
+		`t."name" AS "name"`,
+	} {
+		if !strings.Contains(statement, fragment) {
+			t.Fatalf("runtime data view SQL missing fragment %q:\n%s", fragment, statement)
+		}
+	}
+}
+
 func TestBuildRuntimeScopeDataViewSQLKeepsLookupOutputsBeforeLaterAddedScalarFields(t *testing.T) {
 	scope := runtimeApplyScopePlan{
 		ScopeID:               "root",

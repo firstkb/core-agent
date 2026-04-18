@@ -254,6 +254,39 @@ func (r *repository) QueryRuntimeRows(
 	return records, totalItems, nil
 }
 
+func (r *repository) ResolveRuntimeSourceGUIDColumn(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	relationName string,
+	configured string,
+) (string, error) {
+	relationName = strings.TrimSpace(relationName)
+	if relationName == "" {
+		return "", nil
+	}
+
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return "", fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return "", fmt.Errorf("form builder: begin runtime guid lookup tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	columnSet, err := relationColumnsTx(ctx, tx, relationName)
+	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("form builder: commit runtime guid lookup tx: %w", err)
+	}
+
+	return chooseExistingRelationColumn(columnSet, configured, "guid", relationName+"_guid"), nil
+}
+
 func (r *repository) LoadRuntimeSuggestions(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,

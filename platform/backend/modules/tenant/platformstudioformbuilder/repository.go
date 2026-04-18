@@ -35,6 +35,12 @@ type Repository interface {
 		page int,
 		pageSize int,
 	) ([]runtimeRelationQueryRow, int, error)
+	ResolveRuntimeSourceGUIDColumn(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		relationName string,
+		configured string,
+	) (string, error)
 	LoadRuntimeSuggestions(
 		ctx context.Context,
 		tenant requestctx.TenantInfo,

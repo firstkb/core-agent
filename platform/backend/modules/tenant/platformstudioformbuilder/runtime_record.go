@@ -25,11 +25,12 @@ type runtimeViewRecordSubtableMeta struct {
 }
 
 type runtimeViewRecordContext struct {
-	CanView   bool
-	DataView  string
-	Fields    []runtimeViewRecordFieldMeta
-	Subtables []runtimeViewRecordSubtableMeta
-	Title     string
+	CanView       bool
+	DataView      string
+	Fields        []runtimeViewRecordFieldMeta
+	HasRecordGUID bool
+	Subtables     []runtimeViewRecordSubtableMeta
+	Title         string
 }
 
 func (s *Service) LoadRuntimeViewRecord(
@@ -54,6 +55,9 @@ func (s *Service) LoadRuntimeViewRecord(
 	}
 	if !runtimeContext.CanView {
 		return nil, ErrViewNotFound
+	}
+	if !runtimeContext.HasRecordGUID {
+		return nil, ErrRecordViewRequiresGUID
 	}
 
 	rootColumnNames := []string{"_id"}
@@ -198,6 +202,10 @@ func (s *Service) loadRuntimeViewRecordContext(
 	uiSchema := asMap(viewPayload["uiSchema"])
 	rootScope := uiScope(uiSchema, rootSchemaScopeID)
 	rootDataRuntime := readRuntimeDataScopeMetadata(dataSchemaScope(asMap(modelPayload["dataSchema"]), rootSchemaScopeID))
+	hasRecordGUID, err := s.resolveRuntimeRecordGUIDSupport(ctx, tenant, model.SourceType, rootDataRuntime)
+	if err != nil {
+		return nil, err
+	}
 	dataViewName := strings.TrimSpace(rootDataRuntime.DataViewName)
 	if dataViewName == "" {
 		dataViewName = strings.TrimSpace(runtimePlan.RootScope.DataViewName)
@@ -212,11 +220,12 @@ func (s *Service) loadRuntimeViewRecordContext(
 	}
 
 	return &runtimeViewRecordContext{
-		CanView:   readRuntimeViewCanView(uiSchema, viewPayload),
-		DataView:  dataViewName,
-		Fields:    buildRuntimeViewRecordFields(rootScope, runtimePlan.RootScope.Fields, buildRuntimeViewRecordFieldLabelsByID(asMap(modelPayload["dataSchema"]))),
-		Subtables: buildRuntimeViewRecordSubtables(uiSchema, asMap(modelPayload["dataSchema"]), runtimePlan.SubformScopes),
-		Title:     title,
+		CanView:       readRuntimeViewCanView(uiSchema, viewPayload),
+		DataView:      dataViewName,
+		Fields:        buildRuntimeViewRecordFields(rootScope, runtimePlan.RootScope.Fields, buildRuntimeViewRecordFieldLabelsByID(asMap(modelPayload["dataSchema"]))),
+		HasRecordGUID: hasRecordGUID,
+		Subtables:     buildRuntimeViewRecordSubtables(uiSchema, asMap(modelPayload["dataSchema"]), runtimePlan.SubformScopes),
+		Title:         title,
 	}, nil
 }
 

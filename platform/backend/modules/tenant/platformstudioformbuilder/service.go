@@ -18,6 +18,7 @@ var (
 	ErrModelStructureReadOnly = errors.New("form builder model structure read only")
 	ErrModelNotFound          = errors.New("form builder model not found")
 	ErrRecordNotFound         = errors.New("form builder record not found")
+	ErrRecordViewRequiresGUID = errors.New("form builder record view requires guid")
 	ErrExportUnsupported      = errors.New("form builder export unsupported")
 	ErrRuntimeNameConflict    = errors.New("form builder runtime name conflict")
 	ErrTenantMissing          = errors.New("form builder tenant missing")

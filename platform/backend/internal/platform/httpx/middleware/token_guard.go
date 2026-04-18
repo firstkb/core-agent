@@ -21,7 +21,7 @@ func ValidatedClaims(logger *slog.Logger, validator tokenValidator) func(http.Ha
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			routeInfo, ok := requestctx.Route(r.Context())
 			if !ok {
-				logger.Error("CONTEXT: route info missing", "error", errors.New("route info not found in context"))
+				logger.Error("CONTEXT: route info missing", "error", errors.New("route info not found in context"), "method", r.Method, "path", r.URL.Path)
 				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 				return
 			}
@@ -33,14 +33,14 @@ func ValidatedClaims(logger *slog.Logger, validator tokenValidator) func(http.Ha
 
 			token, err := bearerToken(r)
 			if err != nil {
-				logger.Error("AUTHORIZATION: bearer token invalid", "error", err)
+				logger.Error("AUTHORIZATION: bearer token invalid", append([]any{"error", err}, authLogFields(r)...)...)
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
 
 			_, err = validator.ValidateToken(token)
 			if err != nil {
-				logger.Error("AUTHORIZATION: token validation failed", "error", err)
+				logger.Error("AUTHORIZATION: token validation failed", append([]any{"error", err}, authLogFields(r)...)...)
 				http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
 			}
@@ -48,6 +48,28 @@ func ValidatedClaims(logger *slog.Logger, validator tokenValidator) func(http.Ha
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func authLogFields(r *http.Request) []any {
+	fields := []any{
+		"method", r.Method,
+		"path", r.URL.Path,
+	}
+
+	if routeInfo, ok := requestctx.Route(r.Context()); ok {
+		fields = append(fields,
+			"routeID", string(routeInfo.ID),
+			"routePattern", routeInfo.Pattern,
+			"tier", string(routeInfo.Tier),
+			"domain", routeInfo.Domain,
+		)
+	}
+
+	if tenant, ok := requestctx.Tenant(r.Context()); ok && tenant.ID != "" {
+		fields = append(fields, "tenantID", tenant.ID)
+	}
+
+	return fields
 }
 
 func bearerToken(r *http.Request) (string, error) {

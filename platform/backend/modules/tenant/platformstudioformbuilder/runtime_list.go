@@ -23,6 +23,7 @@ type runtimeViewListContext struct {
 	FieldDefinitions  []collectiontable.FieldDefinition
 	Fields            []runtimeViewListFieldMeta
 	GridViewName      string
+	HasRecordGUID     bool
 	Title             string
 	ColumnDefinitions []collectiontable.ColumnDefinition
 	DefaultFieldID    string
@@ -74,7 +75,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 		},
 		Fields:          runtimeContext.FieldDefinitions,
 		PageSizeOptions: append([]int(nil), runtimeViewListPageSizeOptions...),
-		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView),
+		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView, runtimeContext.HasRecordGUID),
 		RowLayout:       collectiontable.RowLayout{},
 		SavedFilterSets: savedFilterSets,
 		Search: collectiontable.SearchMeta{
@@ -356,6 +357,11 @@ func (s *Service) loadRuntimeViewListContext(
 	runtimePlan := buildRuntimeApplyPlan(model, views, modelPayload, lookupModels)
 	rootScope := runtimePlan.RootScope
 	rootViewRuntime := readRuntimeViewScopeMetadata(uiScope(asMap(viewPayload["uiSchema"]), rootSchemaScopeID))
+	rootDataRuntime := readRuntimeDataScopeMetadata(dataSchemaScope(asMap(modelPayload["dataSchema"]), rootSchemaScopeID))
+	hasRecordGUID, err := s.resolveRuntimeRecordGUIDSupport(ctx, tenant, model.SourceType, rootDataRuntime)
+	if err != nil {
+		return nil, err
+	}
 	gridViewName := strings.TrimSpace(rootViewRuntime.GridViewName)
 	if gridViewName == "" {
 		return nil, ErrInvalidDraft
@@ -412,6 +418,7 @@ func (s *Service) loadRuntimeViewListContext(
 		FieldDefinitions:  fieldDefinitions,
 		Fields:            fields,
 		GridViewName:      gridViewName,
+		HasRecordGUID:     hasRecordGUID,
 		Title:             title,
 		ColumnDefinitions: columnDefinitions,
 		DefaultFieldID:    defaultFieldID,
@@ -421,8 +428,8 @@ func (s *Service) loadRuntimeViewListContext(
 	}, nil
 }
 
-func buildRuntimeViewListRowActions(canView bool) []collectiontable.RowActionDefinition {
-	if !canView {
+func buildRuntimeViewListRowActions(canView bool, hasRecordGUID bool) []collectiontable.RowActionDefinition {
+	if !canView || !hasRecordGUID {
 		return []collectiontable.RowActionDefinition{}
 	}
 
@@ -433,6 +440,25 @@ func buildRuntimeViewListRowActions(canView bool) []collectiontable.RowActionDef
 			Execution: "frontend",
 		},
 	}
+}
+
+func (s *Service) resolveRuntimeRecordGUIDSupport(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	sourceType string,
+	runtime runtimeDataScopeMetadata,
+) (bool, error) {
+	if !isExternalRuntimeSourceType(sourceType) {
+		return true, nil
+	}
+	if strings.TrimSpace(runtime.TableName) == "" {
+		return false, nil
+	}
+	columnName, err := s.repo.ResolveRuntimeSourceGUIDColumn(ctx, tenant, runtime.TableName, runtime.SourceGUIDColumn)
+	if err != nil {
+		return false, err
+	}
+	return strings.TrimSpace(columnName) != "", nil
 }
 
 func buildRuntimeViewListSurfaceID(modelID string, viewID string) string {

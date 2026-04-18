@@ -20,6 +20,7 @@ type memoryRepository struct {
 	views                              map[string]map[string]*ViewRecord
 	relationRowCounts                  map[string]int64
 	runtimeRelations                   map[string]string
+	runtimeRelationColumns             map[string]map[string]struct{}
 	runtimeQueryRows                   map[string][]runtimeRelationQueryRow
 	runtimeSuggestions                 map[string]map[string][]runtimeRelationSuggestion
 	runtimeFavorites                   map[string]RuntimeFavoriteRecord
@@ -49,14 +50,15 @@ type memoryRepository struct {
 
 func newMemoryRepository() *memoryRepository {
 	return &memoryRepository{
-		models:              map[string]*ModelRecord{},
-		views:               map[string]map[string]*ViewRecord{},
-		relationRowCounts:   map[string]int64{},
-		runtimeRelations:    map[string]string{},
-		runtimeQueryRows:    map[string][]runtimeRelationQueryRow{},
-		runtimeSuggestions:  map[string]map[string][]runtimeRelationSuggestion{},
-		runtimeFavorites:    map[string]RuntimeFavoriteRecord{},
-		runtimeSavedFilters: map[string][]collectiontable.SavedFilterSet{},
+		models:                 map[string]*ModelRecord{},
+		views:                  map[string]map[string]*ViewRecord{},
+		relationRowCounts:      map[string]int64{},
+		runtimeRelations:       map[string]string{},
+		runtimeRelationColumns: map[string]map[string]struct{}{},
+		runtimeQueryRows:       map[string][]runtimeRelationQueryRow{},
+		runtimeSuggestions:     map[string]map[string][]runtimeRelationSuggestion{},
+		runtimeFavorites:       map[string]RuntimeFavoriteRecord{},
+		runtimeSavedFilters:    map[string][]collectiontable.SavedFilterSet{},
 	}
 }
 
@@ -159,6 +161,15 @@ func (r *memoryRepository) QueryRuntimeRows(
 		})
 	}
 	return items, totalItems, nil
+}
+
+func (r *memoryRepository) ResolveRuntimeSourceGUIDColumn(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	relationName string,
+	configured string,
+) (string, error) {
+	return chooseExistingRelationColumn(r.runtimeRelationColumns[relationName], configured, "guid", relationName+"_guid"), nil
 }
 
 func (r *memoryRepository) LoadRuntimeSuggestions(
@@ -2974,6 +2985,112 @@ func TestLoadRuntimeViewListMetaAddsViewRowActionWhenCanViewEnabled(t *testing.T
 	repo := newMemoryRepository()
 	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
 	repo.runtimeRelations[model.StorageKey] = "table"
+	repo.runtimeRelationColumns[model.StorageKey] = map[string]struct{}{"guid": {}}
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Events"
+	modelPayload["title"] = "Events"
+	modelPayload["dataSchema"] = map[string]any{
+		"modelId":    "events",
+		"modelTitle": "Events",
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"fields": []any{
+				map[string]any{
+					"id":         "event",
+					"kind":       "short_text",
+					"label":      "Event",
+					"storageKey": "event",
+					"runtime": map[string]any{
+						"sourceColumnName": "event",
+						"sourceValueKind":  "scalar",
+					},
+				},
+			},
+			"runtime": map[string]any{
+				"dataViewName":     "vw_events",
+				"rtAlias":          "events",
+				"tableName":        "events",
+				"sourceGuidColumn": "guid",
+			},
+		},
+		"subformScopes": []any{},
+	}
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "event",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Events"
+	viewPayload["title"] = "Events"
+	viewPayload["uiSchema"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"gridViewName": "vg_events__default",
+				"viewRtAlias":  "default",
+			},
+			"nodes": []any{
+				map[string]any{
+					"id":      "field-event",
+					"type":    "field",
+					"fieldId": "event",
+					"order":   0,
+				},
+			},
+			"viewSettings": map[string]any{
+				"actions": map[string]any{
+					"canView": true,
+				},
+				"list": map[string]any{
+					"columns": []any{
+						map[string]any{
+							"fieldId": "event",
+							"id":      "grid-column-event",
+							"order":   0,
+						},
+					},
+				},
+			},
+		},
+		"subformScopes": []any{},
+	}
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if len(out.RowActions) != 1 {
+		t.Fatalf("row action count = %d, want 1", len(out.RowActions))
+	}
+	if out.RowActions[0].ID != "view" {
+		t.Fatalf("row action id = %q, want %q", out.RowActions[0].ID, "view")
+	}
+	if out.RowActions[0].Execution != "frontend" {
+		t.Fatalf("row action execution = %q, want %q", out.RowActions[0].Execution, "frontend")
+	}
+}
+
+func TestLoadRuntimeViewListMetaHidesViewRowActionWithoutGuidEnabledSource(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
 
 	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
 	modelPayload["displayName"] = "Events"
@@ -3063,14 +3180,103 @@ func TestLoadRuntimeViewListMetaAddsViewRowActionWhenCanViewEnabled(t *testing.T
 	if err != nil {
 		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
 	}
-	if len(out.RowActions) != 1 {
-		t.Fatalf("row action count = %d, want 1", len(out.RowActions))
+	if len(out.RowActions) != 0 {
+		t.Fatalf("row action count = %d, want 0 when source guid is unavailable", len(out.RowActions))
 	}
-	if out.RowActions[0].ID != "view" {
-		t.Fatalf("row action id = %q, want %q", out.RowActions[0].ID, "view")
+}
+
+func TestLoadRuntimeViewRecordRequiresGuidEnabledSource(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["displayName"] = "Events"
+	modelPayload["title"] = "Events"
+	modelPayload["dataSchema"] = map[string]any{
+		"modelId":    "events",
+		"modelTitle": "Events",
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"fields": []any{
+				map[string]any{
+					"id":         "event",
+					"kind":       "short_text",
+					"label":      "Event",
+					"storageKey": "event",
+					"runtime": map[string]any{
+						"sourceColumnName": "event",
+						"sourceValueKind":  "scalar",
+					},
+				},
+			},
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"rtAlias":      "events",
+				"tableName":    "events",
+			},
+		},
+		"subformScopes": []any{},
 	}
-	if out.RowActions[0].Execution != "frontend" {
-		t.Fatalf("row action execution = %q, want %q", out.RowActions[0].Execution, "frontend")
+	modelPayload["layoutBlueprint"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"containers":    []any{},
+			"fieldPlacements": []any{
+				map[string]any{
+					"containerKey": "__scope_root__",
+					"fieldId":      "event",
+					"order":        0,
+				},
+			},
+			"unplacedFieldIds": []any{},
+		},
+		"subformScopes": []any{},
+	}
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	viewPayload["displayName"] = "Events"
+	viewPayload["title"] = "Events"
+	viewPayload["uiSchema"] = map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"runtime": map[string]any{
+				"dataViewName": "vw_events",
+				"gridViewName": "vg_events__default",
+				"viewRtAlias":  "default",
+			},
+			"nodes": []any{
+				map[string]any{
+					"id":      "field-event",
+					"type":    "field",
+					"fieldId": "event",
+					"order":   0,
+				},
+			},
+			"viewSettings": map[string]any{
+				"actions": map[string]any{
+					"canView": true,
+				},
+				"list": map[string]any{
+					"columns": []any{
+						map[string]any{
+							"fieldId": "event",
+							"id":      "grid-column-event",
+							"order":   0,
+						},
+					},
+				},
+			},
+		},
+		"subformScopes": []any{},
+	}
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	_, err := svc.LoadRuntimeViewRecord(rootTestContext(), model.ModelID, view.ViewID, "11111111-1111-1111-1111-111111111111")
+	if !errors.Is(err, ErrRecordViewRequiresGUID) {
+		t.Fatalf("LoadRuntimeViewRecord error = %v, want %v", err, ErrRecordViewRequiresGUID)
 	}
 }
 

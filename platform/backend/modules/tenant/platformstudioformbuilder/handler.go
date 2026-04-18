@@ -262,6 +262,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_VIEW_NOT_FOUND", http.StatusNotFound, "view not found")
 	case errors.Is(err, ErrRecordNotFound):
 		return apperr.New("FORM_BUILDER_RECORD_NOT_FOUND", http.StatusNotFound, "record not found")
+	case errors.Is(err, ErrRecordViewRequiresGUID):
+		return apperr.New("FORM_BUILDER_RECORD_VIEW_GUID_REQUIRED", http.StatusConflict, "record view requires guid-enabled source table")
 	case errors.Is(err, ErrCannotDeleteLastView):
 		return apperr.New("FORM_BUILDER_VIEW_DELETE_BLOCKED", http.StatusConflict, "cannot delete last view")
 	default:

@@ -63,6 +63,11 @@ describe("collection-table quick filter grouping", () => {
       .toBe("04/16/2026, 1:46:17 PM");
   });
 
+  it("formats boolean values as Yes and No", () => {
+    expect(formatCollectionTableCellValue("true", "boolean")).toBe("Yes");
+    expect(formatCollectionTableCellValue("false", "boolean")).toBe("No");
+  });
+
   it("uses explicit meta default sort when building default state", () => {
     const meta: CollectionTableMetaResponse = {
       surfaceId: "test",

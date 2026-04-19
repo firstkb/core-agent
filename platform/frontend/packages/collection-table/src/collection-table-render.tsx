@@ -177,11 +177,11 @@ function buildRenderColumns(
           );
         }
 
-        const textColumnType = column.type === "date" || column.type === "date_time"
-          ? column.type
-          : "text";
-
-        return <TextCell value={formatCollectionTableCellValue(getCellText(cell), textColumnType)} />;
+        return (
+          <TextCell
+            value={formatCollectionTableCellValue(getCellText(cell), column.type === "actions" ? "text" : column.type)}
+          />
+        );
       },
       sortable: fieldDefinition?.sortable ?? false,
       width: column.width,

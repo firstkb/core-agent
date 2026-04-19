@@ -86,10 +86,9 @@ The root `users` model should seed the following v1 union.
 | `Last Name` | `last_name` | `last_name` | `short_text` | Used by `Users`, `Contacts`, `List of Accounts`. |
 | `System Access` | `system_access` | `system_access` | `boolean` | Used by `Users` and `List of Accounts`. |
 | `ADMIN Access` | `admin_access` | `admin_access` | `boolean` | Used by `Users` and `List of Accounts`. |
-| `ETS Admin` | `ets_admin` | `ets_admin` | `boolean` | Used by `Users` and `List of Accounts`. |
-| `Job Type` | `job_type_id` | `job_type_id` | `db_lookup` single | Lookup to `jobtype.id`, label `name`. |
+| `Job Type` | `job_type` | `job_type_id` | `db_lookup` single | Lookup to `jobtype.id`, label `name`. |
 | `Email` | `email` | `email` | `short_text` with email mode | Used by all three views. |
-| `Business Unit` | `company_id` | `company_id` | `db_lookup` single | Lookup to `company.id`, label `name`. |
+| `Business Unit` | `company` | `company_id` | `db_lookup` single | Lookup to `company.id`, label `name`. |
 | `Project Access List` | `project_access_manager` | none | `custom_widget` | `users`-hosted relation manager over `projectsaccess`. Used by `Users` and `List of Accounts`. |
 | `Employee Sex` | `sex` | `sex` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
 | `Employee ID` | `employee_number` | `employee_number` | `short_text` | Used by `Users` and `Contacts`. |
@@ -103,11 +102,12 @@ The root `users` model should seed the following v1 union.
 | `Messenger App` | `messenger_app` | `messenger_app` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
 | `Messenger Account` | `messenger_account` | `messenger_account` | `short_text` | Used by `Users` and `Contacts`. |
 | `City` | `city` | `city` | `suggest_text` | First accepted consumer of the new preset. Used by `Users` and `Contacts`. |
-| `State` | `state_id` | `state_id` | `db_lookup` single | Lookup to global `state.id`, primary label `name`. |
-| `Timezone` | `timezone_id` | `timezone_id` | `db_lookup` single | Lookup to global `timezone.id`, primary label `name`. Not placed on the first three authored views yet. |
+| `State` | `state` | `state_id` | `db_lookup` single | Lookup to global `state.id`, primary label `name`. |
+| `Timezone` | `timezone` | `timezone_id` | `db_lookup` single | Lookup to global `timezone.id`, primary label `name`. |
 | `Zip` | `zip` | `zip` | `short_text` | Used by `Users` and `Contacts`. |
 | `Address` | `address_line_1` | `address_line_1` | `long_text` | Used by `Users` and `Contacts`. |
 | `Add. Info.` | `notes` | `notes` | `long_text` | Used by `Users` and `Contacts`. |
+| `SSN` | `ssn` | `ssn` | `short_text` | Kept in the `Users` default full baseline only. |
 | `Status` | `status` | `status` | `short_text` or controlled select | Used by `Users` and `Contacts`. |
 | `Active` | `active` | `active` | `boolean` | Used by all three views. |
 
@@ -116,7 +116,6 @@ The root `users` model should seed the following v1 union.
 The following physical columns must stay out of v1 Form Builder schema for `users` unless a later slice explicitly adds them:
 
 - `password`
-- `ssn`
 - `tour_read`
 - `username`
 - `supervisor_user_id`
@@ -140,6 +139,7 @@ The following physical columns must stay out of v1 Form Builder schema for `user
 - `sys_id`
 - `site`
 - `legacy_user_id`
+- `ets_admin`
 - `supervisor_1027_user_id`
 - `department_1042`
 - `supervisor_1042_user_id_1`
@@ -224,7 +224,7 @@ Mapping:
 v1 note:
 
 - keep the field in the `users` model union
-- do not place it on the first three authored views until there is evidence for the right placement
+- place it on the `Users` default full baseline
 
 ### Access Flags
 
@@ -232,19 +232,18 @@ The following fields must render as yes/no UI values:
 
 - `System Access`
 - `ADMIN Access`
-- `ETS Admin`
 - `Active`
 
 Source columns:
 
 - `system_access`
 - `admin_access`
-- `ets_admin`
 - `active`
 
 Implementation note:
 
-- all four are canonical boolean fields now and must share one yes/no UI contract
+- all three are canonical boolean fields now and must share one yes/no UI contract
+- `ETS Admin` / `ets_admin` is intentionally excluded from the v1 `users` model
 
 ### City
 
@@ -271,19 +270,17 @@ Recommended role:
 
 Recommended `Users` grid order:
 
-1. `Id`
-2. `First Name`
-3. `Middle Name`
-4. `Last Name`
-5. `Job Type`
-6. `Business Unit`
-7. `Employee ID`
-8. `Email`
-9. `Status`
-10. `System Access`
-11. `ADMIN Access`
-12. `ETS Admin`
-13. `Active`
+1. `First Name`
+2. `Middle Name`
+3. `Last Name`
+4. `Job Type`
+5. `Business Unit`
+6. `Employee ID`
+7. `Email`
+8. `Status`
+9. `System Access`
+10. `ADMIN Access`
+11. `Active`
 
 Implementation detail:
 
@@ -294,42 +291,42 @@ Implementation detail:
 
 Recommended `Users` form order:
 
-1. `Id`
-2. `First Name`
-3. `Middle Name`
-4. `Last Name`
-5. `System Access`
-6. `ADMIN Access`
-7. `ETS Admin`
-8. `Job Type`
-9. `Business Unit`
-10. `Project Access List`
-11. `Employee Sex`
-12. `Employee ID`
-13. `Employee Occupation`
-14. `Gross Wages/Salary($)`
-15. `Gross Wages/Salary(Per)`
-16. `Date of Birth`
-17. `Date of Hire`
-18. `Email`
-19. `Phone`
-20. `Mobile Phone`
-21. `Messenger App`
-22. `Messenger Account`
-23. `City`
-24. `State`
-25. `Zip`
-26. `Address`
-27. `Add. Info.`
+1. `First Name`
+2. `Middle Name`
+3. `Last Name`
+4. `System Access`
+5. `ADMIN Access`
+6. `Job Type`
+7. `Email`
+8. `Business Unit`
+9. `Project Access List`
+10. `Employee Sex`
+11. `Employee ID`
+12. `Employee Occupation`
+13. `Gross Wages/Salary($)`
+14. `Gross Wages/Salary(Per)`
+15. `Date of Birth`
+16. `Date of Hire`
+17. `Phone`
+18. `Mobile Phone`
+19. `Messenger App`
+20. `Messenger Account`
+21. `City`
+22. `State`
+23. `Timezone`
+24. `Zip`
+25. `Address`
+26. `Add. Info.`
+27. `SSN`
 28. `Status`
 29. `Active`
 
 Recommended section grouping:
 
-- Identity: `Id`, `First Name`, `Middle Name`, `Last Name`, `Email`
-- Access and Projects: `System Access`, `ADMIN Access`, `ETS Admin`, `Project Access List`
+- Identity: `First Name`, `Middle Name`, `Last Name`, `Email`
+- Access and Projects: `System Access`, `ADMIN Access`, `Project Access List`
 - Employment: `Job Type`, `Business Unit`, `Employee Sex`, `Employee ID`, `Employee Occupation`, wage fields, hire/birth dates
-- Contact and Location: `Phone`, `Mobile Phone`, messenger fields, `City`, `State`, `Zip`, `Address`, `Add. Info.`
+- Contact and Location: `Phone`, `Mobile Phone`, messenger fields, `City`, `State`, `Timezone`, `Zip`, `Address`, `Add. Info.`
 - Record Status: `Status`, `Active`
 
 ## View B: `Contacts`
@@ -346,16 +343,15 @@ Recommended role:
 
 Recommended `Contacts` grid order:
 
-1. `Id`
-2. `First Name`
-3. `Middle Name`
-4. `Last Name`
-5. `Job Type`
-6. `Business Unit`
-7. `Employee ID`
-8. `Email`
-9. `Status`
-10. `Active`
+1. `First Name`
+2. `Middle Name`
+3. `Last Name`
+4. `Job Type`
+5. `Business Unit`
+6. `Employee ID`
+7. `Email`
+8. `Status`
+9. `Active`
 
 Implementation detail:
 
@@ -366,35 +362,37 @@ Implementation detail:
 
 Recommended `Contacts` form order:
 
-1. `Id`
-2. `First Name`
-3. `Middle Name`
-4. `Last Name`
-5. `Job Type`
-6. `Business Unit`
-7. `Employee Sex`
-8. `Employee ID`
-9. `Employee Occupation`
-10. `Gross Wages/Salary($)`
-11. `Gross Wages/Salary(Per)`
-12. `Date of Birth`
-13. `Date of Hire`
-14. `Email`
-15. `Phone`
-16. `Mobile Phone`
-17. `Messenger App`
-18. `Messenger Account`
-19. `City`
-20. `State`
-21. `Zip`
-22. `Address`
-23. `Add. Info.`
-24. `Status`
-25. `Active`
+1. `First Name`
+2. `Middle Name`
+3. `Last Name`
+4. `System Access`
+5. `ADMIN Access`
+6. `Job Type`
+7. `Business Unit`
+8. `Employee Sex`
+9. `Employee ID`
+10. `Employee Occupation`
+11. `Gross Wages/Salary($)`
+12. `Gross Wages/Salary(Per)`
+13. `Date of Birth`
+14. `Date of Hire`
+15. `Email`
+16. `Phone`
+17. `Mobile Phone`
+18. `Messenger App`
+19. `Messenger Account`
+20. `City`
+21. `State`
+22. `Zip`
+23. `Address`
+24. `Add. Info.`
+25. `Status`
+26. `Active`
 
 Recommended section grouping:
 
-- Identity: `Id`, `First Name`, `Middle Name`, `Last Name`
+- Identity: `First Name`, `Middle Name`, `Last Name`
+- Access: `System Access`, `ADMIN Access`
 - Employment: `Job Type`, `Business Unit`, `Employee Sex`, `Employee ID`, `Employee Occupation`, wage fields, hire/birth dates
 - Contact: `Email`, `Phone`, `Mobile Phone`, messenger fields
 - Location and Status: `City`, `State`, `Zip`, `Address`, `Add. Info.`, `Status`, `Active`
@@ -420,8 +418,7 @@ Recommended `List of Accounts` grid order for v1:
 5. `Business Unit`
 6. `System Access`
 7. `ADMIN Access`
-8. `ETS Admin`
-9. `Active`
+8. `Active`
 
 Accepted v1 note:
 
@@ -437,17 +434,16 @@ Recommended `List of Accounts` form order:
 2. `Last Name`
 3. `System Access`
 4. `ADMIN Access`
-5. `ETS Admin`
-6. `Job Type`
-7. `Email`
-8. `Business Unit`
-9. `Project Access List`
-10. `Active`
+5. `Job Type`
+6. `Email`
+7. `Business Unit`
+8. `Project Access List`
+9. `Active`
 
 Recommended section grouping:
 
 - Identity: `First Name`, `Last Name`, `Email`
-- Access: `System Access`, `ADMIN Access`, `ETS Admin`, `Active`
+- Access: `System Access`, `ADMIN Access`, `Active`
 - Organization: `Job Type`, `Business Unit`
 - Projects: `Project Access List`
 

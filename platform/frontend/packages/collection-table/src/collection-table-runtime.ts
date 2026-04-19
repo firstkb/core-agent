@@ -218,6 +218,20 @@ export function formatCollectionTableCellValue(
   value: string,
   type: CollectionTableFieldType,
 ) {
+  if (type === "boolean") {
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (["true", "t", "1", "yes"].includes(normalizedValue)) {
+      return "Yes";
+    }
+
+    if (["false", "f", "0", "no"].includes(normalizedValue)) {
+      return "No";
+    }
+
+    return value;
+  }
+
   if (type !== "date" && type !== "date_time") {
     return value;
   }

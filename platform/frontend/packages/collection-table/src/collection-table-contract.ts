@@ -1,4 +1,4 @@
-export type CollectionTableFieldType = "badge" | "date" | "date_time" | "html" | "text";
+export type CollectionTableFieldType = "badge" | "boolean" | "date" | "date_time" | "html" | "text";
 export type CollectionTableColumnType = CollectionTableFieldType | "actions";
 export type CollectionTableBadgeTone =
   | "brand"

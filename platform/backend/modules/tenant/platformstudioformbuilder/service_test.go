@@ -3313,6 +3313,12 @@ func TestBuildRuntimeViewListDefaultSortUsesViewSorting(t *testing.T) {
 	}
 }
 
+func TestRuntimeViewListFieldTypePreservesBoolean(t *testing.T) {
+	if got := runtimeViewListFieldType("boolean"); got != "boolean" {
+		t.Fatalf("runtimeViewListFieldType(boolean) = %q, want boolean", got)
+	}
+}
+
 func TestBuildRuntimeViewRecordFieldsAndSubtablesUseVisibleNodesOnly(t *testing.T) {
 	rootScope := map[string]any{
 		"nodes": []any{

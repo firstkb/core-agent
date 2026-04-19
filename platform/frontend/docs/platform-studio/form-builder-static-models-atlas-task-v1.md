@@ -58,7 +58,7 @@ Mandatory authoring rules:
 - every static model must have a model and a default view
 - only add secondary views where there is a real separate use case
 - use canonical snake_case storage keys
-- never import sensitive fields such as users.password into dataSchema or uiSchema
+- never import sensitive fields such as `users.password`, `users.username`, or `users.ets_admin` into dataSchema or uiSchema
 - use suggest_text only where the accepted contract already allows it
 
 Execution order:
@@ -189,6 +189,9 @@ Minimum expectation:
 ### `users`
 
 - exclude `password`
+- exclude `username`
+- exclude `ets_admin`
+- keep `ssn`
 - include `city` as `suggest_text`
 - keep `project_access_manager` as a placeholder/custom widget surface, not as a normal persisted field
 

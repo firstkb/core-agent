@@ -612,6 +612,8 @@ func buildRuntimeViewListDefaultSort(
 
 func runtimeViewListFieldType(kind string) string {
 	switch strings.TrimSpace(kind) {
+	case "boolean":
+		return "boolean"
 	case "date":
 		return "date"
 	case "date_time":

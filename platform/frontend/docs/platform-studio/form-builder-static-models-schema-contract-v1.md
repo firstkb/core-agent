@@ -149,6 +149,12 @@ Accepted rules:
 Explicit exclusion already accepted:
 
 - `users.password`
+- `users.username`
+- `users.ets_admin`
+
+Explicit inclusion already accepted:
+
+- `users.ssn`
 
 ### Static Field Source Mapping
 

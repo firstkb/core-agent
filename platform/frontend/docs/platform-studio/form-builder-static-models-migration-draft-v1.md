@@ -11,6 +11,8 @@ Implemented first slice:
 
 - active tenant migration:
   - `platform/backend/migrations/postgres/tenant/001_platform_studio_static_models_seed_reference_and_logs.sql`
+  - `platform/backend/migrations/postgres/tenant/005_platform_studio_static_model_users.sql`
+  - `platform/backend/migrations/postgres/tenant/006_platform_studio_static_model_company.sql`
 - seeded subset:
   - `state`
   - `timezone`
@@ -18,12 +20,12 @@ Implemented first slice:
   - `jobtype`
   - `events`
   - `mails`
+  - `users`
+  - `company`
 
 Still pending in follow-up migration work:
 
-- `company`
 - `projects`
-- `users`
 
 ## Target Migration Slot
 
@@ -31,7 +33,7 @@ The first active slot is now:
 
 - `001_platform_studio_static_models_seed_reference_and_logs.sql`
 
-Additional tenant migration slots are still required for the remaining static models.
+Additional tenant migration slots are still required for `projects`.
 
 ## Accepted Scope
 
@@ -53,7 +55,7 @@ The migration will not seed:
 
 Current implementation note:
 
-- the active `001_*` migration seeds only the implemented subset listed above
+- the active `001_*`, `005_*`, and `006_*` migrations seed only the implemented subset listed above
 - the remaining accepted tables stay in this document as pending follow-up scope
 
 ## Ownership Model
@@ -83,6 +85,7 @@ Special case:
   - `Users`
   - `Contacts`
   - `List of Accounts`
+- `company` uses the user-facing model name `Company` and one default view named `Business Units`
 
 Companion frozen schema contract:
 
@@ -395,11 +398,4 @@ These points are already fixed and do not need reopening:
 
 The next working pass should be the per-table field map:
 
-1. `company`
-2. `companytype`
-3. `events`
-4. `jobtype`
-5. `mails`
-6. `projects`
-7. `state`
-8. `users`
+1. `projects`

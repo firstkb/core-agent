@@ -524,3 +524,18 @@ Primary sources:
 - `scripts/ai/new-run.py`
 - `scripts/ai/automation_versions.py`
 - `platform/docs/ai/automation-changelog.md`
+
+### 2026-04-19 - Static Company model uses Business Units as its default view
+
+Status: active  
+Decision:
+
+- the static/external Form Builder model over the physical `company` table is user-facing as `Company`
+- the default authored/runtime view for that model is user-facing as `Business Units`
+- `Contact Name` is modeled as `short_text`
+- `City` and `Zip` use the `suggest_text` preset
+
+Primary sources:
+
+- `platform/backend/migrations/postgres/tenant/006_platform_studio_static_model_company.sql`
+- `platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md`

@@ -832,3 +832,15 @@ Do not turn it into a task journal.
   - `ai-memory/reference-code/relocation-checkpoint.md`
   - `scripts/ai/docs_memory_check.py`
   - `ai-memory/docs/docs-memory-score-audit.md`
+
+### DEC-070 Docs Memory Drift Runs In CI
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Docs/memory drift verification is now a tracked GitHub Actions gate. `.github/workflows/docs-memory-check.yml` runs `scripts/ai/docs_memory_check.py --check` and `scripts/ai/automation_versions.py --check` for relevant PRs and pushes to `develop` or `main`.
+- Sources:
+  - `.github/workflows/docs-memory-check.yml`
+  - `scripts/ai/docs_memory_check.py`
+  - `scripts/ai/automation_versions.py`
+  - `ai-memory/docs/docs-memory-score-audit.md`

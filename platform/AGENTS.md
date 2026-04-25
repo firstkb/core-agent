@@ -234,6 +234,7 @@ Update `ai-memory/atlas/automation-changelog.md` when:
 
 Update tracked FE/BE docs when code changes the canonical contract itself.
 Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
+The same docs/memory gate runs in `.github/workflows/docs-memory-check.yml` for relevant PRs and pushes.
 
 ## Long-task support
 

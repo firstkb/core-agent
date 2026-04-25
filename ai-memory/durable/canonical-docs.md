@@ -23,6 +23,10 @@ Canonical:
 - `.codex/standards/**`
 - `.agent-cli/config.json`
 
+Automation gates:
+
+- `.github/workflows/docs-memory-check.yml`
+
 Future-target only:
 
 - `docs/maestro/maestro-feature-formation-canonical.md`
@@ -88,6 +92,7 @@ Operational scaffolds, not product truth:
 - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
 - `.agents/skills/ramp-conductor/**`
 - `scripts/ai/**`
+- `.github/workflows/docs-memory-check.yml`
 
 Former legacy sources, deleted from the working tree:
 

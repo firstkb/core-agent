@@ -37,3 +37,4 @@ Use compact maps to plan the tracked docs rewrite.
 Do not physically move tracked docs until a rewrite task explicitly names the target slice.
 Use `reference-pack:*` aliases when planning raw reference-code relocation.
 Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
+CI also runs the same gate through `.github/workflows/docs-memory-check.yml`.

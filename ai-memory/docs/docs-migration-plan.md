@@ -283,6 +283,7 @@ Local relocation/control docs:
 39. Pointer cleanup: landed for `ai-memory/AGENTS.override.md`, old FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording; active docs/maps now point directly to canonical contracts/modules and exact old text is git-history only.
 40. Form Builder retained exact-detail policy and docs/memory score audit: landed with 14 policy-kept exact-detail references, 0 extraction backlog, and 96/100 readiness score.
 41. Reference pointer README deletion and automated drift check: landed with old reference-code pointer folders deleted and `scripts/ai/docs_memory_check.py --check` as the local docs/memory verification gate.
+42. Docs/memory CI gate: landed with `.github/workflows/docs-memory-check.yml` running docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
 
 ## Current Blockers Before Physical Move
 

@@ -12,6 +12,8 @@ docs/
   codex-native-repo.md
   maestro/module-orchestrator-v2-spec-pack/
   ref/reference-code.md
+.github/
+  workflows/docs-memory-check.yml
 .agents/
   skills/
 .codex/
@@ -43,7 +45,6 @@ platform/
   AGENTS.md
   README.md
   docs/
-    ai/
     archive/
   backend/
     AGENTS.md

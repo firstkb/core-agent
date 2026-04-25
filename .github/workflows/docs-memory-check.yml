@@ -1,0 +1,54 @@
+name: Docs Memory Check
+
+on:
+  pull_request:
+    paths:
+      - ".agents/**"
+      - ".codex/**"
+      - ".github/workflows/docs-memory-check.yml"
+      - ".gitignore"
+      - "AGENTS.md"
+      - "ai-memory/**"
+      - "docs/**"
+      - "platform/AGENTS.md"
+      - "platform/backend/docs/**"
+      - "platform/frontend/docs/**"
+      - "scripts/ai/**"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - ".agents/**"
+      - ".codex/**"
+      - ".github/workflows/docs-memory-check.yml"
+      - ".gitignore"
+      - "AGENTS.md"
+      - "ai-memory/**"
+      - "docs/**"
+      - "platform/AGENTS.md"
+      - "platform/backend/docs/**"
+      - "platform/frontend/docs/**"
+      - "scripts/ai/**"
+
+permissions:
+  contents: read
+
+jobs:
+  docs-memory-check:
+    name: Docs memory drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check docs and memory drift
+        run: python3 scripts/ai/docs_memory_check.py --check
+
+      - name: Check Atlas automation versions
+        run: python3 scripts/ai/automation_versions.py --check

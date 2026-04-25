@@ -5,9 +5,10 @@
 ## Read order for product work
 
 - `platform/AGENTS.md`
-- `platform/docs/ai/README.md`
-- `platform/docs/ai/current-state.md`
-- `platform/docs/ai/canonical-docs.md`
+- `ai-memory/README.md`
+- `ai-memory/index/memory-index.yaml`
+- `ai-memory/index/read-routes.yaml`
+- `ai-memory/durable/current-state.md`
 - the relevant local `AGENTS.md` file under `backend/` or `frontend/`
 
 For cross-stack or multi-session work, invoke:
@@ -56,10 +57,11 @@ platform/
 
 - backend lives under `platform/backend` as a modular monolith with multiple runtimes
 - frontend lives under `platform/frontend` as separate product applications plus shared packages
-- shared durable project memory is maintained under `platform/docs/ai/`
-- stable prompt contracts live under `platform/docs/ai/prompts/`
-- workflow templates live under `platform/docs/ai/templates/`
-- coordinated task run artifacts live under `platform/docs/ai/runs/`
+- shared durable project memory is maintained under `ai-memory/durable/` and `ai-memory/modules/`
+- stable Atlas prompt contracts live under `ai-memory/atlas/prompts/`
+- workflow templates live under `ai-memory/atlas/templates/`
+- coordinated task run artifacts live under `ai-memory/runs/`
+- `platform/docs/ai/` is retained only as legacy provenance and compatibility pointers
 - archived one-off prompt artifacts live under `platform/docs/archive/`
 - manual orchestration skill lives at `.agents/skills/ramp-conductor/`
 
@@ -72,10 +74,11 @@ platform/
 
 ## Docs
 
-- shared AI memory: `platform/docs/ai/README.md`
-- canonical docs registry: `platform/docs/ai/canonical-docs.md`
-- prompt registry: `platform/docs/ai/prompts/README.md`
-- template registry: `platform/docs/ai/templates/README.md`
-- run-artifact guide: `platform/docs/ai/runs/README.md`
+- shared AI memory: `ai-memory/README.md`
+- canonical docs registry: `ai-memory/durable/canonical-docs.md`
+- prompt registry: `ai-memory/atlas/prompts/README.md`
+- template registry: `ai-memory/atlas/templates/README.md`
+- run-artifact guide: `ai-memory/runs/README.md`
+- legacy memory pointer: `platform/docs/ai/README.md`
 - backend docs index: `platform/backend/docs/README.md`
 - frontend docs index: `platform/frontend/docs/README.md`

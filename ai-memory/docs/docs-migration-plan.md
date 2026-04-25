@@ -271,6 +271,7 @@ Local relocation/control docs:
 30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
 31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `ai-memory/atlas/platform-docs-ai-retirement-plan.md`.
 32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders remain provenance only pending owner-approved deletion/move.
+33. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md`; active memory now routes to `ai-memory`, while old payload text is git-history provenance only.
 
 ## Current Blockers Before Physical Move
 

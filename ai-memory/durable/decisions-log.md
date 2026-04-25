@@ -671,3 +671,21 @@ Do not turn it into a task journal.
   - `ai-memory/atlas/legacy-runs-triage.md`
   - `platform/docs/ai/runs/README.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-058 Legacy Top-Level AI Memory Files Are Pointers
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Top-level durable, governance, and changelog markdown files under `platform/docs/ai/*.md` are no longer payload-bearing memory. They are compatibility pointers to `ai-memory/durable/**`, `ai-memory/index/**`, `ai-memory/atlas/**`, current AGENTS files, and tracked FE/BE docs indexes. New memory updates must go to `ai-memory` or the tracked doc owner, not to `platform/docs/ai/*.md`.
+- Sources:
+  - `platform/docs/ai/current-state.md`
+  - `platform/docs/ai/platform-contract.md`
+  - `platform/docs/ai/decisions-log.md`
+  - `platform/docs/ai/canonical-docs.md`
+  - `platform/docs/ai/module-index.md`
+  - `platform/docs/ai/repo-map.md`
+  - `platform/docs/ai/markdown-governance.md`
+  - `platform/docs/ai/orchestration-boundaries.md`
+  - `platform/docs/ai/automation-changelog.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

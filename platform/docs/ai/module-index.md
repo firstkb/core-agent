@@ -1,65 +1,20 @@
-# Module Memory Index
+# Retired Module Index
 
-Status: active
+Status: retired legacy memory pointer
+Retired on: 2026-04-25
 
-Read only the module files that match the task.
+This file is no longer the active module memory index.
 
-## Modules
+Read instead:
 
-### `modules/auth-and-session.md`
-Read for:
+- `ai-memory/durable/module-index.md`
+- `ai-memory/index/memory-index.yaml`
+- `ai-memory/index/read-routes.yaml`
+- the relevant module pack under `ai-memory/modules/**`
 
-- OTP auth
-- refresh/logout
-- `/profile`
-- cookie rules
-- `auth-core`
-- `api-client`
-- JWKS
-- origin / host auth behavior
+Historical module routing from this file was compacted into `ai-memory/`.
+Do not add new module entries here.
 
-### `modules/admin-control-plane.md`
-Read for:
+For provenance, use git history or the import audit:
 
-- admin navigation
-- root vs non-root admin behavior
-- tenant onboarding control-plane work
-- admin profile
-- admin grants and access policy
-
-### `modules/admin-module-registry.md`
-Read for:
-
-- module registry list/manage/grants
-- root-only module/section maintenance
-- module-registry endpoint families
-- admin app module-registry pages
-- module-registry-specific use of collection-table
-
-### `modules/collection-table.md`
-Read for:
-
-- universal table runtime contract
-- field/column/search/filter/action metadata
-- persistence and suggestion runtime
-- package-promotion readiness
-- host-page adapter boundaries
-
-### `modules/platform-studio.md`
-Read for:
-
-- tenant-web builder work
-- builder route model
-- `platform-studio-core`
-- forms/navigation builder scope
-- interaction-reference rules
-
-### `modules/schema-and-tenancy.md`
-Read for:
-
-- migrations
-- tenant DB topology
-- master DB vs tenant DB
-- tenant resolution
-- schema baselines
-- provisioning implications
+- `ai-memory/durable/legacy-memory-import.md`

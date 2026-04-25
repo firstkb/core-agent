@@ -6,6 +6,9 @@ Last compacted: 2026-04-25
 This file records how durable knowledge from `platform/docs/ai` was folded into `ai-memory`.
 It prevents agents from rereading the entire old memory corpus unless a task needs verification.
 
+Top-level legacy markdown files under `platform/docs/ai/*.md` are now pointer
+stubs. Use `ai-memory` for active memory and git history for old payload text.
+
 ## Source Classification
 
 Imported as durable semantic memory:
@@ -32,6 +35,10 @@ Operational scaffolds, not durable product truth:
 - `platform/docs/ai/automation-changelog.md`
 
 Active Atlas operational copies now live under `ai-memory/atlas/**`.
+
+Retired top-level pointers:
+
+- `platform/docs/ai/*.md`
 
 Historical/episodic artifacts, not active memory:
 

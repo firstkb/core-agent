@@ -87,13 +87,13 @@ Operational scaffolds, not product truth:
 - `.agents/skills/ramp-conductor/**`
 - `scripts/ai/**`
 
-Legacy operational provenance only:
+Legacy pointers/provenance only:
 
+- `platform/docs/ai/*.md`
 - `platform/docs/ai/prompts/**`
 - `platform/docs/ai/templates/**`
 - `platform/docs/ai/runs/**`
 - `platform/docs/ai/automation-manifest.json`
-- `platform/docs/ai/automation-changelog.md`
 
 ## Backend
 

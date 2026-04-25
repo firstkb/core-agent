@@ -12,3 +12,8 @@ Closed Atlas run artifacts should live under:
 
 The historical run folders in this legacy directory are provenance only.
 Do not create new run folders here.
+
+Read the compact triage before opening old run payload:
+
+- `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+- `ai-memory/atlas/legacy-runs-triage.md`

@@ -15,3 +15,6 @@ Run packets are operational artifacts, not canonical truth.
 
 Before archiving, distill durable outcomes into module `contract.md`, `state.md`, or `lessons.md`.
 
+Legacy `platform/docs/ai/runs/**` artifacts are summarized in:
+
+- `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`

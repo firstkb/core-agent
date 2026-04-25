@@ -37,6 +37,10 @@ Historical/episodic artifacts, not active memory:
 
 - `platform/docs/ai/runs/**`
 
+Compact run triage:
+
+- `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+
 ## Transfer Status
 
 - `auth-and-session`: imported stable cookie refresh, access-token storage, profile/navigation split, bootstrap recovery, and common failure modes into `ai-memory/modules/domains/auth-and-session/`.
@@ -64,3 +68,4 @@ Open `platform/docs/ai` only when:
 - migrating another durable decision into `ai-memory`.
 
 Do not use `platform/docs/ai/runs/**` as active design input unless the owner asks for historical reconstruction.
+Read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` before opening old run payloads.

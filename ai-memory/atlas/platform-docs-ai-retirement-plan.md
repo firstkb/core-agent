@@ -64,7 +64,7 @@ Expected state before deletion:
 
 ## Next Slices
 
-1. Legacy run triage: classify each old run as `archive-summary`, `delete-after-summary`, or `keep-provenance`.
+1. Legacy run triage: landed in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`.
 2. Legacy durable memory pointer pass: compact old durable files into short pointers after confirming imported decisions.
 3. Legacy operational payload pass: replace or remove old prompts/templates/manifest/changelog after reference scan.
 4. Final deletion pass: remove `platform/docs/ai/**` only after the repository has no active references.

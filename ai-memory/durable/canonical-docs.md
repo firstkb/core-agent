@@ -82,6 +82,8 @@ Operational scaffolds, not product truth:
 - `ai-memory/atlas/automation-changelog.md`
 - `ai-memory/atlas/migration-audit.md`
 - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+- `ai-memory/atlas/legacy-runs-triage.md`
+- `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
 - `.agents/skills/ramp-conductor/**`
 - `scripts/ai/**`
 

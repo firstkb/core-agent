@@ -659,3 +659,15 @@ Do not turn it into a task journal.
   - `platform/docs/ai/templates/README.md`
   - `platform/docs/ai/runs/README.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-057 Legacy Platform AI Runs Are Provenance Only
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Legacy Atlas runs under `platform/docs/ai/runs/**` are no longer active task state. They are summarized in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; agents must read that summary before opening old run payload. Old run folders remain in place until owner-approved deletion or archival move.
+- Sources:
+  - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - `ai-memory/atlas/legacy-runs-triage.md`
+  - `platform/docs/ai/runs/README.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

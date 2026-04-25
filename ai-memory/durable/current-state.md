@@ -46,6 +46,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked paths contain pointer READMEs only.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - `landed` `doc-confirmed`: `platform/docs/ai/README.md`, prompt README, template README, and run README are retired pointers. Active Atlas workflow lives under `ai-memory/atlas/**`.
+- `landed` `doc-confirmed`: Legacy run triage for `platform/docs/ai/runs/**` is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders are provenance only.
 
 ## Active Product Domains
 
@@ -105,6 +106,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Historical `platform/docs/ai/**` content still exists in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
 - `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `runs/**` still exist as legacy provenance after the Atlas operational cutover. Do not write new workflow artifacts there.
 - `risk` `doc-confirmed`: Most old `platform/docs/ai/**` payload files still exist until the retirement plan is executed. Use `ai-memory/atlas/platform-docs-ai-retirement-plan.md` before deleting or compacting them.
+- `risk` `doc-confirmed`: `2026-04-13_cross-stack_form-builder-three-schema-stabilization` is the only legacy run marked `keep-provenance`; confirm current code/docs before deleting or replacing that payload.
 
 ## Recommended Reads By Domain
 
@@ -138,3 +140,4 @@ Confidence labels:
 - Reference code relocation checkpoint: `ai-memory/reference-code/relocation-checkpoint.md`
 - Atlas workflow: `ai-memory/atlas/README.md` and `ai-memory/atlas/migration-audit.md`
 - Platform docs AI retirement plan: `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+- Legacy runs triage: `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`

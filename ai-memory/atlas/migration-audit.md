@@ -52,6 +52,7 @@ Landed cleanup:
 
 - `platform/docs/ai/README.md`, `prompts/README.md`, `templates/README.md`, and `runs/README.md` are retired pointers.
 - `docs/ref/**` now contains stable reference registries only; memory reorganization brainstorms moved to `docs/archive/memory-reorg/`.
+- Legacy runs are triaged in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders remain provenance only.
 
 The detailed retirement plan lives in:
 

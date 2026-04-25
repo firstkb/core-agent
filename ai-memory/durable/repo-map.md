@@ -94,4 +94,4 @@ Avoid unless the task explicitly needs them:
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`
 - legacy platform memory under `platform/docs/ai/**`
-- closed folders under `platform/docs/ai/runs/**`
+- closed folders under `platform/docs/ai/runs/**`; read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` first

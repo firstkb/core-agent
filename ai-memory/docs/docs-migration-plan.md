@@ -270,6 +270,7 @@ Local relocation/control docs:
 29. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
 30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
 31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `ai-memory/atlas/platform-docs-ai-retirement-plan.md`.
+32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders remain provenance only pending owner-approved deletion/move.
 
 ## Current Blockers Before Physical Move
 

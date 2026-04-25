@@ -43,6 +43,7 @@ Local reference-code policy:
 
 Local compact owner surfaces:
 
+- `ai-memory/agent-workflow.md`
 - `ai-memory/durable/current-state.md`
 - `ai-memory/durable/platform-contract.md`
 - `ai-memory/durable/module-index.md`
@@ -68,13 +69,23 @@ Local docs rewrite planning surface:
 
 Operational scaffolds, not product truth:
 
+- `ai-memory/atlas/prompts/**`
+- `ai-memory/atlas/templates/**`
+- `ai-memory/runs/active/**`
+- `ai-memory/runs/archive/**`
+- `ai-memory/atlas/automation-manifest.json`
+- `ai-memory/atlas/automation-changelog.md`
+- `ai-memory/atlas/migration-audit.md`
+- `.agents/skills/ramp-conductor/**`
+- `scripts/ai/**`
+
+Legacy operational provenance only:
+
 - `platform/docs/ai/prompts/**`
 - `platform/docs/ai/templates/**`
 - `platform/docs/ai/runs/**`
 - `platform/docs/ai/automation-manifest.json`
 - `platform/docs/ai/automation-changelog.md`
-- `.agents/skills/ramp-conductor/**`
-- `scripts/ai/**`
 
 ## Backend
 

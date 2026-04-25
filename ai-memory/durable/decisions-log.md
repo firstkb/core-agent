@@ -628,3 +628,19 @@ Do not turn it into a task journal.
   - `ai-memory/index/memory-index.yaml`
   - `ai-memory/index/read-routes.yaml`
   - `ai-memory/durable/canonical-docs.md`
+
+### DEC-055 Atlas Workflow Uses Ai-Memory Operational Layer
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Atlas/ramp-conductor now uses `ai-memory` as the first retrieval layer, active prompt/template/version metadata under `ai-memory/atlas`, and run artifacts under `ai-memory/runs/active`. Old `platform/docs/ai/**` is legacy provenance only until final retirement.
+- Sources:
+  - `platform/AGENTS.md`
+  - `platform/backend/AGENTS.md`
+  - `platform/frontend/AGENTS.md`
+  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `ai-memory/atlas/README.md`
+  - `ai-memory/atlas/migration-audit.md`
+  - `scripts/ai/new-run.py`
+  - `scripts/ai/automation_versions.py`

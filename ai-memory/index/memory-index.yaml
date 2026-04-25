@@ -402,3 +402,31 @@
     - ai-memory/docs/frontend/platform-studio/doc-map.md
     - ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md
   last_compacted: 2026-04-25
+
+- id: platform.atlas-workflow
+  memory_type: procedural
+  domain: atlas-orchestration
+  state: landed
+  confidence: doc-confirmed
+  summary: "Atlas/ramp-conductor now uses ai-memory-first routing, active prompts/templates under ai-memory/atlas, and new run artifacts under ai-memory/runs/active; old platform/docs/ai is legacy provenance only."
+  read_when:
+    - "task touches Atlas, ramp-conductor, AI memory workflow, run scaffolding, lane prompts, prompt templates, automation versions, or platform/docs/ai retirement"
+    - "task asks how agents should read memory or write Atlas run artifacts"
+  canonical_docs:
+    - AGENTS.md
+    - platform/AGENTS.md
+    - platform/backend/AGENTS.md
+    - platform/frontend/AGENTS.md
+    - .agents/skills/ramp-conductor/SKILL.md
+    - scripts/ai/new-run.py
+    - scripts/ai/automation_versions.py
+  memory_docs:
+    - ai-memory/agent-workflow.md
+    - ai-memory/atlas/README.md
+    - ai-memory/atlas/migration-audit.md
+    - ai-memory/atlas/automation-manifest.json
+    - ai-memory/atlas/automation-changelog.md
+    - ai-memory/atlas/prompts/README.md
+    - ai-memory/atlas/templates/README.md
+    - ai-memory/durable/legacy-memory-import.md
+  last_compacted: 2026-04-25

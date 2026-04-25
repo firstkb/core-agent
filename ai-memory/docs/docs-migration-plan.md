@@ -267,7 +267,8 @@ Local relocation/control docs:
 26. Backend docs final consistency pass: landed with target-folder read-order normalization across active backend docs.
 27. Frontend docs final consistency pass: landed with target-folder read-order normalization across active frontend docs.
 28. FE/BE docs final index and stale pointer audit: landed; old FE/BE root paths and `platform/docs/ai/**` are not active ownership routes.
-29. Pre-commit docs/memory verification pass: next candidate to run a consolidated audit before the owner commits.
+29. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
+30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
 
 ## Current Blockers Before Physical Move
 

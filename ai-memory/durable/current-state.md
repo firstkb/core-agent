@@ -20,6 +20,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Stable skill nicknames are `maestro`, `charlie`, and `grant`.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.
 - `landed` `doc-confirmed`: `.agent-cli/` owns typed lifecycle state transitions and mutable JSON status files.
+- `landed` `doc-confirmed`: Atlas/ramp-conductor platform workflow now reads `ai-memory` first, uses active operational files under `ai-memory/atlas`, and writes new run artifacts to `ai-memory/runs/active`.
 
 ## Product Runtime
 
@@ -83,7 +84,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
 - `risk` `doc-confirmed`: Some old frontend tracked docs contain stale lifecycle/extraction status, especially compatibility pointers and older auth follow-up state. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
-- `risk` `doc-confirmed`: Closed or superseded run artifacts may still live under hot `platform/docs/ai/runs`.
+- `risk` `doc-confirmed`: Closed or superseded legacy run artifacts still live under `platform/docs/ai/runs`; they are provenance only after the Atlas operational cutover.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
 - `risk` `doc-confirmed`: Old Form Builder archive/future workstream paths are pointer stubs. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
@@ -100,6 +101,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Historical `platform/docs/ai/**` content still exists in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
+- `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `runs/**` still exist as legacy provenance after the Atlas operational cutover. Do not write new workflow artifacts there.
 
 ## Recommended Reads By Domain
 
@@ -131,3 +133,4 @@ Confidence labels:
 - Reference code policy: `ai-memory/durable/reference-code-policy.md`
 - Reference code alias registry: `docs/ref/reference-code.md`
 - Reference code relocation checkpoint: `ai-memory/reference-code/relocation-checkpoint.md`
+- Atlas workflow: `ai-memory/atlas/README.md` and `ai-memory/atlas/migration-audit.md`

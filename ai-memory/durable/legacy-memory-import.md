@@ -31,6 +31,8 @@ Operational scaffolds, not durable product truth:
 - `platform/docs/ai/automation-manifest.json`
 - `platform/docs/ai/automation-changelog.md`
 
+Active Atlas operational copies now live under `ai-memory/atlas/**`.
+
 Historical/episodic artifacts, not active memory:
 
 - `platform/docs/ai/runs/**`

@@ -71,12 +71,12 @@ Tracked doc:
 
 Observed drift:
 
-- It still references Atlas/ramp-conductor pilot routing and `platform/docs/ai` read order.
-- Root repository guidance now defines the active Codex-native runtime and this local `ai-memory` overlay is the compact retrieval layer.
+- It now references Atlas/ramp-conductor routing through the `ai-memory` read order.
+- Root repository guidance defines the active Codex-native runtime and this local `ai-memory` overlay is the compact retrieval layer.
 
 Current read rule:
 
-- Root `AGENTS.md` and `ai-memory/` routing win for local AI work.
+- Root `AGENTS.md`, `platform/AGENTS.md`, and `ai-memory/` routing win for local AI work.
 - Keep frontend package/auth/layout rules from `platform/frontend/AGENTS.md`.
 
 ### Source Markdown Links

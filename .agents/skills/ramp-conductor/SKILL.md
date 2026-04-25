@@ -4,12 +4,12 @@ description: Use this skill as the default intake and routing layer for Ramp Pla
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.4.1
+Skill version: 1.5.0
 Human display name: Atlas
 
 Purpose:
 Atlas is the universal product-task conductor for Ramp Platform v108.
-Use it to intake work, read the smallest sufficient memory slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts, reconcile lane reports, and finalize shared memory updates.
+Use it to intake work, read the smallest sufficient `ai-memory` slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
 - Use explicitly with `$ramp-conductor`.
@@ -25,7 +25,7 @@ Do not create a run solely for ritual completeness; prefer the cheapest path tha
 
 ## Universal intake rule
 
-During the v1 pilot, Atlas is the default first touch for new work under `platform/`.
+During the current platform workflow, Atlas is the default first touch for new work under `platform/`.
 Atlas may still decide that the cheapest correct path is a direct one-lane task with no run artifacts.
 
 Direct lane bypass is still acceptable only as an intentional fast-path for obviously tiny local work.
@@ -50,13 +50,16 @@ Atlas should still accept messier briefs. If route-critical information is missi
 
 Read only the minimal shared memory first:
 1. `platform/AGENTS.md`
-2. `platform/docs/ai/README.md`
-3. `platform/docs/ai/current-state.md`
-4. `platform/docs/ai/canonical-docs.md`
-5. relevant `platform/docs/ai/modules/*.md`
+2. `ai-memory/README.md`
+3. `ai-memory/index/memory-index.yaml`
+4. `ai-memory/index/read-routes.yaml`
+5. `ai-memory/durable/current-state.md`
+6. `ai-memory/durable/module-index.md`
+7. relevant module pack under `ai-memory/modules/**`
 
-Read `platform/docs/ai/orchestration-boundaries.md` if there is confusion about `Atlas` vs repo-level orchestration.
-Read `platform/docs/ai/automation-manifest.json` when prompt/skill/template/script versions are needed.
+Read `ai-memory/durable/canonical-docs.md` when document authority matters.
+Read `ai-memory/atlas/automation-manifest.json` when prompt/skill/template/script versions are needed.
+Read `platform/docs/ai/**` only for legacy provenance, conflict resolution, or migration.
 Read additional docs only when the task actually requires them.
 When a file is large and the task is narrow, read the relevant section first rather than reloading the entire file.
 Prefer exact module and code reads over broad rereads of shared memory.
@@ -127,7 +130,7 @@ Mode rules:
 Atlas chooses the minimum sufficient prompt set and chat topology.
 
 Prompt rules:
-- use `platform/docs/ai/prompts/control-chat-prompt-v1.md` for Atlas itself
+- use `ai-memory/atlas/prompts/control-chat-prompt-v1.md` for Atlas itself
 - use full lane prompts for new, risky, or run-backed lanes
 - use compact lane prompts for direct local work or continuation of an already-stable lane
 
@@ -189,10 +192,10 @@ If the prior run is stale or the objective has materially drifted, open a new `t
 ## Run artifacts
 
 For run-backed work create or update:
-- `platform/docs/ai/runs/<task-id>/task.md`
-- `platform/docs/ai/runs/<task-id>/frontend.md` when FE lane exists
-- `platform/docs/ai/runs/<task-id>/backend.md` when BE lane exists
-- `platform/docs/ai/runs/<task-id>/final.md` at closeout
+- `ai-memory/runs/active/<task-id>/task.md`
+- `ai-memory/runs/active/<task-id>/frontend.md` when FE lane exists
+- `ai-memory/runs/active/<task-id>/backend.md` when BE lane exists
+- `ai-memory/runs/active/<task-id>/final.md` at closeout
 
 File roles:
 - `task.md` = control contract + run state
@@ -218,21 +221,21 @@ The scaffolder is mechanical only. It materializes files and stamps version data
 ## Operational contract references
 
 Use these repository files as stable operational contracts:
-- `platform/docs/ai/prompts/control-chat-prompt-v1.md`
-- `platform/docs/ai/prompts/frontend-prompt-v1.md`
-- `platform/docs/ai/prompts/frontend-prompt-compact-v1.md`
-- `platform/docs/ai/prompts/backend-prompt-v1.md`
-- `platform/docs/ai/prompts/backend-prompt-compact-v1.md`
-- `platform/docs/ai/templates/control-task.md`
-- `platform/docs/ai/templates/lane-report.md`
+- `ai-memory/atlas/prompts/control-chat-prompt-v1.md`
+- `ai-memory/atlas/prompts/frontend-prompt-v1.md`
+- `ai-memory/atlas/prompts/frontend-prompt-compact-v1.md`
+- `ai-memory/atlas/prompts/backend-prompt-v1.md`
+- `ai-memory/atlas/prompts/backend-prompt-compact-v1.md`
+- `ai-memory/atlas/templates/control-task.md`
+- `ai-memory/atlas/templates/lane-report.md`
 
-`task.md` must conform to `platform/docs/ai/templates/control-task.md`.
-Lane files and lane return sections must conform to `platform/docs/ai/templates/lane-report.md`.
+`task.md` must conform to `ai-memory/atlas/templates/control-task.md`.
+Lane files and lane return sections must conform to `ai-memory/atlas/templates/lane-report.md`.
 Generate task-specific packets and launch prompts on top of these contracts, not entirely new base prompts.
 
 ## Version synchronization rule
 
-Use `platform/docs/ai/automation-manifest.json` as the authoritative editable version source.
+Use `ai-memory/atlas/automation-manifest.json` as the authoritative editable version source.
 Automation scripts own version checks and writes. Atlas should consult manifest values when version data is needed, not invent them.
 
 ## Lane packet rules
@@ -265,10 +268,11 @@ After receiving lane reports:
 ## Shared memory ownership
 
 Control owns final shared-memory updates:
-- `platform/docs/ai/current-state.md`
-- `platform/docs/ai/decisions-log.md`
-- `platform/docs/ai/modules/*.md`
-- `platform/docs/ai/canonical-docs.md` when authority changes
+- `ai-memory/durable/current-state.md`
+- `ai-memory/durable/decisions-log.md`
+- relevant module pack under `ai-memory/modules/**`
+- `ai-memory/durable/canonical-docs.md` when authority changes
+- tracked FE/BE docs when the canonical contract itself changes
 
 FE and BE lanes may propose deltas only.
 
@@ -281,6 +285,7 @@ A run may be closed only when:
 - the next exact step is written, or the task is marked complete
 
 Closed runs are historical execution artifacts, not canonical memory.
+Move closed runs from `ai-memory/runs/active/` to `ai-memory/runs/archive/` after closeout.
 
 ## Required output
 

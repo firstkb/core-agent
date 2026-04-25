@@ -23,6 +23,12 @@ Retired surfaces:
 
 - the retired pre-Codex source-of-truth layer must not be reintroduced.
 
+Platform product memory:
+
+- `ai-memory/` is the compact retrieval and durable-memory layer for platform product work.
+- `ai-memory/` does not replace `.codex/`, `.agents/`, `.agent-cli/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
+- `platform/docs/ai/**` is legacy import/provenance only and must not be used as the default memory route.
+
 ## Docs classification
 
 Treat:
@@ -48,6 +54,7 @@ as a future-target architecture document, not as the live runtime contract.
 Ordinary agent work should read only:
 
 - `AGENTS.md`
+- `ai-memory/README.md`, `ai-memory/index/memory-index.yaml`, and `ai-memory/index/read-routes.yaml` for non-trivial platform product work
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring
@@ -59,6 +66,7 @@ Do not read build or plumbing surfaces during ordinary work:
 - `.agent-cli/src/`
 - `.agent-cli/test/`
 - artifact folders for other modules unless the owner explicitly asks
+- legacy platform memory under `platform/docs/ai/**` unless the task is migration, historical reconstruction, or conflict resolution
 
 You are not the build system. Do not inspect validator source, fixtures, internal CLI plumbing, or old runs to infer behavior that is already defined in the active Codex-native skill, contract, template, standard, and doc surfaces.
 

@@ -93,4 +93,5 @@ Avoid unless the task explicitly needs them:
 - `platform/backend/docs/legacy/**`
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`
+- legacy platform memory under `platform/docs/ai/**`
 - closed folders under `platform/docs/ai/runs/**`

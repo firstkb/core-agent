@@ -7,6 +7,7 @@ artifacts/*
 !artifacts/.gitkeep
 platform/*
 !platform/.gitkeep
+!platform/AGENTS.md
 !platform/README.md
 !platform/frontend/
 !platform/frontend/**

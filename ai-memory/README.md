@@ -14,13 +14,15 @@ When this layer conflicts with code or tracked canonical docs, verify against th
 Use this order for agent work:
 
 1. `AGENTS.md`
-2. `ai-memory/AGENTS.override.md`
+2. `platform/AGENTS.md`
 3. `ai-memory/index/memory-index.yaml`
-4. `ai-memory/durable/current-state.md`
-5. `ai-memory/durable/module-index.md`
-6. the relevant module `README.md`
-7. the relevant module `contract.md`, `state.md`, and `lessons.md`
-8. only then open deep source docs or code paths named by the module pack
+4. `ai-memory/index/read-routes.yaml`
+5. `ai-memory/durable/current-state.md`
+6. `ai-memory/durable/module-index.md`
+7. `ai-memory/agent-workflow.md` when workflow/update rules matter
+8. the relevant module `README.md`
+9. the relevant module `contract.md`, `state.md`, and `lessons.md`
+10. only then open deep source docs or code paths named by the module pack
 
 ## Memory Types
 
@@ -32,6 +34,7 @@ Use this order for agent work:
 ## Directory Roles
 
 - `index/`: compact retrieval index and read routing.
+- `atlas/`: active Atlas prompts, templates, automation manifest, and migration audit.
 - `durable/`: small cross-project memory that should be read before deep docs.
 - `modules/domains/`: product/domain memory where frontend, backend, or multiple apps must stay aligned.
 - `modules/frontend/`: frontend-owned module packs and UI/package concerns.
@@ -70,4 +73,5 @@ The initial memory slice covers:
 - frontend and backend docs classification maps
 - target structure for future physical FE/BE docs rewrite
 - source-to-target migration plan for future physical docs rewrite
+- Atlas operational migration from `platform/docs/ai` to `ai-memory/atlas` and `ai-memory/runs`
 - reference-code governance, alias registry, and relocation plan for Metronic, EXTDB, ezform, smartapp, old builder snapshots, and legacy MSSQL material

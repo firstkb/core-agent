@@ -19,7 +19,7 @@ Use it before treating older backend docs as active runtime truth.
 
 ## Known Drift
 
-- `platform/backend/AGENTS.md` still points agents at the old `platform/docs/ai` and Atlas/ramp-conductor style read order. For current local AI work, use root `AGENTS.md` plus `ai-memory` retrieval first.
+- `platform/backend/AGENTS.md` now points agents at `ai-memory` first. Old `platform/docs/ai` is legacy provenance only.
 - Some older backend guidance mentions legacy-compatible prefixed tenant business tables. Newer schema contracts make canonical snake_case the runtime target and keep legacy naming as import/reference material only.
 - The backend runtime slice now stores current runtime shape in `platform/backend/docs/modules/runtime.md` and runtime wiring in `platform/backend/docs/contracts/runtime-wiring.md`.
 - `backend-current-to-target-map.md` is now a compatibility pointer. Current memory treats `cmd/worker` as future/deferred, not an active entrypoint.

@@ -396,3 +396,26 @@ routes:
       - ai-memory/modules/domains/platform-studio/README.md
       - ai-memory/modules/domains/platform-studio/contract.md
       - ai-memory/docs/backend/doc-map.md
+
+  atlas_workflow:
+    triggers:
+      - Atlas
+      - ramp-conductor
+      - AI memory workflow
+      - agent memory
+      - new-run.py
+      - automation_versions.py
+      - automation manifest
+      - lane prompt
+      - control prompt
+      - run scaffold
+      - platform/docs/ai retirement
+      - ai-memory/atlas
+    read:
+      - ai-memory/agent-workflow.md
+      - ai-memory/atlas/README.md
+      - ai-memory/atlas/migration-audit.md
+      - ai-memory/atlas/automation-manifest.json
+      - ai-memory/atlas/prompts/README.md
+      - ai-memory/atlas/templates/README.md
+      - ai-memory/durable/legacy-memory-import.md

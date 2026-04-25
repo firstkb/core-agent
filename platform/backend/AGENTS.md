@@ -5,14 +5,15 @@ Scope: `platform/backend` only.
 Read first:
 
 1. `platform/AGENTS.md`
-2. `platform/docs/ai/README.md`
-3. `platform/docs/ai/current-state.md`
-4. relevant module docs under `platform/docs/ai/modules/`
-5. `platform/backend/docs/README.md`
+2. `ai-memory/index/memory-index.yaml`
+3. `ai-memory/index/read-routes.yaml`
+4. `ai-memory/durable/current-state.md`
+5. relevant module pack under `ai-memory/modules/**`
+6. `platform/backend/docs/README.md`
 
 ## Lane orchestration rule
 
-During the v1 pilot, the preferred entrypoint for new backend work is `Atlas` (`$ramp-conductor`).
+During the current platform workflow, the preferred entrypoint for new backend work is `Atlas` (`$ramp-conductor`).
 Atlas may route the task to:
 - direct backend no-run work
 - `BE_ONLY` run-backed work
@@ -74,6 +75,7 @@ Do not read by default:
 - `migrations/postgres/archive/**`
 - `bundle/tenant_schema_full.sql` unless the task is bundle/migration specific
 - `certs/**`
+- `../docs/ai/**`
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas

@@ -877,3 +877,14 @@ Do not turn it into a task journal.
 - Sources:
   - `ai-memory/agent-workflow.md`
   - `platform/AGENTS.md`
+
+### DEC-074 Form Builder Planned Work Stays Separate From Implemented Truth
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Form Builder planned/open work must be compacted separately from implemented/code-confirmed truth. Agents must not treat import, runtime grants, preview guards, runtime create/edit/save records, non-lookup multivalue storage, package extraction, or exact-detail replacement as implemented unless a future code-backed slice lands.
+- Sources:
+  - `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder.md`
+  - `platform/backend/docs/contracts/platform-studio-form-builder.md`

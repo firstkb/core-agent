@@ -9,6 +9,7 @@ Last compacted: 2026-04-25
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+- `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md` for planned/open work only
 
 ## Owns
 
@@ -36,6 +37,9 @@ Last compacted: 2026-04-25
 
 `Save` is authoring persistence plus additive runtime apply.
 It is not site publication and must not silently become a Navigation Builder or Action Builder operation.
+
+Use `form-builder-planned-work.md` before treating a remembered Form Builder
+follow-up as implemented or as approved near-term scope.
 
 Old Form Builder detail/workstream docs are not default truth.
 Use `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before opening them.

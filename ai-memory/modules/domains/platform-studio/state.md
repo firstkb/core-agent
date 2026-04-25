@@ -37,7 +37,9 @@ Last compacted: 2026-04-25
 - Backend package split plan: `platformstudioformbuilder` remains authoring/control-plane owner; runtime record/list work should move to `platformstudioformruntime`; post-submit side effects should move to `platformstudioformactions`.
 - Import model is planned from managed export bundle.
 - Import data is planned for managed models.
+- No active import route/service exists yet.
 - Final export-data product decision remains open: raw table, authored/runtime view, or both.
+- Multiple lookup fields have code-backed multivalue bridge-table support; non-lookup `multi_select`/`tags` storage remains deferred.
 - Dedicated runtime-vs-preview backend guards remain follow-up.
 - Lookup-heavy filter compiler path remains unfinished for `Contact`, `Project`, `Company`, `Reported By`, and similar presets.
 - Per-tenant `jobtype` seed/backfill may be needed if tenant-owned rows are required beyond bootstrap `tenant_id = 0`.

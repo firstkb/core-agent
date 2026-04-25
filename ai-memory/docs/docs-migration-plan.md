@@ -35,6 +35,7 @@ Current progress:
 - Retained old Form Builder exact-detail reference docs received explicit tracked headers and read rules.
 - Form Builder exact-detail consolidation audit landed: 14 retained as exact-detail, 0 marked for extraction before future deletion, and 9 detail docs deleted after extraction into `form-builder-fields.md`.
 - Form Builder exact-detail replacement roadmap landed as docs-only planning; retained detail docs stay until a future implementation slice names replacement target and verification.
+- Form Builder planned/open work memory landed after code-read verification, separating implemented runtime/export/authoring/multiple-lookup bridge facts from planned import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work.
 - Form Builder retained exact-detail policy and docs/memory score audit landed; overall readiness is 96/100 with remaining work focused on automation and typed/generated replacements, not manual pointer cleanup.
 - Backend runbooks/proposals/reference cleanup landed: operational docs moved to `runbooks/`, gateway/KMS docs moved to `proposals/`, import docs moved to `reference/`, and old root/auth pointer paths were later deleted.
 - Backend remaining proposals/archive cleanup landed: events identity moved to `contracts/`, events/mail and schema drift moved to `proposals/`, historical backend standards/plans/prompts moved to `archive/`, and old root pointer paths were later deleted.
@@ -287,6 +288,7 @@ Local relocation/control docs:
 42. Docs/memory CI gate: landed with `.github/workflows/docs-memory-check.yml` running docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
 43. Scribe semantic audit skill: landed with `.agents/skills/scribe/` for periodic owner-invoked docs/memory source-of-truth audits.
 44. Form Builder exact-detail replacement roadmap: landed as docs-only planning for the 14 retained exact-detail references; no product-code changes are authorized by the roadmap itself.
+45. Form Builder planned/open work memory: landed as code-read verification of implemented vs planned work, including the distinction between implemented multiple-lookup bridge support and deferred non-lookup multivalue storage; no product-code changes authorized.
 
 ## Current Blockers Before Physical Move
 

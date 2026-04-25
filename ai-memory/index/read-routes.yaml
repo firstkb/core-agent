@@ -325,6 +325,7 @@ routes:
       - ai-memory/modules/domains/platform-studio/state.md
       - ai-memory/modules/domains/platform-studio/lessons.md
       - ai-memory/modules/domains/platform-studio/tools/form-builder.md
+      - ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md
       - ai-memory/modules/frontend/tenant-web/README.md
       - ai-memory/modules/frontend/platform-studio-ui/README.md
       - ai-memory/modules/backend/platform-studio-form-builder/README.md

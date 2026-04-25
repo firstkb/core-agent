@@ -218,6 +218,7 @@ Platform Studio:
 
 - `ai-memory/modules/domains/platform-studio/README.md`
 - `ai-memory/modules/domains/platform-studio/tools/README.md`
+- `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `ai-memory/modules/backend/platform-studio-form-builder/README.md`
 - `ai-memory/docs/frontend/platform-studio/README.md`
 - `ai-memory/docs/frontend/platform-studio/doc-map.md`

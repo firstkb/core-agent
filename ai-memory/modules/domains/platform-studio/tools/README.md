@@ -23,6 +23,7 @@ Form Builder is active because it is first, not because it owns all Platform Stu
 ## Tool Files
 
 - `form-builder.md`
+- `form-builder-planned-work.md`
 - `navigation-builder.md`
 - `action-builder.md`
 - `pdf-builder.md`

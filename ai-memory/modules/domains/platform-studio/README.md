@@ -24,6 +24,7 @@ Last compacted: 2026-04-25
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+- `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 
 Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; the old `platform/docs/ai/**` path has been deleted.
 
@@ -38,6 +39,7 @@ Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; 
 - Titles, SQL names, and view-local node ids are not identity.
 - Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 - Form Builder field/catalog/rules/view-settings truth lives in `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
+- Planned/open Form Builder work lives in `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`.
 - Old Form Builder detail/workstream docs are classified in `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`.
 
 ## Tool Map

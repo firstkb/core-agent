@@ -29,14 +29,15 @@ For most Platform Studio frontend tasks:
 2. `ai-memory/modules/domains/platform-studio/tools/README.md`
 3. `ai-memory/modules/frontend/platform-studio-ui/README.md`
 4. `ai-memory/docs/frontend/platform-studio/doc-map.md`
-5. `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` when deciding whether an old Form Builder doc is exact detail, deleted proposal/archive, or reference-only
-6. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md` before deleting or further compacting retained exact-detail docs
-7. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md` before planning replacement of retained exact-detail prose
-8. `platform/frontend/docs/contracts/platform-studio.md`
-9. `platform/frontend/docs/modules/platform-studio/README.md`
-10. `platform/frontend/docs/modules/platform-studio/form-builder.md` when the task is about Form Builder
-11. `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` when the task is about fields, palette, rules, grid, filters, view settings, or scopes
-12. The exact supporting source docs named by the relevant section.
+5. `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md` when the task asks what is still planned/open
+6. `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` when deciding whether an old Form Builder doc is exact detail, deleted proposal/archive, or reference-only
+7. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md` before deleting or further compacting retained exact-detail docs
+8. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md` before planning replacement of retained exact-detail prose
+9. `platform/frontend/docs/contracts/platform-studio.md`
+10. `platform/frontend/docs/modules/platform-studio/README.md`
+11. `platform/frontend/docs/modules/platform-studio/form-builder.md` when the task is about Form Builder
+12. `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` when the task is about fields, palette, rules, grid, filters, view settings, or scopes
+13. The exact supporting source docs named by the relevant section.
 
 ## Hot Source Set
 
@@ -57,6 +58,7 @@ Read these tracked docs first only when source-level detail is required:
 - Old Form Builder detail docs: read `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before opening the old source path.
 - Exact-detail deletion/compaction decisions: read `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`.
 - Exact-detail replacement planning: read `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md`.
+- Planned/open Form Builder work: read `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`.
 - Backend handoff/API/storage/runtime apply work: read `platform/backend/docs/contracts/platform-studio-form-builder.md`; for backend implementation orientation, also read `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Prompt/reference reconstruction: read archive/reference candidates only when explicitly needed.
 

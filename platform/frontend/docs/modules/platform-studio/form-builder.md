@@ -388,6 +388,12 @@ Runtime form should render create/read/edit from:
 - `layoutBlueprint`
 - `uiSchema`
 
+Current runtime implementation is list/read-first.
+The code-backed backend surface currently includes runtime list meta, query,
+search suggestions, saved filters, favorites, and record detail.
+Runtime create/edit/save record flows are future `platformstudioformruntime`
+scope, not completed Form Builder authoring scope.
+
 ## Runtime Routes And Access
 
 Canonical runtime routes:
@@ -465,6 +471,7 @@ Current export scope:
 - backend rejects direct export calls for non-managed model types
 
 Current managed model bundle is the accepted future source for `Import model`.
+There is no active import route/service yet.
 
 Bundle root:
 

@@ -22,6 +22,7 @@ It does not mean every historical exact-detail document has been deleted.
 - Form Builder deleted exact-detail docs are no longer referenced from tracked frontend docs as read targets.
 - Form Builder exact-detail audit has `14 keep_exact_detail`, `0 compact_more_then_delete`, and `9 deleted_after_payload_extraction`.
 - Form Builder retained exact-detail replacement has a docs-only roadmap; no retained detail doc should be deleted before its replacement target and verification are explicit.
+- Form Builder planned/open work has a dedicated code-verified memory doc, so import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work is not confused with implemented truth.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
 - `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift and local markdown-link check.
 - `.github/workflows/docs-memory-check.yml` runs docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
@@ -43,7 +44,7 @@ It does not mean every historical exact-detail document has been deleted.
 ## Remaining Work To Reach 100
 
 - Execute retained Form Builder exact-detail replacements only through explicit implementation slices that name replacement target and verification.
-- Decide later whether Scribe needs scheduled/manual cadence beyond owner-invoked audits.
+- Use Scribe manually after large docs/memory changes and before major development phases; do not run it on every commit by default.
 - Keep future module work disciplined: every new durable decision should update `ai-memory/durable/decisions-log.md`, `current-state.md`, the relevant module pack, and the tracked doc owner.
 
 ## Current Policy

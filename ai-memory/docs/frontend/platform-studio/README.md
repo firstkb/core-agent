@@ -31,11 +31,12 @@ For most Platform Studio frontend tasks:
 4. `ai-memory/docs/frontend/platform-studio/doc-map.md`
 5. `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` when deciding whether an old Form Builder doc is exact detail, deleted proposal/archive, or reference-only
 6. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md` before deleting or further compacting retained exact-detail docs
-7. `platform/frontend/docs/contracts/platform-studio.md`
-8. `platform/frontend/docs/modules/platform-studio/README.md`
-9. `platform/frontend/docs/modules/platform-studio/form-builder.md` when the task is about Form Builder
-10. `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` when the task is about fields, palette, rules, grid, filters, view settings, or scopes
-11. The exact supporting source docs named by the relevant section.
+7. `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md` before planning replacement of retained exact-detail prose
+8. `platform/frontend/docs/contracts/platform-studio.md`
+9. `platform/frontend/docs/modules/platform-studio/README.md`
+10. `platform/frontend/docs/modules/platform-studio/form-builder.md` when the task is about Form Builder
+11. `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` when the task is about fields, palette, rules, grid, filters, view settings, or scopes
+12. The exact supporting source docs named by the relevant section.
 
 ## Hot Source Set
 
@@ -55,6 +56,7 @@ Read these tracked docs first only when source-level detail is required:
 - Field/palette/rules/view-settings work: read `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` first, then only the specific old field/section contract if exact payload detail is required.
 - Old Form Builder detail docs: read `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before opening the old source path.
 - Exact-detail deletion/compaction decisions: read `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`.
+- Exact-detail replacement planning: read `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md`.
 - Backend handoff/API/storage/runtime apply work: read `platform/backend/docs/contracts/platform-studio-form-builder.md`; for backend implementation orientation, also read `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Prompt/reference reconstruction: read archive/reference candidates only when explicitly needed.
 

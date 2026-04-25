@@ -202,6 +202,8 @@ Use this workflow for all non-trivial work:
 
 ## When memory must be updated
 
+Use `ai-memory/agent-workflow.md` as the canonical maintenance matrix.
+
 Update `ai-memory/durable/current-state.md` when:
 
 - a workstream meaningfully advances
@@ -236,6 +238,7 @@ Update `ai-memory/atlas/automation-changelog.md` when:
 Update tracked FE/BE docs when code changes the canonical contract itself.
 Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
 The same docs/memory gate runs in `.github/workflows/docs-memory-check.yml` for relevant PRs and pushes.
+If no memory update is needed, state that explicitly in the closeout.
 
 ## Long-task support
 

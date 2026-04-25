@@ -222,6 +222,7 @@ Platform Studio:
 - `ai-memory/docs/frontend/platform-studio/README.md`
 - `ai-memory/docs/frontend/platform-studio/doc-map.md`
 - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+- `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md`
 - `ai-memory/docs/frontend/platform-studio/contracts/doc-compaction-policy.md`
 - `platform/frontend/docs/contracts/platform-studio.md`
 - `platform/frontend/docs/modules/platform-studio/README.md`

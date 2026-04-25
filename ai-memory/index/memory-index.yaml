@@ -401,6 +401,7 @@
     - ai-memory/modules/backend/platform-studio-form-builder/README.md
     - ai-memory/docs/frontend/platform-studio/doc-map.md
     - ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md
+    - ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md
   last_compacted: 2026-04-25
 
 - id: platform.atlas-workflow

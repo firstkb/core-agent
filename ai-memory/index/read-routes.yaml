@@ -330,6 +330,7 @@ routes:
       - ai-memory/modules/backend/platform-studio-form-builder/README.md
       - ai-memory/docs/frontend/platform-studio/doc-map.md
       - ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md
+      - ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md
 
   form_builder_fields:
     triggers:
@@ -372,6 +373,8 @@ routes:
     read:
       - ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md
       - ai-memory/docs/frontend/platform-studio/doc-map.md
+      - ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md
+      - ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md
 
   backend_form_builder:
     triggers:

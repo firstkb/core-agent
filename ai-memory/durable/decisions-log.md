@@ -856,3 +856,24 @@ Do not turn it into a task journal.
   - `.agents/skills/scribe/agents/openai.yaml`
   - `AGENTS.md`
   - `platform/AGENTS.md`
+
+### DEC-072 Form Builder Exact-Detail Replacement Is Owner-Gated
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: The 14 retained Form Builder exact-detail docs remain tracked opt-in references until a future implementation slice explicitly names the replacement target and verification method. The replacement roadmap is docs-only and does not authorize product-code changes by itself.
+- Sources:
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+
+### DEC-073 Memory Maintenance Matrix Is Mandatory
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Agents must use `ai-memory/agent-workflow.md` as the memory maintenance matrix for new durable decisions, new modules/apps/packages/runtimes, doc status changes, reference-code changes, and Atlas/Scribe workflow changes. If no memory update is needed, the closeout should say so explicitly.
+- Sources:
+  - `ai-memory/agent-workflow.md`
+  - `platform/AGENTS.md`

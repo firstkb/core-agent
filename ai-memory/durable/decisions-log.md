@@ -644,3 +644,18 @@ Do not turn it into a task journal.
   - `ai-memory/atlas/migration-audit.md`
   - `scripts/ai/new-run.py`
   - `scripts/ai/automation_versions.py`
+
+### DEC-056 Docs Ref And Legacy Platform AI Use Archive/Retirement Boundaries
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: `docs/ref/` is reserved for stable opt-in reference registries. Memory reorganization prompts and blueprints moved to `docs/archive/memory-reorg/`. `platform/docs/ai/**` remains legacy provenance only; its top-level, prompt, template, and run indexes are retired pointers, and final deletion must follow the retirement plan.
+- Sources:
+  - `docs/ref/README.md`
+  - `docs/archive/memory-reorg/README.md`
+  - `platform/docs/ai/README.md`
+  - `platform/docs/ai/prompts/README.md`
+  - `platform/docs/ai/templates/README.md`
+  - `platform/docs/ai/runs/README.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

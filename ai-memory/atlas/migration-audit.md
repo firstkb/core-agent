@@ -44,6 +44,15 @@ This audit maps the old `platform/docs/ai` Atlas workflow to the new
 ## Remaining Retirement Work
 
 - Triage old `platform/docs/ai/runs/**` into archive summaries or delete after confirming no active task depends on them.
-- Replace old `platform/docs/ai/README.md` with a short retired-surface pointer after all operational references are gone.
-- Decide whether old `platform/docs/ai/prompts/**` and `templates/**` should become pointer stubs or be physically removed.
-- Clean `docs/ref/**` so migration brainstorm files move to archive and `docs/ref/reference-code.md` remains the stable reference registry.
+- Replace or archive old durable payload files under `platform/docs/ai/*.md` after citation review.
+- Decide whether old `platform/docs/ai/prompts/**` and `templates/**` payload files should become pointer stubs or be physically removed.
+- Decide whether `platform/docs/ai/automation-manifest.json` should be removed after all scripts and docs use `ai-memory/atlas/automation-manifest.json`.
+
+Landed cleanup:
+
+- `platform/docs/ai/README.md`, `prompts/README.md`, `templates/README.md`, and `runs/README.md` are retired pointers.
+- `docs/ref/**` now contains stable reference registries only; memory reorganization brainstorms moved to `docs/archive/memory-reorg/`.
+
+The detailed retirement plan lives in:
+
+- `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

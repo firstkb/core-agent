@@ -1,3 +1,8 @@
+# Archive Note
+
+Status: archived historical input.
+Do not use this file as current repository guidance.
+
 # Local Codex override for this repository
 
 This file is local-only and must not be committed.

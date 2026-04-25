@@ -27,6 +27,8 @@ It does not move or replace tracked docs by itself.
 - `ai-memory/reference-code/packs-index.md`
 - `ai-memory/reference-code/relocation-plan.md`
 - `ai-memory/atlas/migration-audit.md`
+- `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+- `docs/archive/memory-reorg/README.md`
 
 ## Rule
 

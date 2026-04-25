@@ -269,6 +269,7 @@ Local relocation/control docs:
 28. FE/BE docs final index and stale pointer audit: landed; old FE/BE root paths and `platform/docs/ai/**` are not active ownership routes.
 29. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
 30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
+31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `ai-memory/atlas/platform-docs-ai-retirement-plan.md`.
 
 ## Current Blockers Before Physical Move
 

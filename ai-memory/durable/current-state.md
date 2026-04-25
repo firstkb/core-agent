@@ -44,6 +44,8 @@ Confidence labels:
 - `planned` `doc-confirmed`: Deferred composed UI surfaces such as remote table workspaces, file uploads, AI assistant dialog, messenger, and kanban remain future/app-layer-first proposal scope at `platform/frontend/docs/proposals/deferred-composed-surfaces.md`.
 - `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `docs/ref/reference-code.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked paths contain pointer READMEs only.
+- `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
+- `landed` `doc-confirmed`: `platform/docs/ai/README.md`, prompt README, template README, and run README are retired pointers. Active Atlas workflow lives under `ai-memory/atlas/**`.
 
 ## Active Product Domains
 
@@ -102,6 +104,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Historical `platform/docs/ai/**` content still exists in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
 - `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `runs/**` still exist as legacy provenance after the Atlas operational cutover. Do not write new workflow artifacts there.
+- `risk` `doc-confirmed`: Most old `platform/docs/ai/**` payload files still exist until the retirement plan is executed. Use `ai-memory/atlas/platform-docs-ai-retirement-plan.md` before deleting or compacting them.
 
 ## Recommended Reads By Domain
 
@@ -134,3 +137,4 @@ Confidence labels:
 - Reference code alias registry: `docs/ref/reference-code.md`
 - Reference code relocation checkpoint: `ai-memory/reference-code/relocation-checkpoint.md`
 - Atlas workflow: `ai-memory/atlas/README.md` and `ai-memory/atlas/migration-audit.md`
+- Platform docs AI retirement plan: `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

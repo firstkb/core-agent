@@ -27,10 +27,15 @@ Future-target only:
 
 - `docs/maestro/maestro-feature-formation-canonical.md`
 
-Reference/proposed:
+Reference:
 
-- `docs/ref/**`
+- `docs/ref/README.md`
 - `docs/ref/reference-code.md`
+
+Historical archive:
+
+- `docs/archive/README.md`
+- `docs/archive/memory-reorg/README.md`
 
 Local reference-code policy:
 
@@ -76,6 +81,7 @@ Operational scaffolds, not product truth:
 - `ai-memory/atlas/automation-manifest.json`
 - `ai-memory/atlas/automation-changelog.md`
 - `ai-memory/atlas/migration-audit.md`
+- `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
 - `.agents/skills/ramp-conductor/**`
 - `scripts/ai/**`
 

@@ -1,3 +1,8 @@
+# Archive Note
+
+Status: archived historical input.
+Do not use this blueprint as current repository guidance.
+
 # Blueprint: локальная память и реорганизация docs для Codex / Atlas
 
 Статус: proposed

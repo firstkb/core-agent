@@ -1,3 +1,8 @@
+# Archive Note
+
+Status: archived historical input.
+Do not use this prompt as current repository guidance.
+
 # Prompt для Codex / GPT-5.4: переработка текущих папок для AI Agent
 
 Скопируй текст ниже целиком в Codex.
@@ -308,4 +313,3 @@ Policy должна отвечать на вопросы:
 - какие изменения лучше делать второй волной
 
 ---
-

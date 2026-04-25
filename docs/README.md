@@ -20,4 +20,9 @@ Future-target references:
 
 Opt-in reference metadata:
 
+- [`ref/README.md`](./ref/README.md) - stable opt-in reference registry area
 - [`ref/reference-code.md`](./ref/reference-code.md) - alias registry for donor/vendor/legacy reference-code packs; not product truth
+
+Historical archive:
+
+- [`archive/README.md`](./archive/README.md) - retired planning material outside the default read path

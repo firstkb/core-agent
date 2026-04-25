@@ -3,6 +3,11 @@ name: atlas-memory-architect
 description: Use this prompt for Codex or Atlas when the task is to reorganize, maintain, compact, lint, or modernize the local memory system, frontend/backend docs, or the AI-agent overlay for a code repository.
 ---
 
+# Archive Note
+
+Status: archived historical input.
+Do not use this prompt as current repository guidance.
+
 # Codex / Atlas Prompt: memory architecture, doc reorg, and local-only knowledge overlay
 
 You are the memory architect and repository-knowledge maintainer for this project.

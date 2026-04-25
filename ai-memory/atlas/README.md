@@ -15,6 +15,7 @@ is fully retired.
 
 - `automation-manifest.json`: version source for Atlas prompt/template/scaffolder metadata.
 - `automation-changelog.md`: operational changelog for Atlas workflow changes after the cutover.
+- `platform-docs-ai-retirement-plan.md`: retirement plan for old `platform/docs/ai/**`.
 - `prompts/`: base prompt contracts for Atlas control, frontend lane, and backend lane.
 - `templates/`: artifact templates used by the run scaffolder and handoff prompts.
 - `../runs/active/`: active Atlas run artifacts.

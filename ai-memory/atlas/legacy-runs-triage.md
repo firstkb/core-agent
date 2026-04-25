@@ -3,7 +3,7 @@
 Status: final triage record
 Last updated: 2026-04-25
 
-This record tracks the final retirement state for old Atlas runs under
+This record tracks the final retirement state for former Atlas runs under
 `platform/docs/ai/runs/**`.
 
 Compact archive summary:
@@ -20,7 +20,7 @@ Compact archive summary:
 ## Do Not Do
 
 - Do not use old run files as active task state.
-- Do not create new runs under `platform/docs/ai/runs/**`.
+- Do not recreate `platform/docs/ai/runs/**`.
 
 ## Deletion Result
 

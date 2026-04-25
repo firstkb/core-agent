@@ -1,10 +1,9 @@
 # Platform Docs AI Retirement Readiness
 
-Status: final readiness audit
+Status: final deletion audit
 Last audited: 2026-04-25
 
-This audit records whether `platform/docs/ai/**` can be physically removed or
-must remain as compatibility pointers.
+This audit records the final physical removal of `platform/docs/ai/**`.
 
 ## Verdict
 
@@ -12,13 +11,14 @@ Hot-read retirement: pass.
 
 Run payload cleanup: pass.
 
-Remaining physical deletion: pointer-directory decision.
+Physical deletion: pass.
 
 `platform/docs/ai/**` is no longer an active memory or Atlas workflow source.
 Active retrieval and workflow now live under `ai-memory/**`.
 
 Raw legacy run payloads have been deleted after compact summary acceptance.
-The remaining `platform/docs/ai/**` files are compatibility pointers only.
+The remaining compatibility pointer files have also been deleted after active
+reference checks.
 
 ## Reference Scan Summary
 
@@ -32,21 +32,20 @@ for d in platform/docs/ai/runs/20*; do rg -n "$(basename "$d")" AGENTS.md platfo
 
 Results:
 
-- Active AGENTS, runtime scripts, `ai-memory/index/*`, and workflow docs mention `platform/docs/ai/**` only as legacy/provenance, migration scope, or avoid-by-default.
+- Active AGENTS, runtime scripts, `ai-memory/index/*`, and workflow docs do not route agents to read or write `platform/docs/ai/**`.
 - No active script reads `platform/docs/ai/automation-manifest.json`; version sync uses `ai-memory/atlas/automation-manifest.json`.
-- No legacy run id is referenced outside `platform/docs/ai/runs/**` except the compact triage summary and cleanup notes.
+- No legacy run id requires a working-tree `platform/docs/ai/runs/**` file; compact summaries and git history own old provenance.
 - Archive docs still contain historical references to old paths; those are provenance and not active runtime blockers.
 
 ## Remaining Tracked Surface
 
 Current tracked legacy surface:
 
-- `36` files remain in the working tree under `platform/docs/ai/**`.
-- `34` non-run pointer files remain.
-- `2` run-directory pointer files remain: `README.md` and `.gitkeep`.
+- `0` files remain in the working tree under `platform/docs/ai/**`.
 - Raw legacy run payload files were deleted.
+- Pointer README files and `.gitkeep` were deleted after active reference checks.
 
-Non-run files are compatibility pointers only:
+Former non-run files were compatibility pointers only before deletion:
 
 - top-level durable/governance/changelog markdown files,
 - `modules/*.md`,
@@ -71,14 +70,11 @@ Decision:
 - Use git history only when exact old run text is required.
 - Keep no new run artifacts under `platform/docs/ai/runs/**`.
 
-## Recommended Physical Cleanup Plan
+## Physical Cleanup Result
 
-Preferred final plan:
-
-1. Keep pointer directories until the next compatibility decision.
-2. Choose one final compatibility mode:
-   - conservative: keep only `platform/docs/ai/README.md` plus short subdirectory README pointers for one more cycle,
-   - clean: delete `platform/docs/ai/**` entirely and update remaining active references to say historical payload exists only in git history plus `ai-memory/durable/legacy-memory-import.md`.
+- Clean mode was selected by owner decision.
+- `platform/docs/ai/**` was deleted entirely.
+- Active references now point to `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
 ## Do Not Do
 
@@ -88,6 +84,4 @@ Preferred final plan:
 
 ## Next Gate
 
-Next owner decision needed:
-
-- Keep the remaining `platform/docs/ai/**` pointer directories for one more cycle, or remove them entirely.
+No remaining gate for `platform/docs/ai/**`.

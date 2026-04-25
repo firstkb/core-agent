@@ -69,7 +69,7 @@ Do not read by default:
 - `**/.turbo/**`
 - `docs/vendor/**`
 - `docs/platform-studio/old-code-reference/**`
-- `../docs/ai/**`
+- deleted legacy AI memory path `../docs/ai/**`; use `ai-memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas

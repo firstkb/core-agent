@@ -27,7 +27,7 @@ Platform product memory:
 
 - `ai-memory/` is the compact retrieval and durable-memory layer for platform product work.
 - `ai-memory/` does not replace `.codex/`, `.agents/`, `.agent-cli/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
-- `platform/docs/ai/**` is legacy import/provenance only and must not be used as the default memory route.
+- the former `platform/docs/ai/**` layer is fully retired and deleted; use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
 ## Docs classification
 
@@ -66,7 +66,7 @@ Do not read build or plumbing surfaces during ordinary work:
 - `.agent-cli/src/`
 - `.agent-cli/test/`
 - artifact folders for other modules unless the owner explicitly asks
-- legacy platform memory under `platform/docs/ai/**` unless the task is migration, historical reconstruction, or conflict resolution
+- deleted legacy platform memory paths from `platform/docs/ai/**`; recover exact old text from git history only for explicit historical reconstruction
 
 You are not the build system. Do not inspect validator source, fixtures, internal CLI plumbing, or old runs to infer behavior that is already defined in the active Codex-native skill, contract, template, standard, and doc surfaces.
 

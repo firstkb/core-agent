@@ -29,7 +29,7 @@ The memory system exists so the active chat is not the only source of durable st
 Use the chat for execution.
 Use `ai-memory/` by role.
 Use the local `AGENTS.md` files for lane-specific operating rules.
-Use `platform/docs/ai/**` only for legacy provenance, conflict resolution, or final migration.
+Do not use the former `platform/docs/ai/**` path for reads or writes; it has been deleted after migration. Use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for old provenance.
 
 ## Memory roles
 
@@ -63,7 +63,9 @@ Use `ai-memory/` by role:
   - `scripts/ai/new-run.sh`
   - `scripts/ai/automation_versions.py`
 - archive / historical context:
-  - `platform/docs/ai/**`
+  - `ai-memory/durable/legacy-memory-import.md`
+  - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - git history for the former `platform/docs/ai/**` payloads
   - `platform/docs/archive/*`
 
 ## Canonical durable memory surfaces
@@ -166,7 +168,7 @@ Do not read these unless the task explicitly needs them:
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/backend/bundle/tenant_schema_full.sql` unless the task is bundle or migration related
 - `platform/backend/certs/**`
-- `platform/docs/ai/**`
+- deleted legacy AI memory path `platform/docs/ai/**`; use `ai-memory` and git history instead
 - `platform/docs/archive/**`
 
 These are large, generated, donor, or historical surfaces and they slow down agent work.

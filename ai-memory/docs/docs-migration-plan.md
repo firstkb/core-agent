@@ -270,15 +270,15 @@ Local relocation/control docs:
 29. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
 30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
 31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `ai-memory/atlas/platform-docs-ai-retirement-plan.md`.
-32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders remain provenance only pending owner-approved deletion/move.
+32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders were later deleted after summary acceptance.
 33. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md`; active memory now routes to `ai-memory`, while old payload text is git-history provenance only.
 34. Legacy module memory pointer pass: landed for `platform/docs/ai/modules/*.md`; active module memory now routes to `ai-memory/modules/**` and tracked FE/BE docs.
 35. Legacy operational payload pass: landed for `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, and `platform/docs/ai/automation-manifest.json`; active Atlas workflow now routes only to `ai-memory/atlas/**`.
-36. Final `platform/docs/ai/**` retirement readiness audit: landed in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passes, physical deletion remains owner-gated by legacy run payload cleanup.
-37. Legacy run payload cleanup: landed; raw `platform/docs/ai/runs/**` payloads were deleted after accepting the compact archive summary, leaving only the retired run pointer README and `.gitkeep`.
+36. Final `platform/docs/ai/**` retirement readiness audit: landed in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passed and physical deletion is now complete.
+37. Legacy run payload cleanup: landed; raw `platform/docs/ai/runs/**` payloads were deleted after accepting the compact archive summary.
+38. Final `platform/docs/ai/**` pointer-directory deletion: landed; remaining compatibility pointer files were removed after active reference checks. Provenance now uses `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 
 ## Current Blockers Before Physical Move
 
-- Need owner approval before archiving or physically moving old tracked compatibility paths.
 - Need exact decision on whether Navigation Builder owns access assignment or a separate Access Builder is introduced.
 - Need code verification for docs labeled with drift before promoting them into active contracts.

@@ -61,7 +61,7 @@ platform/
 - stable Atlas prompt contracts live under `ai-memory/atlas/prompts/`
 - workflow templates live under `ai-memory/atlas/templates/`
 - coordinated task run artifacts live under `ai-memory/runs/`
-- `platform/docs/ai/` is retained only as legacy provenance and compatibility pointers
+- former `platform/docs/ai/` memory has been migrated into `ai-memory` and deleted; exact old text is git-history provenance only
 - archived one-off prompt artifacts live under `platform/docs/archive/`
 - manual orchestration skill lives at `.agents/skills/ramp-conductor/`
 
@@ -79,6 +79,6 @@ platform/
 - prompt registry: `ai-memory/atlas/prompts/README.md`
 - template registry: `ai-memory/atlas/templates/README.md`
 - run-artifact guide: `ai-memory/runs/README.md`
-- legacy memory pointer: `platform/docs/ai/README.md`
+- legacy memory import audit: `ai-memory/durable/legacy-memory-import.md`
 - backend docs index: `platform/backend/docs/README.md`
 - frontend docs index: `platform/frontend/docs/README.md`

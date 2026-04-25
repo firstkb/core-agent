@@ -15,9 +15,10 @@ Run packets are operational artifacts, not canonical truth.
 
 Before archiving, distill durable outcomes into module `contract.md`, `state.md`, or `lessons.md`.
 
-Legacy `platform/docs/ai/runs/**` artifacts are summarized in:
+Former legacy `platform/docs/ai/runs/**` artifacts are summarized in:
 
 - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
 
-Raw legacy run payloads were deleted from `platform/docs/ai/runs/**` after the
-summary was accepted. Use git history only when exact old run text is required.
+Raw legacy run payloads and the remaining pointer directory were deleted after
+the summary was accepted. Use git history only when exact old run text is
+required.

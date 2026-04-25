@@ -73,5 +73,5 @@ The initial memory slice covers:
 - frontend and backend docs classification maps
 - target structure for future physical FE/BE docs rewrite
 - source-to-target migration plan for future physical docs rewrite
-- Atlas operational migration from `platform/docs/ai` to `ai-memory/atlas` and `ai-memory/runs`
+- Atlas operational migration from the former `platform/docs/ai` layer to `ai-memory/atlas` and `ai-memory/runs`
 - reference-code governance, alias registry, and relocation plan for Metronic, EXTDB, ezform, smartapp, old builder snapshots, and legacy MSSQL material

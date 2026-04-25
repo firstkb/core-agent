@@ -91,7 +91,7 @@ Read only if needed:
 - when a file is large and the task is narrow, read the relevant section first rather than reloading the entire file
 - prefer exact module and code reads over broad project-memory rereads
 - `ai-memory/atlas/templates/*` only when you are generating or updating a task artifact
-- `platform/docs/ai/**` only for legacy provenance, conflict resolution, or migration
+- former `platform/docs/ai/**` only through `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history for explicit provenance recovery
 
 ## Failure handling
 
@@ -127,7 +127,7 @@ as operational scaffolds, not project truth.
 
 Treat:
 - `platform/docs/archive/*`
-- `platform/docs/ai/**`
+- former `platform/docs/ai/**` payloads recoverable from git history only
 - closed or superseded run artifacts
 
 as historical context, not canonical memory.

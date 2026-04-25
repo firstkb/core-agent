@@ -63,8 +63,10 @@ Historical import/audit surface:
 
 - `ai-memory/durable/legacy-memory-import.md`
 
-Old `platform/docs/ai/**` memory is historical import material only.
-It is not the active canonical owner surface after the local memory rewrite.
+The former `platform/docs/ai/**` memory layer is historical import material
+only and has been deleted after migration. It is not an active canonical owner
+surface; use `ai-memory/durable/legacy-memory-import.md` and git history for
+provenance.
 
 Local docs rewrite planning surface:
 
@@ -87,7 +89,7 @@ Operational scaffolds, not product truth:
 - `.agents/skills/ramp-conductor/**`
 - `scripts/ai/**`
 
-Legacy pointers/provenance only:
+Former legacy sources, deleted from the working tree:
 
 - `platform/docs/ai/*.md`
 - `platform/docs/ai/modules/*.md`

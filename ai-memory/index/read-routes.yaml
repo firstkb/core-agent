@@ -19,7 +19,6 @@ default:
     - platform/backend/migrations/postgres/archive/**
     - ai-memory/reference-code/packs/**
     - platform/docs/archive/**
-    - platform/docs/ai/**
 
 routes:
   auth:
@@ -409,7 +408,7 @@ routes:
       - lane prompt
       - control prompt
       - run scaffold
-      - platform/docs/ai retirement
+      - former platform/docs/ai retirement
       - ai-memory/atlas
     read:
       - ai-memory/agent-workflow.md
@@ -418,6 +417,7 @@ routes:
       - ai-memory/atlas/platform-docs-ai-retirement-plan.md
       - ai-memory/atlas/platform-docs-ai-retirement-readiness.md
       - ai-memory/atlas/legacy-runs-triage.md
+      - ai-memory/durable/legacy-memory-import.md
       - ai-memory/runs/archive/legacy-platform-docs-ai-runs.md
       - ai-memory/atlas/automation-manifest.json
       - ai-memory/atlas/prompts/README.md

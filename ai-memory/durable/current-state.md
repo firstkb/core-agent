@@ -45,13 +45,11 @@ Confidence labels:
 - `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `docs/ref/reference-code.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked paths contain pointer READMEs only.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
-- `landed` `doc-confirmed`: `platform/docs/ai/README.md`, prompt README, template README, and run README are retired pointers. Active Atlas workflow lives under `ai-memory/atlas/**`.
-- `landed` `doc-confirmed`: Legacy run triage for `platform/docs/ai/runs/**` is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders are provenance only.
-- `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`; old payload text is available only through git history.
-- `landed` `doc-confirmed`: Legacy module memory files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs; old payload text is available only through git history.
-- `landed` `doc-confirmed`: Legacy prompt/template payloads and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`; old operational payload text is available only through git history.
-- `landed` `doc-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is recorded in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passes, physical deletion remains owner-gated by legacy run payload cleanup.
-- `landed` `owner-confirmed`: Raw legacy run payloads under `platform/docs/ai/runs/**` were deleted after accepting `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` as the durable summary. Exact old run text is git-history provenance only.
+- `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `ai-memory`; exact old payload text is git-history provenance only.
+- `landed` `doc-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`.
+- `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown, module memory, prompts/templates, automation metadata, and runs from the former `platform/docs/ai/**` layer are represented by `ai-memory/durable/legacy-memory-import.md`, `ai-memory/atlas/**`, current module memory, compact run summaries, and git history.
+- `landed` `doc-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is recorded in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; physical deletion is complete.
+- `landed` `owner-confirmed`: Raw legacy run payloads from former `platform/docs/ai/runs/**` were deleted after accepting `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` as the durable summary. Exact old run text is git-history provenance only.
 
 ## Active Product Domains
 
@@ -77,7 +75,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/docs/archive/`; old root paths are archive pointers.
 - `landed` `doc-confirmed`: Legacy PostgreSQL SQL now lives behind `platform/backend/docs/archive/postgres-archive/README.md`; `platform/backend/docs/legacy/postgres-archive/README.md` is only a compatibility pointer.
 - `landed` `doc-confirmed`: Active backend docs now use target-folder `Read with`/`Read Order` links; old root docs are compatibility pointers only.
-- `landed` `doc-confirmed`: `ai-memory/index/*` no longer lists old FE/BE root docs or `platform/docs/ai/**` as active ownership routes; old platform memory is historical import material only.
+- `landed` `doc-confirmed`: `ai-memory/index/*` no longer lists old FE/BE root docs or former `platform/docs/ai/**` as active ownership routes; old platform memory is migrated import material with exact text in git history only.
 - `landed` `doc-confirmed`: Form Builder is the active Platform Studio tool.
 - `planned` `owner-confirmed`: Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned Platform Studio tools, not implementation-active.
 - `planned` `owner-confirmed`: Navigation Builder is expected to include sidebar/navigation composition and may include access/permission assignment unless a later decision splits access into a dedicated tool.
@@ -88,11 +86,11 @@ Confidence labels:
 
 ## Current Risks
 
-- `risk` `doc-confirmed`: Old platform memory under `platform/docs/ai` and new Codex-native runtime docs can be confused. Use `ai-memory` as retrieval and verify against owner surfaces.
+- `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
 - `risk` `doc-confirmed`: Some old frontend tracked docs contain stale lifecycle/extraction status, especially compatibility pointers and older auth follow-up state. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
-- `risk` `doc-confirmed`: Legacy run payloads no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
+- `risk` `doc-confirmed`: Legacy run payloads and pointer directories no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
 - `risk` `doc-confirmed`: Old Form Builder archive/future workstream paths are pointer stubs. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
@@ -108,8 +106,7 @@ Confidence labels:
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
-- `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are pointer stubs only; do not write new workflow artifacts there.
-- `risk` `doc-confirmed`: Remaining `platform/docs/ai/**` files are pointer stubs only. Final full deletion is a compatibility decision, not a memory-content blocker.
+- `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; active workflow artifacts live under `ai-memory/atlas/**`.
 
 ## Recommended Reads By Domain
 

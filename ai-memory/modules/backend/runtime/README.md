@@ -17,7 +17,7 @@ Last compacted: 2026-04-25
 - `platform/backend/docs/contracts/runtime-wiring.md`
 - `platform/backend/docs/modules/runtime.md`
 
-Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; the old `platform/docs/ai/**` path has been deleted.
 
 ## Current Runtimes
 

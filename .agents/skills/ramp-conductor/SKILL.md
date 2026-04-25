@@ -59,7 +59,7 @@ Read only the minimal shared memory first:
 
 Read `ai-memory/durable/canonical-docs.md` when document authority matters.
 Read `ai-memory/atlas/automation-manifest.json` when prompt/skill/template/script versions are needed.
-Read `platform/docs/ai/**` only for legacy provenance, conflict resolution, or migration.
+Do not read or write the former `platform/docs/ai/**` path; it has been deleted after migration. Use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history only for explicit provenance recovery.
 Read additional docs only when the task actually requires them.
 When a file is large and the task is narrow, read the relevant section first rather than reloading the entire file.
 Prefer exact module and code reads over broad rereads of shared memory.

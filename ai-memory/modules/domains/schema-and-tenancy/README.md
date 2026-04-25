@@ -20,7 +20,7 @@ Last compacted: 2026-04-25
 - `platform/backend/docs/reference/import-field-mapping.md`
 - `platform/backend/docs/reference/tenant-import-boundary.md`
 
-Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; the old `platform/docs/ai/**` path has been deleted.
 
 ## Fast Facts
 

@@ -75,7 +75,7 @@ Do not read by default:
 - `migrations/postgres/archive/**`
 - `bundle/tenant_schema_full.sql` unless the task is bundle/migration specific
 - `certs/**`
-- `../docs/ai/**`
+- deleted legacy AI memory path `../docs/ai/**`; use `ai-memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas

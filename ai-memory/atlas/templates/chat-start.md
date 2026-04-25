@@ -41,7 +41,7 @@ Core rules:
   - `atlas/prompts/*` are stable operational prompt contracts
   - `atlas/templates/*` are operational templates
   - `runs/active/*` and `runs/archive/*` are execution artifacts, not canonical memory
-  - `platform/docs/ai/**` is legacy provenance only
+  - former `platform/docs/ai/**` payloads were migrated and deleted; use `legacy-memory-import.md` and git history only for provenance
 - Treat `ai-memory/durable/canonical-docs.md` as the authority for which docs are canonical.
 - Do not invent contracts, routes, env names, migrations, or module boundaries.
 - Mark uncertain statements as `ASSUMPTION`.

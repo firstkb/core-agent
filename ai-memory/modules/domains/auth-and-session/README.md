@@ -20,7 +20,7 @@ Last compacted: 2026-04-25
 - `platform/backend/docs/runbooks/auth-key-sources.md`
 - `platform/backend/docs/proposals/kms-signing.md`
 
-Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; the old `platform/docs/ai/**` path has been deleted.
 
 ## Fast Facts
 

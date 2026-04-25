@@ -11,8 +11,8 @@ Do not turn it into a task journal.
 ### DEC-001 Platform Stays Monorepo And Modular Monolith
 
 - Date: 2026-03-29
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-063 final physical deletion
 - Decision: Keep one monorepo and keep backend as a modular monolith with multiple runtime entrypoints. Do not split into early microservices.
 - Rationale: Current platform boundaries need shared tenant/auth/schema contracts and fast cross-stack iteration.
 - Sources:
@@ -22,8 +22,8 @@ Do not turn it into a task journal.
 ### DEC-002 Frontend Is Split By Product Surface
 
 - Date: 2026-03-29
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-063 final physical deletion
 - Decision: Keep `platform-admin-web` and `tenant-web` as separate apps. Do not collapse them into one route-only app.
 - Sources:
   - `platform/docs/ai/platform-contract.md`
@@ -32,8 +32,8 @@ Do not turn it into a task journal.
 ### DEC-003 Migrations Belong To `cmd/migrate`
 
 - Date: 2026-03-29
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-063 final physical deletion
 - Decision: API runtimes must not run schema migrations during startup.
 - Sources:
   - `platform/docs/ai/modules/schema-and-tenancy.md`
@@ -650,7 +650,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `docs/ref/` is reserved for stable opt-in reference registries. Memory reorganization prompts and blueprints moved to `docs/archive/memory-reorg/`. `platform/docs/ai/**` remains legacy provenance only; its top-level, prompt, template, and run indexes are retired pointers, and final deletion must follow the retirement plan.
+- Decision: `docs/ref/` is reserved for stable opt-in reference registries. Memory reorganization prompts and blueprints moved to `docs/archive/memory-reorg/`. The former `platform/docs/ai/**` layer has moved through retirement into final physical deletion; provenance is now `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 - Sources:
   - `docs/ref/README.md`
   - `docs/archive/memory-reorg/README.md`
@@ -663,9 +663,9 @@ Do not turn it into a task journal.
 ### DEC-057 Legacy Platform AI Runs Are Provenance Only
 
 - Date: 2026-04-25
-- Status: active
-- State: landed
-- Decision: Legacy Atlas runs under `platform/docs/ai/runs/**` are no longer active task state. They are summarized in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; agents must read that summary before opening old run payload. Old run folders remain in place until owner-approved deletion or archival move.
+- Status: superseded
+- State: superseded by DEC-062 run payload deletion and DEC-063 final pointer deletion
+- Decision: Legacy Atlas runs under `platform/docs/ai/runs/**` are no longer active task state. They are summarized in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; the old run folders and pointer directory were later deleted after owner approval.
 - Sources:
   - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
   - `ai-memory/atlas/legacy-runs-triage.md`
@@ -727,7 +727,7 @@ Do not turn it into a task journal.
 
 - Date: 2026-04-25
 - Status: superseded
-- State: superseded by DEC-062 for run payload cleanup; remaining pointer-directory deletion is a separate compatibility decision
+- State: superseded by DEC-062 for run payload cleanup and DEC-063 for final pointer-directory deletion
 - Decision: `platform/docs/ai/**` had passed hot-read retirement but was not ready for physical deletion until the owner approved legacy run payload cleanup. Non-run files were pointer stubs only. Remaining run payload disposition was unresolved at this decision point and is now closed by DEC-062.
 - Sources:
   - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
@@ -746,3 +746,16 @@ Do not turn it into a task journal.
   - `ai-memory/atlas/legacy-runs-triage.md`
   - `platform/docs/ai/runs/README.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
+
+### DEC-063 Platform Docs AI Directory Physically Deleted
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: The remaining `platform/docs/ai/**` compatibility pointer files were deleted after active reference checks. Active memory and Atlas workflow must use `ai-memory/**`, current AGENTS files, tracked FE/BE docs, and scripts. Exact old `platform/docs/ai/**` payload text is available only through git history; do not recreate the deleted path.
+- Sources:
+  - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+  - `ai-memory/durable/legacy-memory-import.md`
+  - `AGENTS.md`
+  - `platform/AGENTS.md`

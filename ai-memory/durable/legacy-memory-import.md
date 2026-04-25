@@ -1,15 +1,16 @@
 # Legacy Memory Import
 
-Status: compact import audit
+Status: final import audit
 Last compacted: 2026-04-25
 
-This file records how durable knowledge from `platform/docs/ai` was folded into `ai-memory`.
-It prevents agents from rereading the entire old memory corpus unless a task needs verification.
+This file records how durable knowledge from the former `platform/docs/ai`
+layer was folded into `ai-memory`. The old directory has been deleted from the
+working tree; use git history only when exact old text is explicitly required.
 
 Top-level legacy markdown files under `platform/docs/ai/*.md`, legacy module
 files under `platform/docs/ai/modules/*.md`, legacy prompts/templates, and the
-legacy automation manifest are now pointer stubs.
-Use `ai-memory` for active memory and git history for old payload text.
+legacy automation manifest were migrated, compacted, and deleted.
+Use `ai-memory` for active memory.
 
 ## Source Classification
 
@@ -38,7 +39,7 @@ Operational scaffolds, not durable product truth:
 
 Active Atlas operational copies now live under `ai-memory/atlas/**`.
 
-Retired pointer stubs:
+Former retired pointer stubs, now deleted:
 
 - `platform/docs/ai/*.md`
 - `platform/docs/ai/modules/*.md`
@@ -73,20 +74,22 @@ Compact run triage:
 ## Default Read Rule
 
 Use `ai-memory/index/memory-index.yaml` and module packs first.
-Open `platform/docs/ai` only when:
+The old `platform/docs/ai` path no longer exists in the working tree.
+Recover exact old text from git history only when:
 
 - verifying a source citation,
 - resolving a conflict between compact memory and tracked docs,
 - recovering detail intentionally omitted during compaction,
 - migrating another durable decision into `ai-memory`.
 
-Do not use `platform/docs/ai/modules/*.md` as active module memory. Read
-`ai-memory/durable/module-index.md` and the relevant `ai-memory/modules/**`
-pack first.
+Do not recreate or use `platform/docs/ai/modules/*.md` as active module memory.
+Read `ai-memory/durable/module-index.md` and the relevant
+`ai-memory/modules/**` pack first.
 
-Do not use `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, or
-`platform/docs/ai/automation-manifest.json` for active Atlas workflow. Read
-`ai-memory/atlas/**` instead.
+Do not recreate or use `platform/docs/ai/prompts/**`,
+`platform/docs/ai/templates/**`, or `platform/docs/ai/automation-manifest.json`
+for active Atlas workflow. Read `ai-memory/atlas/**` instead.
 
-Do not use `platform/docs/ai/runs/**` as active design input unless the owner asks for historical reconstruction.
-Read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` before opening old run payloads.
+Do not recreate or use `platform/docs/ai/runs/**` as active design input. Read
+`ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` first; use git history
+only if the owner asks for exact historical reconstruction.

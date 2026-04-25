@@ -43,9 +43,10 @@ If it conflicts with source code, `.codex/`, `.agents/`, or tracked canonical
 docs, verify against the owner surface named in the module pack or
 `memory-index.yaml`.
 
-When old `platform/docs/ai/**` conflicts with current root `AGENTS.md`,
-Codex-native runtime docs, or `ai-memory`, the current runtime and compact
-memory routes win unless the task is explicitly historical reconstruction.
+The former `platform/docs/ai/**` layer has been migrated and deleted. If a task
+needs old wording for explicit historical reconstruction, use
+`ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git
+history. Current runtime docs and `ai-memory` win for active work.
 
 ## Update Gate
 

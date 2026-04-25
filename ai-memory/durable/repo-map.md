@@ -93,5 +93,5 @@ Avoid unless the task explicitly needs them:
 - `platform/backend/docs/legacy/**`
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`
-- legacy platform memory under `platform/docs/ai/**`
-- closed folders under `platform/docs/ai/runs/**`; read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` first
+- former legacy platform memory under `platform/docs/ai/**`; the path is deleted, so use `ai-memory/durable/legacy-memory-import.md` and git history only when explicitly needed
+- former closed run folders under `platform/docs/ai/runs/**`; read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` first and recover exact old text from git history only if required

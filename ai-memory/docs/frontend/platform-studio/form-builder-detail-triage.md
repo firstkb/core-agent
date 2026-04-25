@@ -54,6 +54,10 @@ Read the compact supporting contract first:
 
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
+For consolidation decisions, deletion blockers, and extraction targets, read:
+
+- `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+
 | Source | Read Only When | Replacement Summary |
 | --- | --- | --- |
 | `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md` | Need exact accepted registry/palette gate. | Compacted into `form-builder-fields.md`. |

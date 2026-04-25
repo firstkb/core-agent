@@ -28,18 +28,27 @@ Backend-owned facts live in `platform/backend/docs/contracts/platform-studio-for
 This document replaces the default read role of these detailed frontend docs.
 They are exact-detail references, not default read-order docs:
 
+Field registry and catalog:
+
 - `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
 - `platform/frontend/docs/platform-studio/form-builder-v2-field-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`
-- `platform/frontend/docs/platform-studio/form-builder-section-tree.md`
+
+Field and preset details:
+
 - `platform/frontend/docs/platform-studio/form-builder-core-data-fields.md`
 - `platform/frontend/docs/platform-studio/form-builder-choice-fields.md`
 - `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md`
 - `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md`
+- `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-relationships.md`
 - `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md`
 - `platform/frontend/docs/platform-studio/form-builder-content-nodes.md`
 - `platform/frontend/docs/platform-studio/form-builder-system-fields.md`
+
+Scope, layout, rules, and view details:
+
+- `platform/frontend/docs/platform-studio/form-builder-section-tree.md`
 - `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md`
@@ -48,7 +57,16 @@ They are exact-detail references, not default read-order docs:
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
+Storage and static/external model details:
+
+- `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
+- `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md`
+
 Open those old docs only for exact historical detail or payload audit.
+For retention and deletion conditions, read:
+
+- `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
 
 ## Current Code Surfaces
 
@@ -462,10 +480,12 @@ Rules:
 For exact payload shapes or historical review, open only the specific old detail doc needed.
 Do not read the whole `platform/frontend/docs/platform-studio/**` tree:
 
-- field catalog and registry: `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
-- specific field settings: `platform/frontend/docs/platform-studio/form-builder-core-data-fields.md`, `platform/frontend/docs/platform-studio/form-builder-choice-fields.md`, `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md`, or `platform/frontend/docs/platform-studio/form-builder-relationships.md`
-- System Fields: `platform/frontend/docs/platform-studio/form-builder-system-fields.md`
-- rules: `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md`
-- grid columns: `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md`
-- view settings and filters: `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
-- scope/subform: `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` and `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md`
+- field catalog and registry: `form-builder-accepted-registry.md`, `form-builder-v2-field-contract.md`, `form-builder-field-catalog.md`
+- specific field settings: `form-builder-core-data-fields.md`, `form-builder-choice-fields.md`, `form-builder-ready-made-fields.md`, `form-builder-suggest-text-field-contract-v1.md`, or `form-builder-relationships.md`
+- System Fields: `form-builder-system-fields.md`
+- rules: `form-builder-field-rules-contract.md`
+- grid columns: `form-builder-grid-columns-contract.md`
+- view settings and filters: `form-builder-view-settings-contract.md` or `form-builder-view-settings-inspector-contract.md`
+- scope/subform: `form-builder-schema-scope-contract.md` and `form-builder-subform-checklist-contract.md`
+- static/external models: `form-builder-static-lookup-naming-policy-v1.md` and `form-builder-static-models-integration-v1.md`
+- storage rationale: `data-schema-storage-rules.md`, but prefer the backend Form Builder contract for current backend-owned storage truth

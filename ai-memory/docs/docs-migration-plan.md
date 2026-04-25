@@ -33,6 +33,7 @@ Current progress:
 - Reference-code relocation checkpoint landed as a local review artifact.
 - Old Form Builder archive/future workstream pointer stubs were deleted; exact-detail reference docs remain intact.
 - Old Form Builder exact-detail reference docs received explicit tracked headers and read rules.
+- Form Builder exact-detail consolidation audit landed: 14 retained as exact-detail, 9 marked for extraction before future deletion, and no payload-bearing exact-detail docs deleted in the audit pass.
 - Backend runbooks/proposals/reference cleanup landed: operational docs moved to `runbooks/`, gateway/KMS docs moved to `proposals/`, import docs moved to `reference/`, and old root/auth pointer paths were later deleted.
 - Backend remaining proposals/archive cleanup landed: events identity moved to `contracts/`, events/mail and schema drift moved to `proposals/`, historical backend standards/plans/prompts moved to `archive/`, and old root pointer paths were later deleted.
 - Backend legacy/postgres archive pointer pass landed: historical PostgreSQL SQL moved behind `archive/postgres-archive/README.md`, and the old `legacy/postgres-archive/README.md` path is a compatibility pointer.
@@ -261,13 +262,14 @@ Local relocation/control docs:
 20. Physical reference-code relocation: landed with ignored `reference-code/` raw packs and pointer READMEs in old tracked paths.
 21. Physical pointer/archive rewrite for old Form Builder docs: landed for archive and future workstream files; exact-detail reference docs remain intact.
 22. Exact-detail Form Builder docs header pass: landed; retained detail files now declare `Status: exact detail reference`.
-23. Backend runbooks/proposals cleanup: landed with runbooks, proposals, reference docs, and deleted old root/auth pointers.
-24. Backend remaining proposals/archive cleanup: landed for events/mail cleanup, schema drift checks, events identity contract, and historical backend standards/prompts.
-25. Backend legacy/postgres archive pointer pass: landed with `archive/postgres-archive/README.md` and a legacy compatibility pointer.
-26. Backend docs final consistency pass: landed with target-folder read-order normalization across active backend docs.
-27. Frontend docs final consistency pass: landed with target-folder read-order normalization across active frontend docs.
-28. FE/BE docs final index and stale pointer audit: landed; old FE/BE root paths and `platform/docs/ai/**` are not active ownership routes.
-29. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
+23. Form Builder exact-detail consolidation audit: landed; no payload-bearing exact-detail docs deleted.
+24. Backend runbooks/proposals cleanup: landed with runbooks, proposals, reference docs, and deleted old root/auth pointers.
+25. Backend remaining proposals/archive cleanup: landed for events/mail cleanup, schema drift checks, events identity contract, and historical backend standards/prompts.
+26. Backend legacy/postgres archive pointer pass: landed with `archive/postgres-archive/README.md` and a legacy compatibility pointer.
+27. Backend docs final consistency pass: landed with target-folder read-order normalization across active backend docs.
+28. Frontend docs final consistency pass: landed with target-folder read-order normalization across active frontend docs.
+29. FE/BE docs final index and stale pointer audit: landed; old FE/BE root paths and `platform/docs/ai/**` are not active ownership routes.
+30. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
 30. Atlas modernization audit slice: landed with `ai-memory/atlas/`, updated AGENTS read order, updated Atlas skill, and updated run/version scripts.
 31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `ai-memory/atlas/platform-docs-ai-retirement-plan.md`.
 32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders were later deleted after summary acceptance.

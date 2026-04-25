@@ -118,11 +118,13 @@ Handled by a dedicated compact map:
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `ai-memory/docs/frontend/platform-studio/README.md`
 - `ai-memory/docs/frontend/platform-studio/doc-map.md`
+- `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
 
 Old suite-level and backend-facing Platform Studio pointer files were deleted
 after compaction. Use the active Platform Studio/Form Builder docs or git
 history for exact old text. Retained old field/catalog docs are exact detail
-references, not default read-order docs.
+references, not default read-order docs; follow the consolidation audit before
+deleting or further compacting them.
 
 ## Vendor And Donor Material
 

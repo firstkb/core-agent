@@ -529,6 +529,17 @@ Do not turn it into a task journal.
 - Status: active
 - State: landed
 - Decision: Retained old Form Builder exact-detail docs under `platform/frontend/docs/platform-studio/` keep their historical payload/settings content, but their tracked headers now declare `Status: exact detail reference` and point readers to the active Form Builder module docs first.
+
+### DEC-049 Form Builder Exact-Detail Docs Require Extraction Before Deletion
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: The retained Form Builder exact-detail docs are payload-bearing and must not be mass-deleted. The consolidation audit keeps 14 exact-detail files and marks 9 files for future extraction before deletion. Future deletion requires updating the listed extraction target and verifying code/schema coverage.
+- Sources:
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
 - Sources:
   - `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
   - `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`

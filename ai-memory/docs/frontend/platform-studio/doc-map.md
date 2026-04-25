@@ -43,6 +43,7 @@ Read these before opening detailed Platform Studio/Form Builder source docs.
 | `platform/frontend/docs/modules/platform-studio/form-builder.md` | `hot_contract` | Current active Form Builder authoring/runtime contract. |
 | `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` | `supporting_contract` | Current compact field catalog, palette registry, rules, grid/view settings, and scope boundary contract. Read after the main Form Builder contract. |
 | `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` | `local_triage_map` | Local classification for old Form Builder docs into compatibility pointer, exact detail, future proposal, archive candidate, and reference-only. |
+| `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md` | `local_consolidation_audit` | Retention/deletion decisions for the remaining exact-detail docs. |
 
 ## Deleted Compatibility Inputs
 

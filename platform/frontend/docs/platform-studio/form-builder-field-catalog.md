@@ -192,9 +192,9 @@ Current deferred backlog:
 - `Survey element`
 - `SQL field`
 
-The section-level contract is locked in:
+The section-level contract was compacted into:
 
-- `form-builder-advanced-fields.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ### 7. Layout
 
@@ -235,9 +235,9 @@ These are non-data authoring elements.
 - `Rich text block`
   - formatted content block
 
-Detailed functionality and settings for this section are locked in:
+Detailed functionality and settings for this section were compacted into:
 
-- `form-builder-content-nodes.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ## What Should Be Presets Instead Of Separate Base Types
 
@@ -807,7 +807,7 @@ The remaining product questions are:
 
 - use one multivalue bridge-table family per scope
 - reuse the same storage family for static options, tags, and future lookup-multiple entries
-- treat storage as locked by `form-builder-multivalue-storage-contract.md`
+- treat multivalue storage as backend-facing and requiring fresh code-backed contract/proposal work before activation
 
 #### Tags
 

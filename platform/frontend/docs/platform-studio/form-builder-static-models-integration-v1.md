@@ -22,9 +22,9 @@ It defines:
 - what migration and implementation steps are required
 - how `projectsaccess` should be handled through a dedicated custom widget instead of a normal subform
 
-Companion frozen payload contract:
+Companion active module contract:
 
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
 
 ## Accepted Static Model Set
 

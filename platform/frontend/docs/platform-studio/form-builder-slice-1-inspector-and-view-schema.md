@@ -22,11 +22,10 @@ It is the detailed companion to:
 - `form-builder-v2-field-contract.md`
 - `form-builder-field-catalog.md`
 - `form-builder-core-data-fields.md`
-- `form-builder-field-rules-contract.md`
-- `form-builder-grid-columns-contract.md`
 - `form-builder-system-fields.md`
-- `form-builder-page-and-filter-notes.md`
-- `form-builder-backend-boundary.md`
+
+Field rule and grid-column payload details were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
+Page/filter notes were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; backend boundary truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
 ## Slice 1 Scope
 
@@ -49,8 +48,7 @@ Model-side preset inspector settings for `Radio group` and `Checkbox group` are 
 
 Accepted target contracts that go beyond the current slice-1 implementation are locked separately in:
 
-- `form-builder-field-rules-contract.md`
-- `form-builder-grid-columns-contract.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ## Inspector Shape
 

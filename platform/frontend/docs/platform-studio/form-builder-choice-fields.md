@@ -28,7 +28,8 @@ This document is the detailed companion to:
 - `form-builder-section-tree.md`
 - `form-builder-v2-field-contract.md`
 - `form-builder-choice-preset-inspector-schema.md`
-- `form-builder-multivalue-storage-contract.md`
+
+Multivalue storage is backend-facing and requires fresh code-backed contract/proposal work before activation.
 
 ## Source Provenance
 
@@ -216,9 +217,8 @@ Current working note:
 
 The frontend authoring contract for options management is accepted now.
 
-The multivalue storage direction is now locked separately in:
-
-- `form-builder-multivalue-storage-contract.md`
+The old multivalue storage draft was deleted as future proposal material.
+Backend-facing storage direction must be re-verified against code before activation.
 
 That contract covers report-friendly storage for:
 

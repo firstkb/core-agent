@@ -12,7 +12,7 @@ Scope:
 This file decides how AI agents should treat old Form Builder detail and workstream docs after the compact tracked docs landed.
 Archive and future workstream pointer stubs listed below were deleted after
 durable facts were compacted.
-Exact-detail reference files remain intact for payload/settings audit.
+Retained exact-detail reference files remain for payload/settings audit.
 Retained exact-detail reference files now declare `Status: exact detail reference` in their tracked headers.
 
 ## Active Read Path
@@ -68,21 +68,30 @@ For consolidation decisions, deletion blockers, and extraction targets, read:
 | `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md` | Need exact radio/checkbox inspector schema. | Choice preset rules compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | Need exact ready-made preset settings. | Ready-made presets compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-relationships.md` | Need exact lookup/relationship settings. | Relationship presets compacted; backend lookup support still requires code/backend contract verification. |
-| `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md` | Need exact deferred advanced item rationale. | Advanced section compacted as reserved/deferred. |
-| `platform/frontend/docs/platform-studio/form-builder-content-nodes.md` | Need exact content-node settings. | Content nodes compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-system-fields.md` | Need exact System Field payload/settings. | System Fields compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-section-tree.md` | Need full palette review tree. | Layout/content/tree facts compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md` | Need exact inspector/view schema examples. | Durable facts compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Need exact root/subform scope details. | Scope rules compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md` | Need exact checklist subform settings. | Checklist rules compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | Need exact rule payload shape. | Simple rules compacted; Action Builder side effects excluded. |
-| `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | Need exact grid-column payload shape. | Grid rules compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | Need exact filter/view settings payload shape. | View settings and filters compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | Need exact inspector UX details. | Inspector detail compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | Need exact `suggest_text` settings. | `suggest_text` compacted as ready-made preset. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Need exact static lookup naming examples. | Static/external model rules compacted in main Form Builder contract; exact naming remains detailed reference. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md` | Need exact static table list/treatment. | Static/external model rules compacted in main Form Builder contract. |
 | `platform/frontend/docs/platform-studio/data-schema-storage-rules.md` | Need old logical-vs-physical storage rationale. | Prefer backend Form Builder contract for current storage truth. |
+
+## Deleted Exact-Detail Sources After Extraction
+
+These files were payload-bearing, then compacted into
+`platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and
+deleted. Use git history only for exact old text.
+
+| Source | Extracted Into |
+| --- | --- |
+| `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md` | Advanced section acceptance boundary and deferred backlog. |
+| `platform/frontend/docs/platform-studio/form-builder-content-nodes.md` | Content node settings, compile targets, and rejected content nodes. |
+| `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | Rule operators, persisted rule shape, authoring rules, and runtime rules. |
+| `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | Grid column shape, editor rules, and runtime/default-hidden behavior. |
+| `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md` | Checklist bindings, normalization, optional sibling fields, and deferred setup details. |
 
 ## Deleted Future Proposal Pointers
 

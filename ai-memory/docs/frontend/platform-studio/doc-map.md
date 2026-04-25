@@ -67,20 +67,17 @@ These retained docs now declare `Status: exact detail reference` in their tracke
 | `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md` | Choice preset inspector shape. |
 | `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | Ready-made field presets. |
 | `platform/frontend/docs/platform-studio/form-builder-relationships.md` | Relationship and lookup fields. |
-| `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md` | Reserved advanced field section. |
-| `platform/frontend/docs/platform-studio/form-builder-content-nodes.md` | Content nodes. |
 | `platform/frontend/docs/platform-studio/form-builder-system-fields.md` | System Fields. |
 | `platform/frontend/docs/platform-studio/form-builder-section-tree.md` | Section tree and layout hierarchy. |
 | `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md` | Slice 1 inspector and view schema baseline. |
 | `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Root/subform scope contract. |
-| `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md` | Checklist subform behavior. |
-| `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | Field rule payloads. |
-| `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | Grid/list columns. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | View settings. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | View settings inspector. |
 | `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | `suggest_text` field contract. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Static lookup naming. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md` | Static model integration direction. |
+
+Deleted after extraction: advanced fields, content nodes, checklist subform, field rules, and grid columns were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 
 ## Backend-Facing Supporting Contracts
 

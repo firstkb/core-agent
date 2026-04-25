@@ -32,9 +32,8 @@ Then use the companion docs for the exact detail level:
 - scope boundaries
 - checklist behavior
 
-For execution sequencing, use:
-
-- `form-builder-implementation-backlog.md`
+The old implementation backlog was deleted because it mixed landed, open, and speculative work.
+For execution sequencing, use the active Form Builder module contract and the current owner-approved task plan.
 
 ## Accepted Palette Sections
 
@@ -381,7 +380,5 @@ Not accepted as current registry items:
 - `form-builder-field-catalog.md`
 - `form-builder-v2-field-contract.md`
 - `form-builder-schema-scope-contract.md`
-- `form-builder-field-rules-contract.md`
-- `form-builder-grid-columns-contract.md`
 - `form-builder-view-settings-contract.md`
-- `form-builder-subform-checklist-contract.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`

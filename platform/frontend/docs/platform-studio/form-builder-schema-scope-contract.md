@@ -209,7 +209,7 @@ Runtime rule:
 
 - `form-builder-field-catalog.md`
 - `form-builder-section-tree.md`
-- `form-builder-subform-checklist-contract.md`
 - `form-builder-v2-field-contract.md`
-- `form-builder-backend-boundary.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `data-schema-storage-rules.md`

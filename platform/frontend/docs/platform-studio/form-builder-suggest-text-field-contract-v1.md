@@ -213,4 +213,5 @@ Accepted compile identity:
 - `form-builder-ready-made-fields.md`
 - `form-builder-v2-field-contract.md`
 - `form-builder-core-data-fields.md`
-- `form-builder-static-models-execution-plan-v1.md`
+
+The old static-model execution plan was deleted as archive/history. Use `platform/frontend/docs/modules/platform-studio/form-builder.md` for current static/external model boundaries and verify implementation against code.

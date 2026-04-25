@@ -281,6 +281,6 @@ The early recommended default is:
 - automatic index and relationship support
 - support for external locked tables with editable UI schemas on top
 
-Companion naming and SQL view contract:
+Current backend-owned storage and generated-object contract:
 
-- `form-builder-storage-and-sql-view-contract.md`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md`

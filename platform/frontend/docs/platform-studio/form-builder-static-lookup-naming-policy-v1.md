@@ -230,6 +230,6 @@ If a phase draft already uses raw FK column names as `storageKey`, correct it be
 ## Companion Docs
 
 - `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
 
 Deleted old planning/prompt companions are git-history only.

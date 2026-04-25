@@ -24,7 +24,8 @@ This document is the detailed companion to:
 - `form-builder-field-catalog.md`
 - `form-builder-section-tree.md`
 - `form-builder-v2-field-contract.md`
-- `form-builder-page-and-filter-notes.md`
+
+Page/filter notes were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 
 ## Source Provenance
 

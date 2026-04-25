@@ -30,7 +30,8 @@ This document is the detailed companion to:
 - `form-builder-section-tree.md`
 - `form-builder-v2-field-contract.md`
 - `form-builder-slice-1-inspector-and-view-schema.md`
-- `form-builder-backend-boundary.md`
+
+Backend boundary truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
 ## Source Provenance
 

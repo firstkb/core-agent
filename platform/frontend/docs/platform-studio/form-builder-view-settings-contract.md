@@ -24,12 +24,11 @@ It exists to keep these concerns explicit and separate from:
 This document is the contract companion to:
 
 - `form-builder-v2-field-contract.md`
-- `form-builder-grid-columns-contract.md`
-- `form-builder-page-and-filter-notes.md`
-- `form-builder-subform-checklist-contract.md`
-- `form-builder-backend-boundary.md`
 - `form-builder-slice-1-inspector-and-view-schema.md`
 - `form-builder-view-settings-inspector-contract.md`
+
+Grid-column and checklist-subform payload details were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
+Page/filter notes were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; backend boundary truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
 ## Source Provenance
 
@@ -68,7 +67,7 @@ The exact target inspector UX is defined in:
 
 The dedicated `Grid` tab is defined in:
 
-- `form-builder-grid-columns-contract.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ## Canonical View Settings Sections
 

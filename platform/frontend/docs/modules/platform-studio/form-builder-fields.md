@@ -42,17 +42,12 @@ Field and preset details:
 - `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md`
 - `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-relationships.md`
-- `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md`
-- `platform/frontend/docs/platform-studio/form-builder-content-nodes.md`
 - `platform/frontend/docs/platform-studio/form-builder-system-fields.md`
 
 Scope, layout, rules, and view details:
 
 - `platform/frontend/docs/platform-studio/form-builder-section-tree.md`
 - `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
@@ -67,6 +62,10 @@ Open those old docs only for exact historical detail or payload audit.
 For retention and deletion conditions, read:
 
 - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+
+Low-risk exact-detail docs for advanced fields, content nodes, field rules, grid
+columns, and checklist subforms were compacted into this document and deleted.
+Use git history only for their exact old text.
 
 ## Current Code Surfaces
 
@@ -281,6 +280,24 @@ Rules:
 - `View-only field` is a readonly display node for approved bindings such as lookup-derived outputs or root record id
 - `Divider` remains a layout node, not a content node
 
+Content node settings:
+
+- `Heading`: `text`, `level` (`h1 | h2 | h3 | h4`), `alignment` (`left | center | right`), optional `styleVariant`, optional `visibilityRules`; compiles to `content.heading`
+- `Text block`: `text`, `alignment` (`left | center | right`), optional `styleVariant`, optional `visibilityRules`; compiles to `content.text`
+- `Rich text block`: `content`, `editorMode` (`visual | html`), optional `alignment`, optional `styleVariant`, optional `visibilityRules`; compiles to `content.rich_text`
+- `View-only field`: `label`, `binding.kind`, optional `binding.sourceFieldId`, optional `binding.outputKey`, optional `visibilityRules`; compiles to `content.view_only_field`
+
+Accepted `View-only field` bindings:
+
+- `lookup_derived_output`: requires `binding.sourceFieldId` and `binding.outputKey`
+- `root_record_id`: root-only `Doc.id` display
+
+Rejected current content nodes:
+
+- `Image`
+- `Embed`
+- specialized content blocks without a new accepted contract
+
 ## Scope Model
 
 Form Builder uses one root scope plus zero or more subform scopes.
@@ -332,6 +349,25 @@ Accepted subform modes:
 - does not own `Corrective Action`
 - does not use grid-column configuration
 
+Checklist persisted binding shape:
+
+- `lookupFieldId`: required; must reference a child `db_lookup` field in the same subform scope
+- `resultFieldId`: required; must reference a child `single_select` field in the same subform scope
+
+Checklist normalization:
+
+- legacy custom-selection combo behavior normalizes to child `single_select`
+- button-style answers are rendering or preset behavior, not a separate field ontology
+- result options remain editable even when created from a preset
+
+Optional checklist sibling fields:
+
+- notes
+- files or attachments
+
+These optional fields do not replace the required `lookupFieldId` and `resultFieldId` bindings.
+Exact checklist creation UX and automatic-vs-manual binding setup remain deferred.
+
 ## Conditional Rules
 
 Simple conditional UI rules belong in Form Builder.
@@ -360,6 +396,39 @@ First-contract limits:
 - nested `or` groups are not accepted
 - larger side effects, notifications, and post-submit behavior belong to Action Builder
 
+Accepted rule operators:
+
+- `eq`
+- `neq`
+- `in`
+- `not_in`
+- `is_empty`
+- `not_empty`
+- `gt`
+- `gte`
+- `lt`
+- `lte`
+
+Persisted rule shape:
+
+- `RuleCondition`: `id`, `fieldId`, `operator`, optional scalar `value`, optional array `values`
+- `VisibilityRule`: `id`, `when.all[]`, `effect = show | hide`
+- `RequirementRule`: `id`, `when.all[]`, `effect = required | optional`
+- `NodeRules`: optional `visibilityRules[]`, optional `requirementRules[]`
+
+Authoring rules:
+
+- empty checks omit literal values
+- `in` and `not_in` use `values`
+- container nodes may expose visibility rules only
+- field nodes may expose visibility and requirement rules
+
+Runtime rules:
+
+- visibility rules affect UI presentation only
+- requirement rules affect runtime required-state and validation only in the current scope
+- requirement rules do not rewrite the base model field as globally required
+
 ## Grid Columns
 
 Grid-column configuration is a view-layer concern.
@@ -375,6 +444,13 @@ Current persisted direction:
 - `viewSettings.list.columns[]`
 - each column has `fieldId`, `visible`, and `order`
 
+Grid column shape:
+
+- `id`: stable column definition id
+- `fieldId`: field in the current scope
+- `visible`: whether the field renders in the grid
+- `order`: authored display order
+
 Scope rules:
 
 - root scope may configure root grid columns
@@ -387,6 +463,12 @@ UI placement:
 - dedicated top-level `Grid` tab
 - first version supports visibility and ordering
 - width, alignment, renderer override, and label override are deferred
+
+Runtime rules:
+
+- only visible columns render
+- display order follows authored column order
+- fields not included in `columns` are hidden by default
 
 ## View Settings
 
@@ -472,6 +554,8 @@ Not accepted as current registry items:
 Rules:
 
 - `Advanced fields` may remain visible as a reserved section, but its children require explicit acceptance before implementation
+- the section may be empty, hidden, or feature-flagged until individual advanced items are approved
+- advanced items require their own separate review and contract approval
 - generic non-workflow status should use `single_select` or `radio_group`
 - repeated child collections are represented by `Subform`, not `Repeater`
 
@@ -483,9 +567,9 @@ Do not read the whole `platform/frontend/docs/platform-studio/**` tree:
 - field catalog and registry: `form-builder-accepted-registry.md`, `form-builder-v2-field-contract.md`, `form-builder-field-catalog.md`
 - specific field settings: `form-builder-core-data-fields.md`, `form-builder-choice-fields.md`, `form-builder-ready-made-fields.md`, `form-builder-suggest-text-field-contract-v1.md`, or `form-builder-relationships.md`
 - System Fields: `form-builder-system-fields.md`
-- rules: `form-builder-field-rules-contract.md`
-- grid columns: `form-builder-grid-columns-contract.md`
+- rules: use this document; deleted old exact-detail source is git-history only
+- grid columns: use this document; deleted old exact-detail source is git-history only
 - view settings and filters: `form-builder-view-settings-contract.md` or `form-builder-view-settings-inspector-contract.md`
-- scope/subform: `form-builder-schema-scope-contract.md` and `form-builder-subform-checklist-contract.md`
+- scope/subform: `form-builder-schema-scope-contract.md`; checklist subform detail is compacted in this document
 - static/external models: `form-builder-static-lookup-naming-policy-v1.md` and `form-builder-static-models-integration-v1.md`
 - storage rationale: `data-schema-storage-rules.md`, but prefer the backend Form Builder contract for current backend-owned storage truth

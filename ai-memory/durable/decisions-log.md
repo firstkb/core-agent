@@ -518,7 +518,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Old Form Builder prompt, task, archive, and future workstream pointer docs under `platform/frontend/docs/platform-studio/` are no longer active read-path content and were deleted after compaction. Exact-detail reference docs remain intact for payload/settings audit.
+- Decision: Old Form Builder prompt, task, archive, and future workstream pointer docs under `platform/frontend/docs/platform-studio/` are no longer active read-path content and were deleted after compaction. Retained exact-detail reference docs remain for payload/settings audit.
 - Sources:
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
   - git history for exact deleted pointer text
@@ -533,9 +533,9 @@ Do not turn it into a task journal.
 ### DEC-049 Form Builder Exact-Detail Docs Require Extraction Before Deletion
 
 - Date: 2026-04-25
-- Status: active
-- State: landed
-- Decision: The retained Form Builder exact-detail docs are payload-bearing and must not be mass-deleted. The consolidation audit keeps 14 exact-detail files and marks 9 files for future extraction before deletion. Future deletion requires updating the listed extraction target and verifying code/schema coverage.
+- Status: superseded
+- State: superseded by DEC-065 for the first low-risk deletion wave
+- Decision: The retained Form Builder exact-detail docs are payload-bearing and must not be mass-deleted. Future deletion requires updating the consolidation audit extraction target and verifying code/schema coverage.
 - Sources:
   - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
@@ -771,3 +771,15 @@ Do not turn it into a task journal.
   - `platform/backend/docs/README.md`
   - `ai-memory/docs/frontend/doc-map.md`
   - `ai-memory/docs/backend/doc-map.md`
+
+### DEC-065 Form Builder Low-Risk Exact Details Extracted
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: The low-risk Form Builder exact-detail docs for advanced fields, content nodes, field rules, grid columns, and checklist subforms were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. These files are no longer tracked read targets; exact old text is git-history only. Retained exact-detail docs still require the consolidation audit before any future deletion.
+- Sources:
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+  - `ai-memory/docs/docs-migration-plan.md`

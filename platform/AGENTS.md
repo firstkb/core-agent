@@ -59,6 +59,7 @@ Use `ai-memory/` by role:
   - `ai-memory/atlas/automation-manifest.json`
   - `ai-memory/atlas/automation-changelog.md`
   - `.agents/skills/ramp-conductor/*`
+  - `.agents/skills/scribe/*`
   - `scripts/ai/new-run.py`
   - `scripts/ai/new-run.sh`
   - `scripts/ai/automation_versions.py`
@@ -273,3 +274,4 @@ Require explicit confirmation before finalizing changes that affect:
 ## Documentation rule
 
 If code changes a shared contract and the docs are not updated, the task is not actually complete.
+Use `Scribe` (`$scribe`) for periodic semantic docs/memory audits after large docs, memory, AGENTS, Atlas, or reference-code changes.

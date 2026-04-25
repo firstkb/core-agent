@@ -1,0 +1,8 @@
+interface:
+  display_name: "Scribe"
+  short_description: "Semantic docs and ai-memory drift auditor"
+  brand_color: "#475569"
+  default_prompt: "Use $scribe to audit docs and ai-memory for source-of-truth drift, stale routes, and context-window risks."
+
+policy:
+  allow_implicit_invocation: false

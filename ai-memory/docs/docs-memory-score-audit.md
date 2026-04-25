@@ -24,6 +24,7 @@ It does not mean every historical exact-detail document has been deleted.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
 - `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift and local markdown-link check.
 - `.github/workflows/docs-memory-check.yml` runs docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
+- `.agents/skills/scribe/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
 - Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.
 
 ## Scores
@@ -41,7 +42,7 @@ It does not mean every historical exact-detail document has been deleted.
 ## Remaining Work To Reach 100
 
 - Replace retained Form Builder exact-detail prose with typed schemas, tests, generated registries, or code-backed docs where practical.
-- Add a lightweight scheduled run for docs/memory drift instead of relying only on manual invocation.
+- Decide later whether Scribe needs scheduled/manual cadence beyond owner-invoked audits.
 - Keep future module work disciplined: every new durable decision should update `ai-memory/durable/decisions-log.md`, `current-state.md`, the relevant module pack, and the tracked doc owner.
 
 ## Current Policy

@@ -116,11 +116,24 @@ Grant does not:
 - change lifecycle state
 - write repository artifacts directly
 
+### Scribe
+
+Use Scribe for semantic docs and ai-memory audit when the goal is to:
+
+- find source-of-truth drift after large docs or memory changes
+- check AGENTS, Atlas, FE/BE docs, and `ai-memory` consistency
+- identify stale lifecycle language, duplicated ownership, or context-window bloat
+- review reference-code policy usage without opening raw packs by default
+
+Scribe is an audit workflow, not a feature owner or implementation agent.
+It should report findings first and patch files only when the owner asks to apply the audit.
+
 ## Naming
 
 - `maestro` -> `module_orchestrator`
 - `charlie` -> `research_codebase`
 - `grant` -> `brief_auditor`
+- `scribe` -> semantic docs/memory auditor skill; no backed system agent
 
 ## Artifact model
 

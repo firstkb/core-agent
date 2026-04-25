@@ -18,6 +18,7 @@ Canonical:
 - `.agents/skills/maestro/SKILL.md`
 - `.agents/skills/charlie/SKILL.md`
 - `.agents/skills/grant/SKILL.md`
+- `.agents/skills/scribe/SKILL.md`
 - `.codex/contracts/**`
 - `.codex/templates/**`
 - `.codex/standards/**`
@@ -91,6 +92,7 @@ Operational scaffolds, not product truth:
 - `ai-memory/atlas/legacy-runs-triage.md`
 - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
 - `.agents/skills/ramp-conductor/**`
+- `.agents/skills/scribe/**`
 - `scripts/ai/**`
 - `.github/workflows/docs-memory-check.yml`
 

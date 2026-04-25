@@ -46,6 +46,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked pointer README directories were deleted.
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now validates docs/memory drift, deleted pointer folders, retained Form Builder exact-detail policy, and local markdown links.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift and Atlas automation version checks for relevant PRs and pushes.
+- `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `ai-memory`; exact old payload text is git-history provenance only.
 - `landed` `doc-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`.
@@ -112,6 +113,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Deferred composed UI surfaces can be misread as UI Kit/UI Lab scope. Treat `proposals/deferred-composed-surfaces.md` as future proposal and start app-layer-first only after owner activation.
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Docs/memory drift is covered by local check and GitHub Actions, but not by an installed local pre-commit/pre-push hook. Run `python3 scripts/ai/docs_memory_check.py --check` before docs/memory commits when working offline.
+- `risk` `doc-confirmed`: Scribe audit is manual and semantic; it should be run after large docs/memory slices or phase changes, not on every commit.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; active workflow artifacts live under `ai-memory/atlas/**`.

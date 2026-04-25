@@ -284,6 +284,7 @@ Local relocation/control docs:
 40. Form Builder retained exact-detail policy and docs/memory score audit: landed with 14 policy-kept exact-detail references, 0 extraction backlog, and 96/100 readiness score.
 41. Reference pointer README deletion and automated drift check: landed with old reference-code pointer folders deleted and `scripts/ai/docs_memory_check.py --check` as the local docs/memory verification gate.
 42. Docs/memory CI gate: landed with `.github/workflows/docs-memory-check.yml` running docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
+43. Scribe semantic audit skill: landed with `.agents/skills/scribe/` for periodic owner-invoked docs/memory source-of-truth audits.
 
 ## Current Blockers Before Physical Move
 

@@ -844,3 +844,15 @@ Do not turn it into a task journal.
   - `scripts/ai/docs_memory_check.py`
   - `scripts/ai/automation_versions.py`
   - `ai-memory/docs/docs-memory-score-audit.md`
+
+### DEC-071 Scribe Owns Semantic Docs Memory Audits
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: `Scribe` is the local semantic docs and ai-memory audit skill. It is invoked as `$scribe` for periodic source-of-truth drift review after large docs/memory, AGENTS, Atlas, or reference-code changes. Scribe complements mechanical checks and CI; it is not an implementation agent and should patch only when the owner asks to apply an audit.
+- Sources:
+  - `.agents/skills/scribe/SKILL.md`
+  - `.agents/skills/scribe/agents/openai.yaml`
+  - `AGENTS.md`
+  - `platform/AGENTS.md`

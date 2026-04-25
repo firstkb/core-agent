@@ -275,6 +275,7 @@ Local relocation/control docs:
 34. Legacy module memory pointer pass: landed for `platform/docs/ai/modules/*.md`; active module memory now routes to `ai-memory/modules/**` and tracked FE/BE docs.
 35. Legacy operational payload pass: landed for `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, and `platform/docs/ai/automation-manifest.json`; active Atlas workflow now routes only to `ai-memory/atlas/**`.
 36. Final `platform/docs/ai/**` retirement readiness audit: landed in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passes, physical deletion remains owner-gated by legacy run payload cleanup.
+37. Legacy run payload cleanup: landed; raw `platform/docs/ai/runs/**` payloads were deleted after accepting the compact archive summary, leaving only the retired run pointer README and `.gitkeep`.
 
 ## Current Blockers Before Physical Move
 

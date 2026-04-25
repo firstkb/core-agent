@@ -51,6 +51,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Legacy module memory files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs; old payload text is available only through git history.
 - `landed` `doc-confirmed`: Legacy prompt/template payloads and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`; old operational payload text is available only through git history.
 - `landed` `doc-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is recorded in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passes, physical deletion remains owner-gated by legacy run payload cleanup.
+- `landed` `owner-confirmed`: Raw legacy run payloads under `platform/docs/ai/runs/**` were deleted after accepting `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` as the durable summary. Exact old run text is git-history provenance only.
 
 ## Active Product Domains
 
@@ -91,7 +92,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
 - `risk` `doc-confirmed`: Some old frontend tracked docs contain stale lifecycle/extraction status, especially compatibility pointers and older auth follow-up state. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
-- `risk` `doc-confirmed`: Closed or superseded legacy run artifacts still live under `platform/docs/ai/runs`; they are provenance only after the Atlas operational cutover.
+- `risk` `doc-confirmed`: Legacy run payloads no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
 - `risk` `doc-confirmed`: Old Form Builder archive/future workstream paths are pointer stubs. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
@@ -107,10 +108,8 @@ Confidence labels:
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
-- `risk` `doc-confirmed`: Historical `platform/docs/ai/runs/**` payloads still exist in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
 - `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are pointer stubs only; do not write new workflow artifacts there.
-- `risk` `doc-confirmed`: Some old `platform/docs/ai/**` payload files still exist until the retirement plan is executed. Use `ai-memory/atlas/platform-docs-ai-retirement-plan.md` before deleting or compacting them.
-- `risk` `doc-confirmed`: `2026-04-13_cross-stack_form-builder-three-schema-stabilization` is the only legacy run marked `keep-provenance`; confirm current code/docs before deleting or replacing that payload.
+- `risk` `doc-confirmed`: Remaining `platform/docs/ai/**` files are pointer stubs only. Final full deletion is a compatibility decision, not a memory-content blocker.
 
 ## Recommended Reads By Domain
 

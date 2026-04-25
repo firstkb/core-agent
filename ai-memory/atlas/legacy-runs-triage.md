@@ -1,9 +1,9 @@
 # Legacy Runs Triage
 
-Status: active triage record
+Status: final triage record
 Last updated: 2026-04-25
 
-This record tracks the retirement state for old Atlas runs under
+This record tracks the final retirement state for old Atlas runs under
 `platform/docs/ai/runs/**`.
 
 Compact archive summary:
@@ -12,24 +12,19 @@ Compact archive summary:
 
 ## Result
 
-- 8 legacy runs are `archive-summary`: durable outcomes are already captured in
-  current `ai-memory` and tracked FE/BE docs.
-- 1 legacy run is `keep-provenance`: Form Builder three-schema stabilization
-  contains unresolved frontend stabilization state and should not be deleted yet.
-- 1 legacy run is `delete-after-owner-confirm`: admin tenant list navigation is
-  an empty draft scaffold and needs owner confirmation before removal.
+- 9 legacy runs were deleted after compact summary acceptance.
+- 1 legacy draft scaffold was deleted as low-value after owner approval.
+- No legacy run remains marked for special provenance retention.
+- Exact old run text is available only through git history.
 
 ## Do Not Do
 
-- Do not move or delete old run folders as part of this triage record alone.
 - Do not use old run files as active task state.
 - Do not create new runs under `platform/docs/ai/runs/**`.
 
-## Deletion Gate
+## Deletion Result
 
-Final deletion or movement of old run payload requires:
-
-- owner approval,
-- reference scan for the exact run id,
-- confirmation that durable facts are present in `ai-memory` or tracked docs,
-- no active task depending on the old run folder.
+- Owner approval was given in the memory/docs modernization thread.
+- The compact summary was accepted as the durable archive record.
+- The Form Builder stabilization run was superseded by current Form Builder docs and `ai-memory`.
+- The admin tenant list navigation run was an incomplete draft scaffold and was removed.

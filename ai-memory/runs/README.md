@@ -18,3 +18,6 @@ Before archiving, distill durable outcomes into module `contract.md`, `state.md`
 Legacy `platform/docs/ai/runs/**` artifacts are summarized in:
 
 - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+
+Raw legacy run payloads were deleted from `platform/docs/ai/runs/**` after the
+summary was accepted. Use git history only when exact old run text is required.

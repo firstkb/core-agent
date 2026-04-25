@@ -29,7 +29,7 @@ This audit maps the old `platform/docs/ai` Atlas workflow to the new
 | `platform/docs/ai/templates/*.md` | retired template pointers | `ai-memory/atlas/templates/*.md` | pointer landed |
 | `platform/docs/ai/automation-manifest.json` | retired JSON pointer | `ai-memory/atlas/automation-manifest.json` | pointer landed |
 | `platform/docs/ai/automation-changelog.md` | retired changelog pointer | `ai-memory/atlas/automation-changelog.md` | pointer landed |
-| `platform/docs/ai/runs/**` | historical run provenance | `ai-memory/runs/archive/` after triage | not moved yet |
+| `platform/docs/ai/runs/**` | retired run payloads | `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` | raw payloads deleted after summary acceptance |
 | `scripts/ai/new-run.py` | run scaffolder | unchanged script path, new output target | updated to write `ai-memory/runs/active` |
 | `scripts/ai/automation_versions.py` | version sync | unchanged script path, new manifest target | updated to read `ai-memory/atlas/automation-manifest.json` |
 
@@ -43,14 +43,13 @@ This audit maps the old `platform/docs/ai` Atlas workflow to the new
 
 ## Remaining Retirement Work
 
-- Triage old `platform/docs/ai/runs/**` into archive summaries or delete after confirming no active task depends on them.
 - Decide whether legacy prompt/template/manifest pointer stubs should remain until final deletion or be removed earlier after reference scan.
 
 Landed cleanup:
 
 - `platform/docs/ai/README.md`, `prompts/README.md`, `templates/README.md`, and `runs/README.md` are retired pointers.
 - `docs/ref/**` now contains stable reference registries only; memory reorganization brainstorms moved to `docs/archive/memory-reorg/`.
-- Legacy runs are triaged in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders remain provenance only.
+- Legacy runs are summarized in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old raw run payloads were deleted.
 - Top-level durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`.
 - Legacy module markdown files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs.
 - Legacy prompt/template markdown files and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`.

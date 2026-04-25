@@ -43,7 +43,7 @@ The active system is:
 | `platform/docs/ai/templates/**` | retired template pointers | `ai-memory/atlas/templates/**` | pointer landed |
 | `platform/docs/ai/automation-manifest.json` | retired JSON pointer | `ai-memory/atlas/automation-manifest.json` | pointer landed |
 | `platform/docs/ai/automation-changelog.md` | retired pointer | `ai-memory/atlas/automation-changelog.md` | pointer landed |
-| `platform/docs/ai/runs/**` | historical run provenance | `ai-memory/runs/archive/**` or summarized archive | triage per run |
+| `platform/docs/ai/runs/**` | retired run pointer | `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` | raw payloads deleted |
 
 ## Required Checks Before Final Deletion
 
@@ -60,7 +60,7 @@ Expected state before deletion:
 - AGENTS and Atlas skill mention `platform/docs/ai/**` only as legacy provenance.
 - Scripts read/write only `ai-memory/atlas/**` and `ai-memory/runs/**`.
 - `ai-memory/index/read-routes.yaml` keeps `platform/docs/ai/**` in `avoid_by_default`.
-- Old runs are either archived, summarized, or explicitly declared unnecessary.
+- Old raw run payloads are deleted after compact summary acceptance.
 
 ## Next Slices
 
@@ -68,7 +68,8 @@ Expected state before deletion:
 2. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md` durable/governance/changelog files.
 3. Legacy operational payload pass: landed for old prompts, templates, and automation manifest.
 4. Final readiness audit: landed in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`.
-5. Final deletion pass: remove `platform/docs/ai/**` only after the owner approves the remaining run payload decision.
+5. Legacy run payload cleanup: landed; raw run payloads were deleted after compact summary acceptance.
+6. Final pointer-directory decision: keep compatibility pointers for one more cycle or remove `platform/docs/ai/**` entirely.
 
 ## Final Readiness
 
@@ -79,4 +80,5 @@ The final readiness audit lives in:
 Current verdict:
 
 - Hot-read retirement is complete.
-- Physical deletion is owner-gated by legacy run payload cleanup.
+- Legacy run payload cleanup is complete.
+- Physical deletion of the remaining pointer directories is now a separate compatibility decision.

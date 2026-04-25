@@ -25,6 +25,8 @@ Top-level durable memory files in this folder are compatibility pointers only.
 Legacy module memory files under `modules/` are compatibility pointers only.
 Legacy prompt/template files and `automation-manifest.json` are compatibility
 pointers only.
+Legacy raw run payloads were deleted after compact triage; `runs/` is a pointer
+directory only.
 Use git history if historical payload text is required.
 
 Read the retirement plan before deleting or compacting this folder:

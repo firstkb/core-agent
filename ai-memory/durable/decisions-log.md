@@ -726,11 +726,23 @@ Do not turn it into a task journal.
 ### DEC-061 Platform Docs AI Physical Deletion Is Owner-Gated
 
 - Date: 2026-04-25
-- Status: active
-- State: accepted
-- Decision: `platform/docs/ai/**` has passed hot-read retirement but should not be physically deleted until the owner approves legacy run payload cleanup. Non-run files are pointer stubs only. Remaining run payloads must be deleted or archived after accepting the compact summary, resolving the one `keep-provenance` Form Builder stabilization run, and confirming the empty admin tenant list draft can be deleted.
+- Status: superseded
+- State: superseded by DEC-062 for run payload cleanup; remaining pointer-directory deletion is a separate compatibility decision
+- Decision: `platform/docs/ai/**` had passed hot-read retirement but was not ready for physical deletion until the owner approved legacy run payload cleanup. Non-run files were pointer stubs only. Remaining run payload disposition was unresolved at this decision point and is now closed by DEC-062.
 - Sources:
   - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
   - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
   - `ai-memory/atlas/legacy-runs-triage.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-062 Legacy Run Payloads Deleted After Summary Acceptance
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Raw legacy Atlas run payloads under `platform/docs/ai/runs/**` were deleted after owner approval and acceptance of `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` as the durable archive summary. The former Form Builder stabilization run is superseded by current Form Builder contracts and memory; the admin tenant list navigation run was an incomplete draft scaffold. Exact old run text is available only through git history.
+- Sources:
+  - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - `ai-memory/atlas/legacy-runs-triage.md`
+  - `platform/docs/ai/runs/README.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`

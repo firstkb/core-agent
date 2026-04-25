@@ -534,7 +534,7 @@ Do not turn it into a task journal.
 
 - Date: 2026-04-25
 - Status: superseded
-- State: superseded by DEC-065 for the first low-risk deletion wave
+- State: superseded by DEC-065 and DEC-066 for extraction deletion waves
 - Decision: The retained Form Builder exact-detail docs are payload-bearing and must not be mass-deleted. Future deletion requires updating the consolidation audit extraction target and verifying code/schema coverage.
 - Sources:
   - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
@@ -778,6 +778,18 @@ Do not turn it into a task journal.
 - Status: active
 - State: landed
 - Decision: The low-risk Form Builder exact-detail docs for advanced fields, content nodes, field rules, grid columns, and checklist subforms were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. These files are no longer tracked read targets; exact old text is git-history only. Retained exact-detail docs still require the consolidation audit before any future deletion.
+- Sources:
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+  - `ai-memory/docs/docs-migration-plan.md`
+
+### DEC-066 Form Builder Preset Exact Details Extracted
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Form Builder exact-detail docs for choice fields, ready-made fields, and `suggest_text` were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. These files are no longer tracked read targets; exact old text is git-history only. The remaining extraction target is `form-builder-schema-scope-contract.md`; all other retained exact-detail docs are kept until typed schemas/tests or structured registry outputs replace their examples.
 - Sources:
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`

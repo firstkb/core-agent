@@ -37,8 +37,8 @@ shape, inspector behavior, migration/static-model detail, or historical audit.
 Current audit result:
 
 - `keep_exact_detail`: 14
-- `compact_more_then_delete`: 4
-- `deleted_after_payload_extraction`: 5
+- `compact_more_then_delete`: 1
+- `deleted_after_payload_extraction`: 8
 - `delete_now_without_extraction`: 0
 
 ## Consolidation Decisions
@@ -59,9 +59,9 @@ Current audit result:
 | `platform/frontend/docs/platform-studio/data-schema-storage-rules.md` | 286 | `keep_exact_detail` | Logical-vs-physical storage rationale and external/static storage boundaries still help backend-facing work. | Keep until backend contract and code fully cover these storage rules. |
 | `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md` | 298 | `keep_exact_detail` | Exact radio/checkbox inspector schema and normalized settings are payload-bearing. | Keep until inspector schemas are typed and tested. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | 235 | `keep_exact_detail` | Static lookup naming examples prevent raw FK-column leakage into `storageKey`. | Keep until static lookup naming is enforced in code/tests. |
-| `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | 231 | `compact_more_then_delete` | Choice field rules overlap with catalog and ready-made docs, but exact settings still need extraction. | Expand choice section in `form-builder-fields.md` or typed schemas. |
-| `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | 265 | `compact_more_then_delete` | Ready-made presets overlap with compact docs; exact settings can be extracted. | Add preset settings matrix to `form-builder-fields.md` or typed schemas. |
-| `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | 216 | `compact_more_then_delete` | `suggest_text` is a ready-made preset; exact source/runtime/filter behavior should be extracted. | Merge into ready-made preset matrix and backend boundary notes. |
+| `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | 231 | `deleted_after_payload_extraction` | Choice source/settings matrix and option authoring rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
+| `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | 265 | `deleted_after_payload_extraction` | Ready-made preset compile targets and locked settings were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
+| `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | 216 | `deleted_after_payload_extraction` | `suggest_text` source/runtime/backend/filter behavior was compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | 215 | `compact_more_then_delete` | Scope/root/subform rules are mostly compacted but exact authoring shape remains useful. | Add scope authoring shape to `form-builder-fields.md` and main Form Builder contract if needed. |
 | `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | 173 | `deleted_after_payload_extraction` | Rule operators, persisted shape, authoring rules, and runtime rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-content-nodes.md` | 170 | `deleted_after_payload_extraction` | Content node settings, compile targets, and accepted/rejected node boundaries were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
@@ -75,6 +75,5 @@ Do not delete all exact-detail docs at once.
 
 Recommended next extraction order:
 
-1. Extract preset matrices: `choice`, `ready-made`, `suggest_text`.
-2. Revisit scope/static lookup/static model docs after code verification.
-3. Keep the large catalog/schema/view-settings docs until typed schemas or tests replace their exact examples.
+1. Revisit scope/static lookup/static model docs after code verification.
+2. Keep the large catalog/schema/view-settings docs until typed schemas or tests replace their exact examples.

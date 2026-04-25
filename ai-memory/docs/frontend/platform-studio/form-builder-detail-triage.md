@@ -64,9 +64,7 @@ For consolidation decisions, deletion blockers, and extraction targets, read:
 | `platform/frontend/docs/platform-studio/form-builder-v2-field-contract.md` | Need exact field registry or persisted-shape examples. | Compacted into `form-builder-fields.md`. |
 | `platform/frontend/docs/platform-studio/form-builder-field-catalog.md` | Need full catalog/historical legacy mapping. | Compacted into `form-builder-fields.md`; expensive read. |
 | `platform/frontend/docs/platform-studio/form-builder-core-data-fields.md` | Need exact basic-field settings. | Basic base types compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | Need exact choice-field settings. | Choice fields compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md` | Need exact radio/checkbox inspector schema. | Choice preset rules compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | Need exact ready-made preset settings. | Ready-made presets compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-relationships.md` | Need exact lookup/relationship settings. | Relationship presets compacted; backend lookup support still requires code/backend contract verification. |
 | `platform/frontend/docs/platform-studio/form-builder-system-fields.md` | Need exact System Field payload/settings. | System Fields compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-section-tree.md` | Need full palette review tree. | Layout/content/tree facts compacted. |
@@ -74,7 +72,6 @@ For consolidation decisions, deletion blockers, and extraction targets, read:
 | `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Need exact root/subform scope details. | Scope rules compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | Need exact filter/view settings payload shape. | View settings and filters compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | Need exact inspector UX details. | Inspector detail compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | Need exact `suggest_text` settings. | `suggest_text` compacted as ready-made preset. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Need exact static lookup naming examples. | Static/external model rules compacted in main Form Builder contract; exact naming remains detailed reference. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md` | Need exact static table list/treatment. | Static/external model rules compacted in main Form Builder contract. |
 | `platform/frontend/docs/platform-studio/data-schema-storage-rules.md` | Need old logical-vs-physical storage rationale. | Prefer backend Form Builder contract for current storage truth. |
@@ -92,6 +89,9 @@ deleted. Use git history only for exact old text.
 | `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | Rule operators, persisted rule shape, authoring rules, and runtime rules. |
 | `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | Grid column shape, editor rules, and runtime/default-hidden behavior. |
 | `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md` | Checklist bindings, normalization, optional sibling fields, and deferred setup details. |
+| `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | Choice field source/settings matrix and option authoring rules. |
+| `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | Ready-made preset compile targets and locked settings matrix. |
+| `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | `suggest_text` storage, config, runtime, backend boundary, and filter behavior. |
 
 ## Deleted Future Proposal Pointers
 

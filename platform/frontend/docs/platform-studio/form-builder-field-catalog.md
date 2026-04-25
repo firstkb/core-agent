@@ -128,9 +128,9 @@ These fields represent option-backed value selection.
 - `Single select`
 - `Multi select`
 
-Detailed functionality and settings for this section are locked in:
+Detailed functionality and settings for this section were compacted into:
 
-- `form-builder-choice-fields.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ### 3. Relationships
 
@@ -175,9 +175,9 @@ These are user-friendly authored shortcuts layered on top of underlying base fie
 - `Radio group`
 - `Checkbox group`
 
-Detailed functionality and settings for this section are locked in:
+Detailed functionality and settings for this section were compacted into:
 
-- `form-builder-ready-made-fields.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ### 6. Advanced Fields
 

@@ -37,10 +37,7 @@ Field registry and catalog:
 Field and preset details:
 
 - `platform/frontend/docs/platform-studio/form-builder-core-data-fields.md`
-- `platform/frontend/docs/platform-studio/form-builder-choice-fields.md`
 - `platform/frontend/docs/platform-studio/form-builder-choice-preset-inspector-schema.md`
-- `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md`
-- `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-relationships.md`
 - `platform/frontend/docs/platform-studio/form-builder-system-fields.md`
 
@@ -66,6 +63,10 @@ For retention and deletion conditions, read:
 Low-risk exact-detail docs for advanced fields, content nodes, field rules, grid
 columns, and checklist subforms were compacted into this document and deleted.
 Use git history only for their exact old text.
+
+Preset exact-detail docs for choice fields, ready-made fields, and `suggest_text`
+were compacted into this document and deleted. Use git history only for their
+exact old text.
 
 ## Current Code Surfaces
 
@@ -195,6 +196,172 @@ Preset rules:
 - `Checkbox group` compiles to `multi_select`
 - `Contact`, `Company`, and `Project` compile to `db_lookup` with target/source preset metadata
 - single and multiple relationship palette entries remain separate user-facing shortcuts even when they share the same preset family
+
+## Choice Fields
+
+The `Choice fields` palette section contains:
+
+- `single_select`
+- `multi_select`
+
+Choice fields are option-backed model fields.
+They must support builder-side add/edit/delete/reorder option management.
+They should move toward stable option identity instead of label-only storage.
+
+Shared settings:
+
+- `displayName`
+- `key`
+- `description`
+- `isRequired`
+- `isNullable`
+- `defaultValue`
+- `lockState`
+- `sourceType`
+- `options`
+- optional `orientation`: `vertical | horizontal`
+- future stable option identity: `optionKey`, `optionLabel`
+
+When `sourceType = static_options`, the field settings UI must expose an inline
+options editor.
+
+Choice field matrix:
+
+| Field | Value Shape | Source Types | Required Settings | Runtime Variants | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `single_select` | one selected option value | `static_options`, `dynamic_source` | `options`, `allowEmpty`, `allowCustomValues` | dropdown select, radio group, chips/segmented single-choice, button group | Generic non-workflow status should use this or `radio_group`. Legacy `COMBOBOX (Yes/No)` normalizes to `radio_group` with editable `Yes`/`No` defaults. |
+| `multi_select` | multiple selected option values | `static_options`, `dynamic_source`, `tags` | `options`, `allowCustomValues` | multi-select dropdown, checkbox list, chips picker, tag-style picker, button group | `Checkbox group` and `Tags` are presets over this field, not separate base field types. |
+
+Recommended choice settings:
+
+- `displayLabelField`
+- `storedValueField`
+- `sortMode`
+- `controlType`
+- `renderStyle`
+- `orientation`
+- `optionStyles`
+
+`single_select` control/render values:
+
+- `controlType`: `select | radio`
+- `renderStyle`: `native | buttons | chips`
+- `optionStyles` is available when `controlType = radio` and `renderStyle = buttons`
+
+`multi_select` control/render values:
+
+- `controlType`: `multi_select | checkbox`
+- `renderStyle`: `native | buttons | chips`
+- `optionStyles` is available when `controlType = checkbox` and `renderStyle = buttons`
+
+Backend storage note:
+
+- frontend option authoring is accepted
+- multivalue storage remains backend-facing and requires fresh code-backed contract/proposal work before activation
+- this applies to `multi_select`, `tags`, and future lookup multiselect modes
+
+## Ready-made Preset Matrix
+
+Ready-made fields are palette shortcuts over accepted base field types.
+They are not standalone backend primitives.
+
+| Preset | Compile Target | Locked Settings | Runtime/Authoring Notes |
+| --- | --- | --- | --- |
+| `Email` | `baseType = short_text`, `fieldPreset = email` | `placeholder`, `autocomplete = email`, `inputMode = email`, `displayFormat`, `validation = email` | Fast email input preset over text storage. |
+| `Phone` | `baseType = short_text`, `fieldPreset = phone` | `placeholder`, `autocomplete = tel`, `inputMode = tel`, `displayFormat`, `mask`, `validation` | Phone-oriented input behavior over text storage. |
+| `URL` | `baseType = short_text`, `fieldPreset = url` | `placeholder`, `autocomplete = url`, `inputMode = url`, `displayFormat`, `validation = url` | Link-oriented validation and entry behavior over text storage. |
+| `suggest_text` | `baseType = short_text`, `fieldPreset = suggest_text` | `suggestConfig.sourceMode`, `suggestConfig.searchMode`, `suggestConfig.minQueryLength`, `suggestConfig.maxResults`, `suggestConfig.allowCustomValue` | Searchable text combobox with custom values; see `Suggest Text Contract` below. |
+| `date_today` | `baseType = date`, `fieldPreset = date_today` | `defaultValueMode = today`, `displayFormat`, optional `readonly` | Date field preconfigured with current-date default behavior. |
+| `tags` | `baseType = multi_select`, `fieldPreset = tags` | `tagMode`, `options`, optional `maxTags` | `tagMode = select_existing | select_or_create | create_only`; existing options are available when suggestions are used. |
+| `radio_group` | `baseType = single_select`, `fieldPreset = radio_group` | `options`, `renderStyle`, `orientation`, `optionStyles` | Single-choice preset rendered as native radio controls or colored buttons; options remain editable. |
+| `checkbox_group` | `baseType = multi_select`, `fieldPreset = checkbox_group` | `options`, `renderStyle`, `orientation`, `optionStyles`, `minSelections`, optional `maxSelections` | Multi-choice preset rendered as checkboxes or colored buttons; `isRequired` may shortcut to `minSelections = 1`. |
+
+Ready-made locked decisions:
+
+- `Radio group` and `Checkbox group` stay in `Ready-made fields`, not in `Basic fields`
+- `Radio group` and `Checkbox group` are create shortcuts, not new base field types
+- generic non-workflow status fields should use `single_select` or `radio_group`
+- workflow `Status` remains only in `System Fields`
+
+## Suggest Text Contract
+
+`suggest_text` is a ready-made preset over `short_text`.
+It supports combobox-like text entry, ajax suggestions, same-field existing-value
+search, and custom typed values while preserving plain text storage.
+
+It is not:
+
+- a new base storage primitive
+- a `db_lookup`
+- a `single_select`
+- a tag or multivalue field
+
+Persisted field shape:
+
+```json
+{
+  "family": "preset",
+  "kind": "short_text",
+  "preset": "suggest_text",
+  "suggestConfig": {
+    "sourceMode": "same_field_distinct_values",
+    "searchMode": "contains",
+    "minQueryLength": 1,
+    "maxResults": 20,
+    "allowCustomValue": true
+  }
+}
+```
+
+Accepted `suggestConfig` settings:
+
+- `sourceMode`: current accepted value is `same_field_distinct_values`
+- `searchMode`: `contains | prefix`
+- `minQueryLength`
+- `maxResults`
+- `allowCustomValue`
+
+Current defaults:
+
+- `sourceMode = same_field_distinct_values`
+- `searchMode = contains`
+- `minQueryLength = 1`
+- `maxResults = 20`
+- `allowCustomValue = true`
+
+Storage and runtime rules:
+
+- stored value is a scalar `string`
+- no foreign key is stored
+- no helper lookup output columns are generated
+- grid, filters, and form display use the stored text directly
+- user may type freely, select a suggestion, or keep a custom value
+- selecting a suggestion writes its text value into the field
+- clearing returns the stored value to empty text or null according to normal `short_text` nullability rules
+
+Suggestion backend boundary:
+
+- query distinct non-empty values from the same logical field domain
+- filter by query string
+- apply tenant scoping when the model is tenant-scoped
+- return only text suggestions
+
+Not accepted in `suggest_text` v1:
+
+- cross-table custom SQL sources
+- grouped suggestion sections
+- FK persistence
+- automatic conversion into lookup fields
+
+Expected `suggest_text` filter operators:
+
+- `eq`
+- `neq`
+- `contains`
+- `not_contains`
+- `in`
+- `is_empty`
+- `is_not_empty`
 
 ## System Fields
 
@@ -565,7 +732,7 @@ For exact payload shapes or historical review, open only the specific old detail
 Do not read the whole `platform/frontend/docs/platform-studio/**` tree:
 
 - field catalog and registry: `form-builder-accepted-registry.md`, `form-builder-v2-field-contract.md`, `form-builder-field-catalog.md`
-- specific field settings: `form-builder-core-data-fields.md`, `form-builder-choice-fields.md`, `form-builder-ready-made-fields.md`, `form-builder-suggest-text-field-contract-v1.md`, or `form-builder-relationships.md`
+- specific field settings: `form-builder-core-data-fields.md`, `form-builder-choice-preset-inspector-schema.md`, or `form-builder-relationships.md`; choice, ready-made, and `suggest_text` payloads are compacted in this document
 - System Fields: `form-builder-system-fields.md`
 - rules: use this document; deleted old exact-detail source is git-history only
 - grid columns: use this document; deleted old exact-detail source is git-history only

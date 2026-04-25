@@ -29,10 +29,11 @@ This document exists to keep one clear boundary:
 
 This document is the detailed companion to:
 
-- `form-builder-choice-fields.md`
 - `form-builder-v2-field-contract.md`
 - `form-builder-slice-1-inspector-and-view-schema.md`
 - `form-builder-field-catalog.md`
+
+Choice field and ready-made preset payload matrices were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 
 ## Source Provenance
 

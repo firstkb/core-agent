@@ -257,9 +257,9 @@ Initial operations:
 
 ## Required Implementation Steps
 
-Current execution priority is fixed separately in:
-
-- `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md`
+The old execution-plan pointer file was deleted after compaction.
+Before implementing static-model changes, rewrite the work from current active
+Form Builder docs and verify against code.
 
 ### Step 1. Lock the static model set
 

@@ -513,19 +513,15 @@ Do not turn it into a task journal.
   - `ai-memory/reference-code/relocation-plan.md`
   - `ai-memory/durable/reference-code-policy.md`
 
-### DEC-047 Old Form Builder Archive And Future Workstream Docs Are Pointer Stubs
+### DEC-047 Old Form Builder Archive And Future Workstream Docs Are Deleted
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Old Form Builder prompt, task, archive, and future workstream docs under `platform/frontend/docs/platform-studio/` are no longer active read-path content. Their tracked files are short archive or future proposal pointer stubs. Exact-detail reference docs remain intact for payload/settings audit.
+- Decision: Old Form Builder prompt, task, archive, and future workstream pointer docs under `platform/frontend/docs/platform-studio/` are no longer active read-path content and were deleted after compaction. Exact-detail reference docs remain intact for payload/settings audit.
 - Sources:
-  - `platform/frontend/docs/platform-studio/agent-prompts.md`
-  - `platform/frontend/docs/platform-studio/form-builder-implementation-backlog.md`
-  - `platform/frontend/docs/platform-studio/form-builder-multivalue-storage-contract.md`
-  - `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
-  - `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md`
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+  - git history for exact deleted pointer text
 
 ### DEC-048 Old Form Builder Exact-Detail Docs Declare Non-Hot Status
 
@@ -562,7 +558,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Backend event actor identity now lives under `platform/backend/docs/contracts/`; events/mail cleanup and schema drift checks live under `platform/backend/docs/proposals/`; completed plans, old standards, and prompt artifacts live under `platform/backend/docs/archive/`. Old root paths are compatibility or archive pointers.
+- Decision: Backend event actor identity now lives under `platform/backend/docs/contracts/`; events/mail cleanup and schema drift checks live under `platform/backend/docs/proposals/`; completed plans, old standards, and prompt artifacts live under `platform/backend/docs/archive/`. Old root pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/contracts/events-identity.md`
   - `platform/backend/docs/proposals/events-mails-cleanup.md`

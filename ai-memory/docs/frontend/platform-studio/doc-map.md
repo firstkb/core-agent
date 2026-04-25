@@ -12,7 +12,8 @@ Scope:
 
 This classification optimizes retrieval.
 Most source docs keep their tracked paths until the owner explicitly approves a tracked docs reorg.
-Archive and future Form Builder workstream files have been rewritten in place as short pointer stubs.
+Archive and future Form Builder workstream pointer stubs were deleted after
+compaction.
 Old suite-level and backend-facing compatibility pointer stubs were deleted after
 backend facts moved to the active backend contract.
 
@@ -90,23 +91,14 @@ Backend implementation orientation now lives in `platform/backend/docs/modules/p
 | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Active backend Form Builder API/storage/runtime apply contract. |
 | `platform/backend/docs/modules/platform-studio/form-builder.md` | Active backend Form Builder implementation map and read order. |
 
-## Working Plans And Future Proposals
+## Deleted Working Plans And Future Proposals
 
-These are useful for sequencing or historical context but should not override contracts or code.
-Use the detail triage map before opening them.
-The listed future proposal files are pointer stubs; use git history only for exact historical content.
+Old future/archive pointer stubs for Form Builder backlog, multivalue storage,
+schema cleanup, rich text, approved workstream, static-model execution/migration
+drafts, and static-model task prompts were deleted after compaction.
 
-| Source | Current Handling |
-| --- | --- |
-| `platform/frontend/docs/platform-studio/form-builder-implementation-backlog.md` | `future_proposal`; rewrite before implementation. |
-| `platform/frontend/docs/platform-studio/form-builder-multivalue-storage-contract.md` | `future_proposal`; backend-facing storage direction needs implementation/code verification. |
-| `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md` | `future_proposal`; compatibility cleanup proposal, not current contract. |
-| `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md` | `future_proposal`; rich text work must be rewritten before implementation. |
-| `platform/frontend/docs/platform-studio/form-builder-approved-frontend-workstream-plan.md` | `archive_candidate`; durable outcomes compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md` | `archive_candidate`; execution history. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md` | `archive_candidate`; draft detail. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-phase-1-reference-schema-pack-v1.md` | `archive_candidate`; reference draft. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-users-field-map-draft-v1.md` | `archive_candidate`; draft detail. |
+Future work must be rewritten as a fresh proposal from active docs and verified
+against code before implementation. Use git history only for exact old text.
 
 ## Foundation And Supporting Notes
 
@@ -114,23 +106,16 @@ These are not first-read docs after the compact memory layer exists.
 
 | Source | Handling |
 | --- | --- |
-| `platform/frontend/docs/platform-studio/v2-foundation-brief.md` | Supporting foundation; compacted outcomes live in module memory. |
-| `platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md` | Supporting technical map. |
 | `platform/frontend/docs/platform-studio/data-schema-storage-rules.md` | Supporting storage rules; use when storage detail is needed. |
-| `platform/frontend/docs/platform-studio/form-builder-page-and-filter-notes.md` | Notes; prefer current view settings/runtime filter contracts. |
 | `platform/frontend/docs/platform-studio/ezform-analysis.md` | Reference analysis only. |
 
 ## Operational Scaffolds And Archive Candidates
 
-These should not be active truth.
-The listed prompt/task artifacts are pointer stubs; use git history only for exact historical content.
+Old prompt/task pointer stubs were deleted after compaction.
+Use git history only for exact old prompt text.
 
 | Source | Classification | Reason |
 | --- | --- | --- |
-| `platform/frontend/docs/platform-studio/agent-prompts.md` | `operational_scaffold` / `archive_candidate` | Prompt artifact. |
-| `platform/frontend/docs/platform-studio/promt-continue.md` | `operational_scaffold` / `archive_candidate` | Prompt artifact. |
-| `platform/frontend/docs/platform-studio/promt-continue-short.md` | `operational_scaffold` / `archive_candidate` | Prompt artifact. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-atlas-task-v1.md` | `operational_scaffold` / `archive_candidate` | Task prompt, not product truth. |
 | `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference_only` | `reference-pack:old-builder-reference`; historical opt-in code reference. |
 | `platform/frontend/docs/platform-studio/EXTDB/**` | `reference_only` | `reference-pack:extdb-legacy`; legacy behavior source. |
 | `platform/frontend/docs/platform-studio/ezform/**` | `reference_only` | `reference-pack:ezform-prototype`; donor/reference project material. |

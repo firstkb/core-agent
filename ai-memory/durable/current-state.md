@@ -64,7 +64,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Active Form Builder tracked behavior now lives at `platform/frontend/docs/modules/platform-studio/form-builder.md`.
 - `landed` `doc-confirmed`: Form Builder field catalog, palette registry, rules, grid/view settings, and scope boundaries now live at `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` as a supporting frontend contract.
 - `landed` `doc-confirmed`: Old Form Builder detail/workstream docs are classified in `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` as deleted compatibility pointers, exact-detail references, future proposals, archive candidates, or reference-only donor material.
-- `landed` `doc-confirmed`: Old Form Builder archive/future workstream docs were rewritten in place as short pointer stubs; exact-detail reference docs remain intact for payload/settings audit.
+- `landed` `doc-confirmed`: Old Form Builder archive/future workstream pointer stubs were deleted; exact-detail reference docs remain intact for payload/settings audit.
 - `landed` `doc-confirmed`: Retained old Form Builder exact-detail docs now declare `Status: exact detail reference` and point readers back to the active Form Builder module docs first.
 - `landed` `doc-confirmed`: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply behavior now lives at `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 - `landed` `doc-confirmed`: Backend Form Builder implementation orientation now lives at `platform/backend/docs/modules/platform-studio/form-builder.md`.
@@ -90,11 +90,11 @@ Confidence labels:
 
 - `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
-- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially future proposal/archive pointer stubs and exact-detail docs. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
+- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially exact-detail docs and reference-only donor notes. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are still working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Legacy run payloads and pointer directories no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
-- `risk` `doc-confirmed`: Old Form Builder archive/future workstream paths are pointer stubs. Use git history only for exact historical content, not as the active read path.
+- `risk` `doc-confirmed`: Old Form Builder archive/future workstream pointer stubs were deleted. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
 - `risk` `doc-confirmed`: Old frontend backend-facing Form Builder pointer docs were deleted; backend implementation work should read the backend Form Builder contract and use git history only for exact old handoff/storage/review text.
 - `risk` `doc-confirmed`: Frontend old root pointer docs were deleted; retained old Platform Studio docs are exact-detail, proposal, archive, or reference-only. Do not treat them as active ownership when a target-folder doc exists.

@@ -46,7 +46,6 @@ They are exact-detail references, not default read-order docs:
 - `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-page-and-filter-notes.md`
 - `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
 
 Open those old docs only for exact historical detail or payload audit.

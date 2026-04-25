@@ -10,7 +10,8 @@ Scope:
 - donor/reference trees under `platform/frontend/docs/platform-studio/**`
 
 This file decides how AI agents should treat old Form Builder detail and workstream docs after the compact tracked docs landed.
-Archive and future workstream files listed below have been physically rewritten as short pointer stubs.
+Archive and future workstream pointer stubs listed below were deleted after
+durable facts were compacted.
 Exact-detail reference files remain intact for payload/settings audit.
 Retained exact-detail reference files now declare `Status: exact detail reference` in their tracked headers.
 
@@ -79,12 +80,11 @@ Read the compact supporting contract first:
 | `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md` | Need exact static table list/treatment. | Static/external model rules compacted in main Form Builder contract. |
 | `platform/frontend/docs/platform-studio/data-schema-storage-rules.md` | Need old logical-vs-physical storage rationale. | Prefer backend Form Builder contract for current storage truth. |
 
-## Future Proposals
+## Deleted Future Proposal Pointers
 
-These docs contain open/deferred work.
-Do not implement directly from them.
-Rewrite the relevant parts into a proposal before work starts.
-Their tracked paths are now short future proposal pointer stubs.
+These old docs contained open/deferred work but were pointer-only after
+compaction. Do not implement directly from them. Rewrite the relevant parts into
+a fresh proposal before work starts, and use git history only for exact old text.
 
 | Source | Future Target | Reason |
 | --- | --- | --- |
@@ -93,11 +93,11 @@ Their tracked paths are now short future proposal pointer stubs.
 | `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md` | compatibility cleanup proposal | Payload cleanup is useful, but should not override current code/contracts without an implementation slice. |
 | `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md` | rich text proposal only if work is reactivated | Workstream language should not stay hot; durable field/content distinction is already compacted. |
 
-## Archive Candidates
+## Deleted Archive Pointers
 
-These are historical workstreams, prompts, task prompts, drafts, or closed plans.
-They should not be used as current truth.
-Their tracked paths are now short archive pointer stubs.
+These historical workstreams, prompts, task prompts, drafts, or closed plans
+were pointer-only after compaction and were deleted. They should not be used as
+current truth. Use git history only for exact old text.
 
 | Source | Reason |
 | --- | --- |
@@ -134,7 +134,7 @@ Alias registry:
 ## Read Rules
 
 - If a doc has `Status: active` but appears in this triage as `exact_detail_reference`, do not treat its status as default read priority.
-- If a doc is `future_proposal`, verify owner activation before implementation; the old tracked path is a pointer stub.
-- If a doc is `archive_candidate`, use git history only when exact historical content is needed; the old tracked path is a pointer stub.
+- If a deleted old path is `future_proposal`, verify owner activation before implementation and rewrite it as a fresh proposal.
+- If a deleted old path is `archive_candidate`, use git history only when exact historical content is needed.
 - If a task needs donor/source behavior, read only the exact reference file needed and distill the lesson into active docs or memory.
 - Prefer `reference-pack:*` citations over raw donor paths when rewriting old docs.

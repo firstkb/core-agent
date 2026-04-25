@@ -789,7 +789,19 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Form Builder exact-detail docs for choice fields, ready-made fields, and `suggest_text` were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. These files are no longer tracked read targets; exact old text is git-history only. The remaining extraction target is `form-builder-schema-scope-contract.md`; all other retained exact-detail docs are kept until typed schemas/tests or structured registry outputs replace their examples.
+- Decision: Form Builder exact-detail docs for choice fields, ready-made fields, and `suggest_text` were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. These files are no longer tracked read targets; exact old text is git-history only. The remaining extraction target at this decision point was `form-builder-schema-scope-contract.md`; it is now closed by DEC-067.
+- Sources:
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+  - `ai-memory/docs/docs-migration-plan.md`
+
+### DEC-067 Form Builder Schema Scope Exact Detail Extracted
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` was compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` and deleted. The compact contract now owns builder document shape, root/subform scope ownership, root-only concerns, allowed subform concerns, Section placement, and DEFAULT/CHECKLIST runtime boundaries. The Form Builder exact-detail audit now has no `compact_more_then_delete` entries.
 - Sources:
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`

@@ -33,11 +33,11 @@ This document is the contract companion to:
 - `form-builder-section-tree.md`
 - `form-builder-core-data-fields.md`
 - `form-builder-system-fields.md`
-- `form-builder-schema-scope-contract.md`
 - `form-builder-view-settings-contract.md`
 - `form-builder-slice-1-inspector-and-view-schema.md`
 
 Field rule, grid-column, and checklist-subform payload details were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
+Schema-scope authoring details were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 Page/filter notes were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; backend boundary truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
 ## Review Projection Note

@@ -69,7 +69,6 @@ For consolidation decisions, deletion blockers, and extraction targets, read:
 | `platform/frontend/docs/platform-studio/form-builder-system-fields.md` | Need exact System Field payload/settings. | System Fields compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-section-tree.md` | Need full palette review tree. | Layout/content/tree facts compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md` | Need exact inspector/view schema examples. | Durable facts compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Need exact root/subform scope details. | Scope rules compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | Need exact filter/view settings payload shape. | View settings and filters compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | Need exact inspector UX details. | Inspector detail compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Need exact static lookup naming examples. | Static/external model rules compacted in main Form Builder contract; exact naming remains detailed reference. |
@@ -92,6 +91,7 @@ deleted. Use git history only for exact old text.
 | `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | Choice field source/settings matrix and option authoring rules. |
 | `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | Ready-made preset compile targets and locked settings matrix. |
 | `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | `suggest_text` storage, config, runtime, backend boundary, and filter behavior. |
+| `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Builder document shape, root/subform scope ownership, Section placement, and subform runtime boundary. |
 
 ## Deleted Future Proposal Pointers
 

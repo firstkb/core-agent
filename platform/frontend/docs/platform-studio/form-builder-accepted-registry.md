@@ -379,6 +379,5 @@ Not accepted as current registry items:
 
 - `form-builder-field-catalog.md`
 - `form-builder-v2-field-contract.md`
-- `form-builder-schema-scope-contract.md`
 - `form-builder-view-settings-contract.md`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`

@@ -44,7 +44,6 @@ Field and preset details:
 Scope, layout, rules, and view details:
 
 - `platform/frontend/docs/platform-studio/form-builder-section-tree.md`
-- `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md`
@@ -67,6 +66,9 @@ Use git history only for their exact old text.
 Preset exact-detail docs for choice fields, ready-made fields, and `suggest_text`
 were compacted into this document and deleted. Use git history only for their
 exact old text.
+
+The schema-scope exact-detail doc was compacted into this document and deleted.
+Use git history only for its exact old text.
 
 ## Current Code Surfaces
 
@@ -468,6 +470,41 @@ Rejected current content nodes:
 ## Scope Model
 
 Form Builder uses one root scope plus zero or more subform scopes.
+It uses one builder document, not one flat mixed schema and not multiple
+unrelated schema documents.
+
+Canonical terms:
+
+- `Form scope`: one authoring scope with its own `dataSchema` and `uiSchema`
+- `Root scope`: the main form scope
+- `Subform scope`: one child-record scope owned by one `Subform`
+- `Scope root`: the top layout container of one scope
+
+Recommended authoring shape:
+
+```ts
+interface FormBuilderDocument {
+  rootScope: RootFormScope;
+  subformScopes: SubformScope[];
+}
+
+interface RootFormScope {
+  scopeId: "root";
+  scopeType: "ROOT";
+  dataSchema: ModelDefinition;
+  uiSchema: ViewDefinition;
+}
+
+interface SubformScope {
+  scopeId: string;
+  scopeType: "SUBFORM";
+  parentSubformNodeId: string;
+  tableKey: string;
+  subformType: "DEFAULT" | "CHECKLIST";
+  dataSchema: ModelDefinition;
+  uiSchema: ViewDefinition;
+}
+```
 
 Root scope owns:
 
@@ -477,19 +514,48 @@ Root scope owns:
 - root `viewSettings`
 - root `filterDefinitions`
 - root list behavior
+- root view actions
 
 Subform scope owns:
 
 - child model fields
 - child `uiSchema`
+- child physical table
+- child `tableKey`
+- child `subformType`
 - child table/list behavior for `DEFAULT` subforms
 - child lookup/result bindings for `CHECKLIST` subforms
+
+Root-only concerns:
+
+- `System Fields`
+- `viewSettings.iconDataUrl`
+- `viewSettings.correctiveAction`
+- root `actions.canAdd`
+- root `actions.canView`
+- root `actions.canEdit`
+- root `actions.canDelete`
+- root `list.sorting`
+- root `pageFilters`
+- root `quickFilters`
+
+Allowed inside subform scopes:
+
+- model-backed fields
+- field presets
+- layout nodes
+- content nodes
+- child lookup fields
+- checklist result fields
+- conditional node rules
+- child-table grid columns for `DEFAULT` subforms
 
 Scope rules:
 
 - root and subform schemas must not be flattened into one schema
 - each subform owns a dedicated `dataSchema` and `uiSchema`
 - `Section` may be added only at the root of the main form scope or one subform scope
+- `Section` must not be added inside another `Section`, `Group`, `Tabs`, `Grid layout`, or other nested containers
 - if a scope has no explicit section, runtime should render the scope inside one default card-like surface
 
 ## Subforms
@@ -515,6 +581,7 @@ Accepted subform modes:
 - recommended authoring path for result choices is `Radio group`
 - does not own `Corrective Action`
 - does not use grid-column configuration
+- changes runtime orchestration, not the schema-scope boundary
 
 Checklist persisted binding shape:
 
@@ -737,6 +804,6 @@ Do not read the whole `platform/frontend/docs/platform-studio/**` tree:
 - rules: use this document; deleted old exact-detail source is git-history only
 - grid columns: use this document; deleted old exact-detail source is git-history only
 - view settings and filters: `form-builder-view-settings-contract.md` or `form-builder-view-settings-inspector-contract.md`
-- scope/subform: `form-builder-schema-scope-contract.md`; checklist subform detail is compacted in this document
+- scope/subform: use this document; deleted old schema-scope and checklist sources are git-history only
 - static/external models: `form-builder-static-lookup-naming-policy-v1.md` and `form-builder-static-models-integration-v1.md`
 - storage rationale: `data-schema-storage-rules.md`, but prefer the backend Form Builder contract for current backend-owned storage truth

@@ -37,8 +37,8 @@ shape, inspector behavior, migration/static-model detail, or historical audit.
 Current audit result:
 
 - `keep_exact_detail`: 14
-- `compact_more_then_delete`: 1
-- `deleted_after_payload_extraction`: 8
+- `compact_more_then_delete`: 0
+- `deleted_after_payload_extraction`: 9
 - `delete_now_without_extraction`: 0
 
 ## Consolidation Decisions
@@ -62,7 +62,7 @@ Current audit result:
 | `platform/frontend/docs/platform-studio/form-builder-choice-fields.md` | 231 | `deleted_after_payload_extraction` | Choice source/settings matrix and option authoring rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md` | 265 | `deleted_after_payload_extraction` | Ready-made preset compile targets and locked settings were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | 216 | `deleted_after_payload_extraction` | `suggest_text` source/runtime/backend/filter behavior was compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
-| `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | 215 | `compact_more_then_delete` | Scope/root/subform rules are mostly compacted but exact authoring shape remains useful. | Add scope authoring shape to `form-builder-fields.md` and main Form Builder contract if needed. |
+| `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | 215 | `deleted_after_payload_extraction` | Scope/root/subform authoring shape, root-only rules, Section placement, and subform runtime boundary were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-field-rules-contract.md` | 173 | `deleted_after_payload_extraction` | Rule operators, persisted shape, authoring rules, and runtime rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-content-nodes.md` | 170 | `deleted_after_payload_extraction` | Content node settings, compile targets, and accepted/rejected node boundaries were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-subform-checklist-contract.md` | 136 | `deleted_after_payload_extraction` | Checklist binding shape, normalization, optional sibling fields, and deferred setup details were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
@@ -73,7 +73,7 @@ Current audit result:
 
 Do not delete all exact-detail docs at once.
 
-Recommended next extraction order:
+Recommended next consolidation order:
 
-1. Revisit scope/static lookup/static model docs after code verification.
+1. Revisit static lookup/static model docs after code verification.
 2. Keep the large catalog/schema/view-settings docs until typed schemas or tests replace their exact examples.

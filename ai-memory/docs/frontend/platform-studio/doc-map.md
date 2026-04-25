@@ -68,7 +68,6 @@ These retained docs now declare `Status: exact detail reference` in their tracke
 | `platform/frontend/docs/platform-studio/form-builder-system-fields.md` | System Fields. |
 | `platform/frontend/docs/platform-studio/form-builder-section-tree.md` | Section tree and layout hierarchy. |
 | `platform/frontend/docs/platform-studio/form-builder-slice-1-inspector-and-view-schema.md` | Slice 1 inspector and view schema baseline. |
-| `platform/frontend/docs/platform-studio/form-builder-schema-scope-contract.md` | Root/subform scope contract. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | View settings. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | View settings inspector. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Static lookup naming. |
@@ -76,6 +75,7 @@ These retained docs now declare `Status: exact detail reference` in their tracke
 
 Deleted after extraction: advanced fields, content nodes, checklist subform, field rules, and grid columns were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 Deleted after preset extraction: choice fields, ready-made fields, and `suggest_text` were compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
+Deleted after scope extraction: schema scope was compacted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 
 ## Backend-Facing Supporting Contracts
 

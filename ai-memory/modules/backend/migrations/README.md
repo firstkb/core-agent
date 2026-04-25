@@ -16,7 +16,8 @@ Last compacted: 2026-04-25
 - `ai-memory/modules/domains/schema-and-tenancy/`
 - `platform/backend/docs/contracts/migrations.md`
 - `platform/backend/docs/contracts/schema-tenancy.md`
-- `platform/backend/docs/local-backend-bootstrap.md`
+- `platform/backend/docs/runbooks/local-bootstrap.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
 - `platform/backend/cmd/migrate`
 - `platform/backend/migrations/postgres/**`
 
@@ -27,6 +28,8 @@ Last compacted: 2026-04-25
 - Tenant bundle and forward migrations must remain coherent.
 - Active tenant migrations include `000_tenant_baseline.sql` through `006_platform_studio_static_model_company.sql`.
 - Archive old migrations only when the active migration/bundle policy permits it.
+- Legacy import mapping is reference material under `platform/backend/docs/reference/`, not runtime schema truth.
+- Legacy PostgreSQL SQL under `platform/backend/docs/archive/postgres-archive/**` is documentation archive only, not active migration input.
 
 ## Lessons
 

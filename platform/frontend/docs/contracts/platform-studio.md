@@ -8,6 +8,13 @@ Canonical scope: Platform Studio suite boundary, tool ownership, tenant-web/shar
 This contract defines the Platform Studio suite boundary.
 It intentionally does not expand Form Builder details; current Form Builder behavior lives in `platform/frontend/docs/modules/platform-studio/form-builder.md`.
 
+Read with:
+
+- `platform/frontend/docs/modules/platform-studio/README.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md` for active Form Builder work
+- `platform/frontend/docs/modules/tenant-web.md` for tenant app ownership and placement
+- `platform/backend/docs/contracts/platform-studio-form-builder.md` for backend-owned Form Builder API/storage/runtime apply behavior
+
 ## Core Invariants
 
 - Platform Studio is the tenant-web builder/configuration tool suite.

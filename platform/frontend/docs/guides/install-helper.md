@@ -8,6 +8,12 @@ Canonical scope: current frontend install prompt/runtime guide for admin and ten
 This guide is the active read path for the current install/access helper runtime.
 It is not an offline-first, service-worker, or mobile-app implementation contract.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/modules/tenant-web.md`
+- `platform/frontend/docs/proposals/pwa-offline.md` only for future offline/PWA scope
+
 Future offline/PWA and Flutter/hybrid mobile strategy lives in:
 
 - `platform/frontend/docs/proposals/pwa-offline.md`
@@ -40,9 +46,10 @@ Manifests:
 - `platform/frontend/apps/platform-admin-web/public/manifest.json`
 - `platform/frontend/apps/tenant-web/public/manifest.json`
 
-## Supersedes
+## Compatibility Inputs
 
-This guide supersedes the active-read role of:
+This guide replaces the default read role of this old doc.
+It is a compatibility pointer, not an active read-order doc:
 
 - `platform/frontend/docs/install-helper-runtime.md`
 

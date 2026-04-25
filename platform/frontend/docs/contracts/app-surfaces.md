@@ -9,6 +9,13 @@ This contract answers which frontend app owns each current user-facing runtime s
 
 It does not define package boundaries, tenant shared logic, or future offline/PWA implementation detail.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/package-boundaries.md`
+- `platform/frontend/docs/contracts/tenant-model.md`
+- `platform/frontend/docs/proposals/pwa-offline.md` only for future offline/PWA scope
+
 ## Current Rule
 
 - Current frontend delivery is online web application delivery.

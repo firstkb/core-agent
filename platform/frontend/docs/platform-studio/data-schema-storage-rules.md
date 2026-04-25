@@ -1,5 +1,14 @@
 # Data Schema And Storage Rules
 
+Status: exact detail reference
+Last audited: 2026-04-25
+Read rule: Open only after the active Form Builder module docs, and only when exact payload/settings/history detail is needed.
+Canonical active docs:
+
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md`
+
 ## Purpose
 
 This document captures early rules for how Platform Studio should think about:

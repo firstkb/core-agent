@@ -8,6 +8,11 @@ Canonical scope: backend shared collection table DTOs, query helpers, preference
 This contract defines the backend side of the generic Collection Table model.
 It is separate from Module Registry, Employees, and Tenant List business ownership.
 
+Read with:
+
+- `platform/backend/docs/contracts/admin-control-plane.md`
+- `platform/backend/docs/contracts/admin-module-registry.md`
+
 ## Core Invariants
 
 - Backend Collection Table helpers are shared infrastructure, not a product module.

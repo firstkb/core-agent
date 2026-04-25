@@ -13,5 +13,5 @@ Use the new contract for the active tenant canonical schema boundary.
 
 For legacy-to-canonical import mapping detail, use:
 
-- `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md`
-- `platform/backend/docs/backend-tenant-import-module-boundary-v1.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`

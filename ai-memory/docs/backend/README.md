@@ -13,6 +13,7 @@ Do not mirror the entire `platform/backend/docs` corpus here.
 ## Migrated Runtime Source Docs
 
 - `platform/backend/docs/contracts/runtime-wiring.md`
+- `platform/backend/docs/contracts/events-identity.md`
 - `platform/backend/docs/modules/runtime.md`
 
 ## Migrated Auth Source Docs
@@ -25,6 +26,21 @@ Do not mirror the entire `platform/backend/docs` corpus here.
 
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/contracts/migrations.md`
+
+## Migrated Runbook, Proposal, And Reference Docs
+
+- `platform/backend/docs/runbooks/local-bootstrap.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+- `platform/backend/docs/proposals/kms-signing.md`
+- `platform/backend/docs/proposals/api-gateway-http-api-mapping.md`
+- `platform/backend/docs/proposals/api-gateway-proxy-routing.md`
+- `platform/backend/docs/proposals/events-mails-cleanup.md`
+- `platform/backend/docs/proposals/schema-drift-checks.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
+- `platform/backend/docs/archive/README.md`
+- `platform/backend/docs/archive/postgres-archive/README.md`
 
 ## Migrated Admin Source Docs
 
@@ -62,14 +78,23 @@ Use tracked source docs for deep detail after reading compact memory:
 - `platform/backend/AGENTS.md`
 - `platform/backend/docs/README.md`
 - `platform/backend/docs/contracts/runtime-wiring.md`
+- `platform/backend/docs/contracts/events-identity.md`
 - `platform/backend/docs/modules/runtime.md`
-- `platform/backend/docs/local-backend-bootstrap.md`
+- `platform/backend/docs/runbooks/local-bootstrap.md`
 - `platform/backend/docs/contracts/auth-gateway.md`
 - `platform/backend/docs/contracts/auth-control-schema.md`
 - `platform/backend/docs/modules/auth.md`
-- `platform/backend/docs/auth/auth-key-source-configuration.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/proposals/kms-signing.md`
+- `platform/backend/docs/proposals/api-gateway-http-api-mapping.md`
+- `platform/backend/docs/proposals/api-gateway-proxy-routing.md`
+- `platform/backend/docs/proposals/events-mails-cleanup.md`
+- `platform/backend/docs/proposals/schema-drift-checks.md`
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/contracts/migrations.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
 - `platform/backend/docs/contracts/collection-table.md`
 - `platform/backend/docs/contracts/admin-control-plane.md`
 - `platform/backend/docs/contracts/admin-module-registry.md`
@@ -78,7 +103,8 @@ Use tracked source docs for deep detail after reading compact memory:
 
 Compatibility pointer docs for migrated runtime/auth/schema/admin slices should not be used as first-read docs.
 Legacy MSSQL raw schema files are reference-code material only; read `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening them.
+Legacy PostgreSQL SQL under `platform/backend/docs/archive/postgres-archive/**` is archive/reference material only.
 
 ## Archive Rule
 
-Do not promote old standards, prompt artifacts, proposed gateway plans, or completed refactor plans into active memory unless their durable outcome has not yet been captured elsewhere.
+Do not promote old standards, prompt artifacts, proposed gateway/KMS/schema-drift plans, completed refactor plans, or legacy PostgreSQL SQL into active memory unless their durable outcome has not yet been captured elsewhere.

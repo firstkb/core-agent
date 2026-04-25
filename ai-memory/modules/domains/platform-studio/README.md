@@ -18,13 +18,14 @@ Last compacted: 2026-04-25
 
 ## Owner Sources
 
-- `platform/docs/ai/modules/platform-studio.md`
 - `platform/frontend/docs/contracts/platform-studio.md`
 - `platform/frontend/docs/modules/platform-studio/README.md`
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
 
 ## Fast Facts
 

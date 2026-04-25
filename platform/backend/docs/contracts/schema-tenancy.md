@@ -8,6 +8,13 @@ Canonical scope: master schema, tenant schema, table placement, tenant isolation
 This contract defines the active schema and tenancy boundary.
 It replaces the old split schema baseline docs as the first tracked schema read.
 
+Read with:
+
+- `platform/backend/docs/contracts/migrations.md`
+- `platform/backend/docs/reference/import-field-mapping.md` only for import mapping work
+- `platform/backend/docs/reference/tenant-import-boundary.md` only for future import boundary work
+- `platform/backend/docs/proposals/schema-drift-checks.md` only when drift verification work is activated
+
 ## Core Invariants
 
 - Master DB owns control-plane, routing, auth/session control, admin control, and migration coordination data.
@@ -179,7 +186,7 @@ They do not define the runtime schema directly.
 
 Use import/reference docs for mapping detail:
 
-- `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md`
-- `platform/backend/docs/backend-tenant-import-module-boundary-v1.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
 
 Runtime code targets canonical PostgreSQL schema only.

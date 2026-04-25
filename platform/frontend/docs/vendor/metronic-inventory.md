@@ -1,7 +1,19 @@
 # Metronic Inventory
 
+Status: reference metadata
+Owner: frontend
+Last audited: 2026-04-25
+Canonical scope: Metronic donor inventory and extraction notes only
+
 Inventory and migration tracker for the Metronic donor sources.
 Use `reference-pack:metronic` as the stable alias; the raw pack is local-only under `reference-code/frontend/metronic`.
+
+Read with:
+
+- `docs/ref/reference-code.md`
+- `platform/frontend/docs/vendor/README.md`
+- `platform/frontend/docs/contracts/ui-kit.md` only after a donor extraction task is explicitly activated
+- `platform/frontend/docs/guides/ui-lab.md` only for UI review of extracted product-owned components
 
 ## Decision Rules
 

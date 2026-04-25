@@ -534,3 +534,97 @@ Do not turn it into a task journal.
   - `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
   - `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md`
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+
+### DEC-048 Old Form Builder Exact-Detail Docs Declare Non-Hot Status
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Retained old Form Builder exact-detail docs under `platform/frontend/docs/platform-studio/` keep their historical payload/settings content, but their tracked headers now declare `Status: exact detail reference` and point readers to the active Form Builder module docs first.
+- Sources:
+  - `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
+  - `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`
+  - `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
+  - `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md`
+  - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+
+### DEC-049 Backend Operational, Proposal, And Import Docs Use Target Folders
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Backend operational docs now live under `platform/backend/docs/runbooks/`, future gateway/KMS docs live under `platform/backend/docs/proposals/`, and legacy import mapping/boundary docs live under `platform/backend/docs/reference/`. Old root/auth paths are compatibility pointers.
+- Sources:
+  - `platform/backend/docs/runbooks/local-bootstrap.md`
+  - `platform/backend/docs/runbooks/auth-key-sources.md`
+  - `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+  - `platform/backend/docs/proposals/kms-signing.md`
+  - `platform/backend/docs/proposals/api-gateway-http-api-mapping.md`
+  - `platform/backend/docs/proposals/api-gateway-proxy-routing.md`
+  - `platform/backend/docs/reference/import-field-mapping.md`
+  - `platform/backend/docs/reference/tenant-import-boundary.md`
+
+### DEC-050 Backend Events, Drift, And Historical Docs Use Target Folders
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Backend event actor identity now lives under `platform/backend/docs/contracts/`; events/mail cleanup and schema drift checks live under `platform/backend/docs/proposals/`; completed plans, old standards, and prompt artifacts live under `platform/backend/docs/archive/`. Old root paths are compatibility or archive pointers.
+- Sources:
+  - `platform/backend/docs/contracts/events-identity.md`
+  - `platform/backend/docs/proposals/events-mails-cleanup.md`
+  - `platform/backend/docs/proposals/schema-drift-checks.md`
+  - `platform/backend/docs/archive/README.md`
+
+### DEC-051 Legacy PostgreSQL SQL Is Archive-Only
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Legacy PostgreSQL SQL is archive/reference material only. The payload now lives under `platform/backend/docs/archive/postgres-archive/`, the old `platform/backend/docs/legacy/postgres-archive/README.md` path is a compatibility pointer, and agents must read active schema/migration contracts before opening archived SQL.
+- Sources:
+  - `platform/backend/docs/archive/postgres-archive/README.md`
+  - `platform/backend/docs/legacy/postgres-archive/README.md`
+  - `platform/backend/docs/contracts/migrations.md`
+  - `platform/backend/docs/contracts/schema-tenancy.md`
+
+### DEC-052 Backend Active Docs Use Target-Folder Read Order
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Active backend docs must route readers through target folders: `contracts/`, `modules/`, `runbooks/`, `proposals/`, `reference/`, and `archive/`. Old root backend docs may remain as compatibility pointers, but they must not be described as active read-order or ownership sources.
+- Sources:
+  - `platform/backend/docs/README.md`
+  - `platform/backend/docs/contracts/runtime-wiring.md`
+  - `platform/backend/docs/modules/runtime.md`
+  - `platform/backend/docs/proposals/events-mails-cleanup.md`
+  - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+
+### DEC-053 Frontend Active Docs Use Target-Folder Read Order
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Active frontend docs must route readers through target folders: `contracts/`, `modules/`, `guides/`, `proposals/`, and reference/archive metadata. Old root and `platform-studio/**` docs may remain as compatibility, exact-detail, archive, or reference-only inputs, but they must not be described as active read-order or ownership sources.
+- Sources:
+  - `platform/frontend/docs/README.md`
+  - `platform/frontend/docs/contracts/workspace.md`
+  - `platform/frontend/docs/contracts/ui-kit.md`
+  - `platform/frontend/docs/modules/platform-studio/README.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+
+### DEC-054 FE/BE Indexes And Memory Routes Do Not Promote Old Paths
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Tracked frontend/backend docs indexes and local `ai-memory/index/*` routes must not promote old root docs or old `platform/docs/ai/**` memory as active ownership. Old FE/BE root docs remain compatibility pointers; old platform memory is historical import material behind `ai-memory/durable/legacy-memory-import.md`.
+- Sources:
+  - `platform/frontend/docs/README.md`
+  - `platform/backend/docs/README.md`
+  - `ai-memory/index/memory-index.yaml`
+  - `ai-memory/index/read-routes.yaml`
+  - `ai-memory/durable/canonical-docs.md`

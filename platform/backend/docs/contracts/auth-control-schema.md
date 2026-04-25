@@ -7,6 +7,12 @@ Canonical scope: master auth/control schema and tenant auth-facing user requirem
 
 This contract defines the control-plane tables required by the current auth model.
 
+Read with:
+
+- `platform/backend/docs/contracts/auth-gateway.md`
+- `platform/backend/docs/modules/auth.md`
+- `platform/backend/docs/contracts/schema-tenancy.md`
+
 ## Active Master Auth And Control Tables
 
 - `tenant_auth_policy`

@@ -14,7 +14,8 @@ Last compacted: 2026-04-25
 - `platform/backend/docs/contracts/auth-gateway.md`
 - `platform/backend/docs/contracts/auth-control-schema.md`
 - `platform/backend/docs/modules/auth.md`
-- `platform/backend/docs/auth/auth-key-source-configuration.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/proposals/kms-signing.md`
 - `platform/backend/cmd/auth`
 - `platform/backend/internal/platform/auth`
 
@@ -25,6 +26,7 @@ Last compacted: 2026-04-25
 - Refresh token is cookie-backed.
 - Tenant login identity is resolved through backend tenant context, not frontend-supplied tenant ids.
 - Auth key source behavior must remain explicit and documented.
+- KMS signing is proposal scope and must not be treated as active runtime behavior until implemented.
 - Prefer new contract-first auth docs over old compatibility pointer paths.
 
 ## Lessons

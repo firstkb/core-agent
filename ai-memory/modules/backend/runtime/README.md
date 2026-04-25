@@ -16,7 +16,8 @@ Last compacted: 2026-04-25
 - `platform/backend/README.md`
 - `platform/backend/docs/contracts/runtime-wiring.md`
 - `platform/backend/docs/modules/runtime.md`
-- `platform/docs/ai/platform-contract.md`
+
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
 
 ## Current Runtimes
 

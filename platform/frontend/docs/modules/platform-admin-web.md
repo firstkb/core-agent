@@ -8,6 +8,14 @@ Canonical scope: `platform-admin-web` app shell, admin profile/navigation bootst
 This document defines the current frontend module contract for the admin web app.
 It supersedes the old admin Module Registry backend handoff path.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/auth-runtime.md`
+- `platform/frontend/docs/contracts/collection-table.md`
+- `platform/backend/docs/contracts/admin-control-plane.md`
+- `platform/backend/docs/contracts/admin-module-registry.md`
+
 ## Core Invariants
 
 - `platform-admin-web` is the current admin web application.

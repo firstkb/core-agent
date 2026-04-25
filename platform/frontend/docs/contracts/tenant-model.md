@@ -9,6 +9,13 @@ This contract defines what belongs in `tenant-core` versus the owning app.
 
 It does not define app ownership or future offline/PWA runtime split.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/modules/tenant-web.md`
+- `platform/frontend/docs/proposals/pwa-offline.md` only for future offline/PWA scope
+
 ## `tenant-core` Owns
 
 - current tenant identity

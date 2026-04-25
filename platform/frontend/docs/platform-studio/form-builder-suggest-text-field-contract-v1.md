@@ -1,7 +1,14 @@
 # Suggest Text Field Contract v1
 
-Status: accepted
+Status: exact detail reference
+Historical status: accepted
 Date: 2026-04-15
+Last audited: 2026-04-25
+Read rule: Open only after the active Form Builder module docs, and only when exact payload/settings/history detail is needed.
+Canonical active docs:
+
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
 ## Purpose
 

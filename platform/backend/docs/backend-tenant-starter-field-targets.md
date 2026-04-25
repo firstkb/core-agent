@@ -1,14 +1,19 @@
 # Tenant Starter Field Targets
 
-Status: superseded  
-Date: 2026-04-15
+Status: archive pointer
+Owner: backend
+Last audited: 2026-04-25
+Canonical scope: historical tenant starter field target notes
 
-This document is retained only as historical context for the earlier legacy-prefixed tenant baseline discussion.
+This document moved to archive.
+Do not use this old path as current tenant schema truth.
 
-The active canonical tenant references are now:
+Read instead:
 
-- `backend-tenant-canonical-refactor-contract-v1.md`
-- `backend-tenant-canonical-field-mapping-v1.md`
-- `backend-schema-tenant-baseline.md`
+- `platform/backend/docs/archive/backend-tenant-starter-field-targets.md` for history
+- `platform/backend/docs/contracts/schema-tenancy.md` for current schema truth
+- `platform/backend/docs/reference/import-field-mapping.md` for legacy import mapping
 
-Do not use this file as the source of truth for the current tenant schema.
+Reason:
+
+- The old starter-field target is superseded by canonical schema contracts.

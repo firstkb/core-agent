@@ -8,6 +8,13 @@ Canonical scope: backend-owned Form Builder authoring API, metadata storage, run
 This contract is the backend source of truth for the active Form Builder backend boundary.
 It compacts backend-owned facts from older frontend-owned backend handoff docs and aligns them with current backend code.
 
+Read with:
+
+- `platform/backend/docs/modules/platform-studio/form-builder.md`
+- `platform/backend/docs/contracts/runtime-wiring.md`
+- `platform/backend/docs/contracts/migrations.md`
+- `platform/backend/docs/contracts/schema-tenancy.md`
+
 ## Code Owners
 
 Runtime wiring:
@@ -28,9 +35,10 @@ Frontend contract companion:
 
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 
-## Supersedes
+## Historical Frontend Inputs
 
-This contract supersedes the active-read role of these older frontend docs:
+This contract supersedes the active-read role of these older frontend docs.
+They are compatibility pointers or historical audit inputs, not backend read-order docs:
 
 - `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md`

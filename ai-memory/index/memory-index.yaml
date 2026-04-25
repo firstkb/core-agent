@@ -33,9 +33,9 @@
     - "task spans frontend and backend"
     - "task may update durable product memory"
   canonical_docs:
-    - platform/docs/ai/current-state.md
-    - platform/docs/ai/platform-contract.md
-    - platform/docs/ai/repo-map.md
+    - platform/frontend/docs/README.md
+    - platform/backend/docs/README.md
+    - docs/codex-native-repo.md
   memory_docs:
     - ai-memory/durable/current-state.md
     - ai-memory/durable/platform-contract.md
@@ -52,11 +52,12 @@
   read_when:
     - "task touches login, OTP, refresh, logout, profile bootstrap, navigation bootstrap, JWT, JWKS, auth-core, or api-client"
   canonical_docs:
-    - platform/docs/ai/modules/auth-and-session.md
     - platform/frontend/docs/contracts/auth-runtime.md
     - platform/backend/docs/contracts/auth-gateway.md
     - platform/backend/docs/contracts/auth-control-schema.md
     - platform/backend/docs/modules/auth.md
+    - platform/backend/docs/runbooks/auth-key-sources.md
+    - platform/backend/docs/proposals/kms-signing.md
   memory_docs:
     - ai-memory/modules/domains/auth-and-session/README.md
     - ai-memory/modules/domains/auth-and-session/contract.md
@@ -69,7 +70,7 @@
   domain: frontend-docs
   state: accepted
   confidence: doc-confirmed
-  summary: "Frontend docs are classified through a compact ai-memory map. Read module memory first, then exact tracked docs; avoid metronic/vendor and stale working plans by default."
+  summary: "Frontend docs are classified through a compact ai-memory map. Read module memory first, then target-folder tracked docs; avoid old root/platform-studio docs, Metronic/vendor material, and stale working plans by default."
   read_when:
     - "task asks about frontend docs, frontend documentation reorg, package boundaries, app surfaces, ui-kit docs, or frontend source-doc classification"
     - "task may physically move or rewrite platform/frontend/docs"
@@ -193,7 +194,7 @@
   domain: backend-docs
   state: accepted
   confidence: doc-confirmed
-  summary: "Backend docs are classified through a compact ai-memory map. Read module memory first, then exact tracked docs; avoid legacy archives, old standards, prompts, and completed plans by default."
+  summary: "Backend docs are classified through a compact ai-memory map. Read module memory first, then exact tracked docs; avoid archives, legacy SQL, old standards, prompts, and completed plans by default."
   read_when:
     - "task asks about backend docs, backend documentation reorg, Go/backend source-doc classification, runtime wiring docs, backend auth docs, schema docs, or backend admin docs"
     - "task may physically move or rewrite platform/backend/docs"
@@ -201,12 +202,23 @@
     - platform/backend/AGENTS.md
     - platform/backend/docs/README.md
     - platform/backend/docs/contracts/runtime-wiring.md
+    - platform/backend/docs/contracts/events-identity.md
     - platform/backend/docs/modules/runtime.md
     - platform/backend/docs/contracts/auth-gateway.md
     - platform/backend/docs/contracts/auth-control-schema.md
     - platform/backend/docs/modules/auth.md
     - platform/backend/docs/contracts/schema-tenancy.md
     - platform/backend/docs/contracts/migrations.md
+    - platform/backend/docs/runbooks/local-bootstrap.md
+    - platform/backend/docs/runbooks/auth-key-sources.md
+    - platform/backend/docs/runbooks/db-instance-secret-resolution.md
+    - platform/backend/docs/proposals/kms-signing.md
+    - platform/backend/docs/proposals/api-gateway-http-api-mapping.md
+    - platform/backend/docs/proposals/api-gateway-proxy-routing.md
+    - platform/backend/docs/proposals/events-mails-cleanup.md
+    - platform/backend/docs/proposals/schema-drift-checks.md
+    - platform/backend/docs/reference/import-field-mapping.md
+    - platform/backend/docs/reference/tenant-import-boundary.md
     - platform/backend/docs/contracts/admin-control-plane.md
     - platform/backend/docs/contracts/admin-module-registry.md
     - platform/backend/docs/contracts/platform-studio-form-builder.md
@@ -228,10 +240,12 @@
   read_when:
     - "task touches migrations, tenant DBs, schema baselines, tenant resolution, bundle generation, or provisioning"
   canonical_docs:
-    - platform/docs/ai/modules/schema-and-tenancy.md
     - platform/backend/docs/contracts/schema-tenancy.md
     - platform/backend/docs/contracts/migrations.md
-    - platform/backend/docs/local-backend-bootstrap.md
+    - platform/backend/docs/runbooks/local-bootstrap.md
+    - platform/backend/docs/runbooks/db-instance-secret-resolution.md
+    - platform/backend/docs/reference/import-field-mapping.md
+    - platform/backend/docs/reference/tenant-import-boundary.md
   memory_docs:
     - ai-memory/modules/domains/schema-and-tenancy/README.md
     - ai-memory/modules/domains/schema-and-tenancy/contract.md
@@ -248,7 +262,6 @@
   read_when:
     - "task touches admin navigation, root/non-root behavior, admin grants, tenant onboarding, tenant list, employees, or api-admin composition"
   canonical_docs:
-    - platform/docs/ai/modules/admin-control-plane.md
     - platform/backend/docs/contracts/admin-control-plane.md
     - platform/backend/docs/contracts/admin-module-registry.md
   memory_docs:
@@ -267,7 +280,6 @@
   read_when:
     - "task touches module registry list, module/section management, grants, module registry routes, or module registry admin pages"
   canonical_docs:
-    - platform/docs/ai/modules/admin-module-registry.md
     - platform/backend/docs/contracts/admin-module-registry.md
     - platform/backend/docs/contracts/admin-control-plane.md
     - platform/frontend/docs/contracts/collection-table.md
@@ -288,10 +300,9 @@
   read_when:
     - "task touches @platform/collection-table, table metadata, filters, search, saved filters, favorites, row actions, export, or admin collection surfaces"
   canonical_docs:
-    - platform/docs/ai/modules/collection-table.md
     - platform/frontend/docs/contracts/collection-table.md
     - platform/backend/docs/contracts/collection-table.md
-    - platform/frontend/docs/package-boundaries.md
+    - platform/frontend/docs/contracts/package-boundaries.md
   memory_docs:
     - ai-memory/modules/domains/collection-table/README.md
     - ai-memory/modules/domains/collection-table/contract.md
@@ -310,7 +321,6 @@
     - "task touches Platform Studio as a product suite"
     - "task mentions Navigation Builder, sidebar, Platform Studio access/grants, Action Builder, authored events, PDF Builder, Report Builder, generated documents, or future builder tools"
   canonical_docs:
-    - platform/docs/ai/modules/platform-studio.md
     - platform/frontend/docs/contracts/platform-studio.md
     - platform/frontend/docs/modules/platform-studio/README.md
     - platform/frontend/docs/modules/platform-studio/form-builder.md
@@ -375,7 +385,6 @@
   read_when:
     - "task touches Form Builder, model/view authoring, dataSchema, layoutBlueprint, uiSchema, static models, runtime apply, import/export, form runtime routes, or tenant builder UI"
   canonical_docs:
-    - platform/docs/ai/modules/platform-studio.md
     - platform/frontend/docs/contracts/platform-studio.md
     - platform/frontend/docs/modules/platform-studio/README.md
     - platform/frontend/docs/modules/platform-studio/form-builder.md

@@ -8,6 +8,13 @@ Canonical scope: frontend apps, shared packages, and docs read path
 This contract defines the current frontend workspace shape.
 It is the first tracked doc to read for app/package ownership questions.
 
+Read with:
+
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/contracts/package-boundaries.md`
+- `platform/frontend/docs/contracts/tenant-model.md`
+- `platform/frontend/docs/proposals/pwa-offline.md` only for future offline/PWA scope
+
 ## Current App Strategy
 
 - Current delivery is online web application delivery.
@@ -35,16 +42,17 @@ It is the first tracked doc to read for app/package ownership questions.
 - `platform/frontend/packages/tenant-core`: tenant resolution, tenant context, branding resolution, and tenant permission wiring.
 - `platform/frontend/packages/ui-kit`: stable reusable UI primitives built on top of `design-tokens`.
 
-## Contract Links
+## Read With
 
 - App ownership: `platform/frontend/docs/contracts/app-surfaces.md`
 - Package boundaries: `platform/frontend/docs/contracts/package-boundaries.md`
 - Tenant shared logic: `platform/frontend/docs/contracts/tenant-model.md`
 - Future offline/PWA delivery: `platform/frontend/docs/proposals/pwa-offline.md`
 
-## Compatibility Sources
+## Compatibility Pointers
 
-These root docs are compatibility pointers after the workspace docs rewrite:
+These root docs are compatibility pointers after the workspace docs rewrite.
+They are not part of the active read order:
 
 - `platform/frontend/docs/app-surfaces.md`
 - `platform/frontend/docs/package-boundaries.md`

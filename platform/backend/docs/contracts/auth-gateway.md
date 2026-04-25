@@ -7,6 +7,13 @@ Canonical scope: backend-issued JWT, JWKS, cookie refresh, and API gateway autho
 
 This contract defines the backend auth gateway model used by `cmd/auth`, `cmd/api-tenant`, and `cmd/api-admin`.
 
+Read with:
+
+- `platform/backend/docs/modules/auth.md`
+- `platform/backend/docs/contracts/auth-control-schema.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/proposals/kms-signing.md` only for future KMS signer work
+
 ## Fixed Decisions
 
 - The platform does not use Cognito for backend auth.

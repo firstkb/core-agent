@@ -7,13 +7,21 @@ Canonical scope: master migrations, tenant migrations, tenant bundle, and migrat
 
 This contract defines the active schema source-of-truth boundary.
 
+Read with:
+
+- `platform/backend/docs/contracts/schema-tenancy.md`
+- `platform/backend/docs/runbooks/local-bootstrap.md`
+- `platform/backend/docs/proposals/schema-drift-checks.md` only when drift verification work is activated
+- `platform/backend/docs/archive/postgres-archive/README.md` only for historical PostgreSQL archaeology
+
 ## Core Invariants
 
 - `cmd/migrate` owns schema migration execution.
 - API runtimes must not run schema migrations at startup.
 - Master and tenant migrations are distinct.
 - Tenant bundle generation and tenant forward migrations must stay coherent.
-- Archive migrations are not active runtime input unless explicitly restored through a migration decision.
+- Archive migrations under `migrations/postgres/archive/` are not applied incrementally by the runner, but may remain bundle-generation input when rebuilding `tenant_schema_full.sql`.
+- Historical SQL under `platform/backend/docs/archive/postgres-archive/` is documentation archive only and is not a migration or bundle input.
 
 ## Runtime Owner
 
@@ -37,6 +45,10 @@ Tenant bundle:
 Archive:
 
 - `platform/backend/migrations/postgres/archive/`
+
+Historical SQL archive:
+
+- `platform/backend/docs/archive/postgres-archive/`
 
 ## Active Master Migration Set
 
@@ -124,3 +136,8 @@ Accepted tenant policy:
 
 Legacy MSSQL material is migration/import reference input only.
 It does not define runtime schema directly.
+
+## Legacy PostgreSQL Archive Role
+
+Historical PostgreSQL SQL under `platform/backend/docs/archive/postgres-archive/` is archive/reference material only.
+It does not define runtime schema directly and must not be copied into active migrations without an explicit migration decision.

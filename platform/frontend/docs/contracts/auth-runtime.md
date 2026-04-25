@@ -8,6 +8,13 @@ Canonical scope: frontend auth runtime, cookie refresh, profile bootstrap, and a
 This contract defines how frontend apps integrate with the backend auth runtime.
 It replaces the old frontend auth implementation brief as the active frontend auth contract.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/modules/platform-admin-web.md` for admin bootstrap/navigation context
+- `platform/frontend/docs/modules/tenant-web.md` for tenant bootstrap context
+- `platform/backend/docs/contracts/auth-gateway.md` for backend JWT/JWKS/cookie behavior
+
 ## Core Invariants
 
 - Refresh token is backend-managed and stored only in an `HttpOnly` cookie.

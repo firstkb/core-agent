@@ -7,6 +7,10 @@ Canonical scope: Go backend application composition under `cmd/<app>/internal/se
 
 This contract defines where backend runtime composition, module wiring, and route registration belong.
 
+Read with:
+
+- `platform/backend/docs/modules/runtime.md`
+
 ## Goal
 
 Backend runtime composition must stay explicit, testable, and readable.

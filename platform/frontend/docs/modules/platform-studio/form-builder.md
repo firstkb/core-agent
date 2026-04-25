@@ -8,6 +8,13 @@ Canonical scope: active Form Builder authoring/runtime contract inside Platform 
 This document is the tracked active contract for Form Builder.
 It compacts the current stable truth from the older Form Builder source docs without carrying their working-plan history.
 
+Read with:
+
+- `platform/frontend/docs/contracts/platform-studio.md`
+- `platform/frontend/docs/modules/platform-studio/README.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` for field/catalog/rules/view-settings details
+- `platform/backend/docs/contracts/platform-studio-form-builder.md` for backend-owned API/storage/runtime apply behavior
+
 Detailed field/catalog/rules/view-settings facts live in the supporting contract:
 
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
@@ -17,9 +24,10 @@ Read this after:
 1. `platform/frontend/docs/contracts/platform-studio.md`
 2. `platform/frontend/docs/modules/platform-studio/README.md`
 
-## Compacted Source Docs
+## Compatibility Inputs
 
-This document supersedes the active-read role of:
+This document replaces the default read role of these old docs.
+They are compatibility pointers or historical detail sources, not active read-order docs:
 
 - `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`

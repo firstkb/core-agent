@@ -8,6 +8,12 @@ Canonical scope: frontend local development commands, HTTPS proxy modes, ports, 
 This guide is the active read path for frontend local development workflow.
 It is operational guidance, not a product app ownership contract.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/proposals/pwa-offline.md` only for future offline/PWA scope
+
 Use these docs for product/runtime boundaries:
 
 - `platform/frontend/docs/contracts/workspace.md`

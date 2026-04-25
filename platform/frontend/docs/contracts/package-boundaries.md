@@ -7,6 +7,13 @@ Canonical scope: frontend shared package responsibilities and import rules
 
 This contract defines what may live in frontend packages versus apps.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/contracts/ui-kit.md` for shared UI package promotion
+- `platform/frontend/docs/contracts/platform-studio.md` for Platform Studio shared package boundaries
+
 ## Package Responsibilities
 
 - `design-tokens`: colors, spacing, typography, z-index, and motion tokens; no React code.

@@ -1,38 +1,18 @@
-# Archived migrations
+# Legacy PostgreSQL Archive Pointer
 
-Этот каталог предназначен для **архива старых миграций**, которые:
+Status: archive pointer
+Owner: backend
+Last audited: 2026-04-25
+Canonical scope: compatibility pointer for old historical SQL path
 
-- Уже «запакованы» в golden schema (`bundle/tenant_schema_full.sql`), и
-- Больше не должны выполняться `ApplyAll` на новых деплоях.
+The historical PostgreSQL SQL payload was moved out of this legacy path.
 
-## Правила
+Read instead:
 
-- **Активные** миграции, которые должны применяться ко всем tenant-базам — лежат в `../tenant/`.
-- Когда миграция становится частью bundle и больше не нужна для инкрементального применения:
-  - её можно **вручную** перенести из `../tenant/` в этот каталог,
-  - Runner с `MigrationsDir = src/migrations/postgres/tenant` её больше не увидит.
+- `platform/backend/docs/archive/postgres-archive/README.md`
 
-## Когда архивировать?
+Do not use this old path as an active schema or migration source.
+Current schema truth lives in:
 
-Миграцию можно переместить в архив когда:
-
-1. ✅ Миграция применена ко **всем существующим базам** (проверить через `schema_migrations`)
-2. ✅ Миграция включена в `bundle/tenant_schema_full.sql` (перегенерировать bundle после архивации)
-3. ✅ Нет новых баз, которые ещё не получили эту миграцию
-
-## Процесс архивации (ручной)
-
-```bash
-# 1. Проверить статус миграции во всех базах
-# 2. Переместить файл
-mv src/migrations/postgres/tenant/XXX_migration.sql src/migrations/postgres/archive/
-
-# 3. Перегенерировать bundle
-task schema-bundle
-
-# 4. Закоммитить изменения
-```
-
-**Примечание:** Архивация — ручной процесс. Автоматизация возможна, но требует осторожности.
-
-Файлы здесь служат **историей изменений** схемы, но не участвуют в автоматическом прогоне.
+- `platform/backend/docs/contracts/schema-tenancy.md`
+- `platform/backend/docs/contracts/migrations.md`

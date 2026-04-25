@@ -49,7 +49,7 @@ Compatibility pointers:
 
 | Source | Classification | Read When |
 | --- | --- | --- |
-| `platform/frontend/docs/README.md` | `tracked_index` | Need tracked source index, but prefer this compact map first. |
+| `platform/frontend/docs/README.md` | `tracked_index` | Need tracked source index; old root/platform-studio paths listed there are compatibility-only. |
 | `platform/frontend/docs/app-surfaces.md` | `compatibility_pointer` | Old path; read `contracts/app-surfaces.md` instead. |
 | `platform/frontend/docs/package-boundaries.md` | `compatibility_pointer` | Old path; read `contracts/package-boundaries.md` instead. |
 | `platform/frontend/docs/tenant-model.md` | `compatibility_pointer` | Old path; read `contracts/tenant-model.md` instead. |

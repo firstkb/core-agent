@@ -8,6 +8,13 @@ Canonical scope: future offline/PWA delivery strategy
 This proposal preserves the offline/PWA decision boundary.
 It is not active implementation scope.
 
+Read with:
+
+- `platform/frontend/docs/contracts/workspace.md`
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/modules/tenant-web.md`
+- `platform/frontend/docs/guides/install-helper.md` for current install prompt behavior
+
 ## Current Position
 
 - Current applications are online web applications.

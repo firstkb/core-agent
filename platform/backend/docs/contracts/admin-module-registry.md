@@ -7,6 +7,11 @@ Canonical scope: root-only admin Module Registry, module/section records, grants
 
 This contract defines the current backend Module Registry control-plane domain.
 
+Read with:
+
+- `platform/backend/docs/contracts/admin-control-plane.md`
+- `platform/backend/docs/contracts/collection-table.md`
+
 ## Core Invariants
 
 - Module Registry is an admin API domain only.

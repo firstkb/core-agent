@@ -178,6 +178,28 @@ Current read rule:
 - Prefer the new `contracts/` and `proposals/` paths.
 - Use old root paths only for compatibility with existing links.
 
+### Frontend Active Docs Final Consistency Pass
+
+Tracked docs:
+
+- `platform/frontend/docs/README.md`
+- `platform/frontend/docs/contracts/**`
+- `platform/frontend/docs/modules/**`
+- `platform/frontend/docs/guides/**`
+- `platform/frontend/docs/proposals/**`
+
+Observed state:
+
+- Active frontend docs now use target-folder `Read with` or `Read Order` links.
+- Old root docs and older `platform-studio/**` docs are compatibility, exact-detail, archive, or reference-only inputs.
+- Vendor metadata under `platform/frontend/docs/vendor/**` is reference-only; raw donor material stays behind `reference-pack:*` aliases.
+
+Current read rule:
+
+- Prefer target-folder docs for active frontend work.
+- Open old root or `platform-studio/**` docs only when the target doc explicitly says exact-detail or historical audit is needed.
+- Do not read the whole `platform/frontend/docs/platform-studio/**` tree by default.
+
 ### Install Helper Guide Migrated
 
 Tracked docs:

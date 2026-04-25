@@ -13,10 +13,14 @@ Last compacted: 2026-04-25
 
 ## Owner Sources
 
-- `platform/docs/ai/modules/schema-and-tenancy.md`
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/contracts/migrations.md`
-- `platform/backend/docs/local-backend-bootstrap.md`
+- `platform/backend/docs/runbooks/local-bootstrap.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
+
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
 
 ## Fast Facts
 
@@ -27,3 +31,5 @@ Last compacted: 2026-04-25
 - Tenant-aware tables retain `tenant_id`.
 - Tenant scope must come from trusted runtime context.
 - Active tenant migrations include `000_tenant_baseline.sql` through `006_platform_studio_static_model_company.sql`.
+- Legacy MSSQL/PostgreSQL import mapping is reference material, not runtime schema truth.
+- Legacy PostgreSQL SQL lives under `platform/backend/docs/archive/postgres-archive/**` and should be opened only for explicit archaeology.

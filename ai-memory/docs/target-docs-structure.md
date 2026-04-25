@@ -210,7 +210,7 @@ Move only after durable outcomes are captured:
 - old large backend standard
 - prompt artifacts
 - superseded tenant starter field notes
-- legacy PostgreSQL archive
+- legacy PostgreSQL archive under `platform/backend/docs/archive/postgres-archive/`
 - completed cookie migration plan after final current auth contract is rewritten
 
 ## Reference Code Strategy

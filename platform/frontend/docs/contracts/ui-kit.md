@@ -8,6 +8,12 @@ Canonical scope: frontend UI Kit boundary, promotion rules, stable approval set,
 This contract is the active source for `@platform/ui-kit` governance.
 It compacts the older UI delivery, layout baseline, boundary audit, and stable approval docs into one read path.
 
+Read with:
+
+- `platform/frontend/docs/contracts/package-boundaries.md`
+- `platform/frontend/docs/guides/ui-lab.md`
+- `platform/frontend/docs/proposals/deferred-composed-surfaces.md` only for future workflow-shaped surfaces
+
 ## Code Surfaces
 
 Shared package:
@@ -24,16 +30,17 @@ Tracked companion docs:
 - `platform/frontend/docs/contracts/package-boundaries.md`
 - `platform/frontend/docs/guides/ui-lab.md`
 
-## Supersedes
+## Compatibility Inputs
 
-This contract supersedes the active-read role of:
+This contract replaces the default read role of these old docs.
+They are compatibility or archive pointers, not active read-order docs:
 
 - `platform/frontend/docs/ui-delivery-order.md`
 - `platform/frontend/docs/layout-baseline.md`
 - `platform/frontend/docs/ui-kit-boundary-audit.md`
 - `platform/frontend/docs/ui-kit-stable-approved-audit.md`
 
-It also carries durable foundation and gap-discipline lessons from:
+It also carries durable foundation and gap-discipline lessons from archived history:
 
 - `platform/frontend/docs/foundation-rollout-plan.md`
 - `platform/frontend/docs/phase-e-gap-review.md`

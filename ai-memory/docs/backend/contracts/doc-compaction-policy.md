@@ -36,7 +36,9 @@ Avoid by default:
 - `platform/backend/docs/GO_AGENT_RULES.md`
 - `platform/backend/docs/ramp_v_108_backend_standard_v_2.md`
 - `platform/backend/docs/backend-export-architecture-agent-prompt.md`
+- `platform/backend/docs/archive/**`
 - `platform/backend/docs/legacy/**`
+- `platform/backend/docs/archive/postgres-archive/**`
 - completed refactor plans unless investigating history
 
 ## Rewrite Rules For Later Docs Reorg

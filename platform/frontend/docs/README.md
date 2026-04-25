@@ -26,7 +26,8 @@ Read contract docs first, then module-specific docs, then guides/proposals/refer
 
 ## Current Compatibility Pointers
 
-These old root paths remain as compatibility pointers during the migration:
+These old root/platform-studio paths remain as compatibility pointers during the migration.
+They are not part of the active read order:
 
 - `install-helper-runtime.md`
 - `app-surfaces.md`
@@ -113,3 +114,4 @@ Opt-in only:
 
 Reference and donor material is not product truth and must not be read by default.
 Use `docs/ref/reference-code.md` for stable `reference-pack:*` aliases before opening donor code.
+Future physical docs rewrite should move compact reference metadata under `reference/`; current old donor paths remain reference-only compatibility locations.

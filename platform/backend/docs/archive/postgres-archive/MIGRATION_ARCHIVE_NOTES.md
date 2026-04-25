@@ -1,4 +1,14 @@
-# Архив миграций
+# PostgreSQL Migration Archive Notes
+
+Status: archived historical notes
+Owner: backend
+Last audited: 2026-04-25
+Canonical scope: historical notes for legacy PostgreSQL SQL only
+
+Read `platform/backend/docs/archive/postgres-archive/README.md` before using this file.
+These notes are history, not current migration policy.
+
+## Архив миграций
 
 ## Перемещенные миграции
 

@@ -7,6 +7,11 @@ Canonical scope: admin profile, navigation, section grants, route authorization,
 
 This contract defines the current admin control-plane access model.
 
+Read with:
+
+- `platform/backend/docs/contracts/admin-module-registry.md`
+- `platform/backend/docs/contracts/collection-table.md`
+
 ## Core Invariants
 
 - Admin control-plane APIs live in `cmd/api-admin`.

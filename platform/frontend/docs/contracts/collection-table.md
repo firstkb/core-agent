@@ -8,6 +8,12 @@ Canonical scope: `@platform/collection-table` runtime package, host adapter boun
 This contract defines the current frontend Collection Table model.
 It supersedes the old root collection-table runtime and backend-integration docs.
 
+Read with:
+
+- `platform/frontend/docs/contracts/package-boundaries.md`
+- `platform/frontend/docs/modules/platform-admin-web.md`
+- `platform/backend/docs/contracts/collection-table.md`
+
 ## Core Invariants
 
 - Collection Table is a reusable runtime package, not a screen-specific business module.

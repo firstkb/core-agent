@@ -6,6 +6,14 @@ Last audited: 2026-04-25
 Canonical scope: Form Builder field catalog, palette registry, conditional rules, grid settings, view settings, and scope boundaries
 
 This supporting contract keeps Form Builder field/catalog details out of the main Form Builder module contract.
+
+Read with:
+
+- `platform/frontend/docs/contracts/platform-studio.md`
+- `platform/frontend/docs/modules/platform-studio/README.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md` only when the field detail affects backend validation/storage/runtime apply
+
 Read it only after:
 
 1. `platform/frontend/docs/contracts/platform-studio.md`
@@ -15,9 +23,10 @@ Read it only after:
 It intentionally does not define backend API, storage, SQL view generation, migration policy, or runtime apply behavior.
 Backend-owned facts live in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
-## Compacted Source Docs
+## Compatibility And Exact-Detail Inputs
 
-This document supersedes the default active-read role of these detailed frontend docs:
+This document replaces the default read role of these detailed frontend docs.
+They are exact-detail references, not default read-order docs:
 
 - `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
 - `platform/frontend/docs/platform-studio/form-builder-v2-field-contract.md`
@@ -451,7 +460,8 @@ Rules:
 
 ## Exact Detail Read Path
 
-For exact payload shapes or historical review, open only the specific old detail doc needed:
+For exact payload shapes or historical review, open only the specific old detail doc needed.
+Do not read the whole `platform/frontend/docs/platform-studio/**` tree:
 
 - field catalog and registry: `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
 - specific field settings: `platform/frontend/docs/platform-studio/form-builder-core-data-fields.md`, `platform/frontend/docs/platform-studio/form-builder-choice-fields.md`, `platform/frontend/docs/platform-studio/form-builder-ready-made-fields.md`, or `platform/frontend/docs/platform-studio/form-builder-relationships.md`

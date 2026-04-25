@@ -89,6 +89,7 @@ Avoid unless the task explicitly needs them:
 - `platform/frontend/docs/vendor/**`
 - `reference-code/**`
 - old reference pointer READMEs under `platform/frontend/docs/metronic/`, `platform/frontend/docs/platform-studio/EXTDB/`, `platform/frontend/docs/platform-studio/ezform/`, `platform/frontend/docs/platform-studio/smartapp/`, `platform/frontend/docs/platform-studio/old-code-reference/`, and `platform/backend/docs/MSSQL/`
+- `platform/backend/docs/archive/**`
 - `platform/backend/docs/legacy/**`
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`

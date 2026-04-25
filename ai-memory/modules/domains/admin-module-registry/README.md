@@ -14,11 +14,12 @@ Last compacted: 2026-04-25
 
 ## Owner Sources
 
-- `platform/docs/ai/modules/admin-module-registry.md`
 - `platform/backend/docs/contracts/admin-module-registry.md`
 - `platform/backend/docs/contracts/admin-control-plane.md`
 - `platform/frontend/docs/contracts/collection-table.md`
 - `platform/backend/docs/contracts/collection-table.md`
+
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
 
 ## Fast Facts
 

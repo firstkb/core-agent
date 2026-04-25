@@ -13,12 +13,14 @@ Last compacted: 2026-04-25
 
 ## Owner Sources
 
-- `platform/docs/ai/modules/auth-and-session.md`
 - `platform/frontend/docs/contracts/auth-runtime.md`
 - `platform/backend/docs/contracts/auth-gateway.md`
 - `platform/backend/docs/contracts/auth-control-schema.md`
 - `platform/backend/docs/modules/auth.md`
-- `platform/backend/docs/auth/auth-key-source-configuration.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/proposals/kms-signing.md`
+
+Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; do not open old `platform/docs/ai/**` by default.
 
 ## Fast Facts
 
@@ -30,6 +32,7 @@ Last compacted: 2026-04-25
 - `/app/profile` owns authenticated profile bootstrap.
 - `GET /app/me/navigation` owns admin navigation.
 - Prefer new contract-first auth docs over old compatibility pointer paths.
+- KMS signing remains future proposal scope until implementation lands.
 
 ## Local Read Path
 

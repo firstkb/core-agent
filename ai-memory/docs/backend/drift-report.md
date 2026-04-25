@@ -25,15 +25,19 @@ Use it before treating older backend docs as active runtime truth.
 - `backend-current-to-target-map.md` is now a compatibility pointer. Current memory treats `cmd/worker` as future/deferred, not an active entrypoint.
 - The schema/tenancy slice now stores current schema and migration behavior in `platform/backend/docs/contracts/schema-tenancy.md` and `platform/backend/docs/contracts/migrations.md`.
 - The old migration baseline said only `000_tenant_baseline.sql` was active, but code now has tenant migrations `001..006`; the new migrations contract is the current source for active migration set.
-- `local-backend-bootstrap.md` describes seed rows needed for OTP auth in wording that may imply an identity mirror. Auth boundary docs say auth correctness must not depend on a master user mirror. Verify current seed/code behavior before changing auth.
-- `backend-auth-cookie-migration-plan.md` is a migration plan, not current behavior by itself. Current compact memory says refresh is cookie-backed and access token state is frontend runtime state.
+- `runbooks/local-bootstrap.md` now clarifies that local seed rows do not make master user mirroring the auth source of truth. Verify current seed/code behavior before changing auth.
+- `archive/backend-auth-cookie-migration-plan.md` is migration history, not current behavior. Current compact memory says refresh is cookie-backed and access token state is frontend runtime state.
 - The backend auth slice now stores current auth gateway behavior in `platform/backend/docs/contracts/auth-gateway.md`, auth schema in `platform/backend/docs/contracts/auth-control-schema.md`, and auth module behavior in `platform/backend/docs/modules/auth.md`.
 - The admin control-plane slice now stores current admin access behavior in `platform/backend/docs/contracts/admin-control-plane.md` and Module Registry behavior in `platform/backend/docs/contracts/admin-module-registry.md`.
 - The Collection Table slice now stores backend DTO/helper/preference and endpoint-family behavior in `platform/backend/docs/contracts/collection-table.md`.
 - The backend Form Builder slice now stores backend-owned API/storage/runtime apply truth in `platform/backend/docs/contracts/platform-studio-form-builder.md` and implementation orientation in `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Old frontend backend-facing Form Builder docs are compatibility pointers. Older `publishBuilderDraft` lifecycle wording and `vw_ps_*` storage examples are superseded by current save/runtime-apply and `vw_`/`vg_` naming.
 - `backend-admin-module-registry-brief.md` is still labeled as a planning brief while much of the listed work is already landed. Use compact admin memory for the current state.
-- `auth/auth-kms-implementation-status.md` documents planned KMS work. KMS signing must not be assumed live.
+- `proposals/kms-signing.md` documents planned KMS work. KMS signing must not be assumed live.
+- `proposals/events-mails-cleanup.md` and `proposals/schema-drift-checks.md` are future proposal scope, not active runtime behavior.
+- `contracts/events-identity.md` is the active event actor identity contract.
+- `archive/postgres-archive/**` contains legacy PostgreSQL SQL reference only. Do not read it as current schema or active migration input.
+- Active backend docs now route `Read with`/`Read Order` through target folders. Old root-path docs are compatibility pointers only.
 - Several tracked backend docs contain machine-local markdown links. Do not copy those links into compact memory; repair them during the later physical docs rewrite.
 
 ## Migrated Runtime Slice
@@ -143,6 +147,45 @@ Current read rule:
 - Prefer `modules/platform-studio/form-builder.md` for backend implementation orientation and code-surface mapping.
 - Read it with `platform/frontend/docs/modules/platform-studio/form-builder.md` for cross-stack Form Builder behavior.
 - Use old frontend backend-facing docs only for historical audit detail.
+
+## Migrated Backend Runbooks, Proposals, And Reference Slice
+
+Tracked docs:
+
+- `platform/backend/docs/runbooks/local-bootstrap.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+- `platform/backend/docs/proposals/kms-signing.md`
+- `platform/backend/docs/proposals/api-gateway-http-api-mapping.md`
+- `platform/backend/docs/proposals/api-gateway-proxy-routing.md`
+- `platform/backend/docs/proposals/events-mails-cleanup.md`
+- `platform/backend/docs/proposals/schema-drift-checks.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
+- `platform/backend/docs/contracts/events-identity.md`
+- `platform/backend/docs/archive/README.md`
+- `platform/backend/docs/archive/postgres-archive/README.md`
+
+Observed state:
+
+- Old root/auth paths for these docs are compatibility pointers.
+- Operational docs moved under `runbooks/`.
+- Gateway and KMS work moved under `proposals/`.
+- Events/mail cleanup and schema drift verification moved under `proposals/`.
+- Legacy import mapping and import module boundary moved under `reference/`.
+- Event actor identity moved under `contracts/`.
+- Historical plans, prompts, and old standards moved under `archive/`.
+- Legacy PostgreSQL SQL moved behind `archive/postgres-archive/README.md`; the old `legacy/postgres-archive/README.md` path is a pointer.
+
+Current read rule:
+
+- Prefer runbooks for local operations and key/DB secret setup.
+- Prefer proposals only when the owner activates gateway, KMS, events/mail cleanup, or schema drift work.
+- Prefer reference docs only for import/migration archaeology; runtime schema truth remains `contracts/schema-tenancy.md`.
+- Prefer `archive/postgres-archive/README.md` before opening any legacy PostgreSQL SQL payload.
+- Treat old root-path docs mentioned in `platform/backend/docs/README.md` as compatibility pointers, not active ownership docs.
+- Prefer `contracts/events-identity.md` for event actor identity work.
+- Prefer `archive/README.md` before opening historical backend standards, prompts, or completed plans.
 
 ## Resolution Policy
 

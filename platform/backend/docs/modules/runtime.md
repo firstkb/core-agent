@@ -8,6 +8,12 @@ Canonical scope: current backend runtime shape and foundation boundaries
 This module doc defines the current backend runtime shape.
 Use it before opening older restructuring plans.
 
+Read with:
+
+- `platform/backend/docs/contracts/runtime-wiring.md`
+- `platform/backend/docs/contracts/migrations.md`
+- `platform/backend/docs/contracts/auth-gateway.md`
+
 ## Current Backend Shape
 
 - Backend is a modular monolith with multiple runtime entrypoints.
@@ -122,9 +128,10 @@ Do not create new root `internal/*` business packages.
 - Master DB owns control-plane and routing/auth-related data.
 - Tenant DBs own tenant application data.
 
-## Compatibility Sources
+## Compatibility Pointers
 
-These root docs are compatibility pointers after the backend runtime docs rewrite:
+These root docs are compatibility pointers after the backend runtime docs rewrite.
+They are not part of the active read order:
 
 - `platform/backend/docs/backend-current-to-target-map.md`
 - `platform/backend/docs/backend-module-wiring-standard.md`

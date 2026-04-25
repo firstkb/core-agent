@@ -7,6 +7,12 @@ Canonical scope: backend auth module behavior, tenant resolution, OTP, refresh, 
 
 This module doc defines the accepted backend auth boundary.
 
+Read with:
+
+- `platform/backend/docs/contracts/auth-gateway.md`
+- `platform/backend/docs/contracts/auth-control-schema.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+
 ## Current Model
 
 Accepted tenant auth model:

@@ -8,6 +8,12 @@ Canonical scope: deferred workflow-shaped frontend surfaces that must not be pro
 This proposal captures larger frontend surfaces that may matter later, but are not active implementation scope.
 They must not reopen the UI foundation rollout, add default UI Lab top-level sections, or move screen-shaped workflows into `@platform/ui-kit`.
 
+Read with:
+
+- `platform/frontend/docs/contracts/ui-kit.md`
+- `platform/frontend/docs/guides/ui-lab.md`
+- `platform/frontend/docs/contracts/package-boundaries.md`
+
 Authoritative active boundaries:
 
 - `platform/frontend/docs/contracts/ui-kit.md`

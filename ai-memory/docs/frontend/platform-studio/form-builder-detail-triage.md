@@ -12,6 +12,7 @@ Scope:
 This file decides how AI agents should treat old Form Builder detail and workstream docs after the compact tracked docs landed.
 Archive and future workstream files listed below have been physically rewritten as short pointer stubs.
 Exact-detail reference files remain intact for payload/settings audit.
+Retained exact-detail reference files now declare `Status: exact detail reference` in their tracked headers.
 
 ## Active Read Path
 
@@ -65,6 +66,7 @@ Do not read them by default.
 ## Exact Detail References
 
 These docs may still be useful for exact settings or historical payload details.
+Their tracked headers declare `Status: exact detail reference`.
 Read the compact supporting contract first:
 
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`

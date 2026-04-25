@@ -1,11 +1,18 @@
 # Backend Export Architecture Agent Prompt
 
-Status: archived prompt reference
+Status: archive pointer
+Owner: backend
+Last audited: 2026-04-25
+Canonical scope: historical backend export architecture prompt
 
-This file used to contain a one-off working prompt for backend export architecture work.
-The historical prompt text was moved to:
+This document moved to archive.
+Do not use this old path as backend architecture truth.
 
-- `platform/docs/archive/agent-prompts/backend-export-architecture-agent-prompt.md`
+Read instead:
 
-Use the archived prompt only when you explicitly need legacy prompt wording.
-Do not treat it as current backend architecture truth.
+- `platform/backend/docs/archive/backend-export-architecture-agent-prompt.md` for history
+- `platform/backend/docs/README.md` for current backend docs orientation
+
+Reason:
+
+- Prompt artifacts are not runtime/product source of truth.

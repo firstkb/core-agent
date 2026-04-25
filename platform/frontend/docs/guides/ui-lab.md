@@ -12,6 +12,12 @@ UI Lab is a review and documentation surface for frontend foundations.
 It is not the product shell, not a second product app, and not the approval source for `ui-kit` promotion.
 Use `platform/frontend/docs/contracts/ui-kit.md` for UI Kit approval boundaries.
 
+Read with:
+
+- `platform/frontend/docs/contracts/ui-kit.md`
+- `platform/frontend/docs/contracts/package-boundaries.md`
+- `platform/frontend/docs/proposals/deferred-composed-surfaces.md` only for future workflow-shaped surfaces
+
 ## Code Surfaces
 
 Runtime route:
@@ -31,14 +37,15 @@ Primary package under review:
 - `platform/frontend/packages/ui-kit`
 - `platform/frontend/packages/design-tokens`
 
-## Supersedes
+## Compatibility Inputs
 
-This guide supersedes the active-read role of:
+This guide replaces the default read role of these old docs.
+They are compatibility or archive pointers, not active read-order docs:
 
 - `platform/frontend/docs/ui-lab-structure.md`
 - `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
 
-It also carries durable review-surface lessons from:
+It also carries durable review-surface lessons from archived history:
 
 - `platform/frontend/docs/foundation-rollout-plan.md`
 - `platform/frontend/docs/phase-e-gap-review.md`

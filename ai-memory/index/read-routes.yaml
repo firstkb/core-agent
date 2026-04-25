@@ -14,10 +14,12 @@ default:
     - platform/frontend/docs/platform-studio/old-code-reference/**
     - platform/backend/docs/MSSQL/**
     - reference-code/**
+    - platform/backend/docs/archive/**
     - platform/backend/docs/legacy/**
+    - platform/backend/migrations/postgres/archive/**
     - ai-memory/reference-code/packs/**
     - platform/docs/archive/**
-    - platform/docs/ai/runs/**
+    - platform/docs/ai/**
 
 routes:
   auth:

@@ -74,6 +74,7 @@ These old suite-level and Form Builder paths should not be used as active entryp
 
 Read `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` first.
 Open these old detailed docs only when the compact supporting contract is not enough for exact payload or historical audit detail.
+These retained docs now declare `Status: exact detail reference` in their tracked headers.
 
 | Source | Feature Area |
 | --- | --- |
@@ -96,10 +97,7 @@ Open these old detailed docs only when the compact supporting contract is not en
 | `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | Grid/list columns. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md` | View settings. |
 | `platform/frontend/docs/platform-studio/form-builder-view-settings-inspector-contract.md` | View settings inspector. |
-| `platform/frontend/docs/platform-studio/form-builder-multivalue-storage-contract.md` | Multivalue storage. |
 | `platform/frontend/docs/platform-studio/form-builder-suggest-text-field-contract-v1.md` | `suggest_text` field contract. |
-| `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md` | Rich text editor slice. |
-| `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md` | Schema cleanup and compatibility. |
 | `platform/frontend/docs/platform-studio/form-builder-static-lookup-naming-policy-v1.md` | Static lookup naming. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md` | Static model integration direction. |
 
@@ -124,6 +122,7 @@ The listed future proposal files are pointer stubs; use git history only for exa
 | `platform/frontend/docs/platform-studio/form-builder-implementation-backlog.md` | `future_proposal`; rewrite before implementation. |
 | `platform/frontend/docs/platform-studio/form-builder-multivalue-storage-contract.md` | `future_proposal`; backend-facing storage direction needs implementation/code verification. |
 | `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md` | `future_proposal`; compatibility cleanup proposal, not current contract. |
+| `platform/frontend/docs/platform-studio/form-builder-rich-text-editor-workstream-contract.md` | `future_proposal`; rich text work must be rewritten before implementation. |
 | `platform/frontend/docs/platform-studio/form-builder-approved-frontend-workstream-plan.md` | `archive_candidate`; durable outcomes compacted. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md` | `archive_candidate`; execution history. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md` | `archive_candidate`; draft detail. |

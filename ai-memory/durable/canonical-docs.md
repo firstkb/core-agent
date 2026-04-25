@@ -41,20 +41,24 @@ Local reference-code policy:
 
 ## Product Shared Memory
 
-Canonical tracked owner surfaces:
+Local compact owner surfaces:
 
-- `platform/docs/ai/current-state.md`
-- `platform/docs/ai/platform-contract.md`
-- `platform/docs/ai/repo-map.md`
-- `platform/docs/ai/decisions-log.md`
-- `platform/docs/ai/module-index.md`
-- `platform/docs/ai/canonical-docs.md`
-- `platform/docs/ai/modules/*.md`
-- `platform/docs/ai/markdown-governance.md`
+- `ai-memory/durable/current-state.md`
+- `ai-memory/durable/platform-contract.md`
+- `ai-memory/durable/module-index.md`
+- `ai-memory/durable/decisions-log.md`
+- `ai-memory/durable/repo-map.md`
+- `ai-memory/durable/canonical-docs.md`
+- `ai-memory/modules/domains/**`
+- `ai-memory/modules/frontend/**`
+- `ai-memory/modules/backend/**`
 
-Local compact import/audit surface:
+Historical import/audit surface:
 
 - `ai-memory/durable/legacy-memory-import.md`
+
+Old `platform/docs/ai/**` memory is historical import material only.
+It is not the active canonical owner surface after the local memory rewrite.
 
 Local docs rewrite planning surface:
 
@@ -88,27 +92,42 @@ Workspace/runtime:
 - `platform/backend/README.md`
 - `platform/backend/docs/README.md`
 - `platform/backend/docs/contracts/runtime-wiring.md`
+- `platform/backend/docs/contracts/events-identity.md`
 - `platform/backend/docs/modules/runtime.md`
-- `platform/backend/docs/local-backend-bootstrap.md`
+- `platform/backend/docs/runbooks/local-bootstrap.md`
 
 Auth:
 
 - `platform/backend/docs/contracts/auth-gateway.md`
 - `platform/backend/docs/contracts/auth-control-schema.md`
 - `platform/backend/docs/modules/auth.md`
-- `platform/backend/docs/auth/auth-key-source-configuration.md`
+- `platform/backend/docs/runbooks/auth-key-sources.md`
+- `platform/backend/docs/proposals/kms-signing.md`
 
 Admin:
 
 - `platform/backend/docs/contracts/admin-control-plane.md`
 - `platform/backend/docs/contracts/admin-module-registry.md`
 
+Gateway proposals:
+
+- `platform/backend/docs/proposals/api-gateway-http-api-mapping.md`
+- `platform/backend/docs/proposals/api-gateway-proxy-routing.md`
+- `platform/backend/docs/proposals/events-mails-cleanup.md`
+
 Schema/tenancy:
 
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/contracts/migrations.md`
-- `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md`
-- `platform/backend/docs/backend-tenant-import-module-boundary-v1.md`
+- `platform/backend/docs/runbooks/db-instance-secret-resolution.md`
+- `platform/backend/docs/proposals/schema-drift-checks.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
+
+Backend archive:
+
+- `platform/backend/docs/archive/README.md`
+- `platform/backend/docs/archive/postgres-archive/README.md`
 
 Platform Studio:
 
@@ -190,5 +209,6 @@ Historical / opt-in:
 - old reference pointer READMEs under `platform/frontend/docs/metronic/`, `platform/frontend/docs/platform-studio/EXTDB/`, `platform/frontend/docs/platform-studio/ezform/`, `platform/frontend/docs/platform-studio/smartapp/`, `platform/frontend/docs/platform-studio/old-code-reference/`, and `platform/backend/docs/MSSQL/`
 - `ai-memory/docs/frontend/archive/archive-candidates.md`
 - `ai-memory/docs/backend/archive/archive-candidates.md`
+- `platform/backend/docs/archive/postgres-archive/**`
 - `platform/backend/docs/legacy/**`
 - `platform/docs/archive/**`

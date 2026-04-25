@@ -141,10 +141,10 @@ They are not product truth and should not be read by default.
 
 | Source | Role |
 | --- | --- |
-| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference-pack:extdb-legacy`; legacy product source/reference for old field ids, page settings, templates, filters, import/PDF/report behaviors. |
-| `platform/frontend/docs/platform-studio/ezform/**` | `reference-pack:ezform-prototype`; donor authoring-shell reference. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | `reference-pack:smartapp-runtime`; donor/runtime reference for old field rendering and runtime behavior. |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference-pack:old-builder-reference`; historical old builder code reference. |
+| `reference-pack:extdb-legacy` | Legacy product source/reference for old field ids, page settings, templates, filters, import/PDF/report behaviors. |
+| `reference-pack:ezform-prototype` | Donor authoring-shell reference. |
+| `reference-pack:smartapp-runtime` | Donor/runtime reference for old field rendering and runtime behavior. |
+| `reference-pack:old-builder-reference` | Historical old builder code reference. |
 | `platform/frontend/docs/platform-studio/ezform-analysis.md` | Donor analysis; durable lessons should be compacted before implementation. |
 
 Alias registry:

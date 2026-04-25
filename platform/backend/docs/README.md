@@ -141,8 +141,8 @@ Archive compatibility pointer, not active read-order doc:
 Old root compatibility/archive pointer files were deleted after compaction.
 Only the legacy PostgreSQL path remains as a narrow compatibility pointer.
 
-Legacy MSSQL schema files under `MSSQL/**` are reference-code material only.
-Use `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening them.
+Legacy MSSQL schema material is reference-code only.
+Use `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening the local-only raw pack.
 
 Legacy PostgreSQL SQL under `archive/postgres-archive/**` is historical archive/reference only.
 It is not an active migration source.

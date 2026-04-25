@@ -29,7 +29,7 @@ Current progress:
 - Platform Studio supporting field/catalog slice landed with Form Builder field catalog, palette registry, rules, grid/view settings, and scope boundaries compacted into an active supporting module doc.
 - Remaining Form Builder detail triage landed as a local classification map for deleted compatibility pointers, exact-detail references, future proposals, archive candidates, and reference-only donor material.
 - Reference-code alias registry and relocation plan landed for Metronic, EXTDB, ezform, smartapp, old builder snapshots, and legacy MSSQL raw packs.
-- Raw reference-code relocation landed: raw packs moved to ignored `reference-code/`; old tracked paths now contain pointer READMEs.
+- Raw reference-code relocation landed: raw packs moved to ignored `reference-code/`; old tracked pointer README folders were later deleted.
 - Reference-code relocation checkpoint landed as a local review artifact.
 - Old Form Builder archive/future workstream pointer stubs were deleted; retained exact-detail reference docs remain for payload/settings audit.
 - Retained old Form Builder exact-detail reference docs received explicit tracked headers and read rules.
@@ -103,7 +103,7 @@ Current progress:
 | `platform/frontend/docs/foundation-rollout-plan.md` | deleted archive pointer | UI Kit/UI Lab active docs | git history | delete | Landed: durable foundation baseline and review lessons compacted into active docs. | Exact old text is git-history only. |
 | `platform/frontend/docs/phase-e-gap-review.md` | deleted archive pointer | UI Kit/UI Lab active docs | git history | delete | Landed: durable gap-discipline and promotion lessons compacted into active docs. | Exact old text is git-history only. |
 | `platform/frontend/docs/vendor/**` | vendor reference | reference metadata | `platform/frontend/docs/reference/vendor/README.md` | reference | Vendor inventory should be opt-in reference. | License/origin metadata required. |
-| `platform/frontend/docs/metronic/**` | reference pointer | external/local reference pack | `docs/ref/reference-code.md` + `reference-code/frontend/metronic/` | reference | Metronic is donor material, not product truth. | Landed: old path contains pointer README only. |
+| `platform/frontend/docs/metronic/**` | deleted reference pointer | external/local reference pack | `docs/ref/reference-code.md` + `reference-code/frontend/metronic/` | delete | Metronic is donor material, not product truth. | Landed: old pointer path deleted; use alias only. |
 
 ## Frontend Platform Studio Docs
 
@@ -171,9 +171,9 @@ Current progress:
 | `platform/frontend/docs/platform-studio/promt-continue.md` | deleted archive pointer | git-history provenance | git history | delete | Prompt artifacts are not product truth. | Exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/promt-continue-short.md` | deleted archive pointer | git-history provenance | git history | delete | Prompt artifacts are not product truth. | Exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-atlas-task-v1.md` | deleted archive pointer | git-history provenance | git history | delete | Task prompt is not product truth. | Exact old text is git-history only. |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/old-builder-reference/` | reference | Old code is opt-in reference only. | Landed: old path contains pointer README only. |
-| `platform/frontend/docs/platform-studio/ezform/**` | reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/ezform/` | reference | Donor material is not active product truth. | Landed: old path contains pointer README only. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/smartapp/` | reference | Donor material is not active product truth. | Landed: old path contains pointer README only. |
+| `platform/frontend/docs/platform-studio/old-code-reference/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/old-builder-reference/` | delete | Old code is opt-in reference only. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/ezform/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/ezform/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/smartapp/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/smartapp/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
 
 ## Reference Code Relocation
 
@@ -188,12 +188,12 @@ Local relocation/control docs:
 
 | old_path | pack_alias | target_path | action | reason | risk/blocker |
 | --- | --- | --- | --- | --- | --- |
-| `platform/frontend/docs/metronic/**` | `reference-pack:metronic` | `reference-code/frontend/metronic/` | reference | Large frontend donor pack should not live in active docs. | Landed: old path contains pointer README only. |
-| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | reference | Legacy behavior source is opt-in archaeology, not active docs. | Landed: old path contains pointer README only. |
-| `platform/frontend/docs/platform-studio/ezform/**` | `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | reference | Prototype is interaction reference only. | Keep `ezform-analysis.md` as compact analysis or archive/reference pointer. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | reference | Runtime donor code is not current architecture. | Landed: old path contains pointer README only. |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | reference | Historical old builder code should be opt-in. | Landed: old path contains pointer README only. |
-| `platform/backend/docs/MSSQL/**` | `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | reference | Legacy MSSQL schema is import/reference material, not active backend schema. | Keep import mapping docs compact and active. |
+| `platform/frontend/docs/metronic/**` | `reference-pack:metronic` | `reference-code/frontend/metronic/` | delete | Large frontend donor pack should not live in active docs. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | delete | Legacy behavior source is opt-in archaeology, not active docs. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/ezform/**` | `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | delete | Prototype is interaction reference only. | Landed: old pointer path deleted; keep `ezform-analysis.md` as compact analysis. |
+| `platform/frontend/docs/platform-studio/smartapp/**` | `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | delete | Runtime donor code is not current architecture. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | delete | Historical old builder code should be opt-in. | Landed: old pointer path deleted; use alias only. |
+| `platform/backend/docs/MSSQL/**` | `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | delete | Legacy MSSQL schema is import/reference material, not active backend schema. | Landed: old pointer path deleted; keep import mapping docs compact and active. |
 
 ## Backend Docs
 
@@ -260,7 +260,7 @@ Local relocation/control docs:
 17. Platform Studio supporting field/catalog slice: landed with `modules/platform-studio/form-builder-fields.md`.
 18. Remaining Form Builder detail triage: landed in `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`.
 19. Reference-code alias/relocation planning: landed with `docs/ref/reference-code.md`, `ai-memory/reference-code/packs-index.md`, and `ai-memory/reference-code/relocation-plan.md`.
-20. Physical reference-code relocation: landed with ignored `reference-code/` raw packs and pointer READMEs in old tracked paths.
+20. Physical reference-code relocation: landed with ignored `reference-code/` raw packs; old pointer README folders were later deleted.
 21. Physical pointer/archive rewrite for old Form Builder docs: landed for archive and future workstream files; retained exact-detail reference docs remain for payload/settings audit.
 22. Exact-detail Form Builder docs header pass: landed; retained detail files declare `Status: exact detail reference`.
 23. Form Builder exact-detail consolidation audit: landed; extraction waves later deleted 9 extracted detail docs.
@@ -282,6 +282,7 @@ Local relocation/control docs:
 38. Final `platform/docs/ai/**` pointer-directory deletion: landed; remaining compatibility pointer files were removed after active reference checks. Provenance now uses `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 39. Pointer cleanup: landed for `ai-memory/AGENTS.override.md`, old FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording; active docs/maps now point directly to canonical contracts/modules and exact old text is git-history only.
 40. Form Builder retained exact-detail policy and docs/memory score audit: landed with 14 policy-kept exact-detail references, 0 extraction backlog, and 96/100 readiness score.
+41. Reference pointer README deletion and automated drift check: landed with old reference-code pointer folders deleted and `scripts/ai/docs_memory_check.py --check` as the local docs/memory verification gate.
 
 ## Current Blockers Before Physical Move
 

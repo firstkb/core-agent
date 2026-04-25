@@ -17,7 +17,7 @@ Read policy:
 Local files:
 
 - `ai-memory/reference-code/packs-index.md`: alias-to-path mapping and metadata checklist.
-- `ai-memory/reference-code/relocation-plan.md`: physical move plan for raw packs currently stored in active docs paths.
+- `ai-memory/reference-code/relocation-plan.md`: physical move plan for raw packs formerly stored in active docs paths.
 - `ai-memory/reference-code/relocation-checkpoint.md`: landed review checkpoint for the physical relocation.
 
 Current registered aliases:
@@ -34,4 +34,4 @@ Raw-pack path after relocation:
 - `reference-code/<domain>/<pack>/`
 
 Raw packs are local-only under `reference-code/`.
-Old tracked docs paths contain compatibility pointer READMEs.
+Old tracked docs pointer README paths were deleted; use aliases only.

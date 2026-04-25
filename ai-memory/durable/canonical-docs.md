@@ -228,7 +228,6 @@ Historical / opt-in:
 
 - `platform/frontend/docs/vendor/**`
 - `reference-code/**`
-- old reference pointer READMEs under `platform/frontend/docs/metronic/`, `platform/frontend/docs/platform-studio/EXTDB/`, `platform/frontend/docs/platform-studio/ezform/`, `platform/frontend/docs/platform-studio/smartapp/`, `platform/frontend/docs/platform-studio/old-code-reference/`, and `platform/backend/docs/MSSQL/`
 - `ai-memory/docs/frontend/archive/archive-candidates.md`
 - `ai-memory/docs/backend/archive/archive-candidates.md`
 - `platform/backend/docs/archive/postgres-archive/**`

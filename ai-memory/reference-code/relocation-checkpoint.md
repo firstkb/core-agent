@@ -8,19 +8,19 @@ It is a review artifact for AI memory maintenance and should not become a tracke
 
 ## Scope
 
-| Alias | Old tracked pointer path | Local raw-pack path | Approximate size |
-| --- | --- | --- | ---: |
-| `reference-pack:metronic` | `platform/frontend/docs/metronic/README.md` | `reference-code/frontend/metronic/` | 188M |
-| `reference-pack:extdb-legacy` | `platform/frontend/docs/platform-studio/EXTDB/README.md` | `reference-code/platform-studio/extdb/` | 1.4M |
-| `reference-pack:ezform-prototype` | `platform/frontend/docs/platform-studio/ezform/README.md` | `reference-code/platform-studio/ezform/` | 292K |
-| `reference-pack:smartapp-runtime` | `platform/frontend/docs/platform-studio/smartapp/README.md` | `reference-code/platform-studio/smartapp/` | 4.9M |
-| `reference-pack:old-builder-reference` | `platform/frontend/docs/platform-studio/old-code-reference/README.md` | `reference-code/platform-studio/old-builder-reference/` | 92K |
-| `reference-pack:mssql-legacy-schema` | `platform/backend/docs/MSSQL/README.md` | `reference-code/backend/mssql-legacy-schema/` | 56K |
+| Alias | Local raw-pack path | Approximate size |
+| --- | --- | ---: |
+| `reference-pack:metronic` | `reference-code/frontend/metronic/` | 188M |
+| `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | 1.4M |
+| `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | 292K |
+| `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | 4.9M |
+| `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | 92K |
+| `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | 56K |
 
 ## Review Result
 
 - `reference-code/` is ignored by `.gitignore`.
-- Old raw-pack locations contain only pointer `README.md` files.
+- Old raw-pack pointer README files were deleted from tracked docs paths.
 - Six local raw-pack metadata files exist as `REFERENCE-PACK.md`.
 - `docs/ref/reference-code.md` is the tracked alias registry.
 - `ai-memory/reference-code/packs-index.md` marks all six packs as `raw_local_only`.
@@ -40,7 +40,7 @@ It is a review artifact for AI memory maintenance and should not become a tracke
 Expected tracked changes include:
 
 - Large deletion set for raw donor/vendor/reference files removed from old docs paths.
-- New or modified pointer READMEs at old raw-pack paths.
+- Deleted pointer README files at old raw-pack paths.
 - `reference-code/` ignored locally, so raw packs are not staged or committed from this repo.
 
 Do not treat the raw deletion count as data loss before checking:
@@ -54,4 +54,4 @@ Do not treat the raw deletion count as data loss before checking:
 - Raw pack licensing and allowed-use metadata still need owner-level review before reusing code or assets.
 - Raw packs are local-only and must be backed up or synchronized through the owner's separate private reference-code workflow.
 - Agents should not infer product behavior directly from raw packs; durable findings must be distilled into active tracked docs or module memory first.
-- The old raw-pack pointer paths are compatibility anchors only, not product documentation.
+- Old raw-pack pointer paths are not compatibility anchors; use `docs/ref/reference-code.md` and `reference-pack:*` aliases.

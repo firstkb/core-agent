@@ -819,3 +819,16 @@ Do not turn it into a task journal.
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
   - `platform/frontend/docs/modules/platform-studio/form-builder.md`
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+
+### DEC-069 Reference Pointer Dirs Deleted And Docs Memory Check Added
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Old reference-code pointer README folders under `platform/frontend/docs/**` and `platform/backend/docs/**` are deleted instead of retained as compatibility shells. Tracked docs must use `reference-pack:*` aliases plus `docs/ref/reference-code.md`; raw packs remain local-only under `reference-code/**`. Docs/memory drift is now checked by `scripts/ai/docs_memory_check.py --check`.
+- Sources:
+  - `docs/ref/reference-code.md`
+  - `ai-memory/reference-code/packs-index.md`
+  - `ai-memory/reference-code/relocation-checkpoint.md`
+  - `scripts/ai/docs_memory_check.py`
+  - `ai-memory/docs/docs-memory-score-audit.md`

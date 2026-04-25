@@ -62,6 +62,7 @@ Use `ai-memory/` by role:
   - `scripts/ai/new-run.py`
   - `scripts/ai/new-run.sh`
   - `scripts/ai/automation_versions.py`
+  - `scripts/ai/docs_memory_check.py`
 - archive / historical context:
   - `ai-memory/durable/legacy-memory-import.md`
   - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
@@ -232,6 +233,7 @@ Update `ai-memory/atlas/automation-changelog.md` when:
 - the scaffolder behavior changes materially
 
 Update tracked FE/BE docs when code changes the canonical contract itself.
+Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
 
 ## Long-task support
 

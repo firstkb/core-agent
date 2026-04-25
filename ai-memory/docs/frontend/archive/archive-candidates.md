@@ -29,7 +29,7 @@ only.
 ## Reference And Donor Material
 
 - `platform/frontend/docs/vendor/**`
-- `platform/frontend/docs/metronic/**`
+- `reference-pack:metronic`
 
 ## Platform Studio Archive Candidates
 

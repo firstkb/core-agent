@@ -14,9 +14,13 @@ Read with:
 - `platform/frontend/docs/contracts/ui-kit.md` only after a donor extraction task is explicitly activated
 - `platform/frontend/docs/guides/ui-lab.md` only for UI review of extracted product-owned components
 
-Current vendor source:
+Current vendor source alias:
 
-- `metronic/`
+- `reference-pack:metronic`
+
+Local raw-pack location:
+
+- `reference-code/frontend/metronic/`
 
 Current inventory file:
 

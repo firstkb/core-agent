@@ -23,12 +23,8 @@ Read order:
 
 ## Default Avoid Set
 
-- `platform/frontend/docs/metronic/**`
 - `platform/frontend/docs/vendor/**`
-- `platform/frontend/docs/platform-studio/EXTDB/**`
-- `platform/frontend/docs/platform-studio/old-code-reference/**`
-- `platform/frontend/docs/platform-studio/ezform/**`
-- `platform/frontend/docs/platform-studio/smartapp/**`
+- `reference-code/**`
 - prompt files and one-off workstream prompts
 
 ## Workspace And Package Boundaries
@@ -131,11 +127,11 @@ deleting or further compacting them.
 | Source | Classification | Handling |
 | --- | --- | --- |
 | `platform/frontend/docs/vendor/**` | `reference_only` | Vendor inventory and extraction notes only. |
-| `platform/frontend/docs/metronic/**` | `reference_only` | Large donor source; use `reference-pack:metronic`; never default context. |
-| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference_only` | Legacy behavior source; use `reference-pack:extdb-legacy`; never default context. |
-| `platform/frontend/docs/platform-studio/ezform/**` | `reference_only` | Prototype interaction reference; use `reference-pack:ezform-prototype`; never default context. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | `reference_only` | Runtime donor reference; use `reference-pack:smartapp-runtime`; never default context. |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference_only` | Historical old builder reference; use `reference-pack:old-builder-reference`; never default context. |
+| `reference-pack:metronic` | `reference_only` | Large donor source under local `reference-code/frontend/metronic/`; never default context. |
+| `reference-pack:extdb-legacy` | `reference_only` | Legacy behavior source under local `reference-code/platform-studio/extdb/`; never default context. |
+| `reference-pack:ezform-prototype` | `reference_only` | Prototype interaction reference under local `reference-code/platform-studio/ezform/`; never default context. |
+| `reference-pack:smartapp-runtime` | `reference_only` | Runtime donor reference under local `reference-code/platform-studio/smartapp/`; never default context. |
+| `reference-pack:old-builder-reference` | `reference_only` | Historical old builder reference under local `reference-code/platform-studio/old-builder-reference/`; never default context. |
 
 Tracked alias registry:
 

@@ -13,9 +13,9 @@ Old prompt/task pointer stubs were deleted after compaction.
 
 ## Donor And Historical References
 
-- `platform/frontend/docs/platform-studio/old-code-reference/**`
-- `platform/frontend/docs/platform-studio/ezform/**`
-- `platform/frontend/docs/platform-studio/smartapp/**`
+- `reference-pack:old-builder-reference`
+- `reference-pack:ezform-prototype`
+- `reference-pack:smartapp-runtime`
 - `platform/frontend/docs/platform-studio/ezform-analysis.md`
 
 ## Deleted Workstream Plan Pointers

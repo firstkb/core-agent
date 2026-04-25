@@ -43,7 +43,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: The frontend foundation rollout and Phase E gap review are closed history; durable lessons are compacted into the UI Kit contract and UI Lab guide.
 - `planned` `doc-confirmed`: Deferred composed UI surfaces such as remote table workspaces, file uploads, AI assistant dialog, messenger, and kanban remain future/app-layer-first proposal scope at `platform/frontend/docs/proposals/deferred-composed-surfaces.md`.
 - `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `docs/ref/reference-code.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
-- `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked paths contain pointer READMEs only.
+- `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked pointer README directories were deleted.
+- `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now validates docs/memory drift, deleted pointer folders, retained Form Builder exact-detail policy, and local markdown links.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `ai-memory`; exact old payload text is git-history provenance only.
 - `landed` `doc-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`.
@@ -109,6 +110,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Install helper can be confused with offline PWA work. Current install prompt runtime is active, but service worker/offline/local sync remain future proposal scope.
 - `risk` `doc-confirmed`: Deferred composed UI surfaces can be misread as UI Kit/UI Lab scope. Treat `proposals/deferred-composed-surfaces.md` as future proposal and start app-layer-first only after owner activation.
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
+- `risk` `doc-confirmed`: Docs/memory drift has a local check script, but it is not yet wired into CI/pre-commit. Run `python3 scripts/ai/docs_memory_check.py --check` before docs/memory commits.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; active workflow artifacts live under `ai-memory/atlas/**`.

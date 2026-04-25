@@ -111,7 +111,7 @@ Import/reference docs:
 
 | Source | Status | Read for | Retrieval note |
 | --- | --- | --- | --- |
-| `platform/backend/docs/MSSQL/**` | `reference_only` | Legacy MSSQL schema archaeology and import mapping support | Use `reference-pack:mssql-legacy-schema`; not active backend schema truth. |
+| `reference-pack:mssql-legacy-schema` | `reference_only` | Legacy MSSQL schema archaeology and import mapping support | Raw pack is local-only under `reference-code/backend/mssql-legacy-schema/`; not active backend schema truth. |
 | `platform/backend/docs/archive/**` | archive | Historical backend plans, prompts, older standards, and archived SQL reference material | Opt-in only. |
 | `platform/backend/docs/archive/postgres-archive/README.md` | archive index | Legacy PostgreSQL SQL inventory and read rules | Read only for explicit PostgreSQL archaeology tasks. |
 | `platform/backend/docs/legacy/postgres-archive/README.md` | archive pointer | Old path for legacy PostgreSQL SQL archive | Read `archive/postgres-archive/README.md` instead. |

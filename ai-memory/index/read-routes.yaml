@@ -6,13 +6,7 @@ default:
     - ai-memory/durable/current-state.md
     - ai-memory/durable/module-index.md
   avoid_by_default:
-    - platform/frontend/docs/metronic/**
     - platform/frontend/docs/vendor/**
-    - platform/frontend/docs/platform-studio/EXTDB/**
-    - platform/frontend/docs/platform-studio/ezform/**
-    - platform/frontend/docs/platform-studio/smartapp/**
-    - platform/frontend/docs/platform-studio/old-code-reference/**
-    - platform/backend/docs/MSSQL/**
     - reference-code/**
     - platform/backend/docs/archive/**
     - platform/backend/docs/legacy/**

@@ -5,7 +5,7 @@ Last audited: 2026-04-25
 
 ## Result
 
-Overall docs/memory readiness score: 96/100.
+Overall docs/memory readiness score: 98/100.
 
 This score means the repository is ready for normal AI-agent work through
 `ai-memory`, active FE/BE docs, AGENTS instructions, and Atlas workflow files.
@@ -22,6 +22,8 @@ It does not mean every historical exact-detail document has been deleted.
 - Form Builder deleted exact-detail docs are no longer referenced from tracked frontend docs as read targets.
 - Form Builder exact-detail audit has `14 keep_exact_detail`, `0 compact_more_then_delete`, and `9 deleted_after_payload_extraction`.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
+- `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift and local markdown-link check.
+- Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.
 
 ## Scores
 
@@ -29,17 +31,17 @@ It does not mean every historical exact-detail document has been deleted.
 | --- | ---: | --- |
 | AI memory routing | 98 | `ai-memory/index`, durable memory, module packs, and Atlas workflow now own active AI retrieval. |
 | Legacy memory retirement | 100 | `platform/docs/ai/**` was migrated, summarized, and physically deleted. |
-| FE docs structure | 96 | Active docs now route through `contracts/`, `modules/`, `guides/`, `proposals/`, `reference/`, and archive metadata; old root pointers are gone. |
-| BE docs structure | 97 | Active backend docs route through contracts/modules/runbooks/proposals/reference/archive; old root pointers are gone. |
+| FE docs structure | 98 | Active docs now route through `contracts/`, `modules/`, `guides/`, `proposals/`, `reference/`, and archive metadata; old root pointers and reference pointer folders are gone. |
+| BE docs structure | 98 | Active backend docs route through contracts/modules/runbooks/proposals/reference/archive; old root pointers and reference pointer folders are gone. |
 | Form Builder compaction | 93 | Hot Form Builder truth is compacted; 14 retained exact-detail docs remain by policy for exact payload/history. |
-| Reference-code governance | 97 | Raw packs moved to ignored `reference-code/`; tracked docs use `reference-pack:*` aliases. |
-| Atlas/Codex-local workflow | 95 | Atlas uses `ai-memory` and active prompts/templates; remaining improvement is periodic drift automation rather than more manual docs. |
+| Reference-code governance | 99 | Raw packs moved to ignored `reference-code/`; tracked docs use `reference-pack:*` aliases and old pointer README folders were deleted. |
+| Atlas/Codex-local workflow | 97 | Atlas uses `ai-memory` and active prompts/templates; docs/memory drift now has a local check script. |
 
 ## Remaining Work To Reach 100
 
-- Add an automated link/reference check for docs and `ai-memory` routes.
+- Wire `scripts/ai/docs_memory_check.py --check` into CI or a pre-commit/pre-push workflow.
 - Replace retained Form Builder exact-detail prose with typed schemas, tests, generated registries, or code-backed docs where practical.
-- Add a lightweight scheduled drift check for stale lifecycle language in retained exact-detail/reference-only docs.
+- Add a lightweight scheduled run for docs/memory drift instead of relying only on manual invocation.
 - Keep future module work disciplined: every new durable decision should update `ai-memory/durable/decisions-log.md`, `current-state.md`, the relevant module pack, and the tracked doc owner.
 
 ## Current Policy

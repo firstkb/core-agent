@@ -19,18 +19,19 @@ Reference code is not product truth and must not be part of the default read pat
 - Do not treat donor routing, auth, providers, schema, or runtime architecture as current product contracts.
 - Distill useful findings into active product docs before implementation.
 - Prefer `reference-pack:<alias>` citations over raw file paths in active docs.
-- Raw reference packs should live outside active FE/BE docs paths after physical relocation.
+- Raw reference packs live outside active FE/BE docs paths after physical relocation.
+- Do not keep compatibility README folders under `platform/frontend/docs/**` or `platform/backend/docs/**` for raw packs.
 
 ## Alias Registry
 
-| Alias | Tracked pointer | Local raw-pack location | Role | Allowed use | Forbidden use |
-| --- | --- | --- | --- | --- | --- |
-| `reference-pack:metronic` | `platform/frontend/docs/metronic/README.md` | `reference-code/frontend/metronic/` | Frontend vendor UI donor material. | UI inspiration, component extraction planning, visual pattern review. | Product routing/auth/provider copy, treating demo pages as product requirements. |
-| `reference-pack:extdb-legacy` | `platform/frontend/docs/platform-studio/EXTDB/README.md` | `reference-code/platform-studio/extdb/` | Legacy Platform Studio/Form Builder behavior source. | Old field ids, page settings, filters, import/PDF/report behavior archaeology. | Copying ASP/.NET/SQL code or old architecture. |
-| `reference-pack:ezform-prototype` | `platform/frontend/docs/platform-studio/ezform/README.md` | `reference-code/platform-studio/ezform/` | Form Builder authoring-shell prototype. | Interaction flow comparison, builder ergonomics, shell layout review. | Copying UI/code as production implementation. |
-| `reference-pack:smartapp-runtime` | `platform/frontend/docs/platform-studio/smartapp/README.md` | `reference-code/platform-studio/smartapp/` | Legacy/runtime rendering reference. | Runtime behavior comparison and old field rendering review. | Treating runtime implementation as current architecture. |
-| `reference-pack:old-builder-reference` | `platform/frontend/docs/platform-studio/old-code-reference/README.md` | `reference-code/platform-studio/old-builder-reference/` | Historical old builder notes/code snapshot. | Historical comparison after active docs are insufficient. | Treating historical notes as current product contract. |
-| `reference-pack:mssql-legacy-schema` | `platform/backend/docs/MSSQL/README.md` | `reference-code/backend/mssql-legacy-schema/` | Legacy MSSQL schema reference. | Import mapping, legacy field interpretation, migration archaeology. | Treating MSSQL schema as active backend schema truth. |
+| Alias | Local raw-pack location | Role | Allowed use | Forbidden use |
+| --- | --- | --- | --- | --- |
+| `reference-pack:metronic` | `reference-code/frontend/metronic/` | Frontend vendor UI donor material. | UI inspiration, component extraction planning, visual pattern review. | Product routing/auth/provider copy, treating demo pages as product requirements. |
+| `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | Legacy Platform Studio/Form Builder behavior source. | Old field ids, page settings, filters, import/PDF/report behavior archaeology. | Copying ASP/.NET/SQL code or old architecture. |
+| `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | Form Builder authoring-shell prototype. | Interaction flow comparison, builder ergonomics, shell layout review. | Copying UI/code as production implementation. |
+| `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | Legacy/runtime rendering reference. | Runtime behavior comparison and old field rendering review. | Treating runtime implementation as current architecture. |
+| `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | Historical old builder notes/code snapshot. | Historical comparison after active docs are insufficient. | Treating historical notes as current product contract. |
+| `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | Legacy MSSQL schema reference. | Import mapping, legacy field interpretation, migration archaeology. | Treating MSSQL schema as active backend schema truth. |
 
 ## Citation Format
 
@@ -44,4 +45,4 @@ Source basis: reference-pack:metronic / metronic-tailwind-react-starter-kit/type
 ## Migration State
 
 Raw packs have been relocated out of active docs paths.
-Tracked docs keep only compact metadata, compatibility pointers, and distilled product decisions.
+Tracked docs keep only compact metadata and distilled product decisions; old compatibility README folders were deleted.

@@ -28,14 +28,14 @@ reference-code/
 
 ## Source-To-Pack Map
 
-| Old raw path | Pack alias | Local raw-pack path | Tracked pointer path | Action |
-| --- | --- | --- | --- | --- |
-| `platform/frontend/docs/metronic/**` | `reference-pack:metronic` | `reference-code/frontend/metronic/` | `platform/frontend/docs/metronic/README.md` | moved_raw_keep_pointer |
-| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | `platform/frontend/docs/platform-studio/EXTDB/README.md` | moved_raw_keep_pointer |
-| `platform/frontend/docs/platform-studio/ezform/**` | `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | `platform/frontend/docs/platform-studio/ezform/README.md` | moved_raw_keep_pointer |
-| `platform/frontend/docs/platform-studio/smartapp/**` | `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | `platform/frontend/docs/platform-studio/smartapp/README.md` | moved_raw_keep_pointer |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | `platform/frontend/docs/platform-studio/old-code-reference/README.md` | moved_raw_keep_pointer |
-| `platform/backend/docs/MSSQL/**` | `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | `platform/backend/docs/MSSQL/README.md` | moved_raw_keep_pointer |
+| Old raw path | Pack alias | Local raw-pack path | Action |
+| --- | --- | --- | --- |
+| `platform/frontend/docs/metronic/**` | `reference-pack:metronic` | `reference-code/frontend/metronic/` | moved_raw_delete_pointer |
+| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference-pack:extdb-legacy` | `reference-code/platform-studio/extdb/` | moved_raw_delete_pointer |
+| `platform/frontend/docs/platform-studio/ezform/**` | `reference-pack:ezform-prototype` | `reference-code/platform-studio/ezform/` | moved_raw_delete_pointer |
+| `platform/frontend/docs/platform-studio/smartapp/**` | `reference-pack:smartapp-runtime` | `reference-code/platform-studio/smartapp/` | moved_raw_delete_pointer |
+| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference-pack:old-builder-reference` | `reference-code/platform-studio/old-builder-reference/` | moved_raw_delete_pointer |
+| `platform/backend/docs/MSSQL/**` | `reference-pack:mssql-legacy-schema` | `reference-code/backend/mssql-legacy-schema/` | moved_raw_delete_pointer |
 
 ## Link Rewrite Rules
 
@@ -43,7 +43,7 @@ reference-code/
 - Keep exact relative paths only after the alias, for example `reference-pack:extdb-legacy / Template/ExtDBpg_edit.htm`.
 - Do not make tracked docs link to local `ai-memory`.
 - Do not make active FE/BE docs read raw packs by default.
-- Keep old directory-level README pointers only for compatibility and human discovery.
+- Do not keep old directory-level README pointers; use `docs/ref/reference-code.md` and `reference-pack:*` aliases.
 
 ## Docs To Update During Physical Move
 
@@ -61,17 +61,17 @@ reference-code/
 Before move:
 
 - Confirm all raw-pack aliases exist in `docs/ref/reference-code.md`.
-- Confirm `ai-memory/reference-code/packs-index.md` has pointer path and local raw-pack path for every pack.
+- Confirm `ai-memory/reference-code/packs-index.md` has a local raw-pack path for every pack.
 - Confirm no active contract depends on raw donor paths as product truth.
 
 After move:
 
-- Old tracked reference directories contain only pointer READMEs.
+- Old tracked reference directories are deleted from git.
 - `rg -n "reference-pack:" platform/frontend/docs platform/backend/docs docs/ref ai-memory`
 - `git check-ignore -v reference-code/frontend/metronic/REFERENCE-PACK.md reference-code/platform-studio/extdb/REFERENCE-PACK.md reference-code/backend/mssql-legacy-schema/REFERENCE-PACK.md`
 
 ## Current Decision
 
 Owner approved physical relocation.
-The relocation has landed: raw packs are local-only under `reference-code/`, and old tracked docs paths contain pointer READMEs.
+The relocation has landed: raw packs are local-only under `reference-code/`, and old tracked docs pointer directories were deleted.
 The landed review checkpoint is `ai-memory/reference-code/relocation-checkpoint.md`.

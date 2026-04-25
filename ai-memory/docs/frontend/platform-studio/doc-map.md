@@ -114,10 +114,10 @@ Use git history only for exact old prompt text.
 
 | Source | Classification | Reason |
 | --- | --- | --- |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | `reference_only` | `reference-pack:old-builder-reference`; historical opt-in code reference. |
-| `platform/frontend/docs/platform-studio/EXTDB/**` | `reference_only` | `reference-pack:extdb-legacy`; legacy behavior source. |
-| `platform/frontend/docs/platform-studio/ezform/**` | `reference_only` | `reference-pack:ezform-prototype`; donor/reference project material. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | `reference_only` | `reference-pack:smartapp-runtime`; donor/reference project material. |
+| `reference-pack:old-builder-reference` | `reference_only` | Historical opt-in code reference under local `reference-code/platform-studio/old-builder-reference/`. |
+| `reference-pack:extdb-legacy` | `reference_only` | Legacy behavior source under local `reference-code/platform-studio/extdb/`. |
+| `reference-pack:ezform-prototype` | `reference_only` | Donor/reference project material under local `reference-code/platform-studio/ezform/`. |
+| `reference-pack:smartapp-runtime` | `reference_only` | Donor/reference project material under local `reference-code/platform-studio/smartapp/`. |
 
 Reference-code alias registry:
 

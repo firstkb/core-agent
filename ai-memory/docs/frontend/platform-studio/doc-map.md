@@ -56,6 +56,8 @@ suite/Form Builder/backend contracts or git history for exact old text.
 Read `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` first.
 Open these old detailed docs only when the compact supporting contract is not enough for exact payload or historical audit detail.
 These retained docs now declare `Status: exact detail reference` in their tracked headers.
+They are policy-kept opt-in references until code-backed docs, typed schemas,
+tests, or generated registries replace their exact payload examples.
 
 | Source | Feature Area |
 | --- | --- |

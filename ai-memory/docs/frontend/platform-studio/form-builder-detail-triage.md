@@ -58,6 +58,13 @@ For consolidation decisions, deletion blockers, and extraction targets, read:
 
 - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
 
+Retention policy:
+
+- retained exact-detail docs are opt-in payload references, not active ownership docs
+- do not delete them just to reduce file count
+- replace them only after code-backed docs, typed schemas, tests, or generated registries cover the same details
+- keep deleted exact-detail paths as git-history provenance only
+
 | Source | Read Only When | Replacement Summary |
 | --- | --- | --- |
 | `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md` | Need exact accepted registry/palette gate. | Compacted into `form-builder-fields.md`. |

@@ -67,6 +67,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Old Form Builder archive/future workstream pointer stubs were deleted; retained exact-detail reference docs remain for payload/settings audit.
 - `landed` `doc-confirmed`: Retained old Form Builder exact-detail docs declare `Status: exact detail reference` and point readers back to the active Form Builder module docs first.
 - `landed` `doc-confirmed`: Form Builder exact-detail consolidation audit lives at `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`; it keeps 14 docs as exact-detail, marks 0 docs for future extraction before deletion, and records 9 docs deleted after extraction into `form-builder-fields.md`.
+- `landed` `doc-confirmed`: The remaining 14 Form Builder exact-detail docs are policy-kept opt-in references, not active ownership docs or near-term deletion backlog.
 - `landed` `doc-confirmed`: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply behavior now lives at `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 - `landed` `doc-confirmed`: Backend Form Builder implementation orientation now lives at `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - `landed` `doc-confirmed`: Backend operational docs now use `platform/backend/docs/runbooks/` for local bootstrap, auth key sources, and DB instance secret resolution.
@@ -97,7 +98,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
 - `risk` `doc-confirmed`: Old Form Builder archive/future workstream pointer stubs were deleted. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Retained old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
-- `risk` `doc-confirmed`: Do not delete retained exact-detail docs without following the consolidation audit; extracted/deleted waves already compacted advanced, content nodes, field rules, grid columns, checklist subform, choice fields, ready-made fields, `suggest_text`, and schema scope into `form-builder-fields.md`.
+- `risk` `doc-confirmed`: Do not delete retained exact-detail docs without code-backed replacement coverage and a consolidation audit update; extracted/deleted waves already compacted advanced, content nodes, field rules, grid columns, checklist subform, choice fields, ready-made fields, `suggest_text`, and schema scope into `form-builder-fields.md`.
 - `risk` `doc-confirmed`: Old frontend backend-facing Form Builder pointer docs were deleted; backend implementation work should read the backend Form Builder contract and use git history only for exact old handoff/storage/review text.
 - `risk` `doc-confirmed`: Frontend old root pointer docs were deleted; retained old Platform Studio docs are exact-detail, proposal, archive, or reference-only. Do not treat them as active ownership when a target-folder doc exists.
 - `risk` `owner-confirmed`: Planned Platform Studio tool concerns can be accidentally implemented inside Form Builder unless the tool boundary is read first.

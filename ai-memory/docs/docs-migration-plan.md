@@ -34,6 +34,7 @@ Current progress:
 - Old Form Builder archive/future workstream pointer stubs were deleted; retained exact-detail reference docs remain for payload/settings audit.
 - Retained old Form Builder exact-detail reference docs received explicit tracked headers and read rules.
 - Form Builder exact-detail consolidation audit landed: 14 retained as exact-detail, 0 marked for extraction before future deletion, and 9 detail docs deleted after extraction into `form-builder-fields.md`.
+- Form Builder retained exact-detail policy and docs/memory score audit landed; overall readiness is 96/100 with remaining work focused on automation and typed/generated replacements, not manual pointer cleanup.
 - Backend runbooks/proposals/reference cleanup landed: operational docs moved to `runbooks/`, gateway/KMS docs moved to `proposals/`, import docs moved to `reference/`, and old root/auth pointer paths were later deleted.
 - Backend remaining proposals/archive cleanup landed: events identity moved to `contracts/`, events/mail and schema drift moved to `proposals/`, historical backend standards/plans/prompts moved to `archive/`, and old root pointer paths were later deleted.
 - Backend legacy/postgres archive pointer pass landed: historical PostgreSQL SQL moved behind `archive/postgres-archive/README.md`, and the old `legacy/postgres-archive/README.md` path is a compatibility pointer.
@@ -280,6 +281,7 @@ Local relocation/control docs:
 37. Legacy run payload cleanup: landed; raw `platform/docs/ai/runs/**` payloads were deleted after accepting the compact archive summary.
 38. Final `platform/docs/ai/**` pointer-directory deletion: landed; remaining compatibility pointer files were removed after active reference checks. Provenance now uses `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 39. Pointer cleanup: landed for `ai-memory/AGENTS.override.md`, old FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording; active docs/maps now point directly to canonical contracts/modules and exact old text is git-history only.
+40. Form Builder retained exact-detail policy and docs/memory score audit: landed with 14 policy-kept exact-detail references, 0 extraction backlog, and 96/100 readiness score.
 
 ## Current Blockers Before Physical Move
 

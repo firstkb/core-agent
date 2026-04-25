@@ -14,6 +14,9 @@ Scope:
 
 This audit decides which exact-detail docs remain as opt-in payload references,
 which still require extraction, and which were deleted after extraction.
+At this checkpoint, no retained exact-detail file is queued for near-term
+deletion. The remaining retained files are policy-kept until code-backed,
+typed, generated, or test-backed replacements exist.
 
 ## Read Rule
 
@@ -33,6 +36,7 @@ shape, inspector behavior, migration/static-model detail, or historical audit.
 - `keep_exact_detail`: keep the file as an opt-in payload/settings reference.
 - `compact_more_then_delete`: extract remaining durable facts into active docs, then delete the old file in a later slice.
 - `delete_after_payload_extraction`: delete only after the listed extraction target is updated and verified.
+- `deleted_after_payload_extraction`: old file was deleted after durable payload was compacted into active docs.
 
 Current audit result:
 
@@ -40,6 +44,27 @@ Current audit result:
 - `compact_more_then_delete`: 0
 - `deleted_after_payload_extraction`: 9
 - `delete_now_without_extraction`: 0
+
+## Retained Exact-Detail Policy
+
+The 14 retained files are not active ownership docs and are not default read
+targets. They are retained because deleting them now would remove exact examples,
+payload shapes, legacy mappings, inspector details, or migration/static-model
+edge cases that are not yet fully represented by code-generated artifacts,
+typed schemas, tests, or structured registries.
+
+Deletion is allowed only when all are true:
+
+- the active compact doc or code-owned artifact covers the same durable facts
+- relevant code/tests or typed schemas confirm the replacement
+- this audit, `form-builder-detail-triage.md`, and `ai-memory/durable/current-state.md` are updated in the same change
+- tracked docs no longer link to the deleted path except as git-history provenance
+
+Until then, agents must read:
+
+1. `platform/frontend/docs/modules/platform-studio/form-builder.md`
+2. `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+3. the exact retained file only when exact payload or historical detail is needed
 
 ## Consolidation Decisions
 
@@ -69,9 +94,9 @@ Current audit result:
 | `platform/frontend/docs/platform-studio/form-builder-grid-columns-contract.md` | 133 | `deleted_after_payload_extraction` | Grid column shape, editor, runtime, and default-hidden rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-advanced-fields.md` | 60 | `deleted_after_payload_extraction` | Advanced section acceptance/deferred backlog rules were compacted. | Extracted into `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`; exact old text is git-history only. |
 
-## Next Consolidation Slice
+## Next Consolidation Policy
 
-Do not delete all exact-detail docs at once.
+Do not delete the retained exact-detail docs as a bulk cleanup.
 
 Recommended next consolidation order:
 

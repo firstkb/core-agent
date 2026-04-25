@@ -807,3 +807,15 @@ Do not turn it into a task journal.
   - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
   - `ai-memory/docs/docs-migration-plan.md`
+
+### DEC-068 Form Builder Retained Exact-Detail Policy
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: The remaining 14 Form Builder exact-detail files under `platform/frontend/docs/platform-studio/` are policy-kept opt-in references. They are not active ownership docs and are not near-term deletion backlog. Future deletion requires equivalent coverage in active compact docs plus code-backed docs, typed schemas, tests, or generated registries, and the consolidation audit must be updated in the same change.
+- Sources:
+  - `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+  - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder.md`
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`

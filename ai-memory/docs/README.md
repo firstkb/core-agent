@@ -17,6 +17,7 @@ It does not move or replace tracked docs by itself.
 
 - `ai-memory/docs/target-docs-structure.md`
 - `ai-memory/docs/docs-migration-plan.md`
+- `ai-memory/docs/docs-memory-score-audit.md`
 - `ai-memory/docs/frontend/README.md`
 - `ai-memory/docs/frontend/doc-map.md`
 - `ai-memory/docs/frontend/drift-report.md`

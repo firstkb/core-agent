@@ -416,4 +416,3 @@ routes:
       - ai-memory/atlas/automation-manifest.json
       - ai-memory/atlas/prompts/README.md
       - ai-memory/atlas/templates/README.md
-      - ai-memory/durable/legacy-memory-import.md

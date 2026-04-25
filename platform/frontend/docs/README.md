@@ -71,12 +71,9 @@ Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Rep
 Opt-in only:
 
 - `vendor/**`
-- `metronic/**`
-- `platform-studio/EXTDB/**`
-- `platform-studio/old-code-reference/**`
-- `platform-studio/ezform/**`
-- `platform-studio/smartapp/**`
+- `docs/ref/reference-code.md`
+- `reference-pack:*` aliases for local-only raw packs
 
 Reference and donor material is not product truth and must not be read by default.
 Use `docs/ref/reference-code.md` for stable `reference-pack:*` aliases before opening donor code.
-Future physical docs rewrite should move compact reference metadata under `reference/`; current old donor paths remain reference-only compatibility locations.
+Raw donor/reference packs are local-only under `reference-code/**`; old donor compatibility directories under frontend docs were deleted.

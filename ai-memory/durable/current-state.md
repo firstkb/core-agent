@@ -94,7 +94,7 @@ Confidence labels:
 ## Current Risks
 
 - `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
-- `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
+- `risk` `doc-confirmed`: Retained exact-detail/reference docs can still carry stale lifecycle or extraction language. Machine-local absolute links are not currently observed in active FE/BE docs and must not be reintroduced.
 - `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially exact-detail docs and reference-only donor notes. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are still working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Legacy run payloads and pointer directories no longer live under `platform/docs/ai/runs`; exact old run text requires git history.

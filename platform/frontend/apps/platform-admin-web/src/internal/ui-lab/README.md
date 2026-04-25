@@ -16,7 +16,7 @@ Internal component and foundation review surface for the platform frontend.
 ## Route
 
 - Runtime route: `/root/ui-lab`
-- Route wiring lives in `/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/apps/platform-admin-web/src/app/app.tsx`
+- Route wiring lives in `platform/frontend/apps/platform-admin-web/src/app/app.tsx`
 
 ## Folder Layout
 

@@ -79,13 +79,14 @@ Current read rule:
 
 ### Source Markdown Links
 
-Tracked docs with machine-local absolute markdown links were observed in frontend docs.
-This is not acceptable for new memory docs and should be repaired during physical tracked-doc reorg.
+No machine-local absolute markdown links are currently observed in active `platform/frontend/docs/**/*.md`.
+Do not reintroduce them in tracked docs or memory.
 
 Current rule:
 
 - New `ai-memory` docs use repo-relative paths only.
-- Do not copy machine-local links into new docs.
+- New tracked frontend docs use repo-relative paths only.
+The internal UI Lab README had a machine-local route-wiring note and was repaired to a repo-relative path.
 The old auth follow-up pointer was deleted; recover exact old text from git
 history only if required.
 
@@ -166,7 +167,7 @@ Observed state:
 Current read rule:
 
 - Prefer the new `contracts/` and `proposals/` paths.
-- Use old root paths only for compatibility with existing links.
+- Use git history only when exact old root text is required.
 
 ### Frontend Active Docs Final Consistency Pass
 

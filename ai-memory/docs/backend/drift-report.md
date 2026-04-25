@@ -38,7 +38,7 @@ Use it before treating older backend docs as active runtime truth.
 - `contracts/events-identity.md` is the active event actor identity contract.
 - `archive/postgres-archive/**` contains legacy PostgreSQL SQL reference only. Do not read it as current schema or active migration input.
 - Active backend docs now route `Read with`/`Read Order` through target folders. Old root-path compatibility/archive pointer docs were deleted.
-- Several tracked backend docs contain machine-local markdown links. Do not copy those links into compact memory; repair them during the later physical docs rewrite.
+- No machine-local absolute markdown links are currently observed in active `platform/backend/docs/**/*.md`. Do not reintroduce them in tracked backend docs or memory.
 
 ## Migrated Runtime Slice
 

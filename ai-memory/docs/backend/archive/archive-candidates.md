@@ -59,28 +59,19 @@ Operational/proposal/reference/archive moves have already landed for the files l
 
 ## Compatibility Pointers After Migration
 
-- `platform/backend/docs/backend-current-to-target-map.md`
 - `platform/backend/docs/backend-module-wiring-standard.md`
-- `platform/backend/docs/backend-internal-foundation-matrix.md`
 - `platform/backend/docs/backend-auth-gateway-contract.md`
 - `platform/backend/docs/backend-auth-control-table-design.md`
-- `platform/backend/docs/backend-auth-projection-and-sync.md`
 - `platform/backend/docs/local-backend-bootstrap.md`
 - `platform/backend/docs/auth/auth-key-source-configuration.md`
 - `platform/backend/docs/auth/auth-kms-implementation-status.md`
 - `platform/backend/docs/backend-api-gateway-http-api-mapping-spec.md`
 - `platform/backend/docs/backend-api-gateway-proxy-routing-policy.md`
 - `platform/backend/docs/backend-admin-tenant-events-mails-overlap-audit-v1.md`
-- `platform/backend/docs/backend-schema-master-baseline.md`
-- `platform/backend/docs/backend-schema-tenant-baseline.md`
 - `platform/backend/docs/backend-schema-migrations-baseline.md`
-- `platform/backend/docs/backend-schema-placement-and-naming.md`
-- `platform/backend/docs/backend-tenant-canonical-refactor-contract-v1.md`
 - `platform/backend/docs/backend-db-instance-secret-resolution.md`
 - `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md`
 - `platform/backend/docs/backend-tenant-import-module-boundary-v1.md`
-- `platform/backend/docs/backend-admin-module-registry-brief.md`
-- `platform/backend/docs/backend-admin-access-policy-layering.md`
 - `platform/backend/docs/backend-events-identity-contract.md`
 - `platform/backend/docs/backend-schema-drift-check-strategy.md`
 - `platform/backend/docs/backend-admin-module-registry-refactor-plan.md`
@@ -91,3 +82,8 @@ Operational/proposal/reference/archive moves have already landed for the files l
 - `platform/backend/docs/ramp_v_108_backend_standard_v_2.md`
 - `platform/backend/docs/legacy/postgres-archive/README.md`
   - Reason: old legacy path is pointer-only after the SQL payload moved to `archive/postgres-archive/`.
+
+Pointer-only compacted files for runtime map, foundation matrix, auth
+projection, admin registry/access, schema baselines, placement/naming, and
+tenant canonical refactor were deleted after compaction. Recover exact old text
+from git history only.

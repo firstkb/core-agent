@@ -34,12 +34,8 @@ They are not part of the active read order:
 - `package-boundaries.md`
 - `tenant-model.md`
 - `offline-strategy.md`
-- `auth-agent-integration-brief.md`
 - `auth-runtime-followups.md`
-- `collection-table-runtime-contract.md`
-- `collection-table-backend-integration-contract.md`
 - `collection-table-shared-readiness-plan.md`
-- `admin-module-registry-backend-handoff.md`
 - `ui-delivery-order.md`
 - `layout-baseline.md`
 - `ui-kit-boundary-audit.md`
@@ -50,16 +46,6 @@ They are not part of the active read order:
 - `foundation-rollout-plan.md`
 - `phase-e-gap-review.md`
 - `platform-studio/README.md`
-- `platform-studio/taxonomy-and-naming.md`
-- `platform-studio/form-builder-first-contract.md`
-- `platform-studio/form-builder-three-schema-contract.md`
-- `platform-studio/form-builder-runtime-naming-contract-v1-1.md`
-- `platform-studio/form-builder-runtime-view-strategy-v1.md`
-- `platform-studio/form-builder-runtime-routes-contract-v1.md`
-- `platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
-- `platform-studio/form-builder-package-boundary-plan-v1.md`
-- `platform-studio/form-builder-static-models-schema-contract-v1.md`
-- `platform-studio/form-builder-import-bundle-contract-v1.md`
 - `platform-studio/form-builder-accepted-registry.md`
 - `platform-studio/form-builder-field-catalog.md`
 - `platform-studio/form-builder-v2-field-contract.md`
@@ -72,6 +58,11 @@ They are not part of the active read order:
 - `platform-studio/form-builder-backend*.md`
 - `platform-studio/form-builder-storage-and-sql-view-contract.md`
 - `platform-studio/form-builder-runtime-storage-review-brief.md`
+
+Pointer-only compacted files for the old auth brief, Collection Table root
+contracts, admin backend handoff, Platform Studio taxonomy, and hot Form Builder
+contract slices were deleted after compaction. Use active contracts/modules or
+git history for exact old text.
 
 ## Active Module Docs
 

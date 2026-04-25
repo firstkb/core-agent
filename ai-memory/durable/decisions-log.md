@@ -759,3 +759,16 @@ Do not turn it into a task journal.
   - `ai-memory/durable/legacy-memory-import.md`
   - `AGENTS.md`
   - `platform/AGENTS.md`
+
+### DEC-064 Compacted Pointer Files Deleted
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: `ai-memory/AGENTS.override.md` and pointer-only FE/BE docs carrying compacted-pointer headers were deleted after active references were updated. Active docs/maps now route directly to canonical contracts/modules. Exact old pointer text is available only through git history.
+- Sources:
+  - `ai-memory/docs/docs-migration-plan.md`
+  - `platform/frontend/docs/README.md`
+  - `platform/backend/docs/README.md`
+  - `ai-memory/docs/frontend/doc-map.md`
+  - `ai-memory/docs/backend/doc-map.md`

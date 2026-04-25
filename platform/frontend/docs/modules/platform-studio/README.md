@@ -57,20 +57,10 @@ Current active backend owner for Form Builder:
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`: active backend Form Builder API/storage/runtime apply contract.
 - `platform/backend/docs/modules/platform-studio/form-builder.md`: active backend Form Builder implementation map and read order.
 
-## Form Builder Compatibility Pointers
+## Form Builder Historical Inputs
 
-The old Form Builder source docs below have been compacted into the active module contract.
-Use them only when auditing historical detail:
-
-- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-naming-contract-v1-1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
+Old pointer-only Form Builder contract slices were compacted into the active
+module contract and deleted. Use git history only when auditing exact old text.
 
 Field/catalog/rules/view-settings details now have a compact supporting tracked doc:
 
@@ -97,7 +87,8 @@ Do not infer their implementation model from Form Builder internals.
 Old suite-level paths now point here or to the suite contract:
 
 - `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
+
+The old taxonomy/naming pointer-only file was deleted after compaction.
 
 ## Out Of Scope
 

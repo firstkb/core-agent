@@ -61,8 +61,9 @@ Compatibility pointers:
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/contracts/auth-runtime.md` | `hot_contract` | Frontend auth runtime, OTP, cookie refresh, access-token state, profile bootstrap, auth client behavior. |
-| `platform/frontend/docs/auth-agent-integration-brief.md` | `compatibility_pointer` | Old path; read `contracts/auth-runtime.md` instead. |
 | `platform/frontend/docs/auth-runtime-followups.md` | `compatibility_pointer` | Old path; read `contracts/auth-runtime.md` instead. |
+
+The old auth integration brief pointer-only file was deleted after compaction.
 
 ## Collection Table
 
@@ -72,16 +73,18 @@ Read `platform/backend/docs/contracts/collection-table.md` for backend DTOs, pre
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/contracts/collection-table.md` | `hot_contract` | Current frontend package/runtime contract, host adapter boundary, table metadata, state, actions, and current consumers. |
-| `platform/frontend/docs/collection-table-runtime-contract.md` | `compatibility_pointer` | Old path; read `contracts/collection-table.md` instead. |
-| `platform/frontend/docs/collection-table-backend-integration-contract.md` | `compatibility_pointer` | Old path; read frontend and backend `contracts/collection-table.md` instead. |
 | `platform/frontend/docs/collection-table-shared-readiness-plan.md` | `compatibility_pointer` | Superseded extraction plan; package extraction has landed. |
+
+Old Collection Table root contract pointer-only files were deleted after
+compaction.
 
 ## Platform Admin Web
 
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/modules/platform-admin-web.md` | `hot_module_doc` | Admin shell, profile/navigation bootstrap, sidebar/favorites, admin Collection Table consumers, and root/non-root frontend visibility. |
-| `platform/frontend/docs/admin-module-registry-backend-handoff.md` | `compatibility_pointer` | Old path; read `modules/platform-admin-web.md` instead. |
+
+The old admin backend handoff pointer-only file was deleted after compaction.
 
 ## Tenant Web
 
@@ -120,22 +123,16 @@ Handled by a dedicated compact map:
 - `ai-memory/docs/frontend/platform-studio/README.md`
 - `ai-memory/docs/frontend/platform-studio/doc-map.md`
 
-Compatibility pointers:
+Compatibility and historical inputs:
 
 - `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
-- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-naming-contract-v1-1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend*.md`
 - `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
+
+Pointer-only taxonomy and hot Form Builder contract files were deleted after
+compaction. Use the active Platform Studio/Form Builder docs or git history for
+exact old text.
 
 ## Vendor And Donor Material
 

@@ -36,7 +36,7 @@ Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; 
 - Keep admin and tenant semantics explicit.
 - Do not add `cmd/worker` behavior until the runtime exists in code.
 - Prefer `platform/backend/docs/contracts/runtime-wiring.md` over the old `backend-module-wiring-standard.md` path.
-- Prefer `platform/backend/docs/modules/runtime.md` over the old `backend-current-to-target-map.md` and `backend-internal-foundation-matrix.md` paths.
+- Deleted old compacted runtime map and foundation paths are git-history only; use `platform/backend/docs/modules/runtime.md`.
 
 ## Lessons
 

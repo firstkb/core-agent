@@ -31,9 +31,10 @@ Read contract docs first, then module docs, then runbooks/proposals/reference/hi
 These old root docs remain as compatibility pointers during the migration.
 They are not part of the active read order:
 
-- `backend-current-to-target-map.md`
 - `backend-module-wiring-standard.md`
-- `backend-internal-foundation-matrix.md`
+
+Pointer-only compacted runtime map/foundation files were deleted after
+compaction. Use active runtime docs or git history for exact old text.
 
 ## Auth And Session
 
@@ -56,9 +57,10 @@ Compatibility pointers, not active read-order docs:
 
 - `backend-auth-gateway-contract.md`
 - `backend-auth-control-table-design.md`
-- `backend-auth-projection-and-sync.md`
 - `auth/auth-key-source-configuration.md`
 - `auth/auth-kms-implementation-status.md`
+
+The old auth projection/sync pointer-only file was deleted after compaction.
 
 ## Admin Control Plane
 
@@ -78,10 +80,9 @@ Note:
 - `contracts/admin-module-registry.md` owns Module Registry control-plane context.
 - Generic Collection Table behavior belongs to `contracts/collection-table.md`.
 
-Compatibility pointers, not active read-order docs:
-
-- `backend-admin-module-registry-brief.md`
-- `backend-admin-access-policy-layering.md`
+The old admin Module Registry brief and access-policy layering pointer-only
+files were deleted after compaction. Use the active admin contracts or git
+history for exact old text.
 
 ## Schema And Tenancy
 
@@ -106,14 +107,14 @@ Supporting docs:
 
 Compatibility pointers, not active read-order docs:
 
-- `backend-schema-master-baseline.md`
-- `backend-schema-tenant-baseline.md`
 - `backend-schema-migrations-baseline.md`
-- `backend-schema-placement-and-naming.md`
-- `backend-tenant-canonical-refactor-contract-v1.md`
 - `backend-tenant-canonical-field-mapping-v1.md`
 - `backend-tenant-import-module-boundary-v1.md`
 - `backend-schema-drift-check-strategy.md`
+
+Pointer-only compacted schema baseline, placement/naming, and tenant canonical
+refactor files were deleted after compaction. Use active schema contracts or git
+history for exact old text.
 
 ## Platform Studio Form Builder
 

@@ -12,8 +12,8 @@ Last compacted: 2026-04-24
 
 - `ai-memory/modules/domains/admin-control-plane/`
 - `ai-memory/modules/domains/admin-module-registry/`
-- `platform/backend/docs/backend-admin-module-registry-brief.md`
-- `platform/backend/docs/backend-admin-access-policy-layering.md`
+- `platform/backend/docs/contracts/admin-control-plane.md`
+- `platform/backend/docs/contracts/admin-module-registry.md`
 - `platform/backend/modules/admin/**`
 
 ## Current Modules
@@ -40,4 +40,3 @@ Last compacted: 2026-04-24
 - Do not expose backend routes without matching access policy.
 - Do not treat frontend navigation visibility as authorization.
 - Do not let module-specific table behavior leak into shared collection helpers.
-

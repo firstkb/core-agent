@@ -23,9 +23,6 @@ These may still contain useful facts, but should become compact current-state/co
 ## Compatibility Pointers To Archive Later
 
 - `platform/frontend/docs/install-helper-runtime.md`
-- `platform/frontend/docs/admin-module-registry-backend-handoff.md`
-- `platform/frontend/docs/collection-table-runtime-contract.md`
-- `platform/frontend/docs/collection-table-backend-integration-contract.md`
 - `platform/frontend/docs/collection-table-shared-readiness-plan.md`
 - `platform/frontend/docs/ui-delivery-order.md`
 - `platform/frontend/docs/layout-baseline.md`
@@ -34,6 +31,11 @@ These may still contain useful facts, but should become compact current-state/co
 - `platform/frontend/docs/ui-lab-structure.md`
 - `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
 - `platform/frontend/docs/deferred-composed-surfaces.md`
+
+Pointer-only compacted files for auth brief, Collection Table root contracts,
+admin backend handoff, Platform Studio taxonomy, and hot Form Builder contract
+slices were deleted after compaction. Recover exact old text from git history
+only.
 
 ## Reference And Donor Material
 

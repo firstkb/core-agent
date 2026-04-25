@@ -41,16 +41,7 @@ Do not read them by default.
 | Source | Replacement | Reason |
 | --- | --- | --- |
 | `platform/frontend/docs/platform-studio/README.md` | `platform/frontend/docs/modules/platform-studio/README.md` | Suite entrypoint moved. |
-| `platform/frontend/docs/platform-studio/taxonomy-and-naming.md` | `platform/frontend/docs/contracts/platform-studio.md` | Suite taxonomy and tool ownership moved. |
-| `platform/frontend/docs/platform-studio/form-builder-first-contract.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | First Form Builder contract compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Three-schema rules compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-naming-contract-v1-1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Runtime naming compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Per-view runtime strategy compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Runtime route model compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-access-and-entry-context-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Runtime/preview access staging compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Package boundary rules compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Static/external model behavior compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md` | `platform/frontend/docs/modules/platform-studio/form-builder.md` | Managed export/import direction compacted. |
+| old suite taxonomy and hot Form Builder contract pointer files | `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/form-builder.md` | Pointer-only files were compacted and deleted; use git history for exact old text. |
 | `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend boundary moved to backend contract. |
 | `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend API truth moved to backend contract. |
 | `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend payload truth moved to backend contract. |

@@ -56,21 +56,11 @@ Read these tracked docs first only when source-level detail is required:
 - Backend handoff/API/storage/runtime apply work: read `platform/backend/docs/contracts/platform-studio-form-builder.md`; for backend implementation orientation, also read `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Prompt/reference reconstruction: read archive/reference candidates only when explicitly needed.
 
-## Compatibility Pointers
+## Compatibility And Historical Inputs
 
 These old suite-level paths are no longer active entrypoints:
 
 - `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
-- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-naming-contract-v1-1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md`
@@ -78,6 +68,9 @@ These old suite-level paths are no longer active entrypoints:
 - `platform/frontend/docs/platform-studio/form-builder-backend-validation-matrix.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-object-generation-matrix.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-migration-policy.md`
+
+Pointer-only taxonomy and hot Form Builder contract files were deleted after
+compaction. Use active contracts/modules or git history for exact old text.
 - `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md`
 - `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md`
 - `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`

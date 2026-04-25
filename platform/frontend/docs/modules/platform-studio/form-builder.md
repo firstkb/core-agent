@@ -24,22 +24,11 @@ Read this after:
 1. `platform/frontend/docs/contracts/platform-studio.md`
 2. `platform/frontend/docs/modules/platform-studio/README.md`
 
-## Compatibility Inputs
+## Historical Inputs
 
-This document replaces the default read role of these old docs.
-They are compatibility pointers or historical detail sources, not active read-order docs:
-
-- `platform/frontend/docs/platform-studio/form-builder-first-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-three-schema-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-naming-contract-v1-1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-view-strategy-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-routes-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-access-and-entry-context-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-package-boundary-plan-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
-- `platform/frontend/docs/platform-studio/form-builder-import-bundle-contract-v1.md`
-
-Open the old docs only when auditing historical detail.
+This document replaces the default read role of the old pointer-only Form
+Builder contract slices. Those compacted files were deleted after migration.
+Use git history only when auditing exact old text.
 
 ## Current Code Surfaces
 

@@ -26,7 +26,7 @@ Use this order for agent work:
 
 ## Memory Types
 
-- Procedural memory: how agents should work. Keep this in `AGENTS.md`, `.codex/`, `.agents/`, and this local override only when it is local routing guidance.
+- Procedural memory: how agents should work. Keep this in `AGENTS.md`, `.codex/`, `.agents/`, and `ai-memory/agent-workflow.md` when it is local routing guidance.
 - Semantic memory: durable project facts, contracts, state, and accepted decisions. Keep this in `durable/` and module `contract.md` / `state.md`.
 - Episodic memory: reusable lessons and pitfalls distilled from completed work. Keep this in module `lessons.md` or `lessons/`.
 - Working memory: active task state. Keep this in `working/active/` or `runs/active/`; do not treat it as durable truth.

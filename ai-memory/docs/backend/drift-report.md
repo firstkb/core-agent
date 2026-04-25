@@ -22,7 +22,7 @@ Use it before treating older backend docs as active runtime truth.
 - `platform/backend/AGENTS.md` now points agents at `ai-memory` first. Former `platform/docs/ai` memory was migrated and deleted; old text is git-history provenance only.
 - Some older backend guidance mentions legacy-compatible prefixed tenant business tables. Newer schema contracts make canonical snake_case the runtime target and keep legacy naming as import/reference material only.
 - The backend runtime slice now stores current runtime shape in `platform/backend/docs/modules/runtime.md` and runtime wiring in `platform/backend/docs/contracts/runtime-wiring.md`.
-- `backend-current-to-target-map.md` is now a compatibility pointer. Current memory treats `cmd/worker` as future/deferred, not an active entrypoint.
+- `backend-current-to-target-map.md` was deleted after compaction. Current memory treats `cmd/worker` as future/deferred, not an active entrypoint.
 - The schema/tenancy slice now stores current schema and migration behavior in `platform/backend/docs/contracts/schema-tenancy.md` and `platform/backend/docs/contracts/migrations.md`.
 - The old migration baseline said only `000_tenant_baseline.sql` was active, but code now has tenant migrations `001..006`; the new migrations contract is the current source for active migration set.
 - `runbooks/local-bootstrap.md` now clarifies that local seed rows do not make master user mirroring the auth source of truth. Verify current seed/code behavior before changing auth.
@@ -32,7 +32,7 @@ Use it before treating older backend docs as active runtime truth.
 - The Collection Table slice now stores backend DTO/helper/preference and endpoint-family behavior in `platform/backend/docs/contracts/collection-table.md`.
 - The backend Form Builder slice now stores backend-owned API/storage/runtime apply truth in `platform/backend/docs/contracts/platform-studio-form-builder.md` and implementation orientation in `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Old frontend backend-facing Form Builder docs are compatibility pointers. Older `publishBuilderDraft` lifecycle wording and `vw_ps_*` storage examples are superseded by current save/runtime-apply and `vw_`/`vg_` naming.
-- `backend-admin-module-registry-brief.md` is still labeled as a planning brief while much of the listed work is already landed. Use compact admin memory for the current state.
+- `backend-admin-module-registry-brief.md` was deleted after compaction. Use compact admin memory and active admin contracts for the current state.
 - `proposals/kms-signing.md` documents planned KMS work. KMS signing must not be assumed live.
 - `proposals/events-mails-cleanup.md` and `proposals/schema-drift-checks.md` are future proposal scope, not active runtime behavior.
 - `contracts/events-identity.md` is the active event actor identity contract.

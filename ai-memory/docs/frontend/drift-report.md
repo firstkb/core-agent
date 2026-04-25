@@ -14,14 +14,12 @@ Tracked docs:
 
 - `platform/frontend/docs/contracts/collection-table.md`
 - `platform/backend/docs/contracts/collection-table.md`
-- `platform/frontend/docs/collection-table-runtime-contract.md`
-- `platform/frontend/docs/collection-table-backend-integration-contract.md`
 - `platform/frontend/docs/collection-table-shared-readiness-plan.md`
 
 Observed state:
 
 - The active Collection Table contracts now live under `contracts/collection-table.md`.
-- The old root frontend docs are compatibility pointers.
+- The old pointer-only Collection Table root contracts were deleted after compaction.
 - `@platform/collection-table` exists under `platform/frontend/packages/collection-table`.
 - Current code-confirmed admin consumers are Module Registry, Employees, and Tenants.
 
@@ -29,7 +27,7 @@ Current read rule:
 
 - Read `platform/frontend/docs/contracts/collection-table.md` for frontend runtime/package behavior.
 - Read `platform/backend/docs/contracts/collection-table.md` for backend DTOs, preferences, and endpoint families.
-- Use old root collection-table docs only for compatibility with existing links.
+- Use git history only when exact old root Collection Table text is required.
 
 ### Auth Follow-Up State
 
@@ -46,7 +44,7 @@ Observed drift:
 Current read rule:
 
 - Read `platform/frontend/docs/contracts/auth-runtime.md` for tracked frontend auth behavior.
-- Use old auth root docs only for compatibility with existing links.
+- Use the old follow-up pointer only for compatibility with existing links; use git history for the deleted integration brief.
 
 ### Frontend Auth Slice Migrated
 
@@ -56,7 +54,8 @@ Tracked docs:
 
 Observed state:
 
-- The old frontend auth integration and follow-up docs are compatibility pointers.
+- The old frontend auth integration brief pointer was deleted after compaction.
+- The old follow-up doc remains a compatibility pointer.
 - The active tracked frontend auth contract is contract-first.
 
 Current read rule:
@@ -100,14 +99,13 @@ Tracked doc:
 
 - `platform/frontend/docs/README.md`
 - `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
-- old Form Builder hot docs under `platform/frontend/docs/platform-studio/form-builder-*.md`
+- active Platform Studio docs under `platform/frontend/docs/contracts/` and `platform/frontend/docs/modules/platform-studio/`
 
 Observed drift:
 
 - The old suite-level Platform Studio docs are now compatibility pointers.
 - The active suite-level tracked docs are `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/README.md`.
-- The old Form Builder hot docs are now compatibility pointers.
+- The old taxonomy and hot Form Builder pointer-only docs were deleted after compaction.
 - The active Form Builder tracked doc is `platform/frontend/docs/modules/platform-studio/form-builder.md`.
 - Field/catalog/rules/view-settings details now have a compact supporting tracked doc at `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 - `ai-memory/docs/frontend/platform-studio/doc-map.md` now defines a smaller hot source set and classifies supporting/working/archive candidates.
@@ -245,11 +243,10 @@ Current read rule:
 Tracked docs:
 
 - `platform/frontend/docs/modules/platform-admin-web.md`
-- `platform/frontend/docs/admin-module-registry-backend-handoff.md`
 
 Observed state:
 
-- The old admin Module Registry backend handoff is now a compatibility pointer.
+- The old admin Module Registry backend handoff pointer-only file was deleted after compaction.
 - The active admin web shell/navigation/favorites behavior is tracked in `modules/platform-admin-web.md`.
 
 Current read rule:

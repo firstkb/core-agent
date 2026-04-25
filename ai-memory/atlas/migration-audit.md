@@ -24,7 +24,7 @@ This audit maps the old `platform/docs/ai` Atlas workflow to the new
 | `platform/docs/ai/decisions-log.md` | retired decision pointer | `ai-memory/durable/decisions-log.md` | pointer landed |
 | `platform/docs/ai/canonical-docs.md` | retired docs authority pointer | `ai-memory/durable/canonical-docs.md` | pointer landed |
 | `platform/docs/ai/module-index.md` | retired module routing pointer | `ai-memory/durable/module-index.md` and `ai-memory/index/*` | pointer landed |
-| `platform/docs/ai/modules/*.md` | domain memory provenance | `ai-memory/modules/domains/**` plus FE/BE module packs | imported; old source legacy-only |
+| `platform/docs/ai/modules/*.md` | retired module pointers | `ai-memory/modules/domains/**` plus FE/BE module packs | pointer landed |
 | `platform/docs/ai/prompts/*.md` | Atlas prompt contracts | `ai-memory/atlas/prompts/*.md` | copied and updated to index-first read order |
 | `platform/docs/ai/templates/*.md` | Atlas artifact templates | `ai-memory/atlas/templates/*.md` | copied; chat bootstrap updated to `ai-memory` |
 | `platform/docs/ai/automation-manifest.json` | version source provenance | `ai-memory/atlas/automation-manifest.json` | active manifest moved |
@@ -44,7 +44,6 @@ This audit maps the old `platform/docs/ai` Atlas workflow to the new
 ## Remaining Retirement Work
 
 - Triage old `platform/docs/ai/runs/**` into archive summaries or delete after confirming no active task depends on them.
-- Replace or archive old module payload files under `platform/docs/ai/modules/*.md` after citation review.
 - Decide whether old `platform/docs/ai/prompts/**` and `templates/**` payload files should become pointer stubs or be physically removed.
 - Decide whether `platform/docs/ai/automation-manifest.json` should be removed after all scripts and docs use `ai-memory/atlas/automation-manifest.json`.
 
@@ -54,6 +53,7 @@ Landed cleanup:
 - `docs/ref/**` now contains stable reference registries only; memory reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - Legacy runs are triaged in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders remain provenance only.
 - Top-level durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`.
+- Legacy module markdown files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs.
 
 The detailed retirement plan lives in:
 

@@ -689,3 +689,21 @@ Do not turn it into a task journal.
   - `platform/docs/ai/orchestration-boundaries.md`
   - `platform/docs/ai/automation-changelog.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-059 Legacy Module AI Memory Files Are Pointers
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Legacy module memory files under `platform/docs/ai/modules/*.md` are no longer payload-bearing module memory. They are compatibility pointers to `ai-memory/modules/domains/**`, `ai-memory/modules/frontend/**`, `ai-memory/modules/backend/**`, and the tracked FE/BE docs owners. New module memory updates must go to `ai-memory/modules/**` or the tracked doc owner, not to `platform/docs/ai/modules/*.md`.
+- Sources:
+  - `platform/docs/ai/modules/README.md`
+  - `platform/docs/ai/modules/auth-and-session.md`
+  - `platform/docs/ai/modules/schema-and-tenancy.md`
+  - `platform/docs/ai/modules/admin-control-plane.md`
+  - `platform/docs/ai/modules/admin-module-registry.md`
+  - `platform/docs/ai/modules/collection-table.md`
+  - `platform/docs/ai/modules/collection-table-and-registry.md`
+  - `platform/docs/ai/modules/platform-studio.md`
+  - `ai-memory/durable/module-index.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

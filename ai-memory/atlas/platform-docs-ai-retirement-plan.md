@@ -36,7 +36,7 @@ The active system is:
 | `platform/docs/ai/repo-map.md` | retired pointer | `ai-memory/durable/repo-map.md` | pointer landed |
 | `platform/docs/ai/platform-contract.md` | retired pointer | `ai-memory/durable/platform-contract.md` | pointer landed |
 | `platform/docs/ai/module-index.md` | retired pointer | `ai-memory/durable/module-index.md` and `ai-memory/index/*` | pointer landed |
-| `platform/docs/ai/modules/*.md` | imported domain memory provenance | `ai-memory/modules/domains/**` | final pointer or archive after citation review |
+| `platform/docs/ai/modules/*.md` | retired module pointers | `ai-memory/modules/domains/**` plus FE/BE module packs | pointer landed |
 | `platform/docs/ai/markdown-governance.md` | retired pointer | `ai-memory/agent-workflow.md`, `platform/AGENTS.md`, tracked docs style rules | pointer landed |
 | `platform/docs/ai/orchestration-boundaries.md` | retired pointer | `ai-memory/atlas/README.md`, `.agents/skills/ramp-conductor/SKILL.md` | pointer landed |
 | `platform/docs/ai/prompts/**` | retired prompt provenance | `ai-memory/atlas/prompts/**` | pointer or delete after reference scan |

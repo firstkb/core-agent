@@ -6,8 +6,9 @@ Last compacted: 2026-04-25
 This file records how durable knowledge from `platform/docs/ai` was folded into `ai-memory`.
 It prevents agents from rereading the entire old memory corpus unless a task needs verification.
 
-Top-level legacy markdown files under `platform/docs/ai/*.md` are now pointer
-stubs. Use `ai-memory` for active memory and git history for old payload text.
+Top-level legacy markdown files under `platform/docs/ai/*.md` and legacy module
+files under `platform/docs/ai/modules/*.md` are now pointer stubs.
+Use `ai-memory` for active memory and git history for old payload text.
 
 ## Source Classification
 
@@ -36,9 +37,10 @@ Operational scaffolds, not durable product truth:
 
 Active Atlas operational copies now live under `ai-memory/atlas/**`.
 
-Retired top-level pointers:
+Retired pointer stubs:
 
 - `platform/docs/ai/*.md`
+- `platform/docs/ai/modules/*.md`
 
 Historical/episodic artifacts, not active memory:
 
@@ -73,6 +75,10 @@ Open `platform/docs/ai` only when:
 - resolving a conflict between compact memory and tracked docs,
 - recovering detail intentionally omitted during compaction,
 - migrating another durable decision into `ai-memory`.
+
+Do not use `platform/docs/ai/modules/*.md` as active module memory. Read
+`ai-memory/durable/module-index.md` and the relevant `ai-memory/modules/**`
+pack first.
 
 Do not use `platform/docs/ai/runs/**` as active design input unless the owner asks for historical reconstruction.
 Read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` before opening old run payloads.

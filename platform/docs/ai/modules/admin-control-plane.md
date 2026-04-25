@@ -1,96 +1,27 @@
-# Module Memory — Admin Control Plane
+# Retired Module Memory - Admin Control Plane
 
-Status: active
-Date: 2026-04-16
+Status: retired legacy module pointer
+Retired on: 2026-04-25
 
-## Read this when
+This file is no longer the active admin control-plane memory source.
 
-- touching admin navigation
-- touching root/non-root rules
-- touching tenant onboarding control-plane work
-- changing admin grants or access policy
-- changing `api-admin` surface composition
+Read instead:
 
-## Confirmed backend surfaces
+- `ai-memory/modules/domains/admin-control-plane/README.md`
+- `ai-memory/modules/domains/admin-control-plane/contract.md`
+- `ai-memory/modules/domains/admin-control-plane/state.md`
+- `ai-memory/modules/domains/admin-control-plane/lessons.md`
+- `ai-memory/modules/frontend/platform-admin-web/README.md`
+- `ai-memory/modules/backend/admin-modules/README.md`
 
-- `platform/backend/cmd/api-admin`
-- `platform/backend/modules/admin/navigation`
-- `platform/backend/modules/admin/profile`
-- `platform/backend/modules/admin/tenantmanagement`
-- `platform/backend/modules/admin/tenantlist`
-- `platform/backend/modules/admin/employeeslist`
-- `platform/backend/modules/admin/accesspolicy`
-- `platform/backend/modules/admin/moduleregistrylist`
-- `platform/backend/modules/admin/moduleregistrymanage`
-- `platform/backend/modules/admin/moduleregistrygrants`
+Tracked docs owners:
 
-## Confirmed frontend surfaces
+- `platform/backend/docs/contracts/admin-control-plane.md`
+- `platform/frontend/docs/modules/platform-admin-web.md`
 
-- `platform/frontend/apps/platform-admin-web/src/shared/navigation.ts`
-- `platform/frontend/apps/platform-admin-web/src/pages/employees-list/page.tsx`
-- `platform/frontend/apps/platform-admin-web/src/pages/tenants-list/page.tsx`
-- admin shell bootstrap files under `platform-admin-web/src/app/*`
+Historical content from this file was compacted into `ai-memory/`.
+Do not update this file with new admin control-plane state.
 
-## Locked invariants
+For provenance, use git history or:
 
-- `Module registry` is root-only
-- `Employees` directory is root-only
-- `Tenant inventory` stays root-only until secured non-root list coverage exists
-- non-root admin access is section-level only
-- access model is allow-only
-- current access values are `read` and `write`
-- `/app/profile` is not the navigation payload
-- navigation comes from `GET /app/me/navigation`
-- canonical secure admin API routes live under `/app/...`
-- frontend must not fabricate non-root admin sections that backend did not return
-
-## Current rollout state
-
-Documented as completed in backend brief:
-
-- root-only module registry schema and list API
-- root-only employees directory API backed by platform admin users
-- module and section management API
-- section-level grant model
-- admin navigation projection
-- current endpoint authorization policy for approved non-root slice
-
-Documented as planned / cleanup phase:
-
-- frontend handoff, route alignment, and rollout cleanup
-
-## Current approved non-root slice
-
-- `tenant.onboarding`
-- current route path: `/admin/tenants/onboarding`
-- current backend create endpoint: `POST /app/admin/tenants`
-
-## Current root-only tenant inventory surface
-
-- `tenant.list_of_tenants`
-- current route path: `/admin/tenants`
-- current secure route family: `/app/admin/tenants/list/*`
-- projected in navigation and favorites for `root` only
-- non-root remains hidden until a secured list route is explicitly approved and mapped
-
-## Important docs
-
-- `platform/backend/docs/backend-admin-module-registry-brief.md`
-- `platform/backend/docs/backend-admin-access-policy-layering.md`
-
-## Operational rules
-
-- keep root and non-root behavior explicit in both backend and frontend
-- do not overload profile payloads with navigation concerns
-- do not add hidden legacy API aliases for admin secure routes
-- if a section is not backed by backend route coverage, do not surface it for non-root users
-
-## When to update memory
-
-Update this file when:
-
-- a new admin section becomes part of the approved rollout slice
-- a new root-only admin section becomes first-class in navigation or API composition
-- grant semantics change
-- navigation response shape changes
-- root-only boundaries change
+- `ai-memory/durable/legacy-memory-import.md`

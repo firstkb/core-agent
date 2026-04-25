@@ -90,6 +90,7 @@ Operational scaffolds, not product truth:
 Legacy pointers/provenance only:
 
 - `platform/docs/ai/*.md`
+- `platform/docs/ai/modules/*.md`
 - `platform/docs/ai/prompts/**`
 - `platform/docs/ai/templates/**`
 - `platform/docs/ai/runs/**`

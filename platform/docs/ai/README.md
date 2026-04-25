@@ -22,6 +22,7 @@ agent read path.
 Do not write new prompts, templates, run artifacts, or memory updates here.
 
 Top-level durable memory files in this folder are compatibility pointers only.
+Legacy module memory files under `modules/` are compatibility pointers only.
 Use git history if historical payload text is required.
 
 Read the retirement plan before deleting or compacting this folder:

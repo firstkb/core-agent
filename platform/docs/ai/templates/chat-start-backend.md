@@ -1,19 +1,18 @@
-# Chat Start Prompt — Backend Addendum
+# Retired Template - Backend Chat Start
 
-Append this block to the shared chat-start prompt when the task is backend-local.
+Status: retired legacy template pointer
+Retired on: 2026-04-25
 
-```text
-Backend-local addendum:
-- Read `platform/backend/AGENTS.md` and `platform/backend/docs/README.md` before changing backend code.
-- Default canonical backend doc clusters are:
-  - workspace/runtime shape
-  - auth/session
-  - admin control plane
-  - admin module-registry control-plane surface
-  - schema/tenancy
-- Keep generic shared collection-table helper work separate from module-registry business rules.
-- Require extra care for auth/session, tenant isolation, grants/roles, migrations, seeds, exports, and destructive admin actions.
-- Prefer service/repository separation and keep SQL out of handlers.
-- If schema or migration behavior changes, update both code and the canonical schema docs.
-- End your response with backend-specific checks run or still required.
-```
+This file is no longer the active backend chat-start addendum.
+
+Read instead:
+
+- `ai-memory/atlas/templates/chat-start-backend.md`
+- `ai-memory/atlas/templates/README.md`
+- `platform/backend/AGENTS.md`
+
+Do not start new backend chats from this legacy template.
+
+For provenance, use git history or:
+
+- `ai-memory/durable/legacy-memory-import.md`

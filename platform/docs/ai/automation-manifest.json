@@ -1,67 +1,11 @@
 {
-  "bundle_version": "1.4.1",
-  "skill": {
-    "name": "ramp-conductor",
-    "display_name": "Atlas",
-    "version": "1.4.1",
-    "invocation": "$ramp-conductor",
-    "file": ".agents/skills/ramp-conductor/SKILL.md"
-  },
-  "prompts": {
-    "control": {
-      "family": "v1",
-      "version": "1.4.1",
-      "file": "platform/docs/ai/prompts/control-chat-prompt-v1.md"
-    },
-    "frontend": {
-      "family": "v1",
-      "version": "1.1.0",
-      "file": "platform/docs/ai/prompts/frontend-prompt-v1.md"
-    },
-    "frontend_compact": {
-      "family": "v1",
-      "version": "1.1.0",
-      "file": "platform/docs/ai/prompts/frontend-prompt-compact-v1.md"
-    },
-    "backend": {
-      "family": "v1",
-      "version": "1.1.0",
-      "file": "platform/docs/ai/prompts/backend-prompt-v1.md"
-    },
-    "backend_compact": {
-      "family": "v1",
-      "version": "1.1.0",
-      "file": "platform/docs/ai/prompts/backend-prompt-compact-v1.md"
-    }
-  },
-  "templates": {
-    "control_task": {
-      "version": "1.3.0",
-      "file": "platform/docs/ai/templates/control-task.md"
-    },
-    "lane_report": {
-      "version": "1.3.0",
-      "file": "platform/docs/ai/templates/lane-report.md"
-    }
-  },
-  "scaffolder": {
-    "version": "1.3.0",
-    "python_file": "scripts/ai/new-run.py",
-    "shell_file": "scripts/ai/new-run.sh"
-  },
-  "task_id": {
-    "format": "YYYY-MM-DD_<scope>_<short-kebab-purpose>",
-    "scope_values": [
-      "frontend",
-      "backend",
-      "cross-stack",
-      "research",
-      "module-collection-table",
-      "module-admin-module-registry"
-    ]
-  },
-  "version_sync": {
-    "version": "1.0.0",
-    "python_file": "scripts/ai/automation_versions.py"
-  }
+  "status": "retired legacy automation manifest pointer",
+  "retired_on": "2026-04-25",
+  "replacement": "ai-memory/atlas/automation-manifest.json",
+  "do_not_use_for_version_sync": true,
+  "notes": [
+    "Active Atlas version metadata lives under ai-memory/atlas/automation-manifest.json.",
+    "Scripts must not read this legacy manifest.",
+    "Use git history if the retired manifest payload is required for provenance."
+  ]
 }

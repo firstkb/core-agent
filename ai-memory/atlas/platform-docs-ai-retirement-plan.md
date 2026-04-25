@@ -39,9 +39,9 @@ The active system is:
 | `platform/docs/ai/modules/*.md` | retired module pointers | `ai-memory/modules/domains/**` plus FE/BE module packs | pointer landed |
 | `platform/docs/ai/markdown-governance.md` | retired pointer | `ai-memory/agent-workflow.md`, `platform/AGENTS.md`, tracked docs style rules | pointer landed |
 | `platform/docs/ai/orchestration-boundaries.md` | retired pointer | `ai-memory/atlas/README.md`, `.agents/skills/ramp-conductor/SKILL.md` | pointer landed |
-| `platform/docs/ai/prompts/**` | retired prompt provenance | `ai-memory/atlas/prompts/**` | pointer or delete after reference scan |
-| `platform/docs/ai/templates/**` | retired template provenance | `ai-memory/atlas/templates/**` | pointer or delete after reference scan |
-| `platform/docs/ai/automation-manifest.json` | retired version provenance | `ai-memory/atlas/automation-manifest.json` | pointer not possible for JSON; archive/delete after reference scan |
+| `platform/docs/ai/prompts/**` | retired prompt pointers | `ai-memory/atlas/prompts/**` | pointer landed |
+| `platform/docs/ai/templates/**` | retired template pointers | `ai-memory/atlas/templates/**` | pointer landed |
+| `platform/docs/ai/automation-manifest.json` | retired JSON pointer | `ai-memory/atlas/automation-manifest.json` | pointer landed |
 | `platform/docs/ai/automation-changelog.md` | retired pointer | `ai-memory/atlas/automation-changelog.md` | pointer landed |
 | `platform/docs/ai/runs/**` | historical run provenance | `ai-memory/runs/archive/**` or summarized archive | triage per run |
 
@@ -66,5 +66,5 @@ Expected state before deletion:
 
 1. Legacy run triage: landed in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`.
 2. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md` durable/governance/changelog files.
-3. Legacy operational payload pass: replace or remove old prompts/templates/manifest after reference scan.
+3. Legacy operational payload pass: landed for old prompts, templates, and automation manifest.
 4. Final deletion pass: remove `platform/docs/ai/**` only after the repository has no active references.

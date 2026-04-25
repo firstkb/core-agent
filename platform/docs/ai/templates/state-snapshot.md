@@ -1,17 +1,17 @@
-# State Snapshot Template
+# Retired Template - State Snapshot
 
-Use this after a meaningful implementation slice.
+Status: retired legacy template pointer
+Retired on: 2026-04-25
 
-```text
-STATE SNAPSHOT
+This file is no longer the active state-snapshot template.
 
-Goal:
-Completed:
-Still in progress:
-Touched files/modules:
-Contracts changed:
-Docs updated:
-Tests/checks run:
-Risks:
-Next exact step:
-```
+Read instead:
+
+- `ai-memory/atlas/templates/state-snapshot.md`
+- `ai-memory/atlas/templates/README.md`
+
+Do not create new state snapshots from this legacy template.
+
+For provenance, use git history or:
+
+- `ai-memory/durable/legacy-memory-import.md`

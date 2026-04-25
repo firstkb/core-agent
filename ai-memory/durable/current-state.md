@@ -49,6 +49,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Legacy run triage for `platform/docs/ai/runs/**` is compacted in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`; old run folders are provenance only.
 - `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`; old payload text is available only through git history.
 - `landed` `doc-confirmed`: Legacy module memory files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs; old payload text is available only through git history.
+- `landed` `doc-confirmed`: Legacy prompt/template payloads and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`; old operational payload text is available only through git history.
 
 ## Active Product Domains
 
@@ -105,8 +106,8 @@ Confidence labels:
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
-- `risk` `doc-confirmed`: Historical `platform/docs/ai/prompts/**`, `templates/**`, and run payloads still exist in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
-- `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `runs/**` still exist as legacy provenance after the Atlas operational cutover. Do not write new workflow artifacts there.
+- `risk` `doc-confirmed`: Historical `platform/docs/ai/runs/**` payloads still exist in the repository. Use `ai-memory/durable/legacy-memory-import.md` only when historical reconstruction is explicitly needed.
+- `risk` `doc-confirmed`: Old `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are pointer stubs only; do not write new workflow artifacts there.
 - `risk` `doc-confirmed`: Some old `platform/docs/ai/**` payload files still exist until the retirement plan is executed. Use `ai-memory/atlas/platform-docs-ai-retirement-plan.md` before deleting or compacting them.
 - `risk` `doc-confirmed`: `2026-04-13_cross-stack_form-builder-three-schema-stabilization` is the only legacy run marked `keep-provenance`; confirm current code/docs before deleting or replacing that payload.
 

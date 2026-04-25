@@ -1,17 +1,17 @@
-# Task Header Template
+# Retired Template - Task Header
 
-Use this at the start of a new task inside the current chat.
+Status: retired legacy template pointer
+Retired on: 2026-04-25
 
-```text
-NEW TASK
+This file is no longer the active task-header template.
 
-Goal:
-Why now:
-Active scope:
-Out of scope:
-Touched runtime:
-Touched modules/packages:
-Locked decisions:
-Known assumptions:
-Acceptance criteria:
-```
+Read instead:
+
+- `ai-memory/atlas/templates/task-header.md`
+- `ai-memory/atlas/templates/README.md`
+
+Do not create new task artifacts from this legacy template.
+
+For provenance, use git history or:
+
+- `ai-memory/durable/legacy-memory-import.md`

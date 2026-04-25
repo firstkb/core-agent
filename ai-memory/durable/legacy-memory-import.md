@@ -6,8 +6,9 @@ Last compacted: 2026-04-25
 This file records how durable knowledge from `platform/docs/ai` was folded into `ai-memory`.
 It prevents agents from rereading the entire old memory corpus unless a task needs verification.
 
-Top-level legacy markdown files under `platform/docs/ai/*.md` and legacy module
-files under `platform/docs/ai/modules/*.md` are now pointer stubs.
+Top-level legacy markdown files under `platform/docs/ai/*.md`, legacy module
+files under `platform/docs/ai/modules/*.md`, legacy prompts/templates, and the
+legacy automation manifest are now pointer stubs.
 Use `ai-memory` for active memory and git history for old payload text.
 
 ## Source Classification
@@ -41,6 +42,9 @@ Retired pointer stubs:
 
 - `platform/docs/ai/*.md`
 - `platform/docs/ai/modules/*.md`
+- `platform/docs/ai/prompts/*.md`
+- `platform/docs/ai/templates/*.md`
+- `platform/docs/ai/automation-manifest.json`
 
 Historical/episodic artifacts, not active memory:
 
@@ -79,6 +83,10 @@ Open `platform/docs/ai` only when:
 Do not use `platform/docs/ai/modules/*.md` as active module memory. Read
 `ai-memory/durable/module-index.md` and the relevant `ai-memory/modules/**`
 pack first.
+
+Do not use `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, or
+`platform/docs/ai/automation-manifest.json` for active Atlas workflow. Read
+`ai-memory/atlas/**` instead.
 
 Do not use `platform/docs/ai/runs/**` as active design input unless the owner asks for historical reconstruction.
 Read `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` before opening old run payloads.

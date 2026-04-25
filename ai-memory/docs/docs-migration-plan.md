@@ -273,6 +273,7 @@ Local relocation/control docs:
 32. Legacy run triage: landed with `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`; old run folders remain provenance only pending owner-approved deletion/move.
 33. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md`; active memory now routes to `ai-memory`, while old payload text is git-history provenance only.
 34. Legacy module memory pointer pass: landed for `platform/docs/ai/modules/*.md`; active module memory now routes to `ai-memory/modules/**` and tracked FE/BE docs.
+35. Legacy operational payload pass: landed for `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, and `platform/docs/ai/automation-manifest.json`; active Atlas workflow now routes only to `ai-memory/atlas/**`.
 
 ## Current Blockers Before Physical Move
 

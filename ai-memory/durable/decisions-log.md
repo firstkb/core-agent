@@ -707,3 +707,18 @@ Do not turn it into a task journal.
   - `platform/docs/ai/modules/platform-studio.md`
   - `ai-memory/durable/module-index.md`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-060 Legacy Atlas Operational Payloads Are Pointers
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Legacy Atlas prompt/template files under `platform/docs/ai/prompts/**` and `platform/docs/ai/templates/**`, plus `platform/docs/ai/automation-manifest.json`, are no longer active operational payloads. They are compatibility pointers to `ai-memory/atlas/**`. Active prompt/template/version edits must use `ai-memory/atlas/**` and `scripts/ai/automation_versions.py`, not legacy `platform/docs/ai/**`.
+- Sources:
+  - `platform/docs/ai/prompts/README.md`
+  - `platform/docs/ai/templates/README.md`
+  - `platform/docs/ai/automation-manifest.json`
+  - `ai-memory/atlas/prompts/README.md`
+  - `ai-memory/atlas/templates/README.md`
+  - `ai-memory/atlas/automation-manifest.json`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

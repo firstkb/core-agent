@@ -1,22 +1,17 @@
-# Handoff Packet Template
+# Retired Template - Handoff Packet
 
-Use this when the chat is getting noisy or the context needs to move.
+Status: retired legacy template pointer
+Retired on: 2026-04-25
 
-```text
-HANDOFF PACKET
+This file is no longer the active handoff-packet template.
 
-Project: Ramp Platform v108
-Stream:
-Current objective:
-Why this matters:
-Locked decisions:
-Active assumptions:
-Touched runtimes/apps/packages/modules:
-Changed files:
-What is already done:
-What remains:
-Open risks:
-Do not redo:
-Next exact step:
-First response expected from the new chat:
-```
+Read instead:
+
+- `ai-memory/atlas/templates/handoff-packet.md`
+- `ai-memory/atlas/templates/README.md`
+
+Do not create new handoff packets from this legacy template.
+
+For provenance, use git history or:
+
+- `ai-memory/durable/legacy-memory-import.md`

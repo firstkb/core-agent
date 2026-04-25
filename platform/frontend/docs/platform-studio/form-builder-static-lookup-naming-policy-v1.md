@@ -222,7 +222,7 @@ If a phase draft already uses raw FK column names as `storageKey`, correct it be
 
 ## Companion Docs
 
-- [form-builder-static-models-integration-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md)
-- [form-builder-static-models-schema-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md)
-- [form-builder-schema-cleanup-contract-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md)
-- [form-builder-static-models-atlas-task-v1.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/frontend/docs/platform-studio/form-builder-static-models-atlas-task-v1.md)
+- `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-static-models-schema-contract-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-schema-cleanup-contract-v1.md`
+- `platform/frontend/docs/platform-studio/form-builder-static-models-atlas-task-v1.md`

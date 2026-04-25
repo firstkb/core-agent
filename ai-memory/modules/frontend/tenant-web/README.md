@@ -1,0 +1,82 @@
+# Frontend Tenant Web
+
+Status: active compact frontend pack
+Owner surface: `tenant-web`
+Last compacted: 2026-04-25
+
+## Read This When
+
+- changing tenant app shell bootstrap
+- changing tenant public auth or private profile bootstrap
+- changing tenant sidebar, rail utilities, dashboard, or published runtime route composition
+- changing tenant-facing Platform Studio UI ownership
+- deciding whether code belongs in `tenant-web`, `tenant-core`, or a shared package
+- handling install prompt, manifest, PWA/offline, or mobile questions for the tenant app
+
+## Owner Sources
+
+- `platform/frontend/docs/modules/tenant-web.md`
+- `platform/frontend/docs/contracts/app-surfaces.md`
+- `platform/frontend/docs/contracts/tenant-model.md`
+- `platform/frontend/docs/contracts/auth-runtime.md`
+- `platform/frontend/docs/contracts/platform-studio.md`
+- `platform/frontend/docs/guides/install-helper.md`
+- `platform/frontend/docs/proposals/pwa-offline.md`
+- `platform/frontend/apps/tenant-web/src/main.tsx`
+- `platform/frontend/apps/tenant-web/src/app/root.tsx`
+- `platform/frontend/apps/tenant-web/src/app/app.tsx`
+- `platform/frontend/apps/tenant-web/src/app/private-app.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/**`
+- `platform/frontend/apps/tenant-web/src/features/published-app/**`
+- `platform/frontend/apps/tenant-web/src/features/form-runtime/**`
+
+## Fast Facts
+
+- `tenant-web` is the active online tenant-scoped product app.
+- `tenant-web` owns tenant public auth composition, private shell composition, routes, sidebar/rail behavior, dashboard, tenant branding consumption, and app-local Platform Studio UI.
+- Runtime config loads from `/config.json` and requires `authApiUrl` plus `tenantApiUrl`.
+- Tenant bootstrap injects `/tenant/style.css` and uses tenant logo assets with app asset fallbacks.
+- Tenant auth uses `createOtpAuthService({ surface: "tenant" })`.
+- Private app entry requires real `GET /api/v1/app/profile`.
+- Refresh token remains backend-managed in an `HttpOnly` cookie; JS stores only access token and expiry.
+- Install prompting is mounted on public `/sign-in` only.
+- Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
+- Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned.
+- Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
+- Published runtime consumption is not the full Navigation Builder contract.
+- `tenant-pwa`, service-worker sync, offline-first persistence, Flutter, and hybrid mobile are future/deferred.
+
+## Boundaries
+
+`tenant-web` owns:
+
+- route composition
+- app shell and public auth screen composition
+- tenant page behavior
+- tenant-specific navigation and utility panels
+- screen-specific permission decisions
+- app-local Platform Studio React UI
+- current online tenant web runtime behavior
+
+It does not own:
+
+- admin/backoffice behavior
+- backend tenant isolation policy
+- backend Form Builder API/storage/runtime apply behavior
+- generic shared package contracts
+- offline-first architecture
+- mobile shell architecture
+
+## Tenant-Core Split
+
+- `tenant-core` owns stable reusable tenant identity, tenant context, tenant-scoped configuration, branding resolution, and tenant permission wiring.
+- `tenant-web` consumes shared tenant primitives and composes app routes, screens, shell, and workflows.
+- Do not extract tenant app-local helpers into shared packages until reuse and API shape are proven.
+- Re-evaluate the split before future PWA/offline or Flutter/mobile work is activated.
+
+## Risks
+
+- Manifest/install prompt support can be mistaken for active offline PWA scope.
+- `src/offline/sync-status.ts` can be mistaken for a real sync contract; it is not current offline architecture.
+- Published runtime sidebar entries can be mistaken for completed Navigation Builder behavior.
+- Platform Studio planned tool concerns can leak into Form Builder if the suite contract is not read first.

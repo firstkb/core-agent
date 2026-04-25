@@ -1,9 +1,0 @@
-<div class="row mb-md-4 <% if (req == "Yes") { %>field-required<% } %>">
-    <label class="col-sm-4 fs-6 fw-bold form-label mt-4"><%- title%>:</label>
-    <div class="col-sm-8">
-        <div class="input-group">
-            <span class="input-group-text">$</span>
-            <input type="text" class="form-control <% if (subform === false) { %>fld<% } %>" name="<%- field %>" value="<%- value %>"  title="<%- title%>" <% if (req == "Yes") { %>required<% } %>></div>
-        </div>
-    </div>
-</div>

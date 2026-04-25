@@ -1,20 +1,23 @@
-# ESS Smart Web App
+# smartapp Runtime Reference Pack Pointer
 
-### This app contains ESS Smart Web App
+Status: reference pointer
+Owner: platform-studio
+Last audited: 2026-04-25
+Canonical scope: compatibility pointer for relocated runtime reference source
 
-## About
+The raw smartapp runtime reference no longer lives in active Platform Studio docs.
+Use `docs/ref/reference-code.md` and alias `reference-pack:smartapp-runtime`.
 
-ESS Smart Web App is a cutting-edge application designed to enhance safety systems through early risk prevention.
+This material is opt-in reference only.
+It is not product truth and must not be read by default.
 
-## Features
+Allowed use:
 
-- **User Authentication**: Secure login with AWS Cognito.
+- old runtime behavior comparison
+- old field rendering review
+- implementation archaeology after active docs are insufficient
 
-## Installation
+Forbidden use:
 
-To get started with the ESS Smart Web App, clone the repository and install the dependencies:
-
-```bash
-git clone https://github.com/esafesys-eng/ess-smart-web-app.git
-cd ess-smart-web-app
-pnpm install
+- treating smartapp runtime structure as current product architecture
+- copying runtime implementation directly into current apps or packages

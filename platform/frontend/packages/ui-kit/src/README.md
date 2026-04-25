@@ -12,7 +12,8 @@ Runtime usage:
 
 Migration source of truth:
 
+- `platform/frontend/docs/contracts/ui-kit.md`
+- `platform/frontend/docs/guides/ui-lab.md`
 - `platform/frontend/docs/vendor/metronic-inventory.md`
-- `platform/frontend/docs/ui-kit-boundary-audit.md`
-- `platform/frontend/docs/ui-kit-stable-approved-audit.md`
-- `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
+
+The old boundary, stable-approved, and UI Lab coverage docs are compatibility pointers after the docs compaction slices.

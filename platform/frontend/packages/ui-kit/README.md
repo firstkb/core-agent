@@ -4,6 +4,8 @@ Shared UI primitives and reusable UI patterns built on top of `design-tokens`.
 
 This package is the landing zone for vendor-free extraction from the Metronic references. Do not copy vendor routing, auth, provider, or demo-layout logic here.
 
+Canonical governance lives in `platform/frontend/docs/contracts/ui-kit.md`.
+
 ## Boundary
 
 - reusable UI only;

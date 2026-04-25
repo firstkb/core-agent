@@ -38,8 +38,8 @@ The current `ezform` prototype is built around a three-zone shell:
 
 Relevant files:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/Builder.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/components/MainComponent.tsx`
+- `reference-pack:ezform-prototype / src/components/Builder.tsx`
+- `reference-pack:ezform-prototype / src/components/MainComponent.tsx`
 
 ### Left zone
 
@@ -47,7 +47,7 @@ The left zone is not static. It already reacts to the currently selected parent 
 
 Relevant file:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/FieldList/FieldList.tsx`
+- `reference-pack:ezform-prototype / src/components/FieldList/FieldList.tsx`
 
 Observed behavior:
 
@@ -65,8 +65,8 @@ The center zone acts as a structural authoring canvas, not a polished visual pre
 
 Relevant files:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/FormBuilder/FormCanvas.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/components/FormBuilder/FormField.tsx`
+- `reference-pack:ezform-prototype / src/components/FormBuilder/FormCanvas.tsx`
+- `reference-pack:ezform-prototype / src/components/FormBuilder/FormField.tsx`
 
 Observed behavior:
 
@@ -88,10 +88,10 @@ The right zone is a settings inspector with tabs for:
 
 Relevant files:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/SettingsPanel/SettingsPanel.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/components/SettingsPanel/FieldSettingsTab.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/components/SettingsPanel/FormSettingsTab.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/components/SettingsPanel/GridSettingsTab.tsx`
+- `reference-pack:ezform-prototype / src/components/SettingsPanel/SettingsPanel.tsx`
+- `reference-pack:ezform-prototype / src/components/SettingsPanel/FieldSettingsTab.tsx`
+- `reference-pack:ezform-prototype / src/components/SettingsPanel/FormSettingsTab.tsx`
+- `reference-pack:ezform-prototype / src/components/SettingsPanel/GridSettingsTab.tsx`
 
 This general shape is correct for V2, but the taxonomy and control quality must improve.
 
@@ -113,7 +113,7 @@ V2 should keep and improve the idea that the left palette changes based on the s
 
 Relevant file:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/FieldList/FieldList.tsx`
+- `reference-pack:ezform-prototype / src/components/FieldList/FieldList.tsx`
 
 This is especially important for containers such as:
 
@@ -129,7 +129,7 @@ Example already proven by `ezform`:
 
 Relevant file:
 
-- `platform/frontend/docs/platform-studio/ezform/src/utils/constants.ts`
+- `reference-pack:ezform-prototype / src/utils/constants.ts`
 
 ### 3. Level-aware nested editing
 
@@ -141,7 +141,7 @@ V2 should keep the idea that nested containers are authored by entering the curr
 
 Relevant file:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/FormBuilder/FormCanvas.tsx`
+- `reference-pack:ezform-prototype / src/components/FormBuilder/FormCanvas.tsx`
 
 ### 4. Inspector-driven detailed configuration
 
@@ -160,8 +160,8 @@ The exact tabs may change, but the overall role of the right column is correct.
 
 Relevant files:
 
-- `platform/frontend/docs/platform-studio/ezform/src/context/FormContext.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/utils/schemaGenerator.ts`
+- `reference-pack:ezform-prototype / src/context/FormContext.tsx`
+- `reference-pack:ezform-prototype / src/utils/schemaGenerator.ts`
 
 V2 should keep this concept, but with a more explicit boundary between:
 
@@ -177,7 +177,7 @@ V2 should keep this concept, but with a more explicit boundary between:
 
 Relevant file:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/Builder.tsx`
+- `reference-pack:ezform-prototype / src/components/Builder.tsx`
 
 V2 should use a hybrid interaction:
 
@@ -223,8 +223,8 @@ V2 should likely organize the right panel around:
 
 Relevant files:
 
-- `platform/frontend/docs/platform-studio/ezform/src/components/MainComponent.tsx`
-- `platform/frontend/docs/platform-studio/ezform/src/context/FormContext.tsx`
+- `reference-pack:ezform-prototype / src/components/MainComponent.tsx`
+- `reference-pack:ezform-prototype / src/context/FormContext.tsx`
 
 V2 must support:
 

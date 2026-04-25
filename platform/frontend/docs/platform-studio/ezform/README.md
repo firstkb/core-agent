@@ -1,50 +1,23 @@
-# React + TypeScript + Vite
+# ezform Prototype Reference Pack Pointer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Status: reference pointer
+Owner: platform-studio
+Last audited: 2026-04-25
+Canonical scope: compatibility pointer for relocated Form Builder prototype source
 
-Currently, two official plugins are available:
+The raw ezform prototype no longer lives in active Platform Studio docs.
+Use `docs/ref/reference-code.md` and alias `reference-pack:ezform-prototype`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This material is opt-in reference only.
+It is not product truth and must not be read by default.
 
-## Expanding the ESLint configuration
+Allowed use:
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- Form Builder authoring-flow comparison
+- interaction ergonomics review
+- shell layout inspiration after reading active Platform Studio docs
 
-- Configure the top-level `parserOptions` property like this:
+Forbidden use:
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
-
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- copying prototype UI or code as production implementation
+- treating prototype constraints as current Platform Studio architecture

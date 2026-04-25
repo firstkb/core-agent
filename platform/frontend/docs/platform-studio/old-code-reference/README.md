@@ -1,48 +1,23 @@
-# Old Code Reference
+# Old Builder Reference Pack Pointer
 
-This folder stores reference material for the retired Platform Studio implementation without letting that implementation act like live product guidance again.
+Status: reference pointer
+Owner: platform-studio
+Last audited: 2026-04-25
+Canonical scope: compatibility pointer for relocated historical builder reference
 
-## Reusable Foundation
+The raw old builder reference pack no longer lives in active Platform Studio docs.
+Use `docs/ref/reference-code.md` and alias `reference-pack:old-builder-reference`.
 
-Keep reusable foundation in live source paths, not in this archive.
+This material is opt-in reference only.
+It is not product truth and must not be read by default.
 
-Primary active surfaces:
+Allowed use:
 
-- `platform/frontend/packages/platform-studio-core/**`
-- `platform/frontend/apps/tenant-web/src/features/published-app/**`
-- `platform/frontend/apps/tenant-web/src/shared/**`
+- historical comparison
+- old builder behavior archaeology
+- checking whether a durable lesson was already compacted
 
-See `reusable-foundation-notes.md` for the current classification.
+Forbidden use:
 
-## Discarded UI
-
-Discarded product direction belongs in notes, not in live code and not as a large raw snapshot.
-
-Use `discarded-ui-patterns.md` for:
-
-- old sidebar-module framing
-- cockpit-style control surfaces
-- diagnostics-first top-level pages
-- publish-center-first UX
-- other UI patterns that should not return as the V2 baseline
-
-## Temporary Code Snapshot
-
-The `code-snapshot/` subtree is now a tiny temporary residue, not a full source dump.
-Keep only the remaining raw files that still help explain draft/view mutation and preview adaptation details:
-
-- `code-snapshot/tenant-web/src/features/platform-builder/draft/builder-draft-seed.ts`
-- `code-snapshot/tenant-web/src/features/platform-builder/draft/builder-draft-store.ts`
-- `code-snapshot/tenant-web/src/features/platform-builder/draft/builder-preview-manifest.ts`
-- `code-snapshot/tenant-web/src/features/platform-builder/preview/resolve-builder-preview-state.ts`
-- `code-snapshot/tenant-web/src/features/platform-builder/views/view-builder-state.ts`
-
-Do not keep here:
-
-- active frontend source code moved out of the app just for archival
-- discarded UI screens, shells, CSS, or route trees
-- duplicated runtime helpers that still exist in live source
-- tests kept only because they were part of the old dump
-- new design decisions for V2
-
-Delete the temporary snapshot once those remaining patterns are fully captured in notes or deliberately re-extracted into a cleaner legacy location.
+- treating historical notes as current Form Builder contract
+- reopening old implementation direction without owner activation

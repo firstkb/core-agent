@@ -1,27 +1,12 @@
 # Package Boundaries
 
-Canonical package responsibilities for the frontend workspace.
+Status: compatibility pointer
+Owner: frontend
+Last audited: 2026-04-25
+Canonical scope: old path for package boundary docs
 
-## Packages
+This document has moved to:
 
-- `design-tokens`: colors, spacing, typography, z-index, motion tokens; no React code
-- `ui-kit`: reusable UI primitives built on top of `design-tokens`
-- `api-client`: HTTP client, generated clients, request helpers, API transport contracts
-- `auth-core`: session model, auth state, sign-in and sign-out flows, auth guards
-- `tenant-core`: tenant resolution, tenant context, branding resolution, tenant permissions wiring
-- `app-shell`: shared layout shell, navigation scaffolds, shared app chrome
-- `forms`: shared form primitives or schema-driven form helpers used across apps
-- `platform-studio-core`: typed Platform Studio contracts, validation schemas, and manifest helpers shared across builder domains; no UI code
+- `platform/frontend/docs/contracts/package-boundaries.md`
 
-## Rules
-
-- No business feature package until the feature is shared by at least two apps.
-- `platform-studio-core` is the approved exception for the first shared Platform Studio contract layer because both builder authoring state and runtime metadata resolve depend on the same non-UI contract.
-- domain folders inside `platform-studio-core` may align to `form-builder`, `navigation-builder`, and `action-builder` concerns over time, but separate packages are deferred until reuse is real.
-- No deep imports across package boundaries.
-- Packages must export through `src/index.ts` only.
-- Packages must not depend on app code.
-- UI-free packages should not import `ui-kit`.
-- `ui-kit` defaults to stable primitives and low-risk reusable contracts.
-- Do not treat every donor pattern extracted from Metronic as an automatic `ui-kit` addition.
-- Screen-specific toolbars, route-specific filters, and workflow compositions stay in app code until product contracts are approved.
+Use the new contract for current package responsibilities, import rules, promotion rules, and Platform Studio package boundaries.

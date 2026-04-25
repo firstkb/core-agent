@@ -17,3 +17,7 @@ Future-target references:
 
 - [`future-implementations.md`](./future-implementations.md) - compact backlog of future-target runtime and packaging improvements
 - [`maestro/maestro-feature-formation-canonical.md`](./maestro/maestro-feature-formation-canonical.md) - target architecture for later Maestro evolution, not the live runtime contract
+
+Opt-in reference metadata:
+
+- [`ref/reference-code.md`](./ref/reference-code.md) - alias registry for donor/vendor/legacy reference-code packs; not product truth

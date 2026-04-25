@@ -616,7 +616,7 @@ Recommended editor foundation:
 Notes:
 
 - do not use plain textarea as a fake rich-text surface
-- no reusable WYSIWYG donor foundation was identified in `frontend/docs/metronic`
+- no reusable WYSIWYG donor foundation was identified in `reference-pack:metronic`
 
 ### Integer
 

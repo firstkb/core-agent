@@ -1,47 +1,66 @@
-# Backend Docs Index
+# Backend Docs
 
-Status: active
+Status: active index
+Owner: backend
+Last audited: 2026-04-25
+Canonical scope: tracked backend documentation entrypoint
 
-Use this index together with `platform/docs/ai/*`.
-This folder holds backend-local contracts, runbooks, and working implementation docs.
+This index points agents to the active backend docs set.
+Read contract docs first, then module docs, then runbooks/proposals/reference/history only when the task requires them.
 
-## Start here
+## Active Runtime Docs
 
-Read in this order for most backend work:
+- `contracts/runtime-wiring.md`: backend runtime composition, module wiring, route registration, and responsibility split.
+- `contracts/collection-table.md`: backend shared Collection Table DTOs, query helpers, preferences, and current admin endpoint families.
+- `contracts/platform-studio-form-builder.md`: backend Form Builder authoring API, metadata storage, runtime apply, generated objects, validation, and migration boundary.
+- `modules/runtime.md`: current backend runtime shape, active entrypoints, module roots, and foundation boundaries.
+- `modules/platform-studio/form-builder.md`: backend Form Builder implementation map and read order.
 
-1. `platform/docs/ai/current-state.md`
-2. `platform/docs/ai/canonical-docs.md`
-3. `platform/docs/ai/platform-contract.md`
-4. the relevant module memory file under `platform/docs/ai/modules/`
-5. this file
+## Current Runtime Summary
 
-## Canonical backend docs by domain
+- Active runtime entrypoints: `cmd/api-admin`, `cmd/api-tenant`, `cmd/auth`, `cmd/migrate`.
+- Deferred runtime: `cmd/worker`.
+- Retired runtime: `cmd/scapi`.
+- Backend remains a modular monolith.
+- `cmd/migrate` owns schema migration execution.
+- API startup must not run schema migrations.
 
-### Workspace and runtime shape
+## Compatibility Pointers
+
+These old root docs remain as compatibility pointers during the migration:
 
 - `backend-current-to-target-map.md`
 - `backend-module-wiring-standard.md`
 - `backend-internal-foundation-matrix.md`
-- `local-backend-bootstrap.md`
 
-### Auth and session
+## Auth And Session
 
-- `backend-auth-gateway-contract.md`
-- `backend-auth-control-table-design.md`
-- `backend-auth-projection-and-sync.md`
+Active docs:
+
+- `contracts/auth-gateway.md`
+- `contracts/auth-control-schema.md`
+- `modules/auth.md`
 - `auth/auth-key-source-configuration.md`
 
-Supporting auth docs:
+Supporting docs:
 
 - `backend-db-instance-secret-resolution.md`
 - `auth/auth-kms-implementation-status.md`
 
-### Admin control plane
+Compatibility pointers:
 
-- `backend-admin-module-registry-brief.md`
-- `backend-admin-access-policy-layering.md`
+- `backend-auth-gateway-contract.md`
+- `backend-auth-control-table-design.md`
+- `backend-auth-projection-and-sync.md`
 
-Supporting admin docs:
+## Admin Control Plane
+
+Active docs:
+
+- `contracts/admin-control-plane.md`
+- `contracts/admin-module-registry.md`
+
+Supporting docs:
 
 - `backend-api-gateway-http-api-mapping-spec.md`
 - `backend-api-gateway-proxy-routing-policy.md`
@@ -49,25 +68,60 @@ Supporting admin docs:
 
 Note:
 
-- `backend-admin-module-registry-brief.md` is canonical for the module-registry control-plane domain
-- it should not be treated as the owner of the generic collection-table runtime contract
+- `contracts/admin-module-registry.md` owns Module Registry control-plane context.
+- Generic Collection Table behavior belongs to `contracts/collection-table.md`.
 
-### Schema and tenancy
+Compatibility pointers:
+
+- `backend-admin-module-registry-brief.md`
+- `backend-admin-access-policy-layering.md`
+
+## Schema And Tenancy
+
+Active docs:
+
+- `contracts/schema-tenancy.md`
+- `contracts/migrations.md`
+- `backend-tenant-canonical-field-mapping-v1.md`
+- `backend-tenant-import-module-boundary-v1.md`
+
+Supporting docs:
+
+- `backend-schema-drift-check-strategy.md`
+- `backend-db-instance-secret-resolution.md`
+
+Compatibility pointers:
 
 - `backend-schema-master-baseline.md`
 - `backend-schema-tenant-baseline.md`
 - `backend-schema-migrations-baseline.md`
 - `backend-schema-placement-and-naming.md`
 - `backend-tenant-canonical-refactor-contract-v1.md`
-- `backend-tenant-canonical-field-mapping-v1.md`
-- `backend-tenant-import-module-boundary-v1.md`
 
-Supporting schema docs:
+## Platform Studio Form Builder
 
-- `backend-schema-drift-check-strategy.md`
-- `backend-db-instance-secret-resolution.md`
+Active docs:
 
-## Working or historical docs
+- `contracts/platform-studio-form-builder.md`
+- `modules/platform-studio/form-builder.md`
+
+Code owners:
+
+- `modules/tenant/platformstudioformbuilder`
+- `cmd/api-tenant/internal/server/routes_platform_studio_form_builder.go`
+
+Read rule:
+
+- Use `modules/platform-studio/form-builder.md` for implementation orientation.
+- Use `contracts/platform-studio-form-builder.md` for API, storage, validation, generated-object, runtime apply, and migration-boundary rules.
+
+Frontend compatibility pointers:
+
+- `platform/frontend/docs/platform-studio/form-builder-backend*.md`
+- `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
+- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
+
+## Working Or Historical Docs
 
 Read only when the task explicitly needs rationale or rollout history:
 
@@ -79,8 +133,5 @@ Read only when the task explicitly needs rationale or rollout history:
 - `backend-export-architecture-agent-prompt.md`
 - `legacy/**`
 
-## Archive note
-
-One-off prompt material lives under:
-
-- `platform/docs/archive/agent-prompts/`
+Legacy MSSQL schema files under `MSSQL/**` are reference-code material only.
+Use `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening them.

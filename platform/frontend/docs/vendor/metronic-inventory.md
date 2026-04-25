@@ -1,6 +1,7 @@
 # Metronic Inventory
 
-Inventory and migration tracker for the Metronic donor sources under `platform/frontend/docs/metronic`.
+Inventory and migration tracker for the Metronic donor sources.
+Use `reference-pack:metronic` as the stable alias; the raw pack is local-only under `reference-code/frontend/metronic`.
 
 ## Decision Rules
 

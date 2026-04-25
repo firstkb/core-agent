@@ -44,7 +44,7 @@ This repository should not become the permanent home for:
 
 Supported legacy inputs:
 
-- legacy MSSQL schema under `platform/backend/docs/MSSQL/*`
+- legacy MSSQL schema through `reference-pack:mssql-legacy-schema`
 - legacy PostgreSQL tenant schema, if needed as an intermediate migration source
 
 ### Target system

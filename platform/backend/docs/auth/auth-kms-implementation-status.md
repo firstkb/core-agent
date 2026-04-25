@@ -33,7 +33,7 @@ The following preparation work is complete:
 
 2. JWT issuer now routes by key source.
    Current source routing lives in:
-   - [jwt_key_source.go](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/internal/platform/auth/jwt_key_source.go)
+   - `platform/backend/internal/platform/auth/jwt_key_source.go`
 
 3. `kms` path fails explicitly.
    This is intentional and prevents false production assumptions.
@@ -59,7 +59,7 @@ Current blocker:
 
 2. Add KMS client factory.
    Extend:
-   - [jwt_key_source.go](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/internal/platform/auth/jwt_key_source.go)
+   - `platform/backend/internal/platform/auth/jwt_key_source.go`
 
 3. Implement `kmsTokenSigner`.
    Required behavior:
@@ -118,5 +118,5 @@ Use:
 
 ## Related docs
 
-- [auth-key-source-configuration.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/auth/auth-key-source-configuration.md)
-- [local-backend-bootstrap.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/local-backend-bootstrap.md)
+- `platform/backend/docs/auth/auth-key-source-configuration.md`
+- `platform/backend/docs/local-backend-bootstrap.md`

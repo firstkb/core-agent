@@ -25,7 +25,7 @@ Current build status:
 
 Detailed KMS stage tracking:
 
-- [auth-kms-implementation-status.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/auth/auth-kms-implementation-status.md)
+- `platform/backend/docs/auth/auth-kms-implementation-status.md`
 
 ## Rule
 
@@ -93,7 +93,7 @@ Current support:
 
 ### Local dev generation
 
-From [platform/backend](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend):
+From `platform/backend`:
 
 ```bash
 ./scripts/generate-dev-auth-keys.sh
@@ -288,7 +288,7 @@ Required code work:
 
 1. Add AWS KMS SDK dependency and client wiring.
    Files likely involved:
-   - [jwt_key_source.go](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/internal/platform/auth/jwt_key_source.go)
+   - `platform/backend/internal/platform/auth/jwt_key_source.go`
    - `platform/backend/go.mod`
 
 2. Add a KMS-backed signer implementation.
@@ -305,7 +305,7 @@ Required code work:
 
 3. Teach `tokenSigner` about a `kmsTokenSigner`.
    Current file:
-   - [jwt_key_source.go](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/internal/platform/auth/jwt_key_source.go)
+   - `platform/backend/internal/platform/auth/jwt_key_source.go`
 
    Needed:
    - `kmsTokenSigner.Sign(token *jwt.Token) (string, error)`
@@ -317,7 +317,7 @@ Required code work:
    - or fetch KMS public key with `GetPublicKey` and derive RSA public key/JWKS directly
 
    If using `GetPublicKey`, update:
-   - [jwks.go](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/internal/platform/auth/jwks.go)
+   - `platform/backend/internal/platform/auth/jwks.go`
    - possibly `JWTIssuer` initialization path
 
 5. Define final KMS source contract.
@@ -345,6 +345,6 @@ Required code work:
 
 ## Related files
 
-- [README.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/README.md)
-- [local-backend-bootstrap.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/local-backend-bootstrap.md)
-- [generate-dev-auth-keys.sh](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/scripts/generate-dev-auth-keys.sh)
+- `platform/backend/README.md`
+- `platform/backend/docs/local-backend-bootstrap.md`
+- `platform/backend/scripts/generate-dev-auth-keys.sh`

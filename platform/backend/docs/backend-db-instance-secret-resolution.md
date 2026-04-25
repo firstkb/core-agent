@@ -115,5 +115,5 @@ To support password rotation without restart, backend still needs:
 
 ## Related docs
 
-- [backend-schema-master-baseline.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/backend-schema-master-baseline.md)
-- [local-backend-bootstrap.md](/Volumes/HD/Projects/github/firstkb/core-agent/platform/backend/docs/local-backend-bootstrap.md)
+- `platform/backend/docs/backend-schema-master-baseline.md`
+- `platform/backend/docs/local-backend-bootstrap.md`

@@ -45,15 +45,16 @@ Current contract-first docs:
 | `platform/frontend/docs/guides/local-dev.md` | `hot_guide` | Frontend local dev commands, HTTPS proxy modes, ports, domains, and checks. |
 | `platform/frontend/docs/proposals/pwa-offline.md` | `future_proposal` | PWA/offline or Flutter/hybrid mobile questions. Not active implementation scope. |
 
-Compatibility pointers:
+Tracked index:
 
 | Source | Classification | Read When |
 | --- | --- | --- |
-| `platform/frontend/docs/README.md` | `tracked_index` | Need tracked source index; old root/platform-studio paths listed there are compatibility-only. |
-| `platform/frontend/docs/install-helper-runtime.md` | `compatibility_pointer` | Old path; read `guides/install-helper.md` instead. |
+| `platform/frontend/docs/README.md` | `tracked_index` | Need tracked source index and active read order. |
 
 Pointer-only app-surface, package-boundary, tenant-model, and offline root
-redirect files were deleted after compaction.
+redirect files were deleted after compaction. The old install-helper root
+pointer was also deleted; read `platform/frontend/docs/guides/install-helper.md`
+or git history for exact old text.
 
 ## Auth
 
@@ -72,10 +73,10 @@ Read `platform/backend/docs/contracts/collection-table.md` for backend DTOs, pre
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/contracts/collection-table.md` | `hot_contract` | Current frontend package/runtime contract, host adapter boundary, table metadata, state, actions, and current consumers. |
-| `platform/frontend/docs/collection-table-shared-readiness-plan.md` | `compatibility_pointer` | Superseded extraction plan; package extraction has landed. |
 
 Old Collection Table root contract pointer-only files were deleted after
-compaction.
+compaction. The old shared-readiness root pointer was also deleted; use git
+history only for exact old plan text.
 
 ## Platform Admin Web
 
@@ -99,16 +100,12 @@ The old admin backend handoff pointer-only file was deleted after compaction.
 | --- | --- | --- |
 | `platform/frontend/docs/contracts/ui-kit.md` | `hot_contract` | Current UI Kit boundary, promotion rules, stable/provisional sets, layout baseline, and delivery order. |
 | `platform/frontend/docs/guides/ui-lab.md` | `hot_guide` | Current UI Lab route, section model, review coverage, and editing rules. |
-| `platform/frontend/docs/ui-delivery-order.md` | `compatibility_pointer` | Old path; read `contracts/ui-kit.md` instead. |
-| `platform/frontend/docs/layout-baseline.md` | `compatibility_pointer` | Old path; read `contracts/ui-kit.md` instead. |
-| `platform/frontend/docs/ui-kit-boundary-audit.md` | `compatibility_pointer` | Old path; read `contracts/ui-kit.md` instead. |
-| `platform/frontend/docs/ui-kit-stable-approved-audit.md` | `compatibility_pointer` | Old path; read `contracts/ui-kit.md` instead. |
-| `platform/frontend/docs/ui-lab-structure.md` | `compatibility_pointer` | Old path; read `guides/ui-lab.md` instead. |
-| `platform/frontend/docs/ui-lab-ui-kit-coverage.md` | `compatibility_pointer` | Old path; read `guides/ui-lab.md` instead and verify current exports before implementation. |
 | `platform/frontend/docs/proposals/deferred-composed-surfaces.md` | `future_proposal` | Larger workflow-shaped surfaces deferred from `ui-kit` and UI Lab; owner activation required before implementation. |
-| `platform/frontend/docs/deferred-composed-surfaces.md` | `compatibility_pointer` | Old path; read `proposals/deferred-composed-surfaces.md` instead. |
-| `platform/frontend/docs/foundation-rollout-plan.md` | `archive_compatibility_pointer` | Old closed rollout path; durable lessons are in `contracts/ui-kit.md` and `guides/ui-lab.md`. |
-| `platform/frontend/docs/phase-e-gap-review.md` | `archive_compatibility_pointer` | Old closed gap-review path; durable lessons are in `contracts/ui-kit.md` and `guides/ui-lab.md`. |
+
+Old UI delivery, layout, UI Kit audit, UI Lab structure/coverage,
+deferred-surfaces, foundation rollout, and Phase E gap-review root pointer files
+were deleted after compaction. Use active contracts/guides/proposals or git
+history for exact old text.
 
 ## Platform Studio
 
@@ -122,16 +119,10 @@ Handled by a dedicated compact map:
 - `ai-memory/docs/frontend/platform-studio/README.md`
 - `ai-memory/docs/frontend/platform-studio/doc-map.md`
 
-Compatibility and historical inputs:
-
-- `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend*.md`
-- `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
-
-Pointer-only taxonomy and hot Form Builder contract files were deleted after
-compaction. Use the active Platform Studio/Form Builder docs or git history for
-exact old text.
+Old suite-level and backend-facing Platform Studio pointer files were deleted
+after compaction. Use the active Platform Studio/Form Builder docs or git
+history for exact old text. Retained old field/catalog docs are exact detail
+references, not default read-order docs.
 
 ## Vendor And Donor Material
 

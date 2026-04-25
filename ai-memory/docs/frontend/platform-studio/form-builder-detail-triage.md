@@ -27,32 +27,23 @@ Read in this order before opening any old Form Builder detail doc:
 
 ## Triage Roles
 
-- `compatibility_pointer`: old path kept for links only; read the replacement active doc instead.
+- `deleted_compatibility_pointer`: old pointer path was deleted after durable facts moved to the replacement active doc.
 - `exact_detail_reference`: precise payload/settings/history detail; read only after the compact doc is insufficient.
 - `future_proposal`: open or deferred work; rewrite as proposal before implementation.
 - `archive_candidate`: historical workstream, prompt, draft, or closed plan; do not use as current truth.
 - `reference_only`: donor/source/reference material; opt-in only and not product truth.
 
-## Compatibility Pointers
+## Deleted Compatibility Pointers
 
-These old docs are superseded by active tracked contracts or backend contracts.
-Do not read them by default.
+Old suite-level, taxonomy, hot Form Builder contract, and frontend-owned
+backend-facing pointer files were deleted after compaction. Read the active
+replacement docs first and use git history only for exact old text:
 
-| Source | Replacement | Reason |
-| --- | --- | --- |
-| `platform/frontend/docs/platform-studio/README.md` | `platform/frontend/docs/modules/platform-studio/README.md` | Suite entrypoint moved. |
-| old suite taxonomy and hot Form Builder contract pointer files | `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/form-builder.md` | Pointer-only files were compacted and deleted; use git history for exact old text. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend boundary moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend API truth moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend payload truth moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Storage/SQL view truth moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-validation-matrix.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend validation truth moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-object-generation-matrix.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Runtime apply/generated object truth moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-migration-policy.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Additive migration policy moved to backend contract. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend handoff compacted; old publish wording superseded. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Durable backend task facts compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Backend execution sequencing compacted where still durable. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md` | `platform/backend/docs/contracts/platform-studio-form-builder.md` | Runtime storage review compacted. |
+- `platform/frontend/docs/contracts/platform-studio.md`
+- `platform/frontend/docs/modules/platform-studio/README.md`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md`
+- `platform/backend/docs/modules/platform-studio/form-builder.md`
 
 ## Exact Detail References
 

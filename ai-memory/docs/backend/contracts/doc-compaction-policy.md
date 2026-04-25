@@ -33,13 +33,14 @@ For backend implementation tasks, read:
 
 Avoid by default:
 
-- `platform/backend/docs/GO_AGENT_RULES.md`
-- `platform/backend/docs/ramp_v_108_backend_standard_v_2.md`
-- `platform/backend/docs/backend-export-architecture-agent-prompt.md`
 - `platform/backend/docs/archive/**`
 - `platform/backend/docs/legacy/**`
 - `platform/backend/docs/archive/postgres-archive/**`
 - completed refactor plans unless investigating history
+
+Old root archive pointer files for Go rules, RAMP standard, and export prompt
+were deleted after compaction. Use `platform/backend/docs/archive/**` or git
+history only for explicit history tasks.
 
 ## Rewrite Rules For Later Docs Reorg
 

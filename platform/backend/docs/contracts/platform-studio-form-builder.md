@@ -38,20 +38,9 @@ Frontend contract companion:
 ## Historical Frontend Inputs
 
 This contract supersedes the active-read role of these older frontend docs.
-They are compatibility pointers or historical audit inputs, not backend read-order docs:
+Those frontend-owned backend-facing pointer files were deleted after compaction.
 
-- `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-validation-matrix.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-object-generation-matrix.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-migration-policy.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
-
-Use old docs only for historical audit detail.
+Use git history only when auditing exact old text.
 
 ## Current Backend Boundary
 

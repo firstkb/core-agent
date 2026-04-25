@@ -37,20 +37,13 @@ Primary package under review:
 - `platform/frontend/packages/ui-kit`
 - `platform/frontend/packages/design-tokens`
 
-## Compatibility Inputs
+## Retired Inputs
 
-This guide replaces the default read role of these old docs.
-They are compatibility or archive pointers, not active read-order docs:
+This guide replaces the default read role of the old UI Lab structure, UI Kit
+coverage, foundation rollout, and Phase E gap-review root docs.
+Those pointer-only files were deleted after compaction.
 
-- `platform/frontend/docs/ui-lab-structure.md`
-- `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
-
-It also carries durable review-surface lessons from archived history:
-
-- `platform/frontend/docs/foundation-rollout-plan.md`
-- `platform/frontend/docs/phase-e-gap-review.md`
-
-Use old docs only for historical detail.
+Use git history only when auditing exact old text.
 
 ## Purpose
 

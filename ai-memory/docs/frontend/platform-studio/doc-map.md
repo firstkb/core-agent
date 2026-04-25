@@ -13,6 +13,8 @@ Scope:
 This classification optimizes retrieval.
 Most source docs keep their tracked paths until the owner explicitly approves a tracked docs reorg.
 Archive and future Form Builder workstream files have been rewritten in place as short pointer stubs.
+Old suite-level and backend-facing compatibility pointer stubs were deleted after
+backend facts moved to the active backend contract.
 
 For the full old Form Builder detail/workstream classification, read:
 
@@ -41,28 +43,11 @@ Read these before opening detailed Platform Studio/Form Builder source docs.
 | `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` | `supporting_contract` | Current compact field catalog, palette registry, rules, grid/view settings, and scope boundary contract. Read after the main Form Builder contract. |
 | `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` | `local_triage_map` | Local classification for old Form Builder docs into compatibility pointer, exact detail, future proposal, archive candidate, and reference-only. |
 
-## Compatibility And Historical Inputs
+## Deleted Compatibility Inputs
 
-These old suite-level and Form Builder paths should not be used as active entrypoints.
-
-| Source | Classification | Why |
-| --- | --- | --- |
-| `platform/frontend/docs/platform-studio/README.md` | `compatibility_pointer` | Compacted into the new suite contract and module entrypoint. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-validation-matrix.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-object-generation-matrix.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-migration-policy.md` | `compatibility_pointer` | Backend-owned facts compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md` | `compatibility_pointer` | Backend execution sequencing compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md` where still durable. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md` | `compatibility_pointer` | Backend handoff compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`; old publish lifecycle wording is superseded. |
-| `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md` | `compatibility_pointer` | Backend task list compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-| `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md` | `compatibility_pointer` | Runtime storage review compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`. |
-
-Pointer-only taxonomy and hot Form Builder contract files were deleted after
-compaction. Use the active suite/Form Builder docs or git history for exact old
-text.
+Old suite-level, taxonomy, hot Form Builder contract, and frontend-owned
+backend-facing pointer files were deleted after compaction. Use the active
+suite/Form Builder/backend contracts or git history for exact old text.
 
 ## Field/Catalog Supporting Details
 

@@ -24,13 +24,9 @@ No tracked files were moved during this pass.
 
 - `platform/frontend/docs/platform-studio/form-builder-approved-frontend-workstream-plan.md`
 - `platform/frontend/docs/platform-studio/form-builder-implementation-backlog.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-execution-plan.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
 
 Backend durable facts from the backend handoff/task/review docs are compacted into `platform/backend/docs/contracts/platform-studio-form-builder.md`.
-These old paths remain compatibility pointers until a physical archive move is approved.
+The old backend-facing pointer paths were deleted after compaction.
 
 ## Draft Or Partially Implemented Static-Model Docs
 

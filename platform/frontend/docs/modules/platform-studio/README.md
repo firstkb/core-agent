@@ -69,7 +69,8 @@ Field/catalog/rules/view-settings details now have a compact supporting tracked 
 Open old field/catalog detail docs only for exact payload audit.
 
 Backend-owned Form Builder details now live in the backend contract and backend module map.
-Old frontend backend-facing docs under `platform/frontend/docs/platform-studio/form-builder-backend*.md`, `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`, and `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md` are compatibility pointers.
+Old frontend backend-facing pointer docs and the old suite-level README pointer
+were deleted after compaction.
 
 ## Planned Tool Docs
 
@@ -81,14 +82,6 @@ Until dedicated tracked docs exist, planned tools are defined only by the suite 
 - Report Builder
 
 Do not infer their implementation model from Form Builder internals.
-
-## Compatibility Pointers
-
-Old suite-level paths now point here or to the suite contract:
-
-- `platform/frontend/docs/platform-studio/README.md`
-
-The old taxonomy/naming pointer-only file was deleted after compaction.
 
 ## Out Of Scope
 

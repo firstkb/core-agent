@@ -20,6 +20,6 @@ Reason:
 
 - Durable technical decisions have been compacted into active docs.
 - The old technical map should not override current contracts or code verification.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is an archive pointer for explicit historical audit only.
 
 If exact historical content is needed, use git history for this file.

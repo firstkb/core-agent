@@ -20,6 +20,6 @@ Reason:
 
 - Prompt artifacts are execution history, not durable architecture.
 - Durable decisions have been compacted into the active Platform Studio and Form Builder docs.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is an archive pointer for explicit historical audit only.
 
 If exact historical content is needed, use git history for this file.

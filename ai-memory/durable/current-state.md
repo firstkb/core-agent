@@ -37,7 +37,7 @@ Confidence labels:
 - `landed` `code-confirmed`: Frontend shared packages include `api-client`, `app-shell`, `auth-core`, `collection-table`, `design-tokens`, `forms`, `i18n`, `install-helper`, `platform-studio-core`, `tenant-core`, and `ui-kit`.
 - `landed` `doc-confirmed`: Current install prompt/runtime behavior lives at `platform/frontend/docs/guides/install-helper.md`; it is mounted on public auth screens and does not imply offline-first or service-worker scope.
 - `landed` `doc-confirmed`: Frontend local dev commands, HTTPS proxy modes, ports, domains, and checks live at `platform/frontend/docs/guides/local-dev.md`.
-- `landed` `doc-confirmed`: Active frontend docs now use target-folder `Read with`/`Read Order` links; old root and `platform-studio/**` docs are compatibility, exact-detail, archive, or reference-only inputs.
+- `landed` `doc-confirmed`: Active frontend docs now use target-folder `Read with`/`Read Order` links; old root pointer docs were deleted, while retained `platform-studio/**` docs are exact-detail, proposal, archive, or reference-only inputs.
 - `landed` `doc-confirmed`: UI Kit governance, stable/provisional approval, layout baseline, and delivery order now live at `platform/frontend/docs/contracts/ui-kit.md`.
 - `landed` `doc-confirmed`: UI Lab route, section model, review coverage, and editing rules now live at `platform/frontend/docs/guides/ui-lab.md`.
 - `landed` `doc-confirmed`: The frontend foundation rollout and Phase E gap review are closed history; durable lessons are compacted into the UI Kit contract and UI Lab guide.
@@ -63,7 +63,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Platform Studio suite-level tracked docs now live at `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/README.md`.
 - `landed` `doc-confirmed`: Active Form Builder tracked behavior now lives at `platform/frontend/docs/modules/platform-studio/form-builder.md`.
 - `landed` `doc-confirmed`: Form Builder field catalog, palette registry, rules, grid/view settings, and scope boundaries now live at `platform/frontend/docs/modules/platform-studio/form-builder-fields.md` as a supporting frontend contract.
-- `landed` `doc-confirmed`: Old Form Builder detail/workstream docs are classified in `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` as compatibility pointers, exact-detail references, future proposals, archive candidates, or reference-only donor material.
+- `landed` `doc-confirmed`: Old Form Builder detail/workstream docs are classified in `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` as deleted compatibility pointers, exact-detail references, future proposals, archive candidates, or reference-only donor material.
 - `landed` `doc-confirmed`: Old Form Builder archive/future workstream docs were rewritten in place as short pointer stubs; exact-detail reference docs remain intact for payload/settings audit.
 - `landed` `doc-confirmed`: Retained old Form Builder exact-detail docs now declare `Status: exact detail reference` and point readers back to the active Form Builder module docs first.
 - `landed` `doc-confirmed`: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply behavior now lives at `platform/backend/docs/contracts/platform-studio-form-builder.md`.
@@ -73,9 +73,9 @@ Confidence labels:
 - `landed` `doc-confirmed`: Backend legacy import mapping and import module boundary now live under `platform/backend/docs/reference/`; runtime schema truth remains `contracts/schema-tenancy.md`.
 - `landed` `doc-confirmed`: Backend event actor identity now lives at `platform/backend/docs/contracts/events-identity.md`.
 - `landed` `doc-confirmed`: Backend events/mail cleanup and schema drift checks now live under `platform/backend/docs/proposals/` and remain inactive until owner activation.
-- `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/docs/archive/`; old root paths are archive pointers.
+- `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/docs/archive/`; old root archive pointer files were deleted.
 - `landed` `doc-confirmed`: Legacy PostgreSQL SQL now lives behind `platform/backend/docs/archive/postgres-archive/README.md`; `platform/backend/docs/legacy/postgres-archive/README.md` is only a compatibility pointer.
-- `landed` `doc-confirmed`: Active backend docs now use target-folder `Read with`/`Read Order` links; old root docs are compatibility pointers only.
+- `landed` `doc-confirmed`: Active backend docs now use target-folder `Read with`/`Read Order` links; old root compatibility/archive pointer files were deleted.
 - `landed` `doc-confirmed`: Pointer-only FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording were deleted after their payload had fully moved into active contracts/modules; exact old text is git-history only.
 - `landed` `doc-confirmed`: `ai-memory/index/*` no longer lists old FE/BE root docs or former `platform/docs/ai/**` as active ownership routes; old platform memory is migrated import material with exact text in git history only.
 - `landed` `doc-confirmed`: Form Builder is the active Platform Studio tool.
@@ -90,24 +90,24 @@ Confidence labels:
 
 - `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
-- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially remaining compatibility pointers and exact-detail docs. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
+- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially future proposal/archive pointer stubs and exact-detail docs. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are still working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Legacy run payloads and pointer directories no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.
 - `risk` `doc-confirmed`: Old Form Builder archive/future workstream paths are pointer stubs. Use git history only for exact historical content, not as the active read path.
 - `risk` `doc-confirmed`: Old Form Builder exact-detail docs preserve historical payload/settings details and can still be large. Use them only after compact tracked docs are insufficient.
-- `risk` `doc-confirmed`: Old frontend backend-facing Form Builder docs are compatibility pointers; backend implementation work should read the backend Form Builder contract before old handoff/storage/review docs.
-- `risk` `doc-confirmed`: Frontend old root/platform-studio docs still exist for compatibility and exact detail. Do not treat them as active ownership when a target-folder doc exists.
+- `risk` `doc-confirmed`: Old frontend backend-facing Form Builder pointer docs were deleted; backend implementation work should read the backend Form Builder contract and use git history only for exact old handoff/storage/review text.
+- `risk` `doc-confirmed`: Frontend old root pointer docs were deleted; retained old Platform Studio docs are exact-detail, proposal, archive, or reference-only. Do not treat them as active ownership when a target-folder doc exists.
 - `risk` `owner-confirmed`: Planned Platform Studio tool concerns can be accidentally implemented inside Form Builder unless the tool boundary is read first.
 - `risk` `doc-confirmed`: Collection Table old pointer-only root contracts were deleted; prefer `platform/frontend/docs/contracts/collection-table.md` and `platform/backend/docs/contracts/collection-table.md`.
-- `risk` `doc-confirmed`: Frontend foundation rollout and Phase E gap review files are archive pointers. Do not reopen phased rollout work or invent shared primitives from old history.
+- `risk` `doc-confirmed`: Frontend foundation rollout and Phase E gap review root pointer files were deleted. Do not reopen phased rollout work or invent shared primitives from old history.
 - `risk` `owner-confirmed`: Donor/reference code such as Metronic can overload context and blur product ownership if read by default. Use the reference-code policy and distill lessons into module memory.
 - `risk` `owner-confirmed`: PWA/offline and Flutter/mobile references can be misread as current scope. Treat them as future/deferred unless the owner explicitly activates that work.
 - `risk` `doc-confirmed`: Install helper can be confused with offline PWA work. Current install prompt runtime is active, but service worker/offline/local sync remain future proposal scope.
 - `risk` `doc-confirmed`: Deferred composed UI surfaces can be misread as UI Kit/UI Lab scope. Treat `proposals/deferred-composed-surfaces.md` as future proposal and start app-layer-first only after owner activation.
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
-- `risk` `doc-confirmed`: Backend old root-path docs still exist for compatibility. Do not treat them as active ownership when a target-folder doc exists.
+- `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; active workflow artifacts live under `ai-memory/atlas/**`.
 
 ## Recommended Reads By Domain

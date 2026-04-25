@@ -19,7 +19,7 @@ For backend Form Builder work, read:
 5. `platform/frontend/docs/modules/platform-studio/form-builder.md` when the change affects frontend authoring/runtime behavior
 
 Do not read old frontend backend-handoff docs by default.
-They are compatibility pointers after the backend contract slice.
+Those pointer files were deleted after the backend contract slice.
 
 ## Runtime Ownership
 

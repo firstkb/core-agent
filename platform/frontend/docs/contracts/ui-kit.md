@@ -30,22 +30,13 @@ Tracked companion docs:
 - `platform/frontend/docs/contracts/package-boundaries.md`
 - `platform/frontend/docs/guides/ui-lab.md`
 
-## Compatibility Inputs
+## Retired Inputs
 
-This contract replaces the default read role of these old docs.
-They are compatibility or archive pointers, not active read-order docs:
+This contract replaces the default read role of the old UI delivery, layout,
+boundary, approval, foundation rollout, and Phase E gap-review root docs.
+Those pointer-only files were deleted after compaction.
 
-- `platform/frontend/docs/ui-delivery-order.md`
-- `platform/frontend/docs/layout-baseline.md`
-- `platform/frontend/docs/ui-kit-boundary-audit.md`
-- `platform/frontend/docs/ui-kit-stable-approved-audit.md`
-
-It also carries durable foundation and gap-discipline lessons from archived history:
-
-- `platform/frontend/docs/foundation-rollout-plan.md`
-- `platform/frontend/docs/phase-e-gap-review.md`
-
-Use old docs only for historical audit detail.
+Use git history only when auditing exact old text.
 
 ## Core Boundary
 

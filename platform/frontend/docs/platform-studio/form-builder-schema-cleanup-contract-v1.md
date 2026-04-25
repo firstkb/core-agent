@@ -22,6 +22,6 @@ Reason:
 
 - Payload cleanup can break compatibility if treated as current contract truth.
 - The old file mixed desired cleanup with existing compatibility requirements.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is a future-proposal pointer for explicit planning audit only.
 
 If exact historical content is needed, use git history for this file.

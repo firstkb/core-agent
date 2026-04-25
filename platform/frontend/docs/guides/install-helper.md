@@ -46,14 +46,13 @@ Manifests:
 - `platform/frontend/apps/platform-admin-web/public/manifest.json`
 - `platform/frontend/apps/tenant-web/public/manifest.json`
 
-## Compatibility Inputs
+## Retired Inputs
 
-This guide replaces the default read role of this old doc.
-It is a compatibility pointer, not an active read-order doc:
+This guide replaces the default read role of the old
+`install-helper-runtime.md` root doc. That pointer-only file was deleted after
+compaction.
 
-- `platform/frontend/docs/install-helper-runtime.md`
-
-Use the old doc only for historical link compatibility.
+Use git history only when auditing exact old text.
 
 ## Runtime Contract
 

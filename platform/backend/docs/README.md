@@ -48,13 +48,9 @@ Proposals:
 
 - `proposals/kms-signing.md`
 
-Compatibility pointers, not active read-order docs:
-
-- `auth/auth-key-source-configuration.md`
-- `auth/auth-kms-implementation-status.md`
-
-Pointer-only auth gateway/control/projection root files were deleted after
-compaction. Use active auth contracts/modules or git history for exact old text.
+Pointer-only auth gateway/control/projection/root/auth-path files were deleted
+after compaction. Use active auth contracts/modules/runbooks/proposals or git
+history for exact old text.
 
 ## Admin Control Plane
 
@@ -99,15 +95,10 @@ Supporting docs:
 
 - `proposals/schema-drift-checks.md`
 
-Compatibility pointers, not active read-order docs:
-
-- `backend-tenant-canonical-field-mapping-v1.md`
-- `backend-tenant-import-module-boundary-v1.md`
-- `backend-schema-drift-check-strategy.md`
-
 Pointer-only schema baseline, migration baseline, placement/naming, and tenant
-canonical refactor files were deleted after compaction. Use active schema
-contracts or git history for exact old text.
+canonical/import/reference/drift root files were deleted after compaction. Use
+active schema contracts, runbooks, reference docs, proposals, or git history for
+exact old text.
 
 ## Platform Studio Form Builder
 
@@ -126,11 +117,9 @@ Read rule:
 - Use `modules/platform-studio/form-builder.md` for implementation orientation.
 - Use `contracts/platform-studio-form-builder.md` for API, storage, validation, generated-object, runtime apply, and migration-boundary rules.
 
-Frontend compatibility pointers, not active backend read-order docs:
-
-- `platform/frontend/docs/platform-studio/form-builder-backend*.md`
-- `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
+Old frontend-owned backend-facing Form Builder pointer files were deleted after
+backend facts were compacted into the backend contract. Use the backend contract
+or git history for exact old text.
 
 ## Archive
 
@@ -145,11 +134,12 @@ Read only when the task explicitly needs rationale or rollout history:
 - `archive/backend-export-architecture-agent-prompt.md`
 - `archive/postgres-archive/README.md`
 
-Compatibility/archive pointers, not active read-order docs:
+Archive compatibility pointer, not active read-order doc:
 
 - `legacy/postgres-archive/README.md`
 
-Compatibility pointers remain at old root/legacy paths for historical links.
+Old root compatibility/archive pointer files were deleted after compaction.
+Only the legacy PostgreSQL path remains as a narrow compatibility pointer.
 
 Legacy MSSQL schema files under `MSSQL/**` are reference-code material only.
 Use `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening them.

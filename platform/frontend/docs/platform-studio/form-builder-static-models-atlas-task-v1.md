@@ -20,6 +20,6 @@ Reason:
 
 - Agent task prompts are not durable architecture.
 - Static/external model rules now live in the active Form Builder module contract.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is an archive pointer for explicit historical audit only.
 
 If exact historical content is needed, use git history for this file.

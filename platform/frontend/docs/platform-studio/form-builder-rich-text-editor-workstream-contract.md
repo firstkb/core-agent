@@ -22,6 +22,6 @@ Reason:
 
 - Durable field/content-node boundaries are already compacted into the active Form Builder docs.
 - The old workstream language should not stay in the hot context.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is a future-proposal pointer for explicit planning audit only.
 
 If exact historical content is needed, use git history for this file.

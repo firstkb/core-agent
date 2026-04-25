@@ -20,6 +20,6 @@ Reason:
 
 - Durable view settings, quick filter, and grid rules now live in the supporting Form Builder fields doc.
 - Historical notes should not compete with active field/view contracts.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is an archive pointer for explicit historical audit only.
 
 If exact historical content is needed, use git history for this file.

@@ -56,24 +56,11 @@ Read these tracked docs first only when source-level detail is required:
 - Backend handoff/API/storage/runtime apply work: read `platform/backend/docs/contracts/platform-studio-form-builder.md`; for backend implementation orientation, also read `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - Prompt/reference reconstruction: read archive/reference candidates only when explicitly needed.
 
-## Compatibility And Historical Inputs
+## Deleted Compatibility Inputs
 
-These old suite-level paths are no longer active entrypoints:
-
-- `platform/frontend/docs/platform-studio/README.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-boundary.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-api-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-scope-payload-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-storage-and-sql-view-contract.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-validation-matrix.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-object-generation-matrix.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-migration-policy.md`
-
-Pointer-only taxonomy and hot Form Builder contract files were deleted after
-compaction. Use active contracts/modules or git history for exact old text.
-- `platform/frontend/docs/platform-studio/form-builder-backend-first-slice-handoff.md`
-- `platform/frontend/docs/platform-studio/form-builder-backend-technical-task-list.md`
-- `platform/frontend/docs/platform-studio/form-builder-runtime-storage-review-brief.md`
+Old suite-level, taxonomy, hot Form Builder contract, and frontend-owned
+backend-facing pointer files were deleted after compaction. Use active
+contracts/modules or git history for exact old text.
 
 Use the new suite and Form Builder docs instead:
 

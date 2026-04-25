@@ -24,44 +24,19 @@ Read contract docs first, then module-specific docs, then guides/proposals/refer
 - `proposals/pwa-offline.md`: future PWA/offline and Flutter/hybrid mobile boundary. Not active implementation scope.
 - `proposals/deferred-composed-surfaces.md`: future workflow-shaped UI surfaces that stay app-layer-first until explicitly activated.
 
-## Current Compatibility Pointers
+## Retired Pointers
 
-These old root/platform-studio paths remain as compatibility pointers during the migration.
-They are not part of the active read order:
+Old root compatibility/archive pointer files were deleted after compaction.
+Use active contracts, modules, guides, proposals, or git history for exact old
+text.
 
-- `install-helper-runtime.md`
-- `collection-table-shared-readiness-plan.md`
-- `ui-delivery-order.md`
-- `layout-baseline.md`
-- `ui-kit-boundary-audit.md`
-- `ui-kit-stable-approved-audit.md`
-- `ui-lab-structure.md`
-- `ui-lab-ui-kit-coverage.md`
-- `deferred-composed-surfaces.md`
-- `foundation-rollout-plan.md`
-- `phase-e-gap-review.md`
-- `platform-studio/README.md`
-- `platform-studio/form-builder-accepted-registry.md`
-- `platform-studio/form-builder-field-catalog.md`
-- `platform-studio/form-builder-v2-field-contract.md`
-- `platform-studio/form-builder-*fields*.md`
-- `platform-studio/form-builder-*rules*.md`
-- `platform-studio/form-builder-*view-settings*.md`
-- `platform-studio/form-builder-grid-columns-contract.md`
-- `platform-studio/form-builder-schema-scope-contract.md`
-- `platform-studio/form-builder-subform-checklist-contract.md`
-- `platform-studio/form-builder-backend*.md`
-- `platform-studio/form-builder-storage-and-sql-view-contract.md`
-- `platform-studio/form-builder-runtime-storage-review-brief.md`
+Old frontend-owned Platform Studio backend-facing pointer files were also
+deleted after backend facts were compacted into
+`platform/backend/docs/contracts/platform-studio-form-builder.md`.
 
-Pointer-only compacted files for the old auth brief, Collection Table root
-contracts, admin backend handoff, Platform Studio taxonomy, and hot Form Builder
-contract slices were deleted after compaction. Use active contracts/modules or
-git history for exact old text.
-
-Pointer-only moved/no-longer-active root files for app surfaces, package
-boundaries, tenant model, offline strategy, and auth follow-ups were also
-deleted. Use active contracts/proposals or git history for exact old text.
+Retained old Platform Studio field/catalog/rules/view-settings docs are not
+compatibility pointers. They are exact detail references and should be opened
+only after `modules/platform-studio/form-builder-fields.md` is insufficient.
 
 ## Active Module Docs
 

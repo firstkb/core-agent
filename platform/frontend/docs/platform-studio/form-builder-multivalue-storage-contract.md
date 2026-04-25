@@ -22,6 +22,6 @@ Reason:
 
 - Multivalue storage is backend-facing and requires code verification before activation.
 - The old file mixed target direction with open implementation questions.
-- This old path remains only as a compatibility pointer for historical links.
+- This old path is a future-proposal pointer for explicit planning audit only.
 
 If exact historical content is needed, use git history for this file.

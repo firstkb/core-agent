@@ -280,7 +280,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The first frontend docs migration slice landed as tracked contract-first docs under `platform/frontend/docs/contracts/` plus proposal scope for PWA/offline under `platform/frontend/docs/proposals/`. Old root workspace doc paths remain compatibility pointers.
+- Decision: The first frontend docs migration slice landed as tracked contract-first docs under `platform/frontend/docs/contracts/` plus proposal scope for PWA/offline under `platform/frontend/docs/proposals/`. Old root workspace pointer paths were later deleted.
 - Sources:
   - `platform/frontend/docs/contracts/workspace.md`
   - `platform/frontend/docs/contracts/app-surfaces.md`
@@ -293,7 +293,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The backend runtime docs migration slice landed as tracked contract-first docs under `platform/backend/docs/contracts/runtime-wiring.md` and `platform/backend/docs/modules/runtime.md`. Old root runtime doc paths remain compatibility pointers.
+- Decision: The backend runtime docs migration slice landed as tracked contract-first docs under `platform/backend/docs/contracts/runtime-wiring.md` and `platform/backend/docs/modules/runtime.md`. Old root runtime pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/contracts/runtime-wiring.md`
   - `platform/backend/docs/modules/runtime.md`
@@ -304,7 +304,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The auth cross-stack docs migration slice landed as frontend `platform/frontend/docs/contracts/auth-runtime.md`, backend `platform/backend/docs/contracts/auth-gateway.md`, backend `platform/backend/docs/contracts/auth-control-schema.md`, and backend `platform/backend/docs/modules/auth.md`. Old FE/BE auth doc paths remain compatibility pointers.
+- Decision: The auth cross-stack docs migration slice landed as frontend `platform/frontend/docs/contracts/auth-runtime.md`, backend `platform/backend/docs/contracts/auth-gateway.md`, backend `platform/backend/docs/contracts/auth-control-schema.md`, and backend `platform/backend/docs/modules/auth.md`. Old FE/BE auth pointer paths were later deleted.
 - Sources:
   - `platform/frontend/docs/contracts/auth-runtime.md`
   - `platform/backend/docs/contracts/auth-gateway.md`
@@ -316,7 +316,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The schema and tenancy docs migration slice landed as backend `platform/backend/docs/contracts/schema-tenancy.md` and `platform/backend/docs/contracts/migrations.md`. Old schema baseline and tenant canonical refactor doc paths remain compatibility pointers.
+- Decision: The schema and tenancy docs migration slice landed as backend `platform/backend/docs/contracts/schema-tenancy.md` and `platform/backend/docs/contracts/migrations.md`. Old schema baseline and tenant canonical refactor pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/contracts/schema-tenancy.md`
   - `platform/backend/docs/contracts/migrations.md`
@@ -327,7 +327,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The admin control-plane docs migration slice landed as backend `platform/backend/docs/contracts/admin-control-plane.md` and `platform/backend/docs/contracts/admin-module-registry.md`. Old admin Module Registry and access-policy doc paths remain compatibility pointers.
+- Decision: The admin control-plane docs migration slice landed as backend `platform/backend/docs/contracts/admin-control-plane.md` and `platform/backend/docs/contracts/admin-module-registry.md`. Old admin Module Registry and access-policy pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/contracts/admin-control-plane.md`
   - `platform/backend/docs/contracts/admin-module-registry.md`
@@ -338,7 +338,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The Collection Table docs migration slice landed as frontend `platform/frontend/docs/contracts/collection-table.md` and backend `platform/backend/docs/contracts/collection-table.md`. Old frontend collection-table runtime, backend-integration, and shared-readiness paths remain compatibility pointers.
+- Decision: The Collection Table docs migration slice landed as frontend `platform/frontend/docs/contracts/collection-table.md` and backend `platform/backend/docs/contracts/collection-table.md`. Old frontend collection-table runtime, backend-integration, and shared-readiness pointer paths were later deleted.
 - Sources:
   - `platform/frontend/docs/contracts/collection-table.md`
   - `platform/backend/docs/contracts/collection-table.md`
@@ -350,7 +350,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The Platform Admin Web docs migration slice landed as `platform/frontend/docs/modules/platform-admin-web.md`. The old admin Module Registry backend handoff path remains a compatibility pointer and no longer owns admin shell/navigation/favorites context.
+- Decision: The Platform Admin Web docs migration slice landed as `platform/frontend/docs/modules/platform-admin-web.md`. The old admin Module Registry backend handoff pointer path was later deleted and no longer owns admin shell/navigation/favorites context.
 - Sources:
   - `platform/frontend/docs/modules/platform-admin-web.md`
   - `platform/frontend/docs/admin-module-registry-backend-handoff.md`
@@ -361,19 +361,17 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The Platform Studio suite boundary slice landed as `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/README.md`. The old `platform/frontend/docs/platform-studio/README.md` and `platform/frontend/docs/platform-studio/taxonomy-and-naming.md` paths remain compatibility pointers and no longer own the suite-level read path.
+- Decision: The Platform Studio suite boundary slice landed as `platform/frontend/docs/contracts/platform-studio.md` and `platform/frontend/docs/modules/platform-studio/README.md`. The old suite-level pointer paths were deleted and no longer own the suite-level read path.
 - Sources:
   - `platform/frontend/docs/contracts/platform-studio.md`
   - `platform/frontend/docs/modules/platform-studio/README.md`
-  - `platform/frontend/docs/platform-studio/README.md`
-  - `platform/frontend/docs/platform-studio/taxonomy-and-naming.md`
 
 ### DEC-034 Form Builder Docs Use Module Tracked Path
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The Form Builder docs migration slice landed as `platform/frontend/docs/modules/platform-studio/form-builder.md`. The old hot Form Builder source docs under `platform/frontend/docs/platform-studio/form-builder-*.md` now remain compatibility pointers for historical/audit detail and no longer own the active Form Builder read path.
+- Decision: The Form Builder docs migration slice landed as `platform/frontend/docs/modules/platform-studio/form-builder.md`. Old hot Form Builder pointer files were deleted; retained old field/catalog docs are exact detail references only and no longer own the active Form Builder read path.
 - Sources:
   - `platform/frontend/docs/modules/platform-studio/form-builder.md`
   - `platform/frontend/docs/modules/platform-studio/README.md`
@@ -384,7 +382,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply facts now live in `platform/backend/docs/contracts/platform-studio-form-builder.md`. Old frontend backend-facing Form Builder docs remain compatibility pointers and must not be used as the active backend source of truth.
+- Decision: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply facts now live in `platform/backend/docs/contracts/platform-studio-form-builder.md`. Old frontend backend-facing Form Builder pointer docs were deleted and must not be used as the active backend source of truth.
 - Sources:
   - `platform/backend/docs/contracts/platform-studio-form-builder.md`
   - `platform/backend/docs/README.md`
@@ -406,7 +404,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: UI Kit governance now lives in `platform/frontend/docs/contracts/ui-kit.md`. The old UI delivery order, layout baseline, boundary audit, and stable approved audit paths remain compatibility pointers and no longer own the active UI read path.
+- Decision: UI Kit governance now lives in `platform/frontend/docs/contracts/ui-kit.md`. Old UI delivery order, layout baseline, boundary audit, and stable approved audit pointer paths were deleted and no longer own the active UI read path.
 - Sources:
   - `platform/frontend/docs/contracts/ui-kit.md`
   - `platform/frontend/docs/README.md`
@@ -417,11 +415,9 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: UI Lab route, section model, review coverage, and editing rules now live in `platform/frontend/docs/guides/ui-lab.md`. The old UI Lab structure and UI Kit coverage inventory paths remain compatibility pointers and no longer own the active UI Lab read path.
+- Decision: UI Lab route, section model, review coverage, and editing rules now live in `platform/frontend/docs/guides/ui-lab.md`. The old UI Lab structure and UI Kit coverage inventory pointer paths were deleted and no longer own the active UI Lab read path.
 - Sources:
   - `platform/frontend/docs/guides/ui-lab.md`
-  - `platform/frontend/docs/ui-lab-structure.md`
-  - `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
   - `platform/frontend/docs/README.md`
 
 ### DEC-039 Deferred Composed UI Surfaces Stay Proposal Scope
@@ -432,7 +428,6 @@ Do not turn it into a task journal.
 - Decision: Deferred workflow-shaped frontend surfaces now live in `platform/frontend/docs/proposals/deferred-composed-surfaces.md`. Remote table workspaces, file upload workspace, AI assistant dialog, full-screen messenger, and kanban task board remain future/app-layer-first scope until explicitly activated; they must not be promoted wholesale into UI Lab or UI Kit.
 - Sources:
   - `platform/frontend/docs/proposals/deferred-composed-surfaces.md`
-  - `platform/frontend/docs/deferred-composed-surfaces.md`
   - `platform/frontend/docs/README.md`
 
 ### DEC-040 Frontend Foundation History Is Archived
@@ -440,22 +435,19 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: The frontend foundation rollout and Phase E gap review are closed history. Durable lessons now live in `platform/frontend/docs/contracts/ui-kit.md` and `platform/frontend/docs/guides/ui-lab.md`; old `foundation-rollout-plan.md` and `phase-e-gap-review.md` paths remain archive compatibility pointers and must not drive active shared-component work.
+- Decision: The frontend foundation rollout and Phase E gap review are closed history. Durable lessons now live in `platform/frontend/docs/contracts/ui-kit.md` and `platform/frontend/docs/guides/ui-lab.md`; old root archive pointer paths were deleted and must not drive active shared-component work.
 - Sources:
   - `platform/frontend/docs/contracts/ui-kit.md`
   - `platform/frontend/docs/guides/ui-lab.md`
-  - `platform/frontend/docs/foundation-rollout-plan.md`
-  - `platform/frontend/docs/phase-e-gap-review.md`
 
 ### DEC-041 Install Helper Docs Use Guide Tracked Path
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Current frontend install prompt/runtime behavior now lives in `platform/frontend/docs/guides/install-helper.md`. The old `install-helper-runtime.md` path remains a compatibility pointer. Install helper is active for public auth install prompting, but it does not activate service-worker, offline-first, local sync, or Flutter/hybrid mobile scope.
+- Decision: Current frontend install prompt/runtime behavior now lives in `platform/frontend/docs/guides/install-helper.md`. The old `install-helper-runtime.md` pointer path was deleted. Install helper is active for public auth install prompting, but it does not activate service-worker, offline-first, local sync, or Flutter/hybrid mobile scope.
 - Sources:
   - `platform/frontend/docs/guides/install-helper.md`
-  - `platform/frontend/docs/install-helper-runtime.md`
   - `platform/frontend/docs/proposals/pwa-offline.md`
   - `platform/frontend/docs/README.md`
 
@@ -502,7 +494,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Old Form Builder detail/workstream docs under `platform/frontend/docs/platform-studio/` must be routed through `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before reading. The triage classifies them as compatibility pointers, exact-detail references, future proposals, archive candidates, or reference-only donor material.
+- Decision: Old Form Builder detail/workstream docs under `platform/frontend/docs/platform-studio/` must be routed through `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before reading. The triage classifies them as deleted compatibility pointers, exact-detail references, future proposals, archive candidates, or reference-only donor material.
 - Sources:
   - `ai-memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
   - `ai-memory/docs/frontend/platform-studio/doc-map.md`
@@ -554,7 +546,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Backend operational docs now live under `platform/backend/docs/runbooks/`, future gateway/KMS docs live under `platform/backend/docs/proposals/`, and legacy import mapping/boundary docs live under `platform/backend/docs/reference/`. Old root/auth paths are compatibility pointers.
+- Decision: Backend operational docs now live under `platform/backend/docs/runbooks/`, future gateway/KMS docs live under `platform/backend/docs/proposals/`, and legacy import mapping/boundary docs live under `platform/backend/docs/reference/`. Old root/auth pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/runbooks/local-bootstrap.md`
   - `platform/backend/docs/runbooks/auth-key-sources.md`
@@ -594,7 +586,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Active backend docs must route readers through target folders: `contracts/`, `modules/`, `runbooks/`, `proposals/`, `reference/`, and `archive/`. Old root backend docs may remain as compatibility pointers, but they must not be described as active read-order or ownership sources.
+- Decision: Active backend docs must route readers through target folders: `contracts/`, `modules/`, `runbooks/`, `proposals/`, `reference/`, and `archive/`. Old root backend pointer docs were later deleted and must not be described as active read-order or ownership sources.
 - Sources:
   - `platform/backend/docs/README.md`
   - `platform/backend/docs/contracts/runtime-wiring.md`
@@ -621,7 +613,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Tracked frontend/backend docs indexes and local `ai-memory/index/*` routes must not promote old root docs or old `platform/docs/ai/**` memory as active ownership. Old FE/BE root docs remain compatibility pointers; old platform memory is historical import material behind `ai-memory/durable/legacy-memory-import.md`.
+- Decision: Tracked frontend/backend docs indexes and local `ai-memory/index/*` routes must not promote old root docs or old `platform/docs/ai/**` memory as active ownership. Old FE/BE root pointer docs were later deleted; old platform memory is historical import material behind `ai-memory/durable/legacy-memory-import.md`.
 - Sources:
   - `platform/frontend/docs/README.md`
   - `platform/backend/docs/README.md`
@@ -677,7 +669,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Top-level durable, governance, and changelog markdown files under `platform/docs/ai/*.md` are no longer payload-bearing memory. They are compatibility pointers to `ai-memory/durable/**`, `ai-memory/index/**`, `ai-memory/atlas/**`, current AGENTS files, and tracked FE/BE docs indexes. New memory updates must go to `ai-memory` or the tracked doc owner, not to `platform/docs/ai/*.md`.
+- Decision: Top-level durable, governance, and changelog markdown files under `platform/docs/ai/*.md` are no longer payload-bearing memory. They were pointer-only before deletion; new memory updates must go to `ai-memory` or the tracked doc owner, not to `platform/docs/ai/*.md`.
 - Sources:
   - `platform/docs/ai/current-state.md`
   - `platform/docs/ai/platform-contract.md`
@@ -695,7 +687,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Legacy module memory files under `platform/docs/ai/modules/*.md` are no longer payload-bearing module memory. They are compatibility pointers to `ai-memory/modules/domains/**`, `ai-memory/modules/frontend/**`, `ai-memory/modules/backend/**`, and the tracked FE/BE docs owners. New module memory updates must go to `ai-memory/modules/**` or the tracked doc owner, not to `platform/docs/ai/modules/*.md`.
+- Decision: Legacy module memory files under `platform/docs/ai/modules/*.md` are no longer payload-bearing module memory. They were pointer-only before deletion; new module memory updates must go to `ai-memory/modules/**` or the tracked doc owner, not to `platform/docs/ai/modules/*.md`.
 - Sources:
   - `platform/docs/ai/modules/README.md`
   - `platform/docs/ai/modules/auth-and-session.md`
@@ -713,7 +705,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Legacy Atlas prompt/template files under `platform/docs/ai/prompts/**` and `platform/docs/ai/templates/**`, plus `platform/docs/ai/automation-manifest.json`, are no longer active operational payloads. They are compatibility pointers to `ai-memory/atlas/**`. Active prompt/template/version edits must use `ai-memory/atlas/**` and `scripts/ai/automation_versions.py`, not legacy `platform/docs/ai/**`.
+- Decision: Legacy Atlas prompt/template files under `platform/docs/ai/prompts/**` and `platform/docs/ai/templates/**`, plus `platform/docs/ai/automation-manifest.json`, are no longer active operational payloads. They were pointer-only before deletion. Active prompt/template/version edits must use `ai-memory/atlas/**` and `scripts/ai/automation_versions.py`, not legacy `platform/docs/ai/**`.
 - Sources:
   - `platform/docs/ai/prompts/README.md`
   - `platform/docs/ai/templates/README.md`

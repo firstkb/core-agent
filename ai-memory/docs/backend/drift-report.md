@@ -31,13 +31,13 @@ Use it before treating older backend docs as active runtime truth.
 - The admin control-plane slice now stores current admin access behavior in `platform/backend/docs/contracts/admin-control-plane.md` and Module Registry behavior in `platform/backend/docs/contracts/admin-module-registry.md`.
 - The Collection Table slice now stores backend DTO/helper/preference and endpoint-family behavior in `platform/backend/docs/contracts/collection-table.md`.
 - The backend Form Builder slice now stores backend-owned API/storage/runtime apply truth in `platform/backend/docs/contracts/platform-studio-form-builder.md` and implementation orientation in `platform/backend/docs/modules/platform-studio/form-builder.md`.
-- Old frontend backend-facing Form Builder docs are compatibility pointers. Older `publishBuilderDraft` lifecycle wording and `vw_ps_*` storage examples are superseded by current save/runtime-apply and `vw_`/`vg_` naming.
+- Old frontend backend-facing Form Builder pointer docs were deleted. Older `publishBuilderDraft` lifecycle wording and `vw_ps_*` storage examples are superseded by current save/runtime-apply and `vw_`/`vg_` naming.
 - `backend-admin-module-registry-brief.md` was deleted after compaction. Use compact admin memory and active admin contracts for the current state.
 - `proposals/kms-signing.md` documents planned KMS work. KMS signing must not be assumed live.
 - `proposals/events-mails-cleanup.md` and `proposals/schema-drift-checks.md` are future proposal scope, not active runtime behavior.
 - `contracts/events-identity.md` is the active event actor identity contract.
 - `archive/postgres-archive/**` contains legacy PostgreSQL SQL reference only. Do not read it as current schema or active migration input.
-- Active backend docs now route `Read with`/`Read Order` through target folders. Old root-path docs are compatibility pointers only.
+- Active backend docs now route `Read with`/`Read Order` through target folders. Old root-path compatibility/archive pointer docs were deleted.
 - Several tracked backend docs contain machine-local markdown links. Do not copy those links into compact memory; repair them during the later physical docs rewrite.
 
 ## Migrated Runtime Slice
@@ -49,14 +49,14 @@ Tracked docs:
 
 Observed state:
 
-- The old root runtime docs are now compatibility pointers.
+- The old root runtime pointer docs were deleted after compaction.
 - The active tracked runtime contract is contract-first.
 
 Current read rule:
 
 - Prefer `contracts/runtime-wiring.md` for composition and wiring rules.
 - Prefer `modules/runtime.md` for active runtime shape and backend foundation boundaries.
-- Use old root runtime paths only for compatibility with existing links.
+- Use git history only for exact old root runtime text.
 
 ## Migrated Auth Slice
 
@@ -68,7 +68,7 @@ Tracked docs:
 
 Observed state:
 
-- The old root backend auth docs are now compatibility pointers.
+- The old root/backend auth pointer docs were deleted after compaction.
 - The active tracked backend auth contract is contract-first.
 
 Current read rule:
@@ -86,7 +86,7 @@ Tracked docs:
 
 Observed state:
 
-- Old schema baseline docs are now compatibility pointers.
+- Old schema baseline pointer docs were deleted after compaction.
 - Active tenant migrations include `000..006`, not only the baseline.
 
 Current read rule:
@@ -103,7 +103,7 @@ Tracked docs:
 
 Observed state:
 
-- Old admin Module Registry and access-policy docs are now compatibility pointers.
+- Old admin Module Registry and access-policy pointer docs were deleted after compaction.
 - Active admin contracts no longer expose the phase-heavy planning brief as the default read.
 
 Current read rule:
@@ -137,7 +137,7 @@ Tracked docs:
 Observed state:
 
 - Backend-owned Form Builder API, storage, validation, generated objects, and runtime apply now have a dedicated active backend contract.
-- Old frontend backend handoff/storage/review docs are compatibility pointers, not active backend contracts.
+- Old frontend backend handoff/storage/review pointer docs were deleted after compaction and are not active backend contracts.
 - The old `publishBuilderDraft` lifecycle is superseded by authoring save plus additive runtime apply.
 - Old `vw_ps_*` storage examples are superseded by current `vw_` canonical view and `vg_` grid view naming.
 
@@ -146,7 +146,7 @@ Current read rule:
 - Prefer `contracts/platform-studio-form-builder.md` for backend Form Builder implementation work.
 - Prefer `modules/platform-studio/form-builder.md` for backend implementation orientation and code-surface mapping.
 - Read it with `platform/frontend/docs/modules/platform-studio/form-builder.md` for cross-stack Form Builder behavior.
-- Use old frontend backend-facing docs only for historical audit detail.
+- Use git history only for exact old frontend backend-facing text.
 
 ## Migrated Backend Runbooks, Proposals, And Reference Slice
 
@@ -168,7 +168,7 @@ Tracked docs:
 
 Observed state:
 
-- Old root/auth paths for these docs are compatibility pointers.
+- Old root/auth pointer paths for these docs were deleted after compaction.
 - Operational docs moved under `runbooks/`.
 - Gateway and KMS work moved under `proposals/`.
 - Events/mail cleanup and schema drift verification moved under `proposals/`.
@@ -183,7 +183,7 @@ Current read rule:
 - Prefer proposals only when the owner activates gateway, KMS, events/mail cleanup, or schema drift work.
 - Prefer reference docs only for import/migration archaeology; runtime schema truth remains `contracts/schema-tenancy.md`.
 - Prefer `archive/postgres-archive/README.md` before opening any legacy PostgreSQL SQL payload.
-- Treat old root-path docs mentioned in `platform/backend/docs/README.md` as compatibility pointers, not active ownership docs.
+- Treat deleted old root-path docs as git-history provenance only, not active ownership docs.
 - Prefer `contracts/events-identity.md` for event actor identity work.
 - Prefer `archive/README.md` before opening historical backend standards, prompts, or completed plans.
 

@@ -3,7 +3,7 @@
 Status: local archive planning list
 Last audited: 2026-04-25
 
-This list tracks backend archive/history files and compatibility pointers during the backend docs rewrite.
+This list tracks backend archive/history files and deleted pointer paths during the backend docs rewrite.
 Operational/proposal/reference/archive moves have already landed for the files listed here.
 
 ## Archive Or Historical Reference
@@ -57,34 +57,16 @@ Operational/proposal/reference/archive moves have already landed for the files l
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
 - `platform/backend/docs/modules/platform-studio/form-builder.md`
 
-## Compatibility Pointers After Migration
-
-- `platform/backend/docs/local-backend-bootstrap.md`
-- `platform/backend/docs/auth/auth-key-source-configuration.md`
-- `platform/backend/docs/auth/auth-kms-implementation-status.md`
-- `platform/backend/docs/backend-api-gateway-http-api-mapping-spec.md`
-- `platform/backend/docs/backend-api-gateway-proxy-routing-policy.md`
-- `platform/backend/docs/backend-admin-tenant-events-mails-overlap-audit-v1.md`
-- `platform/backend/docs/backend-db-instance-secret-resolution.md`
-- `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md`
-- `platform/backend/docs/backend-tenant-import-module-boundary-v1.md`
-- `platform/backend/docs/backend-events-identity-contract.md`
-- `platform/backend/docs/backend-schema-drift-check-strategy.md`
-- `platform/backend/docs/backend-admin-module-registry-refactor-plan.md`
-- `platform/backend/docs/backend-auth-cookie-migration-plan.md`
-- `platform/backend/docs/backend-tenant-starter-field-targets.md`
-- `platform/backend/docs/backend-export-architecture-agent-prompt.md`
-- `platform/backend/docs/GO_AGENT_RULES.md`
-- `platform/backend/docs/ramp_v_108_backend_standard_v_2.md`
-- `platform/backend/docs/legacy/postgres-archive/README.md`
-  - Reason: old legacy path is pointer-only after the SQL payload moved to `archive/postgres-archive/`.
+## Deleted Compatibility Pointers
 
 Pointer-only compacted/moved files for runtime map, foundation matrix, module
-wiring, auth gateway/control/projection, admin registry/access, schema
-baselines, migration baseline, placement/naming, and tenant canonical refactor
-were deleted after compaction. Recover exact old text from git history only.
+wiring, auth gateway/control/projection/key-source/KMS/gateway, admin
+registry/access/events-mail cleanup, schema baselines, migration baseline,
+placement/naming, tenant canonical/import/reference/drift, and root archive
+shims were deleted after compaction. Recover exact old text from git history
+only.
 
-Pointer-only compacted files for runtime map, foundation matrix, auth
-projection, admin registry/access, schema baselines, placement/naming, and
-tenant canonical refactor were deleted after compaction. Recover exact old text
-from git history only.
+Remaining pointer:
+
+- `platform/backend/docs/legacy/postgres-archive/README.md`
+  - Reason: old legacy path is pointer-only after the SQL payload moved to `archive/postgres-archive/`.

@@ -23,7 +23,7 @@ Migration progress:
 - UI Kit contract slice landed: frontend `contracts/ui-kit.md` exists in tracked docs.
 - UI Lab guide slice landed: frontend `guides/ui-lab.md` exists in tracked docs.
 - Deferred composed surfaces proposal slice landed: frontend `proposals/deferred-composed-surfaces.md` exists in tracked docs.
-- Frontend closed UI history archive slice landed: `foundation-rollout-plan.md` and `phase-e-gap-review.md` are archive compatibility pointers.
+- Frontend closed UI history archive slice landed: `foundation-rollout-plan.md` and `phase-e-gap-review.md` pointer paths were later deleted.
 - Install helper guide slice landed: frontend `guides/install-helper.md` exists in tracked docs.
 - Frontend local dev guide slice landed: frontend `guides/local-dev.md` exists in tracked docs.
 - Tenant Web module doc slice landed: frontend `modules/tenant-web.md` exists in tracked docs.

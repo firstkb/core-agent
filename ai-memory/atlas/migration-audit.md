@@ -54,6 +54,7 @@ Landed cleanup:
 - Top-level durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`.
 - Legacy module markdown files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs.
 - Legacy prompt/template markdown files and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`.
+- Final readiness audit is recorded in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; physical deletion is owner-gated by legacy run payload cleanup.
 
 The detailed retirement plan lives in:
 

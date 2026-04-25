@@ -67,4 +67,16 @@ Expected state before deletion:
 1. Legacy run triage: landed in `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md` and `ai-memory/atlas/legacy-runs-triage.md`.
 2. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md` durable/governance/changelog files.
 3. Legacy operational payload pass: landed for old prompts, templates, and automation manifest.
-4. Final deletion pass: remove `platform/docs/ai/**` only after the repository has no active references.
+4. Final readiness audit: landed in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`.
+5. Final deletion pass: remove `platform/docs/ai/**` only after the owner approves the remaining run payload decision.
+
+## Final Readiness
+
+The final readiness audit lives in:
+
+- `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
+
+Current verdict:
+
+- Hot-read retirement is complete.
+- Physical deletion is owner-gated by legacy run payload cleanup.

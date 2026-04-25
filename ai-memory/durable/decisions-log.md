@@ -722,3 +722,15 @@ Do not turn it into a task journal.
   - `ai-memory/atlas/templates/README.md`
   - `ai-memory/atlas/automation-manifest.json`
   - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`
+
+### DEC-061 Platform Docs AI Physical Deletion Is Owner-Gated
+
+- Date: 2026-04-25
+- Status: active
+- State: accepted
+- Decision: `platform/docs/ai/**` has passed hot-read retirement but should not be physically deleted until the owner approves legacy run payload cleanup. Non-run files are pointer stubs only. Remaining run payloads must be deleted or archived after accepting the compact summary, resolving the one `keep-provenance` Form Builder stabilization run, and confirming the empty admin tenant list draft can be deleted.
+- Sources:
+  - `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`
+  - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - `ai-memory/atlas/legacy-runs-triage.md`
+  - `ai-memory/atlas/platform-docs-ai-retirement-plan.md`

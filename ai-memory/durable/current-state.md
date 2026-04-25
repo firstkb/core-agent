@@ -50,6 +50,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown files under `platform/docs/ai/*.md` are retired pointers to `ai-memory`; old payload text is available only through git history.
 - `landed` `doc-confirmed`: Legacy module memory files under `platform/docs/ai/modules/*.md` are retired pointers to `ai-memory/modules/**` and tracked FE/BE docs; old payload text is available only through git history.
 - `landed` `doc-confirmed`: Legacy prompt/template payloads and `platform/docs/ai/automation-manifest.json` are retired pointers to `ai-memory/atlas/**`; old operational payload text is available only through git history.
+- `landed` `doc-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is recorded in `ai-memory/atlas/platform-docs-ai-retirement-readiness.md`; hot-read retirement passes, physical deletion remains owner-gated by legacy run payload cleanup.
 
 ## Active Product Domains
 

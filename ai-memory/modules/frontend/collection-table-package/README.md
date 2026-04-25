@@ -14,7 +14,7 @@ Last compacted: 2026-04-25
 
 - `ai-memory/modules/domains/collection-table/`
 - `platform/frontend/docs/contracts/collection-table.md`
-- `platform/frontend/docs/package-boundaries.md`
+- `platform/frontend/docs/contracts/package-boundaries.md`
 - `platform/frontend/packages/collection-table`
 
 ## Frontend Contract

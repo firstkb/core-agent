@@ -33,11 +33,10 @@ Compatibility pointers:
 | --- | --- | --- | --- |
 | `platform/backend/AGENTS.md` | workspace guidance with drift | Backend package boundaries, route conventions, migration ownership, security rules | Current root `AGENTS.md` and local `ai-memory` win for AI-memory read order. |
 | `platform/backend/docs/README.md` | active index | Tracked backend docs orientation | Use as a tracked table of contents; old root paths listed there are compatibility pointers only. |
-| `platform/backend/docs/backend-module-wiring-standard.md` | compatibility pointer | Old path for module wiring standard | Read `contracts/runtime-wiring.md` instead. |
 | `platform/backend/docs/local-backend-bootstrap.md` | compatibility pointer | Old path for local backend bootstrap | Read `runbooks/local-bootstrap.md` instead. |
 
-Pointer-only runtime target map and foundation matrix files were deleted after
-compaction.
+Pointer-only runtime target map, foundation matrix, and module wiring files were
+deleted after compaction.
 
 ## Operational Runbooks
 
@@ -54,13 +53,14 @@ compaction.
 | `platform/backend/docs/contracts/auth-gateway.md` | active contract | Self-issued JWT, JWKS, refresh cookie, API Gateway authorizer target, trusted headers | Hot auth gateway contract. |
 | `platform/backend/docs/contracts/auth-control-schema.md` | active contract | Master auth/control tables, refresh token family/session fields, tenant user auth fields | Hot auth schema contract. |
 | `platform/backend/docs/modules/auth.md` | active module doc | Host-to-tenant resolution, no master user mirror for auth, direct tenant user read, OTP, refresh/logout | Hot auth module doc. |
-| `platform/backend/docs/backend-auth-gateway-contract.md` | compatibility pointer | Old path for auth gateway contract | Read `contracts/auth-gateway.md` instead. |
-| `platform/backend/docs/backend-auth-control-table-design.md` | compatibility pointer | Old path for auth control schema | Read `contracts/auth-control-schema.md` instead. |
 | `platform/backend/docs/auth/auth-key-source-configuration.md` | compatibility pointer | Old path for auth key source configuration | Read `runbooks/auth-key-sources.md` instead. |
 | `platform/backend/docs/auth/auth-kms-implementation-status.md` | compatibility pointer | Old path for future KMS signer work | Read `proposals/kms-signing.md` instead. |
 | `platform/backend/docs/backend-auth-cookie-migration-plan.md` | archive pointer | Old path for historical cookie migration phases | Read `archive/backend-auth-cookie-migration-plan.md` only for history. |
 | `platform/backend/docs/backend-api-gateway-http-api-mapping-spec.md` | compatibility pointer | Old path for future HTTP API mappings and JWT authorizer integration | Read `proposals/api-gateway-http-api-mapping.md` instead. |
 | `platform/backend/docs/backend-api-gateway-proxy-routing-policy.md` | compatibility pointer | Old path for gateway proxy route grouping and path preservation | Read `proposals/api-gateway-proxy-routing.md` instead. |
+
+Pointer-only auth gateway/control/projection root files were deleted after
+compaction.
 
 Future proposal docs:
 
@@ -107,7 +107,6 @@ Frontend compatibility pointers:
 | --- | --- | --- | --- |
 | `platform/backend/docs/contracts/schema-tenancy.md` | active contract | Master/tenant placement, canonical schema, tenant isolation, naming, import boundary | Primary schema/tenancy source. |
 | `platform/backend/docs/contracts/migrations.md` | active contract | Master migrations, tenant migrations, bundle rules, `cmd/migrate` ownership | Primary migration source. |
-| `platform/backend/docs/backend-schema-migrations-baseline.md` | compatibility pointer | Old path for migration baseline | Read `contracts/migrations.md` instead. |
 | `platform/backend/docs/backend-db-instance-secret-resolution.md` | compatibility pointer | Old path for tenant DB secret resolution and operational lookup | Read `runbooks/db-instance-secret-resolution.md` instead. |
 | `platform/backend/docs/backend-tenant-canonical-field-mapping-v1.md` | compatibility pointer | Old path for legacy MSSQL to canonical tenant PostgreSQL field mapping | Read `reference/import-field-mapping.md` instead. |
 | `platform/backend/docs/backend-tenant-import-module-boundary-v1.md` | compatibility pointer | Old path for runtime repo vs future import module boundary | Read `reference/tenant-import-boundary.md` instead. |
@@ -115,8 +114,8 @@ Frontend compatibility pointers:
 | `platform/backend/docs/backend-schema-drift-check-strategy.md` | compatibility pointer | Old path for future database drift verification | Read `proposals/schema-drift-checks.md` instead. |
 | `platform/backend/docs/backend-tenant-starter-field-targets.md` | archive pointer | Old path for historical starter field target | Read `archive/backend-tenant-starter-field-targets.md` only for history. |
 
-Pointer-only schema baseline, placement/naming, and tenant canonical refactor
-files were deleted after compaction.
+Pointer-only schema baseline, migration baseline, placement/naming, and tenant
+canonical refactor files were deleted after compaction.
 
 Import/reference docs:
 

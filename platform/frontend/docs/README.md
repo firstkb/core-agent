@@ -30,11 +30,6 @@ These old root/platform-studio paths remain as compatibility pointers during the
 They are not part of the active read order:
 
 - `install-helper-runtime.md`
-- `app-surfaces.md`
-- `package-boundaries.md`
-- `tenant-model.md`
-- `offline-strategy.md`
-- `auth-runtime-followups.md`
 - `collection-table-shared-readiness-plan.md`
 - `ui-delivery-order.md`
 - `layout-baseline.md`
@@ -63,6 +58,10 @@ Pointer-only compacted files for the old auth brief, Collection Table root
 contracts, admin backend handoff, Platform Studio taxonomy, and hot Form Builder
 contract slices were deleted after compaction. Use active contracts/modules or
 git history for exact old text.
+
+Pointer-only moved/no-longer-active root files for app surfaces, package
+boundaries, tenant model, offline strategy, and auth follow-ups were also
+deleted. Use active contracts/proposals or git history for exact old text.
 
 ## Active Module Docs
 

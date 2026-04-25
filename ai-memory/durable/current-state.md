@@ -76,7 +76,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/docs/archive/`; old root paths are archive pointers.
 - `landed` `doc-confirmed`: Legacy PostgreSQL SQL now lives behind `platform/backend/docs/archive/postgres-archive/README.md`; `platform/backend/docs/legacy/postgres-archive/README.md` is only a compatibility pointer.
 - `landed` `doc-confirmed`: Active backend docs now use target-folder `Read with`/`Read Order` links; old root docs are compatibility pointers only.
-- `landed` `doc-confirmed`: Pointer-only FE/BE docs with compacted-pointer headers were deleted after their payload had fully moved into active contracts/modules; exact old text is git-history only.
+- `landed` `doc-confirmed`: Pointer-only FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording were deleted after their payload had fully moved into active contracts/modules; exact old text is git-history only.
 - `landed` `doc-confirmed`: `ai-memory/index/*` no longer lists old FE/BE root docs or former `platform/docs/ai/**` as active ownership routes; old platform memory is migrated import material with exact text in git history only.
 - `landed` `doc-confirmed`: Form Builder is the active Platform Studio tool.
 - `planned` `owner-confirmed`: Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned Platform Studio tools, not implementation-active.
@@ -90,7 +90,7 @@ Confidence labels:
 
 - `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
 - `risk` `doc-confirmed`: Some tracked docs still contain machine-local absolute links and stale statuses.
-- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially remaining compatibility pointers, exact-detail docs, and older auth follow-up state. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
+- `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially remaining compatibility pointers and exact-detail docs. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are still working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Legacy run payloads and pointer directories no longer live under `platform/docs/ai/runs`; exact old run text requires git history.
 - `risk` `doc-confirmed`: Detailed Platform Studio field/backend/supporting docs remain large. Read the suite contract, module entrypoint, and Form Builder module contract first, then only the exact supporting detail doc needed.

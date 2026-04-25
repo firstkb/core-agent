@@ -16,9 +16,8 @@ This file lists frontend docs that should not stay in hot context after physical
 
 ## Working/Handoff Docs To Compact First
 
-- `platform/frontend/docs/auth-runtime-followups.md`
-
-These may still contain useful facts, but should become compact current-state/contract docs or archive after verification.
+No remaining auth follow-up pointer file. Recover exact old text from git
+history only if required.
 
 ## Compatibility Pointers To Archive Later
 
@@ -32,10 +31,11 @@ These may still contain useful facts, but should become compact current-state/co
 - `platform/frontend/docs/ui-lab-ui-kit-coverage.md`
 - `platform/frontend/docs/deferred-composed-surfaces.md`
 
-Pointer-only compacted files for auth brief, Collection Table root contracts,
-admin backend handoff, Platform Studio taxonomy, and hot Form Builder contract
-slices were deleted after compaction. Recover exact old text from git history
-only.
+Pointer-only compacted/moved files for auth brief/follow-ups, app surfaces,
+package boundaries, tenant model, offline strategy, Collection Table root
+contracts, admin backend handoff, Platform Studio taxonomy, and hot Form Builder
+contract slices were deleted after compaction. Recover exact old text from git
+history only.
 
 ## Reference And Donor Material
 

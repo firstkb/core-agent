@@ -17,7 +17,7 @@ Status: active compact state
 
 ## Planned / Follow-Up
 
-- Keep `auth-runtime-followups.md` as live cleanup surface until explicitly closed.
+- Track future auth cleanup in `platform/frontend/docs/contracts/auth-runtime.md`, backend auth contracts, or a new explicit proposal; the old `auth-runtime-followups.md` pointer was deleted.
 - Continue removing stale legacy assumptions around frontend refresh-token storage.
 
 ## Risks
@@ -26,4 +26,3 @@ Status: active compact state
 - Shell bootstrap can regress into loader loops on stalled refresh/profile calls.
 - Profile and navigation payload responsibilities can drift.
 - Tenant context can be incorrectly pushed from frontend convenience state.
-

@@ -50,20 +50,19 @@ Compatibility pointers:
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/README.md` | `tracked_index` | Need tracked source index; old root/platform-studio paths listed there are compatibility-only. |
-| `platform/frontend/docs/app-surfaces.md` | `compatibility_pointer` | Old path; read `contracts/app-surfaces.md` instead. |
-| `platform/frontend/docs/package-boundaries.md` | `compatibility_pointer` | Old path; read `contracts/package-boundaries.md` instead. |
-| `platform/frontend/docs/tenant-model.md` | `compatibility_pointer` | Old path; read `contracts/tenant-model.md` instead. |
-| `platform/frontend/docs/offline-strategy.md` | `compatibility_pointer` | Old path; read `proposals/pwa-offline.md` instead. |
 | `platform/frontend/docs/install-helper-runtime.md` | `compatibility_pointer` | Old path; read `guides/install-helper.md` instead. |
+
+Pointer-only app-surface, package-boundary, tenant-model, and offline root
+redirect files were deleted after compaction.
 
 ## Auth
 
 | Source | Classification | Read When |
 | --- | --- | --- |
 | `platform/frontend/docs/contracts/auth-runtime.md` | `hot_contract` | Frontend auth runtime, OTP, cookie refresh, access-token state, profile bootstrap, auth client behavior. |
-| `platform/frontend/docs/auth-runtime-followups.md` | `compatibility_pointer` | Old path; read `contracts/auth-runtime.md` instead. |
 
-The old auth integration brief pointer-only file was deleted after compaction.
+The old auth integration brief and auth follow-up pointer-only files were
+deleted after compaction.
 
 ## Collection Table
 

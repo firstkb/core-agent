@@ -765,7 +765,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `ai-memory/AGENTS.override.md` and pointer-only FE/BE docs carrying compacted-pointer headers were deleted after active references were updated. Active docs/maps now route directly to canonical contracts/modules. Exact old pointer text is available only through git history.
+- Decision: `ai-memory/AGENTS.override.md` and pointer-only FE/BE docs carrying compacted-pointer headers, moved-pointer headers, or no-longer-active auth follow-up wording were deleted after active references were updated. Active docs/maps now route directly to canonical contracts/modules. Exact old pointer text is available only through git history.
 - Sources:
   - `ai-memory/docs/docs-migration-plan.md`
   - `platform/frontend/docs/README.md`

@@ -49,12 +49,8 @@ Read with:
 - Tenant shared logic: `platform/frontend/docs/contracts/tenant-model.md`
 - Future offline/PWA delivery: `platform/frontend/docs/proposals/pwa-offline.md`
 
-## Compatibility Pointers
+## Historical Inputs
 
-These root docs are compatibility pointers after the workspace docs rewrite.
-They are not part of the active read order:
-
-- `platform/frontend/docs/app-surfaces.md`
-- `platform/frontend/docs/package-boundaries.md`
-- `platform/frontend/docs/tenant-model.md`
-- `platform/frontend/docs/offline-strategy.md`
+The old root redirect docs for app surfaces, package boundaries, tenant model,
+and offline strategy were deleted after the workspace docs rewrite. Use git
+history only when exact old text is required.

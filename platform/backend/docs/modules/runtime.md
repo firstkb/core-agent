@@ -130,10 +130,5 @@ Do not create new root `internal/*` business packages.
 
 ## Compatibility Pointers
 
-This root doc remains as a compatibility pointer after the backend runtime docs
-rewrite. It is not part of the active read order:
-
-- `platform/backend/docs/backend-module-wiring-standard.md`
-
-Pointer-only compacted runtime map and foundation files were deleted after
-compaction. Use git history only when exact old text is required.
+Pointer-only compacted runtime map, foundation, and module wiring files were
+deleted after compaction. Use git history only when exact old text is required.

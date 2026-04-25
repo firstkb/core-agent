@@ -33,18 +33,18 @@ Current read rule:
 
 Tracked doc:
 
-- `platform/frontend/docs/auth-runtime-followups.md`
+- `platform/frontend/docs/contracts/auth-runtime.md`
 
 Observed drift:
 
-- This path is now a compatibility pointer.
+- The old `auth-runtime-followups.md` pointer-only file was deleted after compaction.
 - Current frontend auth behavior is tracked in `platform/frontend/docs/contracts/auth-runtime.md`.
 - Older follow-up wording made landed cookie-refresh work look incomplete.
 
 Current read rule:
 
 - Read `platform/frontend/docs/contracts/auth-runtime.md` for tracked frontend auth behavior.
-- Use the old follow-up pointer only for compatibility with existing links; use git history for the deleted integration brief.
+- Use git history only when exact old auth follow-up or integration-brief text is required.
 
 ### Frontend Auth Slice Migrated
 
@@ -85,13 +85,14 @@ This is not acceptable for new memory docs and should be repaired during physica
 
 Examples:
 
-- `platform/frontend/docs/auth-runtime-followups.md`
 - `platform/frontend/docs/install-helper-runtime.md`
 
 Current rule:
 
 - New `ai-memory` docs use repo-relative paths only.
 - Do not copy machine-local links into new docs.
+The old auth follow-up pointer was deleted; recover exact old text from git
+history only if required.
 
 ### Platform Studio Active Set Overload
 
@@ -154,7 +155,7 @@ Current read rule:
 
 - Treat PWA/offline/mobile references as proposals unless the owner explicitly activates that work.
 - Do not add service-worker sync, offline-first persistence, or mobile shell assumptions to current frontend tasks by default.
-- Prefer `platform/frontend/docs/proposals/pwa-offline.md` over the old `platform/frontend/docs/offline-strategy.md` path.
+- Prefer `platform/frontend/docs/proposals/pwa-offline.md`; the old `offline-strategy.md` redirect file was deleted.
 
 ### Frontend Workspace Slice Migrated
 
@@ -168,7 +169,7 @@ Tracked docs:
 
 Observed state:
 
-- The old root workspace docs are now compatibility pointers.
+- Old app-surface, package-boundary, tenant-model, and offline root redirect files were deleted after compaction.
 - The active tracked workspace contract is contract-first.
 
 Current read rule:

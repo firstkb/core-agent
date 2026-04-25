@@ -28,12 +28,7 @@ Read contract docs first, then module docs, then runbooks/proposals/reference/hi
 
 ## Compatibility Pointers
 
-These old root docs remain as compatibility pointers during the migration.
-They are not part of the active read order:
-
-- `backend-module-wiring-standard.md`
-
-Pointer-only compacted runtime map/foundation files were deleted after
+Pointer-only runtime map, foundation, and module wiring files were deleted after
 compaction. Use active runtime docs or git history for exact old text.
 
 ## Auth And Session
@@ -55,12 +50,11 @@ Proposals:
 
 Compatibility pointers, not active read-order docs:
 
-- `backend-auth-gateway-contract.md`
-- `backend-auth-control-table-design.md`
 - `auth/auth-key-source-configuration.md`
 - `auth/auth-kms-implementation-status.md`
 
-The old auth projection/sync pointer-only file was deleted after compaction.
+Pointer-only auth gateway/control/projection root files were deleted after
+compaction. Use active auth contracts/modules or git history for exact old text.
 
 ## Admin Control Plane
 
@@ -107,14 +101,13 @@ Supporting docs:
 
 Compatibility pointers, not active read-order docs:
 
-- `backend-schema-migrations-baseline.md`
 - `backend-tenant-canonical-field-mapping-v1.md`
 - `backend-tenant-import-module-boundary-v1.md`
 - `backend-schema-drift-check-strategy.md`
 
-Pointer-only compacted schema baseline, placement/naming, and tenant canonical
-refactor files were deleted after compaction. Use active schema contracts or git
-history for exact old text.
+Pointer-only schema baseline, migration baseline, placement/naming, and tenant
+canonical refactor files were deleted after compaction. Use active schema
+contracts or git history for exact old text.
 
 ## Platform Studio Form Builder
 

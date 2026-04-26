@@ -10,12 +10,12 @@ It sits between the repo-level `AGENTS.md` and the local `platform/backend/AGENT
 Before doing product work, read in this order:
 
 1. `platform/AGENTS.md`
-2. `ai-memory/README.md`
-3. `ai-memory/index/memory-index.yaml`
-4. `ai-memory/index/read-routes.yaml`
-5. `ai-memory/durable/current-state.md`
-6. `ai-memory/durable/module-index.md`
-7. the relevant module pack under `ai-memory/modules/**`
+2. `ai-memory/START_HERE.md`
+3. `ai-memory/index/read-routes.yaml`
+4. `ai-memory/durable/current-state.md`
+5. the relevant module pack under `ai-memory/modules/**`
+6. `ai-memory/index/memory-index.yaml` only when broader routing is needed
+7. `ai-memory/durable/module-index.md` when module ownership is unclear
 8. the local runtime file:
    - `platform/backend/AGENTS.md` for backend work
    - `platform/frontend/AGENTS.md` for frontend work

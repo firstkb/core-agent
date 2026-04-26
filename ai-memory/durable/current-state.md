@@ -45,7 +45,10 @@ Confidence labels:
 - `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `docs/ref/reference-code.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked pointer README directories were deleted.
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now validates docs/memory drift, deleted pointer folders, retained Form Builder exact-detail policy, and local markdown links.
-- `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift and Atlas automation version checks for relevant PRs and pushes.
+- `landed` `doc-confirmed`: `ai-memory/START_HERE.md` is the first compact memory read after repo/platform instructions; `memory-index.yaml` is now broader routing, not mandatory first read for every task.
+- `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now also validates stale platform layout, historical migration-plan status, `AGENTS_NAME.md` non-authoritative status, `START_HERE`, and tracked env-file policy.
+- `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks for relevant PRs and pushes.
+- `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
 - `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
 - `landed` `owner-confirmed`: Scribe should be used manually after large docs/memory changes and before major development phases, not on every commit.
 - `landed` `doc-confirmed`: Memory maintenance rules for new decisions, modules, doc status changes, reference-code changes, and agent workflow changes live in `ai-memory/agent-workflow.md`.
@@ -98,6 +101,7 @@ Confidence labels:
 ## Current Risks
 
 - `risk` `doc-confirmed`: Historical references to former `platform/docs/ai` paths can be confused with active docs. The path is deleted; use `ai-memory` for retrieval and git history only for explicit provenance recovery.
+- `risk` `doc-confirmed`: Machine-local backend env files may still exist in a developer working tree, but they must remain ignored and must not be tracked.
 - `risk` `doc-confirmed`: Retained exact-detail/reference docs can still carry stale lifecycle or extraction language. Machine-local absolute links are not currently observed in active FE/BE docs and must not be reintroduced.
 - `risk` `doc-confirmed`: Some old frontend tracked docs still contain stale lifecycle/extraction status, especially exact-detail docs and reference-only donor notes. Use `ai-memory/docs/frontend/drift-report.md` before treating them as current truth.
 - `risk` `doc-confirmed`: Some backend tracked docs are still working plans, proposed gateway policies, historical standards, or older agent instructions. Use `ai-memory/docs/backend/drift-report.md` before treating them as current truth.

@@ -37,6 +37,7 @@
     - platform/backend/docs/README.md
     - docs/codex-native-repo.md
   memory_docs:
+    - ai-memory/START_HERE.md
     - ai-memory/durable/current-state.md
     - ai-memory/durable/platform-contract.md
     - ai-memory/durable/module-index.md

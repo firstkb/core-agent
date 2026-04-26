@@ -15,14 +15,15 @@ Use this order for agent work:
 
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
-3. `ai-memory/index/memory-index.yaml`
+3. `ai-memory/START_HERE.md`
 4. `ai-memory/index/read-routes.yaml`
 5. `ai-memory/durable/current-state.md`
-6. `ai-memory/durable/module-index.md`
-7. `ai-memory/agent-workflow.md` when workflow/update rules matter
-8. the relevant module `README.md`
-9. the relevant module `contract.md`, `state.md`, and `lessons.md`
-10. only then open deep source docs or code paths named by the module pack
+6. `ai-memory/index/memory-index.yaml` when broader routing is needed
+7. `ai-memory/durable/module-index.md` when module ownership is unclear
+8. `ai-memory/agent-workflow.md` when workflow/update rules matter
+9. the relevant module `README.md`
+10. the relevant module `contract.md`, `state.md`, and `lessons.md`
+11. only then open deep source docs or code paths named by the module pack
 
 ## Memory Types
 
@@ -34,6 +35,7 @@ Use this order for agent work:
 ## Directory Roles
 
 - `index/`: compact retrieval index and read routing.
+- `START_HERE.md`: first compact memory read after repo/platform instructions.
 - `atlas/`: active Atlas prompts, templates, automation manifest, and migration audit.
 - `durable/`: small cross-project memory that should be read before deep docs.
 - `modules/domains/`: product/domain memory where frontend, backend, or multiple apps must stay aligned.

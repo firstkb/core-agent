@@ -18,6 +18,9 @@ platform/*
 !platform/docs/
 !platform/docs/**
 platform/docs/ai/
+platform/backend/env/*.env
+!platform/backend/env/*.env.example
+platform/backend/env/Untitled
 platform/backend/certs/*.pem
 platform/backend/certs/*.key
 platform/backend/certs/*.crt

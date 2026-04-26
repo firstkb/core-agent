@@ -1,3 +1,14 @@
+Status: non-authoritative draft
+
+Canonical agent roles are defined in:
+
+- `AGENTS.md`
+- `.agents/skills/**`
+- `.codex/**`
+
+Do not use this file as active runtime naming or role routing.
+It is a historical naming scratchpad only.
+
 Research        -> Charlie
 Design          -> Atlas
 Planner         -> Delta

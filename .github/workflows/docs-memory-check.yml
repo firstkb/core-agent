@@ -8,9 +8,12 @@ on:
       - ".github/workflows/docs-memory-check.yml"
       - ".gitignore"
       - "AGENTS.md"
+      - "AGENTS_NAME.md"
       - "ai-memory/**"
       - "docs/**"
       - "platform/AGENTS.md"
+      - "platform/README.md"
+      - "platform/backend/env/**"
       - "platform/backend/docs/**"
       - "platform/frontend/docs/**"
       - "scripts/ai/**"
@@ -24,9 +27,12 @@ on:
       - ".github/workflows/docs-memory-check.yml"
       - ".gitignore"
       - "AGENTS.md"
+      - "AGENTS_NAME.md"
       - "ai-memory/**"
       - "docs/**"
       - "platform/AGENTS.md"
+      - "platform/README.md"
+      - "platform/backend/env/**"
       - "platform/backend/docs/**"
       - "platform/frontend/docs/**"
       - "scripts/ai/**"
@@ -49,6 +55,9 @@ jobs:
 
       - name: Check docs and memory drift
         run: python3 scripts/ai/docs_memory_check.py --check
+
+      - name: Check env file policy
+        run: python3 scripts/ai/check-env-policy.py --check
 
       - name: Check Atlas automation versions
         run: python3 scripts/ai/automation_versions.py --check

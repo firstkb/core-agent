@@ -3,6 +3,7 @@
 
 default:
   read:
+    - ai-memory/START_HERE.md
     - ai-memory/durable/current-state.md
     - ai-memory/durable/module-index.md
   avoid_by_default:

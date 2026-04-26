@@ -888,3 +888,18 @@ Do not turn it into a task journal.
   - `ai-memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
   - `platform/frontend/docs/modules/platform-studio/form-builder.md`
   - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+
+### DEC-075 Memory Hygiene First-Read And Env Policy
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: Agent product work should use `ai-memory/START_HERE.md` as the first compact memory read after repo/platform instructions. `docs-migration-plan.md` is historical and must not own the current readiness score. `AGENTS_NAME.md` is non-authoritative. Local backend env files must remain untracked; only `*.env.example` files may be tracked under `platform/backend/env/`.
+- Sources:
+  - `ai-memory/START_HERE.md`
+  - `ai-memory/agent-workflow.md`
+  - `ai-memory/docs/docs-memory-score-audit.md`
+  - `ai-memory/docs/docs-migration-plan.md`
+  - `.gitignore`
+  - `scripts/ai/check-env-policy.py`
+  - `scripts/ai/docs_memory_check.py`

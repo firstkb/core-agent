@@ -75,9 +75,11 @@ provenance.
 
 Local docs rewrite planning surface:
 
+- `ai-memory/START_HERE.md`
 - `ai-memory/docs/README.md`
 - `ai-memory/docs/target-docs-structure.md`
 - `ai-memory/docs/docs-migration-plan.md`
+- `ai-memory/docs/docs-memory-score-audit.md`
 
 Operational scaffolds, not product truth:
 

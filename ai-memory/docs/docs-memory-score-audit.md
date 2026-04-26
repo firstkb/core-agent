@@ -18,14 +18,18 @@ It does not mean every historical exact-detail document has been deleted.
 - `docs/ref/` contains only stable reference registry docs: `README.md` and `reference-code.md`.
 - `platform/docs/ai/**` is absent from the working tree.
 - `ai-memory/AGENTS.override.md` is absent from the working tree.
+- `ai-memory/START_HERE.md` is the first compact memory read after repo/platform instructions.
+- `platform/README.md` no longer lists `platform/docs/ai/**` as active layout.
+- `ai-memory/docs/docs-migration-plan.md` is historical; this score audit owns the current readiness score.
+- Local backend env files are ignored and checked by `scripts/ai/check-env-policy.py --check`.
 - Tracked FE/BE docs do not contain compacted/moved/no-longer-active pointer markers.
 - Form Builder deleted exact-detail docs are no longer referenced from tracked frontend docs as read targets.
 - Form Builder exact-detail audit has `14 keep_exact_detail`, `0 compact_more_then_delete`, and `9 deleted_after_payload_extraction`.
 - Form Builder retained exact-detail replacement has a docs-only roadmap; no retained detail doc should be deleted before its replacement target and verification are explicit.
 - Form Builder planned/open work has a dedicated code-verified memory doc, so import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work is not confused with implemented truth.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
-- `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift and local markdown-link check.
-- `.github/workflows/docs-memory-check.yml` runs docs/memory drift and Atlas automation version checks on relevant PRs and pushes.
+- `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, env-policy, stale-layout, and local markdown-link check.
+- `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks on relevant PRs and pushes.
 - `.agents/skills/scribe/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
 - Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.
 
@@ -33,7 +37,7 @@ It does not mean every historical exact-detail document has been deleted.
 
 | Area | Score | Reason |
 | --- | ---: | --- |
-| AI memory routing | 98 | `ai-memory/index`, durable memory, module packs, and Atlas workflow now own active AI retrieval. |
+| AI memory routing | 99 | `ai-memory/START_HERE.md`, `ai-memory/index`, durable memory, module packs, and Atlas workflow now own active AI retrieval. |
 | Legacy memory retirement | 100 | `platform/docs/ai/**` was migrated, summarized, and physically deleted. |
 | FE docs structure | 98 | Active docs now route through `contracts/`, `modules/`, `guides/`, `proposals/`, `reference/`, and archive metadata; old root pointers and reference pointer folders are gone. |
 | BE docs structure | 98 | Active backend docs route through contracts/modules/runbooks/proposals/reference/archive; old root pointers and reference pointer folders are gone. |
@@ -53,10 +57,11 @@ Normal AI-agent work should start from:
 
 1. `AGENTS.md`
 2. task-relevant `.agents/skills/**` or `.codex/**`
-3. `ai-memory/index/*`
-4. `ai-memory/durable/current-state.md`
-5. the relevant module pack under `ai-memory/modules/**`
-6. active tracked docs under `platform/frontend/docs/**` or `platform/backend/docs/**`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
+5. `ai-memory/durable/current-state.md`
+6. the relevant module pack under `ai-memory/modules/**`
+7. active tracked docs under `platform/frontend/docs/**` or `platform/backend/docs/**`
 
 Do not use deleted legacy paths as read targets. Use git history only for
 explicit provenance recovery.

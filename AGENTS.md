@@ -54,7 +54,8 @@ as a future-target architecture document, not as the live runtime contract.
 Ordinary agent work should read only:
 
 - `AGENTS.md`
-- `ai-memory/README.md`, `ai-memory/index/memory-index.yaml`, and `ai-memory/index/read-routes.yaml` for non-trivial platform product work
+- `ai-memory/START_HERE.md` and `ai-memory/index/read-routes.yaml` for non-trivial platform product work
+- `ai-memory/index/memory-index.yaml` when the task needs a broader route map
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring

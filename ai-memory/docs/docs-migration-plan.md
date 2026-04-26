@@ -1,10 +1,17 @@
 # Docs Migration Plan
 
-Status: active migration plan
+Status: historical migration record
 Last compacted: 2026-04-25
 
-This is the master migration map for a later physical rewrite of `platform/frontend/docs` and `platform/backend/docs`.
+This is the historical migration map for the physical rewrite of
+`platform/frontend/docs` and `platform/backend/docs`.
 It records target moves and migration progress.
+
+Current readiness score lives in:
+
+- `ai-memory/docs/docs-memory-score-audit.md`
+
+Do not use this file as current operational status.
 
 Current progress:
 
@@ -36,13 +43,14 @@ Current progress:
 - Form Builder exact-detail consolidation audit landed: 14 retained as exact-detail, 0 marked for extraction before future deletion, and 9 detail docs deleted after extraction into `form-builder-fields.md`.
 - Form Builder exact-detail replacement roadmap landed as docs-only planning; retained detail docs stay until a future implementation slice names replacement target and verification.
 - Form Builder planned/open work memory landed after code-read verification, separating implemented runtime/export/authoring/multiple-lookup bridge facts from planned import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work.
-- Form Builder retained exact-detail policy and docs/memory score audit landed; overall readiness is 96/100 with remaining work focused on automation and typed/generated replacements, not manual pointer cleanup.
+- Form Builder retained exact-detail policy and docs/memory score audit landed; current readiness score now lives only in `ai-memory/docs/docs-memory-score-audit.md`.
 - Backend runbooks/proposals/reference cleanup landed: operational docs moved to `runbooks/`, gateway/KMS docs moved to `proposals/`, import docs moved to `reference/`, and old root/auth pointer paths were later deleted.
 - Backend remaining proposals/archive cleanup landed: events identity moved to `contracts/`, events/mail and schema drift moved to `proposals/`, historical backend standards/plans/prompts moved to `archive/`, and old root pointer paths were later deleted.
 - Backend legacy/postgres archive pointer pass landed: historical PostgreSQL SQL moved behind `archive/postgres-archive/README.md`, and the old `legacy/postgres-archive/README.md` path is a compatibility pointer.
 - Backend docs final consistency pass landed: active backend docs now use target-folder `Read with`/`Read Order` links, while old root pointer paths are git-history provenance only.
 - Frontend docs final consistency pass landed: active frontend docs now use target-folder `Read with`/`Read Order` links, while old root pointers are deleted and retained old Platform Studio docs are exact-detail, proposal, archive, or reference-only inputs.
 - FE/BE docs final index and stale pointer audit landed: tracked indexes and `ai-memory/index/*` no longer promote old root docs or `platform/docs/ai/**` as active ownership.
+- Memory/docs hygiene hardening landed: `platform/README.md` no longer lists the retired `platform/docs/ai/**` path as active layout, `ai-memory/START_HERE.md` is the first compact memory read, local backend env files are ignored and removed from git tracking, and deterministic checks cover these rules.
 
 ## Action Values
 
@@ -289,6 +297,7 @@ Local relocation/control docs:
 43. Scribe semantic audit skill: landed with `.agents/skills/scribe/` for periodic owner-invoked docs/memory source-of-truth audits.
 44. Form Builder exact-detail replacement roadmap: landed as docs-only planning for the 14 retained exact-detail references; no product-code changes are authorized by the roadmap itself.
 45. Form Builder planned/open work memory: landed as code-read verification of implemented vs planned work, including the distinction between implemented multiple-lookup bridge support and deferred non-lookup multivalue storage; no product-code changes authorized.
+46. Memory/docs hygiene hardening: landed with `ai-memory/START_HERE.md`, historical migration-plan status, env policy gate, `AGENTS_NAME.md` non-authoritative status, and stale layout checks.
 
 ## Current Blockers Before Physical Move
 

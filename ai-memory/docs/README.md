@@ -15,6 +15,7 @@ It does not move or replace tracked docs by itself.
 
 ## Local Docs
 
+- `ai-memory/START_HERE.md`
 - `ai-memory/docs/target-docs-structure.md`
 - `ai-memory/docs/docs-migration-plan.md`
 - `ai-memory/docs/docs-memory-score-audit.md`
@@ -33,6 +34,8 @@ It does not move or replace tracked docs by itself.
 
 ## Rule
 
+Use `docs-memory-score-audit.md` for current readiness.
+Use `docs-migration-plan.md` as historical migration record only.
 Use compact maps to plan the tracked docs rewrite.
 Do not physically move tracked docs until a rewrite task explicitly names the target slice.
 Use `reference-pack:*` aliases when planning raw reference-code relocation.

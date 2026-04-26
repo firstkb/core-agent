@@ -47,28 +47,58 @@ DELETED_FORM_BUILDER_DOCS = [
 
 LOCAL_LINK_SCOPES = [
     "AGENTS.md",
+    "AGENTS_NAME.md",
     "docs",
     "ai-memory",
     "platform/AGENTS.md",
+    "platform/README.md",
     "platform/frontend/docs",
     "platform/backend/docs",
     ".agents",
     ".codex",
 ]
 
+IGNORED_FALLBACK_DIRS = {
+    ".git",
+    ".venv",
+    ".venv-ppe",
+    ".venv-ppe311",
+    "node_modules",
+    "reference-code",
+    "artifacts",
+}
+
+ENV_ROOT = "platform/backend/env/"
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def fallback_files(root: Path) -> list[str]:
+    out: list[str] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel_path = path.relative_to(root)
+        if any(part in IGNORED_FALLBACK_DIRS for part in rel_path.parts):
+            continue
+        out.append(rel_path.as_posix())
+    return sorted(out)
+
+
 def git_ls_files(root: Path) -> list[str]:
-    result = subprocess.run(
-        ["git", "ls-files"],
-        cwd=root,
-        check=True,
-        text=True,
-        stdout=subprocess.PIPE,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            cwd=root,
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return fallback_files(root)
     return [line for line in result.stdout.splitlines() if line]
 
 
@@ -205,6 +235,50 @@ def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
         add_error(errors, "platform/docs/ai", "retired legacy memory path must not exist")
     if (root / "ai-memory/AGENTS.override.md").exists():
         add_error(errors, "ai-memory/AGENTS.override.md", "retired override file must not exist")
+    if not (root / "ai-memory/START_HERE.md").exists():
+        add_error(errors, "ai-memory/START_HERE.md", "first-read memory file must exist")
+
+
+def check_platform_readme(root: Path, errors: list[str]) -> None:
+    path = root / "platform/README.md"
+    if not path.exists():
+        add_error(errors, "platform/README.md", "platform README is missing")
+        return
+    text = read_text(path)
+    layout = re.search(r"## Current layout\s+```text\n(.*?)```", text, flags=re.DOTALL)
+    if layout and re.search(r"(^|\n)\s+ai/\s*(\n|$)", layout.group(1)):
+        add_error(errors, path.relative_to(root), "current layout must not list retired platform/docs/ai")
+    if "`ai-memory/START_HERE.md`" not in text:
+        add_error(errors, path.relative_to(root), "read order must include ai-memory/START_HERE.md")
+
+
+def check_docs_migration_plan_status(root: Path, errors: list[str]) -> None:
+    path = root / "ai-memory/docs/docs-migration-plan.md"
+    if not path.exists():
+        add_error(errors, path.relative_to(root), "docs migration plan is missing")
+        return
+    text = read_text(path)
+    if "Status: historical migration record" not in text:
+        add_error(errors, path.relative_to(root), "migration plan must be historical, not current operational status")
+    if "ai-memory/docs/docs-memory-score-audit.md" not in text:
+        add_error(errors, path.relative_to(root), "migration plan must point to the current readiness score owner")
+    if re.search(r"overall readiness is \d+/?100", text, flags=re.IGNORECASE):
+        add_error(errors, path.relative_to(root), "migration plan must not claim a current readiness score")
+
+
+def check_agents_name_status(root: Path, errors: list[str]) -> None:
+    path = root / "AGENTS_NAME.md"
+    if not path.exists():
+        return
+    text = read_text(path)
+    required = [
+        "Status: non-authoritative draft",
+        "Canonical agent roles are defined in:",
+        "Do not use this file as active runtime naming or role routing.",
+    ]
+    for marker in required:
+        if marker not in text:
+            add_error(errors, path.relative_to(root), f"missing non-authoritative marker `{marker}`")
 
 
 def check_pointer_markers(root: Path, errors: list[str]) -> None:
@@ -261,6 +335,31 @@ def check_gitignore(root: Path, errors: list[str]) -> None:
         add_error(errors, ".gitignore", "reference-code/ must stay ignored")
     if "platform/docs/ai/" not in lines:
         add_error(errors, ".gitignore", "retired platform/docs/ai/ must stay ignored")
+    expected_env_rules = [
+        "platform/backend/env/*.env",
+        "!platform/backend/env/*.env.example",
+        "platform/backend/env/Untitled",
+    ]
+    for rule in expected_env_rules:
+        if rule not in lines:
+            add_error(errors, ".gitignore", f"missing env policy rule `{rule}`")
+
+
+def is_forbidden_env_file(rel: str) -> bool:
+    if not rel.startswith(ENV_ROOT):
+        return False
+    name = rel.removeprefix(ENV_ROOT)
+    if "/" in name:
+        return False
+    if name == "Untitled":
+        return True
+    return name.endswith(".env") and not name.endswith(".env.example")
+
+
+def check_env_policy(tracked: list[str], errors: list[str]) -> None:
+    for rel in tracked:
+        if is_forbidden_env_file(rel):
+            add_error(errors, rel, "local env files must not be tracked; keep only *.env.example")
 
 
 def run_check() -> int:
@@ -270,10 +369,14 @@ def run_check() -> int:
 
     check_root_file_sets(root, errors)
     check_retired_memory_paths(root, errors)
+    check_platform_readme(root, errors)
+    check_docs_migration_plan_status(root, errors)
+    check_agents_name_status(root, errors)
     check_reference_code_retirement(root, errors)
     check_pointer_markers(root, errors)
     check_form_builder_policy(root, errors)
     check_gitignore(root, errors)
+    check_env_policy(tracked, errors)
     check_markdown_links(root, tracked_existing_markdown(root, tracked), errors)
 
     if errors:

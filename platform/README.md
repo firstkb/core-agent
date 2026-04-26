@@ -5,11 +5,11 @@
 ## Read order for product work
 
 - `platform/AGENTS.md`
-- `ai-memory/README.md`
-- `ai-memory/index/memory-index.yaml`
+- `ai-memory/START_HERE.md`
 - `ai-memory/index/read-routes.yaml`
 - `ai-memory/durable/current-state.md`
 - the relevant local `AGENTS.md` file under `backend/` or `frontend/`
+- `ai-memory/index/memory-index.yaml` only when broader routing is needed
 
 For cross-stack or multi-session work, invoke:
 
@@ -24,11 +24,6 @@ platform/
   CHANGELOG.md
 
   docs/
-    ai/
-      prompts/
-      templates/
-      runs/
-      modules/
     archive/
 
   backend/
@@ -61,7 +56,7 @@ platform/
 - stable Atlas prompt contracts live under `ai-memory/atlas/prompts/`
 - workflow templates live under `ai-memory/atlas/templates/`
 - coordinated task run artifacts live under `ai-memory/runs/`
-- former `platform/docs/ai/` memory has been migrated into `ai-memory` and deleted; exact old text is git-history provenance only
+- former `platform/docs/ai/` memory has been migrated into `ai-memory` and deleted; it is historical provenance only
 - archived one-off prompt artifacts live under `platform/docs/archive/`
 - manual orchestration skill lives at `.agents/skills/ramp-conductor/`
 
@@ -74,6 +69,7 @@ platform/
 
 ## Docs
 
+- AI memory start point: `ai-memory/START_HERE.md`
 - shared AI memory: `ai-memory/README.md`
 - canonical docs registry: `ai-memory/durable/canonical-docs.md`
 - prompt registry: `ai-memory/atlas/prompts/README.md`

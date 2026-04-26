@@ -21,12 +21,12 @@ For platform product work, read:
 
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
-3. `ai-memory/README.md`
-4. `ai-memory/index/memory-index.yaml`
-5. `ai-memory/index/read-routes.yaml`
-6. `ai-memory/durable/current-state.md`
-7. `ai-memory/durable/module-index.md`
-8. the relevant module pack under `ai-memory/modules/**`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
+5. `ai-memory/durable/current-state.md`
+6. the relevant module pack under `ai-memory/modules/**`
+7. `ai-memory/index/memory-index.yaml` when broader routing is needed
+8. `ai-memory/durable/module-index.md` when module ownership is unclear
 9. only the exact canonical docs and source files named by that module pack
 
 For Atlas workflow changes, additionally read:
@@ -114,6 +114,28 @@ python3 scripts/ai/automation_versions.py --check
 
 Use `Scribe` (`$scribe`) after large docs/memory, AGENTS, Atlas, or reference-code changes.
 Do not run Scribe on every commit by default.
+
+## Memory Write Matrix
+
+| Change | Write to |
+| --- | --- |
+| New durable product decision | `ai-memory/durable/decisions-log.md` and `ai-memory/durable/current-state.md` |
+| New frontend contract | `platform/frontend/docs/contracts/**` and the relevant frontend docs map |
+| New backend contract | `platform/backend/docs/contracts/**` and the relevant backend docs map |
+| New module, app, package, runtime, or Platform Studio tool | `ai-memory/durable/module-index.md`, `ai-memory/durable/repo-map.md`, module memory, and read routes |
+| Active run artifact | `ai-memory/runs/active/<task-id>/` |
+| Closed reusable run summary | `ai-memory/runs/archive/` |
+| Verified lesson after an error | relevant module `lessons.md` or `ai-memory/lessons/**` |
+| Temporary notes | the active run folder only |
+
+## Module Memory Size Rule
+
+`ai-memory/modules/**` is only for durable, compressed, operationally useful
+facts.
+
+Do not copy full FE/BE docs into module memory.
+Do not copy implementation details that are faster and safer to verify in code.
+Do not preserve historical debates in hot module memory.
 
 ## Archive Rule
 

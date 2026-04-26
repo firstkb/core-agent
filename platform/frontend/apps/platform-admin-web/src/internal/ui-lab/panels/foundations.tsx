@@ -442,7 +442,7 @@ export function renderCodeDocs() {
           <ShowcaseRow label="Default">
             <Code size="sm">tenant_id</Code>
             <Code>workspace_slug</Code>
-            <Code size="lg">demo.platform.local</Code>
+            <Code size="lg">demo.platform.localhost</Code>
           </ShowcaseRow>
           <ShowcaseRow label="Variants">
             <Code>GET /tenants</Code>

@@ -12,20 +12,20 @@ import (
 )
 
 func TestOriginAllowed(t *testing.T) {
-	if !OriginAllowed("https://demo.platform.local", []string{"*.platform.local"}) {
+	if !OriginAllowed("https://demo.platform.localhost", []string{"*.platform.localhost"}) {
 		t.Fatal("expected wildcard origin to match")
 	}
-	if !OriginAllowed("https://admin.platform.local", []string{"admin.platform.local"}) {
+	if !OriginAllowed("https://admin.platform.localhost", []string{"admin.platform.localhost"}) {
 		t.Fatal("expected host-only origin to match")
 	}
-	if OriginAllowed("https://evil.example", []string{"*.platform.local"}) {
+	if OriginAllowed("https://evil.example", []string{"*.platform.localhost"}) {
 		t.Fatal("unexpected origin match")
 	}
 }
 
 func TestCORSAddsVaryAndCredentialsHeaders(t *testing.T) {
 	handler := CORS(nilLogger(), CORSConfig{
-		AllowedOrigins:   []string{"*.platform.local"},
+		AllowedOrigins:   []string{"*.platform.localhost"},
 		AllowedMethods:   []string{http.MethodPost, http.MethodOptions},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
@@ -37,9 +37,9 @@ func TestCORSAddsVaryAndCredentialsHeaders(t *testing.T) {
 	req = req.WithContext(requestctx.WithRoute(req.Context(), requestctx.RouteInfo{
 		ID:     router.RouteID("REFRESH"),
 		Tier:   router.TierPublic,
-		Domain: "demo.platform.local",
+		Domain: "demo.platform.localhost",
 	}))
-	req.Header.Set("Origin", "https://demo.platform.local")
+	req.Header.Set("Origin", "https://demo.platform.localhost")
 	req.Header.Set("Access-Control-Request-Method", http.MethodPost)
 	req.Header.Set("Access-Control-Request-Headers", "Content-Type")
 
@@ -47,8 +47,8 @@ func TestCORSAddsVaryAndCredentialsHeaders(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 
 	res := rec.Result()
-	if got := res.Header.Get("Access-Control-Allow-Origin"); got != "https://demo.platform.local" {
-		t.Fatalf("Access-Control-Allow-Origin = %q, want %q", got, "https://demo.platform.local")
+	if got := res.Header.Get("Access-Control-Allow-Origin"); got != "https://demo.platform.localhost" {
+		t.Fatalf("Access-Control-Allow-Origin = %q, want %q", got, "https://demo.platform.localhost")
 	}
 	if got := res.Header.Get("Access-Control-Allow-Credentials"); got != "true" {
 		t.Fatalf("Access-Control-Allow-Credentials = %q, want %q", got, "true")

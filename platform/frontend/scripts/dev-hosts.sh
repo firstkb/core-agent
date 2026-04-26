@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-HOSTS_LINE="127.0.0.1 admin.platform.local demo.platform.local acme.platform.local"
-export PATH="/opt/homebrew/bin:$PATH"
+cat <<'EOF'
+No /etc/hosts changes are required.
 
-if grep -q "admin.platform.local" /etc/hosts && grep -q "demo.platform.local" /etc/hosts && grep -q "acme.platform.local" /etc/hosts; then
-  echo "Hosts entries already present."
-  exit 0
-fi
+Local dev domains now use the .localhost suffix:
+  https://admin.platform.localhost
+  https://demo.platform.localhost
+  https://acme.platform.localhost
 
-printf '\n%s\n' "$HOSTS_LINE" | sudo tee -a /etc/hosts >/dev/null
-echo "Added hosts entries for admin.platform.local, demo.platform.local, and acme.platform.local."
+.localhost resolves to loopback without a hosts entry and avoids macOS .local
+mDNS/Bonjour resolution stalls.
+EOF

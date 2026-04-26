@@ -27,7 +27,7 @@ func TestDelegatedTenantRootTokenServiceBuildLaunchURL(t *testing.T) {
 		AdminUserID: uuid.MustParse("11111111-1111-1111-1111-111111111111"),
 		ReturnTo:    "/",
 		Scheme:      "https",
-		TenantHost:  "demo.platform.local",
+		TenantHost:  "demo.platform.localhost",
 		TenantID:    "101",
 	})
 	if err != nil {
@@ -53,7 +53,7 @@ func TestDelegatedTenantRootTokenSchemaRejectsExpiredPayload(t *testing.T) {
 	token, err := auth.EncodeToken(codec, schema, DelegatedTenantRootTokenPayload{
 		AdminUserID: uuid.MustParse("11111111-1111-1111-1111-111111111111").String(),
 		ReturnTo:    "/",
-		TenantHost:  "demo.platform.local",
+		TenantHost:  "demo.platform.localhost",
 		TenantID:    "101",
 	})
 	if err != nil {

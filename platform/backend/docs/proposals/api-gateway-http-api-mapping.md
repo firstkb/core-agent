@@ -48,7 +48,7 @@ For public application routes introduced later, the same rule should apply under
 
 Custom domain example:
 
-- `https://demo.platform.local`
+- `https://demo.platform.example`
 
 Create:
 
@@ -64,7 +64,7 @@ JWT:
 
 Custom domain example:
 
-- `https://admin.platform.local`
+- `https://admin.platform.example`
 
 Create:
 

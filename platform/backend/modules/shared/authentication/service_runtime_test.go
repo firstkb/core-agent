@@ -236,25 +236,25 @@ func TestIssuedTokensPublicResponseNil(t *testing.T) {
 func TestRefreshRouteDomain(t *testing.T) {
 	ctx := requestctx.WithRoute(t.Context(), requestctx.RouteInfo{
 		ID:     router.RouteID("REFRESH"),
-		Domain: "demo.platform.local",
+		Domain: "demo.platform.localhost",
 	})
 
-	if got := refreshRouteDomain(ctx); got != "demo.platform.local" {
-		t.Fatalf("refreshRouteDomain = %q, want %q", got, "demo.platform.local")
+	if got := refreshRouteDomain(ctx); got != "demo.platform.localhost" {
+		t.Fatalf("refreshRouteDomain = %q, want %q", got, "demo.platform.localhost")
 	}
 }
 
 func TestRouteDomainMatchesTenantHost(t *testing.T) {
-	if !routeDomainMatchesTenantHost("demo.platform.local", "demo.platform.local") {
+	if !routeDomainMatchesTenantHost("demo.platform.localhost", "demo.platform.localhost") {
 		t.Fatal("expected exact host match")
 	}
-	if routeDomainMatchesTenantHost("demo.platform.local", "acme.platform.local") {
+	if routeDomainMatchesTenantHost("demo.platform.localhost", "acme.platform.localhost") {
 		t.Fatal("unexpected host match")
 	}
-	if routeDomainMatchesTenantHost("undefined", "demo.platform.local") {
+	if routeDomainMatchesTenantHost("undefined", "demo.platform.localhost") {
 		t.Fatal("undefined route domain should not match")
 	}
-	if routeDomainMatchesTenantHost("", "demo.platform.local") {
+	if routeDomainMatchesTenantHost("", "demo.platform.localhost") {
 		t.Fatal("empty route domain should not match")
 	}
 }

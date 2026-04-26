@@ -77,7 +77,7 @@ const tableColumnHeaderPreviewRows = [
     signalLabel: "Paused",
     signalRank: 2,
     signalVariant: "neutral" as const,
-    slug: "nova.platform.local",
+    slug: "nova.platform.localhost",
     tenant: "Nova Retail",
   },
   {
@@ -87,7 +87,7 @@ const tableColumnHeaderPreviewRows = [
     signalLabel: "Review",
     signalRank: 3,
     signalVariant: "warning" as const,
-    slug: "demo.platform.local",
+    slug: "demo.platform.localhost",
     tenant: "Aurora Commerce",
   },
   {
@@ -97,7 +97,7 @@ const tableColumnHeaderPreviewRows = [
     signalLabel: "Healthy",
     signalRank: 1,
     signalVariant: "success" as const,
-    slug: "ops.platform.local",
+    slug: "ops.platform.localhost",
     tenant: "Cinder Labs",
   },
 ] as const;

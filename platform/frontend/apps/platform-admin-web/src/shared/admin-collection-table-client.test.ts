@@ -24,7 +24,7 @@ describe("admin-collection-table-client", () => {
         loadSearchSuggestions: vi.fn(),
         query: vi.fn(),
         runRowAction: vi.fn(async () => ({
-          launchUrl: "https://demo.platform.local/auth/v1/delegated-root/code",
+          launchUrl: "https://demo.platform.localhost/auth/v1/delegated-root/code",
           ok: true,
           openIn: "new_tab" as const,
         })),
@@ -41,7 +41,7 @@ describe("admin-collection-table-client", () => {
     });
 
     expect(openSpy).toHaveBeenCalledWith(
-      "https://demo.platform.local/auth/v1/delegated-root/code",
+      "https://demo.platform.localhost/auth/v1/delegated-root/code",
       "_blank",
       "noopener,noreferrer",
     );

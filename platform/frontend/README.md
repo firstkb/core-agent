@@ -26,7 +26,7 @@ See `docs/README.md` for the active frontend documentation set.
 
 Local HTTPS is handled by Caddy and is intended for development only.
 
-- `pnpm dev:hosts`: add local host mappings
+- `pnpm dev:hosts`: legacy no-op; `.localhost` dev domains do not need `/etc/hosts`
 - `pnpm dev:trust-caddy`: trust the root-mode / launchd Caddy CA
 - `pnpm dev:trust-caddy:user`: trust the user-mode high-port Caddy CA
 - `pnpm dev:https`: legacy foreground root-mode proxy on `443` with `caffeinate`
@@ -43,15 +43,18 @@ Local HTTPS is handled by Caddy and is intended for development only.
 
 Configured local domains:
 
-- `https://admin.platform.local`
-- `https://demo.platform.local`
-- `https://acme.platform.local`
+- `https://admin.platform.localhost`
+- `https://demo.platform.localhost`
+- `https://acme.platform.localhost`
+
+The `.localhost` suffix is intentional. It resolves to loopback without mDNS or
+manual `/etc/hosts` entries.
 
 User-mode high-port equivalents:
 
-- `https://admin.platform.local:8443`
-- `https://demo.platform.local:8443`
-- `https://acme.platform.local:8443`
+- `https://admin.platform.localhost:8443`
+- `https://demo.platform.localhost:8443`
+- `https://acme.platform.localhost:8443`
 
 Same-site dev routing:
 

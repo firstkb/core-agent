@@ -66,12 +66,12 @@ function getSyncProfileValue(tenant: TenantSummary) {
 
 function createInitialFormState(tenant: TenantSummary): TenantConfigFormState {
   return {
-    tenantHost: `${tenant.slug}.platform.local`,
+    tenantHost: `${tenant.slug}.platform.localhost`,
     owner: `${tenant.name} Ops`,
     authMode: getAuthModeValue(tenant),
     releaseTrack: getReleaseTrackValue(tenant),
     syncProfile: getSyncProfileValue(tenant),
-    supportWebhook: `https://${tenant.slug}.platform.local/hooks/ops`,
+    supportWebhook: `https://${tenant.slug}.platform.localhost/hooks/ops`,
     notes:
       tenant.status === "trial"
         ? "Confirm onboarding ownership before promoting this tenant to active."
@@ -86,7 +86,7 @@ function validateTenantConfigForm(formState: TenantConfigFormState): TenantConfi
   const hostPattern = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i;
 
   if (!hostPattern.test(formState.tenantHost.trim())) {
-    errors.tenantHost = "Use a valid host such as demo.platform.local.";
+    errors.tenantHost = "Use a valid host such as demo.platform.localhost.";
   }
 
   if (formState.owner.trim().length < 3) {

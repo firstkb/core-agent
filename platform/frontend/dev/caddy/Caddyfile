@@ -5,7 +5,7 @@
 	}
 }
 
-admin.platform.local {
+admin.platform.localhost {
 	tls internal
 
 	redir /api /api/v1/ 308
@@ -43,7 +43,7 @@ admin.platform.local {
 	}
 }
 
-demo.platform.local {
+demo.platform.localhost {
 	tls internal
 
 	redir /api /api/v1/ 308
@@ -81,7 +81,7 @@ demo.platform.local {
 	}
 }
 
-acme.platform.local {
+acme.platform.localhost {
 	tls internal
 
 	redir /api /api/v1/ 308

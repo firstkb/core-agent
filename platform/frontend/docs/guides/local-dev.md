@@ -94,15 +94,18 @@ HTTPS proxy/admin ports:
 
 Configured local hostnames:
 
-- `https://admin.platform.local`
-- `https://demo.platform.local`
-- `https://acme.platform.local`
+- `https://admin.platform.localhost`
+- `https://demo.platform.localhost`
+- `https://acme.platform.localhost`
+
+The `.localhost` suffix is intentional. It resolves to loopback without macOS
+mDNS/Bonjour and without manual `/etc/hosts` entries.
 
 User-mode high-port equivalents:
 
-- `https://admin.platform.local:8443`
-- `https://demo.platform.local:8443`
-- `https://acme.platform.local:8443`
+- `https://admin.platform.localhost:8443`
+- `https://demo.platform.localhost:8443`
+- `https://acme.platform.localhost:8443`
 
 Same-site dev routing:
 
@@ -110,9 +113,11 @@ Same-site dev routing:
 - `/api/v1/*`: app API
 - `/auth/v1/*`: auth API
 
-Add host mappings:
+Legacy host mapping helper:
 
 - `pnpm dev:hosts`
+
+This command is now a no-op kept for compatibility with older instructions.
 
 ## HTTPS Modes
 

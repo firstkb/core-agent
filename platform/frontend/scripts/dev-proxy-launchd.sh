@@ -111,9 +111,9 @@ bootstrap_label() {
 print_urls() {
   cat <<'EOF'
 Managed URLs:
-  https://admin.platform.local
-  https://demo.platform.local
-  https://acme.platform.local
+  https://admin.platform.localhost
+  https://demo.platform.localhost
+  https://acme.platform.localhost
 EOF
 }
 

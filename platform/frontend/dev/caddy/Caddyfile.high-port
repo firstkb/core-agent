@@ -5,7 +5,7 @@
 	}
 }
 
-admin.platform.local:8443 {
+admin.platform.localhost:8443 {
 	tls internal
 
 	redir /api /api/v1/ 308
@@ -46,7 +46,7 @@ admin.platform.local:8443 {
 	}
 }
 
-demo.platform.local:8443 {
+demo.platform.localhost:8443 {
 	tls internal
 
 	redir /api /api/v1/ 308
@@ -87,7 +87,7 @@ demo.platform.local:8443 {
 	}
 }
 
-acme.platform.local:8443 {
+acme.platform.localhost:8443 {
 	tls internal
 
 	redir /api /api/v1/ 308

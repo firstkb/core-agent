@@ -938,3 +938,15 @@ Do not turn it into a task journal.
   - `.agents/skills/ramp-conductor/SKILL.md`
   - `ai-memory/atlas/prompts/control-chat-prompt-v1.md`
   - `platform/AGENTS.md`
+
+### DEC-079 Local Dev Domains Use `.localhost`
+
+- Date: 2026-04-26
+- Status: active
+- State: landed
+- Decision: Frontend/backend local dev HTTPS domains use `.platform.localhost` instead of `.platform.local`. This avoids macOS `.local` mDNS/Bonjour resolver stalls while preserving same-site browser routing through Caddy. `pnpm dev:hosts` is kept as a compatibility no-op because `.localhost` does not require `/etc/hosts`.
+- Sources:
+  - `platform/frontend/dev/caddy/Caddyfile`
+  - `platform/frontend/dev/caddy/Caddyfile.high-port`
+  - `platform/frontend/docs/guides/local-dev.md`
+  - `platform/backend/seeds/local/010_master_seed.sql`

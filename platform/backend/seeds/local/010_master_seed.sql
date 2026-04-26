@@ -35,12 +35,23 @@ SET plan = EXCLUDED.plan,
     is_default = EXCLUDED.is_default,
     updated_at = now();
 
+-- Migrate pre-.localhost local dev hostnames in existing developer databases.
+UPDATE tenant_domain
+   SET host = 'acme.platform.localhost',
+       updated_at = now()
+ WHERE host = 'acme.platform.local';
+
+UPDATE tenant_domain
+   SET host = 'demo.platform.localhost',
+       updated_at = now()
+ WHERE host = 'demo.platform.local';
+
 INSERT INTO tenant (name, isolation, status)
 SELECT 'Acme Sandbox', 'sandbox'::isolation_mode, 'active'
 WHERE NOT EXISTS (
   SELECT 1
     FROM tenant_domain
-   WHERE host = 'acme.platform.local'
+   WHERE host = 'acme.platform.localhost'
 );
 
 INSERT INTO tenant (name, isolation, status)
@@ -48,23 +59,23 @@ SELECT 'Demo Dedicated', 'dedicated_db'::isolation_mode, 'active'
 WHERE NOT EXISTS (
   SELECT 1
     FROM tenant_domain
-   WHERE host = 'demo.platform.local'
+   WHERE host = 'demo.platform.localhost'
 );
 
 INSERT INTO tenant_domain (tenant_id, host)
-SELECT t.id, 'acme.platform.local'
+SELECT t.id, 'acme.platform.localhost'
   FROM tenant t
  WHERE t.name = 'Acme Sandbox'
    AND NOT EXISTS (
-     SELECT 1 FROM tenant_domain td WHERE td.host = 'acme.platform.local'
+     SELECT 1 FROM tenant_domain td WHERE td.host = 'acme.platform.localhost'
    );
 
 INSERT INTO tenant_domain (tenant_id, host)
-SELECT t.id, 'demo.platform.local'
+SELECT t.id, 'demo.platform.localhost'
   FROM tenant t
  WHERE t.name = 'Demo Dedicated'
    AND NOT EXISTS (
-     SELECT 1 FROM tenant_domain td WHERE td.host = 'demo.platform.local'
+     SELECT 1 FROM tenant_domain td WHERE td.host = 'demo.platform.localhost'
    );
 
 INSERT INTO tenant_db (tenant_id, db_instance_id, db_name)

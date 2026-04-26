@@ -51,9 +51,9 @@ case "$MODE" in
     XDG_DATA_HOME="$ROOT_DIR/.local/root/share"
     XDG_CONFIG_HOME="$ROOT_DIR/.local/root/config"
     URLS=(
-      "https://admin.platform.local"
-      "https://demo.platform.local"
-      "https://acme.platform.local"
+      "https://admin.platform.localhost"
+      "https://demo.platform.localhost"
+      "https://acme.platform.localhost"
     )
     REQUIRES_ROOT=1
     ;;
@@ -62,9 +62,9 @@ case "$MODE" in
     XDG_DATA_HOME="$ROOT_DIR/.local/user/share"
     XDG_CONFIG_HOME="$ROOT_DIR/.local/user/config"
     URLS=(
-      "https://admin.platform.local:8443"
-      "https://demo.platform.local:8443"
-      "https://acme.platform.local:8443"
+      "https://admin.platform.localhost:8443"
+      "https://demo.platform.localhost:8443"
+      "https://acme.platform.localhost:8443"
     )
     REQUIRES_ROOT=0
     ;;

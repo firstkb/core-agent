@@ -150,10 +150,14 @@ psql -d 108-demo -v tenant_id=101 -f ./seeds/local/021_demo_tenant_seed.sql
 
 The seed creates:
 
-- one sandbox tenant at `acme.platform.local`
-- one dedicated demo tenant at `demo.platform.local`
+- one sandbox tenant at `acme.platform.localhost`
+- one dedicated demo tenant at `demo.platform.localhost`
 - one sample user in each tenant
 - local auth bootstrap rows required for OTP auth and tenant membership
+
+The master seed also migrates older local tenant hosts from `.platform.local` to
+`.platform.localhost`. Re-run it after pulling the domain change if your local
+database was seeded before this switch.
 
 This local seed shape does not make master user mirroring the auth source of truth.
 Current auth behavior is defined by `platform/backend/docs/modules/auth.md` and backend code.
@@ -178,13 +182,13 @@ go run ./cmd/api-tenant --env ./env/api-tenant.local.env
 
 ### Sandbox tenant
 
-- host: `acme.platform.local`
+- host: `acme.platform.localhost`
 - db: `108-sandbox`
 - sample email: `user@acme.local`
 
 ### Dedicated demo tenant
 
-- host: `demo.platform.local`
+- host: `demo.platform.localhost`
 - db: `108-demo`
 - sample email: `owner@demo.local`
 
@@ -192,7 +196,7 @@ OTP request example:
 
 ```bash
 curl -i \
-  -H 'Host: demo.platform.local' \
+  -H 'Host: demo.platform.localhost' \
   -H 'Content-Type: application/json' \
   -d '{"email":"owner@demo.local"}' \
   http://127.0.0.1:8082/auth/otp/request

@@ -30,12 +30,12 @@ Read with:
 
 Canonical browser-facing paths:
 
-- Admin frontend: `https://admin.platform.local/`
-- Admin API: `https://admin.platform.local/api/v1/*`
-- Admin auth: `https://admin.platform.local/auth/v1/*`
-- Tenant frontend: `https://demo.platform.local/`
-- Tenant API: `https://demo.platform.local/api/v1/*`
-- Tenant auth: `https://demo.platform.local/auth/v1/*`
+- Admin frontend: `https://admin.platform.localhost/`
+- Admin API: `https://admin.platform.localhost/api/v1/*`
+- Admin auth: `https://admin.platform.localhost/auth/v1/*`
+- Tenant frontend: `https://demo.platform.localhost/`
+- Tenant API: `https://demo.platform.localhost/api/v1/*`
+- Tenant auth: `https://demo.platform.localhost/auth/v1/*`
 
 Frontend runtime config should use same-site paths:
 

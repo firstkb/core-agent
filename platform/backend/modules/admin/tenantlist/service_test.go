@@ -77,7 +77,7 @@ func (f *fakeLauncher) BuildLaunchURL(input authsvc.DelegatedTenantRootLaunchInp
 	if f.url != "" {
 		return f.url, nil
 	}
-	return "https://demo.platform.local/auth/v1/auth/delegated-root/code", nil
+	return "https://demo.platform.localhost/auth/v1/auth/delegated-root/code", nil
 }
 
 func rootContext() context.Context {
@@ -127,7 +127,7 @@ func TestQueryReturnsFilteredRows(t *testing.T) {
 			{
 				ID:           101,
 				Name:         "Demo Tenant",
-				Host:         "demo.platform.local",
+				Host:         "demo.platform.localhost",
 				Plan:         "enterprise",
 				Isolation:    "dedicated_db",
 				Status:       "active",
@@ -138,7 +138,7 @@ func TestQueryReturnsFilteredRows(t *testing.T) {
 			{
 				ID:           102,
 				Name:         "Sandbox Tenant",
-				Host:         "sandbox.platform.local",
+				Host:         "sandbox.platform.localhost",
 				Plan:         "trial",
 				Isolation:    "sandbox",
 				Status:       "disabled",
@@ -183,7 +183,7 @@ func TestLoadSearchSuggestionsBuildsTenantGroups(t *testing.T) {
 			{
 				ID:           101,
 				Name:         "Demo Tenant",
-				Host:         "demo.platform.local",
+				Host:         "demo.platform.localhost",
 				Plan:         "enterprise",
 				Isolation:    "dedicated_db",
 				Status:       "active",
@@ -245,7 +245,7 @@ func TestRunRowActionBuildsDelegatedTenantLaunchURL(t *testing.T) {
 	launcher := &fakeLauncher{}
 	svc := NewService(&fakeRepository{
 		tenants: []TenantRecord{
-			{ID: 101, Host: "demo.platform.local"},
+			{ID: 101, Host: "demo.platform.localhost"},
 		},
 	}, &fakePreferences{}, launcher)
 
@@ -256,7 +256,7 @@ func TestRunRowActionBuildsDelegatedTenantLaunchURL(t *testing.T) {
 	if !out.OK || out.OpenIn != "new_tab" {
 		t.Fatalf("unexpected row action result %+v", out)
 	}
-	if launcher.lastInput.TenantID != "101" || launcher.lastInput.TenantHost != "demo.platform.local" {
+	if launcher.lastInput.TenantID != "101" || launcher.lastInput.TenantHost != "demo.platform.localhost" {
 		t.Fatalf("unexpected launch input %+v", launcher.lastInput)
 	}
 	if launcher.lastInput.ReturnTo != "/" || launcher.lastInput.Scheme != "https" {

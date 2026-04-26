@@ -887,7 +887,7 @@ export function renderInputDocs() {
             <FormGrid columns={2}>
               <Field>
                 <FieldLabel htmlFor="ui-lab-input-matrix-default">Default</FieldLabel>
-                <Input defaultValue="demo.platform.local" id="ui-lab-input-matrix-default" />
+                <Input defaultValue="demo.platform.localhost" id="ui-lab-input-matrix-default" />
                 <FieldHint>Neutral field with helper text.</FieldHint>
               </Field>
               <Field invalid>
@@ -907,7 +907,7 @@ export function renderInputDocs() {
               </Field>
               <Field required>
                 <FieldLabel htmlFor="ui-lab-input-matrix-required">Required</FieldLabel>
-                <Input defaultValue="aurora.platform.local" id="ui-lab-input-matrix-required" required />
+                <Input defaultValue="aurora.platform.localhost" id="ui-lab-input-matrix-required" required />
                 <FieldHint>Required fields get the shared left accent without changing the rest of the input contract.</FieldHint>
               </Field>
             </FormGrid>
@@ -926,7 +926,7 @@ export function renderInputDocs() {
               <InputAddon>https://</InputAddon>
               <Input
                 aria-label="Hostname"
-                defaultValue="demo.platform.local"
+                defaultValue="demo.platform.localhost"
                 id="ui-lab-input-group-hostname"
                 name="ui-lab-input-group-hostname"
               />
@@ -940,7 +940,7 @@ export function renderInputDocs() {
                 id="ui-lab-input-group-slug"
                 name="ui-lab-input-group-slug"
               />
-              <InputAddon>.platform.local</InputAddon>
+              <InputAddon>.platform.localhost</InputAddon>
             </InputGroup>
           </ShowcaseRow>
           <ShowcaseRow label="Field usage" stacked>
@@ -969,14 +969,14 @@ export function renderInputDocs() {
               <Field invalid>
                 <FieldLabel htmlFor="ui-lab-input-field-host">Primary host</FieldLabel>
                 <Input defaultValue="aurora platform local" id="ui-lab-input-field-host" invalid />
-                <FieldError>Use a valid host format such as `aurora.platform.local`.</FieldError>
+                <FieldError>Use a valid host format such as `aurora.platform.localhost`.</FieldError>
               </Field>
             </FormGrid>
           </ShowcaseRow>
           <ShowcaseRow label="Responsive inline" stacked>
             <Field layout="responsive-inline">
               <FieldLabel htmlFor="ui-lab-input-field-inline-owner">Owner email</FieldLabel>
-              <Input defaultValue="owner@aurora.platform.local" id="ui-lab-input-field-inline-owner" />
+              <Input defaultValue="owner@aurora.platform.localhost" id="ui-lab-input-field-inline-owner" />
               <FieldHint>Desktop keeps the label in a left column; mobile returns the same field to the default stacked reading flow.</FieldHint>
             </Field>
           </ShowcaseRow>
@@ -985,7 +985,7 @@ export function renderInputDocs() {
               <FieldLabel htmlFor="ui-lab-input-field-inline-rollout">
                 Primary rollout owner email for review notifications
               </FieldLabel>
-              <Input defaultValue="review@aurora.platform.local" id="ui-lab-input-field-inline-rollout" />
+              <Input defaultValue="review@aurora.platform.localhost" id="ui-lab-input-field-inline-rollout" />
               <FieldHint>Longer labels should still align cleanly against the control on desktop and wrap naturally back above it on mobile.</FieldHint>
             </Field>
           </ShowcaseRow>
@@ -1193,7 +1193,7 @@ export function renderLabelDocs() {
                 <Label htmlFor="ui-lab-label-inline-host" variant="secondary">
                   Preview host
                 </Label>
-                <Input defaultValue="demo.platform.local" id="ui-lab-label-inline-host" name="ui-lab-label-inline-host" readOnly />
+                <Input defaultValue="demo.platform.localhost" id="ui-lab-label-inline-host" name="ui-lab-label-inline-host" readOnly />
               </div>
             </FormGrid>
           </ShowcaseRow>
@@ -2842,7 +2842,7 @@ export function renderFieldDocs() {
           <ShowcaseRow label="Responsive inline" stacked>
             <Field layout="responsive-inline">
               <FieldLabel htmlFor="ui-lab-field-host-inline">Primary host</FieldLabel>
-              <Input defaultValue="aurora.platform.local" id="ui-lab-field-host-inline" />
+              <Input defaultValue="aurora.platform.localhost" id="ui-lab-field-host-inline" />
               <FieldHint>Desktop keeps the label on the left; mobile stacks the same field back above the control.</FieldHint>
             </Field>
           </ShowcaseRow>
@@ -2972,7 +2972,7 @@ export function renderFormShellDocs() {
                 <FormGrid columns={1}>
                   <Field layout="responsive-inline">
                     <FieldLabel htmlFor="ui-lab-formshell-inline-owner">Owner email</FieldLabel>
-                    <Input defaultValue="owner@aurora.platform.local" id="ui-lab-formshell-inline-owner" />
+                    <Input defaultValue="owner@aurora.platform.localhost" id="ui-lab-formshell-inline-owner" />
                     <FieldHint>Use when wider desktop forms benefit from a calmer left column for labels.</FieldHint>
                   </Field>
                   <Field invalid layout="responsive-inline">
@@ -3007,7 +3007,7 @@ export function renderFormShellDocs() {
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="ui-lab-formshell-host">Host</FieldLabel>
-                    <Input defaultValue="nova.platform.local" id="ui-lab-formshell-host" />
+                    <Input defaultValue="nova.platform.localhost" id="ui-lab-formshell-host" />
                   </Field>
                 </FormGrid>
               </FormSection>

@@ -182,8 +182,8 @@ routes:
       - local dev
       - dev:https
       - Caddy
-      - admin.platform.local
-      - demo.platform.local
+      - admin.platform.localhost
+      - demo.platform.localhost
       - service worker
       - local sync
       - Flutter

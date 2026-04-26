@@ -1,7 +1,7 @@
 # Current State
 
 Status: compact active snapshot
-Last compacted: 2026-04-25
+Last compacted: 2026-04-26
 
 This is a compact AI retrieval snapshot.
 Use canonical docs and code for final verification before changing behavior.
@@ -36,7 +36,7 @@ Confidence labels:
 - `planned` `doc-confirmed`: `tenant-pwa` is deferred and not a current app.
 - `landed` `code-confirmed`: Frontend shared packages include `api-client`, `app-shell`, `auth-core`, `collection-table`, `design-tokens`, `forms`, `i18n`, `install-helper`, `platform-studio-core`, `tenant-core`, and `ui-kit`.
 - `landed` `doc-confirmed`: Current install prompt/runtime behavior lives at `platform/frontend/docs/guides/install-helper.md`; it is mounted on public auth screens and does not imply offline-first or service-worker scope.
-- `landed` `doc-confirmed`: Frontend local dev commands, HTTPS proxy modes, ports, domains, and checks live at `platform/frontend/docs/guides/local-dev.md`.
+- `landed` `code-confirmed`: Frontend local dev HTTPS domains use `.platform.localhost` (`admin`, `demo`, `acme`) to avoid macOS `.local` mDNS/Bonjour resolver stalls; commands, Caddy/Vite configs, env examples, local seeds, and docs are aligned through `platform/frontend/docs/guides/local-dev.md`.
 - `landed` `doc-confirmed`: Active frontend docs now use target-folder `Read with`/`Read Order` links; old root pointer docs were deleted, while retained `platform-studio/**` docs are exact-detail, proposal, archive, or reference-only inputs.
 - `landed` `doc-confirmed`: UI Kit governance, stable/provisional approval, layout baseline, and delivery order now live at `platform/frontend/docs/contracts/ui-kit.md`.
 - `landed` `doc-confirmed`: UI Lab route, section model, review coverage, and editing rules now live at `platform/frontend/docs/guides/ui-lab.md`.

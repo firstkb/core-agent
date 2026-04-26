@@ -114,7 +114,7 @@ func TestNormalizeCookieConfigSanitizesValues(t *testing.T) {
 	cfg := normalizeCookieConfig(CookieConfig{
 		Name:       " custom_rt ",
 		Path:       "auth",
-		Domain:     " .platform.local ",
+		Domain:     " .platform.localhost ",
 		SameSite:   "Strict",
 		SecureMode: "always",
 	})
@@ -125,8 +125,8 @@ func TestNormalizeCookieConfigSanitizesValues(t *testing.T) {
 	if cfg.Path != "/auth" {
 		t.Fatalf("Path = %q, want %q", cfg.Path, "/auth")
 	}
-	if cfg.Domain != ".platform.local" {
-		t.Fatalf("Domain = %q, want %q", cfg.Domain, ".platform.local")
+	if cfg.Domain != ".platform.localhost" {
+		t.Fatalf("Domain = %q, want %q", cfg.Domain, ".platform.localhost")
 	}
 	if cfg.SameSite != "strict" {
 		t.Fatalf("SameSite = %q, want %q", cfg.SameSite, "strict")
@@ -140,7 +140,7 @@ func TestBaseRefreshCookieUsesConfiguredPolicy(t *testing.T) {
 	srv := &Server{config: &Config{Cookie: normalizeCookieConfig(CookieConfig{
 		Name:       "admin_rt",
 		Path:       "/session/",
-		Domain:     ".platform.local",
+		Domain:     ".platform.localhost",
 		SameSite:   "none",
 		SecureMode: "always",
 	})}}
@@ -153,8 +153,8 @@ func TestBaseRefreshCookieUsesConfiguredPolicy(t *testing.T) {
 	if cookie.Path != "/session/" {
 		t.Fatalf("Path = %q, want %q", cookie.Path, "/session/")
 	}
-	if cookie.Domain != ".platform.local" {
-		t.Fatalf("Domain = %q, want %q", cookie.Domain, ".platform.local")
+	if cookie.Domain != ".platform.localhost" {
+		t.Fatalf("Domain = %q, want %q", cookie.Domain, ".platform.localhost")
 	}
 	if cookie.SameSite != http.SameSiteNoneMode {
 		t.Fatalf("SameSite = %v, want %v", cookie.SameSite, http.SameSiteNoneMode)
@@ -207,12 +207,12 @@ func TestReadRefreshTokenCookie(t *testing.T) {
 
 func TestHandleLogoutCookieClearsCookieOnInvalidJSON(t *testing.T) {
 	srv := &Server{config: &Config{
-		Origin: "admin.platform.local",
+		Origin: "admin.platform.localhost",
 		Cookie: normalizeCookieConfig(CookieConfig{}),
 	}}
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "http://127.0.0.1/auth/logout", bytes.NewBufferString("{invalid"))
-	req.Header.Set("Origin", "https://admin.platform.local")
+	req.Header.Set("Origin", "https://admin.platform.localhost")
 
 	srv.handleLogoutCookie().ServeHTTP(rec, req)
 
@@ -227,10 +227,10 @@ func TestHandleLogoutCookieClearsCookieOnInvalidJSON(t *testing.T) {
 }
 
 func TestEnsureCookieRequestOrigin(t *testing.T) {
-	srv := &Server{config: &Config{Origin: "*.platform.local"}}
+	srv := &Server{config: &Config{Origin: "*.platform.localhost"}}
 
 	validReq := httptest.NewRequest("POST", "http://127.0.0.1/auth/refresh", nil)
-	validReq.Header.Set("Origin", "https://demo.platform.local")
+	validReq.Header.Set("Origin", "https://demo.platform.localhost")
 	if err := srv.ensureCookieRequestOrigin(validReq); err != nil {
 		t.Fatalf("valid origin returned error: %#v", err)
 	}

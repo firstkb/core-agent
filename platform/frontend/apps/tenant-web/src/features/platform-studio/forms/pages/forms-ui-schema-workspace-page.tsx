@@ -1,5 +1,4 @@
 import {
-  Fragment,
   useEffect,
   useMemo,
   useRef,
@@ -15,49 +14,8 @@ import {
 import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  EyeIcon,
   Input,
-  Label,
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuTrigger,
-  RichTextEditor,
-  SearchIcon,
-  Select,
-  Switch,
-  Tabs,
-  TabsList,
-  TabsPanel,
-  TabsTrigger,
-  Textarea,
-  StarIcon,
 } from "@platform/ui-kit";
 import {
   useNavigate,
@@ -66,9 +24,74 @@ import {
 } from "react-router-dom";
 
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
-import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
-import { FormBuilderElementIcon } from "../forms-builder-icons";
+import {
+  BuilderCanvas,
+  type BuilderCanvasBreadcrumbItem,
+  type BuilderCanvasNodeItem,
+  type BuilderCanvasUnplacedFieldItem,
+} from "../components/builder-canvas";
+import { ChoiceFieldSettings } from "../components/choice-field-settings";
+import { DateTodayFieldSettings } from "../components/date-today-field-settings";
+import { DebugDialog } from "../components/debug-dialog";
+import { DefaultFilterEditorDialog } from "../components/default-filter-editor-dialog";
+import { DeleteNodeConfirmationDialog } from "../components/delete-node-confirmation-dialog";
+import { WorkspaceLoadingState } from "../components/empty-state";
+import { WorkspaceErrorState } from "../components/error-state";
+import {
+  FieldPalette,
+  type FieldPaletteDisplaySection,
+} from "../components/field-palette";
+import { FilterConditionEditor } from "../components/filter-condition-editor";
+import {
+  createDefaultFilterCondition,
+  getFilterOperatorKey,
+  getRelativeDatePresetKey,
+  stringifyScalarValue,
+} from "../components/filter-condition-editor-helpers";
+import {
+  GridSettingsPanel,
+  type GridSettingsFieldItem,
+} from "../components/grid-settings-panel";
+import {
+  InspectorPanel,
+  InspectorPanelTab,
+  type InspectorPanelTabValue,
+} from "../components/inspector-panel";
+import { LookupFieldSettings } from "../components/lookup-field-settings";
+import {
+  getLookupClauseKey,
+  getLookupDynamicTokenKey,
+  getLookupPresetFromField,
+  isPresetLookupField,
+  lookupDynamicTokenOptions,
+} from "../components/lookup-filter-editor-helpers";
+import {
+  LookupSourcePickerDialog,
+  type LookupSourcePickerModelItem,
+} from "../components/lookup-source-picker-dialog";
+import { QuickFilterEditorDialog } from "../components/quick-filter-editor-dialog";
+import { RuleConditionEditor } from "../components/rule-condition-editor";
+import {
+  createDefaultRuleCondition,
+  getRuleOperatorKey,
+  ruleOperatorNeedsValue,
+  ruleOperatorUsesArray,
+  stringifyRuleScalarValue,
+} from "../components/rule-condition-editor-helpers";
+import { RuleEditorDialog } from "../components/rule-editor-dialog";
+import {
+  RulesPanel,
+  type RulesPanelRuleItem,
+} from "../components/rules-panel";
+import { SelectionDeleteAction } from "../components/selection-delete-action";
+import { SelectionInspectorBasicSection } from "../components/selection-inspector-basic-section";
+import { SelectionInspectorEmptyState } from "../components/selection-inspector-empty-state";
+import { TagsFieldSettings } from "../components/tags-field-settings";
+import { TextFieldSettings } from "../components/text-field-settings";
+import { UnsavedLeaveConfirmationDialog } from "../components/unsaved-leave-confirmation-dialog";
+import { ViewSettingsPanel } from "../components/view-settings-panel";
+import { WorkspaceTopline } from "../components/workspace-topline";
 import {
   createFormBuilderFieldFromDefinition,
   formBuilderPaletteSectionDefinitions,
@@ -108,22 +131,14 @@ import {
   normalizeViewScopeRuntime,
   updateFormBuilderNode,
   useFormBuilderDocument,
-  type FormBuilderFilterScalar,
   type FormBuilderFilterCondition,
-  type FormBuilderFilterOperator,
-  type FormBuilderFilterValueSource,
   type FormBuilderGridColumnDefinition,
-  type FormBuilderLookupDynamicToken,
   type FormBuilderLookupFilterClause,
-  type FormBuilderLookupFilterCondition,
-  type FormBuilderLookupPreset,
   type FormBuilderNode,
   type FormBuilderFieldPaletteCategory,
   type FormBuilderQuickFilter,
   type FormBuilderRequirementRule,
   type FormBuilderRuleCondition,
-  type FormBuilderRuleOperator,
-  type FormBuilderRuleScalar,
   type FormBuilderRuntimePreset,
   type FormBuilderScalarFilterCondition,
   type FormBuilderVisibilityRule,
@@ -143,15 +158,11 @@ import {
   normalizeFormsPlaceholderModel,
   normalizeFormsPlaceholderView,
   type FormsPlaceholderChoiceDisplay,
-  type FormsPlaceholderChoiceOrientation,
   type FormsPlaceholderFieldKind,
   type FormsPlaceholderFieldOptionStyle,
   type FormsPlaceholderFieldSemanticRole,
-  type FormsPlaceholderFieldValidation,
   type FormsPlaceholderLookupConfig,
-  type FormsPlaceholderLookupDisplayMode,
   type FormsPlaceholderModel,
-  type FormsPlaceholderTagMode,
   type FormsPlaceholderView,
   getFormsPlaceholderModel,
   type FormsPlaceholderField,
@@ -165,8 +176,6 @@ import {
 } from "../forms-route-helpers";
 import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
 import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
-
-type InspectorTab = "grid" | "selection" | "view";
 
 declare global {
   interface Window {
@@ -1000,46 +1009,6 @@ const filterTokenOptions = [
   "currentUser.divisionName",
   "currentUser.projectAccessIds",
 ] as const;
-const relativeDatePresetOptions = [
-  "current_week",
-  "last_week",
-  "next_week",
-  "current_month",
-  "last_month",
-  "next_month",
-  "current_quarter",
-  "last_quarter",
-  "next_quarter",
-  "current_year",
-  "last_year",
-  "next_year",
-  "last_12_months",
-  "next_3_days",
-  "next_5_days",
-  "next_7_days",
-  "today_or_later",
-  "today_or_earlier",
-] as const;
-const lookupDynamicTokenOptions = [
-  "current_user_id",
-  "current_user_company_id",
-  "current_user_division_id",
-  "current_user_company_name",
-  "current_user_division_name",
-  "assigned_projects",
-] as const satisfies ReadonlyArray<FormBuilderLookupDynamicToken>;
-
-type LookupClauseDefinition = {
-  clauseKey: string;
-  defaultDynamicToken?: FormBuilderLookupDynamicToken;
-  defaultValue?: FormBuilderFilterScalar;
-  literalOptions?: ReadonlyArray<{
-    label: string;
-    value: string;
-  }>;
-  tokenOptions?: ReadonlyArray<FormBuilderLookupDynamicToken>;
-  valueMode: FormBuilderLookupFilterClause["valueMode"];
-};
 
 type LookupSourceFieldOption = {
   key: string;
@@ -1075,27 +1044,6 @@ const rootRecordLookupSourceField = {
   key: "doc_id",
   label: "Doc.id",
 } as const satisfies LookupSourceFieldOption;
-
-const mockContactJobTypeOptions = [
-  { label: "Inspector", value: "inspector" },
-  { label: "Supervisor", value: "supervisor" },
-  { label: "Foreman", value: "foreman" },
-  { label: "Manager", value: "manager" },
-] as const;
-
-const mockBusinessUnitTypeOptions = [
-  { label: "Business Unit", value: "business_unit" },
-  { label: "Division", value: "division" },
-  { label: "Department", value: "department" },
-  { label: "Vendor", value: "vendor" },
-] as const;
-
-const mockBusinessUnitOptions = [
-  { label: "Roofing", value: "roofing" },
-  { label: "Electrical", value: "electrical" },
-  { label: "Safety", value: "safety" },
-  { label: "Operations", value: "operations" },
-] as const;
 
 function buildLookupSourceFieldOptions(
   fields: ReadonlyArray<{
@@ -1245,52 +1193,6 @@ function getLookupDerivedOutputFieldKind(outputKey: string): FormsPlaceholderFie
   return "short_text";
 }
 
-const lookupClauseDefinitionsByPreset: Record<
-  Exclude<FormBuilderLookupPreset, "generic_db_lookup">,
-  ReadonlyArray<LookupClauseDefinition>
-> = {
-  company_lookup: [
-    { clauseKey: "business_unit_type", literalOptions: mockBusinessUnitTypeOptions, valueMode: "literal" },
-    { clauseKey: "business_unit_name", valueMode: "literal" },
-    { clauseKey: "main_company_name", valueMode: "literal" },
-    {
-      clauseKey: "business_unit_scope",
-      defaultDynamicToken: "current_user_company_id",
-      tokenOptions: ["current_user_company_id", "current_user_division_id"],
-      valueMode: "dynamic_token",
-    },
-    {
-      clauseKey: "main_company_scope",
-      defaultDynamicToken: "current_user_company_name",
-      tokenOptions: ["current_user_company_name", "current_user_division_name"],
-      valueMode: "dynamic_token",
-    },
-  ],
-  contact_lookup: [
-    { clauseKey: "contact_job_title", literalOptions: mockContactJobTypeOptions, valueMode: "literal" },
-    {
-      clauseKey: "active_account",
-      defaultDynamicToken: "current_user_id",
-      tokenOptions: ["current_user_id"],
-      valueMode: "dynamic_token",
-    },
-    {
-      clauseKey: "by_user_company",
-      defaultValue: true,
-      valueMode: "boolean_flag",
-    },
-  ],
-  project_lookup: [
-    { clauseKey: "business_unit_id", literalOptions: mockBusinessUnitOptions, valueMode: "literal" },
-    {
-      clauseKey: "assigned_projects",
-      defaultDynamicToken: "assigned_projects",
-      tokenOptions: ["assigned_projects"],
-      valueMode: "dynamic_token",
-    },
-  ],
-};
-
 function getSystemFieldKey(role: SystemFieldRole) {
   return `tenant.platformStudio.forms.builder.systemField.${role}`;
 }
@@ -1299,44 +1201,8 @@ function getSystemFieldPaletteDescriptionKey(role: SystemFieldRole) {
   return `tenant.platformStudio.forms.builder.systemField.palette.${role}Description`;
 }
 
-function getFilterOperatorKey(operator: FormBuilderFilterOperator) {
-  return `tenant.platformStudio.forms.builder.filter.operator.${operator}`;
-}
-
-function getRuleOperatorKey(operator: FormBuilderRuleOperator) {
-  return `tenant.platformStudio.forms.builder.rule.operator.${operator}`;
-}
-
 function getFilterTokenKey(token: typeof filterTokenOptions[number]) {
   return `tenant.platformStudio.forms.builder.filter.token.${token}`;
-}
-
-function getRelativeDatePresetKey(preset: typeof relativeDatePresetOptions[number]) {
-  return `tenant.platformStudio.forms.builder.filter.relativeDate.${preset}`;
-}
-
-function getLookupDynamicTokenKey(token: FormBuilderLookupDynamicToken) {
-  return `tenant.platformStudio.forms.builder.filter.lookupToken.${token}`;
-}
-
-function getLookupClauseKey(clauseKey: string) {
-  return `tenant.platformStudio.forms.builder.filter.lookupClause.${clauseKey}`;
-}
-
-function getLookupPresetFromField(field: FormsPlaceholderField): FormBuilderLookupPreset {
-  if (field.preset === "contact_lookup" || field.preset === "company_lookup" || field.preset === "project_lookup") {
-    return field.preset;
-  }
-
-  return "generic_db_lookup";
-}
-
-function isPresetLookupField(field: FormsPlaceholderField) {
-  return field.kind === "db_lookup" && (
-    field.preset === "contact_lookup" ||
-    field.preset === "company_lookup" ||
-    field.preset === "project_lookup"
-  );
 }
 
 function toStorageKey(value: string) {
@@ -1693,47 +1559,6 @@ function getFieldsWithLookupDerivedOutputs(
   });
 }
 
-function createLookupClauseId(clauseKey: string) {
-  return `lookup-clause-${clauseKey}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function createDefaultLookupClause(definition: LookupClauseDefinition): FormBuilderLookupFilterClause {
-  if (definition.valueMode === "dynamic_token") {
-    return {
-      clauseKey: definition.clauseKey,
-      dynamicToken: definition.defaultDynamicToken ?? definition.tokenOptions?.[0] ?? lookupDynamicTokenOptions[0],
-      id: createLookupClauseId(definition.clauseKey),
-      valueMode: "dynamic_token",
-    };
-  }
-
-  if (definition.valueMode === "boolean_flag") {
-    return {
-      clauseKey: definition.clauseKey,
-      id: createLookupClauseId(definition.clauseKey),
-      value: typeof definition.defaultValue === "boolean" ? definition.defaultValue : true,
-      valueMode: "boolean_flag",
-    };
-  }
-
-  return {
-    clauseKey: definition.clauseKey,
-    id: createLookupClauseId(definition.clauseKey),
-    value: definition.defaultValue ?? "",
-    valueMode: "literal",
-  };
-}
-
-function getLookupClauseDefinitions(
-  lookupPreset: FormBuilderLookupPreset,
-) {
-  if (lookupPreset === "generic_db_lookup") {
-    return [];
-  }
-
-  return lookupClauseDefinitionsByPreset[lookupPreset];
-}
-
 function createRuleId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -1894,93 +1719,6 @@ function sortGridScopeFields(
 
     return (fallbackIndexByFieldId.get(left.id) ?? 0) - (fallbackIndexByFieldId.get(right.id) ?? 0);
   });
-}
-
-function getRuleOperatorOptions(field: FormsPlaceholderField): ReadonlyArray<FormBuilderRuleOperator> {
-  switch (field.kind) {
-    case "boolean":
-      return ["eq", "neq"];
-    case "currency":
-    case "date":
-    case "date_time":
-    case "decimal":
-    case "integer":
-      return ["eq", "neq", "gt", "gte", "lt", "lte", "is_empty", "not_empty"];
-    case "db_lookup":
-    case "multi_select":
-    case "single_select":
-      return ["eq", "neq", "in", "not_in", "is_empty", "not_empty"];
-    default:
-      return ["eq", "neq", "in", "not_in", "is_empty", "not_empty"];
-  }
-}
-
-function ruleOperatorNeedsValue(operator: FormBuilderRuleOperator) {
-  return operator !== "is_empty" && operator !== "not_empty";
-}
-
-function ruleOperatorUsesArray(operator: FormBuilderRuleOperator) {
-  return operator === "in" || operator === "not_in";
-}
-
-function getDefaultRuleScalarValue(field: FormsPlaceholderField): FormBuilderRuleScalar {
-  if (field.kind === "boolean") {
-    return true;
-  }
-
-  if (field.kind === "currency" || field.kind === "decimal" || field.kind === "integer") {
-    return 0;
-  }
-
-  return "";
-}
-
-function createDefaultRuleCondition(
-  fields: ReadonlyArray<FormsPlaceholderField>,
-): FormBuilderRuleCondition | null {
-  const field = fields[0] ?? null;
-  if (!field) {
-    return null;
-  }
-
-  const operator = getRuleOperatorOptions(field)[0] ?? "eq";
-  return {
-    fieldId: field.id,
-    id: createRuleId("rule-condition"),
-    operator,
-    value: ruleOperatorNeedsValue(operator) && !ruleOperatorUsesArray(operator)
-      ? getDefaultRuleScalarValue(field)
-      : undefined,
-    values: ruleOperatorUsesArray(operator) ? [String(getDefaultRuleScalarValue(field))] : undefined,
-  };
-}
-
-function stringifyRuleScalarValue(value: FormBuilderRuleScalar | undefined) {
-  if (typeof value === "boolean") {
-    return value ? "true" : "false";
-  }
-
-  if (typeof value === "number") {
-    return String(value);
-  }
-
-  return value ?? "";
-}
-
-function parseRuleScalarValue(
-  field: FormsPlaceholderField,
-  value: string,
-): FormBuilderRuleScalar {
-  if (field.kind === "boolean") {
-    return value === "true";
-  }
-
-  if (field.kind === "currency" || field.kind === "decimal" || field.kind === "integer") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return value;
 }
 
 function cloneRuleCondition(condition: FormBuilderRuleCondition): FormBuilderRuleCondition {
@@ -2357,166 +2095,9 @@ function buildDataSchemaStructureSignature(dataSchema: Record<string, unknown>) 
   return JSON.stringify(pruneStructureMetadata(dataSchema));
 }
 
-function getFilterOperatorOptions(
-  field: FormsPlaceholderField,
-): ReadonlyArray<FormBuilderFilterOperator> {
-  switch (field.kind) {
-    case "attachment":
-    case "boolean":
-      return ["eq", "neq"];
-    case "currency":
-    case "decimal":
-    case "integer":
-      return ["eq", "neq", "gt", "gte", "lt", "lte", "between", "is_empty", "is_not_empty"];
-    case "date":
-    case "date_time":
-      return ["eq", "neq", "gt", "gte", "lt", "lte", "between", "relative_date", "is_empty", "is_not_empty"];
-    case "db_lookup":
-    case "geo_point":
-    case "multi_select":
-    case "signature":
-    case "single_select":
-      return ["eq", "neq", "in", "is_empty", "is_not_empty"];
-    case "long_text":
-    case "rich_text":
-    case "short_text":
-    default:
-      return ["eq", "neq", "contains", "not_contains", "in", "is_empty", "is_not_empty"];
-  }
-}
-
-function getDefaultFilterScalarValue(field: FormsPlaceholderField): FormBuilderFilterScalar {
-  if (field.kind === "boolean") {
-    return true;
-  }
-
-  if (field.kind === "currency" || field.kind === "decimal" || field.kind === "integer") {
-    return 0;
-  }
-
-  return "";
-}
-
-function createDefaultFilterValueSource(
-  field: FormsPlaceholderField,
-  operator: FormBuilderFilterOperator,
-): FormBuilderFilterValueSource | undefined {
-  if (operator === "is_empty" || operator === "is_not_empty") {
-    return undefined;
-  }
-
-  if (operator === "between") {
-    return {
-      end: getDefaultFilterScalarValue(field),
-      kind: "scalar_range",
-      start: getDefaultFilterScalarValue(field),
-    };
-  }
-
-  if (operator === "in") {
-    const firstOption = field.options?.[0];
-
-    return {
-      kind: "literal_array",
-      value: [firstOption ?? getDefaultFilterScalarValue(field)],
-    };
-  }
-
-  if (operator === "relative_date") {
-    return {
-      kind: "relative_date",
-      preset: "current_month",
-    };
-  }
-
-  return {
-    kind: "literal",
-    value: getDefaultFilterScalarValue(field),
-  };
-}
-
-function createDefaultFilterCondition(
-  fields: ReadonlyArray<FormsPlaceholderField>,
-  fieldId?: string,
-): FormBuilderFilterCondition | null {
-  const field = getFieldById(fields, fieldId) ?? fields[0] ?? null;
-  if (!field) {
-    return null;
-  }
-
-  if (isPresetLookupField(field)) {
-    const lookupPreset = getLookupPresetFromField(field);
-    return {
-      clauses: getLookupClauseDefinitions(lookupPreset).map((definition) => createDefaultLookupClause(definition)),
-      editorType: "lookup",
-      fieldId: field.id,
-      lookupPreset,
-    };
-  }
-
-  const operator = getFilterOperatorOptions(field)[0];
-
-  return {
-    fieldId: field.id,
-    operator,
-    valueSource: createDefaultFilterValueSource(field, operator),
-  };
-}
-
-function parseScalarInput(
-  field: FormsPlaceholderField,
-  value: string,
-): FormBuilderFilterScalar {
-  if (field.kind === "boolean") {
-    return value === "true";
-  }
-
-  if (field.kind === "currency" || field.kind === "decimal" || field.kind === "integer") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  return value;
-}
-
-function stringifyScalarValue(value: FormBuilderFilterScalar | undefined) {
-  if (typeof value === "boolean") {
-    return value ? "true" : "false";
-  }
-
-  if (typeof value === "number") {
-    return String(value);
-  }
-
-  return value ?? "";
-}
-
-function getScalarInputType(fieldKind: FormsPlaceholderFieldKind) {
-  if (fieldKind === "currency" || fieldKind === "decimal" || fieldKind === "integer") {
-    return "number";
-  }
-
-  if (fieldKind === "date") {
-    return "date";
-  }
-
-  if (fieldKind === "date_time") {
-    return "datetime-local";
-  }
-
-  return "text";
-}
-
 function normalizeHexColor(value: string) {
   const trimmed = value.trim();
   return /^#[0-9A-Fa-f]{6}$/.test(trimmed) ? trimmed : "";
-}
-
-function getChoiceOptionStyle(
-  choiceDisplay: FormsPlaceholderChoiceDisplay | undefined,
-  option: string,
-) {
-  return choiceDisplay?.optionStyles?.find((entry) => entry.option === option) ?? null;
 }
 
 function syncChoiceOptionStyles(
@@ -2732,635 +2313,6 @@ function EditableStringList({
   );
 }
 
-function LookupFilterEditor({
-  condition,
-  disabled,
-  field,
-  onChange,
-  t,
-}: {
-  condition: FormBuilderLookupFilterCondition;
-  disabled: boolean;
-  field: FormsPlaceholderField;
-  onChange: (condition: FormBuilderLookupFilterCondition) => void;
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
-  const clauseDefinitions = getLookupClauseDefinitions(condition.lookupPreset);
-  if (clauseDefinitions.length === 0) {
-    return (
-      <p className="tenant-web__platform-studio-inline-help">
-        {t("tenant.platformStudio.forms.builder.filter.genericLookupFallback")}
-      </p>
-    );
-  }
-
-  return (
-    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-      {clauseDefinitions.map((definition) => {
-        const clause = condition.clauses.find((entry) => entry.clauseKey === definition.clauseKey)
-          ?? createDefaultLookupClause(definition);
-
-        if (definition.valueMode === "boolean_flag") {
-          return (
-            <div className="tenant-web__platform-studio-switch-row" key={definition.clauseKey}>
-              <span className="tenant-web__platform-studio-compact-row-label">
-                {t(getLookupClauseKey(definition.clauseKey))}
-              </span>
-              <Switch
-                checked={condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey && Boolean(entry.value))}
-                disabled={disabled}
-                onCheckedChange={(checked) => onChange({
-                  ...condition,
-                  clauses: checked
-                    ? condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                      ? condition.clauses.map((entry) =>
-                          entry.clauseKey === definition.clauseKey
-                            ? {
-                                ...entry,
-                                value: true,
-                              }
-                            : entry,
-                        )
-                      : [...condition.clauses, { ...clause, value: true }]
-                    : condition.clauses.filter((entry) => entry.clauseKey !== definition.clauseKey),
-                })}
-                size="sm"
-              />
-            </div>
-          );
-        }
-
-        if (definition.valueMode === "dynamic_token") {
-          const tokenOptions = definition.tokenOptions ?? lookupDynamicTokenOptions;
-          const selectedToken = clause.dynamicToken ?? definition.defaultDynamicToken ?? tokenOptions[0];
-
-          if (tokenOptions.length <= 1) {
-            return (
-              <div className="tenant-web__platform-studio-compact-row" key={definition.clauseKey}>
-                <div className="tenant-web__platform-studio-compact-row-main">
-                  <span className="tenant-web__platform-studio-compact-row-label">
-                    {t(getLookupClauseKey(definition.clauseKey))}
-                  </span>
-                  <span className="tenant-web__platform-studio-compact-row-summary">
-                    {t(getLookupDynamicTokenKey(selectedToken))}
-                  </span>
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div className="tenant-web__platform-studio-form-group" key={definition.clauseKey}>
-              <Label htmlFor={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}>
-                {t(getLookupClauseKey(definition.clauseKey))}
-              </Label>
-              <Select
-                disabled={disabled}
-                id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
-                onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
-                        entry.clauseKey === definition.clauseKey
-                          ? {
-                              ...entry,
-                              dynamicToken: event.target.value as FormBuilderLookupDynamicToken,
-                            }
-                          : entry,
-                      )
-                    : [...condition.clauses, {
-                        ...clause,
-                        dynamicToken: event.target.value as FormBuilderLookupDynamicToken,
-                      }],
-                })}
-                value={selectedToken}
-              >
-                {tokenOptions.map((token) => (
-                  <option key={token} value={token}>
-                    {t(getLookupDynamicTokenKey(token))}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          );
-        }
-
-        return (
-          <div className="tenant-web__platform-studio-form-group" key={definition.clauseKey}>
-            <Label htmlFor={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}>
-              {t(getLookupClauseKey(definition.clauseKey))}
-            </Label>
-            {definition.literalOptions ? (
-              <Select
-                disabled={disabled}
-                id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
-                onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
-                        entry.clauseKey === definition.clauseKey
-                          ? {
-                              ...entry,
-                              value: event.target.value,
-                            }
-                          : entry,
-                      )
-                    : [...condition.clauses, {
-                        ...clause,
-                        value: event.target.value,
-                      }],
-                })}
-                value={typeof clause.value === "string" || typeof clause.value === "number" ? String(clause.value) : ""}
-              >
-                <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                {definition.literalOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            ) : (
-              <Input
-                disabled={disabled}
-                id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
-                onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
-                        entry.clauseKey === definition.clauseKey
-                          ? {
-                              ...entry,
-                              value: event.target.value,
-                            }
-                          : entry,
-                      )
-                    : [...condition.clauses, {
-                        ...clause,
-                        value: event.target.value,
-                      }],
-                })}
-                value={typeof clause.value === "string" || typeof clause.value === "number" ? String(clause.value) : ""}
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function FilterConditionEditor({
-  condition,
-  disabled,
-  fields,
-  idPrefix,
-  onChange,
-  onRemove,
-  t,
-}: {
-  condition: FormBuilderFilterCondition;
-  disabled: boolean;
-  fields: ReadonlyArray<FormsPlaceholderField>;
-  idPrefix: string;
-  onChange: (condition: FormBuilderFilterCondition) => void;
-  onRemove: () => void;
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
-  const field = getFieldById(fields, condition.fieldId) ?? fields[0] ?? null;
-  if (!field) {
-    return null;
-  }
-
-  if (field.kind === "db_lookup" && "editorType" in condition && condition.editorType === "lookup") {
-    return (
-      <div className="tenant-web__platform-studio-filter-card">
-        <LookupFilterEditor
-          condition={condition}
-          disabled={disabled}
-          field={field}
-          onChange={onChange}
-          t={t}
-        />
-      </div>
-    );
-  }
-
-  const scalarCondition = condition as FormBuilderScalarFilterCondition;
-  const operatorOptions = getFilterOperatorOptions(field);
-  const operator = operatorOptions.includes(scalarCondition.operator)
-    ? scalarCondition.operator
-    : operatorOptions[0];
-  const rawValueSource = scalarCondition.valueSource ?? createDefaultFilterValueSource(field, operator);
-  const valueSource = rawValueSource?.kind === "token"
-    ? createDefaultFilterValueSource(field, operator)
-    : rawValueSource;
-
-  return (
-    <div className="tenant-web__platform-studio-filter-card">
-      <div className="tenant-web__platform-studio-form-group">
-        <Label htmlFor={`${idPrefix}-field`}>
-          {t("tenant.platformStudio.forms.builder.filter.fieldLabel")}
-        </Label>
-        <Select
-          disabled={disabled}
-          id={`${idPrefix}-field`}
-          onChange={(event) => {
-            const nextCondition = createDefaultFilterCondition(fields, event.target.value);
-            if (nextCondition) {
-              onChange(nextCondition);
-            }
-          }}
-          value={field.id}
-        >
-          {fields.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div className="tenant-web__platform-studio-form-group">
-        <Label htmlFor={`${idPrefix}-operator`}>
-          {t("tenant.platformStudio.forms.builder.filter.operatorLabel")}
-        </Label>
-        <Select
-          disabled={disabled}
-          id={`${idPrefix}-operator`}
-          onChange={(event) => {
-            const nextOperator = event.target.value as FormBuilderFilterOperator;
-            onChange({
-              fieldId: field.id,
-              operator: nextOperator,
-              valueSource: createDefaultFilterValueSource(field, nextOperator),
-            });
-          }}
-          value={operator}
-        >
-          {operatorOptions.map((item) => (
-            <option key={item} value={item}>
-              {t(getFilterOperatorKey(item))}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      {(operator !== "is_empty" && operator !== "is_not_empty") ? (
-        <>
-          {valueSource?.kind === "literal" ? (
-            <div className="tenant-web__platform-studio-form-group">
-              <Label htmlFor={`${idPrefix}-value`}>
-                {t("tenant.platformStudio.forms.builder.filter.valueLabel")}
-              </Label>
-              {field.kind === "boolean" ? (
-                <Select
-                  disabled={disabled}
-                  id={`${idPrefix}-value`}
-                  onChange={(event) => onChange({
-                    fieldId: field.id,
-                    operator,
-                    valueSource: {
-                      kind: "literal",
-                      value: parseScalarInput(field, event.target.value),
-                    },
-                  })}
-                  value={stringifyScalarValue(valueSource.value)}
-                >
-                  <option value="true">{t("tenant.platformStudio.forms.builder.boolean.true")}</option>
-                  <option value="false">{t("tenant.platformStudio.forms.builder.boolean.false")}</option>
-                </Select>
-              ) : field.kind === "single_select" && field.options?.length ? (
-                <Select
-                  disabled={disabled}
-                  id={`${idPrefix}-value`}
-                  onChange={(event) => onChange({
-                    fieldId: field.id,
-                    operator,
-                    valueSource: {
-                      kind: "literal",
-                      value: event.target.value,
-                    },
-                  })}
-                  value={stringifyScalarValue(valueSource.value)}
-                >
-                  <option value="">{t("tenant.platformStudio.forms.builder.filter.emptyValue")}</option>
-                  {field.options.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </Select>
-              ) : (
-                <Input
-                  disabled={disabled}
-                  id={`${idPrefix}-value`}
-                  onChange={(event) => onChange({
-                    fieldId: field.id,
-                    operator,
-                    valueSource: {
-                      kind: "literal",
-                      value: parseScalarInput(field, event.target.value),
-                    },
-                  })}
-                  type={getScalarInputType(field.kind)}
-                  value={stringifyScalarValue(valueSource.value)}
-                />
-              )}
-            </div>
-          ) : null}
-
-          {valueSource?.kind === "literal_array" ? (
-            <div className="tenant-web__platform-studio-form-group">
-              <Label htmlFor={`${idPrefix}-value-array`}>
-                {t("tenant.platformStudio.forms.builder.filter.valueLabel")}
-              </Label>
-              <Input
-                disabled={disabled}
-                id={`${idPrefix}-value-array`}
-                onChange={(event) => onChange({
-                  fieldId: field.id,
-                  operator,
-                  valueSource: {
-                    kind: "literal_array",
-                    value: event.target.value
-                      .split(",")
-                      .map((item) => item.trim())
-                      .filter(Boolean),
-                  },
-                })}
-                value={valueSource.value.join(", ")}
-              />
-            </div>
-          ) : null}
-
-          {valueSource?.kind === "scalar_range" ? (
-            <>
-              <div className="tenant-web__platform-studio-form-group">
-                <Label htmlFor={`${idPrefix}-range-start`}>
-                  {t("tenant.platformStudio.forms.builder.filter.rangeStartLabel")}
-                </Label>
-                <Input
-                  disabled={disabled}
-                  id={`${idPrefix}-range-start`}
-                  onChange={(event) => onChange({
-                    fieldId: field.id,
-                    operator,
-                    valueSource: {
-                      ...valueSource,
-                      start: parseScalarInput(field, event.target.value),
-                    },
-                  })}
-                  type={getScalarInputType(field.kind)}
-                  value={stringifyScalarValue(valueSource.start)}
-                />
-              </div>
-              <div className="tenant-web__platform-studio-form-group">
-                <Label htmlFor={`${idPrefix}-range-end`}>
-                  {t("tenant.platformStudio.forms.builder.filter.rangeEndLabel")}
-                </Label>
-                <Input
-                  disabled={disabled}
-                  id={`${idPrefix}-range-end`}
-                  onChange={(event) => onChange({
-                    fieldId: field.id,
-                    operator,
-                    valueSource: {
-                      ...valueSource,
-                      end: parseScalarInput(field, event.target.value),
-                    },
-                  })}
-                  type={getScalarInputType(field.kind)}
-                  value={stringifyScalarValue(valueSource.end)}
-                />
-              </div>
-            </>
-          ) : null}
-
-          {valueSource?.kind === "relative_date" ? (
-            <div className="tenant-web__platform-studio-form-group">
-              <Label htmlFor={`${idPrefix}-relative-date`}>
-                {t("tenant.platformStudio.forms.builder.filter.valueLabel")}
-              </Label>
-              <Select
-                disabled={disabled}
-                id={`${idPrefix}-relative-date`}
-                onChange={(event) => onChange({
-                  fieldId: field.id,
-                  operator,
-                  valueSource: {
-                    kind: "relative_date",
-                    preset: event.target.value as typeof relativeDatePresetOptions[number],
-                  },
-                })}
-                value={valueSource.preset}
-              >
-                {relativeDatePresetOptions.map((item) => (
-                  <option key={item} value={item}>
-                    {t(getRelativeDatePresetKey(item))}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          ) : null}
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function RuleConditionEditor({
-  allowRemove = true,
-  condition,
-  disabled,
-  fields,
-  idPrefix,
-  onChange,
-  onRemove,
-  t,
-}: {
-  allowRemove?: boolean;
-  condition: FormBuilderRuleCondition;
-  disabled: boolean;
-  fields: ReadonlyArray<FormsPlaceholderField>;
-  idPrefix: string;
-  onChange: (condition: FormBuilderRuleCondition) => void;
-  onRemove: () => void;
-  t: ReturnType<typeof useTranslation>["t"];
-}) {
-  const field = getFieldById(fields, condition.fieldId) ?? fields[0] ?? null;
-  if (!field) {
-    return null;
-  }
-
-  const operatorOptions = getRuleOperatorOptions(field);
-  const operator = operatorOptions.includes(condition.operator)
-    ? condition.operator
-    : operatorOptions[0];
-  const usesArray = ruleOperatorUsesArray(operator);
-  const needsValue = ruleOperatorNeedsValue(operator);
-  const scalarValue = usesArray
-    ? undefined
-    : condition.value ?? getDefaultRuleScalarValue(field);
-  const arrayValue = usesArray
-    ? (condition.values?.length ? [...condition.values] : [String(getDefaultRuleScalarValue(field))])
-    : [];
-
-  return (
-    <div className="tenant-web__platform-studio-filter-card">
-      <div className="tenant-web__platform-studio-form-group">
-        <Label htmlFor={`${idPrefix}-field`}>
-          {t("tenant.platformStudio.forms.builder.filter.fieldLabel")}
-        </Label>
-        <Select
-          disabled={disabled}
-          id={`${idPrefix}-field`}
-          onChange={(event) => {
-            const nextField = getFieldById(fields, event.target.value);
-            if (!nextField) {
-              return;
-            }
-
-            const nextOperator = getRuleOperatorOptions(nextField)[0] ?? "eq";
-            onChange({
-              fieldId: nextField.id,
-              id: condition.id,
-              operator: nextOperator,
-              value: ruleOperatorNeedsValue(nextOperator) && !ruleOperatorUsesArray(nextOperator)
-                ? getDefaultRuleScalarValue(nextField)
-                : undefined,
-              values: ruleOperatorUsesArray(nextOperator)
-                ? [String(getDefaultRuleScalarValue(nextField))]
-                : undefined,
-            });
-          }}
-          value={field.id}
-        >
-          {fields.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      <div className="tenant-web__platform-studio-form-group">
-        <Label htmlFor={`${idPrefix}-operator`}>
-          {t("tenant.platformStudio.forms.builder.rule.operatorLabel")}
-        </Label>
-        <Select
-          disabled={disabled}
-          id={`${idPrefix}-operator`}
-          onChange={(event) => {
-            const nextOperator = event.target.value as FormBuilderRuleOperator;
-            onChange({
-              fieldId: field.id,
-              id: condition.id,
-              operator: nextOperator,
-              value: ruleOperatorNeedsValue(nextOperator) && !ruleOperatorUsesArray(nextOperator)
-                ? getDefaultRuleScalarValue(field)
-                : undefined,
-              values: ruleOperatorUsesArray(nextOperator)
-                ? [String(getDefaultRuleScalarValue(field))]
-                : undefined,
-            });
-          }}
-          value={operator}
-        >
-          {operatorOptions.map((item) => (
-            <option key={item} value={item}>
-              {t(getRuleOperatorKey(item))}
-            </option>
-          ))}
-        </Select>
-      </div>
-
-      {needsValue ? (
-        <div className="tenant-web__platform-studio-form-group">
-          <Label htmlFor={`${idPrefix}-value`}>
-            {t("tenant.platformStudio.forms.builder.rule.valueLabel")}
-          </Label>
-          {field.kind === "boolean" && !usesArray ? (
-            <Select
-              disabled={disabled}
-              id={`${idPrefix}-value`}
-              onChange={(event) => onChange({
-                ...condition,
-                fieldId: field.id,
-                operator,
-                value: event.target.value === "true",
-                values: undefined,
-              })}
-              value={stringifyRuleScalarValue(scalarValue)}
-            >
-              <option value="true">{t("tenant.platformStudio.forms.builder.boolean.true")}</option>
-              <option value="false">{t("tenant.platformStudio.forms.builder.boolean.false")}</option>
-            </Select>
-          ) : field.kind === "single_select" && field.options?.length && !usesArray ? (
-            <Select
-              disabled={disabled}
-              id={`${idPrefix}-value`}
-              onChange={(event) => onChange({
-                ...condition,
-                fieldId: field.id,
-                operator,
-                value: event.target.value,
-                values: undefined,
-              })}
-              value={stringifyRuleScalarValue(scalarValue)}
-            >
-              <option value="">{t("tenant.platformStudio.forms.builder.rule.noValue")}</option>
-              {field.options.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </Select>
-          ) : usesArray ? (
-            <Input
-              disabled={disabled}
-              id={`${idPrefix}-value`}
-              onChange={(event) => onChange({
-                ...condition,
-                fieldId: field.id,
-                operator,
-                value: undefined,
-                values: event.target.value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter(Boolean)
-                  .map((item) => parseRuleScalarValue(field, item)),
-              })}
-              value={arrayValue.map((item) => stringifyRuleScalarValue(item)).join(", ")}
-            />
-          ) : (
-            <Input
-              disabled={disabled}
-              id={`${idPrefix}-value`}
-              onChange={(event) => onChange({
-                ...condition,
-                fieldId: field.id,
-                operator,
-                value: parseRuleScalarValue(field, event.target.value),
-                values: undefined,
-              })}
-              type={getScalarInputType(field.kind)}
-              value={stringifyRuleScalarValue(scalarValue)}
-            />
-          )}
-        </div>
-      ) : null}
-
-      {allowRemove ? (
-        <div className="tenant-web__platform-studio-button-row">
-          <Button disabled={disabled} onClick={onRemove} size="sm" variant="ghost">
-            {t("tenant.platformStudio.forms.builder.rule.removeCondition")}
-          </Button>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function getSummaryText(
   node: FormBuilderNode,
   document: ReturnType<typeof useFormBuilderDocument>["document"],
@@ -3565,475 +2517,6 @@ function getCanvasAttentionNodeIds(
   return attentionNodeIds;
 }
 
-function BackArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="tenant-web__platform-studio-back-icon"
-      fill="none"
-      viewBox="0 0 20 20"
-      width="16"
-      height="16"
-    >
-      <path
-        d="M10.5 5.5 6 10l4.5 4.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M6.5 5.5 2 10l4.5 4.5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function DatabaseFieldIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.6"
-      viewBox="0 0 20 20"
-    >
-      <ellipse cx="10" cy="5" rx="5.5" ry="2.5" />
-      <path d="M4.5 5v4c0 1.4 2.46 2.5 5.5 2.5s5.5-1.1 5.5-2.5V5" />
-      <path d="M4.5 9v4c0 1.4 2.46 2.5 5.5 2.5s5.5-1.1 5.5-2.5V9" />
-    </svg>
-  );
-}
-
-function DragHandleIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      viewBox="0 0 20 20"
-    >
-      <circle cx="7" cy="6" fill="currentColor" r="1.1" />
-      <circle cx="13" cy="6" fill="currentColor" r="1.1" />
-      <circle cx="7" cy="10" fill="currentColor" r="1.1" />
-      <circle cx="13" cy="10" fill="currentColor" r="1.1" />
-      <circle cx="7" cy="14" fill="currentColor" r="1.1" />
-      <circle cx="13" cy="14" fill="currentColor" r="1.1" />
-    </svg>
-  );
-}
-
-function PaletteItem({
-  description,
-  disabled,
-  disabledReason,
-  iconKey,
-  label,
-  onClick,
-}: {
-  description: string;
-  disabled: boolean;
-  disabledReason: string | null;
-  iconKey: string;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`tenant-web__platform-studio-palette-item${disabled ? " tenant-web__platform-studio-palette-item--disabled" : ""}`}
-      disabled={disabled}
-      onClick={onClick}
-      title={disabledReason ?? undefined}
-      type="button"
-    >
-      <span className="tenant-web__platform-studio-item-icon">
-        <FormBuilderElementIcon iconKey={iconKey} />
-      </span>
-      <span className="tenant-web__platform-studio-palette-copy">
-        <span className="tenant-web__platform-studio-palette-title">{label}</span>
-        <span className="tenant-web__platform-studio-palette-description">{description}</span>
-      </span>
-    </button>
-  );
-}
-
-function CanvasNodeRow({
-  canEditVisibility,
-  canMoveItems,
-  currentLevelId,
-  document,
-  dragOverNodeId,
-  draggedNodeId,
-  hasAttention,
-  object,
-  onDragEnd,
-  onDragOverNode,
-  onDragStartNode,
-  onDropNode,
-  onOpenLevel,
-  onToggleVisibility,
-  onSelect,
-  selectedNodeId,
-  t,
-  workspaceDocumentChildrenCount,
-  node,
-}: {
-  canEditVisibility: boolean;
-  canMoveItems: boolean;
-  currentLevelId: string | null;
-  document: Parameters<typeof getFormBuilderNodeSummary>[1];
-  dragOverNodeId: string | null;
-  draggedNodeId: string | null;
-  hasAttention: boolean;
-  node: FormBuilderNode;
-  object: NonNullable<ReturnType<typeof getFormsPlaceholderModel>>;
-  onDragEnd: () => void;
-  onDragOverNode: () => void;
-  onDragStartNode: () => void;
-  onDropNode: () => void;
-  onOpenLevel: () => void;
-  onToggleVisibility: () => void;
-  onSelect: () => void;
-  selectedNodeId: string | null;
-  t: ReturnType<typeof useTranslation>["t"];
-  workspaceDocumentChildrenCount: number;
-}) {
-  const isSelected = selectedNodeId === node.id;
-  const isCurrentLevel = currentLevelId === node.id;
-  const isDragging = draggedNodeId === node.id;
-  const isDropTarget = dragOverNodeId === node.id && draggedNodeId !== node.id;
-  const isContainer = isFormBuilderContainer(node.type);
-  const summaryKey = getFormBuilderNodeSummary(
-    node,
-    document,
-    object,
-  );
-  const summary = getSummaryText(
-    node,
-    document,
-    object.title,
-    object.fields,
-    summaryKey,
-    t,
-    workspaceDocumentChildrenCount,
-  );
-  const visibilityToneClass =
-    node.visibility === "readonly"
-      ? " tenant-web__platform-studio-canvas-visibility-button--readonly"
-      : node.visibility === "hidden"
-        ? " tenant-web__platform-studio-canvas-visibility-button--hidden"
-        : " tenant-web__platform-studio-canvas-visibility-button--visible";
-
-  return (
-    <div
-      className={`tenant-web__platform-studio-canvas-item${isSelected ? " tenant-web__platform-studio-canvas-item--selected" : ""}${isDragging ? " tenant-web__platform-studio-canvas-item--dragging" : ""}${isDropTarget ? " tenant-web__platform-studio-canvas-item--drop-target" : ""}${hasAttention ? " tenant-web__platform-studio-canvas-item--attention" : ""}`}
-      draggable={canMoveItems}
-      role="button"
-      onDragEnd={onDragEnd}
-      onDragOver={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDragOverNode();
-      }}
-      onDragStart={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", node.id);
-        onDragStartNode();
-      }}
-      onDrop={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDropNode();
-      }}
-      onClick={onSelect}
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
-    >
-      <div className="tenant-web__platform-studio-canvas-item-main">
-        {canMoveItems ? (
-          <span className="tenant-web__platform-studio-drag-handle" title={t("tenant.platformStudio.forms.builder.dragToReorder")}>
-            <DragHandleIcon />
-          </span>
-        ) : null}
-        <span className="tenant-web__platform-studio-item-icon tenant-web__platform-studio-item-icon--canvas">
-          <FormBuilderElementIcon
-            iconKey={
-              node.type === "field"
-                ? getFormsPlaceholderFieldIconKey(object.fields.find((field) => field.id === node.fieldId) ?? {
-                  family: "core",
-                  id: "missing-field",
-                  isLocked: false,
-                  kind: "short_text",
-                  label: "Field",
-                })
-                : node.type
-            }
-          />
-        </span>
-        <div className="tenant-web__platform-studio-canvas-copy">
-          <span className="tenant-web__platform-studio-canvas-item-title">{getFormBuilderDisplayLabel(node, object)}</span>
-          <span className="tenant-web__platform-studio-canvas-item-summary">{summary}</span>
-        </div>
-      </div>
-
-      <div className="tenant-web__platform-studio-canvas-actions">
-        <button
-          aria-label={t(`tenant.platformStudio.forms.builder.visibility.${node.visibility}`)}
-          className={`tenant-web__platform-studio-canvas-visibility-button${visibilityToneClass}`}
-          disabled={!canEditVisibility}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleVisibility();
-          }}
-          title={t(`tenant.platformStudio.forms.builder.visibility.${node.visibility}`)}
-          type="button"
-        >
-          <EyeIcon />
-        </button>
-        {isContainer ? (
-          <>
-            {isCurrentLevel ? (
-              <Badge appearance="soft" size="sm" variant="brand">
-                {t("tenant.platformStudio.forms.builder.currentLevelBadge")}
-              </Badge>
-            ) : (
-              <Button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenLevel();
-                }}
-                size="sm"
-                variant="secondary"
-              >
-                {t("tenant.platformStudio.forms.openWorkspace")}
-              </Button>
-            )}
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function GridColumnRow({
-  canEdit,
-  canMoveItems,
-  dragOverFieldId,
-  draggedFieldId,
-  field,
-  onDragEnd,
-  onDragOverField,
-  onDragStartField,
-  onDropField,
-  t,
-  visible,
-  onToggleVisible,
-}: {
-  canEdit: boolean;
-  canMoveItems: boolean;
-  dragOverFieldId: string | null;
-  draggedFieldId: string | null;
-  field: FormsPlaceholderField;
-  onDragEnd: () => void;
-  onDragOverField: () => void;
-  onDragStartField: () => void;
-  onDropField: () => void;
-  onToggleVisible: (checked: boolean) => void;
-  t: ReturnType<typeof useTranslation>["t"];
-  visible: boolean;
-}) {
-  const isDragging = draggedFieldId === field.id;
-  const isDropTarget = dragOverFieldId === field.id && draggedFieldId !== field.id;
-
-  return (
-    <div
-      className={`tenant-web__platform-studio-canvas-item tenant-web__platform-studio-grid-column-item${isDragging ? " tenant-web__platform-studio-canvas-item--dragging" : ""}${isDropTarget ? " tenant-web__platform-studio-canvas-item--drop-target" : ""}`}
-      draggable={canMoveItems}
-      onDragEnd={onDragEnd}
-      onDragOver={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDragOverField();
-      }}
-      onDragStart={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", field.id);
-        onDragStartField();
-      }}
-      onDrop={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDropField();
-      }}
-    >
-      <div className="tenant-web__platform-studio-canvas-item-main">
-        {canMoveItems ? (
-          <span className="tenant-web__platform-studio-drag-handle" title={t("tenant.platformStudio.forms.builder.dragToReorder")}>
-            <DragHandleIcon />
-          </span>
-        ) : null}
-        <span className="tenant-web__platform-studio-item-icon tenant-web__platform-studio-item-icon--canvas">
-          <FormBuilderElementIcon iconKey={getFormsPlaceholderFieldIconKey(field)} />
-        </span>
-        <div className="tenant-web__platform-studio-canvas-copy">
-          <span className="tenant-web__platform-studio-canvas-item-title">{field.label}</span>
-          <span className="tenant-web__platform-studio-canvas-item-summary">
-            {visible
-              ? t("tenant.platformStudio.forms.builder.grid.visibleInGrid")
-              : t("tenant.platformStudio.forms.builder.grid.hiddenInGrid")}
-          </span>
-        </div>
-      </div>
-
-      <div className="tenant-web__platform-studio-grid-column-switch">
-        <Switch
-          checked={visible}
-          disabled={!canEdit}
-          onCheckedChange={onToggleVisible}
-          size="sm"
-        />
-      </div>
-    </div>
-  );
-}
-
-function ChoiceOptionRow({
-  canEdit,
-  canMoveItems,
-  dragOverOptionIndex,
-  draggedOptionIndex,
-  index,
-  onChangeValue,
-  onDragEnd,
-  onDragOverOption,
-  onDragStartOption,
-  onDropOption,
-  onRemove,
-  t,
-  value,
-}: {
-  canEdit: boolean;
-  canMoveItems: boolean;
-  dragOverOptionIndex: number | null;
-  draggedOptionIndex: number | null;
-  index: number;
-  onChangeValue: (value: string) => void;
-  onDragEnd: () => void;
-  onDragOverOption: () => void;
-  onDragStartOption: () => void;
-  onDropOption: () => void;
-  onRemove: () => void;
-  t: ReturnType<typeof useTranslation>["t"];
-  value: string;
-}) {
-  const isDragging = draggedOptionIndex === index;
-  const isDropTarget = dragOverOptionIndex === index && draggedOptionIndex !== index;
-
-  return (
-    <div
-      className={`tenant-web__platform-studio-compact-row tenant-web__platform-studio-choice-option-row${isDragging ? " tenant-web__platform-studio-canvas-item--dragging" : ""}${isDropTarget ? " tenant-web__platform-studio-canvas-item--drop-target" : ""}`}
-      draggable={canMoveItems}
-      onDragEnd={onDragEnd}
-      onDragOver={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDragOverOption();
-      }}
-      onDragStart={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", String(index));
-        onDragStartOption();
-      }}
-      onDrop={(event) => {
-        if (!canMoveItems) {
-          return;
-        }
-
-        event.preventDefault();
-        onDropOption();
-      }}
-    >
-      <div className="tenant-web__platform-studio-choice-option-main">
-        {canMoveItems ? (
-          <span
-            className="tenant-web__platform-studio-drag-handle"
-            title={t("tenant.platformStudio.forms.builder.dragToReorder")}
-          >
-            <DragHandleIcon />
-          </span>
-        ) : null}
-
-        <div className="tenant-web__platform-studio-choice-option-editor">
-          <Input
-            disabled={!canEdit}
-            id={`tenant-platform-studio-choice-option-${index}`}
-            onChange={(event) => onChangeValue(event.target.value)}
-            value={value}
-          />
-        </div>
-      </div>
-
-      <Menu align="end">
-        <MenuTrigger>
-          <button
-            aria-label={t("tenant.platformStudio.forms.builder.rule.actionsMenu")}
-            className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
-            disabled={!canEdit}
-            type="button"
-          >
-            <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">⋮</span>
-          </button>
-        </MenuTrigger>
-        <MenuContent className="tenant-web__platform-studio-menu">
-          <MenuItem
-            onClick={onRemove}
-            tone="danger"
-          >
-            {t("tenant.platformStudio.forms.builder.removeNode")}
-          </MenuItem>
-        </MenuContent>
-      </Menu>
-    </div>
-  );
-}
-
 export function FormsViewWorkspacePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -4074,7 +2557,7 @@ export function FormsViewWorkspacePage() {
   const [routeBootstrapError, setRouteBootstrapError] = useState<string | null>(null);
   const [isBootstrappingRoute, setIsBootstrappingRoute] = useState(Boolean(params.modelId && params.viewId));
   const [paletteQuery, setPaletteQuery] = useState("");
-  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("selection");
+  const [inspectorTab, setInspectorTab] = useState<InspectorPanelTabValue>("selection");
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
   const [draggedGridFieldId, setDraggedGridFieldId] = useState<string | null>(null);
@@ -4248,6 +2731,16 @@ export function FormsViewWorkspacePage() {
   const selectedNodeSupportsRules = Boolean(
     selectedNode && (selectedNode.type === "field" || selectedNode.type === "view_only_field" || isFormBuilderContainer(selectedNode.type)),
   );
+  const selectedVisibilityRuleItems: ReadonlyArray<RulesPanelRuleItem> = (selectedNode?.rules?.visibilityRules ?? []).map((rule) => ({
+    effectLabel: t(`tenant.platformStudio.forms.builder.rule.effect.${rule.effect}`),
+    id: rule.id,
+    summary: getRuleSummary(rule, selectedNodeRuleFields, t),
+  }));
+  const selectedRequirementRuleItems: ReadonlyArray<RulesPanelRuleItem> = (selectedNode?.rules?.requirementRules ?? []).map((rule) => ({
+    effectLabel: t(`tenant.platformStudio.forms.builder.rule.effect.${rule.effect}`),
+    id: rule.id,
+    summary: getRuleSummary(rule, selectedNodeRuleFields, t),
+  }));
   const currentParentNode = getFormBuilderNode(document, currentScopeParentId);
   const currentScopeSubformNode = getCurrentFormBuilderScopeSubformNode(document);
   const currentGridScopeFields = useMemo(
@@ -6045,2265 +4538,1163 @@ export function FormsViewWorkspacePage() {
 
   if (!hasResolvedWorkspace && isBootstrappingRoute) {
     return (
-      <Card className="tenant-web__platform-studio-missing">
-        <CardHeader>
-          <div>
-            <CardTitle>{t("tenant.platformStudio.forms.loadingWorkspaceTitle")}</CardTitle>
-            <CardDescription>{t("tenant.platformStudio.forms.loadingWorkspaceDescription")}</CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+      <WorkspaceLoadingState
+        description={t("tenant.platformStudio.forms.loadingWorkspaceDescription")}
+        title={t("tenant.platformStudio.forms.loadingWorkspaceTitle")}
+      />
     );
   }
 
   if (hasResolvedWorkspace && !hasHydratedCurrentDraft && !draftSyncError) {
     return (
-      <Card className="tenant-web__platform-studio-missing">
-        <CardHeader>
-          <div>
-            <CardTitle>{t("tenant.platformStudio.forms.loadingWorkspaceTitle")}</CardTitle>
-            <CardDescription>{t("tenant.platformStudio.forms.loadingWorkspaceDescription")}</CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+      <WorkspaceLoadingState
+        description={t("tenant.platformStudio.forms.loadingWorkspaceDescription")}
+        title={t("tenant.platformStudio.forms.loadingWorkspaceTitle")}
+      />
     );
   }
 
   if (!hasResolvedWorkspace) {
     return (
-      <Card className="tenant-web__platform-studio-missing">
-        <CardHeader>
-          <div>
-            <CardTitle>{t("tenant.platformStudio.forms.missingTitle")}</CardTitle>
-            <CardDescription>{routeBootstrapError ?? t("tenant.platformStudio.forms.missingDescription")}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="tenant-web__platform-studio-row">
-          <Button onClick={() => navigate(platformStudioPaths.forms)} variant="outline">
-            {t("tenant.platformStudio.forms.backToForms")}
-          </Button>
-          {params.modelId ? (
-            <Button onClick={() => navigate(platformStudioPaths.model(params.modelId ?? ""))} variant="ghost">
-              {t("tenant.platformStudio.forms.backToModel")}
+      <WorkspaceErrorState
+        actions={(
+          <>
+            <Button onClick={() => navigate(platformStudioPaths.forms)} variant="outline">
+              {t("tenant.platformStudio.forms.backToForms")}
             </Button>
-          ) : null}
-        </CardContent>
-      </Card>
+            {params.modelId ? (
+              <Button onClick={() => navigate(platformStudioPaths.model(params.modelId ?? ""))} variant="ghost">
+                {t("tenant.platformStudio.forms.backToModel")}
+              </Button>
+            ) : null}
+          </>
+        )}
+        description={routeBootstrapError ?? t("tenant.platformStudio.forms.missingDescription")}
+        title={t("tenant.platformStudio.forms.missingTitle")}
+      />
     );
   }
+
+  const paletteDisplaySections: ReadonlyArray<FieldPaletteDisplaySection> = paletteSections.map((section) => ({
+    items: section.items.map((item) => {
+      if (item.kind === "element") {
+        return {
+          description: t(item.descriptionKey),
+          disabled: item.disabled,
+          disabledReason: item.disabledReasonKey ? t(item.disabledReasonKey) : null,
+          iconKey: item.iconKey,
+          key: `${item.nodeType}:${item.labelKey}`,
+          label: t(item.labelKey),
+          onClick: () => updateDocument((currentDocument) =>
+            addFormBuilderElementNode(
+              currentDocument,
+              getCurrentFormBuilderInsertParentId(currentDocument),
+              item.nodeType,
+              item.initialNode,
+            )
+          ),
+        };
+      }
+
+      if (item.kind === "systemField") {
+        return {
+          description: t(item.descriptionKey),
+          disabled: item.disabled,
+          disabledReason: item.disabledReasonKey ? t(item.disabledReasonKey) : null,
+          iconKey: item.iconKey,
+          key: item.key,
+          label: t(item.labelKey),
+          onClick: () => handleCreateSystemField(item.key),
+        };
+      }
+
+      return {
+        description: getFieldPaletteDescription(item.definition.template, t),
+        disabled: item.disabled,
+        disabledReason: item.disabledReasonKey ? t(item.disabledReasonKey) : null,
+        iconKey: item.iconKey,
+        key: item.definition.idBase,
+        label: t(item.definition.labelKey),
+        onClick: () => handleCreateLibraryField(item.definition),
+      };
+    }),
+    key: section.key,
+    label: t(section.labelKey),
+  }));
+  const canvasBreadcrumbItems: ReadonlyArray<BuilderCanvasBreadcrumbItem> = breadcrumb.map((node) => ({
+    id: node.id,
+    label: getFormBuilderDisplayLabel(node, currentModel),
+  }));
+  const canvasNodeItems: ReadonlyArray<BuilderCanvasNodeItem> = currentNodes.map((node) => {
+    const summaryKey = getFormBuilderNodeSummary(node, document, currentModel);
+    const iconKey = node.type === "field"
+      ? getFormsPlaceholderFieldIconKey(currentModel.fields.find((field) => field.id === node.fieldId) ?? {
+          family: "core",
+          id: "missing-field",
+          isLocked: false,
+          kind: "short_text",
+          label: "Field",
+        })
+      : node.type;
+
+    return {
+      hasAttention: attentionNodeIds.has(node.id),
+      iconKey,
+      id: node.id,
+      isContainer: isFormBuilderContainer(node.type),
+      label: getFormBuilderDisplayLabel(node, currentModel),
+      summary: getSummaryText(
+        node,
+        document,
+        currentModel.title,
+        currentModel.fields,
+        summaryKey,
+        t,
+        getFormBuilderChildren(document, node.id).length,
+      ),
+      visibility: node.visibility,
+    };
+  });
+  const canvasUnplacedFields: ReadonlyArray<BuilderCanvasUnplacedFieldItem> = currentScopeUnplacedFields.map((field) => ({
+    id: field.id,
+    label: getFormsPlaceholderFieldDisplayName(field),
+    summary: t(getFieldTypeKey(field)),
+  }));
+  const gridSettingsFieldItems: ReadonlyArray<GridSettingsFieldItem> = sortedCurrentGridScopeTargets.map((field) => {
+    const column = getGridColumnByFieldId(currentGridColumns, field.id);
+
+    return {
+      iconKey: getFormsPlaceholderFieldIconKey(field),
+      id: field.id,
+      label: field.label,
+      visible: column?.visible ?? false,
+    };
+  });
+  const viewSettingsActionItems = isRootViewScope
+    ? ([
+        ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
+        ["canView", "tenant.platformStudio.forms.builder.viewSettings.action.view"],
+        ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
+        ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
+      ] as const).map(([actionKey, labelKey]) => ({
+        checked: document.viewSettings.actions[actionKey],
+        key: actionKey,
+        label: t(labelKey),
+        onChange: (checked: boolean) => updateViewSettings((viewSettings) => ({
+          ...viewSettings,
+          actions: {
+            ...viewSettings.actions,
+            [actionKey]: checked,
+          },
+        })),
+      }))
+    : ([
+        ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
+        ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
+        ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
+      ] as const).map(([actionKey, labelKey]) => ({
+        checked: Boolean(currentScopeViewSettings?.actions[actionKey]),
+        key: actionKey,
+        label: t(labelKey),
+        onChange: (checked: boolean) => updateCurrentScopeSubformViewSettings((viewSettings) => ({
+          ...viewSettings,
+          actions: {
+            ...viewSettings.actions,
+            [actionKey]: checked,
+          },
+        })),
+      }));
+  const viewSettingsSystemFields = systemFieldRoles.map((role) => ({
+    boundFieldId: getBoundSystemFieldIdByRole(document, role) ?? "",
+    compatibleFields: getSystemFieldOptions(currentModel.fields, document, role).map((field) => ({
+      id: field.id,
+      label: getFieldLabelWithBoundField(field, document),
+    })),
+    finalValue: document.systemFields.workflowStatus?.finalValue ?? "",
+    initialValue: document.systemFields.workflowStatus?.initialValue ?? "",
+    label: t(getSystemFieldKey(role)),
+    noCompatibleText: t("tenant.platformStudio.forms.builder.systemField.noCompatibleField"),
+    role,
+    summary: getSystemFieldBindingSummary(role, currentModel.fields, document, t),
+    workflowStatusOptions,
+  }));
+  const viewSettingsSortingFields = currentScopeSortingFields.map((field) => ({
+    id: field.id,
+    label: field.label,
+  }));
+  const viewSettingsDefaultFilterItems = currentScopeFilterDefinitions.defaultFilters.conditions.map((condition, index) => ({
+    fieldLabel: getFieldById(currentViewFilterTargets, condition.fieldId)?.label ?? t("tenant.platformStudio.forms.builder.filter.fieldLabel"),
+    index,
+    summary: getFilterConditionSummary(condition, currentViewFilterTargets, t),
+  }));
+  const lookupSourcePickerModelItems: LookupSourcePickerModelItem[] = availableLookupSourceModels.map((modelOption) => {
+    const loadedModelOption = lookupSourceModelsById[modelOption.id];
+
+    return {
+      defaultDisplayFields: loadedModelOption ? [...loadedModelOption.defaultDisplayFields] : [],
+      defaultSortField: loadedModelOption?.defaultSortField ?? "",
+      fieldCount: loadedModelOption?.fields.length ?? null,
+      id: modelOption.id,
+      label: modelOption.label,
+    };
+  });
+  const lookupSourcePickerSelectedFieldsSummary = lookupSourcePicker && lookupSourcePickerModel
+    ? lookupSourcePicker.selectedFieldKeys.length > 0
+      ? getLookupModelFieldLabels(
+        lookupSourcePickerModel,
+        lookupSourcePicker.selectedFieldKeys,
+      ).join(", ")
+      : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")
+    : "";
 
   return (
     <div className="tenant-web__platform-studio-shell tenant-web__platform-studio-shell--desktop-panels">
       <PlatformStudioTabs onFormsNavigate={() => requestNavigate(platformStudioPaths.forms)} />
 
-      <div className="tenant-web__platform-studio-workspace-topline">
-        <div className="tenant-web__platform-studio-panel-actions tenant-web__platform-studio-panel-actions--workspace-primary">
-          <Button
-            leadingIcon={<BackArrowIcon />}
-            onClick={() => requestNavigate(platformStudioPaths.model(currentModelRouteId))}
-            variant="ghost"
-          >
-            {t("tenant.platformStudio.forms.backToModel")}
-          </Button>
-          {currentActor.isRoot ? (
-            <Button
-              onClick={() => setDebugOpen(true)}
-              size="sm"
-              variant="outline"
-            >
-              {t("tenant.platformStudio.forms.builder.debugAction")}
-            </Button>
-          ) : null}
-          <Button
-            disabled={isSaveButtonDisabled}
-            onClick={() => {
-              void handleSave();
-            }}
-            size="sm"
-            variant={savePulse ? "secondary" : "primary"}
-          >
-            {savePulse
-              ? t("tenant.platformStudio.forms.builder.savedAction")
-              : isSavingDraft
-                ? t("tenant.platformStudio.forms.builder.savingAction")
-                : t("tenant.platformStudio.forms.builder.saveAction")}
-          </Button>
-        </div>
-        <div className="tenant-web__platform-studio-badge-row">
-          <Badge appearance="soft" size="sm" variant="brand">
-            {currentModel.title}
-          </Badge>
-          {isDefaultView ? (
-            <Badge appearance="soft" size="sm" variant="brand">
-              <span className="tenant-web__platform-studio-badge-label">
-                <StarIcon
-                  aria-hidden="true"
-                  className="tenant-web__platform-studio-badge-icon"
-                />
-                {t("tenant.platformStudio.forms.builder.viewMode.default")}
-              </span>
-            </Badge>
-          ) : null}
-          {isDraftSyncing ? (
-            <Badge appearance="soft" size="sm" variant="info">
-              {t("tenant.platformStudio.forms.builder.syncingDraft")}
-            </Badge>
-          ) : null}
-          {draftSyncError ? (
-            <Badge appearance="soft" size="sm" variant="warning">
-              {draftSyncError}
-            </Badge>
-          ) : null}
-          {currentModel.isStructureLocked ? (
-            <Badge appearance="soft" size="sm" variant="warning">
-              {t("tenant.platformStudio.forms.structureLocked")}
-            </Badge>
-          ) : null}
-          {currentView.isViewLocked ? (
-            <Badge appearance="soft" size="sm" variant="warning">
-              {t("tenant.platformStudio.forms.viewLocked")}
-            </Badge>
-          ) : null}
-          {currentModel.canEditViewsOnly ? (
-            <Badge appearance="soft" size="sm" variant="info">
-              {t("tenant.platformStudio.forms.canEditViewsOnly")}
-            </Badge>
-          ) : null}
-        </div>
-      </div>
+      <WorkspaceTopline
+        canEditViewsOnly={currentModel.canEditViewsOnly ?? false}
+        draftSyncError={draftSyncError}
+        isDefaultView={isDefaultView}
+        isDraftSyncing={isDraftSyncing}
+        isRootActor={currentActor.isRoot}
+        isSaveButtonDisabled={isSaveButtonDisabled}
+        isSavingDraft={isSavingDraft}
+        isStructureLocked={currentModel.isStructureLocked ?? false}
+        isViewLocked={currentView.isViewLocked ?? false}
+        labels={{
+          backToModel: t("tenant.platformStudio.forms.backToModel"),
+          canEditViewsOnly: t("tenant.platformStudio.forms.canEditViewsOnly"),
+          debugAction: t("tenant.platformStudio.forms.builder.debugAction"),
+          defaultView: t("tenant.platformStudio.forms.builder.viewMode.default"),
+          saveAction: t("tenant.platformStudio.forms.builder.saveAction"),
+          savedAction: t("tenant.platformStudio.forms.builder.savedAction"),
+          savingAction: t("tenant.platformStudio.forms.builder.savingAction"),
+          structureLocked: t("tenant.platformStudio.forms.structureLocked"),
+          syncingDraft: t("tenant.platformStudio.forms.builder.syncingDraft"),
+          viewLocked: t("tenant.platformStudio.forms.viewLocked"),
+        }}
+        modelTitle={currentModel.title}
+        onBackToModel={() => requestNavigate(platformStudioPaths.model(currentModelRouteId))}
+        onDebugOpen={() => setDebugOpen(true)}
+        onSave={() => {
+          void handleSave();
+        }}
+        savePulse={savePulse}
+      />
 
       <section className="tenant-web__platform-studio-builder-grid">
-        <Card className="tenant-web__platform-studio-panel">
-          <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
-            <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
-              <div className="tenant-web__platform-studio-search">
-                <div className="tenant-web__platform-studio-search-field">
-                  <span className="tenant-web__platform-studio-search-icon">
-                    <SearchIcon />
-                  </span>
-                  <Input
-                    className="tenant-web__platform-studio-search-input"
-                    id="tenant-platform-studio-palette-search"
-                    onChange={(event) => setPaletteQuery(event.target.value)}
-                    placeholder={t("tenant.platformStudio.forms.builder.searchPlaceholder")}
-                    value={paletteQuery}
-                  />
-                </div>
-              </div>
-            </div>
+        <FieldPalette
+          emptyText={t("tenant.platformStudio.forms.builder.noPaletteResults")}
+          onQueryChange={setPaletteQuery}
+          placeholder={t("tenant.platformStudio.forms.builder.searchPlaceholder")}
+          query={paletteQuery}
+          searchInputId="tenant-platform-studio-palette-search"
+          sections={paletteDisplaySections}
+        />
 
-            <PlatformStudioPanelScroll>
-              <div className="tenant-web__platform-studio-builder-panel-body tenant-web__platform-studio-builder-panel-body--compact tenant-web__platform-studio-builder-panel-body--compact-x tenant-web__platform-studio-builder-panel-body--scroll tenant-web__platform-studio-builder-panel-body--workspace-scroll tenant-web__platform-studio-builder-panel-body--palette-scroll">
-                <div className="tenant-web__platform-studio-palette">
-                  {paletteSections.map((section) => (
-                    <section className="tenant-web__platform-studio-palette-section" key={section.key}>
-                      <h3 className="tenant-web__platform-studio-palette-heading">
-                        {t(section.labelKey)}
-                      </h3>
-                      <div className="tenant-web__platform-studio-palette-list">
-                        {section.items.map((item) => {
-                          if (item.kind === "element") {
-                            return (
-                              <PaletteItem
-                                description={t(item.descriptionKey)}
-                                disabled={item.disabled}
-                                disabledReason={item.disabledReasonKey ? t(item.disabledReasonKey) : null}
-                                iconKey={item.iconKey}
-                                key={`${item.nodeType}:${item.labelKey}`}
-                                label={t(item.labelKey)}
-                                onClick={() => updateDocument((currentDocument) =>
-                                  addFormBuilderElementNode(
-                                    currentDocument,
-                                    getCurrentFormBuilderInsertParentId(currentDocument),
-                                    item.nodeType,
-                                    item.initialNode,
-                                  )
-                                )}
-                              />
-                            );
-                          }
+        <BuilderCanvas
+          breadcrumbItems={canvasBreadcrumbItems}
+          canEditVisibility={workspaceAccess.canEditSettings}
+          canMoveItems={canDragItems}
+          canPlaceUnplacedFields={canPlaceUnplacedFields}
+          canvasEmptyText={
+            structureEditingAccess.canAddElementItems || structureEditingAccess.canAddFieldItems
+              ? t("tenant.platformStudio.forms.builder.canvasEmpty")
+              : t("tenant.platformStudio.forms.builder.canvasEmptyLocked")
+          }
+          currentLevelId={currentScopeParentId}
+          currentLevelBadgeLabel={t("tenant.platformStudio.forms.builder.currentLevelBadge")}
+          currentLevelLabel={currentLevelLabel}
+          dragToReorderLabel={t("tenant.platformStudio.forms.builder.dragToReorder")}
+          dragOverNodeId={dragOverNodeId}
+          draggedNodeId={draggedNodeId}
+          nodeItems={canvasNodeItems}
+          onDragEnd={() => {
+            setDraggedNodeId(null);
+            setDragOverNodeId(null);
+          }}
+          onDragOverNode={(nodeId) => setDragOverNodeId(nodeId)}
+          onDragStartNode={(nodeId) => {
+            setDraggedNodeId(nodeId);
+            setDragOverNodeId(nodeId);
+          }}
+          onDropNode={(nodeId) => {
+            if (!draggedNodeId || draggedNodeId === nodeId) {
+              setDragOverNodeId(null);
+              return;
+            }
 
-                          if (item.kind === "systemField") {
-                            return (
-                              <PaletteItem
-                                description={t(item.descriptionKey)}
-                                disabled={item.disabled}
-                                disabledReason={item.disabledReasonKey ? t(item.disabledReasonKey) : null}
-                                iconKey={item.iconKey}
-                                key={item.key}
-                                label={t(item.labelKey)}
-                                onClick={() => handleCreateSystemField(item.key)}
-                              />
-                            );
-                          }
+            updateDocument((currentDocument) =>
+              reorderFormBuilderNode(currentDocument, draggedNodeId, nodeId)
+            );
+            setDraggedNodeId(null);
+            setDragOverNodeId(null);
+          }}
+          onOpenBreadcrumb={(nodeId) => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, nodeId))}
+          onOpenLevel={(nodeId) => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, nodeId))}
+          onOpenRoot={() => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, null))}
+          onPlaceUnplacedField={(fieldId) => {
+            const field = currentScopeUnplacedFields.find((entry) => entry.id === fieldId);
+            if (!field) {
+              return;
+            }
 
-                          return (
-                            <PaletteItem
-                              description={getFieldPaletteDescription(item.definition.template, t)}
-                              disabled={item.disabled}
-                              disabledReason={item.disabledReasonKey ? t(item.disabledReasonKey) : null}
-                              iconKey={item.iconKey}
-                              key={item.definition.idBase}
-                              label={t(item.definition.labelKey)}
-                              onClick={() => handleCreateLibraryField(item.definition)}
-                            />
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))}
+            updateDocument((currentDocument) =>
+              addFormBuilderFieldNode(currentDocument, currentScopeParentId, field)
+            );
+          }}
+          onSelectNode={(nodeId) => {
+            updateDocument((currentDocument) => selectFormBuilderNode(currentDocument, nodeId));
+            setInspectorTab("selection");
+          }}
+          onToggleVisibility={(nodeId, visibility) => updateDocument((currentDocument) =>
+            updateFormBuilderNode(currentDocument, nodeId, {
+              visibility: cycleNodeVisibility(visibility),
+            })
+          )}
+          openWorkspaceLabel={t("tenant.platformStudio.forms.openWorkspace")}
+          rootLevelLabel={t("tenant.platformStudio.forms.builder.rootLevel")}
+          selectedNodeId={currentScopeSelectedNodeId}
+          title={currentDraftViewTitle}
+          unplacedFields={canvasUnplacedFields}
+          unplacedFieldsDescription={t("tenant.platformStudio.forms.builder.unplacedFieldsDescription", {
+            scope: currentScopePlacementLabel,
+          })}
+          unplacedFieldsHint={unplacedFieldsHintKey ? t(unplacedFieldsHintKey) : null}
+          unplacedFieldsPlaceActionLabel={t("tenant.platformStudio.forms.builder.unplacedFieldsPlaceAction")}
+          unplacedFieldsTitle={t("tenant.platformStudio.forms.builder.unplacedFieldsTitle")}
+          visibilityLabels={{
+            hidden: t("tenant.platformStudio.forms.builder.visibility.hidden"),
+            readonly: t("tenant.platformStudio.forms.builder.visibility.readonly"),
+            visible: t("tenant.platformStudio.forms.builder.visibility.visible"),
+          }}
+        />
 
-                  {paletteSections.length === 0 ? (
-                    <div className="tenant-web__platform-studio-empty-state tenant-web__platform-studio-builder-empty">
-                      <p>{t("tenant.platformStudio.forms.builder.noPaletteResults")}</p>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </PlatformStudioPanelScroll>
-          </CardContent>
-        </Card>
-
-        <Card className="tenant-web__platform-studio-panel">
-          <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
-            <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
-              <div className="tenant-web__platform-studio-workspace-header">
-                <p className="tenant-web__platform-studio-workspace-title">{currentDraftViewTitle}</p>
-                <Breadcrumb className="tenant-web__platform-studio-workspace-breadcrumbs">
-                  <BreadcrumbList className="tenant-web__platform-studio-workspace-breadcrumb-list">
-                    {breadcrumb.length > 0 ? (
-                      <>
-                        <BreadcrumbItem>
-                          <button
-                            className="tenant-web__platform-studio-workspace-breadcrumb-chip tenant-web__platform-studio-workspace-breadcrumb-chip--button"
-                            onClick={() => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, null))}
-                            type="button"
-                          >
-                            {t("tenant.platformStudio.forms.builder.rootLevel")}
-                          </button>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator>
-                          <span className="tenant-web__platform-studio-workspace-breadcrumb-separator">/</span>
-                        </BreadcrumbSeparator>
-                        {breadcrumb.map((node, index) => {
-                          const label = getFormBuilderDisplayLabel(node, currentModel);
-                          const isLast = index === breadcrumb.length - 1;
-
-                          return (
-                            <Fragment key={node.id}>
-                              <BreadcrumbItem>
-                                {isLast ? (
-                                  <BreadcrumbPage>
-                                    <span className="tenant-web__platform-studio-workspace-breadcrumb-chip tenant-web__platform-studio-workspace-breadcrumb-chip--active">
-                                      {label}
-                                    </span>
-                                  </BreadcrumbPage>
-                                ) : (
-                                  <button
-                                    className="tenant-web__platform-studio-workspace-breadcrumb-chip tenant-web__platform-studio-workspace-breadcrumb-chip--button"
-                                    onClick={() => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, node.id))}
-                                    type="button"
-                                  >
-                                    {label}
-                                  </button>
-                                )}
-                              </BreadcrumbItem>
-                              {!isLast ? (
-                                <BreadcrumbSeparator>
-                                  <span className="tenant-web__platform-studio-workspace-breadcrumb-separator">/</span>
-                                </BreadcrumbSeparator>
-                              ) : null}
-                            </Fragment>
-                          );
-                        })}
-                      </>
-                    ) : (
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>
-                          <span className="tenant-web__platform-studio-workspace-breadcrumb-chip tenant-web__platform-studio-workspace-breadcrumb-chip--active">
-                            {currentLevelLabel}
-                          </span>
-                        </BreadcrumbPage>
-                      </BreadcrumbItem>
-                    )}
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
-            </div>
-
-            <PlatformStudioPanelScroll>
-              <div className="tenant-web__platform-studio-builder-panel-body tenant-web__platform-studio-builder-panel-body--compact tenant-web__platform-studio-builder-panel-body--compact-x tenant-web__platform-studio-builder-panel-body--scroll tenant-web__platform-studio-builder-panel-body--workspace-scroll">
-                <div className="tenant-web__platform-studio-canvas-list">
-                  {currentNodes.length > 0 ? (
-                    currentNodes.map((node) => (
-                      <CanvasNodeRow
-                        canEditVisibility={workspaceAccess.canEditSettings}
-                        canMoveItems={canDragItems}
-                        currentLevelId={currentScopeParentId}
-                        document={document}
-                        dragOverNodeId={dragOverNodeId}
-                        draggedNodeId={draggedNodeId}
-                        hasAttention={attentionNodeIds.has(node.id)}
-                        key={node.id}
-                        node={node}
-                        object={currentModel}
-                        onDragEnd={() => {
-                          setDraggedNodeId(null);
-                          setDragOverNodeId(null);
-                        }}
-                        onDragOverNode={() => setDragOverNodeId(node.id)}
-                        onDragStartNode={() => {
-                          setDraggedNodeId(node.id);
-                          setDragOverNodeId(node.id);
-                        }}
-                        onDropNode={() => {
-                          if (!draggedNodeId || draggedNodeId === node.id) {
-                            setDragOverNodeId(null);
-                            return;
-                          }
-
-                          updateDocument((currentDocument) =>
-                            reorderFormBuilderNode(currentDocument, draggedNodeId, node.id)
-                          );
-                          setDraggedNodeId(null);
-                          setDragOverNodeId(null);
-                        }}
-                        onOpenLevel={() => updateDocument((currentDocument) => setFormBuilderCurrentParent(currentDocument, node.id))}
-                        onToggleVisibility={() => updateDocument((currentDocument) =>
-                          updateFormBuilderNode(currentDocument, node.id, {
-                            visibility: cycleNodeVisibility(node.visibility),
-                          })
-                        )}
-                        onSelect={() => {
-                          updateDocument((currentDocument) => selectFormBuilderNode(currentDocument, node.id));
-                          setInspectorTab("selection");
-                        }}
-                        selectedNodeId={currentScopeSelectedNodeId}
-                        t={t}
-                        workspaceDocumentChildrenCount={getFormBuilderChildren(document, node.id).length}
-                      />
-                    ))
-                  ) : (
-                    <div className="tenant-web__platform-studio-empty-state tenant-web__platform-studio-builder-empty">
-                      <p>
-                        {structureEditingAccess.canAddElementItems || structureEditingAccess.canAddFieldItems
-                          ? t("tenant.platformStudio.forms.builder.canvasEmpty")
-                          : t("tenant.platformStudio.forms.builder.canvasEmptyLocked")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {currentScopeUnplacedFields.length > 0 ? (
-                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                    <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                      <span>{t("tenant.platformStudio.forms.builder.unplacedFieldsTitle")}</span>
-                    </div>
-                    <p className="tenant-web__platform-studio-inline-help">
-                      {t("tenant.platformStudio.forms.builder.unplacedFieldsDescription", {
-                        scope: currentScopePlacementLabel,
-                      })}
-                    </p>
-
-                    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                      {currentScopeUnplacedFields.map((field) => (
-                        <div className="tenant-web__platform-studio-compact-row" key={`unplaced-${field.id}`}>
-                          <div className="tenant-web__platform-studio-compact-row-main">
-                            <span className="tenant-web__platform-studio-compact-row-label">
-                              {getFormsPlaceholderFieldDisplayName(field)}
-                            </span>
-                            <span className="tenant-web__platform-studio-compact-row-summary">
-                              {t(getFieldTypeKey(field))}
-                            </span>
-                          </div>
-                          <Button
-                            disabled={!canPlaceUnplacedFields}
-                            onClick={() => updateDocument((currentDocument) =>
-                              addFormBuilderFieldNode(currentDocument, currentScopeParentId, field)
-                            )}
-                            size="sm"
-                            variant="secondary"
-                          >
-                            {t("tenant.platformStudio.forms.builder.unplacedFieldsPlaceAction")}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {unplacedFieldsHintKey ? (
-                      <p className="tenant-web__platform-studio-inline-help">
-                        {t(unplacedFieldsHintKey)}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-            </PlatformStudioPanelScroll>
-          </CardContent>
-        </Card>
-
-        <Card className="tenant-web__platform-studio-panel">
-          <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
-            <Tabs
-              defaultValue="selection"
-              onValueChange={(value) => setInspectorTab(value as InspectorTab)}
-              value={inspectorTab}
-              variant="surface"
-            >
-              <div className="tenant-web__platform-studio-panel-static">
-                <div className="tenant-web__platform-studio-inspector-tabs">
-                  <TabsList>
-                    <TabsTrigger value="selection">{t("tenant.platformStudio.forms.builder.selectionTab")}</TabsTrigger>
-                    <TabsTrigger disabled={!isViewTabAvailable} value="view">{t("tenant.platformStudio.forms.builder.viewTab")}</TabsTrigger>
-                    <TabsTrigger value="grid">{t("tenant.platformStudio.forms.builder.gridTab")}</TabsTrigger>
-                  </TabsList>
-                </div>
-              </div>
-
-              <PlatformStudioPanelScroll>
-                <div className="tenant-web__platform-studio-builder-panel-body tenant-web__platform-studio-builder-panel-body--compact tenant-web__platform-studio-builder-panel-body--scroll tenant-web__platform-studio-builder-panel-body--workspace-scroll">
-                  <TabsPanel value="selection">
+        <InspectorPanel
+          activeTab={inspectorTab}
+          isViewTabAvailable={isViewTabAvailable}
+          labels={{
+            grid: t("tenant.platformStudio.forms.builder.gridTab"),
+            selection: t("tenant.platformStudio.forms.builder.selectionTab"),
+            view: t("tenant.platformStudio.forms.builder.viewTab"),
+          }}
+          onTabChange={setInspectorTab}
+        >
+          <InspectorPanelTab value="selection">
                     <div ref={selectionPanelTopRef} />
                     {selectedNode ? (
                       <div className="tenant-web__platform-studio-builder-stack">
-                        <div className="tenant-web__platform-studio-inspector-section">
-                          <div className="tenant-web__platform-studio-inspector-head tenant-web__platform-studio-inspector-head--selection">
-                            <span className="tenant-web__platform-studio-item-icon">
-                              <FormBuilderElementIcon
-                                iconKey={
-                                  selectedField
-                                    ? getFormsPlaceholderFieldIconKey(selectedField)
-                                    : selectedNode.type
-                                }
-                              />
-                            </span>
-                            <div className="tenant-web__platform-studio-inspector-head-copy">
-                              <p className="tenant-web__platform-studio-inspector-title">{getFormBuilderDisplayLabel(selectedNode, currentModel)}</p>
-                              <p className="tenant-web__platform-studio-inspector-meta">
-                                {selectedField
-                                  ? t(getFieldTypeKey(selectedField))
-                                  : t(getNodeTypeKey(selectedNode.type))}
-                              </p>
-                            </div>
-                          </div>
+                        <SelectionInspectorBasicSection
+                          canEdit={workspaceAccess.canEditSettings}
+                          iconKey={selectedField ? getFormsPlaceholderFieldIconKey(selectedField) : selectedNode.type}
+                          labels={{
+                            hiddenVisibility: t("tenant.platformStudio.forms.builder.visibility.hidden"),
+                            lockedHint: !structureEditingAccess.canRemoveItems
+                              ? t(structureEditingAccess.lockReasonKey ?? "tenant.platformStudio.forms.builder.lockedStructureHint")
+                              : null,
+                            noAdvancedSettings: t("tenant.platformStudio.forms.builder.noAdvancedSettings"),
+                            nodeText: t("tenant.platformStudio.forms.builder.nodeTextLabel"),
+                            nodeTitle: t("tenant.platformStudio.forms.builder.nodeTitleLabel"),
+                            nodeVisibility: t("tenant.platformStudio.forms.builder.nodeVisibilityLabel"),
+                            readonlyText: t(access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly"),
+                            readonlyVisibility: t("tenant.platformStudio.forms.builder.visibility.readonly"),
+                            required: t("tenant.platformStudio.forms.builder.rule.effect.required"),
+                            viewOnlyBinding: t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBinding"),
+                            viewOnlyBindingEmpty: t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBindingEmpty"),
+                            viewOnlyBindingPending: t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBindingPending"),
+                            viewOnlyFieldSection: t("tenant.platformStudio.forms.builder.nodeType.view_only_field"),
+                            visibleVisibility: t("tenant.platformStudio.forms.builder.visibility.visible"),
+                          }}
+                          meta={selectedField ? t(getFieldTypeKey(selectedField)) : t(getNodeTypeKey(selectedNode.type))}
+                          nodeRequired={selectedNode.required ?? false}
+                          nodeText={selectedNode.text ?? ""}
+                          nodeTitle={selectedNode.title ?? ""}
+                          nodeType={selectedNode.type}
+                          nodeVisibility={selectedNode.visibility}
+                          onRequiredChange={(checked) => updateDocument((currentDocument) =>
+                            updateFormBuilderNode(currentDocument, selectedNode.id, { required: checked })
+                          )}
+                          onRichTextChange={(value) => updateDocument((currentDocument) =>
+                            updateFormBuilderNode(currentDocument, selectedNode.id, { text: value })
+                          )}
+                          onTextChange={(value) => updateDocument((currentDocument) =>
+                            updateFormBuilderNode(currentDocument, selectedNode.id, { text: value })
+                          )}
+                          onTitleChange={(nextTitle) => {
+                            if (selectedNode.type === "field") {
+                              if (!selectedField) {
+                                return;
+                              }
 
-                          {selectedField && isPersistedModelField(selectedField) ? (
-                            <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                              <div className="tenant-web__platform-studio-compact-row">
-                                <div className="tenant-web__platform-studio-compact-row-main">
-                                  <span className="tenant-web__platform-studio-compact-row-title-wrap">
-                                    <span className="tenant-web__platform-studio-compact-row-label">
-                                      <DatabaseFieldIcon />
-                                      {" "}
-                                      {getModelFieldLabel(selectedField)}
-                                    </span>
-                                  </span>
-                                  <span className="tenant-web__platform-studio-compact-row-summary">
-                                    {selectedField.storageKey}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ) : null}
+                              if (canEditModelDefinition) {
+                                updateFieldById(selectedField.id, (field) => {
+                                  const nextModelLabel = nextTitle.trim() || getModelFieldLabel(field);
 
-                          {workspaceAccess.canEditSettings ? (
-                            <div className="tenant-web__platform-studio-form">
-                              {selectedNode.type === "field" ? (
-                                <>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-title">
-                                      {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
-                                    </Label>
-                                    <Input
-                                      disabled={Boolean(
-                                        selectedField
-                                        && isDefaultView
-                                        && !canEditModelDefinition
-                                        && !isStaticModel,
-                                      )}
-                                      id="tenant-platform-studio-node-title"
-                                      onChange={(event) => {
-                                        const nextTitle = event.target.value;
+                                  return {
+                                    ...field,
+                                    displayName: nextModelLabel,
+                                    label: nextModelLabel,
+                                    ...(!isPersistedModelField(field)
+                                      ? {
+                                          storageKey: createUniqueFormsPlaceholderStorageKey(
+                                            nextModelLabel,
+                                            field.id,
+                                            currentModel.fields,
+                                            {
+                                              excludeFieldId: field.id,
+                                              schemaScopeKey: field.schemaScopeKey,
+                                            },
+                                          ),
+                                        }
+                                      : {}),
+                                  };
+                                });
+                              }
+                            }
 
-                                        if (!selectedField) {
+                            updateDocument((currentDocument) =>
+                              updateFormBuilderNode(currentDocument, selectedNode.id, { title: nextTitle })
+                            );
+                          }}
+                          onViewOnlyBindingChange={(bindingId) => {
+                            const nextOption = selectedViewOnlyBindingOptions.find((option) => option.bindingId === bindingId) ?? null;
+                            const currentBindingLabel = selectedViewOnlyBindingOption?.label;
+                            const nextTitle = selectedNode.title?.trim() ?? "";
+                            const shouldAutofillTitle =
+                              nextTitle.length === 0 ||
+                              nextTitle === t("tenant.platformStudio.forms.builder.nodeType.view_only_field") ||
+                              (currentBindingLabel ? nextTitle === currentBindingLabel : false);
+
+                            updateDocument((currentDocument) =>
+                              updateFormBuilderNode(currentDocument, selectedNode.id, {
+                                title: nextOption && shouldAutofillTitle ? nextOption.label : selectedNode.title,
+                                viewOnlyBinding: nextOption?.binding,
+                              })
+                            );
+                          }}
+                          onVisibilityChange={(nextVisibility) => {
+                            updateDocument((currentDocument) => {
+                              if (selectedNode.type !== "field") {
+                                return updateFormBuilderNode(currentDocument, selectedNode.id, {
+                                  visibility: nextVisibility,
+                                });
+                              }
+
+                              const nextRuntimePresets = selectedField
+                                ? getCompatibleRuntimePresets(selectedField, nextVisibility)
+                                : [];
+
+                              return updateFormBuilderNode(currentDocument, selectedNode.id, {
+                                runtimePreset:
+                                  selectedNode.runtimePreset && !nextRuntimePresets.includes(selectedNode.runtimePreset)
+                                    ? undefined
+                                    : selectedNode.runtimePreset,
+                                visibility: nextVisibility,
+                              });
+                            });
+                          }}
+                          persistedField={selectedField && isPersistedModelField(selectedField)
+                            ? {
+                                label: getModelFieldLabel(selectedField),
+                                storageKey: selectedField.storageKey ?? "",
+                              }
+                            : null}
+                          selectedViewOnlyBindingId={selectedViewOnlyBindingOption?.bindingId ?? ""}
+                          title={getFormBuilderDisplayLabel(selectedNode, currentModel)}
+                          titleDisabled={Boolean(
+                            selectedField
+                            && isDefaultView
+                            && !canEditModelDefinition
+                            && !isStaticModel,
+                          )}
+                          viewOnlyBindingOptions={selectedViewOnlyBindingOptions.map((option) => ({
+                            bindingId: option.bindingId,
+                            label: option.label,
+                          }))}
+                        >
+                          {selectedNode.type === "field" ? (
+                            <>
+                                  {selectedFieldIsChoice ? (
+                                    <ChoiceFieldSettings
+                                      canEdit={workspaceAccess.canEditSettings && canEditModelDefinition}
+                                      canMoveOptions={workspaceAccess.canEditSettings && canEditModelDefinition && (selectedField.options?.length ?? 0) > 1}
+                                      choiceDisplay={selectedField.choiceDisplay}
+                                      dragOverOptionIndex={dragOverChoiceOptionIndex}
+                                      draggedOptionIndex={draggedChoiceOptionIndex}
+                                      fieldKind={selectedField.kind === "multi_select" ? "multi_select" : "single_select"}
+                                      fieldTypeLabel={t(getFieldTypeKey(selectedField))}
+                                      labels={{
+                                        actionsMenu: t("tenant.platformStudio.forms.builder.rule.actionsMenu"),
+                                        addOption: t("tenant.platformStudio.forms.builder.fieldSettings.addOption"),
+                                        allowEmpty: t("tenant.platformStudio.forms.builder.fieldSettings.allowEmpty"),
+                                        backgroundColor: t("tenant.platformStudio.forms.builder.fieldSettings.backgroundColor"),
+                                        borderColor: t("tenant.platformStudio.forms.builder.fieldSettings.borderColor"),
+                                        buttonStyles: t("tenant.platformStudio.forms.builder.fieldSettings.buttonStyles"),
+                                        display: t("tenant.platformStudio.forms.builder.fieldSettings.display"),
+                                        dragToReorder: t("tenant.platformStudio.forms.builder.dragToReorder"),
+                                        emptyOptions: t("tenant.platformStudio.forms.builder.fieldSettings.emptyOptions"),
+                                        maxSelections: t("tenant.platformStudio.forms.builder.fieldSettings.maxSelections"),
+                                        minSelections: t("tenant.platformStudio.forms.builder.fieldSettings.minSelections"),
+                                        options: t("tenant.platformStudio.forms.builder.fieldSettings.options"),
+                                        orientation: t("tenant.platformStudio.forms.builder.fieldSettings.orientation"),
+                                        orientationHorizontal: t("tenant.platformStudio.forms.builder.fieldSettings.orientationHorizontal"),
+                                        orientationVertical: t("tenant.platformStudio.forms.builder.fieldSettings.orientationVertical"),
+                                        removeOption: t("tenant.platformStudio.forms.builder.removeNode"),
+                                        renderStyle: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyle"),
+                                        renderStyleButtons: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleButtons"),
+                                        renderStyleNative: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleNative"),
+                                        selection: t("tenant.platformStudio.forms.builder.fieldSettings.selection"),
+                                        textColor: t("tenant.platformStudio.forms.builder.fieldSettings.textColor"),
+                                      }}
+                                      onAddOption={() => updateSelectedFieldOptions((options) => [
+                                        ...options,
+                                        `${t("tenant.platformStudio.forms.builder.fieldSettings.newOption")} ${options.length + 1}`,
+                                      ])}
+                                      onChoiceDisplayChange={updateSelectedFieldChoiceDisplay}
+                                      onDragEnd={() => {
+                                        setDraggedChoiceOptionIndex(null);
+                                        setDragOverChoiceOptionIndex(null);
+                                      }}
+                                      onDragOverOption={setDragOverChoiceOptionIndex}
+                                      onDragStartOption={(optionIndex) => {
+                                        setDraggedChoiceOptionIndex(optionIndex);
+                                        setDragOverChoiceOptionIndex(optionIndex);
+                                      }}
+                                      onDropOption={(optionIndex) => {
+                                        if (draggedChoiceOptionIndex === null || draggedChoiceOptionIndex === optionIndex) {
+                                          setDragOverChoiceOptionIndex(null);
                                           return;
                                         }
 
-                                        if (canEditModelDefinition) {
-                                          updateFieldById(selectedField.id, (field) => {
-                                            const nextModelLabel = nextTitle.trim() || getModelFieldLabel(field);
-
-                                            return {
-                                              ...field,
-                                              displayName: nextModelLabel,
-                                              label: nextModelLabel,
-                                              ...(!isPersistedModelField(field)
-                                                ? {
-                                                    storageKey: createUniqueFormsPlaceholderStorageKey(
-                                                      nextModelLabel,
-                                                      field.id,
-                                                      currentModel.fields,
-                                                      {
-                                                        excludeFieldId: field.id,
-                                                        schemaScopeKey: field.schemaScopeKey,
-                                                      },
-                                                    ),
-                                                  }
-                                                : {}),
-                                            };
-                                          });
-                                        }
-
-                                        updateDocument((currentDocument) =>
-                                          updateFormBuilderNode(currentDocument, selectedNode.id, { title: nextTitle })
-                                        );
+                                        reorderSelectedFieldOption(draggedChoiceOptionIndex, optionIndex);
+                                        setDraggedChoiceOptionIndex(null);
+                                        setDragOverChoiceOptionIndex(null);
                                       }}
-                                      value={selectedNode.title ?? ""}
+                                      onOptionChange={renameSelectedFieldOption}
+                                      onOptionRemove={(optionIndex) => updateSelectedFieldOptions((options) =>
+                                        options.filter((_, currentIndex) => currentIndex !== optionIndex)
+                                      )}
+                                      onOptionStyleChange={updateSelectedFieldChoiceStyle}
+                                      options={selectedField.options ?? []}
                                     />
-                                  </div>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-visibility">
-                                      {t("tenant.platformStudio.forms.builder.nodeVisibilityLabel")}
-                                    </Label>
-                                    <Select
-                                      id="tenant-platform-studio-node-visibility"
-                                      onChange={(event) => {
-                                        const nextVisibility = event.target.value as FormBuilderNode["visibility"];
-
-                                        updateDocument((currentDocument) => {
-                                          const nextRuntimePresets = selectedField
-                                            ? getCompatibleRuntimePresets(selectedField, nextVisibility)
-                                            : [];
-
-                                          return updateFormBuilderNode(currentDocument, selectedNode.id, {
-                                            runtimePreset:
-                                              selectedNode.runtimePreset && !nextRuntimePresets.includes(selectedNode.runtimePreset)
-                                                ? undefined
-                                                : selectedNode.runtimePreset,
-                                            visibility: nextVisibility,
-                                          });
-                                        });
-                                      }}
-                                      value={selectedNode.visibility}
-                                    >
-                                      <option value="visible">{t("tenant.platformStudio.forms.builder.visibility.visible")}</option>
-                                      <option value="readonly">{t("tenant.platformStudio.forms.builder.visibility.readonly")}</option>
-                                      <option value="hidden">{t("tenant.platformStudio.forms.builder.visibility.hidden")}</option>
-                                    </Select>
-                                  </div>
-                                  <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__platform-studio-switch-row--element-inline">
-                                    <span className="tenant-web__platform-studio-form-inline-label">
-                                      {t("tenant.platformStudio.forms.builder.rule.effect.required")}
-                                    </span>
-                                    <Switch
-                                      checked={selectedNode.required ?? false}
-                                      onCheckedChange={(checked) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { required: checked })
-                                      )}
-                                      size="sm"
-                                    />
-                                  </div>
-                                  {selectedFieldIsChoice ? (
-                                    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t(getFieldTypeKey(selectedField))}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.options")}</span>
-                                      </div>
-
-                                      {(selectedField.options ?? []).length === 0 ? (
-                                        <p className="tenant-web__platform-studio-inline-help">
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.emptyOptions")}
-                                        </p>
-                                      ) : (
-                                        <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                          {(selectedField.options ?? []).map((option, optionIndex) => (
-                                            <ChoiceOptionRow
-                                              canEdit={workspaceAccess.canEditSettings && canEditModelDefinition}
-                                              canMoveItems={workspaceAccess.canEditSettings && canEditModelDefinition && (selectedField.options?.length ?? 0) > 1}
-                                              dragOverOptionIndex={dragOverChoiceOptionIndex}
-                                              draggedOptionIndex={draggedChoiceOptionIndex}
-                                              index={optionIndex}
-                                              key={`${selectedField.id}-option-${optionIndex}`}
-                                              onChangeValue={(nextValue) => renameSelectedFieldOption(optionIndex, nextValue)}
-                                              onDragEnd={() => {
-                                                setDraggedChoiceOptionIndex(null);
-                                                setDragOverChoiceOptionIndex(null);
-                                              }}
-                                              onDragOverOption={() => {
-                                                setDragOverChoiceOptionIndex(optionIndex);
-                                              }}
-                                              onDragStartOption={() => {
-                                                setDraggedChoiceOptionIndex(optionIndex);
-                                                setDragOverChoiceOptionIndex(optionIndex);
-                                              }}
-                                              onDropOption={() => {
-                                                if (draggedChoiceOptionIndex === null || draggedChoiceOptionIndex === optionIndex) {
-                                                  setDragOverChoiceOptionIndex(null);
-                                                  return;
-                                                }
-
-                                                reorderSelectedFieldOption(draggedChoiceOptionIndex, optionIndex);
-                                                setDraggedChoiceOptionIndex(null);
-                                                setDragOverChoiceOptionIndex(null);
-                                              }}
-                                              onRemove={() => updateSelectedFieldOptions((options) =>
-                                                options.filter((_, currentIndex) => currentIndex !== optionIndex)
-                                              )}
-                                              t={t}
-                                              value={option}
-                                            />
-                                          ))}
-                                        </div>
-                                      )}
-
-                                      <div className="tenant-web__platform-studio-button-row">
-                                        <Button
-                                          disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
-                                          onClick={() => updateSelectedFieldOptions((options) => [
-                                            ...options,
-                                            `${t("tenant.platformStudio.forms.builder.fieldSettings.newOption")} ${options.length + 1}`,
-                                          ])}
-                                          size="sm"
-                                          variant="secondary"
-                                        >
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.addOption")}
-                                        </Button>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.display")}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-choice-render-style">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.renderStyle")}
-                                          </Label>
-                                          <Select
-                                            id="tenant-platform-studio-choice-render-style"
-                                            onChange={(event) => updateSelectedFieldChoiceDisplay((choiceDisplay) => ({
-                                              ...choiceDisplay,
-                                              renderStyle: event.target.value as "buttons" | "native",
-                                            }))}
-                                            value={selectedField.choiceDisplay?.renderStyle ?? "native"}
-                                          >
-                                            <option value="native">{t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleNative")}</option>
-                                            <option value="buttons">{t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleButtons")}</option>
-                                          </Select>
-                                        </div>
-
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-choice-orientation">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.orientation")}
-                                          </Label>
-                                          <Select
-                                            id="tenant-platform-studio-choice-orientation"
-                                            onChange={(event) => updateSelectedFieldChoiceDisplay((choiceDisplay) => ({
-                                              ...choiceDisplay,
-                                              orientation: event.target.value as FormsPlaceholderChoiceOrientation,
-                                            }))}
-                                            value={selectedField.choiceDisplay?.orientation ?? "vertical"}
-                                          >
-                                            <option value="vertical">{t("tenant.platformStudio.forms.builder.fieldSettings.orientationVertical")}</option>
-                                            <option value="horizontal">{t("tenant.platformStudio.forms.builder.fieldSettings.orientationHorizontal")}</option>
-                                          </Select>
-                                        </div>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t("tenant.platformStudio.forms.builder.fieldSettings.selection")}</span>
-                                      </div>
-
-                                      {selectedField.kind === "single_select" ? (
-                                        <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__platform-studio-switch-row--element-inline">
-                                          <span className="tenant-web__platform-studio-form-inline-label">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.allowEmpty")}
-                                          </span>
-                                          <Switch
-                                            checked={selectedField.choiceDisplay?.allowEmpty ?? false}
-                                            onCheckedChange={(checked) => updateSelectedFieldChoiceDisplay((choiceDisplay) => ({
-                                              ...choiceDisplay,
-                                              allowEmpty: checked,
-                                            }))}
-                                            size="sm"
-                                          />
-                                        </div>
-                                      ) : (
-                                        <div className="tenant-web__platform-studio-sort-row">
-                                          <div className="tenant-web__platform-studio-form-group">
-                                            <Label htmlFor="tenant-platform-studio-choice-min-selections">
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.minSelections")}
-                                            </Label>
-                                            <Input
-                                              id="tenant-platform-studio-choice-min-selections"
-                                              min={0}
-                                              onChange={(event) => updateSelectedFieldChoiceDisplay((choiceDisplay) => ({
-                                                ...choiceDisplay,
-                                                minSelections: Math.max(0, Number(event.target.value) || 0),
-                                              }))}
-                                              type="number"
-                                              value={selectedField.choiceDisplay?.minSelections ?? 0}
-                                            />
-                                          </div>
-                                          <div className="tenant-web__platform-studio-form-group">
-                                            <Label htmlFor="tenant-platform-studio-choice-max-selections">
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.maxSelections")}
-                                            </Label>
-                                            <Input
-                                              id="tenant-platform-studio-choice-max-selections"
-                                              min={0}
-                                              onChange={(event) => updateSelectedFieldChoiceDisplay((choiceDisplay) => {
-                                                const rawValue = event.target.value.trim();
-                                                return {
-                                                  ...choiceDisplay,
-                                                  maxSelections: rawValue ? Math.max(0, Number(rawValue) || 0) : undefined,
-                                                };
-                                              })}
-                                              type="number"
-                                              value={selectedField.choiceDisplay?.maxSelections ?? ""}
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {selectedField.choiceDisplay?.renderStyle === "buttons" && (selectedField.options?.length ?? 0) > 0 ? (
-                                        <>
-                                          <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                            <span>{t("tenant.platformStudio.forms.builder.fieldSettings.buttonStyles")}</span>
-                                          </div>
-
-                                          <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                            {selectedField.options?.map((option) => {
-                                              const optionStyle = getChoiceOptionStyle(selectedField.choiceDisplay, option);
-
-                                              return (
-                                                <div className="tenant-web__platform-studio-compact-row tenant-web__platform-studio-choice-style-row" key={`choice-style-${option}`}>
-                                                  <div className="tenant-web__platform-studio-compact-row-main">
-                                                    <span className="tenant-web__platform-studio-compact-row-label">{option}</span>
-                                                  </div>
-
-                                                  <div className="tenant-web__platform-studio-choice-style-controls">
-                                                    <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                                      <Label htmlFor={`tenant-platform-studio-choice-background-${option}`}>
-                                                        {t("tenant.platformStudio.forms.builder.fieldSettings.backgroundColor")}
-                                                      </Label>
-                                                      <Input
-                                                        id={`tenant-platform-studio-choice-background-${option}`}
-                                                        onChange={(event) => updateSelectedFieldChoiceStyle(option, (currentStyle) => ({
-                                                          ...(currentStyle ?? { option }),
-                                                          backgroundColor: normalizeHexColor(event.target.value) || undefined,
-                                                          option,
-                                                        }))}
-                                                        type="color"
-                                                        value={optionStyle?.backgroundColor ?? "#000000"}
-                                                      />
-                                                    </div>
-                                                    <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                                      <Label htmlFor={`tenant-platform-studio-choice-text-${option}`}>
-                                                        {t("tenant.platformStudio.forms.builder.fieldSettings.textColor")}
-                                                      </Label>
-                                                      <Input
-                                                        id={`tenant-platform-studio-choice-text-${option}`}
-                                                        onChange={(event) => updateSelectedFieldChoiceStyle(option, (currentStyle) => ({
-                                                          ...(currentStyle ?? { option }),
-                                                          option,
-                                                          textColor: normalizeHexColor(event.target.value) || undefined,
-                                                        }))}
-                                                        type="color"
-                                                        value={optionStyle?.textColor ?? "#ffffff"}
-                                                      />
-                                                    </div>
-                                                    <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                                      <Label htmlFor={`tenant-platform-studio-choice-border-${option}`}>
-                                                        {t("tenant.platformStudio.forms.builder.fieldSettings.borderColor")}
-                                                      </Label>
-                                                      <Input
-                                                        id={`tenant-platform-studio-choice-border-${option}`}
-                                                        onChange={(event) => updateSelectedFieldChoiceStyle(option, (currentStyle) => ({
-                                                          ...(currentStyle ?? { option }),
-                                                          borderColor: normalizeHexColor(event.target.value) || undefined,
-                                                          option,
-                                                        }))}
-                                                        type="color"
-                                                        value={optionStyle?.borderColor ?? "#000000"}
-                                                      />
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              );
-                                            })}
-                                          </div>
-                                        </>
-                                      ) : null}
-                                    </div>
                                   ) : null}
 
                                   {selectedFieldIsLookup ? (
-                                    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t(getFieldTypeKey(selectedField))}</span>
-                                      </div>
-
-                                      {selectedFieldIsPresetLookup && selectedLookupSourceSummary ? (
-                                        <div className="tenant-web__platform-studio-compact-row">
-                                          <div className="tenant-web__platform-studio-compact-row-main">
-                                            <span className="tenant-web__platform-studio-compact-row-label">
-                                              {selectedLookupSourceSummary.label}
-                                            </span>
-                                            <span className="tenant-web__platform-studio-compact-row-summary">
-                                              {selectedLookupSourceSummary.summary}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <>
-                                          <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                            <div className="tenant-web__platform-studio-compact-row">
-                                              <div className="tenant-web__platform-studio-compact-row-main">
-                                                <span className="tenant-web__platform-studio-compact-row-label">
-                                                  {t("tenant.platformStudio.forms.builder.fieldSettings.sourceModel")}
-                                                </span>
-                                                <span className="tenant-web__platform-studio-compact-row-summary">
-                                                  {selectedGenericLookupSourceModel?.label
-                                                    ?? selectedField.sourceLabel
-                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
-                                                </span>
-                                              </div>
-                                            </div>
-
-                                            {!selectedFieldIsLookupValue ? (
-                                              <div className="tenant-web__platform-studio-compact-row">
-                                                <div className="tenant-web__platform-studio-compact-row-main">
-                                                  <span className="tenant-web__platform-studio-compact-row-label">
-                                                    {t("tenant.platformStudio.forms.builder.fieldSettings.storedValueField")}
-                                                  </span>
-                                                  <span className="tenant-web__platform-studio-compact-row-summary">
-                                                    {getLookupModelFieldLabel(
-                                                      selectedGenericLookupSourceModel,
-                                                      selectedField.lookupConfig?.storedValueField,
-                                                    ) || t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
-                                                  </span>
-                                                </div>
-                                              </div>
-                                            ) : null}
-
-                                            <div className="tenant-web__platform-studio-compact-row">
-                                              <div className="tenant-web__platform-studio-compact-row-main">
-                                                <span className="tenant-web__platform-studio-compact-row-label">
-                                                  {selectedLookupStoredValueSummary?.label
-                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.displayFields")}
-                                                </span>
-                                                <span className="tenant-web__platform-studio-compact-row-summary">
-                                                  {selectedLookupStoredValueSummary?.summary
-                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
-                                                </span>
-                                              </div>
-                                            </div>
-
-                                            <div className="tenant-web__platform-studio-compact-row">
-                                              <div className="tenant-web__platform-studio-compact-row-main">
-                                                <span className="tenant-web__platform-studio-compact-row-label">
-                                                  {selectedLookupSortFieldSummary?.label
-                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.sortBy")}
-                                                </span>
-                                                <span className="tenant-web__platform-studio-compact-row-summary">
-                                                  {selectedLookupSortFieldSummary?.summary
-                                                    ?? t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending")}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          </div>
-
-                                          <div className="tenant-web__platform-studio-button-row">
-                                            <Button
-                                              disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
-                                              onClick={openLookupSourcePicker}
-                                              size="sm"
-                                              variant="secondary"
-                                            >
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.chooseSource")}
-                                            </Button>
-                                          </div>
-                                        </>
-                                      )}
-
-                                      {selectedFieldShowsLookupDisplayMode ? (
-                                        <>
-                                          <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                            <span>{t("tenant.platformStudio.forms.builder.fieldSettings.display")}</span>
-                                          </div>
-
-                                          <div className="tenant-web__platform-studio-form-group">
-                                            <Label htmlFor="tenant-platform-studio-lookup-display-mode">
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.displayMode")}
-                                            </Label>
-                                            <Select
-                                              id="tenant-platform-studio-lookup-display-mode"
-                                              onChange={(event) => updateSelectedFieldLookupConfig((lookupConfig) => ({
-                                                ...lookupConfig,
-                                                displayMode: event.target.value as FormsPlaceholderLookupDisplayMode,
-                                              }))}
-                                              value={selectedField.lookupConfig?.displayMode ?? "search_select"}
-                                            >
-                                              <option value="search_select">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect")}</option>
-                                              <option value="catalog_modal">{t("tenant.platformStudio.forms.builder.fieldSettings.displayModeCatalogModal")}</option>
-                                            </Select>
-                                          </div>
-                                        </>
-                                      ) : null}
-                                    </div>
+                                    <LookupFieldSettings
+                                      canChooseSource={workspaceAccess.canEditSettings && canEditModelDefinition}
+                                      displayMode={selectedField.lookupConfig?.displayMode ?? "search_select"}
+                                      fieldTypeLabel={t(getFieldTypeKey(selectedField))}
+                                      labels={{
+                                        chooseSource: t("tenant.platformStudio.forms.builder.fieldSettings.chooseSource"),
+                                        display: t("tenant.platformStudio.forms.builder.fieldSettings.display"),
+                                        displayMode: t("tenant.platformStudio.forms.builder.fieldSettings.displayMode"),
+                                        displayModeCatalogModal: t("tenant.platformStudio.forms.builder.fieldSettings.displayModeCatalogModal"),
+                                        displayModeSearchSelect: t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect"),
+                                      }}
+                                      onChooseSource={openLookupSourcePicker}
+                                      onDisplayModeChange={(displayMode) => updateSelectedFieldLookupConfig((lookupConfig) => ({
+                                        ...lookupConfig,
+                                        displayMode,
+                                      }))}
+                                      presetLookupSummary={selectedFieldIsPresetLookup && selectedLookupSourceSummary
+                                        ? selectedLookupSourceSummary
+                                        : null}
+                                      showDisplayMode={selectedFieldShowsLookupDisplayMode}
+                                      sourceRows={[
+                                        {
+                                          label: t("tenant.platformStudio.forms.builder.fieldSettings.sourceModel"),
+                                          summary: selectedGenericLookupSourceModel?.label
+                                            ?? selectedField.sourceLabel
+                                            ?? t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending"),
+                                        },
+                                        ...(!selectedFieldIsLookupValue
+                                          ? [{
+                                              label: t("tenant.platformStudio.forms.builder.fieldSettings.storedValueField"),
+                                              summary: getLookupModelFieldLabel(
+                                                selectedGenericLookupSourceModel,
+                                                selectedField.lookupConfig?.storedValueField,
+                                              ) || t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending"),
+                                            }]
+                                          : []),
+                                        {
+                                          label: selectedLookupStoredValueSummary?.label
+                                            ?? t("tenant.platformStudio.forms.builder.fieldSettings.displayFields"),
+                                          summary: selectedLookupStoredValueSummary?.summary
+                                            ?? t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields"),
+                                        },
+                                        {
+                                          label: selectedLookupSortFieldSummary?.label
+                                            ?? t("tenant.platformStudio.forms.builder.fieldSettings.sortBy"),
+                                          summary: selectedLookupSortFieldSummary?.summary
+                                            ?? t("tenant.platformStudio.forms.builder.fieldSettings.sourcePending"),
+                                        },
+                                      ]}
+                                    />
                                   ) : null}
 
                                   {selectedFieldSupportsTextInputSettings ? (
-                                    <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                      <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                        <span>{t(getFieldTypeKey(selectedField))}</span>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-preset-placeholder">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.placeholder")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-preset-placeholder"
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              placeholder: event.target.value || undefined,
-                                            }))}
-                                            value={selectedField.placeholder ?? ""}
-                                          />
-                                        </div>
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-preset-mask">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.mask")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-preset-mask"
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              mask: event.target.value || undefined,
-                                            }))}
-                                            value={selectedField.mask ?? ""}
-                                          />
-                                        </div>
-                                        {selectedFieldSupportsTextPreset ? (
-                                          <div className="tenant-web__platform-studio-form-group">
-                                            <Label htmlFor="tenant-platform-studio-preset-validation">
-                                              {t("tenant.platformStudio.forms.builder.fieldSettings.validation")}
-                                            </Label>
-                                            <Select
-                                              id="tenant-platform-studio-preset-validation"
-                                              onChange={(event) => updateSelectedField((field) => ({
-                                                ...field,
-                                                validation: (event.target.value || undefined) as FormsPlaceholderFieldValidation | undefined,
-                                              }))}
-                                              value={selectedField.validation ?? ""}
-                                            >
-                                              <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                                              <option value="email">{t("tenant.platformStudio.forms.builder.fieldSettings.validationEmail")}</option>
-                                              <option value="phone">{t("tenant.platformStudio.forms.builder.fieldSettings.validationPhone")}</option>
-                                              <option value="url">{t("tenant.platformStudio.forms.builder.fieldSettings.validationUrl")}</option>
-                                            </Select>
-                                          </div>
-                                        ) : null}
-                                      </div>
-
-                                      <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__platform-studio-switch-row--element-inline">
-                                        <span className="tenant-web__platform-studio-form-inline-label">
-                                          {t("tenant.platformStudio.forms.builder.fieldSettings.autocomplete")}
-                                        </span>
-                                        <Switch
-                                          checked={selectedFieldAutocompleteChecked}
-                                          onCheckedChange={(checked) => updateSelectedField((field) => ({
-                                            ...field,
-                                            autocomplete: checked ? selectedFieldDefaultAutocompleteValue : "off",
-                                          }))}
-                                          size="sm"
-                                        />
-                                      </div>
-                                    </div>
+                                    <TextFieldSettings
+                                      autocompleteChecked={selectedFieldAutocompleteChecked}
+                                      fieldTypeLabel={t(getFieldTypeKey(selectedField))}
+                                      labels={{
+                                        autocomplete: t("tenant.platformStudio.forms.builder.fieldSettings.autocomplete"),
+                                        mask: t("tenant.platformStudio.forms.builder.fieldSettings.mask"),
+                                        placeholder: t("tenant.platformStudio.forms.builder.fieldSettings.placeholder"),
+                                        unbound: t("tenant.platformStudio.forms.builder.systemField.unbound"),
+                                        validation: t("tenant.platformStudio.forms.builder.fieldSettings.validation"),
+                                        validationEmail: t("tenant.platformStudio.forms.builder.fieldSettings.validationEmail"),
+                                        validationPhone: t("tenant.platformStudio.forms.builder.fieldSettings.validationPhone"),
+                                        validationUrl: t("tenant.platformStudio.forms.builder.fieldSettings.validationUrl"),
+                                      }}
+                                      mask={selectedField.mask ?? ""}
+                                      onAutocompleteChange={(checked) => updateSelectedField((field) => ({
+                                        ...field,
+                                        autocomplete: checked ? selectedFieldDefaultAutocompleteValue : "off",
+                                      }))}
+                                      onMaskChange={(mask) => updateSelectedField((field) => ({
+                                        ...field,
+                                        mask: mask || undefined,
+                                      }))}
+                                      onPlaceholderChange={(placeholder) => updateSelectedField((field) => ({
+                                        ...field,
+                                        placeholder: placeholder || undefined,
+                                      }))}
+                                      onValidationChange={(validation) => updateSelectedField((field) => ({
+                                        ...field,
+                                        validation,
+                                      }))}
+                                      placeholder={selectedField.placeholder ?? ""}
+                                      showValidation={selectedFieldSupportsTextPreset}
+                                      validation={selectedField.validation}
+                                    />
                                   ) : null}
 
                                   {selectedFieldIsDateToday ? (
-                                    <div className="tenant-web__platform-studio-filter-group">
-                                      <p className="tenant-web__platform-studio-filter-group-title">
-                                        {t("tenant.platformStudio.forms.builder.fieldSettings.dateToday")}
-                                      </p>
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-date-today-default">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.defaultValueMode")}
-                                          </Label>
-                                          <Input
-                                            disabled
-                                            id="tenant-platform-studio-date-today-default"
-                                            value={t("tenant.platformStudio.forms.builder.fieldSettings.defaultValueToday")}
-                                          />
-                                        </div>
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-date-today-format">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.displayFormat")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-date-today-format"
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              displayFormat: event.target.value || undefined,
-                                            }))}
-                                            value={selectedField.displayFormat ?? ""}
-                                          />
-                                        </div>
-                                      </div>
-                                      <div className="tenant-web__platform-studio-switch-row">
-                                        <span className="tenant-web__platform-studio-compact-row-label">
-                                          {t("tenant.platformStudio.forms.builder.visibility.readonly")}
-                                        </span>
-                                        <Switch
-                                          checked={selectedField.readonly ?? false}
-                                          onCheckedChange={(checked) => updateSelectedField((field) => ({
-                                            ...field,
-                                            readonly: checked,
-                                          }))}
-                                          size="sm"
-                                        />
-                                      </div>
-                                    </div>
+                                    <DateTodayFieldSettings
+                                      displayFormat={selectedField.displayFormat ?? ""}
+                                      labels={{
+                                        dateToday: t("tenant.platformStudio.forms.builder.fieldSettings.dateToday"),
+                                        defaultValueMode: t("tenant.platformStudio.forms.builder.fieldSettings.defaultValueMode"),
+                                        defaultValueToday: t("tenant.platformStudio.forms.builder.fieldSettings.defaultValueToday"),
+                                        displayFormat: t("tenant.platformStudio.forms.builder.fieldSettings.displayFormat"),
+                                        readonly: t("tenant.platformStudio.forms.builder.visibility.readonly"),
+                                      }}
+                                      onDisplayFormatChange={(displayFormat) => updateSelectedField((field) => ({
+                                        ...field,
+                                        displayFormat: displayFormat || undefined,
+                                      }))}
+                                      onReadonlyChange={(checked) => updateSelectedField((field) => ({
+                                        ...field,
+                                        readonly: checked,
+                                      }))}
+                                      readonly={selectedField.readonly ?? false}
+                                    />
                                   ) : null}
 
                                   {selectedFieldIsTags ? (
-                                    <div className="tenant-web__platform-studio-filter-group">
-                                      <p className="tenant-web__platform-studio-filter-group-title">
-                                        {t("tenant.platformStudio.forms.builder.fieldSettings.tags")}
-                                      </p>
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-tags-mode">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.tagMode")}
-                                          </Label>
-                                          <Select
-                                            id="tenant-platform-studio-tags-mode"
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              tagMode: event.target.value as FormsPlaceholderTagMode,
-                                            }))}
-                                            value={selectedField.tagMode ?? "select_or_create"}
-                                          >
-                                            <option value="select_existing">{t("tenant.platformStudio.forms.builder.fieldSettings.tagModeSelectExisting")}</option>
-                                            <option value="select_or_create">{t("tenant.platformStudio.forms.builder.fieldSettings.tagModeSelectOrCreate")}</option>
-                                            <option value="create_only">{t("tenant.platformStudio.forms.builder.fieldSettings.tagModeCreateOnly")}</option>
-                                          </Select>
-                                        </div>
-                                        <div className="tenant-web__platform-studio-form-group">
-                                          <Label htmlFor="tenant-platform-studio-tags-max">
-                                            {t("tenant.platformStudio.forms.builder.fieldSettings.maxTags")}
-                                          </Label>
-                                          <Input
-                                            id="tenant-platform-studio-tags-max"
-                                            min={0}
-                                            onChange={(event) => updateSelectedField((field) => ({
-                                              ...field,
-                                              maxTags: event.target.value.trim()
-                                                ? Math.max(0, Number(event.target.value) || 0)
-                                                : undefined,
-                                            }))}
-                                            type="number"
-                                            value={selectedField.maxTags ?? ""}
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
+                                    <TagsFieldSettings
+                                      labels={{
+                                        maxTags: t("tenant.platformStudio.forms.builder.fieldSettings.maxTags"),
+                                        tagMode: t("tenant.platformStudio.forms.builder.fieldSettings.tagMode"),
+                                        tagModeCreateOnly: t("tenant.platformStudio.forms.builder.fieldSettings.tagModeCreateOnly"),
+                                        tagModeSelectExisting: t("tenant.platformStudio.forms.builder.fieldSettings.tagModeSelectExisting"),
+                                        tagModeSelectOrCreate: t("tenant.platformStudio.forms.builder.fieldSettings.tagModeSelectOrCreate"),
+                                        tags: t("tenant.platformStudio.forms.builder.fieldSettings.tags"),
+                                      }}
+                                      maxTags={selectedField.maxTags ?? ""}
+                                      onMaxTagsChange={(maxTags) => updateSelectedField((field) => ({
+                                        ...field,
+                                        maxTags: maxTags.trim()
+                                          ? Math.max(0, Number(maxTags) || 0)
+                                          : undefined,
+                                      }))}
+                                      onTagModeChange={(tagMode) => updateSelectedField((field) => ({
+                                        ...field,
+                                        tagMode,
+                                      }))}
+                                      tagMode={selectedField.tagMode ?? "select_or_create"}
+                                    />
                                   ) : null}
-                                </>
-                              ) : selectedNode.type === "view_only_field" ? (
-                                <>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-title">
-                                      {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
-                                    </Label>
-                                    <Input
-                                      id="tenant-platform-studio-node-title"
-                                      onChange={(event) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
-                                      )}
-                                      value={selectedNode.title ?? ""}
-                                    />
-                                  </div>
-
-                                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                    <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                      <span>{t("tenant.platformStudio.forms.builder.nodeType.view_only_field")}</span>
-                                    </div>
-
-                                    <div className="tenant-web__platform-studio-form-group">
-                                      <Label htmlFor="tenant-platform-studio-view-only-binding">
-                                        {t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBinding")}
-                                      </Label>
-                                      <Select
-                                        id="tenant-platform-studio-view-only-binding"
-                                        onChange={(event) => {
-                                          const nextOption = selectedViewOnlyBindingOptions.find((option) => option.bindingId === event.target.value) ?? null;
-                                          const currentBindingLabel = selectedViewOnlyBindingOption?.label;
-                                          const nextTitle = selectedNode.title?.trim() ?? "";
-                                          const shouldAutofillTitle =
-                                            nextTitle.length === 0 ||
-                                            nextTitle === t("tenant.platformStudio.forms.builder.nodeType.view_only_field") ||
-                                            (currentBindingLabel ? nextTitle === currentBindingLabel : false);
-
-                                          updateDocument((currentDocument) =>
-                                            updateFormBuilderNode(currentDocument, selectedNode.id, {
-                                              title: nextOption && shouldAutofillTitle ? nextOption.label : selectedNode.title,
-                                              viewOnlyBinding: nextOption?.binding,
-                                            })
-                                          );
-                                        }}
-                                        value={selectedViewOnlyBindingOption?.bindingId ?? ""}
-                                      >
-                                        <option value="">{t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBindingPending")}</option>
-                                        {selectedViewOnlyBindingOptions.map((option) => (
-                                          <option key={option.bindingId} value={option.bindingId}>
-                                            {option.label}
-                                          </option>
-                                        ))}
-                                      </Select>
-                                    </div>
-
-                                    {selectedViewOnlyBindingOptions.length === 0 ? (
-                                      <p className="tenant-web__platform-studio-inline-help">
-                                        {t("tenant.platformStudio.forms.builder.fieldSettings.viewOnlyBindingEmpty")}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                </>
-                              ) : selectedNode.type === "text" ? (
-                                <>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-title">
-                                      {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
-                                    </Label>
-                                    <Input
-                                      id="tenant-platform-studio-node-title"
-                                      onChange={(event) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
-                                      )}
-                                      value={selectedNode.title ?? ""}
-                                    />
-                                  </div>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-text">
-                                      {t("tenant.platformStudio.forms.builder.nodeTextLabel")}
-                                    </Label>
-                                    <Textarea
-                                      id="tenant-platform-studio-node-text"
-                                      onChange={(event) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { text: event.target.value })
-                                      )}
-                                      rows={5}
-                                      value={selectedNode.text ?? ""}
-                                    />
-                                  </div>
-                                </>
-                              ) : selectedNode.type === "rich_text" ? (
-                                <>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-title">
-                                      {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
-                                    </Label>
-                                    <Input
-                                      id="tenant-platform-studio-node-title"
-                                      onChange={(event) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
-                                      )}
-                                      value={selectedNode.title ?? ""}
-                                    />
-                                  </div>
-                                  <div className="tenant-web__platform-studio-form-group">
-                                    <Label htmlFor="tenant-platform-studio-node-rich-text">
-                                      {t("tenant.platformStudio.forms.builder.nodeTextLabel")}
-                                    </Label>
-                                    <RichTextEditor
-                                      aria-label={t("tenant.platformStudio.forms.builder.nodeTextLabel")}
-                                      id="tenant-platform-studio-node-rich-text"
-                                      onChange={(value) => updateDocument((currentDocument) =>
-                                        updateFormBuilderNode(currentDocument, selectedNode.id, { text: value })
-                                      )}
-                                      value={selectedNode.text ?? ""}
-                                    />
-                                  </div>
-                                </>
-                              ) : selectedNode.type === "divider" || selectedNode.type === "spacer" ? (
-                                <p className="tenant-web__platform-studio-inline-help">
-                                  {t("tenant.platformStudio.forms.builder.noAdvancedSettings")}
-                                </p>
-                              ) : (
-                                <div className="tenant-web__platform-studio-form-group">
-                                  <Label htmlFor="tenant-platform-studio-node-title">
-                                    {t("tenant.platformStudio.forms.builder.nodeTitleLabel")}
-                                  </Label>
-                                  <Input
-                                    id="tenant-platform-studio-node-title"
-                                    onChange={(event) => updateDocument((currentDocument) =>
-                                      updateFormBuilderNode(currentDocument, selectedNode.id, { title: event.target.value })
-                                    )}
-                                    value={selectedNode.title ?? ""}
-                                  />
-                                </div>
-                              )}
-
-                              {selectedNode.type !== "divider" && selectedNode.type !== "field" ? (
-                                <div className="tenant-web__platform-studio-form-group">
-                                  <Label htmlFor="tenant-platform-studio-node-visibility">
-                                    {t("tenant.platformStudio.forms.builder.nodeVisibilityLabel")}
-                                  </Label>
-                                  <Select
-                                    id="tenant-platform-studio-node-visibility"
-                                    onChange={(event) => updateDocument((currentDocument) =>
-                                      updateFormBuilderNode(currentDocument, selectedNode.id, {
-                                        visibility: event.target.value as FormBuilderNode["visibility"],
-                                      })
-                                    )}
-                                    value={selectedNode.visibility}
-                                  >
-                                    <option value="visible">{t("tenant.platformStudio.forms.builder.visibility.visible")}</option>
-                                    <option value="readonly">{t("tenant.platformStudio.forms.builder.visibility.readonly")}</option>
-                                    <option value="hidden">{t("tenant.platformStudio.forms.builder.visibility.hidden")}</option>
-                                  </Select>
-                                </div>
-                              ) : null}
-
-                              {!structureEditingAccess.canRemoveItems ? (
-                                <p className="tenant-web__platform-studio-inline-help">
-                                  {t(structureEditingAccess.lockReasonKey ?? "tenant.platformStudio.forms.builder.lockedStructureHint")}
-                                </p>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <p className="tenant-web__platform-studio-inline-help">
-                              {t(access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly")}
-                            </p>
-                          )}
-                        </div>
+                            </>
+                          ) : null}
+                        </SelectionInspectorBasicSection>
 
                         {selectedNodeSupportsRules ? (
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            {!workspaceAccess.canEditSettings ? (
-                              <p className="tenant-web__platform-studio-inline-help">
-                                {t(access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly")}
-                              </p>
-                            ) : (
-                              <div className="tenant-web__platform-studio-builder-stack">
-                                <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                  <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                    <span>{t("tenant.platformStudio.forms.builder.rule.visibilityRules")}</span>
-                                  </div>
-                                  {(selectedNode.rules?.visibilityRules ?? []).length === 0 ? (
-                                    <p className="tenant-web__platform-studio-inline-help">
-                                      {selectedNodeRuleFields.length === 0
-                                        ? t("tenant.platformStudio.forms.builder.rule.noScopeFields")
-                                        : t("tenant.platformStudio.forms.builder.rule.emptyVisibilityRules")}
-                                    </p>
-                                  ) : (
-                                    (selectedNode.rules?.visibilityRules ?? []).map((rule, ruleIndex) => (
-                                      <div className="tenant-web__platform-studio-compact-row" key={rule.id}>
-                                        <div className="tenant-web__platform-studio-compact-row-main">
-                                          <span className="tenant-web__platform-studio-compact-row-label">
-                                            {t(`tenant.platformStudio.forms.builder.rule.effect.${rule.effect}`)}
-                                          </span>
-                                          <span className="tenant-web__platform-studio-compact-row-summary">
-                                            {getRuleSummary(rule, selectedNodeRuleFields, t)}
-                                          </span>
-                                        </div>
-
-                                        <Menu align="end">
-                                          <MenuTrigger>
-                                            <button
-                                              aria-label={t("tenant.platformStudio.forms.builder.rule.actionsMenu")}
-                                              className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
-                                              type="button"
-                                            >
-                                              <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">⋮</span>
-                                            </button>
-                                          </MenuTrigger>
-                                          <MenuContent className="tenant-web__platform-studio-menu">
-                                            <MenuItem onClick={() => openVisibilityRuleEditor(ruleIndex)}>
-                                              {t("tenant.platformStudio.forms.builder.filter.editFilter")}
-                                            </MenuItem>
-                                            <MenuItem
-                                              onClick={() => updateVisibilityRules((rules) =>
-                                                rules.filter((_, entryIndex) => entryIndex !== ruleIndex)
-                                              )}
-                                              tone="danger"
-                                            >
-                                              {t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
-                                            </MenuItem>
-                                          </MenuContent>
-                                        </Menu>
-                                      </div>
-                                    ))
-                                  )}
-                                  <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--compact">
-                                    <Button
-                                      disabled={selectedNodeRuleFields.length === 0}
-                                      onClick={() => openVisibilityRuleEditor(null)}
-                                      size="sm"
-                                      variant="secondary"
-                                    >
-                                      {t("tenant.platformStudio.forms.builder.rule.addVisibilityRule")}
-                                    </Button>
-                                  </div>
-                                </div>
-
-                                {selectedNode.type === "field" ? (
-                                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                                    <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
-                                      <span>{t("tenant.platformStudio.forms.builder.rule.requirementRules")}</span>
-                                    </div>
-                                    {(selectedNode.rules?.requirementRules ?? []).length === 0 ? (
-                                      <p className="tenant-web__platform-studio-inline-help">
-                                        {selectedNodeRuleFields.length === 0
-                                          ? t("tenant.platformStudio.forms.builder.rule.noScopeFields")
-                                          : t("tenant.platformStudio.forms.builder.rule.emptyRequirementRules")}
-                                      </p>
-                                    ) : (
-                                      (selectedNode.rules?.requirementRules ?? []).map((rule, ruleIndex) => (
-                                        <div className="tenant-web__platform-studio-compact-row" key={rule.id}>
-                                          <div className="tenant-web__platform-studio-compact-row-main">
-                                            <span className="tenant-web__platform-studio-compact-row-label">
-                                              {t(`tenant.platformStudio.forms.builder.rule.effect.${rule.effect}`)}
-                                            </span>
-                                            <span className="tenant-web__platform-studio-compact-row-summary">
-                                              {getRuleSummary(rule, selectedNodeRuleFields, t)}
-                                            </span>
-                                          </div>
-
-                                          <Menu align="end">
-                                            <MenuTrigger>
-                                              <button
-                                                aria-label={t("tenant.platformStudio.forms.builder.rule.actionsMenu")}
-                                                className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
-                                                type="button"
-                                              >
-                                                <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">⋮</span>
-                                              </button>
-                                            </MenuTrigger>
-                                            <MenuContent className="tenant-web__platform-studio-menu">
-                                              <MenuItem onClick={() => openRequirementRuleEditor(ruleIndex)}>
-                                                {t("tenant.platformStudio.forms.builder.filter.editFilter")}
-                                              </MenuItem>
-                                              <MenuItem
-                                                onClick={() => updateRequirementRules((rules) =>
-                                                  rules.filter((_, entryIndex) => entryIndex !== ruleIndex)
-                                                )}
-                                                tone="danger"
-                                              >
-                                                {t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
-                                              </MenuItem>
-                                            </MenuContent>
-                                          </Menu>
-                                        </div>
-                                      ))
-                                    )}
-                                    <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--compact">
-                                      <Button
-                                        disabled={selectedNodeRuleFields.length === 0}
-                                        onClick={() => openRequirementRuleEditor(null)}
-                                        size="sm"
-                                        variant="secondary"
-                                      >
-                                        {t("tenant.platformStudio.forms.builder.rule.addRequirementRule")}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ) : null}
-                              </div>
+                          <RulesPanel
+                            canEdit={workspaceAccess.canEditSettings}
+                            labels={{
+                              actionsMenu: t("tenant.platformStudio.forms.builder.rule.actionsMenu"),
+                              addRequirementRule: t("tenant.platformStudio.forms.builder.rule.addRequirementRule"),
+                              addVisibilityRule: t("tenant.platformStudio.forms.builder.rule.addVisibilityRule"),
+                              deleteRule: t("tenant.platformStudio.forms.builder.filter.deleteFilter"),
+                              editRule: t("tenant.platformStudio.forms.builder.filter.editFilter"),
+                              emptyRequirementRules: t("tenant.platformStudio.forms.builder.rule.emptyRequirementRules"),
+                              emptyVisibilityRules: t("tenant.platformStudio.forms.builder.rule.emptyVisibilityRules"),
+                              noScopeFields: t("tenant.platformStudio.forms.builder.rule.noScopeFields"),
+                              readonlyText: t(access.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.readonly"),
+                              requirementRules: t("tenant.platformStudio.forms.builder.rule.requirementRules"),
+                              visibilityRules: t("tenant.platformStudio.forms.builder.rule.visibilityRules"),
+                            }}
+                            onAddRequirementRule={() => openRequirementRuleEditor(null)}
+                            onAddVisibilityRule={() => openVisibilityRuleEditor(null)}
+                            onDeleteRequirementRule={(ruleIndex) => updateRequirementRules((rules) =>
+                              rules.filter((_, entryIndex) => entryIndex !== ruleIndex)
                             )}
-                          </div>
+                            onDeleteVisibilityRule={(ruleIndex) => updateVisibilityRules((rules) =>
+                              rules.filter((_, entryIndex) => entryIndex !== ruleIndex)
+                            )}
+                            onEditRequirementRule={openRequirementRuleEditor}
+                            onEditVisibilityRule={openVisibilityRuleEditor}
+                            requirementRules={selectedRequirementRuleItems}
+                            ruleFieldsAvailable={selectedNodeRuleFields.length > 0}
+                            showRequirementRules={selectedNode.type === "field"}
+                            visibilityRules={selectedVisibilityRuleItems}
+                          />
                         ) : null}
 
                         {structureEditingAccess.canRemoveItems ? (
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            <div className="tenant-web__platform-studio-danger-zone">
-                              <Button
-                                onClick={() => setDeleteNodeOpen(true)}
-                                variant="danger"
-                              >
-                                {t("tenant.platformStudio.forms.builder.deleteNode")}
-                              </Button>
-                            </div>
-                          </div>
+                          <SelectionDeleteAction
+                            label={t("tenant.platformStudio.forms.builder.deleteNode")}
+                            onDelete={() => setDeleteNodeOpen(true)}
+                          />
                         ) : null}
                       </div>
                     ) : (
-                      <div className="tenant-web__platform-studio-empty-state tenant-web__platform-studio-builder-empty">
-                        <p className="tenant-web__platform-studio-empty-title">
-                          {t("tenant.platformStudio.forms.builder.selectionEmptyTitle")}
-                        </p>
-                        <p>{t("tenant.platformStudio.forms.builder.selectionEmptyDescription")}</p>
-                      </div>
+                      <SelectionInspectorEmptyState
+                        description={t("tenant.platformStudio.forms.builder.selectionEmptyDescription")}
+                        title={t("tenant.platformStudio.forms.builder.selectionEmptyTitle")}
+                      />
                     )}
-                  </TabsPanel>
+          </InspectorPanelTab>
 
-                  <TabsPanel value="grid">
-                    <div className="tenant-web__platform-studio-builder-stack">
-                      <div className="tenant-web__platform-studio-inspector-section">
-                        <div className="tenant-web__platform-studio-inspector-head">
-                          <div>
-                            <p className="tenant-web__platform-studio-inspector-title">
-                              {t(
-                                isSubformGridScope
-                                  ? "tenant.platformStudio.forms.builder.grid.subtable"
-                                  : "tenant.platformStudio.forms.builder.grid.mainTable",
-                              )}
-                            </p>
-                            <p className="tenant-web__platform-studio-inspector-meta">
-                              {isSubformGridScope
-                                ? (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"))
-                                : currentDraftViewTitle}
-                            </p>
-                          </div>
-                        </div>
+          <InspectorPanelTab value="grid">
+                    <GridSettingsPanel
+                      canEdit={workspaceAccess.canEditSettings}
+                      canMoveItems={workspaceAccess.canEditSettings && sortedCurrentGridScopeTargets.length > 1}
+                      checklistUnsupportedText={t("tenant.platformStudio.forms.builder.grid.checklistUnsupported")}
+                      dragOverFieldId={dragOverGridFieldId}
+                      draggedFieldId={draggedGridFieldId}
+                      dragToReorderLabel={t("tenant.platformStudio.forms.builder.dragToReorder")}
+                      fieldItems={gridSettingsFieldItems}
+                      hiddenInGridText={t("tenant.platformStudio.forms.builder.grid.hiddenInGrid")}
+                      isChecklistGridScope={isChecklistGridScope}
+                      meta={
+                        isSubformGridScope
+                          ? (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"))
+                          : currentDraftViewTitle
+                      }
+                      noFieldsText={t("tenant.platformStudio.forms.builder.grid.noFields")}
+                      onDragEnd={() => {
+                        setDraggedGridFieldId(null);
+                        setDragOverGridFieldId(null);
+                      }}
+                      onDragOverField={(fieldId) => {
+                        setDragOverGridFieldId(fieldId);
+                      }}
+                      onDragStartField={(fieldId) => {
+                        setDraggedGridFieldId(fieldId);
+                        setDragOverGridFieldId(fieldId);
+                      }}
+                      onDropField={(fieldId) => {
+                        if (!draggedGridFieldId || draggedGridFieldId === fieldId) {
+                          return;
+                        }
 
-                        <div className="tenant-web__platform-studio-builder-stack">
-                          {isChecklistGridScope ? (
-                            <p className="tenant-web__platform-studio-inline-help">
-                              {t("tenant.platformStudio.forms.builder.grid.checklistUnsupported")}
-                            </p>
-                          ) : currentGridScopeTargets.length === 0 ? (
-                            <p className="tenant-web__platform-studio-inline-help">
-                              {t("tenant.platformStudio.forms.builder.grid.noFields")}
-                            </p>
-                          ) : (
-                            <div className="tenant-web__platform-studio-builder-stack">
-                              {sortedCurrentGridScopeTargets.map((field) => {
-                                const column = getGridColumnByFieldId(currentGridColumns, field.id);
-
-                                return (
-                                  <GridColumnRow
-                                    canEdit={workspaceAccess.canEditSettings}
-                                    canMoveItems={workspaceAccess.canEditSettings && sortedCurrentGridScopeTargets.length > 1}
-                                    dragOverFieldId={dragOverGridFieldId}
-                                    draggedFieldId={draggedGridFieldId}
-                                    field={field}
-                                    key={`grid-column-${field.id}`}
-                                    onDragEnd={() => {
-                                      setDraggedGridFieldId(null);
-                                      setDragOverGridFieldId(null);
-                                    }}
-                                    onDragOverField={() => {
-                                      setDragOverGridFieldId(field.id);
-                                    }}
-                                    onDragStartField={() => {
-                                      setDraggedGridFieldId(field.id);
-                                      setDragOverGridFieldId(field.id);
-                                    }}
-                                    onDropField={() => {
-                                      if (!draggedGridFieldId || draggedGridFieldId === field.id) {
-                                        return;
-                                      }
-
-                                      reorderGridColumns(draggedGridFieldId, field.id);
-                                      setDraggedGridFieldId(null);
-                                      setDragOverGridFieldId(null);
-                                    }}
-                                    onToggleVisible={(checked) => updateGridColumnVisibility(field.id, checked)}
-                                    t={t}
-                                    visible={column?.visible ?? false}
-                                  />
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </TabsPanel>
-
-                  <TabsPanel value="view">
-                    <div className="tenant-web__platform-studio-builder-stack">
-                      {isRootViewScope ? (
-                        <>
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            <div className="tenant-web__platform-studio-form">
-                              <div className="tenant-web__platform-studio-form-group">
-                                <Label htmlFor="tenant-platform-studio-view-title">
-                                  {t("tenant.platformStudio.forms.builder.viewTitleLabel")}
-                                </Label>
-                                <Input
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  id="tenant-platform-studio-view-title"
-                                  onChange={(event) => updateDocument((currentDocument) => ({
-                                    ...currentDocument,
-                                    viewTitle: event.target.value,
-                                  }))}
-                                  value={document.viewTitle}
-                                />
-                              </div>
-
-                              <div className="tenant-web__platform-studio-form-group">
-                                <Label htmlFor="tenant-platform-studio-view-description">
-                                  {t("tenant.platformStudio.forms.builder.viewDescriptionLabel")}
-                                </Label>
-                                <Textarea
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  id="tenant-platform-studio-view-description"
-                                  onChange={(event) => updateDocument((currentDocument) => ({
-                                    ...currentDocument,
-                                    viewDescription: event.target.value,
-                                  }))}
-                                  rows={5}
-                                  value={document.viewDescription}
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            <div className="tenant-web__platform-studio-labeled-divider">
-                              <span>{t("tenant.platformStudio.forms.builder.viewSection.authoringLocks")}</span>
-                            </div>
-                            <div className="tenant-web__platform-studio-builder-stack">
-                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                <div>
-                                  <p className="tenant-web__platform-studio-compact-row-label">
-                                    {t("tenant.platformStudio.forms.builder.activeViewLabel")}
-                                  </p>
-                                  <p className="tenant-web__platform-studio-compact-row-summary">
-                                    {currentView.isActive
-                                      ? t("tenant.platformStudio.forms.viewActive")
-                                      : t("tenant.platformStudio.forms.viewInactive")}
-                                  </p>
-                                </div>
-                                <Switch
-                                  checked={currentView.isActive}
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
-                                    ...viewEntry,
-                                    isActive: checked,
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                              {currentActor.isRoot ? (
-                                <>
-                                  {!isStaticModel ? (
-                                    <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                      <div>
-                                        <p className="tenant-web__platform-studio-compact-row-label">
-                                          {t("tenant.platformStudio.forms.builder.locking.model")}
-                                        </p>
-                                        <p className="tenant-web__platform-studio-compact-row-summary">
-                                          {currentModel.isStructureLocked
-                                            ? t("tenant.platformStudio.forms.builder.locking.locked")
-                                            : t("tenant.platformStudio.forms.builder.locking.unlocked")}
-                                        </p>
-                                      </div>
-                                      <Switch
-                                        checked={currentModel.isStructureLocked}
-                                        disabled={!canToggleModelLocks}
-                                        onCheckedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
-                                          ...currentModelDraft,
-                                          isStructureLocked: checked,
-                                        }))}
-                                        size="sm"
-                                      />
-                                    </div>
-                                  ) : null}
-                                  <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                    <div>
-                                      <p className="tenant-web__platform-studio-compact-row-label">
-                                        {t("tenant.platformStudio.forms.builder.locking.view")}
-                                      </p>
-                                      <p className="tenant-web__platform-studio-compact-row-summary">
-                                        {currentView.isViewLocked
-                                          ? t("tenant.platformStudio.forms.builder.locking.locked")
-                                          : t("tenant.platformStudio.forms.builder.locking.unlocked")}
-                                      </p>
-                                    </div>
-                                    <Switch
-                                      checked={currentView.isViewLocked ?? false}
-                                      disabled={!canToggleViewLocks}
-                                      onCheckedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
-                                        ...viewEntry,
-                                        isViewLocked: checked,
-                                      }))}
-                                      size="sm"
-                                    />
-                                  </div>
-                                  {!canToggleModelLocks ? (
-                                    <p className="tenant-web__platform-studio-inline-help">
-                                      {t("tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice")}
-                                    </p>
-                                  ) : null}
-                                </>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            <div className="tenant-web__platform-studio-labeled-divider">
-                              <span>{t("tenant.platformStudio.forms.builder.viewSection.workflow")}</span>
-                            </div>
-                            <div className="tenant-web__platform-studio-builder-stack">
-                              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain">
-                                <div>
-                                  <p className="tenant-web__platform-studio-compact-row-label">
-                                    {t("tenant.platformStudio.forms.builder.viewSettings.correctiveAction")}
-                                  </p>
-                                  <p className="tenant-web__platform-studio-compact-row-summary">
-                                    {document.viewSettings.correctiveAction.enabled
-                                      ? t("tenant.platformStudio.forms.builder.viewSettings.correctiveActionSource")
-                                      : t("tenant.platformStudio.forms.builder.systemField.unbound")}
-                                  </p>
-                                </div>
-                                <Switch
-                                  checked={document.viewSettings.correctiveAction.enabled}
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  onCheckedChange={(checked) => updateViewSettings((viewSettings) => ({
-                                    ...viewSettings,
-                                    correctiveAction: {
-                                      ...viewSettings.correctiveAction,
-                                      enabled: checked,
-                                    },
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="tenant-web__platform-studio-inspector-section">
-                            <div className="tenant-web__platform-studio-labeled-divider">
-                              <span>{t("tenant.platformStudio.forms.builder.viewSection.systemFields")}</span>
-                            </div>
-                            <div className="tenant-web__platform-studio-builder-stack">
-                              {systemFieldRoles.map((role) => {
-                                const compatibleFields = getSystemFieldOptions(currentModel.fields, document, role);
-                                const boundFieldId = getBoundSystemFieldIdByRole(document, role) ?? "";
-                                const boundSummary = getSystemFieldBindingSummary(role, currentModel.fields, document, t);
-
-                                return (
-                                  <div className="tenant-web__platform-studio-system-field-card" key={role}>
-                                    <div className="tenant-web__platform-studio-system-field-card-header">
-                                      <div className="tenant-web__platform-studio-compact-row-main">
-                                        <span className="tenant-web__platform-studio-compact-row-label">
-                                          {t(getSystemFieldKey(role))}
-                                        </span>
-                                        <span className="tenant-web__platform-studio-compact-row-summary">
-                                          {boundSummary}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                      <Select
-                                        aria-label={t(getSystemFieldKey(role))}
-                                        disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition}
-                                        id={`tenant-platform-studio-system-field-${role}`}
-                                        onChange={(event) => updateSystemFieldBinding(role, event.target.value)}
-                                        value={boundFieldId}
-                                      >
-                                        <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                                        {compatibleFields.map((field) => (
-                                          <option key={field.id} value={field.id}>
-                                            {getFieldLabelWithBoundField(field, document)}
-                                          </option>
-                                        ))}
-                                      </Select>
-                                    </div>
-
-                                    {compatibleFields.length === 0 ? (
-                                      <p className="tenant-web__platform-studio-inline-help">
-                                        {t("tenant.platformStudio.forms.builder.systemField.noCompatibleField")}
-                                      </p>
-                                    ) : null}
-
-                                    {role === "workflowStatus" ? (
-                                      <div className="tenant-web__platform-studio-sort-row">
-                                        <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                          <Label htmlFor="tenant-platform-studio-system-field-status-initial">
-                                            {t("tenant.platformStudio.forms.builder.systemField.initialValue")}
-                                          </Label>
-                                          <Select
-                                            disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
-                                            id="tenant-platform-studio-system-field-status-initial"
-                                            onChange={(event) => updateWorkflowStatusOption("initialValue", event.target.value)}
-                                            value={document.systemFields.workflowStatus?.initialValue ?? ""}
-                                          >
-                                            <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                                            {workflowStatusOptions.map((option) => (
-                                              <option key={option} value={option}>
-                                                {option}
-                                              </option>
-                                            ))}
-                                          </Select>
-                                        </div>
-
-                                        <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-                                          <Label htmlFor="tenant-platform-studio-system-field-status-final">
-                                            {t("tenant.platformStudio.forms.builder.systemField.finalValue")}
-                                          </Label>
-                                          <Select
-                                            disabled={!workspaceAccess.canEditSettings || !canEditModelDefinition || !document.systemFields.workflowStatus || workflowStatusOptions.length === 0}
-                                            id="tenant-platform-studio-system-field-status-final"
-                                            onChange={(event) => updateWorkflowStatusOption("finalValue", event.target.value)}
-                                            value={document.systemFields.workflowStatus?.finalValue ?? ""}
-                                          >
-                                            <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                                            {workflowStatusOptions.map((option) => (
-                                              <option key={option} value={option}>
-                                                {option}
-                                              </option>
-                                            ))}
-                                          </Select>
-                                        </div>
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="tenant-web__platform-studio-inspector-section">
-                          <div className="tenant-web__platform-studio-inspector-header tenant-web__platform-studio-inspector-header--grid">
-                            <div>
-                              <p className="tenant-web__platform-studio-inspector-title">
-                                {t("tenant.platformStudio.forms.builder.grid.subtable")}
-                              </p>
-                              <p className="tenant-web__platform-studio-inspector-meta">
-                                {currentScopeViewLabel}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                        reorderGridColumns(draggedGridFieldId, fieldId);
+                        setDraggedGridFieldId(null);
+                        setDragOverGridFieldId(null);
+                      }}
+                      onToggleVisible={updateGridColumnVisibility}
+                      title={t(
+                        isSubformGridScope
+                          ? "tenant.platformStudio.forms.builder.grid.subtable"
+                          : "tenant.platformStudio.forms.builder.grid.mainTable",
                       )}
+                      visibleInGridText={t("tenant.platformStudio.forms.builder.grid.visibleInGrid")}
+                    />
+          </InspectorPanelTab>
 
-                      <div className="tenant-web__platform-studio-inspector-section">
-                        <div className="tenant-web__platform-studio-labeled-divider">
-                          <span>{t("tenant.platformStudio.forms.builder.viewSection.actions")}</span>
-                        </div>
+          <InspectorPanelTab value="view">
+                    <ViewSettingsPanel
+                      actionItems={viewSettingsActionItems}
+                      actionsMenuLabel={t("tenant.platformStudio.forms.builder.rule.actionsMenu")}
+                      addFilterLabel={t("tenant.platformStudio.forms.builder.filter.addFilter")}
+                      canEditModelDefinition={canEditModelDefinition}
+                      canEditSettings={workspaceAccess.canEditSettings}
+                      canToggleModelLocks={canToggleModelLocks}
+                      canToggleViewLocks={canToggleViewLocks}
+                      correctiveActionEnabled={document.viewSettings.correctiveAction.enabled}
+                      currentScopeViewLabel={currentScopeViewLabel}
+                      defaultFilterEmptyText={t("tenant.platformStudio.forms.builder.filter.emptyDefaultFilters")}
+                      defaultFilterFieldLabel={t("tenant.platformStudio.forms.builder.filter.fieldLabel")}
+                      defaultFilterItems={viewSettingsDefaultFilterItems}
+                      deleteFilterLabel={t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
+                      editFilterLabel={t("tenant.platformStudio.forms.builder.filter.editFilter")}
+                      filterFieldOptions={currentViewFilterTargets.map((field) => ({
+                        id: field.id,
+                        label: field.label,
+                      }))}
+                      isRootActor={currentActor.isRoot}
+                      isRootViewScope={isRootViewScope}
+                      isStaticModel={isStaticModel}
+                      labels={{
+                        actionsSection: t("tenant.platformStudio.forms.builder.viewSection.actions"),
+                        activeView: t("tenant.platformStudio.forms.builder.activeViewLabel"),
+                        correctiveAction: t("tenant.platformStudio.forms.builder.viewSettings.correctiveAction"),
+                        correctiveActionSource: t("tenant.platformStudio.forms.builder.viewSettings.correctiveActionSource"),
+                        defaultViewStructureOnlyNotice: t("tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice"),
+                        filtersSection: t("tenant.platformStudio.forms.builder.viewSection.filters"),
+                        finalValue: t("tenant.platformStudio.forms.builder.systemField.finalValue"),
+                        initialValue: t("tenant.platformStudio.forms.builder.systemField.initialValue"),
+                        locked: t("tenant.platformStudio.forms.builder.locking.locked"),
+                        modelLock: t("tenant.platformStudio.forms.builder.locking.model"),
+                        sortDirection: t("tenant.platformStudio.forms.builder.viewSettings.sortDirection"),
+                        sortDirectionAsc: t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionAsc"),
+                        sortDirectionDesc: t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionDesc"),
+                        sortField: t(
+                          isRootViewScope
+                            ? "tenant.platformStudio.forms.builder.viewSettings.sortField"
+                            : "tenant.platformStudio.forms.builder.viewSettings.sortFieldSubtable",
+                        ),
+                        sortingSection: t(
+                          isRootViewScope
+                            ? "tenant.platformStudio.forms.builder.viewSettings.sorting"
+                            : "tenant.platformStudio.forms.builder.viewSettings.sortingSubtable",
+                        ),
+                        subtableTitle: t("tenant.platformStudio.forms.builder.grid.subtable"),
+                        systemFieldsSection: t("tenant.platformStudio.forms.builder.viewSection.systemFields"),
+                        unbound: t("tenant.platformStudio.forms.builder.systemField.unbound"),
+                        unlocked: t("tenant.platformStudio.forms.builder.locking.unlocked"),
+                        viewActive: t("tenant.platformStudio.forms.viewActive"),
+                        viewDescription: t("tenant.platformStudio.forms.builder.viewDescriptionLabel"),
+                        viewInactive: t("tenant.platformStudio.forms.viewInactive"),
+                        viewLock: t("tenant.platformStudio.forms.builder.locking.view"),
+                        viewTitle: t("tenant.platformStudio.forms.builder.viewTitleLabel"),
+                        workflowSection: t("tenant.platformStudio.forms.builder.viewSection.workflow"),
+                      }}
+                      modelStructureLocked={currentModel.isStructureLocked}
+                      onAddDefaultFilter={addDefaultFilterCondition}
+                      onCorrectiveActionChange={(checked) => updateViewSettings((viewSettings) => ({
+                        ...viewSettings,
+                        correctiveAction: {
+                          ...viewSettings.correctiveAction,
+                          enabled: checked,
+                        },
+                      }))}
+                      onDeleteDefaultFilter={(index) => updateDefaultFilters((conditions) =>
+                        conditions.filter((_, entryIndex) => entryIndex !== index)
+                      )}
+                      onEditDefaultFilter={openDefaultFilterEditor}
+                      onModelStructureLockedChange={(checked) => updateCurrentModel((currentModelDraft) => ({
+                        ...currentModelDraft,
+                        isStructureLocked: checked,
+                      }))}
+                      onPendingDefaultFilterFieldChange={setPendingDefaultFilterFieldId}
+                      onSortDirectionChange={(direction) => {
+                        if (isRootViewScope) {
+                          updateViewSettings((viewSettings) => ({
+                            ...viewSettings,
+                            list: {
+                              ...viewSettings.list,
+                              sorting: {
+                                ...viewSettings.list.sorting,
+                                direction,
+                              },
+                            },
+                          }));
+                          return;
+                        }
 
-                        {isRootViewScope ? (
-                          <div className="tenant-web__platform-studio-switch-grid">
-                            {([
-                              ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
-                              ["canView", "tenant.platformStudio.forms.builder.viewSettings.action.view"],
-                              ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
-                              ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
-                            ] as const).map(([actionKey, labelKey]) => (
-                              <div className="tenant-web__platform-studio-switch-row" key={actionKey}>
-                                <span className="tenant-web__platform-studio-compact-row-label">
-                                  {t(labelKey)}
-                                </span>
-                                <Switch
-                                  checked={document.viewSettings.actions[actionKey]}
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  onCheckedChange={(checked) => updateViewSettings((viewSettings) => ({
-                                    ...viewSettings,
-                                    actions: {
-                                      ...viewSettings.actions,
-                                      [actionKey]: checked,
-                                    },
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="tenant-web__platform-studio-switch-grid">
-                            {([
-                              ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
-                              ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
-                              ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
-                            ] as const).map(([actionKey, labelKey]) => (
-                              <div className="tenant-web__platform-studio-switch-row" key={actionKey}>
-                                <span className="tenant-web__platform-studio-compact-row-label">
-                                  {t(labelKey)}
-                                </span>
-                                <Switch
-                                  checked={Boolean(currentScopeViewSettings?.actions[actionKey])}
-                                  disabled={!workspaceAccess.canEditSettings}
-                                  onCheckedChange={(checked) => updateCurrentScopeSubformViewSettings((viewSettings) => ({
-                                    ...viewSettings,
-                                    actions: {
-                                      ...viewSettings.actions,
-                                      [actionKey]: checked,
-                                    },
-                                  }))}
-                                  size="sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                        updateCurrentScopeSubformViewSettings((viewSettings) => ({
+                          ...viewSettings,
+                          list: {
+                            ...viewSettings.list,
+                            sorting: {
+                              ...viewSettings.list.sorting,
+                              direction,
+                            },
+                          },
+                        }));
+                      }}
+                      onSortFieldChange={(fieldId) => {
+                        if (isRootViewScope) {
+                          updateViewSettings((viewSettings) => ({
+                            ...viewSettings,
+                            list: {
+                              ...viewSettings.list,
+                              sorting: {
+                                ...viewSettings.list.sorting,
+                                fieldId: fieldId || undefined,
+                              },
+                            },
+                          }));
+                          return;
+                        }
 
-                      <div className="tenant-web__platform-studio-inspector-section">
-                        <div className="tenant-web__platform-studio-labeled-divider">
-                          <span>{t(
-                            isRootViewScope
-                              ? "tenant.platformStudio.forms.builder.viewSettings.sorting"
-                              : "tenant.platformStudio.forms.builder.viewSettings.sortingSubtable",
-                          )}</span>
-                        </div>
-
-                        <div className="tenant-web__platform-studio-builder-stack">
-                          <div className="tenant-web__platform-studio-sort-row">
-                            <div className="tenant-web__platform-studio-form-group">
-                              <Label htmlFor="tenant-platform-studio-sort-field">
-                                {t(
-                                  isRootViewScope
-                                    ? "tenant.platformStudio.forms.builder.viewSettings.sortField"
-                                    : "tenant.platformStudio.forms.builder.viewSettings.sortFieldSubtable",
-                                )}
-                              </Label>
-                              <Select
-                                disabled={!workspaceAccess.canEditSettings}
-                                id="tenant-platform-studio-sort-field"
-                                onChange={(event) => {
-                                  if (isRootViewScope) {
-                                    updateViewSettings((viewSettings) => ({
-                                      ...viewSettings,
-                                      list: {
-                                        ...viewSettings.list,
-                                        sorting: {
-                                          ...viewSettings.list.sorting,
-                                          fieldId: event.target.value || undefined,
-                                        },
-                                      },
-                                    }));
-                                    return;
-                                  }
-
-                                  updateCurrentScopeSubformViewSettings((viewSettings) => ({
-                                    ...viewSettings,
-                                    list: {
-                                      ...viewSettings.list,
-                                      sorting: {
-                                        ...viewSettings.list.sorting,
-                                        fieldId: event.target.value || undefined,
-                                      },
-                                    },
-                                  }));
-                                }}
-                                value={isRootViewScope
-                                  ? (document.viewSettings.list.sorting.fieldId ?? "")
-                                  : (currentScopeViewSettings?.list.sorting.fieldId ?? "")}
-                              >
-                                <option value="">{t("tenant.platformStudio.forms.builder.systemField.unbound")}</option>
-                                {currentScopeSortingFields.map((field) => (
-                                  <option key={field.id} value={field.id}>
-                                    {field.label}
-                                  </option>
-                                ))}
-                              </Select>
-                            </div>
-
-                            <div className="tenant-web__platform-studio-form-group">
-                              <Label htmlFor="tenant-platform-studio-sort-direction">
-                                {t("tenant.platformStudio.forms.builder.viewSettings.sortDirection")}
-                              </Label>
-                              <Select
-                                disabled={!workspaceAccess.canEditSettings}
-                                id="tenant-platform-studio-sort-direction"
-                                onChange={(event) => {
-                                  if (isRootViewScope) {
-                                    updateViewSettings((viewSettings) => ({
-                                      ...viewSettings,
-                                      list: {
-                                        ...viewSettings.list,
-                                        sorting: {
-                                          ...viewSettings.list.sorting,
-                                          direction: event.target.value === "desc" ? "desc" : "asc",
-                                        },
-                                      },
-                                    }));
-                                    return;
-                                  }
-
-                                  updateCurrentScopeSubformViewSettings((viewSettings) => ({
-                                    ...viewSettings,
-                                    list: {
-                                      ...viewSettings.list,
-                                      sorting: {
-                                        ...viewSettings.list.sorting,
-                                        direction: event.target.value === "desc" ? "desc" : "asc",
-                                      },
-                                    },
-                                  }));
-                                }}
-                                value={isRootViewScope
-                                  ? document.viewSettings.list.sorting.direction
-                                  : (currentScopeViewSettings?.list.sorting.direction ?? "asc")}
-                              >
-                                <option value="asc">{t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionAsc")}</option>
-                                <option value="desc">{t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionDesc")}</option>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {isRootViewScope ? (
-                        <div className="tenant-web__platform-studio-inspector-section">
-                          <div className="tenant-web__platform-studio-labeled-divider">
-                            <span>{t("tenant.platformStudio.forms.builder.viewSection.filters")}</span>
-                          </div>
-                          <div className="tenant-web__platform-studio-builder-stack">
-                            <div className="tenant-web__platform-studio-filter-group">
-                              <div className="tenant-web__platform-studio-sort-row">
-                                <div className="tenant-web__platform-studio-form-group">
-                                  <Label htmlFor="tenant-platform-studio-default-filter-field">
-                                    {t("tenant.platformStudio.forms.builder.filter.fieldLabel")}
-                                  </Label>
-                                  <Select
-                                    disabled={!workspaceAccess.canEditSettings || currentViewFilterTargets.length === 0}
-                                    id="tenant-platform-studio-default-filter-field"
-                                    onChange={(event) => setPendingDefaultFilterFieldId(event.target.value)}
-                                    value={pendingDefaultFilterFieldId}
-                                  >
-                                    {currentViewFilterTargets.map((field) => (
-                                      <option key={field.id} value={field.id}>
-                                        {field.label}
-                                      </option>
-                                    ))}
-                                  </Select>
-                                </div>
-                                <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                                  <Button
-                                    disabled={!workspaceAccess.canEditSettings || currentViewFilterTargets.length === 0}
-                                    onClick={addDefaultFilterCondition}
-                                    size="sm"
-                                    variant="secondary"
-                                  >
-                                    {t("tenant.platformStudio.forms.builder.filter.addFilter")}
-                                  </Button>
-                                </div>
-                              </div>
-                              {currentScopeFilterDefinitions.defaultFilters.conditions.length === 0 ? (
-                                <p className="tenant-web__platform-studio-inline-help">
-                                  {t("tenant.platformStudio.forms.builder.filter.emptyDefaultFilters")}
-                                </p>
-                              ) : (
-                                currentScopeFilterDefinitions.defaultFilters.conditions.map((condition, index) => (
-                                  <div className="tenant-web__platform-studio-compact-row" key={`default-filter-${index}`}>
-                                    <div className="tenant-web__platform-studio-compact-row-main">
-                                      <span className="tenant-web__platform-studio-compact-row-label">
-                                        {getFieldById(currentViewFilterTargets, condition.fieldId)?.label ?? t("tenant.platformStudio.forms.builder.filter.fieldLabel")}
-                                      </span>
-                                      <span className="tenant-web__platform-studio-compact-row-summary">
-                                        {getFilterConditionSummary(condition, currentViewFilterTargets, t)}
-                                      </span>
-                                    </div>
-                                    <Menu align="end">
-                                      <MenuTrigger>
-                                        <button
-                                          aria-label={t("tenant.platformStudio.forms.builder.rule.actionsMenu")}
-                                          className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
-                                          type="button"
-                                        >
-                                          <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">⋮</span>
-                                        </button>
-                                      </MenuTrigger>
-                                      <MenuContent className="tenant-web__platform-studio-menu">
-                                        <MenuItem onClick={() => openDefaultFilterEditor(index)}>
-                                          {t("tenant.platformStudio.forms.builder.filter.editFilter")}
-                                        </MenuItem>
-                                        <MenuItem
-                                          onClick={() => updateDefaultFilters((conditions) =>
-                                            conditions.filter((_, entryIndex) => entryIndex !== index)
-                                          )}
-                                          tone="danger"
-                                        >
-                                          {t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
-                                        </MenuItem>
-                                      </MenuContent>
-                                    </Menu>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </TabsPanel>
-                </div>
-              </PlatformStudioPanelScroll>
-            </Tabs>
-          </CardContent>
-        </Card>
+                        updateCurrentScopeSubformViewSettings((viewSettings) => ({
+                          ...viewSettings,
+                          list: {
+                            ...viewSettings.list,
+                            sorting: {
+                              ...viewSettings.list.sorting,
+                              fieldId: fieldId || undefined,
+                            },
+                          },
+                        }));
+                      }}
+                      onSystemFieldChange={(role, fieldId) => updateSystemFieldBinding(role as SystemFieldRole, fieldId)}
+                      onViewActiveChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
+                        ...viewEntry,
+                        isActive: checked,
+                      }))}
+                      onViewDescriptionChange={(description) => updateDocument((currentDocument) => ({
+                        ...currentDocument,
+                        viewDescription: description,
+                      }))}
+                      onViewLockedChange={(checked) => updateCurrentViewMetadata((viewEntry) => ({
+                        ...viewEntry,
+                        isViewLocked: checked,
+                      }))}
+                      onViewTitleChange={(title) => updateDocument((currentDocument) => ({
+                        ...currentDocument,
+                        viewTitle: title,
+                      }))}
+                      onWorkflowStatusOptionChange={updateWorkflowStatusOption}
+                      pendingDefaultFilterFieldId={pendingDefaultFilterFieldId}
+                      sortDirection={isRootViewScope
+                        ? document.viewSettings.list.sorting.direction
+                        : (currentScopeViewSettings?.list.sorting.direction ?? "asc")}
+                      sortFieldId={isRootViewScope
+                        ? (document.viewSettings.list.sorting.fieldId ?? "")
+                        : (currentScopeViewSettings?.list.sorting.fieldId ?? "")}
+                      sortingFieldItems={viewSettingsSortingFields}
+                      systemFields={viewSettingsSystemFields}
+                      viewActive={currentView.isActive}
+                      viewDescription={document.viewDescription}
+                      viewLocked={currentView.isViewLocked ?? false}
+                      viewTitle={document.viewTitle}
+                    />
+          </InspectorPanelTab>
+        </InspectorPanel>
       </section>
 
-      <AlertDialog onOpenChange={setDeleteNodeOpen} open={deleteNodeOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("tenant.platformStudio.forms.builder.confirmDeleteNode", { title: selectedNodeLabel })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("tenant.platformStudio.forms.builder.confirmDeleteNodeDescription", { title: selectedNodeLabel })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("tenant.platformStudio.forms.cancelDelete")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (!selectedNode) {
-                  setDeleteNodeOpen(false);
-                  return;
-                }
+      <DeleteNodeConfirmationDialog
+        cancelLabel={t("tenant.platformStudio.forms.cancelDelete")}
+        confirmLabel={t("tenant.platformStudio.forms.builder.deleteNode")}
+        description={t("tenant.platformStudio.forms.builder.confirmDeleteNodeDescription", { title: selectedNodeLabel })}
+        onConfirm={() => {
+          if (!selectedNode) {
+            setDeleteNodeOpen(false);
+            return;
+          }
 
-                if (selectedNode.type === "field" && selectedField && !isPersistedModelField(selectedField)) {
-                  deleteUnsavedField(selectedField.id, selectedNode.id);
-                  setDeleteNodeOpen(false);
-                  return;
-                }
+          if (selectedNode.type === "field" && selectedField && !isPersistedModelField(selectedField)) {
+            deleteUnsavedField(selectedField.id, selectedNode.id);
+            setDeleteNodeOpen(false);
+            return;
+          }
 
-                updateDocument((currentDocument) => removeFormBuilderNode(currentDocument, selectedNode.id));
-                setDeleteNodeOpen(false);
-              }}
-              variant="danger"
-            >
-              {t("tenant.platformStudio.forms.builder.deleteNode")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          updateDocument((currentDocument) => removeFormBuilderNode(currentDocument, selectedNode.id));
+          setDeleteNodeOpen(false);
+        }}
+        onOpenChange={setDeleteNodeOpen}
+        open={deleteNodeOpen}
+        title={t("tenant.platformStudio.forms.builder.confirmDeleteNode", { title: selectedNodeLabel })}
+      />
 
-      <Dialog
+      <RuleEditorDialog
+        canDelete={Boolean(visibilityRuleEditor && visibilityRuleEditor.index !== null)}
+        canEdit={workspaceAccess.canEditSettings}
+        canSave={Boolean(visibilityRuleEditor && visibilityRuleEditor.draft.when.all.length > 0)}
+        cancelLabel={t("tenant.platformStudio.forms.cancelDelete")}
+        deleteLabel={t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
+        description={t("tenant.platformStudio.forms.builder.rule.rulesDescription")}
+        effectLabel={t("tenant.platformStudio.forms.builder.rule.effectLabel")}
+        effectOptions={[
+          { label: t("tenant.platformStudio.forms.builder.rule.effect.show"), value: "show" },
+          { label: t("tenant.platformStudio.forms.builder.rule.effect.hide"), value: "hide" },
+        ]}
+        effectSelectId="tenant-platform-studio-visibility-rule-effect"
+        effectValue={visibilityRuleEditor?.draft.effect ?? "show"}
         onOpenChange={(open) => {
           if (!open) {
             setVisibilityRuleEditor(null);
           }
         }}
         open={Boolean(visibilityRuleEditor)}
+        onCancel={() => setVisibilityRuleEditor(null)}
+        onDelete={() => {
+          if (!visibilityRuleEditor || visibilityRuleEditor.index === null) {
+            return;
+          }
+
+          updateVisibilityRules((rules) =>
+            rules.filter((_, entryIndex) => entryIndex !== visibilityRuleEditor.index)
+          );
+          setVisibilityRuleEditor(null);
+        }}
+        onEffectChange={(effect) => setVisibilityRuleEditor((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                draft: {
+                  ...currentValue.draft,
+                  effect,
+                },
+              }
+            : currentValue
+        )}
+        onSave={saveVisibilityRuleEditor}
+        saveLabel={t("tenant.platformStudio.forms.builder.saveAction")}
+        title={
+          visibilityRuleEditor?.index === null
+            ? t("tenant.platformStudio.forms.builder.rule.addVisibilityRule")
+            : t("tenant.platformStudio.forms.builder.rule.editVisibilityRule")
+        }
       >
-        <DialogContent className="tenant-web__platform-studio-filter-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>
-                {visibilityRuleEditor?.index === null
-                  ? t("tenant.platformStudio.forms.builder.rule.addVisibilityRule")
-                  : t("tenant.platformStudio.forms.builder.rule.editVisibilityRule")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("tenant.platformStudio.forms.builder.rule.rulesDescription")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
+        {visibilityRuleEditor?.draft.when.all[0] ? (
+          <RuleConditionEditor
+            allowRemove={false}
+            condition={visibilityRuleEditor.draft.when.all[0]}
+            disabled={!workspaceAccess.canEditSettings}
+            fields={selectedNodeRuleFields}
+            idPrefix={`tenant-platform-studio-visibility-rule-editor-${visibilityRuleEditor.draft.id}`}
+            onChange={(nextCondition) => setVisibilityRuleEditor((currentValue) =>
+              currentValue
+                ? {
+                    ...currentValue,
+                    draft: {
+                      ...currentValue.draft,
+                      when: {
+                        all: [nextCondition],
+                      },
+                    },
+                  }
+                : currentValue
+            )}
+            onRemove={() => undefined}
+            t={t}
+          />
+        ) : null}
+      </RuleEditorDialog>
 
-          <DialogBody className="tenant-web__platform-studio-filter-dialog-body">
-            {visibilityRuleEditor ? (
-              <div className="tenant-web__platform-studio-builder-stack">
-                <div className="tenant-web__platform-studio-form-group">
-                  <Label htmlFor="tenant-platform-studio-visibility-rule-effect">
-                    {t("tenant.platformStudio.forms.builder.rule.effectLabel")}
-                  </Label>
-                  <Select
-                    disabled={!workspaceAccess.canEditSettings}
-                    id="tenant-platform-studio-visibility-rule-effect"
-                    onChange={(event) => setVisibilityRuleEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              effect: event.target.value as FormBuilderVisibilityRule["effect"],
-                            },
-                          }
-                        : currentValue
-                    )}
-                    value={visibilityRuleEditor.draft.effect}
-                  >
-                    <option value="show">{t("tenant.platformStudio.forms.builder.rule.effect.show")}</option>
-                    <option value="hide">{t("tenant.platformStudio.forms.builder.rule.effect.hide")}</option>
-                  </Select>
-                </div>
-
-                {visibilityRuleEditor.draft.when.all[0] ? (
-                  <RuleConditionEditor
-                    allowRemove={false}
-                    condition={visibilityRuleEditor.draft.when.all[0]}
-                    disabled={!workspaceAccess.canEditSettings}
-                    fields={selectedNodeRuleFields}
-                    idPrefix={`tenant-platform-studio-visibility-rule-editor-${visibilityRuleEditor.draft.id}`}
-                    onChange={(nextCondition) => setVisibilityRuleEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              when: {
-                                all: [nextCondition],
-                              },
-                            },
-                          }
-                        : currentValue
-                    )}
-                    onRemove={() => undefined}
-                    t={t}
-                  />
-                ) : null}
-
-                <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                  <Button onClick={() => setVisibilityRuleEditor(null)} size="sm" variant="ghost">
-                    {t("tenant.platformStudio.forms.cancelDelete")}
-                  </Button>
-                  {visibilityRuleEditor.index !== null ? (
-                    <Button
-                      onClick={() => {
-                        updateVisibilityRules((rules) =>
-                          rules.filter((_, entryIndex) => entryIndex !== visibilityRuleEditor.index)
-                        );
-                        setVisibilityRuleEditor(null);
-                      }}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      {t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
-                    </Button>
-                  ) : null}
-                  <Button
-                    disabled={
-                      !workspaceAccess.canEditSettings
-                      || !visibilityRuleEditor
-                      || visibilityRuleEditor.draft.when.all.length === 0
-                    }
-                    onClick={saveVisibilityRuleEditor}
-                    size="sm"
-                    variant="primary"
-                  >
-                    {t("tenant.platformStudio.forms.builder.saveAction")}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
+      <RuleEditorDialog
+        canDelete={Boolean(requirementRuleEditor && requirementRuleEditor.index !== null)}
+        canEdit={workspaceAccess.canEditSettings}
+        canSave={Boolean(requirementRuleEditor && requirementRuleEditor.draft.when.all.length > 0)}
+        cancelLabel={t("tenant.platformStudio.forms.cancelDelete")}
+        deleteLabel={t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
+        description={t("tenant.platformStudio.forms.builder.rule.rulesDescription")}
+        effectLabel={t("tenant.platformStudio.forms.builder.rule.effectLabel")}
+        effectOptions={[
+          { label: t("tenant.platformStudio.forms.builder.rule.effect.required"), value: "required" },
+          { label: t("tenant.platformStudio.forms.builder.rule.effect.optional"), value: "optional" },
+        ]}
+        effectSelectId="tenant-platform-studio-requirement-rule-effect"
+        effectValue={requirementRuleEditor?.draft.effect ?? "required"}
         onOpenChange={(open) => {
           if (!open) {
             setRequirementRuleEditor(null);
           }
         }}
         open={Boolean(requirementRuleEditor)}
+        onCancel={() => setRequirementRuleEditor(null)}
+        onDelete={() => {
+          if (!requirementRuleEditor || requirementRuleEditor.index === null) {
+            return;
+          }
+
+          updateRequirementRules((rules) =>
+            rules.filter((_, entryIndex) => entryIndex !== requirementRuleEditor.index)
+          );
+          setRequirementRuleEditor(null);
+        }}
+        onEffectChange={(effect) => setRequirementRuleEditor((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                draft: {
+                  ...currentValue.draft,
+                  effect,
+                },
+              }
+            : currentValue
+        )}
+        onSave={saveRequirementRuleEditor}
+        saveLabel={t("tenant.platformStudio.forms.builder.saveAction")}
+        title={
+          requirementRuleEditor?.index === null
+            ? t("tenant.platformStudio.forms.builder.rule.addRequirementRule")
+            : t("tenant.platformStudio.forms.builder.rule.editRequirementRule")
+        }
       >
-        <DialogContent className="tenant-web__platform-studio-filter-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>
-                {requirementRuleEditor?.index === null
-                  ? t("tenant.platformStudio.forms.builder.rule.addRequirementRule")
-                  : t("tenant.platformStudio.forms.builder.rule.editRequirementRule")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("tenant.platformStudio.forms.builder.rule.rulesDescription")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
+        {requirementRuleEditor?.draft.when.all[0] ? (
+          <RuleConditionEditor
+            allowRemove={false}
+            condition={requirementRuleEditor.draft.when.all[0]}
+            disabled={!workspaceAccess.canEditSettings}
+            fields={selectedNodeRuleFields}
+            idPrefix={`tenant-platform-studio-requirement-rule-editor-${requirementRuleEditor.draft.id}`}
+            onChange={(nextCondition) => setRequirementRuleEditor((currentValue) =>
+              currentValue
+                ? {
+                    ...currentValue,
+                    draft: {
+                      ...currentValue.draft,
+                      when: {
+                        all: [nextCondition],
+                      },
+                    },
+                  }
+                : currentValue
+            )}
+            onRemove={() => undefined}
+            t={t}
+          />
+        ) : null}
+      </RuleEditorDialog>
 
-          <DialogBody className="tenant-web__platform-studio-filter-dialog-body">
-            {requirementRuleEditor ? (
-              <div className="tenant-web__platform-studio-builder-stack">
-                <div className="tenant-web__platform-studio-form-group">
-                  <Label htmlFor="tenant-platform-studio-requirement-rule-effect">
-                    {t("tenant.platformStudio.forms.builder.rule.effectLabel")}
-                  </Label>
-                  <Select
-                    disabled={!workspaceAccess.canEditSettings}
-                    id="tenant-platform-studio-requirement-rule-effect"
-                    onChange={(event) => setRequirementRuleEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              effect: event.target.value as FormBuilderRequirementRule["effect"],
-                            },
-                          }
-                        : currentValue
-                    )}
-                    value={requirementRuleEditor.draft.effect}
-                  >
-                    <option value="required">{t("tenant.platformStudio.forms.builder.rule.effect.required")}</option>
-                    <option value="optional">{t("tenant.platformStudio.forms.builder.rule.effect.optional")}</option>
-                  </Select>
-                </div>
-
-                {requirementRuleEditor.draft.when.all[0] ? (
-                  <RuleConditionEditor
-                    allowRemove={false}
-                    condition={requirementRuleEditor.draft.when.all[0]}
-                    disabled={!workspaceAccess.canEditSettings}
-                    fields={selectedNodeRuleFields}
-                    idPrefix={`tenant-platform-studio-requirement-rule-editor-${requirementRuleEditor.draft.id}`}
-                    onChange={(nextCondition) => setRequirementRuleEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              when: {
-                                all: [nextCondition],
-                              },
-                            },
-                          }
-                        : currentValue
-                    )}
-                    onRemove={() => undefined}
-                    t={t}
-                  />
-                ) : null}
-
-                <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                  <Button onClick={() => setRequirementRuleEditor(null)} size="sm" variant="ghost">
-                    {t("tenant.platformStudio.forms.cancelDelete")}
-                  </Button>
-                  {requirementRuleEditor.index !== null ? (
-                    <Button
-                      onClick={() => {
-                        updateRequirementRules((rules) =>
-                          rules.filter((_, entryIndex) => entryIndex !== requirementRuleEditor.index)
-                        );
-                        setRequirementRuleEditor(null);
-                      }}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      {t("tenant.platformStudio.forms.builder.filter.deleteFilter")}
-                    </Button>
-                  ) : null}
-                  <Button
-                    disabled={
-                      !workspaceAccess.canEditSettings
-                      || !requirementRuleEditor
-                      || requirementRuleEditor.draft.when.all.length === 0
-                    }
-                    onClick={saveRequirementRuleEditor}
-                    size="sm"
-                    variant="primary"
-                  >
-                    {t("tenant.platformStudio.forms.builder.saveAction")}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
+      <LookupSourcePickerDialog
+        canEdit={workspaceAccess.canEditSettings}
+        error={lookupSourcePickerError}
+        isLoading={isLookupSourcePickerLoading}
+        labels={{
+          availableFields: t("tenant.platformStudio.forms.builder.fieldSettings.availableFields"),
+          availableFieldsCount: t("tenant.platformStudio.forms.builder.fieldSettings.availableFieldsCount"),
+          availableModels: t("tenant.platformStudio.forms.builder.fieldSettings.availableModels"),
+          cancel: t("tenant.platformStudio.forms.cancelDelete"),
+          emptyDisplayFields: t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields"),
+          noAvailableModels: t("tenant.platformStudio.forms.builder.fieldSettings.noAvailableModels"),
+          noSourceSelected: t("tenant.platformStudio.forms.builder.fieldSettings.noSourceSelected"),
+          save: t("tenant.platformStudio.forms.builder.saveAction"),
+          selectedFields: t("tenant.platformStudio.forms.builder.fieldSettings.selectedFields"),
+          sortBy: t("tenant.platformStudio.forms.builder.fieldSettings.sortBy"),
+          sourcePickerDescription: t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerDescription"),
+          sourcePickerLoading: t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerLoading"),
+          sourcePickerTitle: t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerTitle"),
+        }}
+        modelItems={lookupSourcePickerModelItems}
+        onCancel={() => setLookupSourcePicker(null)}
+        onFieldCheckedChange={(fieldKey, checked) => setLookupSourcePicker((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                selectedFieldKeys: checked
+                  ? Array.from(new Set([...currentValue.selectedFieldKeys, fieldKey]))
+                  : currentValue.selectedFieldKeys.filter((entry) => entry !== fieldKey),
+              }
+            : currentValue
+        )}
+        onModelChange={(modelId, selectedFieldKeys, sortFieldKey) => setLookupSourcePicker((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                modelId,
+                selectedFieldKeys: [...selectedFieldKeys],
+                sortFieldKey,
+              }
+            : currentValue
+        )}
         onOpenChange={(open) => {
           if (!open) {
             setLookupSourcePicker(null);
@@ -8311,529 +5702,226 @@ export function FormsViewWorkspacePage() {
             setIsLookupSourcePickerLoading(false);
           }
         }}
+        onSave={saveLookupSourcePicker}
+        onSortFieldChange={(sortFieldKey) => setLookupSourcePicker((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                sortFieldKey: sortFieldKey || (lookupSourcePickerModel?.defaultSortField ?? ""),
+              }
+            : currentValue
+        )}
         open={Boolean(lookupSourcePicker)}
-      >
-        <DialogContent className="tenant-web__platform-studio-filter-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>
-                {t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerTitle")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerDescription")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
+        selectedFieldKeys={lookupSourcePicker?.selectedFieldKeys ?? []}
+        selectedFieldsSummary={lookupSourcePickerSelectedFieldsSummary}
+        selectedModel={lookupSourcePickerModel}
+        selectedModelId={lookupSourcePicker?.modelId ?? ""}
+        sortFieldKey={lookupSourcePicker?.sortFieldKey ?? ""}
+      />
 
-          <DialogBody className="tenant-web__platform-studio-filter-dialog-body">
-            {lookupSourcePicker ? (
-              <div className="tenant-web__platform-studio-builder-stack">
-                <div className="tenant-web__platform-studio-lookup-picker-columns">
-                  <div className="tenant-web__platform-studio-lookup-picker-column">
-                    <p className="tenant-web__platform-studio-filter-group-title">
-                      {t("tenant.platformStudio.forms.builder.fieldSettings.availableModels")}
-                    </p>
-                    {availableLookupSourceModels.length > 0 ? (
-                      <div className="tenant-web__platform-studio-lookup-picker-list">
-                        {availableLookupSourceModels.map((modelOption) => {
-                          const checked = lookupSourcePicker.modelId === modelOption.id;
-                          const loadedModelOption = lookupSourceModelsById[modelOption.id];
-
-                          return (
-                            <label
-                              className={`tenant-web__platform-studio-lookup-picker-option${checked ? " tenant-web__platform-studio-lookup-picker-option--selected" : ""}`}
-                              key={modelOption.id}
-                            >
-                              <input
-                                checked={checked}
-                                disabled={!workspaceAccess.canEditSettings}
-                                name="tenant-platform-studio-lookup-source-model"
-                                onChange={() => setLookupSourcePicker((currentValue) =>
-                                  currentValue
-                                    ? {
-                                        ...currentValue,
-                                        modelId: modelOption.id,
-                                        selectedFieldKeys: loadedModelOption
-                                          ? [...loadedModelOption.defaultDisplayFields]
-                                          : [],
-                                        sortFieldKey: loadedModelOption?.defaultSortField ?? "",
-                                      }
-                                    : currentValue
-                                )}
-                                type="radio"
-                                value={modelOption.id}
-                              />
-                              <div className="tenant-web__platform-studio-compact-row-main">
-                                <span className="tenant-web__platform-studio-compact-row-label">
-                                  {modelOption.label}
-                                </span>
-                                {loadedModelOption ? (
-                                  <span className="tenant-web__platform-studio-compact-row-summary">
-                                    {`${loadedModelOption.fields.length} ${t("tenant.platformStudio.forms.builder.fieldSettings.availableFieldsCount")}`}
-                                  </span>
-                                ) : null}
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="tenant-web__platform-studio-inline-help">
-                        {t("tenant.platformStudio.forms.builder.fieldSettings.noAvailableModels")}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="tenant-web__platform-studio-lookup-picker-column">
-                    <p className="tenant-web__platform-studio-filter-group-title">
-                      {t("tenant.platformStudio.forms.builder.fieldSettings.availableFields")}
-                    </p>
-
-                    {isLookupSourcePickerLoading ? (
-                      <p className="tenant-web__platform-studio-inline-help">
-                        {t("tenant.platformStudio.forms.builder.fieldSettings.sourcePickerLoading")}
-                      </p>
-                    ) : lookupSourcePickerError ? (
-                      <p className="tenant-web__platform-studio-inline-help">
-                        {lookupSourcePickerError}
-                      </p>
-                    ) : lookupSourcePickerModel ? (
-                      <div className="tenant-web__platform-studio-lookup-picker-list">
-                        {lookupSourcePickerModel.fields.map((fieldOption) => {
-                          const checked = lookupSourcePicker.selectedFieldKeys.includes(fieldOption.key);
-
-                          return (
-                            <label
-                              className={`tenant-web__platform-studio-lookup-picker-option${checked ? " tenant-web__platform-studio-lookup-picker-option--selected" : ""}`}
-                              key={`${lookupSourcePickerModel.id}-${fieldOption.key}`}
-                            >
-                              <input
-                                checked={checked}
-                                disabled={!workspaceAccess.canEditSettings}
-                                onChange={(event) => setLookupSourcePicker((currentValue) =>
-                                  currentValue
-                                    ? {
-                                        ...currentValue,
-                                        selectedFieldKeys: event.target.checked
-                                          ? Array.from(new Set([...currentValue.selectedFieldKeys, fieldOption.key]))
-                                          : currentValue.selectedFieldKeys.filter((entry) => entry !== fieldOption.key),
-                                      }
-                                    : currentValue
-                                )}
-                                type="checkbox"
-                              />
-                              <div className="tenant-web__platform-studio-compact-row-main">
-                                <span className="tenant-web__platform-studio-compact-row-label">
-                                  {fieldOption.label}
-                                </span>
-                                <span className="tenant-web__platform-studio-compact-row-summary">
-                                  {fieldOption.key}
-                                </span>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="tenant-web__platform-studio-inline-help">
-                        {t("tenant.platformStudio.forms.builder.fieldSettings.noSourceSelected")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {lookupSourcePickerModel ? (
-                  <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
-                    <div className="tenant-web__platform-studio-compact-row">
-                      <div className="tenant-web__platform-studio-compact-row-main">
-                        <span className="tenant-web__platform-studio-compact-row-label">
-                          {t("tenant.platformStudio.forms.builder.fieldSettings.selectedFields")}
-                        </span>
-                        <span className="tenant-web__platform-studio-compact-row-summary">
-                          {lookupSourcePicker.selectedFieldKeys.length > 0
-                            ? getLookupModelFieldLabels(
-                              lookupSourcePickerModel,
-                              lookupSourcePicker.selectedFieldKeys,
-                            ).join(", ")
-                            : t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields")}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="tenant-web__platform-studio-form-group">
-                      <Label htmlFor="tenant-platform-studio-lookup-sort-field">
-                        {t("tenant.platformStudio.forms.builder.fieldSettings.sortBy")}
-                      </Label>
-                      <Select
-                        disabled={!workspaceAccess.canEditSettings}
-                        id="tenant-platform-studio-lookup-sort-field"
-                        onChange={(event) => setLookupSourcePicker((currentValue) =>
-                          currentValue
-                            ? {
-                                ...currentValue,
-                                sortFieldKey: event.target.value || lookupSourcePickerModel.defaultSortField,
-                              }
-                            : currentValue
-                        )}
-                        value={lookupSourcePicker.sortFieldKey}
-                      >
-                        {lookupSourcePickerModel.fields.map((fieldOption) => (
-                          <option key={`${lookupSourcePickerModel.id}-sort-${fieldOption.key}`} value={fieldOption.key}>
-                            {fieldOption.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                  <Button onClick={() => setLookupSourcePicker(null)} size="sm" variant="ghost">
-                    {t("tenant.platformStudio.forms.cancelDelete")}
-                  </Button>
-                  <Button
-                    disabled={
-                      !workspaceAccess.canEditSettings
-                      || !lookupSourcePickerModel
-                      || lookupSourcePicker.selectedFieldKeys.length === 0
-                    }
-                    onClick={saveLookupSourcePicker}
-                    size="sm"
-                    variant="primary"
-                  >
-                    {t("tenant.platformStudio.forms.builder.saveAction")}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
+      <DefaultFilterEditorDialog
+        canEdit={workspaceAccess.canEditSettings}
+        canSave={Boolean(defaultFilterEditor)}
+        cancelLabel={t("tenant.platformStudio.forms.cancelDelete")}
+        description={t(
+          isRootViewScope
+            ? "tenant.platformStudio.forms.builder.viewSection.filtersDescription"
+            : "tenant.platformStudio.forms.builder.filter.filtersDescriptionSubtable",
+        )}
         onOpenChange={(open) => {
           if (!open) {
             setDefaultFilterEditor(null);
           }
         }}
         open={Boolean(defaultFilterEditor)}
+        onCancel={() => setDefaultFilterEditor(null)}
+        onSave={saveDefaultFilterEditor}
+        saveLabel={t("tenant.platformStudio.forms.builder.saveAction")}
+        title={
+          defaultFilterEditor?.index === null
+            ? t(
+              isRootViewScope
+                ? "tenant.platformStudio.forms.builder.filter.addFilter"
+                : "tenant.platformStudio.forms.builder.filter.addFilterSubtable",
+            )
+            : t(
+              isRootViewScope
+                ? "tenant.platformStudio.forms.builder.filter.editFilter"
+                : "tenant.platformStudio.forms.builder.filter.editFilterSubtable",
+            )
+        }
       >
-        <DialogContent className="tenant-web__platform-studio-filter-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>
-                {defaultFilterEditor?.index === null
-                  ? t(
-                    isRootViewScope
-                      ? "tenant.platformStudio.forms.builder.filter.addFilter"
-                      : "tenant.platformStudio.forms.builder.filter.addFilterSubtable",
-                  )
-                  : t(
-                    isRootViewScope
-                      ? "tenant.platformStudio.forms.builder.filter.editFilter"
-                      : "tenant.platformStudio.forms.builder.filter.editFilterSubtable",
-                  )}
-              </DialogTitle>
-              <DialogDescription>
-                {t(
-                  isRootViewScope
-                    ? "tenant.platformStudio.forms.builder.viewSection.filtersDescription"
-                    : "tenant.platformStudio.forms.builder.filter.filtersDescriptionSubtable",
-                )}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-
-          <DialogBody className="tenant-web__platform-studio-filter-dialog-body">
-            {defaultFilterEditor ? (
-              <FilterConditionEditor
-                condition={defaultFilterEditor.draft}
-                disabled={!workspaceAccess.canEditSettings}
-                fields={currentViewFilterTargets}
-                idPrefix="tenant-platform-studio-default-filter-editor"
-                onChange={(nextCondition) => setDefaultFilterEditor((currentValue) =>
-                  currentValue
-                    ? {
-                        ...currentValue,
-                        draft: nextCondition,
-                      }
-                    : currentValue
-                )}
-                onRemove={() => {
-                  if (defaultFilterEditor.index !== null) {
-                    updateDefaultFilters((conditions) =>
-                      conditions.filter((_, entryIndex) => entryIndex !== defaultFilterEditor.index)
-                    );
+        {defaultFilterEditor ? (
+          <FilterConditionEditor
+            condition={defaultFilterEditor.draft}
+            disabled={!workspaceAccess.canEditSettings}
+            fields={currentViewFilterTargets}
+            idPrefix="tenant-platform-studio-default-filter-editor"
+            onChange={(nextCondition) => setDefaultFilterEditor((currentValue) =>
+              currentValue
+                ? {
+                    ...currentValue,
+                    draft: nextCondition,
                   }
+                : currentValue
+            )}
+            onRemove={() => {
+              if (defaultFilterEditor.index !== null) {
+                updateDefaultFilters((conditions) =>
+                  conditions.filter((_, entryIndex) => entryIndex !== defaultFilterEditor.index)
+                );
+              }
 
-                  setDefaultFilterEditor(null);
-                }}
-                t={t}
-              />
-            ) : null}
+              setDefaultFilterEditor(null);
+            }}
+            t={t}
+          />
+        ) : null}
+      </DefaultFilterEditorDialog>
 
-            <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-              <Button onClick={() => setDefaultFilterEditor(null)} size="sm" variant="ghost">
-                {t("tenant.platformStudio.forms.cancelDelete")}
-              </Button>
-              <Button
-                disabled={!workspaceAccess.canEditSettings || !defaultFilterEditor}
-                onClick={saveDefaultFilterEditor}
-                size="sm"
-                variant="primary"
-              >
-                {t("tenant.platformStudio.forms.builder.saveAction")}
-              </Button>
-            </div>
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
+      <QuickFilterEditorDialog
+        addConditionLabel={t("tenant.platformStudio.forms.builder.filter.addCondition")}
+        canAddCondition={workspaceAccess.canEditSettings && rootViewFilterTargets.length > 0}
+        canEdit={workspaceAccess.canEditSettings}
+        canSave={Boolean(
+          quickFilterEditor
+          && quickFilterEditor.draft.label.trim()
+          && quickFilterEditor.draft.conditions.length > 0,
+        )}
+        cancelLabel={t("tenant.platformStudio.forms.cancelDelete")}
+        color={quickFilterEditor?.draft.color ?? ""}
+        colorLabel={t("tenant.platformStudio.forms.builder.filter.quickFilterColor")}
+        colorPlaceholder="#D97706"
+        description={t("tenant.platformStudio.forms.builder.filter.quickFilters")}
+        label={quickFilterEditor?.draft.label ?? ""}
+        labelInputLabel={t("tenant.platformStudio.forms.builder.filter.quickFilterLabel")}
+        onAddCondition={() => {
+          const nextCondition = createDefaultFilterCondition(rootViewFilterTargets);
+          if (!nextCondition) {
+            return;
+          }
 
-      <Dialog
+          setQuickFilterEditor((currentValue) =>
+            currentValue
+              ? {
+                  ...currentValue,
+                  draft: {
+                    ...currentValue.draft,
+                    conditions: [...currentValue.draft.conditions, nextCondition],
+                  },
+                }
+              : currentValue
+          );
+        }}
+        onCancel={() => setQuickFilterEditor(null)}
+        onColorChange={(color) => setQuickFilterEditor((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                draft: {
+                  ...currentValue.draft,
+                  color: normalizeHexColor(color) || undefined,
+                },
+              }
+            : currentValue
+        )}
+        onLabelChange={(label) => setQuickFilterEditor((currentValue) =>
+          currentValue
+            ? {
+                ...currentValue,
+                draft: {
+                  ...currentValue.draft,
+                  label,
+                },
+              }
+            : currentValue
+        )}
         onOpenChange={(open) => {
           if (!open) {
             setQuickFilterEditor(null);
           }
         }}
         open={Boolean(quickFilterEditor)}
+        onSave={saveQuickFilterEditor}
+        saveLabel={t("tenant.platformStudio.forms.builder.saveAction")}
+        title={
+          quickFilterEditor?.index === null
+            ? t("tenant.platformStudio.forms.builder.filter.addQuickFilter")
+            : t("tenant.platformStudio.forms.builder.filter.editFilter")
+        }
       >
-        <DialogContent className="tenant-web__platform-studio-filter-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>
-                {quickFilterEditor?.index === null
-                  ? t("tenant.platformStudio.forms.builder.filter.addQuickFilter")
-                  : t("tenant.platformStudio.forms.builder.filter.editFilter")}
-              </DialogTitle>
-              <DialogDescription>
-                {t("tenant.platformStudio.forms.builder.filter.quickFilters")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
-
-          <DialogBody className="tenant-web__platform-studio-filter-dialog-body">
-            {quickFilterEditor ? (
-              <div className="tenant-web__platform-studio-builder-stack">
-                <div className="tenant-web__platform-studio-form-group">
-                  <Label htmlFor="tenant-platform-studio-quick-filter-editor-label">
-                    {t("tenant.platformStudio.forms.builder.filter.quickFilterLabel")}
-                  </Label>
-                  <Input
-                    disabled={!workspaceAccess.canEditSettings}
-                    id="tenant-platform-studio-quick-filter-editor-label"
-                    onChange={(event) => setQuickFilterEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              label: event.target.value,
-                            },
-                          }
-                        : currentValue
-                    )}
-                    value={quickFilterEditor.draft.label}
-                  />
-                </div>
-
-                <div className="tenant-web__platform-studio-form-group">
-                  <Label htmlFor="tenant-platform-studio-quick-filter-editor-color">
-                    {t("tenant.platformStudio.forms.builder.filter.quickFilterColor")}
-                  </Label>
-                  <Input
-                    disabled={!workspaceAccess.canEditSettings}
-                    id="tenant-platform-studio-quick-filter-editor-color"
-                    onChange={(event) => setQuickFilterEditor((currentValue) =>
-                      currentValue
-                        ? {
-                            ...currentValue,
-                            draft: {
-                              ...currentValue.draft,
-                              color: normalizeHexColor(event.target.value) || undefined,
-                            },
-                          }
-                        : currentValue
-                    )}
-                    placeholder="#D97706"
-                    value={quickFilterEditor.draft.color ?? ""}
-                  />
-                </div>
-
-                <div className="tenant-web__platform-studio-builder-stack">
-                  {quickFilterEditor.draft.conditions.map((condition, conditionIndex) => (
-                    <FilterConditionEditor
-                      condition={condition}
-                      disabled={!workspaceAccess.canEditSettings}
-                      fields={rootViewFilterTargets}
-                      idPrefix={`tenant-platform-studio-quick-filter-editor-${quickFilterEditor.draft.id}-${conditionIndex}`}
-                      key={`${quickFilterEditor.draft.id}-${conditionIndex}`}
-                      onChange={(nextCondition) => setQuickFilterEditor((currentValue) =>
-                        currentValue
-                          ? {
-                              ...currentValue,
-                              draft: {
-                                ...currentValue.draft,
-                                conditions: currentValue.draft.conditions.map((entry, entryIndex) =>
-                                  entryIndex === conditionIndex ? nextCondition : entry
-                                ),
-                              },
-                            }
-                          : currentValue
-                      )}
-                      onRemove={() => setQuickFilterEditor((currentValue) =>
-                        currentValue
-                          ? {
-                              ...currentValue,
-                              draft: {
-                                ...currentValue.draft,
-                                conditions: currentValue.draft.conditions.filter((_, entryIndex) =>
-                                  entryIndex !== conditionIndex
-                                ),
-                              },
-                            }
-                          : currentValue
-                      )}
-                      t={t}
-                    />
-                  ))}
-                </div>
-
-                <div className="tenant-web__platform-studio-button-row">
-                  <Button
-                    disabled={!workspaceAccess.canEditSettings || rootViewFilterTargets.length === 0}
-                    onClick={() => {
-                      const nextCondition = createDefaultFilterCondition(rootViewFilterTargets);
-                      if (!nextCondition) {
-                        return;
+        {quickFilterEditor
+          ? quickFilterEditor.draft.conditions.map((condition, conditionIndex) => (
+              <FilterConditionEditor
+                condition={condition}
+                disabled={!workspaceAccess.canEditSettings}
+                fields={rootViewFilterTargets}
+                idPrefix={`tenant-platform-studio-quick-filter-editor-${quickFilterEditor.draft.id}-${conditionIndex}`}
+                key={`${quickFilterEditor.draft.id}-${conditionIndex}`}
+                onChange={(nextCondition) => setQuickFilterEditor((currentValue) =>
+                  currentValue
+                    ? {
+                        ...currentValue,
+                        draft: {
+                          ...currentValue.draft,
+                          conditions: currentValue.draft.conditions.map((entry, entryIndex) =>
+                            entryIndex === conditionIndex ? nextCondition : entry
+                          ),
+                        },
                       }
+                    : currentValue
+                )}
+                onRemove={() => setQuickFilterEditor((currentValue) =>
+                  currentValue
+                    ? {
+                        ...currentValue,
+                        draft: {
+                          ...currentValue.draft,
+                          conditions: currentValue.draft.conditions.filter((_, entryIndex) =>
+                            entryIndex !== conditionIndex
+                          ),
+                        },
+                      }
+                    : currentValue
+                )}
+                t={t}
+              />
+            ))
+          : null}
+      </QuickFilterEditorDialog>
 
-                      setQuickFilterEditor((currentValue) =>
-                        currentValue
-                          ? {
-                              ...currentValue,
-                              draft: {
-                                ...currentValue.draft,
-                                conditions: [...currentValue.draft.conditions, nextCondition],
-                              },
-                            }
-                          : currentValue
-                      );
-                    }}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    {t("tenant.platformStudio.forms.builder.filter.addCondition")}
-                  </Button>
-                </div>
-
-                <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                  <Button onClick={() => setQuickFilterEditor(null)} size="sm" variant="ghost">
-                    {t("tenant.platformStudio.forms.cancelDelete")}
-                  </Button>
-                  <Button
-                    disabled={!workspaceAccess.canEditSettings || !quickFilterEditor.draft.label.trim() || quickFilterEditor.draft.conditions.length === 0}
-                    onClick={saveQuickFilterEditor}
-                    size="sm"
-                    variant="primary"
-                  >
-                    {t("tenant.platformStudio.forms.builder.saveAction")}
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
+      <DebugDialog
+        compiledRuntime={debugCompiledRuntime}
+        labels={{
+          compiledRuntimeDescription: "Derived storage and SQL mapping for scopes and fields.",
+          compiledRuntimeTitle: "Compiled Runtime",
+          description: t("tenant.platformStudio.forms.builder.debugDialogDescription"),
+          modelSchemaDescription: t("tenant.platformStudio.forms.builder.debugModelSchemaDescription"),
+          modelSchemaTitle: t("tenant.platformStudio.forms.builder.debugModelSchemaTitle"),
+          title: t("tenant.platformStudio.forms.builder.debugDialogTitle"),
+          uiSchemaDescription: t("tenant.platformStudio.forms.builder.debugUiSchemaDescription"),
+          uiSchemaTitle: t("tenant.platformStudio.forms.builder.debugUiSchemaTitle"),
+        }}
+        modelSchema={debugDataSchema}
         onOpenChange={setDebugOpen}
         open={debugOpen}
-        surfaceClassName="tenant-web__platform-studio-debug-surface"
-      >
-        <DialogContent className="tenant-web__platform-studio-debug-dialog">
-          <DialogHeader>
-            <div>
-              <DialogTitle>{t("tenant.platformStudio.forms.builder.debugDialogTitle")}</DialogTitle>
-              <DialogDescription>
-                {t("tenant.platformStudio.forms.builder.debugDialogDescription")}
-              </DialogDescription>
-            </div>
-          </DialogHeader>
+        uiSchema={debugUiSchema}
+      />
 
-          <DialogBody className="tenant-web__platform-studio-debug-dialog-body">
-            <div className="tenant-web__platform-studio-debug-schema-grid">
-              <Card className="tenant-web__platform-studio-debug-schema-card">
-                <CardHeader>
-                  <div>
-                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugModelSchemaTitle")}</CardTitle>
-                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugModelSchemaDescription")}</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
-                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugDataSchema}</pre>
-                </CardContent>
-              </Card>
-
-              <Card className="tenant-web__platform-studio-debug-schema-card">
-                <CardHeader>
-                  <div>
-                    <CardTitle>{t("tenant.platformStudio.forms.builder.debugUiSchemaTitle")}</CardTitle>
-                    <CardDescription>{t("tenant.platformStudio.forms.builder.debugUiSchemaDescription")}</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
-                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugUiSchema}</pre>
-                </CardContent>
-              </Card>
-
-              <Card className="tenant-web__platform-studio-debug-schema-card">
-                <CardHeader>
-                  <div>
-                    <CardTitle>Compiled Runtime</CardTitle>
-                    <CardDescription>Derived storage and SQL mapping for scopes and fields.</CardDescription>
-                  </div>
-                </CardHeader>
-                <CardContent className="tenant-web__platform-studio-debug-schema-scroll">
-                  <pre className="tenant-web__platform-studio-debug-schema-pre">{debugCompiledRuntime}</pre>
-                </CardContent>
-              </Card>
-            </div>
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
+      <UnsavedLeaveConfirmationDialog
+        cancelLabel={t("tenant.platformStudio.forms.builder.stayAction")}
+        confirmLabel={t("tenant.platformStudio.forms.builder.leaveWithoutSavingAction")}
+        description={t("tenant.platformStudio.forms.builder.unsavedLeaveDescription")}
+        onCancel={() => resolveLeaveConfirmation(false)}
+        onConfirm={() => resolveLeaveConfirmation(true)}
         onOpenChange={(open) => {
           if (!open && leaveConfirmOpen) {
             resolveLeaveConfirmation(false);
           }
         }}
         open={leaveConfirmOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("tenant.platformStudio.forms.builder.unsavedLeaveTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("tenant.platformStudio.forms.builder.unsavedLeaveDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => resolveLeaveConfirmation(false)}
-            >
-              {t("tenant.platformStudio.forms.builder.stayAction")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => resolveLeaveConfirmation(true)}
-              variant="danger"
-            >
-              {t("tenant.platformStudio.forms.builder.leaveWithoutSavingAction")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={t("tenant.platformStudio.forms.builder.unsavedLeaveTitle")}
+      />
     </div>
   );
 }

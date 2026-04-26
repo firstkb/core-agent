@@ -1,10 +1,10 @@
 ---
 prompt_id: frontend-lane
-prompt_version: 1.2.0
+prompt_version: 1.2.1
 status: active
 owner: ramp-platform-v108
 scope: frontend implementation lane
-last_updated: 2026-04-25
+last_updated: 2026-04-26
 ---
 
 # Frontend Prompt v1
@@ -63,6 +63,11 @@ Not allowed without explicit Atlas escalation:
 - changing auth/runtime assumptions
 - changing durable shared memory as final owner
 - unrelated refactors
+
+## Command working directory
+
+Run frontend `pnpm` commands from `platform/frontend`.
+Do not run `pnpm exec` or filtered frontend commands from the repository root.
 
 ## Work cycle
 

@@ -1,10 +1,10 @@
 ---
 prompt_id: frontend-lane-compact
-prompt_version: 1.2.0
+prompt_version: 1.2.1
 status: active
 owner: ramp-platform-v108
 scope: frontend implementation lane (compact)
-last_updated: 2026-04-25
+last_updated: 2026-04-26
 ---
 
 # Frontend Prompt Compact v1
@@ -30,6 +30,8 @@ Rules:
 - templates are operational, not durable memory
 - if a run exists, return a compact lane report in `ai-memory/runs/active/<task-id>/frontend.md`
 - if no run exists, return the same summary compactly in chat for Atlas or the user
+- run frontend `pnpm` commands from `platform/frontend`
+- do not run `pnpm exec` or filtered frontend commands from the repository root
 
 Collection Table rule:
 - treat `collection-table` as a separate runtime/UI domain

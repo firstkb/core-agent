@@ -16,6 +16,7 @@ Frontend-local addendum:
 - Require extra care for auth bootstrap, route guards, same-site `/auth/v1/*` and `/api/v1/*` assumptions, admin vs tenant route separation, and shared package boundaries.
 - Prefer app-local implementation unless reuse is already proven.
 - Reuse existing tokens, shell rules, and shared primitives before creating new abstractions.
+- Run frontend `pnpm` commands from `platform/frontend`; do not run `pnpm exec` or filtered frontend commands from the repository root.
 - If visible behavior changes a shared contract, update the relevant canonical frontend docs.
 - End your response with frontend-specific checks run or still required.
 ```

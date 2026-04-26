@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -362,6 +363,26 @@ def check_env_policy(tracked: list[str], errors: list[str]) -> None:
             add_error(errors, rel, "local env files must not be tracked; keep only *.env.example")
 
 
+def check_preflight_policy(root: Path, errors: list[str]) -> None:
+    path = root / "scripts/ai/preflight.sh"
+    if not path.exists():
+        add_error(errors, "scripts/ai/preflight.sh", "lightweight local preflight script must exist")
+        return
+    if not os.access(path, os.X_OK):
+        add_error(errors, path.relative_to(root), "preflight script must be executable")
+
+    text = read_text(path)
+    for marker in ["--lite", "--full", "--docs", "not a GitHub Actions gate"]:
+        if marker not in text:
+            add_error(errors, path.relative_to(root), f"missing preflight contract marker `{marker}`")
+
+    workflow_root = root / ".github/workflows"
+    if workflow_root.exists():
+        for workflow in workflow_root.rglob("*"):
+            if workflow.is_file() and "preflight.sh" in read_text(workflow):
+                add_error(errors, workflow.relative_to(root), "preflight must stay manual/local until owner promotes it to a CI gate")
+
+
 def run_check() -> int:
     root = repo_root()
     tracked = git_ls_files(root)
@@ -377,6 +398,7 @@ def run_check() -> int:
     check_form_builder_policy(root, errors)
     check_gitignore(root, errors)
     check_env_policy(tracked, errors)
+    check_preflight_policy(root, errors)
     check_markdown_links(root, tracked_existing_markdown(root, tracked), errors)
 
     if errors:

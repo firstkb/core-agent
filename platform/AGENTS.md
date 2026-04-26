@@ -31,6 +31,16 @@ Use `ai-memory/` by role.
 Use the local `AGENTS.md` files for lane-specific operating rules.
 Do not use the former `platform/docs/ai/**` path for reads or writes; it has been deleted after migration. Use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for old provenance.
 
+## Local preflight
+
+Use `scripts/ai/preflight.sh` as the lightweight local preflight before closing
+non-trivial implementation work.
+
+The script does not install dependencies and is not a required GitHub Actions
+gate. Default mode runs docs/memory/env hygiene and quick agent-cli checks when
+available. Use `scripts/ai/preflight.sh --full` only when a broader backend and
+frontend sweep is needed.
+
 ## Memory roles
 
 Use `ai-memory/` by role:

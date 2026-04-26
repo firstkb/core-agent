@@ -71,6 +71,20 @@ Do not read build or plumbing surfaces during ordinary work:
 
 You are not the build system. Do not inspect validator source, fixtures, internal CLI plumbing, or old runs to infer behavior that is already defined in the active Codex-native skill, contract, template, standard, and doc surfaces.
 
+## Completion Checks
+
+Before marking non-trivial implementation work complete, run:
+
+```bash
+scripts/ai/preflight.sh
+```
+
+Use `scripts/ai/preflight.sh --full` only when the task needs a broader
+product sweep across backend/frontend checks.
+If the task is docs/memory-only, the targeted docs/memory checks are enough.
+If preflight cannot run or optional checks fail, state exactly which checks ran,
+which did not, and why.
+
 ## Runtime roles
 
 ### Maestro

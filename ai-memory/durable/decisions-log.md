@@ -903,3 +903,15 @@ Do not turn it into a task journal.
   - `.gitignore`
   - `scripts/ai/check-env-policy.py`
   - `scripts/ai/docs_memory_check.py`
+
+### DEC-076 Lightweight Local Preflight Is Manual
+
+- Date: 2026-04-25
+- Status: active
+- State: landed
+- Decision: `scripts/ai/preflight.sh` is the local/manual preflight for non-trivial implementation work. Default mode runs docs/memory, env, Atlas automation, and quick agent-cli checks when available. Use `scripts/ai/preflight.sh --full` only when a broader backend/frontend sweep is needed. It does not install dependencies and is not wired as a required GitHub Actions gate.
+- Sources:
+  - `scripts/ai/preflight.sh`
+  - `AGENTS.md`
+  - `platform/AGENTS.md`
+  - `ai-memory/START_HERE.md`

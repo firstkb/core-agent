@@ -46,7 +46,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `ai-memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked pointer README directories were deleted.
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now validates docs/memory drift, deleted pointer folders, retained Form Builder exact-detail policy, and local markdown links.
 - `landed` `doc-confirmed`: `ai-memory/START_HERE.md` is the first compact memory read after repo/platform instructions; `memory-index.yaml` is now broader routing, not mandatory first read for every task.
-- `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now also validates stale platform layout, historical migration-plan status, `AGENTS_NAME.md` non-authoritative status, `START_HERE`, and tracked env-file policy.
+- `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now also validates stale platform layout, historical migration-plan status, `AGENTS_NAME.md` non-authoritative status, `START_HERE`, tracked env-file policy, and manual preflight policy.
+- `landed` `doc-confirmed`: `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/env/automation checks plus quick agent-cli tests when available, while `--full` is explicit for broader backend/frontend checks.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks for relevant PRs and pushes.
 - `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
 - `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.

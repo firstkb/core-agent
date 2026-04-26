@@ -4,7 +4,7 @@ description: Use this skill as the default intake and routing layer for Ramp Pla
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.5.0
+Skill version: 1.5.1
 Human display name: Atlas
 
 Purpose:
@@ -228,10 +228,21 @@ Use these repository files as stable operational contracts:
 - `ai-memory/atlas/prompts/backend-prompt-compact-v1.md`
 - `ai-memory/atlas/templates/control-task.md`
 - `ai-memory/atlas/templates/lane-report.md`
+- `ai-memory/atlas/templates/agent-evidence.md`
 
 `task.md` must conform to `ai-memory/atlas/templates/control-task.md`.
 Lane files and lane return sections must conform to `ai-memory/atlas/templates/lane-report.md`.
 Generate task-specific packets and launch prompts on top of these contracts, not entirely new base prompts.
+
+## Agent evidence rule
+
+For non-trivial task closeout or PR body text, use the compact evidence shape in
+`ai-memory/atlas/templates/agent-evidence.md`.
+
+Do not create a separate evidence file by default.
+For run-backed work, put the evidence in the final response and, when useful,
+inside `ai-memory/runs/active/<task-id>/final.md`.
+For tiny tasks, use the reduced evidence shape or a concise prose closeout.
 
 ## Version synchronization rule
 

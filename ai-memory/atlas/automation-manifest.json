@@ -1,16 +1,16 @@
 {
-  "bundle_version": "1.5.0",
+  "bundle_version": "1.5.1",
   "skill": {
     "name": "ramp-conductor",
     "display_name": "Atlas",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "invocation": "$ramp-conductor",
     "file": ".agents/skills/ramp-conductor/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "file": "ai-memory/atlas/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {
@@ -42,6 +42,10 @@
     "lane_report": {
       "version": "1.3.0",
       "file": "ai-memory/atlas/templates/lane-report.md"
+    },
+    "agent_evidence": {
+      "version": "1.0.0",
+      "file": "ai-memory/atlas/templates/agent-evidence.md"
     }
   },
   "scaffolder": {

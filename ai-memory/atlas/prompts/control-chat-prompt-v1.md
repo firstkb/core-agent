@@ -1,10 +1,10 @@
 ---
 prompt_id: control-chat
-prompt_version: 1.5.0
+prompt_version: 1.5.1
 status: active
 owner: ramp-platform-v108
 scope: universal product-task intake and control orchestration
-last_updated: 2026-04-25
+last_updated: 2026-04-26
 skill_name: ramp-conductor
 skill_display_name: Atlas
 ---
@@ -301,5 +301,10 @@ At reconciliation / closeout use:
 ## Contract Drift Check
 ## Checks Summary
 ## Shared Memory Updates
+## Agent Evidence
 ## Final Closeout
 ## Next Exact Step
+
+For non-trivial closeout or PR body text, use the compact shape from
+`ai-memory/atlas/templates/agent-evidence.md`.
+Do not create a separate evidence file by default.

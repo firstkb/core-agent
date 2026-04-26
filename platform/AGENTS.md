@@ -41,6 +41,10 @@ gate. Default mode runs docs/memory/env hygiene and quick agent-cli checks when
 available. Use `scripts/ai/preflight.sh --full` only when a broader backend and
 frontend sweep is needed.
 
+For non-trivial platform closeout or PR text, use
+`ai-memory/atlas/templates/agent-evidence.md` as a compact evidence block.
+Tiny local edits can use a concise prose closeout instead.
+
 ## Memory roles
 
 Use `ai-memory/` by role:

@@ -406,6 +406,8 @@ routes:
       - automation manifest
       - lane prompt
       - control prompt
+      - agent evidence
+      - PR evidence
       - run scaffold
       - former platform/docs/ai retirement
       - ai-memory/atlas
@@ -421,3 +423,4 @@ routes:
       - ai-memory/atlas/automation-manifest.json
       - ai-memory/atlas/prompts/README.md
       - ai-memory/atlas/templates/README.md
+      - ai-memory/atlas/templates/agent-evidence.md

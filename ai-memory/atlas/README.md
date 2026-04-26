@@ -18,7 +18,7 @@ deleted; use compact import records and git history for provenance.
 - `platform-docs-ai-retirement-readiness.md`: final deletion audit for the former `platform/docs/ai/**` layer.
 - `legacy-runs-triage.md`: triage state for former `platform/docs/ai/runs/**` artifacts.
 - `prompts/`: base prompt contracts for Atlas control, frontend lane, and backend lane.
-- `templates/`: artifact templates used by the run scaffolder and handoff prompts.
+- `templates/`: artifact templates used by the run scaffolder, handoff prompts, and compact agent evidence blocks.
 - `../runs/active/`: active Atlas run artifacts.
 - `../runs/archive/`: closed or superseded Atlas run artifacts.
 - `../../scripts/ai/new-run.py`: mechanical run scaffolder.

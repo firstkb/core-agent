@@ -30,6 +30,7 @@ It does not mean every historical exact-detail document has been deleted.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
 - `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, env-policy, stale-layout, preflight-policy, and local markdown-link check.
 - `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs hygiene plus quick agent-cli checks, and `--full` is explicit for broader backend/frontend checks.
+- `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
 - `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks on relevant PRs and pushes.
 - `.agents/skills/scribe/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
 - Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.

@@ -16,6 +16,7 @@ Use them only when the current workflow step needs a structured artifact.
 - `chat-start-frontend.md` — frontend addendum for chat bootstrap
 - `control-task.md` — Atlas-owned task contract and lane packet scaffold for run-backed work
 - `lane-report.md` — FE/BE lane file scaffold that combines launch prompt, packet snapshot, and lane return report
+- `agent-evidence.md` — compact final response or PR evidence block for non-trivial agent tasks
 
 ## Use rule
 
@@ -27,8 +28,10 @@ They are opened on demand during transitions:
 - handoff
 - coordinated control run
 - lane closeout
+- non-trivial final closeout or PR summary
 
 Direct no-run local tasks usually do not need `control-task.md` or `lane-report.md`.
+Tiny tasks may use a reduced `agent-evidence.md` block instead of the full form.
 
 
 ## Version note

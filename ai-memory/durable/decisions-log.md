@@ -915,3 +915,15 @@ Do not turn it into a task journal.
   - `AGENTS.md`
   - `platform/AGENTS.md`
   - `ai-memory/START_HERE.md`
+
+### DEC-077 Agent Evidence Template Stays Lightweight
+
+- Date: 2026-04-26
+- Status: active
+- State: landed
+- Decision: `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence shape for non-trivial agent closeout or PR body text. It should be pasted into the final response, PR body, or run `final.md` when useful. It must not become a mandatory standalone artifact for tiny tasks.
+- Sources:
+  - `ai-memory/atlas/templates/agent-evidence.md`
+  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `AGENTS.md`
+  - `platform/AGENTS.md`

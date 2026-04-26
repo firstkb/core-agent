@@ -85,6 +85,10 @@ If the task is docs/memory-only, the targeted docs/memory checks are enough.
 If preflight cannot run or optional checks fail, state exactly which checks ran,
 which did not, and why.
 
+For non-trivial task closeout or PR text, use the compact evidence shape in
+`ai-memory/atlas/templates/agent-evidence.md`. Keep it short; do not turn it
+into a mandatory file for tiny changes.
+
 ## Runtime roles
 
 ### Maestro

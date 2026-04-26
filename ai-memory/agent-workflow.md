@@ -118,6 +118,10 @@ which checks could not run and why. Use `scripts/ai/preflight.sh --full` only
 when a broader backend/frontend sweep is needed. The preflight is local/manual
 and must not install dependencies.
 
+For non-trivial closeout or PR body text, use
+`ai-memory/atlas/templates/agent-evidence.md`. Keep it compact and do not create
+a standalone evidence file unless the owner asks.
+
 Use `Scribe` (`$scribe`) after large docs/memory, AGENTS, Atlas, or reference-code changes.
 Do not run Scribe on every commit by default.
 

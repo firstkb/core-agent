@@ -111,5 +111,11 @@ The preflight is local/manual. It does not install dependencies and is not a
 GitHub Actions gate. Use `scripts/ai/preflight.sh --full` only when a broader
 backend/frontend sweep is needed.
 
+For non-trivial closeout or PR body text, use:
+
+```text
+ai-memory/atlas/templates/agent-evidence.md
+```
+
 Use Scribe manually after large docs/memory changes or before a major development phase.
 Do not run Scribe on every commit by default.

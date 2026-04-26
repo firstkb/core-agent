@@ -42,15 +42,16 @@ They are operational behavior contracts.
 
 ## Selection rules
 
-Atlas chooses the prompt plan and must emit the ready-to-paste lane launch prompt when a new lane chat is needed.
+Atlas chooses the prompt plan and must emit the ready-to-paste lane launch prompt when a run-backed lane chat is needed.
 Use these defaults:
 
 - new task and routing unclear -> start with Atlas
-- direct tiny frontend task -> compact FE prompt
-- direct tiny backend task -> compact BE prompt
+- direct tiny frontend task -> current-chat execution using compact FE prompt guidance
+- direct tiny backend task -> current-chat execution using compact BE prompt guidance
 - new run-backed FE lane -> full FE prompt
 - new run-backed BE lane -> full BE prompt
 - cross-stack work -> Atlas control prompt + whichever lane prompts Atlas selects
+- owner-requested separate chat without run -> label `MANUAL_HANDOFF_NO_RUN` and provide a manual handoff prompt, not lane orchestration
 
 ## Naming rule
 
@@ -61,4 +62,4 @@ Prompt files may refer to either form, but technical automation should continue 
 
 ## Atlas intake note
 
-For new platform tasks, start with Atlas. Atlas decides run/no-run, task-id, prompt plan, and chat topology. The lane prompts are execution prompts, not intake prompts. Atlas should not require a second user message just to produce the lane bootstrap text.
+For new platform tasks, start with Atlas. Atlas decides run/no-run, task-id, prompt plan, and chat topology. Direct no-run tasks stay in the current chat by default. If Atlas chooses a separate FE/BE lane chat, it should normally create a run and should not require a second user message just to produce the lane bootstrap text.

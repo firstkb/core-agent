@@ -49,6 +49,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now also validates stale platform layout, historical migration-plan status, `AGENTS_NAME.md` non-authoritative status, `START_HERE`, tracked env-file policy, and manual preflight policy.
 - `landed` `doc-confirmed`: `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/env/automation checks plus quick agent-cli tests when available, while `--full` is explicit for broader backend/frontend checks.
 - `landed` `doc-confirmed`: `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence shape for non-trivial closeout or PR text; it should not become a standalone artifact by default.
+- `landed` `doc-confirmed`: Atlas direct no-run now means current-chat execution by default. Separate FE/BE chats should normally be run-backed; no-run separate-chat prompts are allowed only as owner-requested `MANUAL_HANDOFF_NO_RUN`.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks for relevant PRs and pushes.
 - `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
 - `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.

@@ -31,6 +31,9 @@ They are opened on demand during transitions:
 - non-trivial final closeout or PR summary
 
 Direct no-run local tasks usually do not need `control-task.md` or `lane-report.md`.
+Direct no-run means current-chat execution by default.
+If a separate FE/BE chat is needed, create a run unless the owner explicitly asks
+for `MANUAL_HANDOFF_NO_RUN`.
 Tiny tasks may use a reduced `agent-evidence.md` block instead of the full form.
 
 

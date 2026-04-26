@@ -408,6 +408,8 @@ routes:
       - control prompt
       - agent evidence
       - PR evidence
+      - MANUAL_HANDOFF_NO_RUN
+      - direct no-run
       - run scaffold
       - former platform/docs/ai retirement
       - ai-memory/atlas

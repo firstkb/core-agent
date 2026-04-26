@@ -134,12 +134,14 @@ For any cross-stack, shared-contract, package-boundary, auth/session, tenancy-se
 Do not rely on implicit activation for this workflow.
 
 The control skill:
-- decides whether the task should be direct/no-run or run-backed
+- decides whether the task should be current-chat direct/no-run or run-backed
 - selects the route and mode
 - creates or updates `ai-memory/runs/active/<task-id>/` when a run is needed
 - writes `task.md`
 - writes `frontend.md` and/or `backend.md` when lanes exist
-- returns ready-to-paste FE/BE launch prompts in the same response when new lane chats are needed
+- executes small direct no-run tasks in the current chat when implementation was requested
+- returns ready-to-paste FE/BE launch prompts in the same response when run-backed lane chats are needed
+- returns manual no-run handoff prompts only when the owner explicitly asks for a separate chat without a run
 - writes the same launch prompts into the lane files when a run exists
 - reconciles lane reports
 - owns final shared-memory updates
@@ -170,6 +172,8 @@ It does not decide task intent or memory updates.
 
 FE and BE lanes may propose memory deltas, but only Atlas finalizes updates to shared memory files.
 Do not make the user ask a second time for lane prompts after Atlas has already chosen the route and prompt plan.
+If Atlas chooses a separate FE/BE chat itself, it should normally create a run.
+No-run separate-chat handoff must be explicit owner intent and labeled `MANUAL_HANDOFF_NO_RUN`.
 
 ## Ignore by default
 

@@ -1,15 +1,15 @@
 ---
 name: ramp-conductor
-description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should stay in one direct frontend/backend lane without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, ready-to-paste lane prompts, reconciliation, and final shared memory updates.
+description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should be executed directly in the current chat without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, ready-to-paste lane prompts for run-backed or explicit manual handoff work, reconciliation, and final shared memory updates.
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.5.1
+Skill version: 1.5.2
 Human display name: Atlas
 
 Purpose:
 Atlas is the universal product-task conductor for Ramp Platform v108.
-Use it to intake work, read the smallest sufficient `ai-memory` slice, route the task, decide whether a run is needed, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts, reconcile lane reports, and finalize shared memory updates.
+Use it to intake work, read the smallest sufficient `ai-memory` slice, route the task, decide whether a run is needed, execute small direct no-run tasks in the current chat, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts only for run-backed or explicit owner-requested manual handoff work, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
 - Use explicitly with `$ramp-conductor`.
@@ -26,10 +26,10 @@ Do not create a run solely for ritual completeness; prefer the cheapest path tha
 ## Universal intake rule
 
 During the current platform workflow, Atlas is the default first touch for new work under `platform/`.
-Atlas may still decide that the cheapest correct path is a direct one-lane task with no run artifacts.
+Atlas may still decide that the cheapest correct path is current-chat execution with no run artifacts.
 
 Direct lane bypass is still acceptable only as an intentional fast-path for obviously tiny local work.
-After intake, Atlas should prefer a direct no-run route when scope is single-lane, the shared contract is clear, and durable run artifacts would add more overhead than value.
+After intake, Atlas should prefer a direct no-run route when scope is small, the shared contract is clear, and durable run artifacts would add more overhead than value.
 If routing, memory impact, or task duration is unclear, start with Atlas.
 
 ## Preferred intake brief
@@ -42,7 +42,7 @@ Atlas works best when the task is stated in this shape:
 - `Candidate V1` — optional proposed first implementation
 - `Open questions` — optional unknowns Atlas should lock before coding
 - `Out of scope` — what should not be touched
-- `Need from Atlas` — route, run/no-run, task-id, prompt plan, chat count, ready chat prompts, and next step
+- `Need from Atlas` — route, run/no-run, task-id when needed, prompt plan, chat topology, execution plan, optional manual handoff prompt when explicitly requested, and next step
 
 Atlas should still accept messier briefs. If route-critical information is missing and cheap to resolve from the user, ask one focused clarifying question; otherwise choose the safest conservative route and preserve the provided details rather than rewriting them away.
 
@@ -91,17 +91,28 @@ Prefer a direct no-run route when all of these are true:
 - the work is likely to finish in one session
 - no durable handoff is expected
 
-For a direct no-run route, Atlas must still return:
+Direct no-run means current-chat execution by Atlas/main agent.
+Do not open or recommend a separate FE/BE lane chat by default.
+Do not emit a ready-to-paste lane launch prompt by default.
+
+For a direct no-run route, Atlas must either execute the task in the current chat
+or return a compact current-chat implementation plan when the owner asked only
+for routing advice. It must still state:
 - locked invariants
 - required reads
 - chosen prompt (`full` or `compact`)
-- recommended chat count
-- a ready-to-paste direct lane launch prompt
+- recommended chat topology: `current chat only`
 - next exact step
 
-For direct no-run work, Atlas may use a compact control response that includes only the required no-run fields instead of the full run-backed intake structure.
+For direct no-run work, Atlas may use compact FE/BE lane prompt guidance internally, but the work stays in the current chat.
 
 No `task-id` or run folder is required for a no-run route.
+
+Exception: if the owner explicitly asks for a prompt to paste into another chat
+without creating a run, label it `MANUAL_HANDOFF_NO_RUN`. This is an
+owner-managed handoff, not lane orchestration. Atlas may provide the prompt, but
+must state that there is no run folder, no Atlas reconciliation artifact, and
+the receiving chat should return compact Agent Evidence to the owner.
 
 ### Run-backed routes
 
@@ -132,10 +143,11 @@ Atlas chooses the minimum sufficient prompt set and chat topology.
 Prompt rules:
 - use `ai-memory/atlas/prompts/control-chat-prompt-v1.md` for Atlas itself
 - use full lane prompts for new, risky, or run-backed lanes
-- use compact lane prompts for direct local work or continuation of an already-stable lane
+- use compact lane prompt guidance internally for direct local work or continuation of an already-stable lane
 
 Chat topology rules:
-- direct local task -> `1` lane chat
+- direct local task -> current chat only
+- owner-requested manual no-run handoff -> current chat + owner-managed target chat, no run folder
 - `FE_ONLY` -> `1` control chat + `1` FE lane chat
 - `BE_ONLY` -> `1` control chat + `1` BE lane chat
 - `CROSS_STACK_PARALLEL` -> `1` control chat + `1` FE lane + `1` BE lane
@@ -144,14 +156,14 @@ Chat topology rules:
 
 ## Prompt delivery contract
 
-Whenever Atlas decides that one or more lane chats should be opened, Atlas must provide the ready-to-paste launch prompt(s) in the same response.
+Whenever Atlas decides that one or more lane chats should be opened, the task should normally be run-backed and Atlas must provide the ready-to-paste launch prompt(s) in the same response.
 Do not make the user ask a second time for the FE or BE prompt.
 
 Each lane prompt must name the base prompt, required reads, allowed scope, out-of-scope boundaries, required checks, expected return shape, and remind the lane that Atlas owns final shared-memory updates.
 
 For run-backed lanes, Atlas must also write the same launch prompt into the corresponding lane file under `## Ready Chat Launch Prompt` and set `launch_prompt_status: ready`.
 
-For direct no-run routes, Atlas must return the direct launch prompt inline in the control response.
+For direct no-run routes, Atlas must not emit a lane launch prompt unless the owner explicitly asks for `MANUAL_HANDOFF_NO_RUN`.
 
 ## Task-id rules
 
@@ -308,7 +320,7 @@ At intake use this structure:
 - chat topology
 - scaffolder action when relevant
 - lane plan / packets when relevant
-- ready-to-paste lane prompt(s)
+- ready-to-paste lane prompt(s) only for run-backed lanes or owner-requested `MANUAL_HANDOFF_NO_RUN`
 - memory targets
 - next control step
 
@@ -318,8 +330,8 @@ If `run_required = no`, Atlas may use a compact intake response as long as it st
 - locked invariants
 - required reads
 - chosen prompt
-- recommended chat count
-- ready-to-paste direct lane launch prompt
+- recommended chat topology
+- whether Atlas will execute now or the owner requested `MANUAL_HANDOFF_NO_RUN`
 - next exact step
 
 At reconciliation / closeout use:

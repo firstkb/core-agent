@@ -411,9 +411,9 @@
   domain: atlas-orchestration
   state: landed
   confidence: doc-confirmed
-  summary: "Atlas/ramp-conductor now uses ai-memory-first routing, active prompts/templates under ai-memory/atlas, compact agent evidence for closeout/PR text, and new run artifacts under ai-memory/runs/active; former platform/docs/ai payloads were migrated and deleted, with provenance in legacy import records and git history."
+  summary: "Atlas/ramp-conductor now uses ai-memory-first routing, direct no-run current-chat execution, active prompts/templates under ai-memory/atlas, compact agent evidence for closeout/PR text, and new run artifacts under ai-memory/runs/active; former platform/docs/ai payloads were migrated and deleted, with provenance in legacy import records and git history."
   read_when:
-    - "task touches Atlas, ramp-conductor, AI memory workflow, run scaffolding, lane prompts, prompt templates, agent evidence, automation versions, or former platform/docs/ai retirement"
+    - "task touches Atlas, ramp-conductor, AI memory workflow, direct no-run routing, manual no-run handoff, run scaffolding, lane prompts, prompt templates, agent evidence, automation versions, or former platform/docs/ai retirement"
     - "task asks how agents should read memory or write Atlas run artifacts"
   canonical_docs:
     - AGENTS.md

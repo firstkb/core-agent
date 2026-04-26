@@ -1,12 +1,17 @@
 ---
 template_id: lane-report
-template_version: 1.3.0
+template_version: 1.3.1
 status: active
 owner: ramp-platform-v108
-last_updated: 2026-04-05
+last_updated: 2026-04-26
 ---
 
 # LANE FILE
+
+Use this template for run-backed FE/BE lanes.
+Do not create a lane file for direct no-run work.
+Owner-requested `MANUAL_HANDOFF_NO_RUN` uses a chat prompt and compact Agent
+Evidence, not this persistent lane artifact.
 
 ## Metadata
 - task_id:

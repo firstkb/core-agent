@@ -927,3 +927,14 @@ Do not turn it into a task journal.
   - `.agents/skills/ramp-conductor/SKILL.md`
   - `AGENTS.md`
   - `platform/AGENTS.md`
+
+### DEC-078 Direct No-Run Means Current-Chat Execution
+
+- Date: 2026-04-26
+- Status: active
+- State: landed
+- Decision: Atlas direct no-run routes mean current-chat execution by default. If Atlas decides a separate FE/BE chat should be opened, the task should normally become run-backed with a task id and `ai-memory/runs/active/<task-id>/` artifacts. A separate no-run prompt is allowed only when the owner explicitly requests `MANUAL_HANDOFF_NO_RUN`; that handoff is owner-managed and not Atlas lane orchestration.
+- Sources:
+  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `ai-memory/atlas/prompts/control-chat-prompt-v1.md`
+  - `platform/AGENTS.md`

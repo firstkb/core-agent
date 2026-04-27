@@ -2,7 +2,7 @@
 
 Status: active compact frontend pack
 Owner surface: tenant-web Platform Studio
-Last compacted: 2026-04-25
+Last compacted: 2026-04-26
 
 ## Read This When
 
@@ -54,3 +54,4 @@ Last compacted: 2026-04-25
 - Do not auto-create a `Main section` for empty new model.
 - Keep non-default view editing `uiSchema`-only.
 - Do not hide backend-denied static model actions behind frontend-only assumptions; backend remains source of truth.
+- For Platform Studio builder UI, start new feature work with app-local focused components and controller/helper units instead of growing workspace pages. Prefer UI components, panels, dialogs, and focused helpers under roughly 300 lines. Keep route/workspace pages as orchestration shells; if they exceed roughly 500-700 lines, extract presentational components or controller/helper units before adding non-trivial UI. Avoid cross-package abstractions until reuse is proven.

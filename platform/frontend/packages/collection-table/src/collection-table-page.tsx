@@ -1,93 +1,61 @@
-import { startTransition, useEffect, useMemo, useRef, useState, type FocusEvent, type SVGProps } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import {
-  Button,
-  CloseIcon,
-  DatePicker,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuLabel,
-  MenuSeparator,
-  MenuTrigger,
-  PlusIcon,
-  SearchIcon,
-  Select,
-  StarIcon,
-} from "@platform/ui-kit";
+import { Button, PlusIcon } from "@platform/ui-kit";
 import { useTranslation } from "@platform/i18n";
 
 import { getCollectionFiltersForPreset } from "./collection-page";
 import {
   type CollectionTableAdapter,
-  type CollectionTableBulkActionDefinition,
   type CollectionTableMetaResponse,
   type CollectionTableQueryRequest,
-  type CollectionTableQuickFilter,
   type CollectionTableRowActionDefinition,
   type CollectionTableFavoriteToggleEvent,
   type CollectionTableSavedFilterSet,
   type CollectionTableSearchOperator,
-  type CollectionTableSearchSuggestionGroup,
-  type CollectionTableSearchSuggestionItem,
 } from "./collection-table-contract";
 import {
   clearPersistedCollectionTableState,
-  createCollectionTableSuggestionsFieldSignature,
   getCollectionTableStateStorageKey,
   getCollectionTableSuggestionsStorageKey,
   readPersistedCollectionTableState,
-  readPersistedCollectionTableSuggestions,
   restoreCollectionTableState,
   toCollectionTableQueryRequest,
   type CollectionTableState,
   writePersistedCollectionTableState,
-  writePersistedCollectionTableSuggestions,
 } from "./collection-table-state";
 import {
   createCollectionRenderConfig,
-  OverflowMenuIcon,
-  renderHighlightedSuggestionText,
 } from "./collection-table-render";
 import {
   buildAppliedQuickFilter,
-  buildSearchFieldOptions,
   createCollectionTableQueryScopeKey,
   createDefaultCollectionState,
-  createFilterSignature,
   createInitialCollectionTableMeta,
   doesSearchOperatorRequireValue,
-  filterCompatibleSearchSuggestionGroups,
-  filterSearchSuggestionGroups,
-  formatAppliedQuickFilterGroupLabel,
-  getAllowedSearchOperators,
   getCellText,
   getCollectionTableRowLabel,
-  getDefaultSearchOperator,
-  getSearchFieldKind,
-  groupCollectionTableQuickFilters,
-  normalizeCollectionRows,
   reconcileSelectedRowIds,
-  resolveCollectionStateForMeta,
   type CollectionTableRenderRow,
-  type SearchFieldKind,
-  type SearchFieldOption,
 } from "./collection-table-runtime";
 import { CollectionPageSurface } from "./collection-page-surface";
-
-type QuickFilterToken = {
-  id: string;
-  label: string;
-  onRemove: () => void;
-};
+import { CollectionTableBulkBar } from "./components/collection-table-bulk-bar";
+import { CollectionTableSaveFilterDialog } from "./components/collection-table-save-filter-dialog";
+import { CollectionTableSavedFilterMenuItems } from "./components/collection-table-saved-filter-menu-items";
+import { CollectionTableToolbar, type CollectionTableQuickFilterToken } from "./components/collection-table-toolbar";
+import {
+  buildCollectionTableQuickFilterTokens,
+  getCollectionTableBulkActionLabel,
+  getCollectionTableBulkActionToneClass,
+  getCollectionTableRowActionLabel,
+  getCollectionTableSavedFilterLabelState,
+  getCollectionTableToolbarActions,
+  isCollectionTableFilterSetSaved,
+} from "./controller/collection-table-page-helpers";
+import { useCollectionTableMetaLoader } from "./controller/use-collection-table-meta-loader";
+import { useCollectionTableQueryLoader } from "./controller/use-collection-table-query-loader";
+import { useCollectionTableSearchController } from "./controller/use-collection-table-search-controller";
+import { useCollectionTableSearchSuggestions } from "./controller/use-collection-table-search-suggestions";
 
 export type CollectionTablePageRowActionPathResolver = (
   action: CollectionTableRowActionDefinition,
@@ -112,79 +80,6 @@ type CollectionTablePageProps = {
 const DEFAULT_OPERATOR: CollectionTableSearchOperator = "contains";
 const COLLECTION_TABLE_RESET_PARAM = "reset";
 
-function RefreshIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.8"
-      viewBox="0 0 24 24"
-      {...props}
-    >
-      <path d="M20 11a8 8 0 1 0-2.35 5.65" />
-      <path d="M20 5v6h-6" />
-    </svg>
-  );
-}
-
-function FilterFunnelIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.8"
-      viewBox="0 0 24 24"
-      {...props}
-    >
-      <path d="M4.5 6.25h15" />
-      <path d="M7.5 11.5h9" />
-      <path d="M10.5 16.75h3" />
-    </svg>
-  );
-}
-
-function SpreadsheetExportIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="1.7"
-      viewBox="0 0 24 24"
-      {...props}
-    >
-      <path d="M7.5 3.75h7L19.5 8.7v10.55A1.75 1.75 0 0 1 17.75 21h-10A1.75 1.75 0 0 1 6 19.25V5.5A1.75 1.75 0 0 1 7.75 3.75Z" />
-      <path d="M14.5 3.75V8.5h5" />
-      <path d="M9 12.25h5.5M9 15.25h5.5M9 18.25h3.25" />
-      <path d="M17 13.5v4.25" />
-      <path d="m15.5 16.25 1.5 1.5 1.5-1.5" />
-    </svg>
-  );
-}
-
-function getSearchSuggestionOptionId(tableId: string, suggestionId: string) {
-  return `${tableId}-search-suggestion-${suggestionId}`;
-}
-
-function getSearchSuggestionKey(suggestion: CollectionTableSearchSuggestionItem) {
-  return `${suggestion.fieldId}:${suggestion.id}:${suggestion.value}`;
-}
-
-function humanizeActionIdLabel(actionId: string) {
-  return actionId
-    .trim()
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (character) => character.toUpperCase());
-}
-
 export function CollectionTablePage({
   adapter,
   getCreatePath,
@@ -199,7 +94,6 @@ export function CollectionTablePage({
   const [searchParams, setSearchParams] = useSearchParams();
   const tableStateStorageKey = getCollectionTableStateStorageKey(tableId);
   const tableSuggestionsStorageKey = getCollectionTableSuggestionsStorageKey(tableId);
-  const searchSuggestionListboxId = `${tableId}-search-suggestions`;
   const shouldResetPersistedState = searchParams.get(COLLECTION_TABLE_RESET_PARAM) === "1";
   const initialPersistedState = useMemo(
     () =>
@@ -212,21 +106,13 @@ export function CollectionTablePage({
     () => createInitialCollectionTableMeta(tableId),
     [tableId],
   );
+  const initialDraftSearchFieldId = initialPersistedState?.draftSearchFieldId ?? initialMeta.search?.defaultFieldId ?? "all";
+  const initialDraftSearchOperator = initialPersistedState?.draftSearchOperator ?? DEFAULT_OPERATOR;
   const [selectedRowIds, setSelectedRowIds] = useState<ReadonlyArray<string>>([]);
-  const [draftSearchFieldId, setDraftSearchFieldId] = useState(
-    () => initialPersistedState?.draftSearchFieldId ?? initialMeta.search?.defaultFieldId ?? "all",
-  );
-  const [draftSearchOperator, setDraftSearchOperator] = useState<CollectionTableSearchOperator>(
-    () => initialPersistedState?.draftSearchOperator ?? DEFAULT_OPERATOR,
-  );
-  const [draftSearchQuery, setDraftSearchQuery] = useState("");
   const [savedFilterSets, setSavedFilterSets] = useState<ReadonlyArray<CollectionTableSavedFilterSet>>(
     initialMeta.savedFilterSets ?? [],
   );
   const [deletingSavedFilterId, setDeletingSavedFilterId] = useState<string | null>(null);
-  const [searchSuggestionGroups, setSearchSuggestionGroups] = useState<ReadonlyArray<CollectionTableSearchSuggestionGroup>>([]);
-  const [isSearchSuggestionOpen, setIsSearchSuggestionOpen] = useState(false);
-  const [highlightedSuggestionKey, setHighlightedSuggestionKey] = useState<string | null>(null);
   const [isSaveFilterDialogOpen, setIsSaveFilterDialogOpen] = useState(false);
   const [draftSavedFilterLabel, setDraftSavedFilterLabel] = useState("");
   const [loading, setLoading] = useState(true);
@@ -244,11 +130,7 @@ export function CollectionTablePage({
   const [resolvedRows, setResolvedRows] = useState<ReadonlyArray<CollectionTableRenderRow>>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const hasLoadedSearchSuggestions = useRef(searchSuggestionGroups.length > 0);
-  const searchSuggestionsLoadPromise = useRef<Promise<ReadonlyArray<CollectionTableSearchSuggestionGroup>> | null>(null);
-  const hasRevalidatedSearchSuggestionsForMeta = useRef(false);
   const hasHydratedMetaRef = useRef(false);
-  const lastQueryExecutionKeyRef = useRef<string | null>(null);
   const lastSelectionScopeKeyRef = useRef<string | null>(null);
 
   const tableAdapter = useMemo<CollectionTableAdapter>(
@@ -272,6 +154,7 @@ export function CollectionTablePage({
     }),
     [adapter],
   );
+  const remoteMetadataErrorMessage = t("admin.collectionTable.errors.remoteMetadata");
   const searchOperators = useMemo<ReadonlyArray<{ label: string; value: CollectionTableSearchOperator }>>(
     () => [
       { label: t("admin.collectionTable.operators.contains"), value: "contains" },
@@ -294,10 +177,6 @@ export function CollectionTablePage({
     () => createCollectionTableQueryScopeKey(request),
     [request],
   );
-  const suggestionFieldSignature = useMemo(
-    () => createCollectionTableSuggestionsFieldSignature(tableMeta.fields),
-    [tableMeta.fields],
-  );
   const surfaceState = useMemo(
     () => ({
       density: collectionState.density,
@@ -311,19 +190,31 @@ export function CollectionTablePage({
     }),
     [collectionState],
   );
-
-  useEffect(() => {
-    const searchableFieldIds = new Set(
-      tableMeta.fields
-        .filter((field) => field.searchable)
-        .map((field) => field.id),
-    );
-    const defaultFieldId = tableMeta.search?.defaultFieldId ?? "all";
-
-    if (draftSearchFieldId !== "all" && !searchableFieldIds.has(draftSearchFieldId)) {
-      setDraftSearchFieldId(defaultFieldId);
-    }
-  }, [draftSearchFieldId, tableMeta.fields, tableMeta.search?.defaultFieldId]);
+  const {
+    ensureSearchSuggestionsLoaded,
+    searchSuggestionGroups,
+  } = useCollectionTableSearchSuggestions({
+    isIgnorableError,
+    remoteMetadataErrorMessage,
+    setError,
+    tableAdapter,
+    tableFields: tableMeta.fields,
+    tableSuggestionsStorageKey,
+  });
+  const searchController = useCollectionTableSearchController({
+    allFieldLabel: t("admin.collectionTable.search.all"),
+    defaultSearchFieldId: tableMeta.search?.defaultFieldId ?? "all",
+    ensureSearchSuggestionsLoaded,
+    initialDraftSearchFieldId,
+    initialDraftSearchOperator,
+    metaVersion,
+    onApplyQuickFilterValue: handleApplyQuickFilterValue,
+    searchOperators,
+    searchSuggestionGroups,
+    tableFields: tableMeta.fields,
+    tableId,
+  });
+  const resetSearchDraft = searchController.resetSearchDraft;
 
   useEffect(() => {
     if (!hasHydratedMetaRef.current) {
@@ -331,14 +222,14 @@ export function CollectionTablePage({
     }
 
     writePersistedCollectionTableState(tableStateStorageKey, {
-      draftSearchFieldId,
-      draftSearchOperator,
+      draftSearchFieldId: searchController.draftSearchFieldId,
+      draftSearchOperator: searchController.draftSearchOperator,
       queryState: collectionState.query,
     });
   }, [
     collectionState.query,
-    draftSearchFieldId,
-    draftSearchOperator,
+    searchController.draftSearchFieldId,
+    searchController.draftSearchOperator,
     tableStateStorageKey,
   ]);
 
@@ -367,15 +258,14 @@ export function CollectionTablePage({
 
     clearPersistedCollectionTableState(tableStateStorageKey);
     setCollectionState(createDefaultCollectionState(tableMeta));
-    setDraftSearchFieldId(tableMeta.search?.defaultFieldId ?? "all");
-    setDraftSearchOperator(DEFAULT_OPERATOR);
-    setDraftSearchQuery("");
+    resetSearchDraft(tableMeta.search?.defaultFieldId ?? "all");
     setSelectedRowIds([]);
 
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete(COLLECTION_TABLE_RESET_PARAM);
     setSearchParams(nextSearchParams, { replace: true });
   }, [
+    resetSearchDraft,
     searchParams,
     setSearchParams,
     shouldResetPersistedState,
@@ -420,55 +310,11 @@ export function CollectionTablePage({
   }
 
   function resolveRowActionLabel(action: CollectionTableRowActionDefinition) {
-    if (action.label) {
-      return action.label;
-    }
-
-    switch (action.id) {
-      case "edit":
-        return t("admin.collectionTable.rowActions.edit");
-      case "view":
-        return t("admin.collectionTable.rowActions.view");
-      case "pdf":
-        return t("admin.collectionTable.rowActions.pdf");
-      default:
-        return humanizeActionIdLabel(action.id);
-    }
-  }
-
-  function resolveToolbarActionLabel(actionId: "create" | "exportXls" | "reload") {
-    switch (actionId) {
-      case "create":
-        return t("admin.collectionTable.actions.startNew");
-      case "exportXls":
-        return t("admin.collectionTable.actions.exportXls");
-      case "reload":
-        return t("admin.collectionTable.actions.reload");
-      default:
-        return actionId;
-    }
-  }
-
-  function resolveBulkActionLabel(action: CollectionTableBulkActionDefinition) {
-    return action.label ?? action.id;
-  }
-
-  function resolveBulkActionToneClass(action: CollectionTableBulkActionDefinition) {
-    switch (action.tone) {
-      case "brand":
-        return " admin-web__collection-bulk-button--brand";
-      case "danger":
-        return " admin-web__collection-bulk-button--danger";
-      case "info":
-        return " admin-web__collection-bulk-button--info";
-      case "success":
-        return " admin-web__collection-bulk-button--success";
-      case "warning":
-        return " admin-web__collection-bulk-button--warning";
-      case "neutral":
-      default:
-        return "";
-    }
+    return getCollectionTableRowActionLabel(action, {
+      edit: t("admin.collectionTable.rowActions.edit"),
+      pdf: t("admin.collectionTable.rowActions.pdf"),
+      view: t("admin.collectionTable.rowActions.view"),
+    });
   }
 
   const resolvedConfig = createCollectionRenderConfig(tableMeta, {
@@ -500,292 +346,99 @@ export function CollectionTablePage({
     },
   });
 
-  useEffect(() => {
-    let cancelled = false;
+  useCollectionTableMetaLoader({
+    hasHydratedMetaRef,
+    initialPersistedState,
+    isIgnorableError,
+    metaRefreshKey,
+    remoteMetadataErrorMessage,
+    setCollectionState,
+    setError,
+    setLoading,
+    setMetaVersion,
+    setSavedFilterSets,
+    setTableMeta,
+    tableAdapter,
+  });
 
-    async function resolveCollectionMeta() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const nextMeta = await tableAdapter.loadMeta();
-
-        if (cancelled) {
-          return;
-        }
-
-        setTableMeta(nextMeta);
-        setSavedFilterSets(nextMeta.savedFilterSets ?? []);
-        setCollectionState((currentValue) =>
-          resolveCollectionStateForMeta(
-            nextMeta,
-            currentValue,
-            initialPersistedState,
-            hasHydratedMetaRef.current,
-          ),
-        );
-        const nextSuggestionFieldSignature = createCollectionTableSuggestionsFieldSignature(nextMeta.fields);
-        const persistedSuggestionGroups = readPersistedCollectionTableSuggestions(
-          tableSuggestionsStorageKey,
-          nextSuggestionFieldSignature,
-        ) ?? [];
-        const compatibleSuggestionGroups = filterCompatibleSearchSuggestionGroups(
-          persistedSuggestionGroups,
-          nextMeta.fields,
-        );
-
-        hasLoadedSearchSuggestions.current = compatibleSuggestionGroups.length > 0;
-        hasRevalidatedSearchSuggestionsForMeta.current = false;
-        searchSuggestionsLoadPromise.current = null;
-        setSearchSuggestionGroups(compatibleSuggestionGroups);
-        hasHydratedMetaRef.current = true;
-        setMetaVersion((currentValue) => currentValue + 1);
-      } catch (requestError) {
-        if (cancelled) {
-          return;
-        }
-
-        if (!isIgnorableError?.(requestError)) {
-          setError(t("admin.collectionTable.errors.remoteMetadata"));
-        }
-
-        setLoading(false);
-      }
-    }
-
-    void resolveCollectionMeta();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [initialPersistedState, isIgnorableError, metaRefreshKey, t, tableAdapter, tableSuggestionsStorageKey]);
-
-  useEffect(() => {
-    if (metaVersion === 0) {
-      return;
-    }
-
-    const queryExecutionKey = JSON.stringify({
-      metaVersion,
-      queryRefreshKey,
-      request,
-    });
-
-    if (lastQueryExecutionKeyRef.current === queryExecutionKey) {
-      return;
-    }
-
-    lastQueryExecutionKeyRef.current = queryExecutionKey;
-
-    let cancelled = false;
-
-    async function resolveCollectionRows() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await tableAdapter.query(request);
-
-        if (cancelled) {
-          return;
-        }
-
-        applyResolvedQueryResponse(response, request);
-      } catch (requestError) {
-        if (cancelled) {
-          return;
-        }
-
-        if (!isIgnorableError?.(requestError)) {
-          setError(t("admin.collectionTable.errors.remoteMetadata"));
-        }
-
-        setLoading(false);
-      }
-    }
-
-    void resolveCollectionRows();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isIgnorableError, metaVersion, queryRefreshKey, request, t, tableAdapter]);
+  const { reloadCurrentQuery } = useCollectionTableQueryLoader({
+    isIgnorableError,
+    metaVersion,
+    queryRefreshKey,
+    remoteMetadataErrorMessage,
+    request,
+    setCollectionState,
+    setError,
+    setLoading,
+    setResolvedRows,
+    setTotalItems,
+    setTotalPages,
+    tableAdapter,
+  });
 
   const createPath = getCreatePath?.() ?? null;
-  const createAction = tableMeta.actions?.create?.visible && createPath
-    ? {
-      label: tableMeta.actions.create.label ?? resolveToolbarActionLabel("create"),
-    }
-    : null;
-  const exportAction = tableMeta.actions?.exportXls?.visible
-    ? {
-      label: tableMeta.actions.exportXls.label ?? resolveToolbarActionLabel("exportXls"),
-    }
-    : null;
-  const favoriteAction = tableMeta.actions?.favorite?.visible
-    ? tableMeta.actions.favorite
-    : null;
-  const reloadAction = tableMeta.actions?.reload?.visible
-    ? {
-      label: tableMeta.actions.reload.label ?? resolveToolbarActionLabel("reload"),
-    }
-    : null;
+  const {
+    createAction,
+    exportAction,
+    favoriteAction,
+    reloadAction,
+  } = getCollectionTableToolbarActions(tableMeta, createPath, {
+    create: t("admin.collectionTable.actions.startNew"),
+    exportXls: t("admin.collectionTable.actions.exportXls"),
+    reload: t("admin.collectionTable.actions.reload"),
+  });
 
-  const searchFieldOptions = useMemo<ReadonlyArray<SearchFieldOption>>(
-    () => buildSearchFieldOptions(tableMeta.fields, t("admin.collectionTable.search.all")),
-    [tableMeta.fields, t],
-  );
-  const selectedSearchField = useMemo(
-    () =>
-      draftSearchFieldId === "all"
-        ? null
-        : tableMeta.fields.find((field) => field.id === draftSearchFieldId && field.searchable) ?? null,
-    [draftSearchFieldId, tableMeta.fields],
-  );
-  const selectedSearchFieldKind = useMemo<SearchFieldKind>(
-    () => (selectedSearchField ? getSearchFieldKind(selectedSearchField.type) : "all"),
-    [selectedSearchField],
-  );
-  const allowedSearchOperators = useMemo(
-    () => getAllowedSearchOperators(selectedSearchFieldKind),
-    [selectedSearchFieldKind],
-  );
-  useEffect(() => {
-    if (allowedSearchOperators.includes(draftSearchOperator)) {
-      return;
-    }
-
-    setDraftSearchOperator(getDefaultSearchOperator(selectedSearchFieldKind));
-  }, [allowedSearchOperators, draftSearchOperator, selectedSearchFieldKind]);
-  const selectableSearchOperators = useMemo(
-    () => searchOperators.filter((option) => allowedSearchOperators.includes(option.value)),
-    [allowedSearchOperators, searchOperators],
-  );
-  const usesDateSearchInput =
-    selectedSearchFieldKind === "date" && doesSearchOperatorRequireValue(draftSearchOperator);
-  const supportsSearchSuggestions =
-    doesSearchOperatorRequireValue(draftSearchOperator) &&
-    !usesDateSearchInput &&
-    (draftSearchFieldId === "all" || Boolean(selectedSearchField?.suggestable));
-  const visibleSearchSuggestionGroups = useMemo(
-    () =>
-      supportsSearchSuggestions
-        ? filterSearchSuggestionGroups(searchSuggestionGroups, draftSearchFieldId, draftSearchQuery)
-        : [],
-    [draftSearchFieldId, draftSearchQuery, searchSuggestionGroups, supportsSearchSuggestions],
-  );
-  const flattenedVisibleSearchSuggestions = useMemo(
-    () => visibleSearchSuggestionGroups.flatMap((group) => group.items),
-    [visibleSearchSuggestionGroups],
-  );
-  const highlightedSearchSuggestion = useMemo(
-    () =>
-      highlightedSuggestionKey
-        ? flattenedVisibleSearchSuggestions.find((suggestion) => getSearchSuggestionKey(suggestion) === highlightedSuggestionKey) ?? null
-        : null,
-    [flattenedVisibleSearchSuggestions, highlightedSuggestionKey],
-  );
-  const highlightedSearchSuggestionOptionId = highlightedSearchSuggestion
-    ? getSearchSuggestionOptionId(tableId, getSearchSuggestionKey(highlightedSearchSuggestion))
-    : undefined;
-  const shouldRenderSearchSuggestions =
-    isSearchSuggestionOpen && visibleSearchSuggestionGroups.length > 0;
   const selectedRowIdSet = useMemo(
     () => new Set(selectedRowIds),
     [selectedRowIds],
   );
   const selectedRowCount = selectedRowIds.length;
 
-  useEffect(() => {
-    if (!supportsSearchSuggestions) {
-      setIsSearchSuggestionOpen(false);
-    }
-
-    setHighlightedSuggestionKey(null);
-  }, [draftSearchFieldId, draftSearchOperator, draftSearchQuery, supportsSearchSuggestions]);
-
-  useEffect(() => {
-    if (!isSearchSuggestionOpen) {
-      return;
-    }
-
-    setIsSearchSuggestionOpen(visibleSearchSuggestionGroups.length > 0);
-  }, [isSearchSuggestionOpen, visibleSearchSuggestionGroups.length]);
-
-  useEffect(() => {
-    if (
-      !isSearchSuggestionOpen ||
-      !highlightedSearchSuggestionOptionId ||
-      typeof document === "undefined"
-    ) {
-      return;
-    }
-
-    document.getElementById(highlightedSearchSuggestionOptionId)?.scrollIntoView({
-      block: "nearest",
+  const activeTokens = useMemo<ReadonlyArray<CollectionTableQuickFilterToken>>(() => {
+    return buildCollectionTableQuickFilterTokens({
+      labels: {
+        allField: t("admin.collectionTable.search.all"),
+        isEmpty: t("admin.collectionTable.operators.isEmpty"),
+        isNotEmpty: t("admin.collectionTable.operators.isNotEmpty"),
+      },
+      onRemoveGroup: (groupFilterIds) => {
+        setState((currentValue) => ({
+          ...currentValue,
+          query: {
+            ...currentValue.query,
+            page: 1,
+            quickFilters: currentValue.query.quickFilters.filter(
+              (currentFilter) => !groupFilterIds.has(currentFilter.id),
+            ),
+          },
+        }));
+      },
+      quickFilters: collectionState.query.quickFilters,
+      searchFieldOptions: searchController.searchFieldOptions,
     });
-  }, [highlightedSearchSuggestionOptionId, isSearchSuggestionOpen]);
-
-  const activeTokens = useMemo<ReadonlyArray<QuickFilterToken>>(() => {
-    return groupCollectionTableQuickFilters(collectionState.query.quickFilters).map((group) => {
-      const groupFilterIds = new Set(group.filters.map((filter) => filter.id));
-
-      return {
-        id: group.id,
-        label: formatAppliedQuickFilterGroupLabel(group, searchFieldOptions, {
-          allField: t("admin.collectionTable.search.all"),
-          isEmpty: t("admin.collectionTable.operators.isEmpty"),
-          isNotEmpty: t("admin.collectionTable.operators.isNotEmpty"),
-        }),
-        onRemove: () => {
-          setState((currentValue) => ({
-            ...currentValue,
-            query: {
-              ...currentValue.query,
-              page: 1,
-              quickFilters: currentValue.query.quickFilters.filter(
-                (currentFilter) => !groupFilterIds.has(currentFilter.id),
-              ),
-            },
-          }));
-        },
-      };
-    });
-  }, [collectionState.query.quickFilters, searchFieldOptions, t]);
-
-  const currentFilterSignature = useMemo(
-    () => createFilterSignature(collectionState.query.quickFilters),
-    [collectionState.query.quickFilters],
-  );
+  }, [collectionState.query.quickFilters, searchController.searchFieldOptions, t]);
 
   const isCurrentFilterSetSaved = useMemo(
-    () =>
-      collectionState.query.quickFilters.length > 0 &&
-      savedFilterSets.some((savedFilterSet) => createFilterSignature(savedFilterSet.quickFilters) === currentFilterSignature),
-    [collectionState.query.quickFilters.length, currentFilterSignature, savedFilterSets],
+    () => isCollectionTableFilterSetSaved(collectionState.query.quickFilters, savedFilterSets),
+    [collectionState.query.quickFilters, savedFilterSets],
   );
 
-  const normalizedSavedFilterLabel = draftSavedFilterLabel.trim();
-  const saveFilterLabelError = useMemo(() => {
-    if (!isSaveFilterDialogOpen) {
-      return null;
-    }
-
-    if (normalizedSavedFilterLabel.length === 0) {
-      return t("admin.collectionTable.dialog.validation.empty");
-    }
-
-    if (
-      savedFilterSets.some(
-        (savedFilterSet) =>
-          savedFilterSet.label.trim().toLowerCase() === normalizedSavedFilterLabel.toLowerCase(),
-      )
-    ) {
-      return t("admin.collectionTable.dialog.validation.duplicate");
-    }
-
-    return null;
-  }, [isSaveFilterDialogOpen, normalizedSavedFilterLabel, savedFilterSets]);
+  const {
+    error: saveFilterLabelError,
+    normalizedLabel: normalizedSavedFilterLabel,
+  } = useMemo(
+    () =>
+      getCollectionTableSavedFilterLabelState({
+        labels: {
+          duplicate: t("admin.collectionTable.dialog.validation.duplicate"),
+          empty: t("admin.collectionTable.dialog.validation.empty"),
+        },
+        open: isSaveFilterDialogOpen,
+        savedFilterSets,
+        value: draftSavedFilterLabel,
+      }),
+    [draftSavedFilterLabel, isSaveFilterDialogOpen, savedFilterSets, t],
+  );
 
   function setState(
     updater: (currentValue: CollectionTableState) => CollectionTableState,
@@ -800,7 +453,7 @@ export function CollectionTablePage({
       return;
     }
 
-    setError(t("admin.collectionTable.errors.remoteMetadata"));
+    setError(remoteMetadataErrorMessage);
   }
 
   async function runCollectionMutation(
@@ -811,141 +464,6 @@ export function CollectionTablePage({
     } catch (requestError) {
       reportCollectionError(requestError);
     }
-  }
-
-  function applyResolvedQueryResponse(
-    response: Awaited<ReturnType<CollectionTableAdapter["query"]>>,
-    requestInput: CollectionTableQueryRequest,
-  ) {
-    setResolvedRows(normalizeCollectionRows(response.rows));
-    setTotalItems(response.totalItems);
-    setTotalPages(response.totalPages);
-    setLoading(false);
-
-    if (response.page !== requestInput.page) {
-      setCollectionState((currentValue) =>
-        currentValue.query.page === response.page
-          ? currentValue
-          : {
-            ...currentValue,
-            query: {
-              ...currentValue.query,
-              page: response.page,
-            },
-          },
-      );
-    }
-  }
-
-  async function reloadCurrentQuery() {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await tableAdapter.query(request);
-      applyResolvedQueryResponse(response, request);
-    } catch (requestError) {
-      reportCollectionError(requestError);
-      setLoading(false);
-    }
-  }
-
-  function getCompatibleCachedSearchSuggestionGroups() {
-    const inMemoryGroups = filterCompatibleSearchSuggestionGroups(
-      searchSuggestionGroups,
-      tableMeta.fields,
-    );
-
-    if (inMemoryGroups.length > 0) {
-      return inMemoryGroups;
-    }
-
-    return readPersistedCollectionTableSuggestions(
-      tableSuggestionsStorageKey,
-      suggestionFieldSignature,
-    ) ?? [];
-  }
-
-  async function refreshSearchSuggestions() {
-    if (searchSuggestionsLoadPromise.current) {
-      return searchSuggestionsLoadPromise.current;
-    }
-
-    const loadPromise = (async () => {
-      try {
-        const nextGroups = filterCompatibleSearchSuggestionGroups(
-          (await tableAdapter.loadSearchSuggestions?.())?.groups ?? [],
-          tableMeta.fields,
-        );
-
-        hasLoadedSearchSuggestions.current = true;
-        hasRevalidatedSearchSuggestionsForMeta.current = true;
-        setSearchSuggestionGroups(nextGroups);
-        writePersistedCollectionTableSuggestions(
-          tableSuggestionsStorageKey,
-          nextGroups,
-          suggestionFieldSignature,
-        );
-
-        return nextGroups;
-      } catch (requestError) {
-        reportCollectionError(requestError);
-        return getCompatibleCachedSearchSuggestionGroups();
-      }
-    })();
-
-    searchSuggestionsLoadPromise.current = loadPromise;
-
-    try {
-      return await loadPromise;
-    } finally {
-      searchSuggestionsLoadPromise.current = null;
-    }
-  }
-
-  async function ensureSearchSuggestionsLoaded(options?: { revalidateOnCache?: boolean }) {
-    const compatibleCachedGroups = getCompatibleCachedSearchSuggestionGroups();
-    const shouldRevalidateOnCache = options?.revalidateOnCache === true;
-
-    if (compatibleCachedGroups.length > 0) {
-      hasLoadedSearchSuggestions.current = true;
-
-      if (searchSuggestionGroups !== compatibleCachedGroups) {
-        setSearchSuggestionGroups(compatibleCachedGroups);
-      }
-
-      if (
-        shouldRevalidateOnCache &&
-        !hasRevalidatedSearchSuggestionsForMeta.current
-      ) {
-        void refreshSearchSuggestions();
-      }
-
-      return compatibleCachedGroups;
-    }
-
-    return refreshSearchSuggestions();
-  }
-
-  function closeSearchSuggestions() {
-    setIsSearchSuggestionOpen(false);
-    setHighlightedSuggestionKey(null);
-  }
-
-  async function openSearchSuggestions() {
-    if (!supportsSearchSuggestions) {
-      closeSearchSuggestions();
-      return;
-    }
-
-    const loadedGroups = await ensureSearchSuggestionsLoaded({ revalidateOnCache: true });
-    const nextVisibleGroups = filterSearchSuggestionGroups(
-      loadedGroups,
-      draftSearchFieldId,
-      draftSearchQuery,
-    );
-
-    setIsSearchSuggestionOpen(nextVisibleGroups.length > 0);
   }
 
   function clearSelection() {
@@ -999,10 +517,7 @@ export function CollectionTablePage({
   }
 
   function handleResetFilters() {
-    setDraftSearchFieldId("all");
-    setDraftSearchOperator(DEFAULT_OPERATOR);
-    setDraftSearchQuery("");
-    closeSearchSuggestions();
+    searchController.resetSearchDraft("all");
     clearSelection();
     setState((currentValue) => ({
       ...currentValue,
@@ -1016,7 +531,7 @@ export function CollectionTablePage({
   }
 
   function handleSortChange(columnId: string) {
-    closeSearchSuggestions();
+    searchController.closeSearchSuggestions();
     clearSelection();
     setState((currentValue) => ({
       ...currentValue,
@@ -1032,10 +547,6 @@ export function CollectionTablePage({
     }));
   }
 
-  function handleApplyDraftFilter() {
-    handleApplyDraftFilterWithQuery(draftSearchQuery);
-  }
-
   function handleApplyQuickFilterValue(
     fieldId: string,
     operator: CollectionTableSearchOperator,
@@ -1048,7 +559,7 @@ export function CollectionTablePage({
     );
 
     if (!nextFilter) {
-      return;
+      return false;
     }
 
     setState((currentValue) => {
@@ -1065,53 +576,12 @@ export function CollectionTablePage({
         },
       };
     });
-    setDraftSearchQuery("");
-    closeSearchSuggestions();
     clearSelection();
-  }
-
-  function handleApplyDraftFilterWithQuery(nextQuery: string) {
-    handleApplyQuickFilterValue(draftSearchFieldId, draftSearchOperator, nextQuery);
-  }
-
-  function handleApplySuggestion(suggestion: CollectionTableSearchSuggestionItem) {
-    const nextFieldId =
-      draftSearchFieldId === "all"
-        ? (typeof suggestion.fieldId === "string" && suggestion.fieldId.trim().length > 0
-          ? suggestion.fieldId
-          : "all")
-        : draftSearchFieldId;
-
-    handleApplyQuickFilterValue(
-      nextFieldId,
-      nextFieldId === "all" ? DEFAULT_OPERATOR : draftSearchOperator,
-      suggestion.value,
-    );
-  }
-
-  function handleSearchShellFocusCapture() {
-    if (!supportsSearchSuggestions || metaVersion === 0) {
-      return;
-    }
-
-    void ensureSearchSuggestionsLoaded({ revalidateOnCache: true });
-  }
-
-  function handleSearchShellBlur(event: FocusEvent<HTMLDivElement>) {
-    const nextFocusedElement = event.relatedTarget;
-
-    if (nextFocusedElement instanceof Node && event.currentTarget.contains(nextFocusedElement)) {
-      return;
-    }
-
-    closeSearchSuggestions();
+    return true;
   }
 
   function handleApplySavedFilterSet(savedFilterSet: CollectionTableSavedFilterSet) {
-    setDraftSearchFieldId("all");
-    setDraftSearchOperator(DEFAULT_OPERATOR);
-    setDraftSearchQuery("");
-    closeSearchSuggestions();
+    searchController.resetSearchDraft("all");
     clearSelection();
     setState((currentValue) => ({
       ...currentValue,
@@ -1225,473 +695,67 @@ export function CollectionTablePage({
     navigate(createPath);
   }
 
-  const savedFilterMenuItems = savedFilterSets.length > 0 ? (
-    savedFilterSets.map((savedFilterSet) => (
-      <div className="admin-web__collection-saved-filter-row" key={savedFilterSet.id}>
-        <MenuItem
-          className="admin-web__collection-saved-filter-apply"
-          onClick={() => handleApplySavedFilterSet(savedFilterSet)}
-        >
-          {savedFilterSet.label}
-        </MenuItem>
-        {tableAdapter.deleteSavedFilterSet ? (
-          <button
-            aria-label={t("admin.collectionTable.menu.deleteSavedFilter", { label: savedFilterSet.label })}
-            className="admin-web__collection-saved-filter-delete"
-            disabled={deletingSavedFilterId === savedFilterSet.id}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void handleDeleteSavedFilterSet(savedFilterSet.id);
-            }}
-            title={t("admin.collectionTable.menu.deleteSavedFilter", { label: savedFilterSet.label })}
-            type="button"
-          >
-            <CloseIcon className="admin-web__collection-saved-filter-delete-icon" />
-          </button>
-        ) : null}
-      </div>
-    ))
-  ) : (
-    <MenuItem disabled>
-      {t("admin.collectionTable.menu.noSavedFilters")}
-    </MenuItem>
+  function handleReloadAction() {
+    setQueryRefreshKey((currentValue) => currentValue + 1);
+  }
+
+  const savedFilterMenuItems = (
+    <CollectionTableSavedFilterMenuItems
+      canDelete={Boolean(tableAdapter.deleteSavedFilterSet)}
+      deletingSavedFilterId={deletingSavedFilterId}
+      onApplySavedFilterSet={handleApplySavedFilterSet}
+      onDeleteSavedFilterSet={handleDeleteSavedFilterSet}
+      savedFilterSets={savedFilterSets}
+    />
   );
 
+  const searchInputPlaceholder = doesSearchOperatorRequireValue(searchController.draftSearchOperator)
+    ? (resolvedConfig.searchPlaceholder ?? "Search...")
+    : t("admin.collectionTable.search.pressEnter");
+
   const toolbar = (
-    <div className="admin-web__collection-toolbar admin-web__collection-toolbar--smart">
-      <div className="admin-web__collection-smart-row">
-        {createAction ? (
-          <div className="admin-web__collection-smart-start admin-web__collection-smart-start--desktop">
-            <Button
-              className="admin-web__collection-smart-start-button"
-              leadingIcon={<PlusIcon className="admin-web__collection-start-icon" />}
-              onClick={handleCreateAction}
-              size="sm"
-              variant="primary"
-            >
-              {createAction.label}
-            </Button>
-          </div>
-        ) : null}
-
-        <div className="admin-web__collection-smart-controls">
-          <div
-            className="admin-web__collection-smart-search-stack"
-            onBlurCapture={handleSearchShellBlur}
-            onFocusCapture={handleSearchShellFocusCapture}
-          >
-            <div className="admin-web__collection-smart-search-shell">
-              <div
-                aria-hidden="true"
-                className="admin-web__collection-smart-segment admin-web__collection-smart-segment--prefix admin-web__collection-smart-search-prefix"
-              >
-                <SearchIcon className="admin-web__collection-smart-search-icon" />
-              </div>
-
-              <span aria-hidden="true" className="admin-web__collection-smart-divider admin-web__collection-smart-divider--prefix" />
-
-              <div className="admin-web__collection-smart-segment admin-web__collection-smart-segment--field">
-                <Select
-                  aria-label={t("admin.collectionTable.search.fieldAria")}
-                  className="admin-web__collection-smart-select admin-web__collection-smart-select--field"
-                  onChange={(event) => {
-                    const nextFieldId = event.currentTarget.value;
-                    const nextField =
-                      tableMeta.fields.find((field) => field.id === nextFieldId && field.searchable) ??
-                      null;
-                    const nextFieldKind = nextField ? getSearchFieldKind(nextField.type) : "all";
-                    const nextAllowedOperators = getAllowedSearchOperators(nextFieldKind);
-                    const nextOperator = nextAllowedOperators.includes(draftSearchOperator)
-                      ? draftSearchOperator
-                      : getDefaultSearchOperator(nextFieldKind);
-
-                    setDraftSearchFieldId(nextFieldId);
-                    setDraftSearchOperator(nextOperator);
-                    setHighlightedSuggestionKey(null);
-
-                    if (
-                      (nextFieldId === "all" || Boolean(nextField?.suggestable)) &&
-                      doesSearchOperatorRequireValue(nextOperator) &&
-                      nextFieldKind !== "date"
-                    ) {
-                      void ensureSearchSuggestionsLoaded();
-                      setIsSearchSuggestionOpen(true);
-                      return;
-                    }
-
-                    closeSearchSuggestions();
-                  }}
-                  size="sm"
-                  value={draftSearchFieldId}
-                >
-                  {searchFieldOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              <span aria-hidden="true" className="admin-web__collection-smart-divider" />
-
-              <div className="admin-web__collection-smart-segment admin-web__collection-smart-segment--operator">
-                <Select
-                  aria-label={t("admin.collectionTable.search.operatorAria")}
-                  className="admin-web__collection-smart-select admin-web__collection-smart-select--operator"
-                  disabled={draftSearchFieldId === "all"}
-                  onChange={(event) => {
-                    const nextOperator = event.currentTarget.value as CollectionTableSearchOperator;
-                    const nextUsesDateSearchInput =
-                      selectedSearchFieldKind === "date" &&
-                      doesSearchOperatorRequireValue(nextOperator);
-
-                    setDraftSearchOperator(nextOperator);
-                    setHighlightedSuggestionKey(null);
-
-                    if (
-                      doesSearchOperatorRequireValue(nextOperator) &&
-                      !nextUsesDateSearchInput &&
-                      (draftSearchFieldId === "all" || Boolean(selectedSearchField?.suggestable))
-                    ) {
-                      void ensureSearchSuggestionsLoaded();
-                      setIsSearchSuggestionOpen(true);
-                      return;
-                    }
-
-                    closeSearchSuggestions();
-                  }}
-                  size="sm"
-                  value={draftSearchFieldId === "all" ? "contains" : draftSearchOperator}
-                >
-                  {selectableSearchOperators.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-
-              <span aria-hidden="true" className="admin-web__collection-smart-divider admin-web__collection-smart-divider--operator" />
-
-              <div className="admin-web__collection-smart-segment admin-web__collection-smart-segment--input">
-                {usesDateSearchInput ? (
-                  <DatePicker
-                    aria-label={t("admin.collectionTable.search.inputAria")}
-                    className="admin-web__collection-smart-date-picker"
-                    onValueChange={(nextValue) => {
-                      setDraftSearchQuery(nextValue);
-
-                      if (nextValue.length > 0) {
-                        handleApplyDraftFilterWithQuery(nextValue);
-                      }
-                    }}
-                    openOnFieldClick
-                    picker="calendar"
-                    placeholderText={t("admin.collectionTable.search.selectDate")}
-                    size="sm"
-                    value={draftSearchQuery}
-                  />
-                ) : (
-                  <Input
-                    aria-activedescendant={shouldRenderSearchSuggestions ? highlightedSearchSuggestionOptionId : undefined}
-                    aria-autocomplete="list"
-                    aria-controls={shouldRenderSearchSuggestions ? searchSuggestionListboxId : undefined}
-                    aria-expanded={shouldRenderSearchSuggestions}
-                    aria-label={t("admin.collectionTable.search.inputAria")}
-                    className="admin-web__collection-smart-search-input"
-                    onChange={(event) => {
-                      setDraftSearchQuery(event.currentTarget.value);
-                      setHighlightedSuggestionKey(null);
-
-                      if (supportsSearchSuggestions) {
-                        void ensureSearchSuggestionsLoaded();
-                        setIsSearchSuggestionOpen(true);
-                        return;
-                      }
-
-                      closeSearchSuggestions();
-                    }}
-                    onFocus={() => {
-                      void openSearchSuggestions();
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        event.preventDefault();
-                        closeSearchSuggestions();
-                        return;
-                      }
-
-                      if (event.key === "ArrowDown") {
-                        event.preventDefault();
-
-                        if (flattenedVisibleSearchSuggestions.length === 0) {
-                          return;
-                        }
-
-                        const currentIndex = highlightedSuggestionKey
-                          ? flattenedVisibleSearchSuggestions.findIndex(
-                            (suggestion) => getSearchSuggestionKey(suggestion) === highlightedSuggestionKey,
-                          )
-                          : -1;
-                        const nextIndex =
-                          currentIndex >= flattenedVisibleSearchSuggestions.length - 1
-                            ? 0
-                            : currentIndex + 1;
-
-                        setIsSearchSuggestionOpen(true);
-                        setHighlightedSuggestionKey(
-                          flattenedVisibleSearchSuggestions[nextIndex]
-                            ? getSearchSuggestionKey(flattenedVisibleSearchSuggestions[nextIndex])
-                            : null,
-                        );
-                        return;
-                      }
-
-                      if (event.key === "ArrowUp") {
-                        event.preventDefault();
-
-                        if (flattenedVisibleSearchSuggestions.length === 0) {
-                          return;
-                        }
-
-                        const currentIndex = highlightedSuggestionKey
-                          ? flattenedVisibleSearchSuggestions.findIndex(
-                            (suggestion) => getSearchSuggestionKey(suggestion) === highlightedSuggestionKey,
-                          )
-                          : flattenedVisibleSearchSuggestions.length;
-                        const nextIndex =
-                          currentIndex <= 0
-                            ? flattenedVisibleSearchSuggestions.length - 1
-                            : currentIndex - 1;
-
-                        setIsSearchSuggestionOpen(true);
-                        setHighlightedSuggestionKey(
-                          flattenedVisibleSearchSuggestions[nextIndex]
-                            ? getSearchSuggestionKey(flattenedVisibleSearchSuggestions[nextIndex])
-                            : null,
-                        );
-                        return;
-                      }
-
-                      if (event.key !== "Enter") {
-                        return;
-                      }
-
-                      event.preventDefault();
-
-                      if (highlightedSearchSuggestion) {
-                        handleApplySuggestion(highlightedSearchSuggestion);
-                        return;
-                      }
-
-                      handleApplyDraftFilter();
-                    }}
-                    placeholder={
-                      doesSearchOperatorRequireValue(draftSearchOperator)
-                        ? (resolvedConfig.searchPlaceholder ?? "Search...")
-                        : t("admin.collectionTable.search.pressEnter")
-                    }
-                    size="sm"
-                    value={draftSearchQuery}
-                  />
-                )}
-              </div>
-            </div>
-
-            {shouldRenderSearchSuggestions ? (
-              <div
-                className="admin-web__collection-smart-suggestions"
-                id={searchSuggestionListboxId}
-                role="listbox"
-              >
-                {visibleSearchSuggestionGroups.map((group) => (
-                  <div className="admin-web__collection-smart-suggestion-group" key={group.fieldId}>
-                    {draftSearchFieldId === "all" ? (
-                      <div className="admin-web__collection-smart-suggestion-group-label">
-                        {group.label}
-                      </div>
-                    ) : null}
-
-                    <div className="admin-web__collection-smart-suggestion-items">
-                      {group.items.map((suggestion) => (
-                        <button
-                          aria-selected={highlightedSuggestionKey === getSearchSuggestionKey(suggestion)}
-                          className={`admin-web__collection-smart-suggestion-item${highlightedSuggestionKey === getSearchSuggestionKey(suggestion) ? " admin-web__collection-smart-suggestion-item--active" : ""}`}
-                          id={getSearchSuggestionOptionId(tableId, getSearchSuggestionKey(suggestion))}
-                          key={getSearchSuggestionKey(suggestion)}
-                          onClick={() => handleApplySuggestion(suggestion)}
-                          onMouseDown={(event) => {
-                            event.preventDefault();
-                            setHighlightedSuggestionKey(getSearchSuggestionKey(suggestion));
-                          }}
-                          onMouseMove={() => {
-                            const nextSuggestionKey = getSearchSuggestionKey(suggestion);
-
-                            if (highlightedSuggestionKey !== nextSuggestionKey) {
-                              setHighlightedSuggestionKey(nextSuggestionKey);
-                            }
-                          }}
-                          role="option"
-                          tabIndex={-1}
-                          type="button"
-                        >
-                          <span className="admin-web__collection-smart-suggestion-value">
-                            {renderHighlightedSuggestionText(suggestion.value, draftSearchQuery)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="admin-web__collection-smart-actions admin-web__collection-smart-actions--desktop">
-            {favoriteAction ? (
-              <button
-                aria-label={favoriteAction.isFavorite ? t("admin.collectionTable.favorite.remove") : t("admin.collectionTable.favorite.add")}
-                className={`admin-web__collection-smart-icon-button admin-web__collection-smart-icon-button--favorite${favoriteAction.isFavorite ? " admin-web__collection-smart-icon-button--active" : ""}`}
-                onClick={() => {
-                  void handleToggleFavorite();
-                }}
-                title={favoriteAction.isFavorite ? t("admin.collectionTable.favorite.remove") : t("admin.collectionTable.favorite.add")}
-                type="button"
-              >
-                <StarIcon className="admin-web__collection-smart-action-icon" />
-              </button>
-            ) : null}
-
-            <Menu align="end">
-              <MenuTrigger>
-                <button
-                  aria-label={t("admin.collectionTable.menu.openSavedFilters")}
-                  className="admin-web__collection-smart-icon-button"
-                  title={t("admin.collectionTable.menu.savedFilters")}
-                  type="button"
-                >
-                  <FilterFunnelIcon className="admin-web__collection-smart-action-icon" />
-                </button>
-              </MenuTrigger>
-              <MenuContent className="admin-web__collection-smart-menu-content">
-                <MenuLabel className="admin-web__collection-smart-menu-label">
-                  {t("admin.collectionTable.menu.savedFilters")}
-                </MenuLabel>
-                {savedFilterMenuItems}
-              </MenuContent>
-            </Menu>
-
-            {reloadAction ? (
-              <button
-                aria-label={t("admin.collectionTable.actions.reload")}
-                className="admin-web__collection-smart-icon-button"
-                onClick={() => setQueryRefreshKey((currentValue) => currentValue + 1)}
-                title={t("admin.collectionTable.actions.reload")}
-                type="button"
-              >
-                <RefreshIcon className="admin-web__collection-smart-action-icon" />
-              </button>
-            ) : null}
-
-            {exportAction ? (
-              <button
-                aria-label={t("admin.collectionTable.actions.exportXls")}
-                className="admin-web__collection-smart-icon-button"
-                onClick={handleExportXls}
-                title={t("admin.collectionTable.actions.exportXls")}
-                type="button"
-              >
-                <SpreadsheetExportIcon className="admin-web__collection-smart-action-icon" />
-              </button>
-            ) : null}
-          </div>
-
-          <div className="admin-web__collection-smart-actions admin-web__collection-smart-actions--mobile">
-            {favoriteAction ? (
-              <button
-                aria-label={favoriteAction.isFavorite ? t("admin.collectionTable.favorite.remove") : t("admin.collectionTable.favorite.add")}
-                className={`admin-web__collection-smart-icon-button admin-web__collection-smart-icon-button--favorite${favoriteAction.isFavorite ? " admin-web__collection-smart-icon-button--active" : ""}`}
-                onClick={() => {
-                  void handleToggleFavorite();
-                }}
-                title={favoriteAction.isFavorite ? t("admin.collectionTable.favorite.remove") : t("admin.collectionTable.favorite.add")}
-                type="button"
-              >
-                <StarIcon className="admin-web__collection-smart-action-icon" />
-              </button>
-            ) : null}
-
-            <Menu align="end">
-              <MenuTrigger>
-                <button
-                  aria-label={t("admin.collectionTable.menu.openTableActions")}
-                  className="admin-web__collection-smart-icon-button"
-                  title={t("admin.collectionTable.menu.moreActions")}
-                  type="button"
-                >
-                  <OverflowMenuIcon className="admin-web__collection-smart-menu-icon" />
-                </button>
-              </MenuTrigger>
-              <MenuContent className="admin-web__collection-smart-menu-content">
-                {reloadAction ? (
-                  <MenuItem onClick={() => setQueryRefreshKey((currentValue) => currentValue + 1)}>
-                    {t("admin.collectionTable.actions.reload")}
-                  </MenuItem>
-                ) : null}
-
-                {exportAction ? (
-                  <MenuItem onClick={handleExportXls}>
-                    {t("admin.collectionTable.actions.exportXls")}
-                  </MenuItem>
-                ) : null}
-
-                {reloadAction || exportAction ? <MenuSeparator /> : null}
-
-                <MenuLabel className="admin-web__collection-smart-menu-label">
-                  {t("admin.collectionTable.menu.savedFilters")}
-                </MenuLabel>
-                {savedFilterMenuItems}
-              </MenuContent>
-            </Menu>
-          </div>
-        </div>
-      </div>
-
-      {activeTokens.length > 0 ? (
-        <div className="admin-web__collection-toolbar-secondary">
-          <div className="admin-web__collection-toolbar-tokens">
-            {activeTokens.map((token) => (
-              <button
-                className="admin-web__collection-filter-token"
-                key={token.id}
-                onClick={token.onRemove}
-                type="button"
-              >
-                <span>{token.label}</span>
-                <CloseIcon className="admin-web__collection-filter-token-icon" />
-              </button>
-            ))}
-          </div>
-
-          <div className="admin-web__collection-toolbar-secondary-actions">
-            <Button className="admin-web__collection-reset-filter" onClick={handleResetFilters} size="sm" variant="outline">
-              {t("admin.collectionTable.actions.resetFilters")}
-            </Button>
-
-            <Button
-              className="admin-web__collection-save-filter"
-              disabled={collectionState.query.quickFilters.length === 0 || isCurrentFilterSetSaved}
-              onClick={handleSaveFilterSet}
-              size="sm"
-              variant="ghost"
-            >
-              {isCurrentFilterSetSaved ? t("admin.collectionTable.actions.saved") : t("admin.collectionTable.actions.saveFilterSet")}
-            </Button>
-          </div>
-        </div>
-      ) : null}
-    </div>
+    <CollectionTableToolbar
+      activeTokens={activeTokens}
+      createAction={createAction}
+      draftSearchFieldId={searchController.draftSearchFieldId}
+      draftSearchOperator={searchController.draftSearchOperator}
+      draftSearchQuery={searchController.draftSearchQuery}
+      exportAction={exportAction}
+      favoriteAction={favoriteAction}
+      highlightedSearchSuggestionOptionId={searchController.highlightedSearchSuggestionOptionId}
+      highlightedSuggestionKey={searchController.highlightedSuggestionKey}
+      isCurrentFilterSetSaved={isCurrentFilterSetSaved}
+      onApplySuggestion={searchController.applySuggestion}
+      onCreateAction={handleCreateAction}
+      onDateSearchValueChange={searchController.handleDateSearchValueChange}
+      onExportXls={handleExportXls}
+      onReload={handleReloadAction}
+      onResetFilters={handleResetFilters}
+      onSaveFilterSet={handleSaveFilterSet}
+      onSearchFieldChange={searchController.handleSearchFieldChange}
+      onSearchInputChange={searchController.handleSearchInputChange}
+      onSearchInputFocus={() => {
+        void searchController.openSearchSuggestions();
+      }}
+      onSearchInputKeyDown={searchController.handleSearchInputKeyDown}
+      onSearchOperatorChange={searchController.handleSearchOperatorChange}
+      onSearchShellBlur={searchController.handleSearchShellBlur}
+      onSearchShellFocusCapture={searchController.handleSearchShellFocusCapture}
+      onSuggestionMouseDown={searchController.handleSuggestionMouseDown}
+      onSuggestionMouseMove={searchController.handleSuggestionMouseMove}
+      onToggleFavorite={handleToggleFavorite}
+      quickFilterCount={collectionState.query.quickFilters.length}
+      reloadAction={reloadAction}
+      savedFilterMenuItems={savedFilterMenuItems}
+      searchFieldOptions={searchController.searchFieldOptions}
+      searchInputPlaceholder={searchInputPlaceholder}
+      searchSuggestionListboxId={searchController.searchSuggestionListboxId}
+      selectableSearchOperators={searchController.selectableSearchOperators}
+      shouldRenderSearchSuggestions={searchController.shouldRenderSearchSuggestions}
+      tableId={tableId}
+      usesDateSearchInput={searchController.usesDateSearchInput}
+      visibleSearchSuggestionGroups={searchController.visibleSearchSuggestionGroups}
+    />
   );
 
   return (
@@ -1761,67 +825,24 @@ export function CollectionTablePage({
         totalPages={totalPages}
       />
 
-      {selectedRowCount > 0 && tableMeta.selection?.enabled ? (
-        <div className="admin-web__collection-bulk-bar" role="region" aria-label={t("admin.collectionTable.selection.bulkActions")}>
-          <div className="admin-web__collection-bulk-bar-copy">
-            <span className="admin-web__collection-bulk-bar-count">{t("admin.collectionTable.selection.selectedCount", { count: selectedRowCount })}</span>
-          </div>
-
-          <div className="admin-web__collection-bulk-bar-actions">
-            {(tableMeta.bulkActions ?? []).map((action) => (
-              <Button
-                className={`admin-web__collection-bulk-button${resolveBulkActionToneClass(action)}`}
-                key={action.id}
-                onClick={() => {
-                  void handleApplyBulkAction(action.id);
-                }}
-                size="sm"
-                variant="outline"
-              >
-                {resolveBulkActionLabel(action)}
-              </Button>
-            ))}
-          </div>
-        </div>
+      {tableMeta.selection?.enabled ? (
+        <CollectionTableBulkBar
+          actions={tableMeta.bulkActions ?? []}
+          getActionLabel={getCollectionTableBulkActionLabel}
+          getActionToneClass={getCollectionTableBulkActionToneClass}
+          onApplyAction={handleApplyBulkAction}
+          selectedRowCount={selectedRowCount}
+        />
       ) : null}
 
-      <Dialog onOpenChange={handleSaveFilterDialogOpenChange} open={isSaveFilterDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("admin.collectionTable.dialog.title")}</DialogTitle>
-          </DialogHeader>
-
-          <DialogBody>
-            <div className="admin-web__collection-save-dialog-form">
-              <Input
-                autoFocus
-                aria-invalid={saveFilterLabelError ? "true" : undefined}
-                id="saved-filter-set-name"
-                onChange={(event) => setDraftSavedFilterLabel(event.currentTarget.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") {
-                    return;
-                  }
-
-                  event.preventDefault();
-                  handleConfirmSaveFilterSet();
-                }}
-                placeholder={t("admin.collectionTable.dialog.placeholder")}
-                value={draftSavedFilterLabel}
-              />
-            </div>
-          </DialogBody>
-
-          <DialogFooter>
-            <Button onClick={() => handleSaveFilterDialogOpenChange(false)} variant="ghost">
-              {t("admin.collectionTable.dialog.cancel")}
-            </Button>
-            <Button disabled={Boolean(saveFilterLabelError)} onClick={handleConfirmSaveFilterSet}>
-              {t("admin.collectionTable.dialog.save")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CollectionTableSaveFilterDialog
+        labelError={saveFilterLabelError}
+        onConfirm={handleConfirmSaveFilterSet}
+        onLabelChange={setDraftSavedFilterLabel}
+        onOpenChange={handleSaveFilterDialogOpenChange}
+        open={isSaveFilterDialogOpen}
+        value={draftSavedFilterLabel}
+      />
     </div>
   );
 }

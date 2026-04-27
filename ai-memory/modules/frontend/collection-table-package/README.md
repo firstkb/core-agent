@@ -36,3 +36,4 @@ Last compacted: 2026-04-25
 - Do not add page-specific toolbar behavior to the package.
 - Do not hardcode admin backend URLs into the package.
 - Do not treat an admin consumer as a universal product requirement.
+- Keep `collection-table-page.tsx` orchestration-focused; new search, toolbar, dialog, selection, and saved-filter UI should start as package-local focused components/helpers rather than expanding the page monolith.

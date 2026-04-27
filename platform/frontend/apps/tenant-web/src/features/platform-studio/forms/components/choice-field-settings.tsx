@@ -108,7 +108,7 @@ export function ChoiceFieldSettings({
               dragOverOptionIndex={dragOverOptionIndex}
               draggedOptionIndex={draggedOptionIndex}
               index={optionIndex}
-              key={`choice-option-${optionIndex}-${option}`}
+              key={`choice-option-${optionIndex}`}
               labels={labels}
               onChangeValue={(nextValue) => onOptionChange(optionIndex, nextValue)}
               onDragEnd={onDragEnd}

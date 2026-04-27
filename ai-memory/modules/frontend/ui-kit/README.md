@@ -35,3 +35,4 @@ Last compacted: 2026-04-25
 - Do not expand provisional primitive APIs casually.
 - Do not treat repeated page CSS or workflow-shaped widgets as automatic design-system candidates.
 - Do not read vendor docs before checking current UI owner docs.
+- Keep large UI Lab panel examples split into app-local docs/previews helpers; do not grow `panels/form-controls.tsx` or similar review panels as single multi-thousand-line files.

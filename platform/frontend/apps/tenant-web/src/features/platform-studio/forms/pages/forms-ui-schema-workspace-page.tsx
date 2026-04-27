@@ -17,103 +17,23 @@ import {
 
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
-import { createFormBuilderCanvasHandlers } from "../controller/form-builder-workspace-canvas-handlers";
 import {
-  createSelectedFieldSettingsHandlers,
-} from "../controller/form-builder-workspace-selected-field-settings-handlers";
-import { buildCanonicalDataSchema } from "../controller/form-builder-workspace-data-schema";
-import { getDeleteNodeConfirmationAction } from "../controller/form-builder-workspace-delete-node";
-import { getCanvasAttentionNodeIds } from "../controller/form-builder-workspace-diff-helpers";
+  createFormBuilderWorkspaceMutationHandlers,
+} from "../controller/form-builder-workspace-mutation-handlers";
 import {
-  applyRootViewActionUpdate,
-  applySubformViewActionUpdate,
-} from "../controller/form-builder-workspace-document-updates";
-import {
-  getFieldPaletteDescription,
-  getFieldTypeKey,
-  getSummaryText,
-} from "../controller/form-builder-workspace-display-helpers";
-import { buildCanonicalLayoutBlueprint } from "../controller/form-builder-workspace-layout-compile";
-import {
-  createCanvasBreadcrumbItems,
-  createCanvasNodeItems,
-  createCanvasUnplacedFields,
-  createGridSettingsFieldItems,
-  createLookupSourcePickerModelItems,
-  createLookupSourcePickerSelectedFieldsSummary,
-  createRulesPanelRuleItems,
-  createViewSettingsDefaultFilterItems,
-  createViewSettingsFilterFieldOptions,
-  createViewSettingsSortingFields,
-} from "../controller/form-builder-workspace-display-items";
-import {
-  findFormBuilderNodeByFieldId,
-  getAuthoringFieldLabel,
   getFieldById,
   getFieldLabelAndBoundField,
   getFieldLabelWithBoundField,
-  getRuleScopeFields,
-  getScopeFields,
-  sortGridScopeFields,
 } from "../controller/form-builder-workspace-field-scope-grid";
 import {
-  getFilterConditionSummary,
-  getQuickFilterSummary,
-} from "../controller/form-builder-workspace-filter-helpers";
-import {
-  getLookupModelFieldLabels,
-  getLookupSortFieldSummary,
-  getLookupSourceModelById,
-  getLookupSourceSummary,
-  getLookupStoredValueSummary,
-} from "../controller/form-builder-workspace-lookup-options";
-import {
-  applyLookupSourcePickerSelectionToField,
-} from "../controller/form-builder-workspace-lookup-source-picker";
-import {
-  getFieldsWithLookupDerivedOutputs,
-} from "../controller/form-builder-workspace-lookup-derived-outputs";
-import {
-  createPaletteDisplaySections,
   type SystemFieldRole,
 } from "../controller/form-builder-workspace-palette-items";
-import {
-  isPersistedModelField,
-} from "../controller/form-builder-workspace-normalization-helpers";
 import { createFormBuilderRuleFilterHandlers } from "../controller/form-builder-workspace-rule-filter-handlers";
-import {
-  getRuleSummary,
-} from "../controller/form-builder-workspace-rule-helpers";
+import { createFormBuilderWorkspaceRenderModel } from "../controller/form-builder-workspace-render-model";
 import {
   createEmptyLayoutBlueprint,
-  deriveModelSchemaScopes,
-  getScopeSchemaScopeKey,
 } from "../controller/form-builder-workspace-schema-utils";
-import {
-  applySelectedFieldTitleUpdate,
-  applySelectedNodeRequiredUpdate,
-  applySelectedNodeTextUpdate,
-  applySelectedNodeTitleUpdate,
-  applySelectedNodeVisibilityUpdate,
-} from "../controller/form-builder-workspace-selected-node-updates";
-import {
-  applyCreatedSystemFieldDocumentBinding,
-  applySystemFieldDocumentBinding,
-  applySystemFieldSemanticRoleBinding,
-  applyWorkflowStatusOptionUpdate,
-  prepareSystemFieldCreation,
-} from "../controller/form-builder-workspace-system-field-derivation";
-import {
-  createSystemFieldPaletteItems,
-  createViewSettingsSystemFields,
-  getBoundSystemFieldIdByRole,
-} from "../controller/form-builder-workspace-system-fields";
-import { buildCanonicalUiSchema } from "../controller/form-builder-workspace-ui-schema";
 import { createFormBuilderViewGridHandlers } from "../controller/form-builder-workspace-view-grid-handlers";
-import {
-  getViewOnlyBindingOption,
-  getViewOnlyBindingOptions,
-} from "../controller/form-builder-workspace-view-only-bindings";
 import { useFormBuilderDebugDialog } from "../controller/use-form-builder-debug-dialog";
 import { useFormBuilderDraftHydration } from "../controller/use-form-builder-draft-hydration";
 import { useFormBuilderDraftSaveAction } from "../controller/use-form-builder-draft-save-action";
@@ -122,8 +42,11 @@ import { useFormBuilderLookupSourceModels } from "../controller/use-form-builder
 import { useFormBuilderLookupSourcePicker } from "../controller/use-form-builder-lookup-source-picker";
 import { useFormBuilderRuleFilterEditors } from "../controller/use-form-builder-rule-filter-editors";
 import { useFormBuilderRouteWorkspace } from "../controller/use-form-builder-route-workspace";
+import { useFormBuilderSelectedLookupSummaries } from "../controller/use-form-builder-selected-lookup-summaries";
 import { useFormBuilderTransientUiEffects } from "../controller/use-form-builder-transient-ui-effects";
+import { useFormBuilderWorkspaceDragControllers } from "../controller/use-form-builder-workspace-drag-controllers";
 import { useFormBuilderWorkspaceController } from "../controller/use-form-builder-workspace-controller";
+import { useFormBuilderWorkspaceDerivedState } from "../controller/use-form-builder-workspace-derived-state";
 import { BuilderCanvas } from "../components/builder-canvas";
 import { WorkspaceLoadingState } from "../components/empty-state";
 import { WorkspaceErrorState } from "../components/error-state";
@@ -133,35 +56,13 @@ import {
   type InspectorPanelTabValue,
   WorkspaceInspector,
 } from "../components/workspace-inspector";
-import {
-  isPresetLookupField,
-} from "../components/lookup-filter-editor-helpers";
 import { SelectionInspectorTabBody } from "../components/selection-inspector-tab-body";
 import { ViewInspectorTabBody } from "../components/view-inspector-tab-body";
 import { WorkspaceDialogStack } from "../components/workspace-dialog-stack";
 import { WorkspaceTopline } from "../components/workspace-topline";
 import {
-  createFormBuilderFieldFromDefinition,
-  formBuilderPaletteSectionDefinitions,
-  type FormBuilderLibraryFieldDefinition,
-} from "../forms-builder-library";
-import {
-  addFormBuilderElementNode,
-  addFormBuilderFieldNode,
-  getCurrentFormBuilderInsertParentId,
-  getElementPaletteItems,
-  getFieldPaletteItems,
-  getFormBuilderBreadcrumb,
   getFormBuilderDisplayLabel,
-  getFormBuilderNodeScopeId,
-  getFormBuilderScopeUnplacedFieldIds,
-  createPersistedFormBuilderDocument,
-  isFormBuilderContainer,
-  normalizePersistedFormBuilderDocument,
-  removeFormBuilderNode,
   useFormBuilderDocument,
-  type FormBuilderNode,
-  type FormBuilderFieldPaletteCategory,
 } from "../forms-builder-state";
 import {
   getFormsAuthoringActor,
@@ -171,8 +72,6 @@ import {
   cloneFormsPlaceholderModel,
   findFormsPlaceholderScreenById,
   type FormsPlaceholderModel,
-  type FormsPlaceholderView,
-  type FormsPlaceholderField,
 } from "../forms-placeholder-data";
 import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
 import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
@@ -214,12 +113,6 @@ export function FormsViewWorkspacePage() {
   });
   const [paletteQuery, setPaletteQuery] = useState("");
   const [inspectorTab, setInspectorTab] = useState<InspectorPanelTabValue>("selection");
-  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
-  const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
-  const [draggedGridFieldId, setDraggedGridFieldId] = useState<string | null>(null);
-  const [dragOverGridFieldId, setDragOverGridFieldId] = useState<string | null>(null);
-  const [draggedChoiceOptionIndex, setDraggedChoiceOptionIndex] = useState<number | null>(null);
-  const [dragOverChoiceOptionIndex, setDragOverChoiceOptionIndex] = useState<number | null>(null);
   const [deleteNodeOpen, setDeleteNodeOpen] = useState(false);
   const [savePulse, setSavePulse] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -336,85 +229,57 @@ export function FormsViewWorkspacePage() {
     savePulse,
     savedModelDraft,
   });
-  const currentModelSchemaScopes = useMemo(
-    () => deriveModelSchemaScopes(currentModel, document),
-    [currentModel, document],
-  );
-  const savedModelSchemaScopes = useMemo(
-    () => deriveModelSchemaScopes(savedModelDraft, savedDocument),
-    [savedDocument, savedModelDraft],
-  );
-  const currentDataSchema = useMemo(
-    () => buildCanonicalDataSchema({
-      ...currentModel,
-      schemaScopes: currentModelSchemaScopes,
-    }, document),
-    [currentModel, currentModelSchemaScopes, document],
-  );
-  const savedDataSchema = useMemo(
-    () => buildCanonicalDataSchema({
-      ...savedModelDraft,
-      schemaScopes: savedModelSchemaScopes,
-    }, savedDocument),
-    [savedDocument, savedModelDraft, savedModelSchemaScopes],
-  );
-  const attentionNodeIds = useMemo(
-    () => getCanvasAttentionNodeIds(persistedDocument, savedDocument, currentModel, savedModelDraft),
-    [currentModel, persistedDocument, savedDocument, savedModelDraft],
-  );
-  const selectedNodeScopeFields = useMemo(
-    () => selectedNode ? getRuleScopeFields(document, currentModel.fields, selectedNode.id) : [],
-    [currentModel.fields, document, selectedNode],
-  );
-  const selectedNodeRuleFields = useMemo(
-    () => selectedNode?.type === "field" && selectedField
-      ? selectedNodeScopeFields.filter((field) => field.id !== selectedField.id)
-      : selectedNodeScopeFields,
-    [selectedField, selectedNode?.type, selectedNodeScopeFields],
-  );
-  const selectedVisibilityRuleItems = createRulesPanelRuleItems({
-    fields: selectedNodeRuleFields,
-    getRuleSummary,
-    rules: selectedNode?.rules?.visibilityRules ?? [],
+  const {
+    attentionNodeIds,
+    breadcrumb,
+    canCreateFieldAtCurrentLevel,
+    canPlaceUnplacedFields,
+    currentDataSchema,
+    currentGridScopeTargets,
+    currentLayoutBlueprint,
+    currentModelSchemaScopes,
+    currentScopePlacementLabel,
+    currentScopeSortingFields,
+    currentScopeUnplacedFields,
+    currentScopeViewLabel,
+    currentUiSchema,
+    currentViewFilterTargets,
+    paletteSections,
+    rootViewFilterTargets,
+    savedDataSchema,
+    selectedFieldIsPresetLookup,
+    selectedFieldShowsLookupDisplayMode,
+    selectedLookupSourceModelId,
+    selectedLookupSourceSummary,
+    selectedNodeRuleFields,
+    selectedRequirementRuleItems,
+    selectedViewOnlyBindingOption,
+    selectedViewOnlyBindingOptions,
+    selectedVisibilityRuleItems,
+    sortedCurrentGridScopeTargets,
+    unplacedFieldsHintKey,
+    workflowStatusOptions,
+  } = useFormBuilderWorkspaceDerivedState({
+    canPlaceFieldAtCurrentLevel,
+    currentDraftViewTitle,
+    currentGridColumns,
+    currentModel,
+    currentScopeSubformNode,
+    document,
+    isDefaultView,
+    isRootViewScope,
+    layoutBlueprintDraft,
+    paletteQuery,
+    persistedDocument,
+    savedDocument,
+    savedModelDraft,
+    selectedField,
+    selectedFieldIsLookup,
+    selectedFieldIsLookupValue,
+    selectedNode,
+    structureEditingAccess,
     t,
   });
-  const selectedRequirementRuleItems = createRulesPanelRuleItems({
-    fields: selectedNodeRuleFields,
-    getRuleSummary,
-    rules: selectedNode?.rules?.requirementRules ?? [],
-    t,
-  });
-  const currentGridScopeFields = useMemo(
-    () => getScopeFields(document, currentModel.fields, currentScopeSubformNode?.id ?? null),
-    [currentModel.fields, currentScopeSubformNode?.id, document],
-  );
-  const currentGridScopeTargets = useMemo(
-    () => getFieldsWithLookupDerivedOutputs({
-      document,
-      fields: currentGridScopeFields,
-      getFieldLabelAndBoundField,
-      t,
-    }),
-    [currentGridScopeFields, document, t],
-  );
-  const sortedCurrentGridScopeTargets = useMemo(
-    () => sortGridScopeFields(currentGridScopeTargets, currentGridColumns),
-    [currentGridColumns, currentGridScopeTargets],
-  );
-  const rootViewScopeFields = useMemo(
-    () => getScopeFields(document, currentModel.fields, null),
-    [currentModel.fields, document],
-  );
-  const rootViewFilterTargets = useMemo(
-    () => getFieldsWithLookupDerivedOutputs({
-      document,
-      fields: rootViewScopeFields,
-      getFieldLabelAndBoundField,
-      t,
-    }),
-    [document, rootViewScopeFields, t],
-  );
-  const currentViewFilterTargets = isRootViewScope ? rootViewFilterTargets : currentGridScopeTargets;
   const {
     addQuickFilterCondition,
     closeDefaultFilterEditor,
@@ -449,23 +314,6 @@ export function FormsViewWorkspacePage() {
     selectedRequirementRules: selectedNode?.rules?.requirementRules ?? [],
     selectedVisibilityRules: selectedNode?.rules?.visibilityRules ?? [],
   });
-  const currentScopeViewLabel = isRootViewScope
-    ? currentDraftViewTitle
-    : (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"));
-  const currentScopeSortingFields = isRootViewScope ? rootViewScopeFields : currentGridScopeFields;
-  const selectedFieldIsPresetLookup = selectedField ? isPresetLookupField(selectedField) : false;
-  const selectedFieldShowsLookupDisplayMode = selectedFieldIsLookup
-    && !selectedFieldIsPresetLookup
-    && !selectedFieldIsLookupValue
-    && (selectedField?.selectionMode ?? "single") === "single";
-  const selectedLookupSourceSummary = useMemo(
-    () => selectedField && selectedField.kind === "db_lookup" ? getLookupSourceSummary(selectedField, t) : null,
-    [selectedField, t],
-  );
-  const selectedLookupSourceModelId =
-    selectedField?.kind === "db_lookup" && !selectedFieldIsPresetLookup
-      ? selectedField.lookupConfig?.sourceModel?.trim() ?? ""
-      : "";
   const {
     availableLookupSourceModels,
     loadLookupSourceModel,
@@ -499,95 +347,15 @@ export function FormsViewWorkspacePage() {
     selectedField,
     selectedFieldIsPresetLookup,
   });
-  const selectedNodeScopeSubformId = selectedNode
-    ? getFormBuilderNodeScopeId(document, selectedNode.id)
-    : "root";
-  const selectedViewOnlyBindingOptions = useMemo(
-    () => selectedNode?.type === "view_only_field"
-      ? getViewOnlyBindingOptions({
-          document,
-          fields: currentModel.fields,
-          getFieldLabelAndBoundField,
-          getScopeFields,
-          scopeSubformId: selectedNodeScopeSubformId === "root" ? null : selectedNodeScopeSubformId,
-          t,
-        })
-      : [],
-    [currentModel.fields, document, selectedNode?.id, selectedNode?.type, selectedNodeScopeSubformId, t],
-  );
-  const selectedViewOnlyBindingOption = useMemo(
-    () => selectedNode?.type === "view_only_field"
-      ? getViewOnlyBindingOption({
-          binding: selectedNode.viewOnlyBinding,
-          document,
-          fields: currentModel.fields,
-          getFieldById,
-          getFieldLabelAndBoundField,
-          t,
-        })
-      : null,
-    [currentModel.fields, document, selectedNode, t],
-  );
-  const selectedGenericLookupSourceModel = useMemo(
-    () => selectedField && selectedField.kind === "db_lookup"
-      ? getLookupSourceModelById(availableLookupSourceModels, selectedField.lookupConfig?.sourceModel)
-      : null,
-    [availableLookupSourceModels, selectedField],
-  );
-  const selectedLookupStoredValueSummary = useMemo(
-    () => selectedField && selectedField.kind === "db_lookup"
-      ? getLookupStoredValueSummary(selectedField, selectedGenericLookupSourceModel, t)
-      : null,
-    [selectedField, selectedGenericLookupSourceModel, t],
-  );
-  const selectedLookupSortFieldSummary = useMemo(
-    () => selectedField && selectedField.kind === "db_lookup"
-      ? getLookupSortFieldSummary(selectedField, selectedGenericLookupSourceModel, t)
-      : null,
-    [selectedField, selectedGenericLookupSourceModel, t],
-  );
-  const currentUiSchema = useMemo(
-    () => buildCanonicalUiSchema(document, currentModel),
-    [currentModel, document],
-  );
-  const currentLayoutBlueprint = useMemo(
-    () => (isDefaultView ? buildCanonicalLayoutBlueprint(document) : layoutBlueprintDraft),
-    [document, isDefaultView, layoutBlueprintDraft],
-  );
-  const breadcrumb = getFormBuilderBreadcrumb(document);
-  const elementItems = getElementPaletteItems(document, structureEditingAccess, paletteQuery);
-  const workflowStatusField = getFieldById(currentModel.fields, document.systemFields.workflowStatus?.fieldId);
-  const workflowStatusOptions = workflowStatusField?.options ?? [];
-  const currentScopePlacementLabel = isRootViewScope
-    ? t("tenant.platformStudio.forms.builder.rootLevel")
-    : currentScopeViewLabel;
-  const currentScopeUnplacedFieldIds = useMemo(
-    () => getFormBuilderScopeUnplacedFieldIds(document, currentScopeSubformNode?.id ?? null),
-    [currentScopeSubformNode?.id, document],
-  );
-  const currentScopeUnplacedFields = useMemo(() => {
-    const fieldById = new Map(currentModel.fields.map((field) => [field.id, {
-      ...field,
-      label: getAuthoringFieldLabel(field, document),
-    }]));
-    return currentScopeUnplacedFieldIds.flatMap((fieldId) => {
-      const field = fieldById.get(fieldId);
-      return field ? [field] : [];
-    });
-  }, [currentModel.fields, currentScopeUnplacedFieldIds, document]);
-  const canCreateFieldAtCurrentLevel = canPlaceFieldAtCurrentLevel;
-  const fieldPlacementAccess = structureEditingAccess;
-  const fieldItems = getFieldPaletteItems(document, fieldPlacementAccess, paletteQuery);
-  const canPlaceUnplacedFields = isDefaultView
-    && canPlaceFieldAtCurrentLevel
-    && structureEditingAccess.canAddFieldItems;
-  const unplacedFieldsHintKey = !isDefaultView
-    ? "tenant.platformStudio.forms.builder.unplacedFieldsDefaultOnlyHint"
-    : !canPlaceFieldAtCurrentLevel
-      ? "tenant.platformStudio.forms.builder.unplacedFieldsOpenContainerHint"
-      : (!structureEditingAccess.canAddFieldItems
-        ? (structureEditingAccess.structureLockReasonKey ?? structureEditingAccess.lockReasonKey)
-        : null);
+  const {
+    selectedGenericLookupSourceModel,
+    selectedLookupSortFieldSummary,
+    selectedLookupStoredValueSummary,
+  } = useFormBuilderSelectedLookupSummaries({
+    availableLookupSourceModels,
+    selectedField,
+    t,
+  });
   const {
     debugCompiledRuntime,
     debugDataSchema,
@@ -615,24 +383,6 @@ export function FormsViewWorkspacePage() {
   }, [hasResolvedWorkspace, resolvedModel]);
 
   const {
-    selectionPanelTopRef,
-  } = useFormBuilderTransientUiEffects({
-    closeLookupSourcePicker,
-    closeRequirementRuleEditor,
-    closeVisibilityRuleEditor,
-    currentViewFilterTargets,
-    inspectorTab,
-    isViewTabAvailable,
-    pendingDefaultFilterFieldId,
-    selectedFieldId: selectedField?.id,
-    selectedNodeId: selectedNode?.id,
-    setDragOverChoiceOptionIndex,
-    setDraggedChoiceOptionIndex,
-    setInspectorTab,
-    setPendingDefaultFilterFieldId,
-  });
-
-  const {
     leaveConfirmOpen,
     onLeaveConfirmOpenChange,
     requestNavigate,
@@ -642,108 +392,21 @@ export function FormsViewWorkspacePage() {
     onNavigate: navigate,
   });
 
-  const systemFieldItems = useMemo(
-    () => createSystemFieldPaletteItems({
-      canPlaceFieldAtCurrentLevel,
-      document,
-      fieldPlacementAccess,
-      paletteQuery,
-    }),
-    [canPlaceFieldAtCurrentLevel, document, fieldPlacementAccess, paletteQuery],
-  );
-
-  const paletteSections = useMemo(
-    () =>
-      formBuilderPaletteSectionDefinitions
-        .map((section) => {
-          if (section.key === "layout" || section.key === "content") {
-            return {
-              items: elementItems.filter((item) => item.category === section.key),
-              key: section.key,
-              labelKey: section.labelKey,
-            };
-          }
-
-          if (section.key === "systemFields") {
-            return {
-              items: systemFieldItems,
-              key: section.key,
-              labelKey: section.labelKey,
-            };
-          }
-
-          return {
-            items: fieldItems.filter((item) => item.category === section.key as FormBuilderFieldPaletteCategory),
-            key: section.key,
-            labelKey: section.labelKey,
-          };
-        })
-        .filter((section) => section.items.length > 0),
-    [elementItems, fieldItems, systemFieldItems],
-  );
-
-  function updateDocument(updater: (currentDocument: typeof document) => typeof document) {
-    setDocument((currentDocument) => updater(currentDocument));
-  }
-
-  function updateCurrentModel(
-    updater: (currentModelDraft: FormsPlaceholderModel) => FormsPlaceholderModel,
-  ) {
-    setModelDraft((currentValue) => cloneFormsPlaceholderModel(updater(currentValue)));
-  }
-
-  function updateFieldById(
-    fieldId: string,
-    updater: (field: FormsPlaceholderField) => FormsPlaceholderField,
-  ) {
-    if (!canEditModelDefinition) {
-      return;
-    }
-
-    updateCurrentModel((currentModelDraft) => ({
-      ...currentModelDraft,
-      fields: currentModelDraft.fields.map((field) =>
-        field.id === fieldId ? updater(field) : field
-      ),
-    }));
-  }
-
-  function deleteUnsavedField(fieldId: string, nodeId: string) {
-    const nextModelBase = cloneFormsPlaceholderModel({
-      ...currentModel,
-      fields: currentModel.fields.filter((field) => field.id !== fieldId),
-    });
-    const documentWithoutField = normalizePersistedFormBuilderDocument(
-      createPersistedFormBuilderDocument(removeFormBuilderNode(document, nodeId)),
-      nextModelBase,
-      currentView,
-    );
-    const nextModel = cloneFormsPlaceholderModel({
-      ...nextModelBase,
-      schemaScopes: deriveModelSchemaScopes(nextModelBase, documentWithoutField),
-    });
-
-    setModelDraft(nextModel);
-    setDocument(documentWithoutField);
-  }
-
-  function updateSelectedField(
-    updater: (field: FormsPlaceholderField) => FormsPlaceholderField,
-  ) {
-    if (!selectedField) {
-      return;
-    }
-
-    updateFieldById(selectedField.id, updater);
-  }
-
   const {
     addSelectedFieldOption,
+    confirmDeleteNode,
+    handleCreateLibraryField,
+    handleCreateSystemField,
+    openDeleteNodeDialog,
     removeSelectedFieldOption,
     renameSelectedFieldOption,
     reorderSelectedFieldOption,
+    saveLookupSourcePicker,
     updateSelectedDateDisplayFormat,
     updateSelectedDateReadonly,
+    updateCurrentModel,
+    updateCurrentViewMetadata,
+    updateDocument,
     updateSelectedFieldAutocomplete,
     updateSelectedFieldChoiceDisplay,
     updateSelectedFieldChoiceStyle,
@@ -751,136 +414,39 @@ export function FormsViewWorkspacePage() {
     updateSelectedFieldPlaceholder,
     updateSelectedFieldValidation,
     updateSelectedLookupDisplayMode,
+    updateSelectedNodeRequired,
+    updateSelectedNodeText,
+    updateSelectedNodeTitle,
+    updateSelectedNodeVisibility,
     updateSelectedTagsMax,
     updateSelectedTagsMode,
     updateSelectedViewOnlyBinding,
-  } = createSelectedFieldSettingsHandlers({
-    defaultViewOnlyFieldTitle: t("tenant.platformStudio.forms.builder.nodeType.view_only_field"),
+    updateSystemFieldBinding,
+    updateWorkflowStatusOption,
+  } = createFormBuilderWorkspaceMutationHandlers({
+    activeScope,
+    canCreateFieldAtCurrentLevel,
+    canEditModelDefinition,
+    canPlaceFieldAtCurrentLevel,
+    closeLookupSourcePicker,
+    currentModel,
+    currentView,
+    document,
+    lookupSourcePicker,
+    lookupSourcePickerModel,
     newChoiceOptionLabel: t("tenant.platformStudio.forms.builder.fieldSettings.newOption"),
     selectedFieldDefaultAutocompleteValue,
+    selectedField,
     selectedNode,
     selectedViewOnlyBindingOption,
     selectedViewOnlyBindingOptions,
-    updateDocument,
-    updateSelectedField,
+    setDeleteNodeOpen,
+    setDocument,
+    setInspectorViewTab: () => setInspectorTab("view"),
+    setModelDraft,
+    structureEditingAccess,
+    viewOnlyFieldDefaultTitle: t("tenant.platformStudio.forms.builder.nodeType.view_only_field"),
   });
-
-  function updateCurrentViewMetadata(
-    updater: (viewEntry: FormsPlaceholderView) => FormsPlaceholderView,
-  ) {
-    updateCurrentModel((currentModelDraft) => ({
-      ...currentModelDraft,
-      screens: currentModelDraft.screens.map((screenEntry) =>
-        screenEntry.id === currentView.id
-          ? updater(screenEntry)
-          : screenEntry
-      ),
-    }));
-  }
-
-  function handleCreateLibraryField(definition: FormBuilderLibraryFieldDefinition) {
-    if (!canCreateFieldAtCurrentLevel || !structureEditingAccess.canAddFieldItems || !canEditModelDefinition) {
-      return;
-    }
-
-    const nextField = createFormBuilderFieldFromDefinition(
-      definition,
-      currentModel.fields,
-      getScopeSchemaScopeKey(activeScope),
-    );
-
-    updateCurrentModel((currentModelDraft) => ({
-      ...currentModelDraft,
-      fields: [...currentModelDraft.fields, nextField],
-    }));
-
-    updateDocument((currentDocument) =>
-      addFormBuilderFieldNode(currentDocument, getCurrentFormBuilderInsertParentId(currentDocument), nextField)
-    );
-  }
-
-  function resetChoiceOptionDragState() {
-    setDraggedChoiceOptionIndex(null);
-    setDragOverChoiceOptionIndex(null);
-  }
-
-  function handleChoiceOptionDragStart(optionIndex: number) {
-    setDraggedChoiceOptionIndex(optionIndex);
-    setDragOverChoiceOptionIndex(optionIndex);
-  }
-
-  function handleChoiceOptionDrop(optionIndex: number) {
-    if (draggedChoiceOptionIndex === null || draggedChoiceOptionIndex === optionIndex) {
-      setDragOverChoiceOptionIndex(null);
-      return;
-    }
-
-    reorderSelectedFieldOption(draggedChoiceOptionIndex, optionIndex);
-    resetChoiceOptionDragState();
-  }
-
-  function saveLookupSourcePicker() {
-    if (!selectedField || selectedField.kind !== "db_lookup" || !lookupSourcePickerModel || !lookupSourcePicker) {
-      return;
-    }
-    if (lookupSourcePickerModel.id === currentModel.id) {
-      return;
-    }
-
-    if (!applyLookupSourcePickerSelectionToField({
-      field: selectedField,
-      picker: lookupSourcePicker,
-      sourceModel: lookupSourcePickerModel,
-    })) {
-      return;
-    }
-
-    updateSelectedField((field) =>
-      applyLookupSourcePickerSelectionToField({
-        field,
-        picker: lookupSourcePicker,
-        sourceModel: lookupSourcePickerModel,
-      }) ?? field
-    );
-
-    closeLookupSourcePicker();
-  }
-
-  function updateSystemFieldBinding(
-    role: SystemFieldRole,
-    fieldId: string,
-  ) {
-    if (!canEditModelDefinition) {
-      return;
-    }
-
-    updateCurrentModel((currentModelDraft) => ({
-      ...currentModelDraft,
-      fields: applySystemFieldSemanticRoleBinding(currentModelDraft.fields, role, fieldId),
-    }));
-
-    updateDocument((currentDocument) => ({
-      ...currentDocument,
-      systemFields: applySystemFieldDocumentBinding(currentDocument.systemFields, role, fieldId),
-    }));
-  }
-
-  function updateWorkflowStatusOption(
-    key: "finalValue" | "initialValue",
-    value: string,
-  ) {
-    updateDocument((currentDocument) => {
-      const nextSystemFields = applyWorkflowStatusOptionUpdate(currentDocument.systemFields, key, value);
-      if (nextSystemFields === currentDocument.systemFields) {
-        return currentDocument;
-      }
-
-      return {
-        ...currentDocument,
-        systemFields: nextSystemFields,
-      };
-    });
-  }
 
   const {
     deleteDefaultFilter,
@@ -912,30 +478,6 @@ export function FormsViewWorkspacePage() {
     visibilityRuleEditor,
   });
 
-  function openDeleteNodeDialog() {
-    setDeleteNodeOpen(true);
-  }
-
-  function confirmDeleteNode() {
-    const action = getDeleteNodeConfirmationAction({
-      isSelectedFieldPersisted: selectedField ? isPersistedModelField(selectedField) : false,
-      selectedField,
-      selectedNode,
-    });
-
-    if (action.kind === "delete-unsaved-field") {
-      deleteUnsavedField(action.fieldId, action.nodeId);
-      setDeleteNodeOpen(false);
-      return;
-    }
-
-    if (action.kind === "remove-node") {
-      updateDocument((currentDocument) => removeFormBuilderNode(currentDocument, action.nodeId));
-    }
-
-    setDeleteNodeOpen(false);
-  }
-
   const {
     addDefaultFilterCondition,
     addQuickFilter,
@@ -963,136 +505,57 @@ export function FormsViewWorkspacePage() {
     updateDocument,
   });
 
-  function resetGridFieldDragState() {
-    setDraggedGridFieldId(null);
-    setDragOverGridFieldId(null);
-  }
-
-  function handleGridFieldDragStart(fieldId: string) {
-    setDraggedGridFieldId(fieldId);
-    setDragOverGridFieldId(fieldId);
-  }
-
-  function handleGridFieldDrop(fieldId: string) {
-    if (!draggedGridFieldId || draggedGridFieldId === fieldId) {
-      return;
-    }
-
-    reorderGridColumns(draggedGridFieldId, fieldId);
-    resetGridFieldDragState();
-  }
-
   const {
+    dragOverChoiceOptionIndex,
+    dragOverGridFieldId,
+    dragOverNodeId,
+    draggedChoiceOptionIndex,
+    draggedGridFieldId,
+    draggedNodeId,
     handleCanvasDragStart,
     handleCanvasDrop,
+    handleChoiceOptionDragStart,
+    handleChoiceOptionDrop,
+    handleGridFieldDragStart,
+    handleGridFieldDrop,
     openCanvasLevel,
     openCanvasRoot,
     placeCanvasUnplacedField,
     resetCanvasDragState,
+    resetChoiceOptionDragState,
+    resetGridFieldDragState,
     selectCanvasNode,
+    setDragOverChoiceOptionIndex,
+    setDragOverGridFieldId,
+    setDragOverNodeId,
+    setDraggedChoiceOptionIndex,
     toggleCanvasNodeVisibility,
-  } = createFormBuilderCanvasHandlers({
+  } = useFormBuilderWorkspaceDragControllers({
     currentScopeParentId,
     currentScopeUnplacedFields,
-    draggedNodeId,
+    reorderGridColumns,
+    reorderSelectedFieldOption,
     selectInspectorSelectionTab: () => setInspectorTab("selection"),
-    setDragOverNodeId,
-    setDraggedNodeId,
     updateDocument,
   });
 
-  function updateSelectedNodeRequired(checked: boolean) {
-    if (!selectedNode) {
-      return;
-    }
-
-    updateDocument((currentDocument) => applySelectedNodeRequiredUpdate(currentDocument, selectedNode.id, checked));
-  }
-
-  function updateSelectedNodeText(text: string) {
-    if (!selectedNode) {
-      return;
-    }
-
-    updateDocument((currentDocument) => applySelectedNodeTextUpdate(currentDocument, selectedNode.id, text));
-  }
-
-  function updateSelectedNodeTitle(nextTitle: string) {
-    if (!selectedNode) {
-      return;
-    }
-
-    if (selectedNode.type === "field") {
-      if (!selectedField) {
-        return;
-      }
-
-      if (canEditModelDefinition) {
-        updateFieldById(selectedField.id, (field) =>
-          applySelectedFieldTitleUpdate({
-            field,
-            fields: currentModel.fields,
-            title: nextTitle,
-          })
-        );
-      }
-    }
-
-    updateDocument((currentDocument) => applySelectedNodeTitleUpdate(currentDocument, selectedNode.id, nextTitle));
-  }
-
-  function updateSelectedNodeVisibility(nextVisibility: FormBuilderNode["visibility"]) {
-    if (!selectedNode) {
-      return;
-    }
-
-    updateDocument((currentDocument) =>
-      applySelectedNodeVisibilityUpdate(currentDocument, selectedNode, selectedField, nextVisibility)
-    );
-  }
-
-  function handleCreateSystemField(role: SystemFieldRole) {
-    if (getBoundSystemFieldIdByRole(document, role)) {
-      return;
-    }
-
-    if (!canPlaceFieldAtCurrentLevel || !structureEditingAccess.canAddFieldItems || !canEditModelDefinition) {
-      return;
-    }
-
-    const {
-      existingField,
-      nextField,
-    } = prepareSystemFieldCreation(currentModel.fields, role);
-
-    if (!existingField) {
-      updateCurrentModel((currentModelDraft) => ({
-        ...currentModelDraft,
-        fields: [...currentModelDraft.fields, nextField],
-      }));
-    } else if (existingField.schemaScopeKey !== "root") {
-      updateFieldById(existingField.id, (field) => ({
-        ...field,
-        schemaScopeKey: "root",
-      }));
-    }
-
-    updateDocument((currentDocument) => {
-      const nextDocument = {
-        ...currentDocument,
-        systemFields: applyCreatedSystemFieldDocumentBinding(currentDocument.systemFields, role, nextField),
-      };
-
-      const existingNode = findFormBuilderNodeByFieldId(nextDocument, nextField.id);
-      if (existingNode || !canPlaceFieldAtCurrentLevel) {
-        return nextDocument;
-      }
-
-      return addFormBuilderFieldNode(nextDocument, getCurrentFormBuilderInsertParentId(nextDocument), nextField);
-    });
-
-    setInspectorTab("view");
-  }
+  const {
+    selectionPanelTopRef,
+  } = useFormBuilderTransientUiEffects({
+    closeLookupSourcePicker,
+    closeRequirementRuleEditor,
+    closeVisibilityRuleEditor,
+    currentViewFilterTargets,
+    inspectorTab,
+    isViewTabAvailable,
+    pendingDefaultFilterFieldId,
+    selectedFieldId: selectedField?.id,
+    selectedNodeId: selectedNode?.id,
+    setDragOverChoiceOptionIndex,
+    setDraggedChoiceOptionIndex,
+    setInspectorTab,
+    setPendingDefaultFilterFieldId,
+  });
 
   const currentLevelLabel = currentParentNode
     ? getFormBuilderDisplayLabel(currentParentNode, currentModel)
@@ -1186,94 +649,48 @@ export function FormsViewWorkspacePage() {
     );
   }
 
-  const paletteDisplaySections = createPaletteDisplaySections({
-    getFieldPaletteDescription,
-    onAddElement: (nodeType, initialNode) => updateDocument((currentDocument) =>
-      addFormBuilderElementNode(
-        currentDocument,
-        getCurrentFormBuilderInsertParentId(currentDocument),
-        nodeType,
-        initialNode,
-      )
-    ),
-    onCreateLibraryField: handleCreateLibraryField,
-    onCreateSystemField: handleCreateSystemField,
-    sections: paletteSections,
-    t,
-  });
-  const canvasBreadcrumbItems = createCanvasBreadcrumbItems({
-    breadcrumb,
-    currentModel,
-  });
-  const canvasNodeItems = createCanvasNodeItems({
+  const {
+    canvasBreadcrumbItems,
+    canvasNodeItems,
+    canvasUnplacedFields,
+    gridSettingsFieldItems,
+    lookupSourcePickerModelItems,
+    lookupSourcePickerSelectedFieldsSummary,
+    paletteDisplaySections,
+    viewSettingsActionItems,
+    viewSettingsDefaultFilterItems,
+    viewSettingsFilterFieldOptions,
+    viewSettingsSortingFields,
+    viewSettingsSystemFields,
+  } = createFormBuilderWorkspaceRenderModel({
     attentionNodeIds,
+    availableLookupSourceModels,
+    breadcrumb,
+    currentGridColumns,
     currentModel,
     currentNodes,
+    currentScopeFilterDefinitions,
+    currentScopeSortingFields,
+    currentScopeUnplacedFields,
+    currentScopeViewSettings,
+    currentViewFilterTargets,
     document,
-    getSummaryText,
-    t,
-  });
-  const canvasUnplacedFields = createCanvasUnplacedFields({
-    fields: currentScopeUnplacedFields,
-    getFieldTypeKey,
-    t,
-  });
-  const gridSettingsFieldItems = createGridSettingsFieldItems({
-    columns: currentGridColumns,
-    fields: sortedCurrentGridScopeTargets,
-  });
-  const viewSettingsActionItems = isRootViewScope
-    ? ([
-        ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
-        ["canView", "tenant.platformStudio.forms.builder.viewSettings.action.view"],
-        ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
-        ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
-      ] as const).map(([actionKey, labelKey]) => ({
-        checked: document.viewSettings.actions[actionKey],
-        key: actionKey,
-        label: t(labelKey),
-        onChange: (checked: boolean) =>
-          updateViewSettings((viewSettings) => applyRootViewActionUpdate(viewSettings, actionKey, checked)),
-      }))
-    : ([
-        ["canAdd", "tenant.platformStudio.forms.builder.viewSettings.action.add"],
-        ["canEdit", "tenant.platformStudio.forms.builder.viewSettings.action.edit"],
-        ["canDelete", "tenant.platformStudio.forms.builder.viewSettings.action.delete"],
-      ] as const).map(([actionKey, labelKey]) => ({
-        checked: Boolean(currentScopeViewSettings?.actions[actionKey]),
-        key: actionKey,
-        label: t(labelKey),
-        onChange: (checked: boolean) =>
-          updateCurrentScopeSubformViewSettings((viewSettings) =>
-            applySubformViewActionUpdate(viewSettings, actionKey, checked)
-          ),
-      }));
-  const viewSettingsSystemFields = createViewSettingsSystemFields({
-    document,
-    fields: currentModel.fields,
     getFieldById,
     getFieldLabelAndBoundField,
     getFieldLabelWithBoundField,
-    t,
-    workflowStatusOptions,
-  });
-  const viewSettingsSortingFields = createViewSettingsSortingFields(currentScopeSortingFields);
-  const viewSettingsFilterFieldOptions = createViewSettingsFilterFieldOptions(currentViewFilterTargets);
-  const viewSettingsDefaultFilterItems = createViewSettingsDefaultFilterItems({
-    conditions: currentScopeFilterDefinitions.defaultFilters.conditions,
-    fields: currentViewFilterTargets,
-    getFilterConditionSummary,
-    t,
-  });
-  const lookupSourcePickerModelItems = createLookupSourcePickerModelItems({
-    sourceModels: availableLookupSourceModels,
-    sourceModelsById: lookupSourceModelsById,
-  });
-  const lookupSourcePickerSelectedFieldsSummary = createLookupSourcePickerSelectedFieldsSummary({
-    getLookupModelFieldLabels,
+    isRootViewScope,
+    lookupSourceModelsById,
     lookupSourcePicker,
-    selectedModel: lookupSourcePickerModel,
+    lookupSourcePickerModel,
+    onCreateLibraryField: handleCreateLibraryField,
+    onCreateSystemField: handleCreateSystemField,
+    paletteSections,
+    sortedCurrentGridScopeTargets,
     t,
+    updateCurrentScopeSubformViewSettings,
+    updateDocument,
+    updateViewSettings,
+    workflowStatusOptions,
   });
 
   return (

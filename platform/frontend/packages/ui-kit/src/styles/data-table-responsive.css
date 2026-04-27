@@ -1,0 +1,64 @@
+@media (max-width: 768px) {
+  .ui-combobox__content {
+    width: min(100vw - 1.5rem, 22rem);
+    min-width: 0;
+  }
+
+  .ui-table-pagination-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .ui-table-pagination-bar__controls {
+    flex: 1 1 auto;
+    width: auto;
+  }
+
+  .ui-table-pagination-bar__meta {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    min-width: auto;
+    margin-left: 0;
+    gap: var(--space-2);
+  }
+
+  .ui-table-pagination-bar__size-control {
+    display: none;
+  }
+
+  .ui-table-pagination-bar__info {
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .ui-table-pagination-bar__controls.ui-pagination {
+    width: auto;
+    --ui-pagination-gap: 0.25rem;
+    --ui-pagination-height: 1.875rem;
+    --ui-pagination-min-width: 1.875rem;
+    --ui-pagination-padding-x: 0.375rem;
+    --ui-pagination-font-size: 0.75rem;
+    --ui-pagination-icon-size: 0.8125rem;
+    --ui-pagination-input-width: 2.375rem;
+    --ui-pagination-ellipsis-width: 0.875rem;
+  }
+
+  .ui-table-pagination-bar__controls .ui-pagination__list {
+    flex-wrap: nowrap;
+  }
+
+  .ui-table-pagination-bar__entry-summary {
+    gap: 0.375rem;
+  }
+
+  .ui-table-pagination-bar__entry-count {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+    padding: 0 0.375rem;
+  }
+}

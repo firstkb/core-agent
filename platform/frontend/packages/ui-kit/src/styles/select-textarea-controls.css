@@ -1,0 +1,88 @@
+.ui-select,
+.ui-textarea {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  background-color: var(--color-control-bg);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-0);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  transition:
+    border-color var(--motion-fast) var(--easing-standard),
+    box-shadow var(--motion-fast) var(--easing-standard),
+    background-color var(--motion-fast) var(--easing-standard);
+}
+
+.ui-select {
+  min-height: 2.5rem;
+  padding: 0 calc(var(--space-4) + 1.625rem) 0 var(--space-4);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6.5 8 10l4-3.5' stroke='%2388909F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.9375rem 0.9375rem;
+}
+
+.ui-textarea {
+  min-height: 6rem;
+  padding: 0.625rem 0.875rem;
+}
+
+.ui-textarea--none {
+  resize: none;
+}
+
+.ui-textarea--vertical {
+  resize: vertical;
+}
+
+.ui-select:hover,
+.ui-textarea:hover {
+  background-color: var(--color-control-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.ui-select:focus-visible,
+.ui-textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.ui-select:disabled,
+.ui-textarea:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-control-bg-disabled);
+  color: var(--color-control-disabled-text);
+  border-color: var(--color-border-subtle);
+}
+
+.ui-select--invalid,
+.ui-textarea--invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px var(--color-danger-ring);
+}
+
+.ui-select--sm {
+  min-height: 2rem;
+  padding-left: var(--space-3);
+  padding-right: calc(var(--space-3) + 1.35rem);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  background-position: right 0.7rem center;
+  background-size: 0.95rem 0.95rem;
+}
+
+.ui-select--lg {
+  min-height: 2.75rem;
+  padding-left: 1rem;
+  padding-right: calc(1rem + 1.625rem);
+  font-size: var(--font-size-md);
+  background-position: right 1rem center;
+  background-size: 1rem 1rem;
+}

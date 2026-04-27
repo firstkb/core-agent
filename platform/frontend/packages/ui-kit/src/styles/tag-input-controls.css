@@ -1,0 +1,192 @@
+.ui-tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.375rem var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  background: var(--color-control-bg);
+  box-shadow: var(--shadow-0);
+  cursor: text;
+  transition:
+    border-color var(--motion-fast) var(--easing-standard),
+    box-shadow var(--motion-fast) var(--easing-standard),
+    background-color var(--motion-fast) var(--easing-standard);
+}
+
+.ui-tag-input-shell {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-tag-input:hover {
+  background: var(--color-control-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.ui-tag-input:focus-within {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.ui-tag-input--invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 2px var(--color-danger-ring);
+}
+
+.ui-tag-input--disabled {
+  cursor: not-allowed;
+  background: var(--color-control-bg-disabled);
+  border-color: var(--color-border-subtle);
+}
+
+.ui-tag-input--sm {
+  min-height: 2rem;
+  padding: 0.25rem var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.ui-tag-input--lg {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+}
+
+.ui-tag-input__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.625rem;
+  padding: 0 0.375rem 0 0.625rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-primary-soft);
+  color: var(--color-accent-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3333333333;
+}
+
+.ui-tag-input__tag-label {
+  max-width: 10rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ui-tag-input__tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--easing-standard),
+    box-shadow var(--motion-fast) var(--easing-standard);
+}
+
+.ui-tag-input__tag-remove:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.ui-tag-input__tag-remove:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.ui-tag-input__tag-remove:disabled {
+  cursor: not-allowed;
+}
+
+.ui-tag-input__tag-remove-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.ui-tag-input__input {
+  min-width: 7rem;
+  flex: 1 1 7rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.ui-tag-input__input::placeholder {
+  color: var(--color-control-placeholder);
+}
+
+.ui-tag-input__input:focus {
+  outline: none;
+}
+
+.ui-tag-input__input:disabled {
+  cursor: not-allowed;
+  color: var(--color-control-disabled-text);
+}
+
+.ui-tag-input__suggestions {
+  position: fixed;
+  z-index: 1050;
+  display: flex;
+  width: auto;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 12rem;
+  overflow-y: auto;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-overlay);
+  box-shadow: var(--shadow-2);
+}
+
+.ui-tag-input__suggestion {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--easing-standard),
+    color var(--motion-fast) var(--easing-standard);
+}
+
+.ui-tag-input__suggestion:hover,
+.ui-tag-input__suggestion:focus-visible,
+.ui-tag-input__suggestion--active {
+  outline: none;
+  background: var(--color-bg-selected);
+}
+
+.ui-tag-input__suggestions-empty {
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}

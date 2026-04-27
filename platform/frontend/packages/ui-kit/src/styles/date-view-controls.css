@@ -1,0 +1,109 @@
+.ui-date-range-field {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.ui-date-range-field__inputs {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ui-date-range-field__inputs--calendar > * {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.ui-date-range-field__inputs .ui-input {
+  min-width: 9.5rem;
+}
+
+.ui-date-range-field__presets {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ui-date-range-field__presets-label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ui-date-range-field__presets-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ui-view-preset-bar {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.ui-view-preset-bar__item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-surface);
+  color: inherit;
+  text-align: left;
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--easing-standard),
+    box-shadow var(--motion-fast) var(--easing-standard),
+    transform var(--motion-fast) var(--easing-standard);
+}
+
+.ui-view-preset-bar__item:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+.ui-view-preset-bar__item--active {
+  border-color: var(--color-accent-primary);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  background: linear-gradient(180deg, var(--color-accent-primary-soft), var(--color-bg-surface));
+}
+
+.ui-view-preset-bar__item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ui-view-preset-bar__label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.ui-view-preset-bar__count,
+.ui-view-preset-bar__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+@media (min-width: 768px) {
+  .ui-view-preset-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

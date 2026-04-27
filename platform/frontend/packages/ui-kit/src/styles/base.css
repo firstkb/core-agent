@@ -1,0 +1,8 @@
+:root {
+  --ui-shell-sidebar-width: 17rem;
+  --ui-shell-header-height: 4rem;
+}
+
+* {
+  box-sizing: border-box;
+}

@@ -1,0 +1,104 @@
+.ui-progress {
+  width: 100%;
+}
+
+.ui-progress__track {
+  overflow: hidden;
+  width: 100%;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-surface-muted);
+}
+
+.ui-progress__indicator {
+  height: 100%;
+  border-radius: inherit;
+  transition: width var(--motion-normal) var(--easing-standard);
+}
+
+.ui-progress__indicator--brand {
+  background: linear-gradient(90deg, var(--color-accent-primary), #3b82f6);
+}
+
+.ui-progress__indicator--success {
+  background: linear-gradient(90deg, var(--color-success), #12b76a);
+}
+
+.ui-progress__indicator--warning {
+  background: linear-gradient(90deg, var(--color-warning), #f79009);
+}
+
+.ui-progress__indicator--danger {
+  background: linear-gradient(90deg, var(--color-danger), #f04438);
+}
+
+.ui-progress__indicator--neutral {
+  background: linear-gradient(90deg, var(--color-text-secondary), var(--color-text-muted));
+}
+
+.ui-top-loader {
+  position: fixed;
+  inset-inline: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-fast) var(--easing-standard);
+}
+
+.ui-top-loader--visible {
+  opacity: 1;
+}
+
+.ui-top-loader__track {
+  width: 100%;
+  height: 0.1875rem;
+  overflow: hidden;
+}
+
+.ui-top-loader__indicator {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 260ms var(--easing-standard);
+}
+
+.ui-top-loader--finishing .ui-top-loader__indicator {
+  transition-duration: 120ms;
+}
+
+.ui-top-loader__indicator::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 3.25rem;
+  transform: translateX(45%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.9) 55%, transparent 100%);
+  opacity: 0.8;
+}
+
+.ui-top-loader__indicator--brand {
+  background: var(--color-accent-primary);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-accent-primary) 48%, transparent);
+}
+
+.ui-top-loader__indicator--success {
+  background: var(--color-success);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-success) 48%, transparent);
+}
+
+.ui-top-loader__indicator--warning {
+  background: var(--color-warning);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-warning) 48%, transparent);
+}
+
+.ui-top-loader__indicator--danger {
+  background: var(--color-danger);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-danger) 48%, transparent);
+}
+
+.ui-top-loader__indicator--neutral {
+  background: var(--color-text-secondary);
+  box-shadow: 0 0 0.8rem color-mix(in srgb, var(--color-text-secondary) 36%, transparent);
+}

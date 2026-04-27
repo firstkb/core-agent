@@ -1,6 +1,6 @@
 # Frontend Lane: Form Builder Route Shell Closeout
 
-Status: active
+Status: closed
 
 ## Plan
 
@@ -43,5 +43,5 @@ Status: active
 
 ## Risks / Follow-Up
 
-- Browser smoke not run yet.
+- Browser smoke was user-checked after closeout; follow-up fixes landed separately in `6a303c4 Fix select options`.
 - Page is below 1,000 lines but not route-shell-only; further extraction should follow a review/checkpoint rather than more blind micro-slices.

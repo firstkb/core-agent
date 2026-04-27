@@ -1,16 +1,16 @@
 # Final Closeout
 
-Status: active run.
+Status: closed run.
 
 ## Agent Evidence
 
 - Task: continue Form Builder route-shell decomposition.
 - Route: frontend run-backed, tenant-web Form Builder page/controller layer.
-- Run folder: `ai-memory/runs/active/2026-04-27_frontend_form-builder-route-shell-closeout/`
+- Run folder: `ai-memory/runs/archive/2026-04-27_frontend_form-builder-route-shell-closeout/`
 - Changed files:
-  - `ai-memory/runs/active/2026-04-27_frontend_form-builder-route-shell-closeout/task.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_form-builder-route-shell-closeout/frontend.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_form-builder-route-shell-closeout/final.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_form-builder-route-shell-closeout/task.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_form-builder-route-shell-closeout/frontend.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_form-builder-route-shell-closeout/final.md`
   - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
   - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-mutation-handlers.ts`
   - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-palette-sections.ts`
@@ -30,9 +30,8 @@ Status: active run.
   - `pnpm --filter @platform/tenant-web typecheck` after selected lookup summary extraction
   - `scripts/ai/preflight.sh`
   - `git diff --check`
-- Checks not run yet:
-  - browser smoke
+- Post-closeout note: browser/user review found option input focus and badge alignment issues; follow-up fixes landed separately in `6a303c4 Fix select options`.
 
 ## Recommended Next Step
 
-- Run a closeout review/checkpoint for this Form Builder page slice. If no boundary leaks or regressions are found, commit this checkpoint before continuing into deeper page-shell/state split work.
+- Do not continue Form Builder page micro-slices until a new run/scope is opened. Next stable work should target `forms-builder-state.ts` with read-only selector/action slices, or move to another global monolith.

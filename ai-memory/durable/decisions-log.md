@@ -950,3 +950,24 @@ Do not turn it into a task journal.
   - `platform/frontend/dev/caddy/Caddyfile.high-port`
   - `platform/frontend/docs/guides/local-dev.md`
   - `platform/backend/seeds/local/010_master_seed.sql`
+
+### DEC-080 Frontend Files Stay Agent-Maintainable
+
+- Date: 2026-04-26
+- Status: active
+- State: landed
+- Decision: Frontend agents should treat file size as a maintainability guardrail, not a hard CI limit. Prefer UI components, panels, dialogs, and focused helpers under roughly 300 lines. Keep route/page files orchestration-focused; if they exceed roughly 500-700 lines, propose presentational component or controller/helper extraction before adding non-trivial UI. State/runtime files may be larger only when cohesive and covered by tests; if they exceed roughly 1000-1200 lines, propose reducer/selectors/actions/test-fixture split. Agents must not keep growing large monoliths for new UI work.
+- Sources:
+  - `platform/frontend/AGENTS.md`
+  - `ai-memory/modules/frontend/platform-studio-ui/README.md`
+  - `ai-memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/final.md`
+
+### DEC-081 Backend Files Stay Responsibility-Focused
+
+- Date: 2026-04-26
+- Status: active
+- State: landed
+- Decision: Backend agents should treat file size as a maintainability signal, not a mechanical split trigger. Split by responsibility before adding non-trivial logic to large files: transport handlers/controllers, validation, authorization/tenant checks, services/use cases, repositories/queries, mappers/DTOs, and tests/fixtures should stay distinct. Prefer handlers around 300-500 lines, services around 400-700 lines, repositories/query modules around 400-800 lines, and split mixed-concern files above roughly 700-1000 lines. Declarative DTO/schema files and cohesive tests may be larger, but tests above roughly 800-1200 lines should usually be split by behavior. Do not split backend code in ways that obscure transaction boundaries, auth/tenant checks, schema ownership, or error mapping.
+- Sources:
+  - `platform/backend/AGENTS.md`
+  - `ai-memory/modules/backend/runtime/README.md`

@@ -67,6 +67,17 @@ Primary active runtime surfaces:
 - master schema uses modern snake_case; tenant business tables target legacy-compatible prefixed naming when schema work touches that boundary
 - do not let module-registry page assumptions redefine the generic shared collection-table helpers
 
+## File size guardrails
+
+- Treat line counts as maintainability heuristics, not hard limits.
+- Split backend code by responsibility before adding non-trivial logic to large files.
+- Keep transport handlers/controllers, validation, authorization/tenant checks, services/use cases, repositories/queries, mappers/DTOs, and tests/fixtures distinct.
+- Prefer handlers around 300-500 lines, services around 400-700 lines, and repository/query modules around 400-800 lines.
+- If a backend file exceeds roughly 700-1000 lines and mixes concerns, propose a responsibility split before extending it.
+- DTO/contract/schema files may be larger when mostly declarative.
+- Tests may be larger, but when they exceed roughly 800-1200 lines, prefer splitting by behavior or fixture scope.
+- Do not split mechanically in ways that obscure transaction boundaries, auth/tenant checks, schema ownership, or error mapping.
+
 ## Default ignore set
 
 Do not read by default:

@@ -104,6 +104,14 @@ Require extra care before finalizing changes that affect:
 - shared surfaces should prefer `min-width: 0` and `width: 100%`
 - avoid `auto-fit` / `auto-fill` grids in shared shells or primitives without explicit review
 
+## File size guardrails
+
+- Treat line counts as maintainability heuristics, not hard CI limits.
+- Prefer UI components, panels, dialogs, and focused helpers under roughly 300 lines.
+- Keep route/page files orchestration-focused; if they exceed roughly 500-700 lines, propose presentational component or controller/helper extraction before adding non-trivial UI.
+- State/runtime files may be larger only when cohesive and covered by tests; if they exceed roughly 1000-1200 lines, propose reducer/selectors/actions/test-fixture split.
+- Do not grow already large UI monoliths for new feature work without first considering a small decomposition slice.
+
 ## Collection-table boundary
 
 - the current collection-table surface remains app-local until the contract is accepted and reused

@@ -2,7 +2,7 @@
 
 Status: active compact backend pack
 Owner surface: backend runtime and module wiring
-Last compacted: 2026-04-25
+Last compacted: 2026-04-26
 
 ## Read This When
 
@@ -43,3 +43,4 @@ Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; 
 - Do not put SQL in handlers.
 - Do not leak transport DTOs into repositories.
 - Do not create broad runtime aliases without explicit migration plan.
+- Before extending large backend files, split by responsibility rather than line count alone: handlers, validation, auth/tenant checks, services, repositories/queries, mappers/DTOs, and tests/fixtures should remain distinct. Keep transaction boundaries, auth/tenant checks, schema ownership, and error mapping explicit.

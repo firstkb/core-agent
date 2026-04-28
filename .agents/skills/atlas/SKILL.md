@@ -65,6 +65,18 @@ Read additional docs only when the task actually requires them.
 When a file is large and the task is narrow, read the relevant section first rather than reloading the entire file.
 Prefer exact module and code reads over broad rereads of shared memory.
 
+## Visual smoke and local auth
+
+For frontend UI changes, prefer the lightest useful visual loop:
+- Storybook for stable `ui-kit` primitives and reviewable component states.
+- Codex Browser Use plugin/skill for local app smoke when the dev stack is already running or the owner asks for browser verification.
+- Use the Browser Use invocation available in the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
+- Do not substitute macOS `open`, generic web browsing, or Playwright for an explicit Browser Use request unless the owner approves a fallback.
+
+Local Browser Use credentials, when owner-provided, live only in ignored `ai-memory/local/browser-use-auth.md`.
+Do not write local auth codes into tracked docs, run artifacts, or evidence blocks.
+Use `Auth: local seeded dev login.` in evidence instead.
+
 ## Failure handling
 
 If the intake brief is missing route-critical information and it is cheap to resolve from the user, ask one focused clarifying question before opening lanes or creating a run.

@@ -105,6 +105,17 @@ Require extra care before finalizing changes that affect:
 - shared surfaces should prefer `min-width: 0` and `width: 100%`
 - avoid `auto-fit` / `auto-fill` grids in shared shells or primitives without explicit review
 
+## Visual review loop
+
+- Use Storybook for stable `ui-kit` primitives and low-risk shared pattern review.
+- Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
+- Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
+- Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
+- Do not replace an explicit Browser Use visual-smoke request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
+- Local Browser Use auth, when needed, must come from ignored `ai-memory/local/browser-use-auth.md`.
+- Do not copy local auth codes into tracked docs, run artifacts, or evidence blocks.
+- In evidence, write `Auth: local seeded dev login.` rather than the credentials.
+
 ## File size guardrails
 
 - Treat line counts as maintainability heuristics, not hard CI limits.
@@ -136,6 +147,8 @@ Workspace:
 - `pnpm test`
 - `pnpm typecheck`
 - `pnpm build`
+- `pnpm storybook`
+- `pnpm storybook:build`
 
 Targeted apps:
 

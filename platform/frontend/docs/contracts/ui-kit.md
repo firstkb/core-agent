@@ -24,6 +24,7 @@ Shared package:
 Review surface:
 
 - `platform/frontend/apps/platform-admin-web/src/internal/ui-lab`
+- `platform/frontend/.storybook`
 
 Tracked companion docs:
 
@@ -298,3 +299,19 @@ Keep page-specific bulk workflows, investigation rails, route-bound filter bars,
 
 UI Lab is the review and documentation surface for `ui-kit`.
 It is not the product shell and must not become the default product page pattern by accident.
+
+## Storybook Rule
+
+Storybook V1 is a lightweight manual/local visual review loop for stable `ui-kit`
+primitives and reusable states. It complements UI Lab by making focused component
+states easier for agents and humans to inspect before touching product screens.
+
+Current Storybook scope:
+
+- stable actions, form controls, feedback, state patterns, and table primitives
+- no product routing, auth, tenant behavior, or backend coupling
+- no CI visual gate until baselines and screenshot policy are explicitly accepted
+
+When changing stable primitives, prefer adding or updating a small story in
+`platform/frontend/packages/ui-kit/src/stories/` rather than relying only on
+product-page screenshots.

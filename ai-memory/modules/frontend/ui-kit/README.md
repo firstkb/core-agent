@@ -20,6 +20,7 @@ Last compacted: 2026-04-25
 
 - `ui-kit` is not a staging area for every donor pattern.
 - Promote into `ui-kit` only when product-owned, generic, reusable, and stable.
+- Storybook V1 is the manual/local visual review surface for stable `ui-kit` primitives and states; it complements UI Lab and is not a CI gate yet.
 - The foundation rollout is closed; do not reopen it unless tokens or core primitive contracts materially change.
 - Stable/provisional/app-layer boundaries are tracked in `platform/frontend/docs/contracts/ui-kit.md`.
 - UI Lab route, sections, coverage, and editing rules are tracked in `platform/frontend/docs/guides/ui-lab.md`.
@@ -36,3 +37,4 @@ Last compacted: 2026-04-25
 - Do not treat repeated page CSS or workflow-shaped widgets as automatic design-system candidates.
 - Do not read vendor docs before checking current UI owner docs.
 - Keep large UI Lab panel examples split into app-local docs/previews helpers; do not grow `panels/form-controls.tsx` or similar review panels as single multi-thousand-line files.
+- Add or update small stories when changing stable primitives so agents can inspect visible states without opening product apps first.

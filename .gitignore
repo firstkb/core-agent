@@ -3,6 +3,7 @@ __MACOSX/
 node_modules/
 **/node_modules/
 /reference-code/
+ai-memory/local/
 artifacts/*
 !artifacts/.gitkeep
 platform/*
@@ -11,6 +12,7 @@ platform/*
 !platform/README.md
 !platform/frontend/
 !platform/frontend/**
+platform/frontend/storybook-static/
 !platform/backend/**
 !platform/backend/
 !platform/backend/AGENTS.md

@@ -468,6 +468,10 @@ def check_gitignore(root: Path, errors: list[str]) -> None:
     lines = {line.strip() for line in read_text(gitignore).splitlines()}
     if "reference-code/" not in lines and "/reference-code/" not in lines:
         add_error(errors, ".gitignore", "reference-code/ must stay ignored")
+    if "ai-memory/local/" not in lines:
+        add_error(errors, ".gitignore", "ai-memory/local/ must stay ignored for local-only agent credentials")
+    if "platform/frontend/storybook-static/" not in lines:
+        add_error(errors, ".gitignore", "Storybook static build output must stay ignored")
     if "platform/docs/ai/" not in lines:
         add_error(errors, ".gitignore", "retired platform/docs/ai/ must stay ignored")
     expected_env_rules = [

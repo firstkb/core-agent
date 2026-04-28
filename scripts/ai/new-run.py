@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scaffold a new Atlas-coordinated run for Ramp Platform v108.
+"""Scaffold a new Atlas-coordinated platform product run for VSM v1.0.0.
 
 This tool is mechanical only.
 Atlas / Control chooses whether a run is needed, the task id, the mode, and the active lanes.

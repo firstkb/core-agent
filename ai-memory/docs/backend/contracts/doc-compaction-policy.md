@@ -38,7 +38,7 @@ Avoid by default:
 - `platform/backend/docs/archive/postgres-archive/**`
 - completed refactor plans unless investigating history
 
-Old root archive pointer files for Go rules, RAMP standard, and export prompt
+Old root archive pointer files for Go rules, historical RAMP standard, and export prompt
 were deleted after compaction. Use `platform/backend/docs/archive/**` or git
 history only for explicit history tasks.
 

@@ -1014,7 +1014,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-28
 - Status: active
 - State: landed
-- Decision: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, skills, or memory. Atlas is now invoked as `$atlas`; the old `$ramp-conductor` invocation and `.agents/skills/ramp-conductor/` path are retired. Backend local database names such as `108-master`, `108-sandbox`, and `108-demo` are technical local-environment identifiers and are not renamed by this product-identity decision.
+- Decision: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, skills, scripts, or memory. Atlas is now invoked as `$atlas`; the old `$ramp-conductor` invocation and `.agents/skills/ramp-conductor/` path are retired. Backend local database names such as `108-master`, `108-sandbox`, and `108-demo` are technical local-environment identifiers and are not renamed by this product-identity decision.
 - Sources:
   - `README.md`
   - `platform/README.md`
@@ -1022,6 +1022,7 @@ Do not turn it into a task journal.
   - `ai-memory/START_HERE.md`
   - `.agents/skills/atlas/SKILL.md`
   - `ai-memory/atlas/automation-manifest.json`
+  - `scripts/ai/new-run.py`
   - `scripts/ai/docs_memory_check.py`
 
 ### DEC-086 Active Runs Must Have Explicit Closure

@@ -119,6 +119,7 @@ PRODUCT_IDENTITY_SCAN_SCOPES = [
     "platform/frontend/docs",
     "platform/backend/docs",
     ".agents",
+    "scripts/ai/new-run.py",
 ]
 
 READ_ORDER_SURFACES = [

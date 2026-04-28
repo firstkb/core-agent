@@ -18,6 +18,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: The repository has a Codex-native runtime model rooted in `AGENTS.md`, `.agents/skills/`, `.codex/`, `.agent-cli/`, `docs/codex-native-repo.md`, and `docs/maestro/module-orchestrator-v2-spec-pack/`.
 - `landed` `owner-confirmed`: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, or memory.
 - `landed` `doc-confirmed`: Root `README.md` and `docs/codex-native-repo.md` now describe the repo as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, with `platform/` as product root and `ai-memory/` as current operational memory.
+- `landed` `code-confirmed`: Atlas run scaffolding uses VSM v1.0.0 / neutral platform product wording; `Ramp Platform v108` is not active scaffolder language.
 - `landed` `doc-confirmed`: Stable system agent ids are `module_orchestrator`, `research_codebase`, and `brief_auditor`.
 - `landed` `doc-confirmed`: Stable skill nicknames are `maestro`, `charlie`, and `grant`.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.

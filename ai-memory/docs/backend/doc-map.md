@@ -117,7 +117,7 @@ Import/reference docs:
 | `platform/backend/docs/legacy/postgres-archive/README.md` | archive pointer | Old path for legacy PostgreSQL SQL archive | Read `archive/postgres-archive/README.md` instead. |
 | `platform/backend/docs/legacy/**` | archive pointer | Old legacy docs path | Do not read by default. |
 
-Old root archive pointer files for Go rules, RAMP standard, export prompt,
+Old root archive pointer files for Go rules, historical RAMP standard, export prompt,
 auth cookie migration, Module Registry refactor, and tenant starter fields were
 deleted after compaction. Use `platform/backend/docs/archive/**` or git history
 for exact old text.

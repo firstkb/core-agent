@@ -19,7 +19,7 @@ Operational/proposal/reference/archive moves have already landed for the files l
 - `platform/backend/docs/archive/GO_AGENT_RULES.md`
   - Reason: older agent guidance overlaps with current root/backend agent guidance and compact memory.
 - `platform/backend/docs/archive/ramp_v_108_backend_standard_v_2.md`
-  - Reason: large historical standard; useful facts should be distilled into active contracts.
+  - Reason: large historical pre-VSM standard; useful facts should be distilled into active contracts.
 - `platform/backend/docs/archive/postgres-archive/README.md`
   - Reason: legacy PostgreSQL SQL inventory; useful only for explicit schema archaeology or migration-history checks.
 

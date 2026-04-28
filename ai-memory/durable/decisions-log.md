@@ -971,3 +971,14 @@ Do not turn it into a task journal.
 - Sources:
   - `platform/backend/AGENTS.md`
   - `ai-memory/modules/backend/runtime/README.md`
+
+### DEC-082 Minimal Product CI Gates
+
+- Date: 2026-04-27
+- Status: active
+- State: landed
+- Decision: Product CI starts with two focused GitHub Actions gates, not a broad CI suite. `backend-ci.yml` runs Go formatting, tests, and command builds for backend changes. `frontend-ci.yml` runs pnpm frozen install, workspace typecheck, and build for frontend changes. Frontend lint/test, security expansion, and UI visual snapshots remain deferred until their baselines are stable enough to avoid noisy mandatory gates.
+- Sources:
+  - `.github/workflows/backend-ci.yml`
+  - `.github/workflows/frontend-ci.yml`
+  - `scripts/ai/preflight.sh`

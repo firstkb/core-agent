@@ -40,12 +40,12 @@ func (s *Service) GetProfile(ctx context.Context) (*Profile, error) {
 	}
 
 	userProfile := UserProfile{
-		ID:    claims.UserID,
-		Email: claims.Email,
+		ID:        claims.UserID,
+		Email:     claims.Email,
 		FirstName: strings.TrimSpace(claims.FirstName),
-		LastName: strings.TrimSpace(claims.LastName),
-		Level: claims.Level,
-		Role:  claims.Role,
+		LastName:  strings.TrimSpace(claims.LastName),
+		Level:     claims.Level,
+		Role:      claims.Role,
 	}
 
 	if s.users != nil && (userProfile.FirstName == "" || userProfile.LastName == "" || userProfile.Email == "") {

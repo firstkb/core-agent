@@ -46,15 +46,15 @@ type IdentityInfo struct {
 }
 
 type ClaimsInfo struct {
-	TenantID string
-	UserID   string
-	Email    string
+	TenantID  string
+	UserID    string
+	Email     string
 	FirstName string
 	LastName  string
-	Phone    string
-	Level    int
-	Role     string
-	Scope    string
+	Phone     string
+	Level     int
+	Role      string
+	Scope     string
 }
 
 type UserInfo struct {

@@ -15,16 +15,16 @@ import (
 )
 
 type Claim struct {
-	TenantID string
-	UserID   string
-	Email    string
+	TenantID  string
+	UserID    string
+	Email     string
 	FirstName string
 	LastName  string
-	Phone    string
-	Level    int
-	Role     string
-	Scope    string
-	Claims   jwtlegacy.MapClaims
+	Phone     string
+	Level     int
+	Role      string
+	Scope     string
+	Claims    jwtlegacy.MapClaims
 }
 
 const (
@@ -44,15 +44,15 @@ func GetClaim(ctx context.Context) (*Claim, error) {
 
 	if rc, ok := requestctx.Claims(ctx); ok {
 		return &Claim{
-			TenantID: rc.TenantID,
-			UserID:   rc.UserID,
-			Email:    rc.Email,
+			TenantID:  rc.TenantID,
+			UserID:    rc.UserID,
+			Email:     rc.Email,
 			FirstName: rc.FirstName,
 			LastName:  rc.LastName,
-			Phone:    rc.Phone,
-			Level:    int(rc.Level),
-			Role:     string(rc.Role),
-			Scope:    rc.Scope,
+			Phone:     rc.Phone,
+			Level:     int(rc.Level),
+			Role:      string(rc.Role),
+			Scope:     rc.Scope,
 		}, nil
 	}
 
@@ -100,15 +100,15 @@ func CreateContextWithClaim(r *http.Request) (context.Context, error) {
 	}
 
 	ctx := requestctx.WithClaims(r.Context(), requestctx.ClaimsInfo{
-		TenantID: claim.TenantID,
-		UserID:   claim.UserID,
-		Email:    claim.Email,
+		TenantID:  claim.TenantID,
+		UserID:    claim.UserID,
+		Email:     claim.Email,
 		FirstName: claim.FirstName,
 		LastName:  claim.LastName,
-		Phone:    claim.Phone,
-		Level:    claim.Level,
-		Role:     claim.Role,
-		Scope:    claim.Scope,
+		Phone:     claim.Phone,
+		Level:     claim.Level,
+		Role:      claim.Role,
+		Scope:     claim.Scope,
 	})
 
 	return ctx, nil
@@ -138,15 +138,15 @@ func CreateContextWithTrustedHeaders(r *http.Request) (context.Context, error) {
 	}
 
 	ctx := requestctx.WithClaims(r.Context(), requestctx.ClaimsInfo{
-		TenantID: tenantID,
-		UserID:   userID,
-		Email:    email,
+		TenantID:  tenantID,
+		UserID:    userID,
+		Email:     email,
 		FirstName: "",
 		LastName:  "",
-		Phone:    phone,
-		Level:    level,
-		Role:     strings.TrimSpace(r.Header.Get(HeaderAuthRole)),
-		Scope:    scope,
+		Phone:     phone,
+		Level:     level,
+		Role:      strings.TrimSpace(r.Header.Get(HeaderAuthRole)),
+		Scope:     scope,
 	})
 
 	return ctx, nil
@@ -159,16 +159,16 @@ func buildClaim(jwtClaims jwtlegacy.MapClaims) (*Claim, error) {
 	}
 
 	return &Claim{
-		TenantID: tenantID,
-		UserID:   userID,
-		Email:    email,
+		TenantID:  tenantID,
+		UserID:    userID,
+		Email:     email,
 		FirstName: stringClaim(jwtClaims, "first_name"),
 		LastName:  stringClaim(jwtClaims, "last_name"),
-		Phone:    phone,
-		Level:    level,
-		Role:     role,
-		Scope:    scope,
-		Claims:   jwtClaims,
+		Phone:     phone,
+		Level:     level,
+		Role:      role,
+		Scope:     scope,
+		Claims:    jwtClaims,
 	}, nil
 }
 

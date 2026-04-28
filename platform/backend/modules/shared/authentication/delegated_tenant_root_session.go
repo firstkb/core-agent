@@ -245,14 +245,14 @@ func delegatedTenantRootUserContext(ctx context.Context, user *AdminUser) contex
 
 func delegatedTenantRootLoginEventData(user *AdminUser, tenantID int64, payload DelegatedTenantRootTokenPayload) eventsvc.EventData {
 	data := eventsvc.EventData{
-		"delegated":      true,
-		"entry_surface":  "admin_console",
-		"method":         "delegated_root",
-		"role":           "root",
-		"status":         "success",
-		"tenant_host":    strings.TrimSpace(payload.TenantHost),
-		"tenant_id":      tenantID,
-		"text":           delegatedTenantRootLoginText(user, payload.TenantHost),
+		"delegated":     true,
+		"entry_surface": "admin_console",
+		"method":        "delegated_root",
+		"role":          "root",
+		"status":        "success",
+		"tenant_host":   strings.TrimSpace(payload.TenantHost),
+		"tenant_id":     tenantID,
+		"text":          delegatedTenantRootLoginText(user, payload.TenantHost),
 	}
 
 	if user != nil {

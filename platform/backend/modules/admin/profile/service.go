@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	ErrUnauthorized  = errors.New("admin profile unauthorized")
-	ErrUserNotFound  = errors.New("admin profile user not found")
-	ErrUserInactive  = errors.New("admin profile user inactive")
-	ErrInvalidScope  = errors.New("admin profile invalid scope")
+	ErrUnauthorized = errors.New("admin profile unauthorized")
+	ErrUserNotFound = errors.New("admin profile user not found")
+	ErrUserInactive = errors.New("admin profile user inactive")
+	ErrInvalidScope = errors.New("admin profile invalid scope")
 )
 
 type Service struct {

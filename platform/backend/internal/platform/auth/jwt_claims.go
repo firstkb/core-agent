@@ -18,27 +18,27 @@ type JWTClaims struct {
 	JWTID     string `json:"jti"`
 
 	// Custom claims
-	Subject string `json:"sub"`             // user_id (UUID)
-	Tenant  string `json:"tenant_id"`       // tenant_id (numeric string)
-	Email   string `json:"email"`           // email
+	Subject   string `json:"sub"`       // user_id (UUID)
+	Tenant    string `json:"tenant_id"` // tenant_id (numeric string)
+	Email     string `json:"email"`     // email
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
-	Phone   string `json:"phone,omitempty"` // phone (E.164, optional)
-	Level   int    `json:"level"`           // access level
-	Role    string `json:"role,omitempty"`  // role (optional)
-	Scope   string `json:"scope,omitempty"` // space-delimited OAuth2 scopes
+	Phone     string `json:"phone,omitempty"` // phone (E.164, optional)
+	Level     int    `json:"level"`           // access level
+	Role      string `json:"role,omitempty"`  // role (optional)
+	Scope     string `json:"scope,omitempty"` // space-delimited OAuth2 scopes
 }
 
 // ToMap converts JWTClaims to a map for JWT library
 func (c *JWTClaims) ToMap() map[string]interface{} {
 	claims := map[string]interface{}{
-		"iss":       c.Issuer,
-		"aud":       c.Audience,
-		"iat":       c.IssuedAt,
-		"exp":       c.ExpiresAt,
-		"jti":       c.JWTID,
-		"sub":       c.Subject,
-		"level":     c.Level,
+		"iss":   c.Issuer,
+		"aud":   c.Audience,
+		"iat":   c.IssuedAt,
+		"exp":   c.ExpiresAt,
+		"jti":   c.JWTID,
+		"sub":   c.Subject,
+		"level": c.Level,
 	}
 
 	if c.Tenant != "" {

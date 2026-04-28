@@ -1,0 +1,49 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/backend-ci.yml"
+      - "platform/backend/**"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - ".github/workflows/backend-ci.yml"
+      - "platform/backend/**"
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Go format, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform/backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.9"
+          cache-dependency-path: platform/backend/go.sum
+
+      - name: Check gofmt
+        run: |
+          files="$(find . -name '*.go' -not -path './vendor/*' -print0 | xargs -0 gofmt -l)"
+          if [ -n "$files" ]; then
+            echo "gofmt required for:"
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build commands
+        run: go build ./cmd/...

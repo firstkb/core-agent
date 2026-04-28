@@ -1,0 +1,49 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/frontend-ci.yml"
+      - "platform/frontend/**"
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - ".github/workflows/frontend-ci.yml"
+      - "platform/frontend/**"
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Install, typecheck, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: platform/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: platform/frontend/pnpm-lock.yaml
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.4.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build

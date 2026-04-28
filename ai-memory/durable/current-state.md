@@ -1,7 +1,7 @@
 # Current State
 
 Status: compact active snapshot
-Last compacted: 2026-04-26
+Last compacted: 2026-04-27
 
 This is a compact AI retrieval snapshot.
 Use canonical docs and code for final verification before changing behavior.
@@ -51,6 +51,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence shape for non-trivial closeout or PR text; it should not become a standalone artifact by default.
 - `landed` `doc-confirmed`: Atlas direct no-run now means current-chat execution by default. Separate FE/BE chats should normally be run-backed; no-run separate-chat prompts are allowed only as owner-requested `MANUAL_HANDOFF_NO_RUN`.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks for relevant PRs and pushes.
+- `landed` `code-confirmed`: Minimal product CI now includes `.github/workflows/backend-ci.yml` for Go format/test/build and `.github/workflows/frontend-ci.yml` for pnpm frozen install, typecheck, and build. Frontend lint/test and UI visual gates remain deferred until baselines are stable.
 - `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
 - `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
 - `landed` `owner-confirmed`: Scribe should be used manually after large docs/memory changes and before major development phases, not on every commit.

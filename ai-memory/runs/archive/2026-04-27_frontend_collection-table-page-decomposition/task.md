@@ -1,6 +1,6 @@
 # Task: Collection Table Page Decomposition
 
-Status: active
+Status: archived
 Route: FE_ONLY run-backed
 Owner: Atlas inline
 

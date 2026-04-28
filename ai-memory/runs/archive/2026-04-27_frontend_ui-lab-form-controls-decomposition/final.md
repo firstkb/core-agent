@@ -1,17 +1,19 @@
 # Final Closeout
 
-Status: ready for review.
+Status: archived.
+Archived at: 2026-04-28
+Archive reason: ready-for-review closeout captured; no active coordination remains.
 
 ## Agent Evidence
 
 - Task: reduce UI Lab Form Controls panel monolith risk.
 - Route: frontend run-backed, app-local decomposition.
-- Run folder: `ai-memory/runs/active/2026-04-27_frontend_ui-lab-form-controls-decomposition/`
+- Run folder: `ai-memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/`
 - Changed files:
   - `ai-memory/modules/frontend/ui-kit/README.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_ui-lab-form-controls-decomposition/task.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_ui-lab-form-controls-decomposition/frontend.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_ui-lab-form-controls-decomposition/final.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/task.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/frontend.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/final.md`
   - `platform/frontend/apps/platform-admin-web/src/internal/ui-lab/panels/form-controls.tsx`
   - `platform/frontend/apps/platform-admin-web/src/internal/ui-lab/panels/form-controls/action-layout-docs.tsx`
   - `platform/frontend/apps/platform-admin-web/src/internal/ui-lab/panels/form-controls/action-previews.tsx`

@@ -4,7 +4,7 @@ description: Use this skill as the default intake and routing layer for VSM v1.0
 ---
 
 # Atlas Skill
-Skill version: 1.6.0
+Skill version: 1.6.1
 Human display name: Atlas
 
 Purpose:
@@ -310,6 +310,13 @@ A run may be closed only when:
 
 Closed runs are historical execution artifacts, not canonical memory.
 Move closed runs from `ai-memory/runs/active/` to `ai-memory/runs/archive/` after closeout.
+If owner review is still needed, keep the run in `active/` only when `final.md`
+contains all of:
+- `Status: awaiting-owner-review`
+- `Next owner action:`
+- `Last updated:`
+Do not leave completed, closeout-ready, or ready-for-review runs in `active/`
+with vague status.
 
 ## Required output
 

@@ -1,6 +1,6 @@
 ---
 prompt_id: control-chat
-prompt_version: 1.6.0
+prompt_version: 1.6.1
 status: active
 owner: vsm-v1.0.0
 scope: universal product-task intake and control orchestration
@@ -329,3 +329,10 @@ At reconciliation / closeout use:
 For non-trivial closeout or PR body text, use the compact shape from
 `ai-memory/atlas/templates/agent-evidence.md`.
 Do not create a separate evidence file by default.
+
+If a run is complete, closeout-ready, or ready for owner review, move the full
+run folder from `ai-memory/runs/active/<task-id>/` to
+`ai-memory/runs/archive/<task-id>/` after durable memory updates are applied or
+explicitly deferred. If the run must remain active while waiting for the owner,
+`final.md` must include `Status: awaiting-owner-review`, `Next owner action:`,
+and `Last updated:`.

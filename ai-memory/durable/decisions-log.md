@@ -1023,3 +1023,16 @@ Do not turn it into a task journal.
   - `.agents/skills/atlas/SKILL.md`
   - `ai-memory/atlas/automation-manifest.json`
   - `scripts/ai/docs_memory_check.py`
+
+### DEC-086 Active Runs Must Have Explicit Closure
+
+- Date: 2026-04-28
+- Status: active
+- State: landed
+- Decision: `ai-memory/runs/active/` must stay small and operational. Completed, closeout-ready, or review-ready runs move to `ai-memory/runs/archive/<task-id>/`. A run may remain in `active/` with a `final.md` only when `final.md` explicitly declares `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:`. `scripts/ai/docs_memory_check.py --check` enforces this rule.
+- Sources:
+  - `ai-memory/runs/README.md`
+  - `scripts/ai/docs_memory_check.py`
+  - `ai-memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/`
+  - `ai-memory/runs/archive/2026-04-27_frontend_ui-kit-styles-decomposition/`
+  - `ai-memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/`

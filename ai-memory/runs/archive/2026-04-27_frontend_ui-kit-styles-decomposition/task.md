@@ -1,6 +1,6 @@
 # UI Kit Styles Decomposition
 
-Status: active
+Status: archived
 
 ## Task
 

@@ -1,6 +1,6 @@
 # Frontend Lane: UI Lab Form Controls Decomposition
 
-Status: active
+Status: archived
 
 ## Read Summary
 

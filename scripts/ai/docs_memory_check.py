@@ -101,6 +101,12 @@ OLD_ATLAS_INVOCATION_ALLOWED_FILES = {
     "scripts/ai/docs_memory_check.py",
 }
 
+ACTIVE_RUN_FINAL_REQUIRED_MARKERS = [
+    "Status: awaiting-owner-review",
+    "Next owner action:",
+    "Last updated:",
+]
+
 PRODUCT_IDENTITY_SCAN_SCOPES = [
     "AGENTS.md",
     "README.md",
@@ -303,6 +309,32 @@ def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
         add_error(errors, "ai-memory/AGENTS.override.md", "retired override file must not exist")
     if not (root / "ai-memory/START_HERE.md").exists():
         add_error(errors, "ai-memory/START_HERE.md", "first-read memory file must exist")
+
+
+def check_active_run_policy(root: Path, errors: list[str]) -> None:
+    active_root = root / "ai-memory/runs/active"
+    if not active_root.exists():
+        add_error(errors, "ai-memory/runs/active", "active run folder must exist")
+        return
+
+    for run_dir in sorted(path for path in active_root.iterdir() if path.is_dir()):
+        rel = run_dir.relative_to(root)
+        if not (run_dir / "task.md").exists():
+            add_error(errors, rel, "active run must include task.md")
+
+        final = run_dir / "final.md"
+        if not final.exists():
+            continue
+
+        final_text = read_text(final)
+        missing = [marker for marker in ACTIVE_RUN_FINAL_REQUIRED_MARKERS if marker not in final_text]
+        if missing:
+            add_error(
+                errors,
+                final.relative_to(root),
+                "active run final.md must either be archived or include explicit awaiting-owner-review closure markers: "
+                + ", ".join(missing),
+            )
 
 
 def check_product_identity(root: Path, tracked: list[str], errors: list[str]) -> None:
@@ -519,6 +551,7 @@ def run_check() -> int:
 
     check_root_file_sets(root, errors)
     check_retired_memory_paths(root, errors)
+    check_active_run_policy(root, errors)
     check_platform_readme(root, errors)
     check_product_identity(root, tracked, errors)
     check_docs_migration_plan_status(root, errors)

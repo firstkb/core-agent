@@ -1,6 +1,6 @@
 # Frontend Lane: UI Kit Styles Decomposition
 
-Status: closeout-ready
+Status: archived
 
 ## Read Summary
 

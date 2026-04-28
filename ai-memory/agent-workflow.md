@@ -133,8 +133,8 @@ Do not run Scribe on every commit by default.
 | New frontend contract | `platform/frontend/docs/contracts/**` and the relevant frontend docs map |
 | New backend contract | `platform/backend/docs/contracts/**` and the relevant backend docs map |
 | New module, app, package, runtime, or Platform Studio tool | `ai-memory/durable/module-index.md`, `ai-memory/durable/repo-map.md`, module memory, and read routes |
-| Active run artifact | `ai-memory/runs/active/<task-id>/` |
-| Closed reusable run summary | `ai-memory/runs/archive/` |
+| Active run artifact | `ai-memory/runs/active/<task-id>/`; if `final.md` exists, it must either be archived or declare `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:` |
+| Closed reusable run summary | `ai-memory/runs/archive/<task-id>/` |
 | Verified lesson after an error | relevant module `lessons.md` or `ai-memory/lessons/**` |
 | Temporary notes | the active run folder only |
 

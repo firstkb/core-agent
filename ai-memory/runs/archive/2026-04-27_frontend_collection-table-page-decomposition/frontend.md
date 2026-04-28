@@ -1,6 +1,6 @@
 # Frontend Lane: Collection Table Page Decomposition
 
-Status: active
+Status: archived
 
 ## Read Summary
 

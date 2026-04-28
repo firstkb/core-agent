@@ -6,6 +6,12 @@ This changelog starts at the `ai-memory/atlas` cutover.
 Earlier Atlas automation history is recoverable from git history for the former
 `platform/docs/ai/automation-changelog.md` path.
 
+## 2026-04-28 - v1.6.1
+
+- Tightened active run closure semantics: completed, closeout-ready, or ready-for-review runs move from `ai-memory/runs/active/` to `ai-memory/runs/archive/`.
+- Active `final.md` files are allowed only with explicit `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:` markers.
+- Added docs-memory checker coverage for active run closure drift.
+
 ## 2026-04-26 - v1.5.2
 
 - Tightened Atlas direct no-run semantics: direct no-run now means current-chat execution by default, not a separate FE/BE lane chat.

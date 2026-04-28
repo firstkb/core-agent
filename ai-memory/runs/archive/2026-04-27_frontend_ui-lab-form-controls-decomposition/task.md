@@ -1,6 +1,6 @@
 # UI Lab Form Controls Decomposition
 
-Status: active
+Status: archived
 
 ## Task
 

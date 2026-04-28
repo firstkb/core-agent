@@ -62,6 +62,9 @@ the task spans multiple modules.
 - Active local run packets go under `ai-memory/runs/active/<task-id>/`.
 - Closed reusable run summaries go under `ai-memory/runs/archive/`.
 - Temporary notes belong in the run folder, not canonical docs.
+- Completed or review-ready runs must move to archive. Active `final.md` files
+  must declare `Status: awaiting-owner-review`, `Next owner action:`, and
+  `Last updated:`.
 - Do not recreate `platform/docs/ai/runs/**`.
 
 ## Never Default-Read

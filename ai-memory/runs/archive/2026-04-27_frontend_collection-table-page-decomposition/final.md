@@ -1,6 +1,8 @@
 # Final Closeout
 
-Status: active run, first implementation slice complete.
+Status: archived.
+Archived at: 2026-04-28
+Archive reason: first implementation slice complete; no active coordination remains.
 
 ## Current Result
 
@@ -16,12 +18,12 @@ Status: active run, first implementation slice complete.
 
 - Task: reduce Collection Table page monolith risk with the first safe decomposition slice.
 - Route: FE_ONLY run-backed, inline Atlas execution.
-- Run folder: `ai-memory/runs/active/2026-04-27_frontend_collection-table-page-decomposition/`
+- Run folder: `ai-memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/`
 - Changed files:
   - `ai-memory/modules/frontend/collection-table-package/README.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_collection-table-page-decomposition/task.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_collection-table-page-decomposition/frontend.md`
-  - `ai-memory/runs/active/2026-04-27_frontend_collection-table-page-decomposition/final.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/task.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/frontend.md`
+  - `ai-memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/final.md`
   - `platform/frontend/packages/collection-table/src/collection-table-page.tsx`
   - `platform/frontend/packages/collection-table/src/components/collection-table-bulk-bar.tsx`
   - `platform/frontend/packages/collection-table/src/components/collection-table-filter-token-bar.tsx`

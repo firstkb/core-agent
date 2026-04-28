@@ -1,16 +1,16 @@
 {
-  "bundle_version": "1.6.0",
+  "bundle_version": "1.6.1",
   "skill": {
     "name": "atlas",
     "display_name": "Atlas",
-    "version": "1.6.0",
+    "version": "1.6.1",
     "invocation": "$atlas",
     "file": ".agents/skills/atlas/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.6.0",
+      "version": "1.6.1",
       "file": "ai-memory/atlas/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {

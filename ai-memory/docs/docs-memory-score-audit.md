@@ -28,7 +28,8 @@ It does not mean every historical exact-detail document has been deleted.
 - Form Builder retained exact-detail replacement has a docs-only roadmap; no retained detail doc should be deleted before its replacement target and verification are explicit.
 - Form Builder planned/open work has a dedicated code-verified memory doc, so import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work is not confused with implemented truth.
 - `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
-- `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, env-policy, stale-layout, preflight-policy, and local markdown-link check.
+- `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, stale-layout, preflight-policy, and local markdown-link check.
+- `scripts/ai/check-env-policy.py --check` is the active env-file policy check for `.gitignore` rules, tracked local env files, and sanitized env examples.
 - `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs hygiene plus quick agent-cli checks, and `--full` is explicit for broader backend/frontend checks.
 - `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
 - Atlas direct no-run semantics are explicit: current-chat execution by default; separate FE/BE chats normally require a run, except owner-requested `MANUAL_HANDOFF_NO_RUN`.

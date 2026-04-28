@@ -69,11 +69,6 @@ IGNORED_FALLBACK_DIRS = {
     "artifacts",
 }
 
-ENV_ROOT = "platform/backend/env/"
-FORBIDDEN_ENV_EXAMPLE_TERMS = [
-    "esafesys",
-]
-
 OLD_PRODUCT_IDENTITY_TERMS = [
     "Ramp Platform v108",
     "RAMP Platform v108",
@@ -503,45 +498,6 @@ def check_gitignore(root: Path, errors: list[str]) -> None:
         add_error(errors, ".gitignore", "Storybook static build output must stay ignored")
     if "platform/docs/ai/" not in lines:
         add_error(errors, ".gitignore", "retired platform/docs/ai/ must stay ignored")
-    expected_env_rules = [
-        "platform/backend/env/*.env",
-        "!platform/backend/env/*.env.example",
-        "platform/backend/env/Untitled",
-    ]
-    for rule in expected_env_rules:
-        if rule not in lines:
-            add_error(errors, ".gitignore", f"missing env policy rule `{rule}`")
-
-
-def is_forbidden_env_file(rel: str) -> bool:
-    if not rel.startswith(ENV_ROOT):
-        return False
-    name = rel.removeprefix(ENV_ROOT)
-    if "/" in name:
-        return False
-    if name == "Untitled":
-        return True
-    return name.endswith(".env") and not name.endswith(".env.example")
-
-
-def check_env_policy(tracked: list[str], errors: list[str]) -> None:
-    for rel in tracked:
-        if is_forbidden_env_file(rel):
-            add_error(errors, rel, "local env files must not be tracked; keep only *.env.example")
-
-
-def check_env_example_identifiers(root: Path, tracked: list[str], errors: list[str]) -> None:
-    for rel in tracked:
-        if not rel.startswith(ENV_ROOT) or not rel.endswith(".env.example"):
-            continue
-        path = root / rel
-        if not path.exists():
-            continue
-        text = read_text(path).lower()
-        for term in FORBIDDEN_ENV_EXAMPLE_TERMS:
-            if term in text:
-                add_error(errors, rel, f"env example contains organization-specific identifier `{term}`")
-
 
 def check_preflight_policy(root: Path, errors: list[str]) -> None:
     path = root / "scripts/ai/preflight.sh"
@@ -607,8 +563,6 @@ def run_check() -> int:
     check_pointer_markers(root, errors)
     check_form_builder_policy(root, errors)
     check_gitignore(root, errors)
-    check_env_policy(tracked, errors)
-    check_env_example_identifiers(root, tracked, errors)
     check_preflight_policy(root, errors)
     check_read_order_policy(root, errors)
     check_markdown_links(root, tracked_existing_markdown(root, tracked), errors)

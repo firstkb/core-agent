@@ -1,4 +1,4 @@
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "medium"
 developer_instructions = """
 You are the Codex role config layer for the system agent `research_codebase`.

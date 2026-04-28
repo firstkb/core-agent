@@ -2,10 +2,10 @@
 # Repo-scoped Codex config for the active runtime.
 # Keep user-specific approval, sandbox, and auth defaults in ~/.codex/config.toml.
 project_root_markers = [".git"]
-model = "gpt-5.4"
+model = "gpt-5.5"
 
 # Optional override used by /review.
-# review_model = "gpt-5.4"
+# review_model = "gpt-5.5"
 
 [features]
 multi_agent = true

@@ -1,4 +1,5 @@
 import type { Preview } from "@storybook/react-vite";
+import React from "react";
 
 import "@platform/design-tokens/styles.css";
 import "@platform/ui-kit/styles.css";

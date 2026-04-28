@@ -33,6 +33,7 @@ Shared package:
 - `platform/frontend/packages/collection-table/src/collection-table-page.tsx`
 - `platform/frontend/packages/collection-table/src/collection-table-runtime.ts`
 - `platform/frontend/packages/collection-table/src/collection-table-state.ts`
+- `platform/frontend/packages/collection-table/src/collection-table.stories.tsx`
 
 Admin app host adapter:
 
@@ -189,6 +190,19 @@ Cells are keyed by field id and can expose raw `value`, optional `displayValue`,
 | `module-registry.list` | Module Registry | supported | `edit` | route exists, no generic `pdf` capability yet | route exists, XLS generation not complete |
 | `employees.list` | Employees | supported | `edit` | not current | not current |
 | `tenant.list` | Tenants | not current | not current | `open_as_root` | not current |
+
+## Visual Review
+
+Storybook V1 covers package-level `CollectionTable` states:
+
+- `empty`
+- `loading`
+- `ready with rows`
+- `error`
+- `filters open`
+
+These stories are manual/local visual review inputs only.
+They are not a CI screenshot baseline or a replacement for app-host integration checks.
 
 ## Backend Companion
 

@@ -1043,10 +1043,12 @@ Do not turn it into a task journal.
 - Date: 2026-04-28
 - Status: active
 - State: landed
-- Decision: Storybook V1 is a lightweight manual/local visual review loop under `platform/frontend/.storybook`, starting with stable `ui-kit` actions, form controls, feedback, state patterns, and table primitives. It is not a CI visual gate until baselines and screenshot policy are explicitly accepted. The Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) is the preferred local app visual-smoke tool when requested; do not substitute macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback. Owner-provided local login data must live only in ignored `ai-memory/local/browser-use-auth.md`, and tracked evidence must not record local auth codes.
+- Decision: Storybook V1 is a lightweight manual/local visual review loop under `platform/frontend/.storybook`, starting with stable `ui-kit` actions, form controls, feedback, state patterns, table primitives, and `CollectionTable` states (`empty`, `loading`, `ready with rows`, `error`, `filters open`). It is not a CI visual gate until baselines and screenshot policy are explicitly accepted. The Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) is the preferred local app visual-smoke tool when requested; do not substitute macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback. Owner-provided local login data must live only in ignored `ai-memory/local/browser-use-auth.md`, and tracked evidence must not record local auth codes.
 - Sources:
   - `platform/frontend/.storybook/`
   - `platform/frontend/packages/ui-kit/src/stories/`
+  - `platform/frontend/packages/collection-table/src/collection-table.stories.tsx`
   - `platform/frontend/AGENTS.md`
   - `platform/frontend/docs/contracts/ui-kit.md`
+  - `platform/frontend/docs/contracts/collection-table.md`
   - `.gitignore`

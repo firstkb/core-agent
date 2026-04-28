@@ -48,11 +48,11 @@ the task spans multiple modules.
 - Form Builder: active Platform Studio tool.
 - Auth/session: cross-stack cookie refresh, access token, profile, and tenant bootstrap.
 - Schema/tenancy: backend-owned migrations and tenant database boundaries.
-- Storybook V1: manual/local frontend visual review for stable `ui-kit` primitives, not a CI gate.
+- Storybook V1: manual/local frontend visual review for stable `ui-kit` primitives and `CollectionTable` states, not a CI gate.
 
 ## Local Visual Smoke
 
-- Use Storybook for `ui-kit` primitive and state review.
+- Use Storybook for `ui-kit` primitive/state review and `CollectionTable` package-state review.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is already running or the owner asks for it.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not replace an explicit Browser Use request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.

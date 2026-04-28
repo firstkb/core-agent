@@ -27,3 +27,4 @@ Historical import context lives in `ai-memory/durable/legacy-memory-import.md`; 
 - Frontend runtime/page host lives in `@platform/collection-table`.
 - Current real admin consumers are Module Registry, Employees, and Tenants.
 - App hosts own endpoint mapping, route behavior, auth/session, and route-specific actions.
+- Storybook V1 covers package-level `CollectionTable` states: `empty`, `loading`, `ready with rows`, `error`, and `filters open`.

@@ -107,7 +107,7 @@ Require extra care before finalizing changes that affect:
 
 ## Visual review loop
 
-- Use Storybook for stable `ui-kit` primitives and low-risk shared pattern review.
+- Use Storybook for stable `ui-kit` primitives, `CollectionTable` package states, and low-risk shared pattern review.
 - Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).

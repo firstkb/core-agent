@@ -6,7 +6,7 @@ Last updated: 2026-04-25
 
 ## Current Objective
 
-- Build Ramp Platform v108 as an online web product first.
+- Build VSM (Virtual Safety Manager) v1.0.0 as an online web product first.
 - Keep admin and tenant web surfaces moving without losing product decisions.
 - Use future PWA/offline, Flutter/mobile, and heavy automation docs only when explicitly routed.
 

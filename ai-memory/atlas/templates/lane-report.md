@@ -1,9 +1,9 @@
 ---
 template_id: lane-report
-template_version: 1.3.1
+template_version: 1.3.2
 status: active
-owner: ramp-platform-v108
-last_updated: 2026-04-26
+owner: vsm-v1.0.0
+last_updated: 2026-04-28
 ---
 
 # LANE FILE

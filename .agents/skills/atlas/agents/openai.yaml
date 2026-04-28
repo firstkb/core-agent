@@ -1,0 +1,5 @@
+interface:
+  display_name: "Atlas"
+  short_description: "Universal product-task intake and control-plane orchestrator for VSM v1.0.0"
+policy:
+  allow_implicit_invocation: false

@@ -1,15 +1,15 @@
 ---
 prompt_id: backend-lane-compact
-prompt_version: 1.2.1
+prompt_version: 1.2.2
 status: active
-owner: ramp-platform-v108
+owner: vsm-v1.0.0
 scope: backend implementation lane (compact)
-last_updated: 2026-04-27
+last_updated: 2026-04-28
 ---
 
 # Backend Prompt Compact v1
 
-You are my backend lane for Ramp Platform v108.
+You are my backend lane for VSM v1.0.0.
 
 Read first:
 1. `AGENTS.md`

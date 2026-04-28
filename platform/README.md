@@ -1,6 +1,7 @@
 # Platform
 
-`platform/` holds the product runtime surfaces for Ramp Platform v108.
+`platform/` holds the product runtime surfaces for VSM (Virtual Safety
+Manager) v1.0.0.
 
 ## Read order for product work
 
@@ -13,7 +14,7 @@
 
 For cross-stack or multi-session work, invoke:
 
-- `$ramp-conductor` (display name: `Atlas`)
+- `$atlas` (display name: `Atlas`)
 
 ## Current layout
 
@@ -58,7 +59,7 @@ platform/
 - coordinated task run artifacts live under `ai-memory/runs/`
 - former `platform/docs/ai/` memory has been migrated into `ai-memory` and deleted; it is historical provenance only
 - archived one-off prompt artifacts live under `platform/docs/archive/`
-- manual orchestration skill lives at `.agents/skills/ramp-conductor/`
+- manual orchestration skill lives at `.agents/skills/atlas/`
 
 ## Frontend decisions
 

@@ -1,18 +1,18 @@
 ---
-name: ramp-conductor
-description: Use this skill as the default intake and routing layer for Ramp Platform v108 work. Atlas decides whether a task should be executed directly in the current chat without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, ready-to-paste lane prompts for run-backed or explicit manual handoff work, reconciliation, and final shared memory updates.
+name: atlas
+description: Use this skill as the default intake and routing layer for VSM v1.0.0 work. Atlas decides whether a task should be executed directly in the current chat without a run, or move into FE_ONLY, BE_ONLY, CROSS_STACK_PARALLEL, CROSS_STACK_SEQUENTIAL, or RESEARCH_CONTRACT_LOCK run orchestration. Atlas also chooses task-id, prompt plan, chat topology, scaffolder usage, ready-to-paste lane prompts for run-backed or explicit manual handoff work, reconciliation, and final shared memory updates.
 ---
 
-# Ramp Conductor Skill
-Skill version: 1.5.3
+# Atlas Skill
+Skill version: 1.6.0
 Human display name: Atlas
 
 Purpose:
-Atlas is the universal product-task conductor for Ramp Platform v108.
+Atlas is the universal product-task conductor for VSM v1.0.0.
 Use it to intake work, read the smallest sufficient `ai-memory` slice, route the task, decide whether a run is needed, execute small direct no-run tasks in the current chat, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts only for run-backed or explicit owner-requested manual handoff work, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
-- Use explicitly with `$ramp-conductor`.
+- Use explicitly with `$atlas`.
 - In human-facing references, call this assistant `Atlas`.
 - Do not rely on implicit activation for this workflow.
 

@@ -633,12 +633,12 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Atlas/ramp-conductor now uses `ai-memory` as the first retrieval layer, active prompt/template/version metadata under `ai-memory/atlas`, and run artifacts under `ai-memory/runs/active`. Old `platform/docs/ai/**` is legacy provenance only until final retirement.
+- Decision: Atlas now uses `ai-memory` as the first retrieval layer, active prompt/template/version metadata under `ai-memory/atlas`, and run artifacts under `ai-memory/runs/active`. Old `platform/docs/ai/**` is legacy provenance only until final retirement.
 - Sources:
   - `platform/AGENTS.md`
   - `platform/backend/AGENTS.md`
   - `platform/frontend/AGENTS.md`
-  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `.agents/skills/atlas/SKILL.md`
   - `ai-memory/atlas/README.md`
   - `ai-memory/atlas/migration-audit.md`
   - `scripts/ai/new-run.py`
@@ -924,7 +924,7 @@ Do not turn it into a task journal.
 - Decision: `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence shape for non-trivial agent closeout or PR body text. It should be pasted into the final response, PR body, or run `final.md` when useful. It must not become a mandatory standalone artifact for tiny tasks.
 - Sources:
   - `ai-memory/atlas/templates/agent-evidence.md`
-  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `.agents/skills/atlas/SKILL.md`
   - `AGENTS.md`
   - `platform/AGENTS.md`
 
@@ -935,7 +935,7 @@ Do not turn it into a task journal.
 - State: landed
 - Decision: Atlas direct no-run routes mean current-chat execution by default. If Atlas decides a separate FE/BE chat should be opened, the task should normally become run-backed with a task id and `ai-memory/runs/active/<task-id>/` artifacts. A separate no-run prompt is allowed only when the owner explicitly requests `MANUAL_HANDOFF_NO_RUN`; that handoff is owner-managed and not Atlas lane orchestration.
 - Sources:
-  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `.agents/skills/atlas/SKILL.md`
   - `ai-memory/atlas/prompts/control-chat-prompt-v1.md`
   - `platform/AGENTS.md`
 
@@ -993,8 +993,33 @@ Do not turn it into a task journal.
   - `platform/AGENTS.md`
   - `platform/frontend/AGENTS.md`
   - `platform/backend/AGENTS.md`
-  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `.agents/skills/atlas/SKILL.md`
   - `.agents/skills/scribe/SKILL.md`
   - `ai-memory/atlas/prompts/*.md`
   - `ai-memory/atlas/templates/chat-start.md`
+  - `scripts/ai/docs_memory_check.py`
+
+### DEC-084 Root Docs Describe Product Workspace
+
+- Date: 2026-04-27
+- Status: active
+- State: landed
+- Decision: Root orientation docs must describe this repository as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, not only as an agent orchestration reference scaffold. `README.md` points agents to `AGENTS.md`, `platform/AGENTS.md`, `ai-memory/START_HERE.md`, and product roots. `docs/codex-native-repo.md` remains the canonical repo runtime layout and source-of-truth boundary, including `ai-memory/`, `platform/`, `.agents/skills/atlas`, `.agents/skills/scribe`, `.agent-cli/`, and `.codex/`.
+- Sources:
+  - `README.md`
+  - `docs/codex-native-repo.md`
+
+### DEC-085 Product Identity Is VSM v1.0.0
+
+- Date: 2026-04-28
+- Status: active
+- State: landed
+- Decision: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, skills, or memory. Atlas is now invoked as `$atlas`; the old `$ramp-conductor` invocation and `.agents/skills/ramp-conductor/` path are retired. Backend local database names such as `108-master`, `108-sandbox`, and `108-demo` are technical local-environment identifiers and are not renamed by this product-identity decision.
+- Sources:
+  - `README.md`
+  - `platform/README.md`
+  - `docs/codex-native-repo.md`
+  - `ai-memory/START_HERE.md`
+  - `.agents/skills/atlas/SKILL.md`
+  - `ai-memory/atlas/automation-manifest.json`
   - `scripts/ai/docs_memory_check.py`

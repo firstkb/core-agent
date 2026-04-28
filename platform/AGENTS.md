@@ -2,7 +2,7 @@
 
 Scope: everything under `platform/`.
 
-This file is the shared product-development instruction layer for Ramp Platform v108.
+This file is the shared product-development instruction layer for VSM v1.0.0.
 It sits between the repo-level `AGENTS.md` and the local `platform/backend/AGENTS.md` or `platform/frontend/AGENTS.md` files.
 
 ## Read order
@@ -72,7 +72,7 @@ Use `ai-memory/` by role:
 - automation metadata:
   - `ai-memory/atlas/automation-manifest.json`
   - `ai-memory/atlas/automation-changelog.md`
-  - `.agents/skills/ramp-conductor/*`
+  - `.agents/skills/atlas/*`
   - `.agents/skills/scribe/*`
   - `scripts/ai/new-run.py`
   - `scripts/ai/new-run.sh`
@@ -106,13 +106,13 @@ These are workflow scaffolds, not canonical memory:
 - `ai-memory/runs/archive/*`
 - `ai-memory/atlas/automation-manifest.json`
 - `ai-memory/atlas/automation-changelog.md`
-- `.agents/skills/ramp-conductor/*`
+- `.agents/skills/atlas/*`
 - `scripts/ai/new-run.py`
 - `scripts/ai/new-run.sh`
 
 ## Atlas orchestration rule
 
-During the current platform workflow, `Atlas` (`$ramp-conductor`) is the default first-touch assistant for new work under `platform/`. Route new platform tasks through Atlas unless you are intentionally bypassing it for an obviously tiny local edit.
+During the current platform workflow, `Atlas` (`$atlas`) is the default first-touch assistant for new work under `platform/`. Route new platform tasks through Atlas unless you are intentionally bypassing it for an obviously tiny local edit.
 Atlas owns:
 - intake
 - route selection
@@ -129,7 +129,7 @@ If there is any doubt about routing, shared contract, memory updates, or task du
 
 ## Control orchestration skill
 
-For any cross-stack, shared-contract, package-boundary, auth/session, tenancy-sensitive, or multi-session task, explicitly invoke `Atlas` (`$ramp-conductor`).
+For any cross-stack, shared-contract, package-boundary, auth/session, tenancy-sensitive, or multi-session task, explicitly invoke `Atlas` (`$atlas`).
 
 Do not rely on implicit activation for this workflow.
 

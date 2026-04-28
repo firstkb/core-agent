@@ -1,9 +1,9 @@
 ---
 template_id: control-task
-template_version: 1.3.0
+template_version: 1.3.1
 status: active
-owner: ramp-platform-v108
-last_updated: 2026-04-05
+owner: vsm-v1.0.0
+last_updated: 2026-04-28
 ---
 
 # CONTROL TASK

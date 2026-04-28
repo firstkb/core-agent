@@ -13,8 +13,8 @@ They are operational behavior contracts.
 - `control-chat-prompt-v1.md`
   - prompt_id: `control-chat`
   - current semantic version: see `ai-memory/atlas/automation-manifest.json`
-  - owner: `ramp-platform-v108`
-  - used with `Atlas` (`$ramp-conductor`)
+  - owner: `vsm-v1.0.0`
+  - used with `Atlas` (`$atlas`)
 
 ### Frontend lane
 
@@ -56,7 +56,7 @@ Use these defaults:
 ## Naming rule
 
 `Atlas` is the human display name fixed in the skill metadata.
-`$ramp-conductor` is the technical invocation name.
+`$atlas` is the technical invocation name.
 Prompt files may refer to either form, but technical automation should continue to use the invocation name.
 
 

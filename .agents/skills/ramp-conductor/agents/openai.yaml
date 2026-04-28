@@ -1,5 +1,0 @@
-interface:
-  display_name: "Atlas"
-  short_description: "Universal product-task intake and control-plane orchestrator for Ramp Platform v108"
-policy:
-  allow_implicit_invocation: false

@@ -34,7 +34,7 @@ ai-memory/
 - `.agents/skills/charlie`: grounded codebase research workflow.
 - `.agents/skills/grant`: optional technical brief review workflow.
 - `.agents/skills/scribe`: manual semantic docs and ai-memory audit workflow.
-- `.agents/skills/ramp-conductor`: legacy/product-level Atlas workflow for platform FE/BE orchestration; currently useful as product memory context but not the root Codex-native runtime.
+- `.agents/skills/atlas`: product-level Atlas workflow for platform FE/BE orchestration; useful as product memory context but not the root Codex-native runtime.
 - `.codex/contracts`: machine-readable contracts and schemas.
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.
 - `.codex/standards`: repository, engineering, frontend, backend, infra, library, and security standards.

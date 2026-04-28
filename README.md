@@ -1,33 +1,63 @@
-# Codex-native agent orchestration reference
+# VSM v1.0.0 Workspace
 
-This repository is a Codex-native reference scaffold for:
+This repository is the working codebase for VSM (Virtual Safety Manager)
+v1.0.0 web product development and its local AI-agent operating model.
 
-- repo-local skills in `.agents/skills/`
-- native agent wiring in `.codex/`
-- typed lifecycle control in `.agent-cli/`
+Product code lives under:
 
-## Core principles
+- `platform/frontend/` - frontend workspace for `tenant-web`, `platform-admin-web`, and shared frontend packages.
+- `platform/backend/` - Go backend runtimes, modules, migrations, and local bootstrap assets.
 
-- `.agents/skills/` and `.codex/` are the active runtime source of truth.
-- `.agent-cli/` is the deterministic validation layer.
-- `AGENTS.md` is the shared project guidance.
-- Persistent artifacts live under `artifacts/{module}/{feature}`.
-- Maestro owns module-root orchestration artifacts and feature seed packs.
-- Charlie owns only stage research attempt outputs.
+The current AI memory and agent workflow lives under:
 
-## Layout
+- `ai-memory/` - compact operational memory, read routes, durable decisions, module packs, Atlas prompts/templates, and run artifacts.
+- `.agents/skills/` - repo-local Codex skills, including `atlas` (Atlas) and `scribe`.
+- `.agent-cli/` - typed lifecycle gateway for module/feature/stage artifacts.
+- `.codex/` - Codex-native runtime wiring, contracts, standards, and templates.
 
-```text
-.agent-cli/            validation and path resolution
-.agent-cli/config.json repo-local CLI defaults for artifacts
-.agents/skills/        Codex-native skills
-.codex/                Codex-native config, agents, contracts, templates, and standards
-artifacts/             persistent agent artifacts
-platform/              product-code root placeholder
+## Start Here
+
+For agent work, read in this order:
+
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
+5. relevant `ai-memory/modules/**` pack
+6. relevant canonical docs under `platform/frontend/docs/` or `platform/backend/docs/`
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
+
+For human orientation:
+
+- `docs/codex-native-repo.md` explains the live repository layout and runtime boundaries.
+- `docs/ref/reference-code.md` lists opt-in local reference-code pack aliases.
+- `platform/frontend/docs/README.md` and `platform/backend/docs/README.md` are the product docs entrypoints.
+
+## Current Runtime
+
+The active product surfaces are:
+
+- Backend runtimes: `cmd/api-admin`, `cmd/api-tenant`, `cmd/auth`, `cmd/migrate`.
+- Frontend apps: `platform-admin-web` and `tenant-web`.
+- Platform Studio: tenant-web suite for builder/configuration tools. Form Builder is the active builder today; Navigation Builder, Action Builder, PDF Builder, and Report Builder are future suite tools.
+
+Online web applications are the current delivery target. PWA/offline and Flutter
+hybrid mobile are future layers after the main web platform stabilizes.
+
+## Checks
+
+GitHub Actions currently include:
+
+- Docs/memory drift checks.
+- Backend Go format, tests, and command builds.
+- Frontend frozen install, typecheck, and build.
+
+Local lightweight preflight:
+
+```bash
+scripts/ai/preflight.sh
 ```
 
-## Notes
-
-- Codex-native skills live in `.agents/skills/`; `.codex/` is used for project config, native agents, contracts, templates, and standards.
-- The stable system ids remain `module_orchestrator`, `research_codebase`, and `brief_auditor`.
-- `docs/codex-native-repo.md` defines the live repository layout and source-of-truth boundary.
+Use `scripts/ai/preflight.sh --full` only when a broader local product sweep is
+worth the extra cost.

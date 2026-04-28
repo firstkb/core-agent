@@ -5,7 +5,7 @@ Use this when the chat is getting noisy or the context needs to move.
 ```text
 HANDOFF PACKET
 
-Project: Ramp Platform v108
+Project: VSM v1.0.0
 Stream:
 Current objective:
 Why this matters:

@@ -69,7 +69,7 @@ Tracked doc:
 
 Observed drift:
 
-- It now references Atlas/ramp-conductor routing through the `ai-memory` read order.
+- It now references Atlas routing through the `ai-memory` read order.
 - Root repository guidance defines the active Codex-native runtime and this local `ai-memory` overlay is the compact retrieval layer.
 
 Current read rule:

@@ -39,7 +39,7 @@ The active system is:
 | `platform/docs/ai/module-index.md` | retired pointer | `ai-memory/durable/module-index.md` and `ai-memory/index/*` | deleted after migration |
 | `platform/docs/ai/modules/*.md` | retired module pointers | `ai-memory/modules/domains/**` plus FE/BE module packs | deleted after migration |
 | `platform/docs/ai/markdown-governance.md` | retired pointer | `ai-memory/agent-workflow.md`, `platform/AGENTS.md`, tracked docs style rules | deleted after migration |
-| `platform/docs/ai/orchestration-boundaries.md` | retired pointer | `ai-memory/atlas/README.md`, `.agents/skills/ramp-conductor/SKILL.md` | deleted after migration |
+| `platform/docs/ai/orchestration-boundaries.md` | retired pointer | `ai-memory/atlas/README.md`, `.agents/skills/atlas/SKILL.md` | deleted after migration |
 | `platform/docs/ai/prompts/**` | retired prompt pointers | `ai-memory/atlas/prompts/**` | deleted after migration |
 | `platform/docs/ai/templates/**` | retired template pointers | `ai-memory/atlas/templates/**` | deleted after migration |
 | `platform/docs/ai/automation-manifest.json` | retired JSON pointer | `ai-memory/atlas/automation-manifest.json` | deleted after migration |

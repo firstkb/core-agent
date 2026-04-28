@@ -1,7 +1,7 @@
 # Current State
 
 Status: compact active snapshot
-Last compacted: 2026-04-27
+Last compacted: 2026-04-28
 
 This is a compact AI retrieval snapshot.
 Use canonical docs and code for final verification before changing behavior.
@@ -16,11 +16,13 @@ Confidence labels:
 ## Repository Runtime
 
 - `landed` `doc-confirmed`: The repository has a Codex-native runtime model rooted in `AGENTS.md`, `.agents/skills/`, `.codex/`, `.agent-cli/`, `docs/codex-native-repo.md`, and `docs/maestro/module-orchestrator-v2-spec-pack/`.
+- `landed` `owner-confirmed`: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, or memory.
+- `landed` `doc-confirmed`: Root `README.md` and `docs/codex-native-repo.md` now describe the repo as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, with `platform/` as product root and `ai-memory/` as current operational memory.
 - `landed` `doc-confirmed`: Stable system agent ids are `module_orchestrator`, `research_codebase`, and `brief_auditor`.
 - `landed` `doc-confirmed`: Stable skill nicknames are `maestro`, `charlie`, and `grant`.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.
 - `landed` `doc-confirmed`: `.agent-cli/` owns typed lifecycle state transitions and mutable JSON status files.
-- `landed` `doc-confirmed`: Atlas/ramp-conductor platform workflow now reads `ai-memory` first, uses active operational files under `ai-memory/atlas`, and writes new run artifacts to `ai-memory/runs/active`.
+- `landed` `doc-confirmed`: Atlas (`$atlas`) platform workflow now reads `ai-memory` first, uses active operational files under `ai-memory/atlas`, and writes new run artifacts to `ai-memory/runs/active`.
 
 ## Product Runtime
 

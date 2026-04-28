@@ -34,7 +34,7 @@ For Atlas workflow changes, additionally read:
 - `ai-memory/atlas/README.md`
 - `ai-memory/atlas/migration-audit.md`
 - `ai-memory/atlas/automation-manifest.json`
-- `.agents/skills/ramp-conductor/SKILL.md`
+- `.agents/skills/atlas/SKILL.md`
 
 ## Conflict Rule
 

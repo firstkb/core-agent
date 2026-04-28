@@ -398,7 +398,7 @@ routes:
   atlas_workflow:
     triggers:
       - Atlas
-      - ramp-conductor
+      - $atlas
       - AI memory workflow
       - agent memory
       - new-run.py

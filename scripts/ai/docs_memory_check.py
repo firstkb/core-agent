@@ -71,11 +71,55 @@ IGNORED_FALLBACK_DIRS = {
 
 ENV_ROOT = "platform/backend/env/"
 
+OLD_PRODUCT_IDENTITY_TERMS = [
+    "Ramp Platform v108",
+    "RAMP Platform v108",
+    "ramp-platform-v108",
+]
+
+OLD_PRODUCT_IDENTITY_ALLOWED_FILES = {
+    "ai-memory/durable/current-state.md",
+    "ai-memory/durable/decisions-log.md",
+    "ai-memory/docs/docs-migration-plan.md",
+}
+
+OLD_PRODUCT_IDENTITY_ALLOWED_MARKERS = [
+    "historical working name",
+    "retired",
+    "old",
+    "archive",
+    "historical",
+]
+
+OLD_ATLAS_INVOCATION_TERMS = [
+    "$ramp-conductor",
+    ".agents/skills/ramp-conductor",
+]
+
+OLD_ATLAS_INVOCATION_ALLOWED_FILES = {
+    "ai-memory/durable/decisions-log.md",
+    "scripts/ai/docs_memory_check.py",
+}
+
+PRODUCT_IDENTITY_SCAN_SCOPES = [
+    "AGENTS.md",
+    "README.md",
+    "docs",
+    "ai-memory",
+    "platform/AGENTS.md",
+    "platform/README.md",
+    "platform/frontend/AGENTS.md",
+    "platform/backend/AGENTS.md",
+    "platform/frontend/docs",
+    "platform/backend/docs",
+    ".agents",
+]
+
 READ_ORDER_SURFACES = [
     "platform/AGENTS.md",
     "platform/frontend/AGENTS.md",
     "platform/backend/AGENTS.md",
-    ".agents/skills/ramp-conductor/SKILL.md",
+    ".agents/skills/atlas/SKILL.md",
     ".agents/skills/scribe/SKILL.md",
     "ai-memory/README.md",
     "ai-memory/START_HERE.md",
@@ -251,10 +295,51 @@ def check_root_file_sets(root: Path, errors: list[str]) -> None:
 def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
     if (root / "platform/docs/ai").exists():
         add_error(errors, "platform/docs/ai", "retired legacy memory path must not exist")
+    if (root / ".agents/skills/ramp-conductor").exists():
+        add_error(errors, ".agents/skills/ramp-conductor", "retired Atlas skill path must not exist; use .agents/skills/atlas")
+    if not (root / ".agents/skills/atlas/SKILL.md").exists():
+        add_error(errors, ".agents/skills/atlas/SKILL.md", "Atlas skill must exist at the canonical path")
     if (root / "ai-memory/AGENTS.override.md").exists():
         add_error(errors, "ai-memory/AGENTS.override.md", "retired override file must not exist")
     if not (root / "ai-memory/START_HERE.md").exists():
         add_error(errors, "ai-memory/START_HERE.md", "first-read memory file must exist")
+
+
+def check_product_identity(root: Path, tracked: list[str], errors: list[str]) -> None:
+    skill = root / ".agents/skills/atlas/SKILL.md"
+    if skill.exists():
+        skill_text = read_text(skill)
+        for marker in ["name: atlas", "VSM v1.0.0", "$atlas"]:
+            if marker not in skill_text:
+                add_error(errors, skill.relative_to(root), f"missing Atlas identity marker `{marker}`")
+
+    for rel in tracked:
+        if not any(rel == scope or rel.startswith(f"{scope}/") for scope in PRODUCT_IDENTITY_SCAN_SCOPES):
+            continue
+        if "/archive/" in rel or rel.startswith("ai-memory/runs/") or rel.startswith("artifacts/"):
+            continue
+        path = root / rel
+        if not path.exists() or not path.is_file():
+            continue
+        try:
+            text = read_text(path)
+        except UnicodeDecodeError:
+            continue
+        for term in OLD_PRODUCT_IDENTITY_TERMS:
+            if term in text:
+                if rel in OLD_PRODUCT_IDENTITY_ALLOWED_FILES:
+                    bad_lines = [
+                        line
+                        for line in text.splitlines()
+                        if term in line
+                        and not any(marker in line.lower() for marker in OLD_PRODUCT_IDENTITY_ALLOWED_MARKERS)
+                    ]
+                    if not bad_lines:
+                        continue
+                add_error(errors, rel, f"uses retired current-product identity `{term}`; use VSM v1.0.0")
+        for term in OLD_ATLAS_INVOCATION_TERMS:
+            if term in text and rel not in OLD_ATLAS_INVOCATION_ALLOWED_FILES:
+                add_error(errors, rel, f"uses retired Atlas invocation/path `{term}`; use $atlas and .agents/skills/atlas")
 
 
 def check_platform_readme(root: Path, errors: list[str]) -> None:
@@ -435,6 +520,7 @@ def run_check() -> int:
     check_root_file_sets(root, errors)
     check_retired_memory_paths(root, errors)
     check_platform_readme(root, errors)
+    check_product_identity(root, tracked, errors)
     check_docs_migration_plan_status(root, errors)
     check_agents_name_status(root, errors)
     check_reference_code_retirement(root, errors)

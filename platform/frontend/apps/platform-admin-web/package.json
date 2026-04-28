@@ -1,7 +1,7 @@
 {
   "name": "@platform/platform-admin-web",
   "private": true,
-  "version": "3.0.2",
+  "version": "1.0.0",
   "type": "module",
   "dependencies": {
     "@platform/api-client": "workspace:*",

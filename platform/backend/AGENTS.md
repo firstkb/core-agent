@@ -14,7 +14,7 @@ Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 ## Lane orchestration rule
 
-During the current platform workflow, the preferred entrypoint for new backend work is `Atlas` (`$ramp-conductor`).
+During the current platform workflow, the preferred entrypoint for new backend work is `Atlas` (`$atlas`).
 Atlas may route the task to:
 - direct backend no-run work
 - `BE_ONLY` run-backed work

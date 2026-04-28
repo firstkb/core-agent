@@ -26,7 +26,7 @@ Audit commands:
 
 ```bash
 rg -n "platform/docs/ai" AGENTS.md platform .agents scripts ai-memory docs --glob '!platform/docs/ai/**'
-rg -n "platform/docs/ai" AGENTS.md platform/README.md platform/AGENTS.md platform/backend/AGENTS.md platform/frontend/AGENTS.md .agents/skills/ramp-conductor/SKILL.md scripts ai-memory/index ai-memory/README.md ai-memory/agent-workflow.md docs/README.md docs/codex-native-repo.md
+rg -n "platform/docs/ai" AGENTS.md platform/README.md platform/AGENTS.md platform/backend/AGENTS.md platform/frontend/AGENTS.md .agents/skills/atlas/SKILL.md scripts ai-memory/index ai-memory/README.md ai-memory/agent-workflow.md docs/README.md docs/codex-native-repo.md
 for d in platform/docs/ai/runs/20*; do rg -n "$(basename "$d")" AGENTS.md platform .agents scripts ai-memory docs --glob '!platform/docs/ai/runs/**'; done
 ```
 

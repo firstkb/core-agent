@@ -1,9 +1,9 @@
 ---
 template_id: agent-evidence
-template_version: 1.0.0
+template_version: 1.0.1
 status: active
-owner: ramp-platform-v108
-last_updated: 2026-04-26
+owner: vsm-v1.0.0
+last_updated: 2026-04-28
 ---
 
 # AGENT EVIDENCE

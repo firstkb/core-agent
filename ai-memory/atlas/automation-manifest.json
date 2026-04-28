@@ -1,50 +1,50 @@
 {
-  "bundle_version": "1.5.3",
+  "bundle_version": "1.6.0",
   "skill": {
-    "name": "ramp-conductor",
+    "name": "atlas",
     "display_name": "Atlas",
-    "version": "1.5.3",
-    "invocation": "$ramp-conductor",
-    "file": ".agents/skills/ramp-conductor/SKILL.md"
+    "version": "1.6.0",
+    "invocation": "$atlas",
+    "file": ".agents/skills/atlas/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.5.3",
+      "version": "1.6.0",
       "file": "ai-memory/atlas/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {
       "family": "v1",
-      "version": "1.2.2",
+      "version": "1.3.0",
       "file": "ai-memory/atlas/prompts/frontend-prompt-v1.md"
     },
     "frontend_compact": {
       "family": "v1",
-      "version": "1.2.2",
+      "version": "1.3.0",
       "file": "ai-memory/atlas/prompts/frontend-prompt-compact-v1.md"
     },
     "backend": {
       "family": "v1",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "file": "ai-memory/atlas/prompts/backend-prompt-v1.md"
     },
     "backend_compact": {
       "family": "v1",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "file": "ai-memory/atlas/prompts/backend-prompt-compact-v1.md"
     }
   },
   "templates": {
     "control_task": {
-      "version": "1.3.0",
+      "version": "1.3.1",
       "file": "ai-memory/atlas/templates/control-task.md"
     },
     "lane_report": {
-      "version": "1.3.1",
+      "version": "1.3.2",
       "file": "ai-memory/atlas/templates/lane-report.md"
     },
     "agent_evidence": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "file": "ai-memory/atlas/templates/agent-evidence.md"
     }
   },

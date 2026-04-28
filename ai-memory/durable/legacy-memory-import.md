@@ -66,7 +66,7 @@ Compact run triage:
 
 ## Important Drift Resolved
 
-- Old memory used Atlas/ramp-conductor operational language. Current repo runtime is Codex-native per root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `.agent-cli/`, and `docs/codex-native-repo.md`.
+- Old memory used Atlas product-orchestration operational language. Current repo runtime is Codex-native per root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `.agent-cli/`, and `docs/codex-native-repo.md`.
 - Old Platform Studio memory focused on Form Builder plus planned Navigation/Action. New memory records owner clarification that Platform Studio is a larger suite including Form Builder, Navigation Builder, Action Builder, PDF Builder, Report Builder, and future tools.
 - Collection Table old wording sometimes described app-local proving state; current memory treats `@platform/collection-table` extraction as landed for admin consumers while keeping cross-app/full capability work planned.
 - Closed run artifacts remain useful for provenance only; they must not be used as canonical truth if compact module memory disagrees.

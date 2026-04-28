@@ -40,6 +40,7 @@ function createSession(expiresAt: number, options?: { issuedAt?: number }): Stor
 
 function createApiError(statusCode: number) {
   return new ApiClientError(`Request failed with status ${statusCode}.`, {
+    responseStatus: statusCode === 401 || statusCode === 403 ? "unauthorized" : undefined,
     statusCode,
   });
 }

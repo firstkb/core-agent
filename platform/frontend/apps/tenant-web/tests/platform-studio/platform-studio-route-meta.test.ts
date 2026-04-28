@@ -1,10 +1,18 @@
-import { describe, expect, it } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import { tenantEnglishMessages } from "../../src/locales/en";
 import {
   getPlatformStudioHeaderMeta,
   getPlatformStudioHeaderTitle,
 } from "../../src/features/platform-studio/platform-studio-route-meta";
+import { installFormsPlaceholderStorage } from "./forms-test-fixtures";
 
 function translate(key: string, options?: Record<string, unknown>) {
   const value = key
@@ -28,6 +36,14 @@ function translate(key: string, options?: Record<string, unknown>) {
 }
 
 describe("platform studio route meta", () => {
+  beforeEach(() => {
+    installFormsPlaceholderStorage();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("uses Form Builder copy for the main forms routes", () => {
     expect(getPlatformStudioHeaderTitle(translate, "/builder/forms")).toBe("Form Builder");
     expect(getPlatformStudioHeaderMeta(translate, "/builder/forms")).toBe("Platform Studio / Form Builder");

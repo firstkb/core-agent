@@ -4,20 +4,16 @@ import {
   getFormsAuthoringAccess,
   getFormsPlaceholderActor,
 } from "../../src/features/platform-studio/forms/forms-actors";
-import { getFormsPlaceholderObject } from "../../src/features/platform-studio/forms/forms-placeholder-data";
-
-const lockedDelegatedModel = getFormsPlaceholderObject("customer-profile");
-const editableOwnerOnlyModel = getFormsPlaceholderObject("site-audit");
-
-if (!lockedDelegatedModel || !editableOwnerOnlyModel) {
-  throw new Error("Expected forms placeholder models for permission tests.");
-}
+import {
+  editableFormBuilderModel,
+  lockedDelegatedFormBuilderModel,
+} from "./forms-test-fixtures";
 
 describe("platform builder forms actor access", () => {
   it("allows model owners to manage locked models and view actions", () => {
     const access = getFormsAuthoringAccess(
       getFormsPlaceholderActor("model-owner"),
-      lockedDelegatedModel,
+      lockedDelegatedFormBuilderModel,
     );
 
     expect(access.canDeleteLockedModel).toBe(true);
@@ -30,7 +26,7 @@ describe("platform builder forms actor access", () => {
   it("blocks view-only editors from structure actions while keeping delegated view actions available", () => {
     const access = getFormsAuthoringAccess(
       getFormsPlaceholderActor("view-only-editor"),
-      lockedDelegatedModel,
+      lockedDelegatedFormBuilderModel,
     );
 
     expect(access.canDeleteModel).toBe(false);
@@ -43,7 +39,7 @@ describe("platform builder forms actor access", () => {
   it("blocks view-only editors when a model does not grant view-only editing", () => {
     const access = getFormsAuthoringAccess(
       getFormsPlaceholderActor("view-only-editor"),
-      editableOwnerOnlyModel,
+      editableFormBuilderModel,
     );
 
     expect(access.canEditViews).toBe(false);
@@ -55,7 +51,7 @@ describe("platform builder forms actor access", () => {
   it("keeps readonly users able to open workspaces while blocking mutations", () => {
     const access = getFormsAuthoringAccess(
       getFormsPlaceholderActor("readonly-user"),
-      lockedDelegatedModel,
+      lockedDelegatedFormBuilderModel,
     );
 
     expect(access.canOpenWorkspace).toBe(true);

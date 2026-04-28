@@ -20,21 +20,18 @@ import {
   reorderFormBuilderNode,
   removeFormBuilderNode,
   saveFormBuilderDocument,
+  setFormBuilderCurrentParent,
   type FormBuilderDocument,
 } from "../../src/features/platform-studio/forms/forms-builder-state";
 import {
-  getFormsPlaceholderObject,
-  getFormsPlaceholderScreen,
-} from "../../src/features/platform-studio/forms/forms-placeholder-data";
+  editableFormBuilderModel,
+  lockedDelegatedFormBuilderModel,
+} from "./forms-test-fixtures";
 
-const editableObject = getFormsPlaceholderObject("site-audit");
-const editableScreen = getFormsPlaceholderScreen("site-audit", "field-checklist");
-const lockedObject = getFormsPlaceholderObject("customer-profile");
-const lockedScreen = getFormsPlaceholderScreen("customer-profile", "intake-form");
-
-if (!editableObject || !editableScreen || !lockedObject || !lockedScreen) {
-  throw new Error("Expected platform builder placeholder fixtures for form builder state tests.");
-}
+const editableObject = editableFormBuilderModel;
+const editableScreen = editableFormBuilderModel.screens[0];
+const lockedObject = lockedDelegatedFormBuilderModel;
+const lockedScreen = lockedDelegatedFormBuilderModel.screens[0];
 
 function makeTestIdFactory() {
   let index = 0;
@@ -43,7 +40,17 @@ function makeTestIdFactory() {
 }
 
 function getFieldNodeIds(document: FormBuilderDocument) {
-  return document.nodes.filter((node) => node.type === "field").map((node) => node.fieldId);
+  return document.rootScope.uiSchema.nodes
+    .filter((node) => node.type === "field")
+    .map((node) => node.fieldId);
+}
+
+function getRootNode(document: FormBuilderDocument, nodeId: string) {
+  return document.rootScope.uiSchema.nodes.find((node) => node.id === nodeId);
+}
+
+function getRootNodeIds(document: FormBuilderDocument) {
+  return document.rootScope.uiSchema.nodes.map((node) => node.id);
 }
 
 describe("forms builder workspace state", () => {
@@ -75,11 +82,17 @@ describe("forms builder workspace state", () => {
 
   it("reads saved workspace documents from localStorage", () => {
     const document = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
-    const nestedSectionId = document.nodes[0]?.id ?? null;
+    const selectedNodeId = document.rootScope.uiSchema.nodes[0]?.id ?? null;
     const updatedDocument = {
       ...document,
-      currentParentId: nestedSectionId,
-      selectedNodeId: document.nodes.find((node) => node.type === "field")?.id ?? document.selectedNodeId,
+      rootScope: {
+        ...document.rootScope,
+        uiSchema: {
+          ...document.rootScope.uiSchema,
+          currentParentId: selectedNodeId,
+          selectedNodeId,
+        },
+      },
       viewDescription: "Saved detail workspace",
     } satisfies FormBuilderDocument;
 
@@ -89,21 +102,27 @@ describe("forms builder workspace state", () => {
     const reopenedDocument = readFormBuilderDocument(editableObject, editableScreen);
 
     expect(reopenedDocument.viewDescription).toBe("Saved detail workspace");
-    expect(reopenedDocument.currentParentId).toBeNull();
-    expect(reopenedDocument.selectedNodeId).toBe(nestedSectionId);
+    expect(reopenedDocument.rootScope.uiSchema.currentParentId).toBeNull();
+    expect(reopenedDocument.rootScope.uiSchema.selectedNodeId).toBeNull();
   });
 
   it("falls back to legacy saved documents when no new snapshot exists", () => {
     const document = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
-    const nestedSectionId = document.nodes[0]?.id ?? null;
+    const selectedNodeId = document.rootScope.uiSchema.nodes[0]?.id ?? null;
 
     window.localStorage.clear();
     window.localStorage.setItem(
       `tenant-web-platform-studio-screen-document:${editableObject.id}:${editableScreen.id}`,
       JSON.stringify({
         ...document,
-        currentParentId: nestedSectionId,
-        selectedNodeId: document.nodes.find((node) => node.type === "field")?.id ?? document.selectedNodeId,
+        rootScope: {
+          ...document.rootScope,
+          uiSchema: {
+            ...document.rootScope.uiSchema,
+            currentParentId: selectedNodeId,
+            selectedNodeId,
+          },
+        },
         viewDescription: "Legacy saved workspace",
       }),
     );
@@ -111,15 +130,15 @@ describe("forms builder workspace state", () => {
     const reopenedDocument = readFormBuilderDocument(editableObject, editableScreen);
 
     expect(reopenedDocument.viewDescription).toBe("Legacy saved workspace");
-    expect(reopenedDocument.currentParentId).toBeNull();
-    expect(reopenedDocument.selectedNodeId).toBe(nestedSectionId);
+    expect(reopenedDocument.rootScope.uiSchema.currentParentId).toBeNull();
+    expect(reopenedDocument.rootScope.uiSchema.selectedNodeId).toBeNull();
   });
 
-  it("seeds one section plus the existing model fields", () => {
+  it("seeds the root scope with the existing model fields", () => {
     const document = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
 
-    expect(document.nodes[0]?.type).toBe("section");
     expect(getFieldNodeIds(document)).toEqual(editableObject.fields.map((field) => field.id));
+    expect(document.rootScope.dataSchema.fieldIds).toEqual(editableObject.fields.map((field) => field.id));
   });
 
   it("prevents duplicate bound field insertion", () => {
@@ -134,10 +153,11 @@ describe("forms builder workspace state", () => {
 
   it("limits tabs containers to tab items only", () => {
     const baseDocument = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
-    const withTabs = addFormBuilderElementNode(baseDocument, null, "tabs", makeTestIdFactory());
-    const tabsNode = withTabs.nodes.find((node) => node.type === "tabs");
+    const withTabs = addFormBuilderElementNode(baseDocument, null, "tabs", undefined, makeTestIdFactory());
+    const tabsNode = withTabs.rootScope.uiSchema.nodes.find((node) => node.type === "tabs");
 
     expect(tabsNode).toBeTruthy();
+    const insideTabs = setFormBuilderCurrentParent(withTabs, tabsNode?.id ?? null);
 
     const editableAccess = getFormsWorkspaceAccess(
       getFormsAuthoringAccess(getFormsPlaceholderActor("model-owner"), editableObject),
@@ -145,10 +165,7 @@ describe("forms builder workspace state", () => {
     );
 
     const palette = getElementPaletteItems(
-      {
-        ...withTabs,
-        currentParentId: tabsNode?.id ?? null,
-      },
+      insideTabs,
       editableAccess,
       "",
     );
@@ -156,60 +173,40 @@ describe("forms builder workspace state", () => {
     expect(palette.map((item) => item.nodeType)).toEqual(["tab_item"]);
   });
 
-  it("disables palette additions when the model structure is locked", () => {
+  it("disables field additions while leaving delegated view layout editing available", () => {
     const document = createDefaultFormBuilderDocument(lockedObject, lockedScreen, makeTestIdFactory());
     const lockedAccess = getFormsWorkspaceAccess(
-      getFormsAuthoringAccess(getFormsPlaceholderActor("model-owner"), lockedObject),
+      getFormsAuthoringAccess(getFormsPlaceholderActor("view-only-editor"), lockedObject),
       lockedObject,
     );
 
     const elementPalette = getElementPaletteItems(document, lockedAccess, "");
-    const fieldPalette = getFieldPaletteItems(document, lockedObject, lockedAccess, "");
+    const fieldPalette = getFieldPaletteItems(document, lockedAccess, "");
 
-    expect(elementPalette.every((item) => item.disabled)).toBe(true);
+    expect(elementPalette.every((item) => item.disabled)).toBe(false);
     expect(fieldPalette.every((item) => item.disabled)).toBe(true);
     expect(lockedAccess.canMoveItems).toBe(true);
-    expect(lockedAccess.canRemoveItems).toBe(false);
+    expect(lockedAccess.canRemoveItems).toBe(true);
   });
 
   it("reorders and removes nodes within the current document", () => {
-    const fieldOnlyDocument: FormBuilderDocument = {
-      currentParentId: null,
-      nodes: [
-        {
-          fieldId: "field-a",
-          helperText: "",
-          id: "field-a-node",
-          order: 0,
-          parentId: null,
-          title: "Field A",
-          type: "field",
-          visibility: "visible",
-        },
-        {
-          fieldId: "field-b",
-          helperText: "",
-          id: "field-b-node",
-          order: 1,
-          parentId: null,
-          title: "Field B",
-          type: "field",
-          visibility: "visible",
-        },
-      ],
-      selectedNodeId: "field-a-node",
-      viewDescription: "Test view",
-    };
+    const fieldOnlyDocument = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
+    const fieldANode = fieldOnlyDocument.rootScope.uiSchema.nodes[0];
+    const fieldBNode = fieldOnlyDocument.rootScope.uiSchema.nodes[1];
 
-    const movedDocument = moveFormBuilderNode(fieldOnlyDocument, "field-b-node", -1);
-    expect(movedDocument.nodes.find((node) => node.id === "field-b-node")?.order).toBe(0);
-    expect(movedDocument.nodes.find((node) => node.id === "field-a-node")?.order).toBe(1);
+    expect(fieldANode).toBeTruthy();
+    expect(fieldBNode).toBeTruthy();
 
-    const reorderedDocument = reorderFormBuilderNode(movedDocument, "field-a-node", "field-b-node");
-    expect(reorderedDocument.nodes.find((node) => node.id === "field-a-node")?.order).toBe(0);
-    expect(reorderedDocument.nodes.find((node) => node.id === "field-b-node")?.order).toBe(1);
+    const movedDocument = moveFormBuilderNode(fieldOnlyDocument, fieldBNode.id, -1);
+    expect(getRootNode(movedDocument, fieldBNode.id)?.order).toBe(0);
+    expect(getRootNode(movedDocument, fieldANode.id)?.order).toBe(1);
 
-    const removedDocument = removeFormBuilderNode(reorderedDocument, "field-a-node");
-    expect(removedDocument.nodes.map((node) => node.id)).toEqual(["field-b-node"]);
+    const reorderedDocument = reorderFormBuilderNode(movedDocument, fieldANode.id, fieldBNode.id);
+    expect(getRootNode(reorderedDocument, fieldANode.id)?.order).toBe(0);
+    expect(getRootNode(reorderedDocument, fieldBNode.id)?.order).toBe(1);
+
+    const removedDocument = removeFormBuilderNode(reorderedDocument, fieldANode.id);
+    expect(getRootNodeIds(removedDocument)).toEqual([fieldBNode.id]);
+    expect(removedDocument.rootScope.uiSchema.unplacedFieldIds).toContain(fieldANode.fieldId);
   });
 });

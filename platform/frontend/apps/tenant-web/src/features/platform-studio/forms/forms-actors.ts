@@ -100,13 +100,16 @@ export function getFormsAuthoringAccess(
   model?: FormsPlaceholderModel | null,
   view?: FormsPlaceholderView | null,
 ): FormsAuthoringAccess {
-  const isRootActor = actor.isRoot;
+  const isRootActor = actor.isRoot || actor.role === "schemaOwner";
   const isReadonlyUser = actor.role === "readonly";
   const viewLockedForActor = Boolean(view?.isViewLocked) && !isRootActor;
+  const supportsDelegatedViewEditing =
+    Boolean(model?.canEditViewsOnly) ||
+    isStaticStructureReadOnlyModel(model);
   const structureReadOnlyForActor = isStaticStructureReadOnlyModel(model)
     || (Boolean(model?.isStructureLocked) && !isRootActor);
-  const canManageStructure = !isReadonlyUser && !viewLockedForActor && !structureReadOnlyForActor;
-  const canEditViews = !isReadonlyUser && !viewLockedForActor;
+  const canManageStructure = isRootActor && !isReadonlyUser && !viewLockedForActor && !structureReadOnlyForActor;
+  const canEditViews = !isReadonlyUser && !viewLockedForActor && (isRootActor || supportsDelegatedViewEditing);
 
   let summaryKey = "tenant.platformStudio.forms.permissionSummary.manageAll";
   let summaryVariant: FormsPermissionSummaryVariant = "brand";
@@ -116,6 +119,9 @@ export function getFormsAuthoringAccess(
     summaryVariant = "neutral";
   } else if (viewLockedForActor) {
     summaryKey = "tenant.platformStudio.forms.permissionSummary.viewLocked";
+    summaryVariant = "warning";
+  } else if (!canEditViews) {
+    summaryKey = "tenant.platformStudio.forms.permissionSummary.viewAccessUnavailable";
     summaryVariant = "warning";
   } else if (structureReadOnlyForActor) {
     summaryKey = "tenant.platformStudio.forms.canEditViewsOnly";

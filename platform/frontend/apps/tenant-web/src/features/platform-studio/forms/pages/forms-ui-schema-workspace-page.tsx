@@ -242,7 +242,6 @@ export function FormsViewWorkspacePage() {
     currentScopeSortingFields,
     currentScopeUnplacedFields,
     currentScopeViewLabel,
-    currentUiSchema,
     currentViewFilterTargets,
     paletteSections,
     rootViewFilterTargets,
@@ -458,11 +457,6 @@ export function FormsViewWorkspacePage() {
     saveQuickFilterEditor,
     saveRequirementRuleEditor,
     saveVisibilityRuleEditor,
-    updateDefaultFilters,
-    updateQuickFilters,
-    updateRequirementRules,
-    updateSelectedNodeRules,
-    updateVisibilityRules,
   } = createFormBuilderRuleFilterHandlers({
     activeScope,
     closeDefaultFilterEditor,
@@ -480,10 +474,8 @@ export function FormsViewWorkspacePage() {
 
   const {
     addDefaultFilterCondition,
-    addQuickFilter,
     reorderGridColumns,
     updateCorrectiveActionEnabled,
-    updateCurrentGridColumns,
     updateCurrentScopeSubformViewSettings,
     updateCurrentViewSortDirection,
     updateCurrentViewSortField,

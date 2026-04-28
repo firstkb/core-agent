@@ -27,7 +27,6 @@ import {
   createFormRuntimeCollectionTableClient,
   type FormRuntimeRecordField,
   type FormRuntimeRecordResponse,
-  type FormRuntimeRecordSubtable,
 } from "../form-runtime-collection-table-client";
 import { formRuntimePaths } from "../form-runtime-route-meta";
 import "./form-runtime.css";

@@ -243,7 +243,6 @@ function resolveModulesListParentMeta(
 
 function resolveEmployeesListParentMeta(
   navigation: AdminNavigation,
-  _translate: TranslateFunction,
 ) {
   const employeesRoute = flattenAdminNavigationSections(navigation).find((section) =>
     normalizePath(section.path) === "/admin/users" ||
@@ -395,7 +394,7 @@ export function getAdminRouteMeta(
   }
 
   if (normalizedPath.startsWith("/admin/users/edit/") || normalizedPath.startsWith("/admin/employees/edit/")) {
-    const parentMeta = resolveEmployeesListParentMeta(navigation, translate);
+    const parentMeta = resolveEmployeesListParentMeta(navigation);
 
     return {
       badge: translate("admin.navigation.employeesEdit.badge"),

@@ -33,7 +33,6 @@ import {
   createDefaultCollectionState,
   createInitialCollectionTableMeta,
   doesSearchOperatorRequireValue,
-  getCellText,
   getCollectionTableRowLabel,
   reconcileSelectedRowIds,
   type CollectionTableRenderRow,
@@ -800,7 +799,6 @@ export function CollectionTablePage({
             },
           }));
         }}
-        onResetFilters={handleResetFilters}
         onRetry={() => {
           clearSelection();
           setMetaRefreshKey((currentValue) => currentValue + 1);

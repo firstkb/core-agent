@@ -106,7 +106,9 @@ function readAdminApiUrlFromStorage() {
     if (configValue) {
       return configValue;
     }
-  } catch {}
+  } catch {
+    // Fall through to the standard missing-config error below.
+  }
 
   throw new ApiClientError("Admin runtime config is missing adminApiUrl.", {
     code: "missing_runtime_config",

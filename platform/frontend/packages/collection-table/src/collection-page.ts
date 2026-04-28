@@ -177,7 +177,6 @@ export function createCollectionPageState<Row extends CollectionPageRow>(
   config: CollectionPageConfig<Row>,
 ): CollectionPageState {
   const presetId = config.presets?.[0]?.id ?? "all";
-  const preset = getCollectionPreset(config, presetId);
 
   return {
     density: "comfortable",

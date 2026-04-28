@@ -86,7 +86,7 @@ export function reconcileFormBuilderDocumentWithLayoutBlueprint({
     const availableFieldIdSet = new Set(availableFieldIds);
     const normalizeContainerNodes = () =>
       internals.getScopeNodes(nextDocument, scopeId).filter((node) => isBlueprintContainerType(node.type));
-    let containerNodeIdsByKey = new Map(
+    const containerNodeIdsByKey = new Map(
       normalizeContainerNodes()
         .filter((node) => typeof node.containerKey === "string" && node.containerKey.trim().length > 0)
         .map((node) => [node.containerKey as string, node.id]),

@@ -694,23 +694,6 @@ function isFieldKind(value: unknown): value is FormsPlaceholderFieldKind {
   );
 }
 
-function isFieldPreset(value: unknown): value is FormsPlaceholderFieldPreset {
-  return (
-    value === "checkbox_group" ||
-    value === "db_lookup_value" ||
-    value === "company_lookup" ||
-    value === "contact_lookup" ||
-    value === "date_today" ||
-    value === "email" ||
-    value === "phone" ||
-    value === "project_lookup" ||
-    value === "radio_group" ||
-    value === "suggest_text" ||
-    value === "tags" ||
-    value === "url"
-  );
-}
-
 function isChoiceRenderStyle(value: unknown): value is FormsPlaceholderChoiceRenderStyle {
   return value === "buttons" || value === "native";
 }

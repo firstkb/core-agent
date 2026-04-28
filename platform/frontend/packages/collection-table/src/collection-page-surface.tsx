@@ -40,7 +40,6 @@ type CollectionPageSurfaceProps<Row extends CollectionPageRow> = {
   loading?: boolean;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onResetFilters: () => void;
   onRetry?: () => void;
   onSortChange: (columnId: string) => void;
   rows: ReadonlyArray<Row>;
@@ -58,7 +57,6 @@ export function CollectionPageSurface<Row extends CollectionPageRow>({
   loading = false,
   onPageChange,
   onPageSizeChange,
-  onResetFilters,
   onRetry,
   onSortChange,
   rows,

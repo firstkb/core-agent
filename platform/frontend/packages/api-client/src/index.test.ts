@@ -93,7 +93,7 @@ describe("api-client admin employees", () => {
   });
 
   it("updates employee detail through the admin employees endpoint", async () => {
-    const fetchMock = vi.fn(async (_input: string, init?: RequestInit) =>
+    const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({
         data: {
           user: {

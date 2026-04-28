@@ -12,6 +12,7 @@ import {
 } from "../components/lookup-filter-editor-helpers";
 import {
   type FormBuilderFilterCondition,
+  type FormBuilderFilterToken,
   type FormBuilderLookupFilterClause,
   type FormBuilderQuickFilter,
   type FormBuilderScalarFilterCondition,
@@ -21,15 +22,7 @@ import { getFieldById } from "./form-builder-workspace-field-scope-grid";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
-const filterTokenOptions = [
-  "currentUser.companyId",
-  "currentUser.companyName",
-  "currentUser.divisionId",
-  "currentUser.divisionName",
-  "currentUser.projectAccessIds",
-] as const;
-
-function getFilterTokenKey(token: typeof filterTokenOptions[number]) {
+function getFilterTokenKey(token: FormBuilderFilterToken) {
   return `tenant.platformStudio.forms.builder.filter.token.${token}`;
 }
 

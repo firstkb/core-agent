@@ -29,7 +29,6 @@ import {
 import { createFormBuilderFlatWorkspaceHelpers } from "./state/form-builder-flat-workspace";
 import { createFormBuilderReconciliationHelpers } from "./state/form-builder-reconciliation";
 import {
-  createDefaultNodeRules,
   normalizeNodeRules,
 } from "./state/form-builder-rule-normalization";
 import {
@@ -51,28 +50,8 @@ import {
   normalizeViewSettings,
 } from "./state/form-builder-view-normalization";
 import {
-  getElementPaletteItems,
-  getFieldPaletteItems,
-  getFormBuilderDisplayLabel,
-  getFormBuilderNodeSummary,
-  getFormsWorkspaceAccess,
   isFormBuilderContainer,
 } from "./state/form-builder-palette-selectors";
-import {
-  getActiveFormBuilderScope,
-  getBoundFieldIds,
-  getCurrentFormBuilderChildren,
-  getCurrentFormBuilderInsertParentId,
-  getCurrentFormBuilderParentId,
-  getCurrentFormBuilderScopeSubformNode,
-  getCurrentFormBuilderSelectedNodeId,
-  getFormBuilderBreadcrumb,
-  getFormBuilderChildren,
-  getFormBuilderNode,
-  getFormBuilderNodeScopeId,
-  getFormBuilderScopeFieldIds,
-  getFormBuilderScopeUnplacedFieldIds,
-} from "./state/form-builder-selectors";
 
 export {
   getElementPaletteItems,

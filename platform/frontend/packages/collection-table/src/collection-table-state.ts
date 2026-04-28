@@ -276,7 +276,9 @@ export function writePersistedCollectionTableState(
         },
       } satisfies PersistedCollectionTableState),
     );
-  } catch {}
+  } catch {
+    // Ignore unavailable or full sessionStorage.
+  }
 }
 
 export function clearPersistedCollectionTableState(storageKey: string) {
@@ -286,7 +288,9 @@ export function clearPersistedCollectionTableState(storageKey: string) {
 
   try {
     window.sessionStorage.removeItem(storageKey);
-  } catch {}
+  } catch {
+    // Ignore unavailable sessionStorage.
+  }
 }
 
 export function readPersistedCollectionTableSuggestions(
@@ -363,5 +367,7 @@ export function writePersistedCollectionTableSuggestions(
           : groups,
       ),
     );
-  } catch {}
+  } catch {
+    // Ignore unavailable or full sessionStorage.
+  }
 }

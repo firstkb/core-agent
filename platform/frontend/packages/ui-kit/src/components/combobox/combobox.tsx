@@ -171,6 +171,12 @@ export function Combobox({
     value: _value,
     ...domProps
   } = props;
+  void _defaultValue;
+  void _onSearchValueChange;
+  void _onValueChange;
+  void _selectionMode;
+  void _value;
+
   const generatedId = useId().replace(/:/g, "");
   const baseId = id ?? `ui-combobox-${generatedId}`;
   const listId = `${baseId}-listbox`;

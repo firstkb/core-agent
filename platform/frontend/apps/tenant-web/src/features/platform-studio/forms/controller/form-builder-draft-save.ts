@@ -17,7 +17,6 @@ import {
   syncFieldNodeTitlesWithModel,
 } from "./form-builder-workspace-normalization-helpers";
 import {
-  deriveModelSchemaScopes,
   getDocumentFieldSchemaScopeKey,
   isRecord,
   replaceModelViewById,

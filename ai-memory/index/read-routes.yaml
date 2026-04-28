@@ -1,5 +1,6 @@
 # Task-to-memory read routing.
-# Use this after memory-index.yaml to choose the smallest useful read set.
+# Use this after ai-memory/START_HERE.md to choose the smallest useful read set.
+# Open memory-index.yaml only when broader routing is needed.
 
 default:
   read:

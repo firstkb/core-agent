@@ -26,8 +26,9 @@ deleted; use compact import records and git history for provenance.
 
 ## Read Rule
 
-For task routing, read `ai-memory/index/memory-index.yaml` and
+For task routing, read `ai-memory/START_HERE.md`, then
 `ai-memory/index/read-routes.yaml` before opening product docs.
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Do not open or recreate the former `platform/docs/ai/**` path. Use
 `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git

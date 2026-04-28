@@ -128,6 +128,7 @@ READ_ORDER_SURFACES = [
     "platform/backend/AGENTS.md",
     ".agents/skills/atlas/SKILL.md",
     ".agents/skills/scribe/SKILL.md",
+    "ai-memory/atlas/README.md",
     "ai-memory/README.md",
     "ai-memory/START_HERE.md",
     "ai-memory/agent-workflow.md",
@@ -400,6 +401,30 @@ def check_docs_migration_plan_status(root: Path, errors: list[str]) -> None:
         add_error(errors, path.relative_to(root), "migration plan must point to the current readiness score owner")
     if re.search(r"overall readiness is \d+/?100", text, flags=re.IGNORECASE):
         add_error(errors, path.relative_to(root), "migration plan must not claim a current readiness score")
+    if "96/100 readiness score" in text:
+        add_error(errors, path.relative_to(root), "historical score must not be phrased as an active readiness score")
+
+
+def check_semantic_drift_pointers(root: Path, errors: list[str]) -> None:
+    read_routes = root / "ai-memory/index/read-routes.yaml"
+    if read_routes.exists():
+        text = read_text(read_routes)
+        if "# Use this after memory-index.yaml" in text:
+            add_error(errors, read_routes.relative_to(root), "read-routes header must follow START_HERE-first read order")
+
+    atlas_readme = root / "ai-memory/atlas/README.md"
+    if atlas_readme.exists():
+        text = read_text(atlas_readme)
+        if "read `ai-memory/index/memory-index.yaml` and" in text:
+            add_error(errors, atlas_readme.relative_to(root), "Atlas read rule must not put memory-index before START_HERE")
+
+    automation_versions = root / "scripts/ai/automation_versions.py"
+    if automation_versions.exists() and ".agents/skills/ramp-conductor/SKILL.md" in read_text(automation_versions):
+        add_error(errors, automation_versions.relative_to(root), "automation fallback must use .agents/skills/atlas/SKILL.md")
+
+    archive_readme = root / "platform/docs/archive/agent-prompts/README.md"
+    if archive_readme.exists() and "platform/docs/ai/*" in read_text(archive_readme):
+        add_error(errors, archive_readme.relative_to(root), "archive README must not point canonical memory to retired platform/docs/ai")
 
 
 def check_agents_name_status(root: Path, errors: list[str]) -> None:
@@ -560,6 +585,7 @@ def run_check() -> int:
     check_platform_readme(root, errors)
     check_product_identity(root, tracked, errors)
     check_docs_migration_plan_status(root, errors)
+    check_semantic_drift_pointers(root, errors)
     check_agents_name_status(root, errors)
     check_reference_code_retirement(root, errors)
     check_pointer_markers(root, errors)

@@ -47,7 +47,7 @@ def collect_targets(root: Path, manifest: dict) -> list[dict]:
     targets.append(
         {
             "kind": "skill",
-            "path": root / skill.get("file", ".agents/skills/ramp-conductor/SKILL.md"),
+            "path": root / skill.get("file", ".agents/skills/atlas/SKILL.md"),
             "expected": skill["version"],
             "pattern": PATTERNS["skill"],
         }

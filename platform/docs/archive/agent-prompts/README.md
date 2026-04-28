@@ -7,8 +7,10 @@ They are **not** part of the canonical project memory system.
 
 Canonical memory now lives in:
 
+- `AGENTS.md`
 - `platform/AGENTS.md`
-- `platform/docs/ai/*`
+- `ai-memory/START_HERE.md`
+- `ai-memory/**`
 
 Archived prompt set currently stored here:
 

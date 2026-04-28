@@ -1,6 +1,6 @@
 ---
 prompt_id: frontend-lane
-prompt_version: 1.3.0
+prompt_version: 1.3.1
 status: active
 owner: vsm-v1.0.0
 scope: frontend implementation lane
@@ -85,6 +85,13 @@ Do not run `pnpm exec` or filtered frontend commands from the repository root.
 5. Implement the smallest safe diff.
 6. Run or list the minimum relevant checks.
 7. Return a lane report.
+
+For non-trivial visible UI work, honor the UI Task Packet from Atlas or create
+a compact inline packet using `ai-memory/atlas/templates/ui-task-packet.md`
+before implementation. Tiny copy/CSS fixes may skip the packet when no new
+state coverage is needed. Include Storybook, product-state Browser Use, or
+screenshot evidence when practical; if visual verification is blocked, state
+why in the lane report.
 
 ## Output contract
 

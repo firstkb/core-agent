@@ -52,6 +52,8 @@ the task spans multiple modules.
 
 ## Local Visual Smoke
 
+- For non-trivial visible UI work, use `ai-memory/atlas/templates/ui-task-packet.md` before implementation unless the change is a tiny copy/CSS fix.
+- UI workflow: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
 - Use Storybook for `ui-kit` primitive/state review and `CollectionTable` package-state review.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is already running or the owner asks for it.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).

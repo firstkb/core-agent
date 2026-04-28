@@ -6,6 +6,13 @@ This changelog starts at the `ai-memory/atlas` cutover.
 Earlier Atlas automation history is recoverable from git history for the former
 `platform/docs/ai/automation-changelog.md` path.
 
+## 2026-04-28 - v1.6.2
+
+- Added `ai-memory/atlas/templates/ui-task-packet.md` for non-trivial visible UI work.
+- Updated Atlas and frontend lane rules to follow: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
+- Tiny copy/CSS fixes may skip the packet when no new state coverage is needed.
+- Bumped Atlas skill/control prompt to `1.6.2` and frontend prompts to `1.3.1`.
+
 ## 2026-04-28 - v1.6.1
 
 - Tightened active run closure semantics: completed, closeout-ready, or ready-for-review runs move from `ai-memory/runs/active/` to `ai-memory/runs/archive/`.

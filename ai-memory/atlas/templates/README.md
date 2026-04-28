@@ -17,6 +17,7 @@ Use them only when the current workflow step needs a structured artifact.
 - `control-task.md` — Atlas-owned task contract and lane packet scaffold for run-backed work
 - `lane-report.md` — FE/BE lane file scaffold that combines launch prompt, packet snapshot, and lane return report
 - `agent-evidence.md` — compact final response or PR evidence block for non-trivial agent tasks
+- `ui-task-packet.md` — compact UI task contract for non-trivial visible UI work before implementation
 
 ## Use rule
 
@@ -28,6 +29,7 @@ They are opened on demand during transitions:
 - handoff
 - coordinated control run
 - lane closeout
+- non-trivial visible UI work
 - non-trivial final closeout or PR summary
 
 Direct no-run local tasks usually do not need `control-task.md` or `lane-report.md`.
@@ -35,6 +37,8 @@ Direct no-run means current-chat execution by default.
 If a separate FE/BE chat is needed, create a run unless the owner explicitly asks
 for `MANUAL_HANDOFF_NO_RUN`.
 Tiny tasks may use a reduced `agent-evidence.md` block instead of the full form.
+Tiny copy/CSS UI fixes may skip `ui-task-packet.md` when no new state coverage
+is needed.
 
 
 ## Version note

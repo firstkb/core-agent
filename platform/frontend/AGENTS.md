@@ -107,6 +107,8 @@ Require extra care before finalizing changes that affect:
 
 ## Visual review loop
 
+- For non-trivial visible UI work, use `ai-memory/atlas/templates/ui-task-packet.md` before implementation unless Atlas explicitly marks the change as a tiny copy/CSS fix.
+- The intended loop is: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
 - Use Storybook for stable `ui-kit` primitives, `CollectionTable` package states, and low-risk shared pattern review.
 - Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
@@ -115,6 +117,7 @@ Require extra care before finalizing changes that affect:
 - Local Browser Use auth, when needed, must come from ignored `ai-memory/local/browser-use-auth.md`.
 - Do not copy local auth codes into tracked docs, run artifacts, or evidence blocks.
 - In evidence, write `Auth: local seeded dev login.` rather than the credentials.
+- If Storybook coverage does not exist for the target surface, use product state verification and record Storybook as follow-up instead of blocking the UI task.
 
 ## File size guardrails
 

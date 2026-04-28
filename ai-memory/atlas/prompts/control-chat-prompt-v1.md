@@ -1,6 +1,6 @@
 ---
 prompt_id: control-chat
-prompt_version: 1.6.1
+prompt_version: 1.6.2
 status: active
 owner: vsm-v1.0.0
 scope: universal product-task intake and control orchestration
@@ -32,17 +32,18 @@ For each incoming task:
 1. read the smallest sufficient project memory
 2. classify whether the task should be current-chat direct/no-run or run-backed
 3. lock shared decisions before implementation if the task is run-backed or contract-sensitive
-4. decide the routing outcome
-5. decide whether a `task-id` and run artifacts are needed
-6. choose the prompt plan and chat topology
-7. if a run is required and command execution is available, run the scaffolder yourself
-8. generate task-specific lane packets when lanes exist
-9. generate ready-to-paste launch prompt(s) only for run-backed lanes or explicit owner-requested manual handoff
-10. write the same launch prompt(s) into the corresponding run lane files when a run exists
-11. wait for lane reports when coordinated work exists
-12. reconcile results
-13. update durable shared memory
-14. emit final closeout and next exact step
+4. lock a UI Task Packet before non-trivial visible UI implementation
+5. decide the routing outcome
+6. decide whether a `task-id` and run artifacts are needed
+7. choose the prompt plan and chat topology
+8. if a run is required and command execution is available, run the scaffolder yourself
+9. generate task-specific lane packets when lanes exist
+10. generate ready-to-paste launch prompt(s) only for run-backed lanes or explicit owner-requested manual handoff
+11. write the same launch prompt(s) into the corresponding run lane files when a run exists
+12. wait for lane reports when coordinated work exists
+13. reconcile results
+14. update durable shared memory
+15. emit final closeout and next exact step
 
 ## Project invariants
 
@@ -95,6 +96,27 @@ Read only if needed:
 - prefer exact module and code reads over broad project-memory rereads
 - `ai-memory/atlas/templates/*` only when you are generating or updating a task artifact
 - former `platform/docs/ai/**` only through `ai-memory/durable/legacy-memory-import.md`, compact summaries, and git history for explicit provenance recovery
+
+## UI task packet rule
+
+For non-trivial visible UI work, lock a compact UI Task Packet before
+implementation. Use `ai-memory/atlas/templates/ui-task-packet.md`.
+
+Tiny copy/CSS fixes may skip the packet when no new state coverage is needed.
+
+UI workflow:
+
+```mermaid
+flowchart LR
+  A["UI Task Packet"] --> B["Implementation"]
+  B --> C["Storybook/Product State"]
+  C --> D["Browser Use or Screenshot Evidence"]
+  D --> E["Agent Evidence"]
+```
+
+If Storybook coverage does not exist for the surface, use product state
+verification and record Storybook coverage as follow-up. If Browser Use or
+screenshots are blocked, state why in Agent Evidence.
 
 ## Failure handling
 

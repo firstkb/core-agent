@@ -1,6 +1,6 @@
 ---
 prompt_id: frontend-lane-compact
-prompt_version: 1.3.0
+prompt_version: 1.3.1
 status: active
 owner: vsm-v1.0.0
 scope: frontend implementation lane (compact)
@@ -34,6 +34,8 @@ Rules:
 - if no run exists, return the same summary compactly in chat for Atlas or the user
 - run frontend `pnpm` commands from `platform/frontend`
 - do not run `pnpm exec` or filtered frontend commands from the repository root
+- for non-trivial visible UI work, use or create a compact UI Task Packet from `ai-memory/atlas/templates/ui-task-packet.md`; tiny copy/CSS fixes may skip it
+- include Storybook, product-state Browser Use, or screenshot evidence when practical; if blocked, say why
 
 Collection Table rule:
 - treat `collection-table` as a separate runtime/UI domain

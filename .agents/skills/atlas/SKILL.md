@@ -4,7 +4,7 @@ description: Use this skill as the default intake and routing layer for VSM v1.0
 ---
 
 # Atlas Skill
-Skill version: 1.6.1
+Skill version: 1.6.2
 Human display name: Atlas
 
 Purpose:
@@ -76,6 +76,42 @@ For frontend UI changes, prefer the lightest useful visual loop:
 Local Browser Use credentials, when owner-provided, live only in ignored `ai-memory/local/browser-use-auth.md`.
 Do not write local auth codes into tracked docs, run artifacts, or evidence blocks.
 Use `Auth: local seeded dev login.` in evidence instead.
+
+## UI task packet rule
+
+For non-trivial visible UI work, Atlas must lock a compact UI Task Packet
+before implementation. Use `ai-memory/atlas/templates/ui-task-packet.md`.
+
+Tiny UI fixes may skip the packet when the work is limited to copy, one small
+spacing tweak, or a single obvious CSS bug and no new state coverage is needed.
+
+Atlas may inline the packet in chat or embed it in the run/lane file. Do not
+create a standalone persistent packet file unless the owner asks.
+
+The packet should define:
+- target surface
+- persona
+- current pain
+- target behavior
+- required states
+- visual acceptance
+- screenshot, Browser Use, or Storybook evidence expectation
+- explicit `Do not change` boundaries
+
+UI workflow:
+
+```mermaid
+flowchart LR
+  A["UI Task Packet"] --> B["Implementation"]
+  B --> C["Storybook/Product State"]
+  C --> D["Browser Use or Screenshot Evidence"]
+  D --> E["Agent Evidence"]
+```
+
+If Storybook coverage does not exist yet, use a product state through Browser
+Use and record that Storybook coverage is a follow-up. If Browser Use is
+unavailable or blocked, state the reason in Agent Evidence rather than
+pretending visual verification happened.
 
 ## Failure handling
 
@@ -254,9 +290,11 @@ Use these repository files as stable operational contracts:
 - `ai-memory/atlas/templates/control-task.md`
 - `ai-memory/atlas/templates/lane-report.md`
 - `ai-memory/atlas/templates/agent-evidence.md`
+- `ai-memory/atlas/templates/ui-task-packet.md`
 
 `task.md` must conform to `ai-memory/atlas/templates/control-task.md`.
 Lane files and lane return sections must conform to `ai-memory/atlas/templates/lane-report.md`.
+Non-trivial visible UI work should use `ai-memory/atlas/templates/ui-task-packet.md`.
 Generate task-specific packets and launch prompts on top of these contracts, not entirely new base prompts.
 
 ## Agent evidence rule

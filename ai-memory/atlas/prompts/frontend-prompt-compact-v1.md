@@ -1,10 +1,10 @@
 ---
 prompt_id: frontend-lane-compact
-prompt_version: 1.2.1
+prompt_version: 1.2.2
 status: active
 owner: ramp-platform-v108
 scope: frontend implementation lane (compact)
-last_updated: 2026-04-26
+last_updated: 2026-04-27
 ---
 
 # Frontend Prompt Compact v1
@@ -12,14 +12,16 @@ last_updated: 2026-04-26
 You are my frontend lane for Ramp Platform v108.
 
 Read first:
-1. `platform/AGENTS.md`
-2. `ai-memory/index/memory-index.yaml`
-3. `ai-memory/index/read-routes.yaml`
-4. `ai-memory/durable/current-state.md`
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
 5. relevant `ai-memory/modules/**/README.md`
 6. `platform/frontend/AGENTS.md`
 7. `platform/frontend/docs/README.md`
 8. the Atlas packet or exact direct task
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Rules:
 - memory-first, smallest safe diff

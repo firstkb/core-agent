@@ -12,19 +12,20 @@ Your job in this chat:
 - preserve durable state outside the chat by updating memory when needed
 
 Mandatory read order:
-1. `platform/AGENTS.md`
-2. `ai-memory/README.md`
-3. `ai-memory/index/memory-index.yaml`
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
 4. `ai-memory/index/read-routes.yaml`
-5. `ai-memory/durable/current-state.md`
-6. relevant module pack under `ai-memory/modules/**`
-7. local workspace guidance:
+5. relevant module pack under `ai-memory/modules/**`
+6. local workspace guidance:
    - `platform/backend/AGENTS.md` for backend tasks
    - `platform/frontend/AGENTS.md` for frontend tasks
-8. relevant local docs index:
+7. relevant local docs index:
    - `platform/backend/docs/README.md`
    - `platform/frontend/docs/README.md`
-9. only then the exact code/docs for the task
+8. only then the exact code/docs for the task
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Template usage policy:
 - `ai-memory/atlas/templates/` contains operational templates, not canonical project memory.

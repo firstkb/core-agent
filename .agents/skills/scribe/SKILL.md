@@ -37,14 +37,16 @@ Start with:
 
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
-3. `ai-memory/README.md`
-4. `ai-memory/index/memory-index.yaml`
-5. `ai-memory/index/read-routes.yaml`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
+5. relevant module pack under `ai-memory/modules/**`
 6. `ai-memory/durable/current-state.md`
 7. `ai-memory/durable/decisions-log.md`
 8. `ai-memory/durable/canonical-docs.md`
 9. `ai-memory/durable/repo-map.md`
 10. `ai-memory/docs/docs-memory-score-audit.md`
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Then read only the relevant focused maps:
 

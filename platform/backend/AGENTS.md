@@ -5,11 +5,12 @@ Scope: `platform/backend` only.
 Read first:
 
 1. `platform/AGENTS.md`
-2. `ai-memory/index/memory-index.yaml`
+2. `ai-memory/START_HERE.md`
 3. `ai-memory/index/read-routes.yaml`
-4. `ai-memory/durable/current-state.md`
-5. relevant module pack under `ai-memory/modules/**`
-6. `platform/backend/docs/README.md`
+4. relevant module pack under `ai-memory/modules/**`
+5. `platform/backend/docs/README.md`
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 ## Lane orchestration rule
 

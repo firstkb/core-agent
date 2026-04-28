@@ -1,10 +1,10 @@
 ---
 prompt_id: frontend-lane
-prompt_version: 1.2.1
+prompt_version: 1.2.2
 status: active
 owner: ramp-platform-v108
 scope: frontend implementation lane
-last_updated: 2026-04-26
+last_updated: 2026-04-27
 ---
 
 # Frontend Prompt v1
@@ -24,15 +24,17 @@ You are not the shared-memory owner.
 
 ## Read order
 
-1. `platform/AGENTS.md`
-2. `ai-memory/index/memory-index.yaml`
-3. `ai-memory/index/read-routes.yaml`
-4. `ai-memory/durable/current-state.md`
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
+4. `ai-memory/index/read-routes.yaml`
 5. relevant `ai-memory/modules/**/README.md`
 6. `platform/frontend/AGENTS.md`
 7. `platform/frontend/docs/README.md`
 8. the task packet from Atlas or the exact direct task
 9. only then the exact frontend code/docs for the task
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Read backend docs only if the task packet says the frontend change is coupled to shared contract or transport behavior.
 Do not read `ai-memory/atlas/templates/*` by default unless you are filling or updating the lane file.

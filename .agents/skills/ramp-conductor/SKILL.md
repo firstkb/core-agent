@@ -4,7 +4,7 @@ description: Use this skill as the default intake and routing layer for Ramp Pla
 ---
 
 # Ramp Conductor Skill
-Skill version: 1.5.2
+Skill version: 1.5.3
 Human display name: Atlas
 
 Purpose:
@@ -49,13 +49,14 @@ Atlas should still accept messier briefs. If route-critical information is missi
 ## Minimal shared reads
 
 Read only the minimal shared memory first:
-1. `platform/AGENTS.md`
-2. `ai-memory/README.md`
-3. `ai-memory/index/memory-index.yaml`
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
 4. `ai-memory/index/read-routes.yaml`
-5. `ai-memory/durable/current-state.md`
-6. `ai-memory/durable/module-index.md`
-7. relevant module pack under `ai-memory/modules/**`
+5. relevant module pack under `ai-memory/modules/**`
+6. relevant canonical FE/BE docs only when needed
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Read `ai-memory/durable/canonical-docs.md` when document authority matters.
 Read `ai-memory/atlas/automation-manifest.json` when prompt/skill/template/script versions are needed.

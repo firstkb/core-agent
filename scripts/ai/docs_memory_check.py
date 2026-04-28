@@ -71,6 +71,23 @@ IGNORED_FALLBACK_DIRS = {
 
 ENV_ROOT = "platform/backend/env/"
 
+READ_ORDER_SURFACES = [
+    "platform/AGENTS.md",
+    "platform/frontend/AGENTS.md",
+    "platform/backend/AGENTS.md",
+    ".agents/skills/ramp-conductor/SKILL.md",
+    ".agents/skills/scribe/SKILL.md",
+    "ai-memory/README.md",
+    "ai-memory/START_HERE.md",
+    "ai-memory/agent-workflow.md",
+    "ai-memory/atlas/prompts/control-chat-prompt-v1.md",
+    "ai-memory/atlas/prompts/frontend-prompt-v1.md",
+    "ai-memory/atlas/prompts/frontend-prompt-compact-v1.md",
+    "ai-memory/atlas/prompts/backend-prompt-v1.md",
+    "ai-memory/atlas/prompts/backend-prompt-compact-v1.md",
+    "ai-memory/atlas/templates/chat-start.md",
+]
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -383,6 +400,33 @@ def check_preflight_policy(root: Path, errors: list[str]) -> None:
                 add_error(errors, workflow.relative_to(root), "preflight must stay manual/local until owner promotes it to a CI gate")
 
 
+def check_read_order_policy(root: Path, errors: list[str]) -> None:
+    for rel in READ_ORDER_SURFACES:
+        path = root / rel
+        if not path.exists():
+            add_error(errors, rel, "read-order surface is missing")
+            continue
+
+        text = read_text(path)
+        start_index = text.find("ai-memory/START_HERE.md")
+        routes_index = text.find("ai-memory/index/read-routes.yaml")
+        memory_index = text.find("ai-memory/index/memory-index.yaml")
+
+        if start_index == -1:
+            add_error(errors, path.relative_to(root), "default read order must include ai-memory/START_HERE.md")
+            continue
+        if routes_index == -1:
+            add_error(errors, path.relative_to(root), "default read order must include ai-memory/index/read-routes.yaml")
+        elif start_index > routes_index:
+            add_error(errors, path.relative_to(root), "START_HERE must appear before read-routes in default read order")
+
+        if memory_index != -1:
+            if memory_index < start_index:
+                add_error(errors, path.relative_to(root), "memory-index.yaml must not appear before START_HERE in active read-order surfaces")
+            if "broader routing" not in text and "broader route map" not in text:
+                add_error(errors, path.relative_to(root), "memory-index.yaml must be described as broader routing, not default first-read")
+
+
 def run_check() -> int:
     root = repo_root()
     tracked = git_ls_files(root)
@@ -399,6 +443,7 @@ def run_check() -> int:
     check_gitignore(root, errors)
     check_env_policy(tracked, errors)
     check_preflight_policy(root, errors)
+    check_read_order_policy(root, errors)
     check_markdown_links(root, tracked_existing_markdown(root, tracked), errors)
 
     if errors:

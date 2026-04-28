@@ -1,36 +1,36 @@
 {
-  "bundle_version": "1.5.2",
+  "bundle_version": "1.5.3",
   "skill": {
     "name": "ramp-conductor",
     "display_name": "Atlas",
-    "version": "1.5.2",
+    "version": "1.5.3",
     "invocation": "$ramp-conductor",
     "file": ".agents/skills/ramp-conductor/SKILL.md"
   },
   "prompts": {
     "control": {
       "family": "v1",
-      "version": "1.5.2",
+      "version": "1.5.3",
       "file": "ai-memory/atlas/prompts/control-chat-prompt-v1.md"
     },
     "frontend": {
       "family": "v1",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "file": "ai-memory/atlas/prompts/frontend-prompt-v1.md"
     },
     "frontend_compact": {
       "family": "v1",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "file": "ai-memory/atlas/prompts/frontend-prompt-compact-v1.md"
     },
     "backend": {
       "family": "v1",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "file": "ai-memory/atlas/prompts/backend-prompt-v1.md"
     },
     "backend_compact": {
       "family": "v1",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "file": "ai-memory/atlas/prompts/backend-prompt-compact-v1.md"
     }
   },

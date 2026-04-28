@@ -982,3 +982,19 @@ Do not turn it into a task journal.
   - `.github/workflows/backend-ci.yml`
   - `.github/workflows/frontend-ci.yml`
   - `scripts/ai/preflight.sh`
+
+### DEC-083 Active Agent Read Order Starts With START_HERE
+
+- Date: 2026-04-27
+- Status: active
+- State: landed
+- Decision: Active agent instructions, Atlas prompts, and chat-start templates use the same default read order: `AGENTS.md`, `platform/AGENTS.md`, `ai-memory/START_HERE.md`, `ai-memory/index/read-routes.yaml`, relevant `ai-memory/modules/**` pack, then relevant canonical FE/BE docs and exact code/docs. `ai-memory/index/memory-index.yaml` is broader routing only and must not appear before `START_HERE` in active read-order surfaces. `scripts/ai/docs_memory_check.py --check` enforces this deterministic read-order policy.
+- Sources:
+  - `platform/AGENTS.md`
+  - `platform/frontend/AGENTS.md`
+  - `platform/backend/AGENTS.md`
+  - `.agents/skills/ramp-conductor/SKILL.md`
+  - `.agents/skills/scribe/SKILL.md`
+  - `ai-memory/atlas/prompts/*.md`
+  - `ai-memory/atlas/templates/chat-start.md`
+  - `scripts/ai/docs_memory_check.py`

@@ -1,10 +1,10 @@
 ---
 prompt_id: control-chat
-prompt_version: 1.5.2
+prompt_version: 1.5.3
 status: active
 owner: ramp-platform-v108
 scope: universal product-task intake and control orchestration
-last_updated: 2026-04-26
+last_updated: 2026-04-27
 skill_name: ramp-conductor
 skill_display_name: Atlas
 ---
@@ -74,13 +74,14 @@ Atlas should still accept less structured requests. If route-critical informatio
 ## Read order
 
 Always read first:
-1. `platform/AGENTS.md`
-2. `ai-memory/README.md`
-3. `ai-memory/index/memory-index.yaml`
+1. `AGENTS.md`
+2. `platform/AGENTS.md`
+3. `ai-memory/START_HERE.md`
 4. `ai-memory/index/read-routes.yaml`
-5. `ai-memory/durable/current-state.md`
-6. `ai-memory/durable/module-index.md`
-7. relevant module pack under `ai-memory/modules/**`
+5. relevant module pack under `ai-memory/modules/**`
+6. relevant canonical FE/BE docs only when needed
+
+Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 
 Read only if needed:
 - `ai-memory/durable/decisions-log.md`

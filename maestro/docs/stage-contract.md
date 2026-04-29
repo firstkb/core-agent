@@ -29,9 +29,9 @@ improve correctness, evidence, approval safety, or handoff quality.
 
 | Stage | Purpose | Typical Agent | Required By Default |
 |---|---|---|---|
-| `planning` | Shape scope, route, task packets, and decomposition | Maestro | Tier 3+ |
+| `planning` | Shape scope, route, task packets, and decomposition | Maestro | Tier 3, Tier 4A, or Tier 4B |
 | `research` | Find code path, facts, dependencies, risks | Charlie | When unknowns matter |
-| `brief_audit` | Audit brief, decomposition, gates, and acceptance | Grant | Tier 4 / high-risk |
+| `brief_audit` | Audit brief, decomposition, gates, and acceptance | Grant | Tier 4A or Tier 4B |
 | `implementation` | Apply scoped changes | Mason | Any code/docs change |
 | `verification` | Run checks and gather proof | Scout or Mason | When evidence matters |
 | `review` | Independent read-only review of diff/evidence | Lens | Risky or non-trivial work |

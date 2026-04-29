@@ -31,7 +31,7 @@ context is valuable, reconciles outputs, and owns closeout.
 
 Detailed routing rules live in `routing-tier-contract.md`.
 
-### Tier 0: Direct
+### Tier 0: Direct Inline
 
 Use for tiny low-risk changes.
 
@@ -59,7 +59,7 @@ State:
 - artifact shape: none by default, or lightweight `task.md + closeout.md` when
   the owner wants a durable record.
 
-### Tier 1: Task
+### Tier 1: Lightweight Task
 
 Use for bounded implementation with useful status, evidence, or review.
 
@@ -81,16 +81,17 @@ State:
 - artifact shape: `task.md + closeout.md` for simple tasks, expanded to
   `stages/<stage>/attempt-*` only when handoff, verification, or review needs it.
 
-### Tier 2: Feature
+### Tier 2: Staged Task
 
-Use for product capability work with multiple stages or meaningful acceptance.
+Use for one task that needs explicit stages, meaningful verification, browser
+evidence, review, or handoff.
 
 Expected path:
 
 ```text
 Maestro
   -> Charlie when research is useful
-  -> task/feature plan
+  -> task packet
   -> Mason
   -> Scout
   -> Lens
@@ -100,15 +101,38 @@ Maestro
 
 State:
 
+- task and stages are first-class;
+- stage attempts and evidence are recorded when they improve the handoff.
+- artifact shape: staged task under `stages/<stage>/attempt-*`.
+
+### Tier 3: Feature Work
+
+Use for one owner goal that needs decomposition into one or more feature slices
+or coordinated tasks.
+
+Expected path:
+
+```text
+Maestro
+  -> Charlie
+  -> feature/task decomposition
+  -> Grant when plan audit is useful
+  -> owner approval when scope/risk requires it
+  -> staged execution
+```
+
+State:
+
 - feature and tasks are first-class;
-- evidence and approvals are recorded.
-- artifact shape: `brief.md + features/<feature>/tasks/<task>` only when feature
-  decomposition is useful; otherwise stay at the staged-task shape.
+- work brief is required when decomposition or approval needs a durable anchor;
+- feature order and dependencies are explicit;
+- execution begins only after required approvals are satisfied.
+- artifact shape: feature-work, expanded only when needed.
 
-### Tier 3: Module-Sized Work
+### Tier 4A: Module-Sized Work
 
-Use for large initiatives that require decomposition, owner approval, or a
-multi-feature plan.
+Use for large initiatives that require an owner-approved brief, multi-feature
+plan, dependency ordering, or staged rollout.
 
 Expected path:
 
@@ -130,7 +154,7 @@ State:
 - artifact shape: feature-work or full shape depending on approval, evidence,
   and snapshot needs.
 
-### Tier 4: High Risk
+### Tier 4B: High Risk
 
 Use for auth, tenancy, permissions, migrations, secrets, release, deployment, or
 other irreversible or security-sensitive work.

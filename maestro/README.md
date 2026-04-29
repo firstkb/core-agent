@@ -40,6 +40,7 @@ formal Maestro chain.
 
 ```text
 maestro/
+  AGENTS.md
   README.md
   docs/
     README.md

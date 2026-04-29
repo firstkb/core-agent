@@ -51,7 +51,7 @@ no persisted artifact tree
 
 Allowed only when closeout evidence can stay in the final response.
 
-### Tier 1: Direct With Lightweight Record
+### Tier 1: Lightweight Task
 
 Use for small work that benefits from a portable record but does not need stage
 attempts.
@@ -104,10 +104,9 @@ maestro/artifacts/workspace/work/<work_id>/
   closeout.md
 ```
 
-### Tier 4: Full Or High-Risk Work
+### Tier 4A: Module-Sized Work
 
-Use when work is module-sized, high-risk, approval-heavy, release-related, or
-needs portable snapshots.
+Use when work is module-sized, approval-heavy, or needs portable snapshots.
 
 Expanded artifact shape:
 
@@ -139,6 +138,20 @@ maestro/artifacts/workspace/
 
 Snapshots are optional exports from API/DB. They are not required for normal
 small work.
+
+### Tier 4B: High-Risk Work
+
+Use when work touches auth, tenancy, permissions, migrations, secrets, release,
+deployment, or other irreversible or security-sensitive behavior.
+
+Default artifact shape:
+
+```text
+same expanded shape as Tier 4A
+```
+
+High-risk work must capture approvals, evidence, residual risks, and release or
+rollback notes when production-impacting action is in scope.
 
 ## Core Files
 

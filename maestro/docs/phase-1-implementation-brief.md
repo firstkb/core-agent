@@ -230,6 +230,78 @@ Recommended order:
 7. Evidence, approvals, and agent-runs panels.
 8. Targeted tests and local run docs.
 
+## Execution Checklist
+
+Use this checklist as the Phase 1 control surface unless a separate task file is
+created later.
+
+### Backend Foundation
+
+- [ ] Create `maestro/backend/` skeleton.
+- [ ] Add config loading for `MAESTRO_DATABASE_URL`,
+  `MAESTRO_ARTIFACT_ROOT`, and `MAESTRO_HTTP_ADDR`.
+- [ ] Add PostgreSQL connection and health endpoint.
+- [ ] Add migration runner.
+- [ ] Add initial migrations for Phase 1 tables.
+- [ ] Add run event append helper.
+
+### API Slice
+
+- [ ] Implement work create/list/get/update endpoints.
+- [ ] Implement task create/list/get/update endpoints.
+- [ ] Implement stage create/list/start/pause/resume/cancel endpoints.
+- [ ] Implement attempt create/submit endpoints.
+- [ ] Implement evidence attach/list endpoints.
+- [ ] Implement approval request/decide endpoints.
+- [ ] Implement agent-run create/start/pause/resume/cancel/checkpoint endpoints.
+- [ ] Ensure lifecycle commands append `run_events`.
+- [ ] Ensure high-risk transitions require explicit approval.
+
+### Artifact Slice
+
+- [ ] Create `maestro/artifacts/current/` root handling.
+- [ ] Normalize artifact paths through the API.
+- [ ] Attach evidence files to attempt/task/work records.
+- [ ] Write handoff and attempt files without treating them as live state.
+- [ ] Validate artifact path traversal protection.
+
+### CLI Slice
+
+- [ ] Create `maestro/cli/` skeleton.
+- [ ] Add stable JSON output shape.
+- [ ] Add `maestroctl work` commands for the vertical slice.
+- [ ] Add `maestroctl task` commands for the vertical slice.
+- [ ] Add `maestroctl stage` commands for start, handoff, and review.
+- [ ] Add `maestroctl evidence attach`.
+- [ ] Add `maestroctl approval request/decide`.
+- [ ] Validate packet and handoff JSON before submit.
+
+### Frontend Slice
+
+- [ ] Create `maestro/frontend/` skeleton.
+- [ ] Add API client layer.
+- [ ] Add Cockpit shell.
+- [ ] Add work table.
+- [ ] Add Kanban view.
+- [ ] Add task detail drawer.
+- [ ] Add evidence panel.
+- [ ] Add approval queue.
+- [ ] Add agent-runs panel.
+- [ ] Surface current gate, missing evidence, and next allowed action.
+
+### Verification
+
+- [ ] Backend starts against local PostgreSQL.
+- [ ] Migrations can run on a clean database.
+- [ ] State survives backend restart.
+- [ ] `maestroctl` can complete the first vertical slice.
+- [ ] Cockpit reads the same state as `maestroctl`.
+- [ ] Evidence files exist under `maestro/artifacts/current`.
+- [ ] Run events are present for lifecycle transitions.
+- [ ] Targeted backend tests pass.
+- [ ] Targeted CLI tests pass.
+- [ ] Targeted frontend tests pass.
+
 ## Acceptance
 
 Phase 1 is accepted when:

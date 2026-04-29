@@ -48,6 +48,8 @@ maestro/
     orchestration-contract.md
     routing-tier-contract.md
     agent-contracts.md
+    agent-sequences.md
+    security-permissions-contract.md
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md

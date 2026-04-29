@@ -1,0 +1,15 @@
+{
+  "name": "@maestro/cli",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "maestroctl": "./bin/maestroctl"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -135,12 +135,14 @@ Directory target:
 ```text
 maestro/cli/
   package.json
+  bin/maestroctl
   src/
-    maestroctl.ts
-    commands/
+    maestroctl.mjs
+  test/
 ```
 
-Use Node/TypeScript for the first CLI driver.
+Use a dependency-free Node CLI for the first driver. TypeScript can be added
+later with frontend/tooling if it improves maintainability.
 
 Rules:
 
@@ -267,14 +269,14 @@ created later.
 
 ### CLI Slice
 
-- [ ] Create `maestro/cli/` skeleton.
-- [ ] Add stable JSON output shape.
-- [ ] Add `maestroctl work` commands for the vertical slice.
-- [ ] Add `maestroctl task` commands for the vertical slice.
-- [ ] Add `maestroctl stage` commands for start, handoff, and review.
-- [ ] Add `maestroctl evidence attach`.
-- [ ] Add `maestroctl approval request/decide`.
-- [ ] Validate packet and handoff JSON before submit.
+- [x] Create `maestro/cli/` skeleton.
+- [x] Add stable JSON output shape.
+- [x] Add `maestroctl work` commands for the vertical slice.
+- [x] Add `maestroctl task` commands for the vertical slice.
+- [x] Add `maestroctl stage` commands for start, handoff, and review.
+- [x] Add `maestroctl evidence attach`.
+- [x] Add `maestroctl approval request/decide`.
+- [x] Validate packet and handoff JSON before submit.
 
 ### Frontend Slice
 
@@ -298,8 +300,8 @@ created later.
 - [ ] Cockpit reads the same state as `maestroctl`.
 - [ ] Evidence files exist under `maestro/artifacts/current`.
 - [ ] Run events are present for lifecycle transitions.
-- [ ] Targeted backend tests pass.
-- [ ] Targeted CLI tests pass.
+- [x] Targeted backend tests pass.
+- [x] Targeted CLI tests pass.
 - [ ] Targeted frontend tests pass.
 
 ## Acceptance

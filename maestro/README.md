@@ -68,6 +68,11 @@ maestro/
     task-packet.schema.json
     stage-handoff.schema.json
     evidence.schema.json
+  cli/
+    README.md
+    package.json
+    bin/maestroctl
+    src/maestroctl.mjs
   templates/
     task.md.tmpl
     stage-attempt.md.tmpl

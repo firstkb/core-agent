@@ -54,6 +54,7 @@ maestro/
     artifact-file-contract.md
     stage-contract.md
     ui-cockpit-contract.md
+    run-control-contract.md
     agent-roles.md
     state-model.md
     db-model.md

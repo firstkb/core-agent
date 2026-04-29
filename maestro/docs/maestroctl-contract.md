@@ -65,6 +65,12 @@ maestroctl stage cancel <stage-id>
 maestroctl stage submit-handoff <stage-id> --handoff handoff.json --readme README.md
 maestroctl stage review <stage-id> --decision <accept|revise|block|cancel> --reason "<reason>"
 
+maestroctl agent-run pause <agent-run-id> --reason "<reason>"
+maestroctl agent-run resume <agent-run-id> --reason "<reason>"
+maestroctl agent-run cancel <agent-run-id> --reason "<reason>"
+maestroctl agent-run heartbeat <agent-run-id> --checkpoint <checkpoint>
+maestroctl agent-run checkpoint <agent-run-id> --checkpoint <checkpoint>
+
 maestroctl evidence attach --task <task-id> --attempt <attempt-id> --file <path> --type <type>
 maestroctl approval request --task <task-id> --type <type> --reason "<reason>"
 maestroctl approval decide <approval-id> --decision <approved|rejected> --reason "<reason>"

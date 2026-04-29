@@ -325,9 +325,20 @@ Core fields:
 - `attempt_id`
 - `agent_role`
 - `status`
+- `current_checkpoint`
+- `last_heartbeat_at`
+- `pause_requested_at`
+- `cancel_requested_at`
 - `started_at`
 - `completed_at`
 - `metadata_json`
+
+Rules:
+
+- pause, resume, cancel, checkpoint, and stale behavior is defined in
+  `run-control-contract.md`;
+- agent run status is granular run-control state, not a substitute for task or
+  stage lifecycle state.
 
 ## `run_events`
 

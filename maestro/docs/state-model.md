@@ -110,17 +110,24 @@ Rules:
 
 ## Stage Status
 
+Detailed pause, resume, cancel, checkpoint, and stale semantics live in
+`run-control-contract.md`.
+
 Recommended stage statuses:
 
 - `pending`
 - `ready`
 - `in_progress`
+- `pause_requested`
 - `paused`
+- `resume_requested`
 - `awaiting_review`
 - `accepted`
 - `revise_requested`
+- `cancel_requested`
 - `failed`
 - `cancelled`
+- `stale`
 
 Rules:
 
@@ -134,11 +141,16 @@ Recommended attempt statuses:
 
 - `created`
 - `running`
+- `pause_requested`
+- `paused`
+- `resume_requested`
 - `submitted`
 - `accepted`
 - `rejected`
+- `cancel_requested`
 - `failed`
 - `cancelled`
+- `stale`
 
 Rules:
 

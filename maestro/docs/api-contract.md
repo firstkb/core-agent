@@ -183,6 +183,9 @@ POST /api/stages/:id/submit-handoff
 POST /api/stages/:id/review
 ```
 
+Pause, resume, and cancel are cooperative run-control requests. Exact
+checkpoint and stale-run behavior is defined in `run-control-contract.md`.
+
 Approvals:
 
 ```text
@@ -195,7 +198,11 @@ Agent runs:
 ```text
 POST /api/agent-runs
 POST /api/agent-runs/:id/start
+POST /api/agent-runs/:id/pause
+POST /api/agent-runs/:id/resume
 POST /api/agent-runs/:id/cancel
+POST /api/agent-runs/:id/heartbeat
+POST /api/agent-runs/:id/checkpoint
 POST /api/agent-runs/:id/submit
 ```
 

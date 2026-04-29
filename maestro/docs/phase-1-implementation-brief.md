@@ -247,15 +247,15 @@ created later.
 
 ### API Slice
 
-- [ ] Implement work create/list/get/update endpoints.
-- [ ] Implement task create/list/get/update endpoints.
-- [ ] Implement stage create/list/start/pause/resume/cancel endpoints.
-- [ ] Implement attempt create/submit endpoints.
-- [ ] Implement evidence attach/list endpoints.
-- [ ] Implement approval request/decide endpoints.
+- [x] Implement work create/list/get/update endpoints.
+- [x] Implement task create/list/get/update endpoints.
+- [x] Implement stage create/list/start/pause/resume/cancel endpoints.
+- [x] Implement attempt create/submit endpoints.
+- [x] Implement evidence attach/list endpoints.
+- [x] Implement approval request/decide endpoints.
 - [ ] Implement agent-run create/start/pause/resume/cancel/checkpoint endpoints.
-- [ ] Ensure lifecycle commands append `run_events`.
-- [ ] Ensure high-risk transitions require explicit approval.
+- [x] Ensure lifecycle commands append `run_events`.
+- [x] Ensure high-risk transitions require explicit approval.
 
 ### Artifact Slice
 

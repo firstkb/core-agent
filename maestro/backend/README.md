@@ -47,3 +47,43 @@ GET /healthz
 GET /readyz
 GET /api/health
 ```
+
+## Phase 1 API Slice
+
+Implemented resources:
+
+```text
+GET  /api/work
+POST /api/work
+GET  /api/work/{id}
+POST /api/work/{id}/update
+
+GET  /api/tasks
+POST /api/tasks
+GET  /api/tasks/{id}
+POST /api/tasks/{id}/update
+
+GET  /api/tasks/{id}/stages
+POST /api/tasks/{id}/stages
+GET  /api/stages/{id}
+POST /api/stages/{id}/start
+POST /api/stages/{id}/pause
+POST /api/stages/{id}/resume
+POST /api/stages/{id}/cancel
+POST /api/stages/{id}/review
+
+GET  /api/tasks/{id}/attempts
+POST /api/tasks/{id}/attempts
+GET  /api/attempts/{id}
+POST /api/attempts/{id}/submit
+
+GET  /api/tasks/{id}/evidence
+POST /api/tasks/{id}/evidence
+GET  /api/attempts/{id}/evidence
+POST /api/attempts/{id}/evidence
+
+GET  /api/tasks/{id}/approvals
+POST /api/tasks/{id}/approvals
+GET  /api/approvals/{id}
+POST /api/approvals/{id}/decide
+```

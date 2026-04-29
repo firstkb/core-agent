@@ -8,19 +8,53 @@ import (
 	"log/slog"
 	"net/http"
 	"time"
+
+	"firstkb.dev/maestro/backend/internal/store"
 )
 
 type Server struct {
 	addr         string
 	db           *sql.DB
+	store        DataStore
 	artifactRoot string
 	logger       *slog.Logger
 	httpServer   *http.Server
 }
 
+type DataStore interface {
+	CreateWork(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
+	ListWork(context.Context, store.WorkFilters) ([]store.Work, error)
+	GetWork(context.Context, string) (store.Work, error)
+	UpdateWork(context.Context, string, store.WorkPatch, store.Actor, string) (store.Work, error)
+	CreateTask(context.Context, store.TaskInput, store.Actor, string) (store.Task, error)
+	ListTasks(context.Context, store.TaskFilters) ([]store.Task, error)
+	GetTask(context.Context, string) (store.Task, error)
+	UpdateTask(context.Context, string, store.TaskPatch, store.Actor, string) (store.Task, error)
+	CreateStage(context.Context, store.StageInput, store.Actor, string) (store.Stage, error)
+	ListStages(context.Context, string) ([]store.Stage, error)
+	GetStage(context.Context, string) (store.Stage, error)
+	StartStage(context.Context, string, store.Actor, string) (store.Stage, error)
+	PauseStage(context.Context, string, store.Actor, string) (store.Stage, error)
+	ResumeStage(context.Context, string, store.Actor, string) (store.Stage, error)
+	CancelStage(context.Context, string, store.Actor, string) (store.Stage, error)
+	ReviewStage(context.Context, string, string, store.Actor, string) (store.Stage, error)
+	CreateAttempt(context.Context, store.AttemptInput, store.Actor, string) (store.Attempt, error)
+	ListAttempts(context.Context, string) ([]store.Attempt, error)
+	GetAttempt(context.Context, string) (store.Attempt, error)
+	SubmitAttempt(context.Context, string, store.AttemptSubmitInput, store.Actor, string) (store.Attempt, error)
+	AttachEvidence(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
+	ListTaskEvidence(context.Context, string) ([]store.Evidence, error)
+	ListAttemptEvidence(context.Context, string) ([]store.Evidence, error)
+	RequestApproval(context.Context, store.ApprovalInput, store.Actor, string) (store.Approval, error)
+	ListTaskApprovals(context.Context, string) ([]store.Approval, error)
+	GetApproval(context.Context, string) (store.Approval, error)
+	DecideApproval(context.Context, string, store.ApprovalDecision, store.Actor, string) (store.Approval, error)
+}
+
 type Options struct {
 	Addr         string
 	DB           *sql.DB
+	Store        DataStore
 	ArtifactRoot string
 	Logger       *slog.Logger
 }
@@ -30,10 +64,15 @@ func New(options Options) *Server {
 	if logger == nil {
 		logger = slog.Default()
 	}
+	dataStore := options.Store
+	if dataStore == nil && options.DB != nil {
+		dataStore = store.New(options.DB)
+	}
 
 	srv := &Server{
 		addr:         options.Addr,
 		db:           options.DB,
+		store:        dataStore,
 		artifactRoot: options.ArtifactRoot,
 		logger:       logger,
 	}
@@ -60,6 +99,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("GET /readyz", s.handleReady)
 	mux.HandleFunc("GET /api/health", s.handleAPIHealth)
+	s.registerAPIRoutes(mux)
 	return mux
 }
 

@@ -78,6 +78,10 @@ Recommended work statuses:
 Rules:
 
 - `direct` work may skip persisted stages and close with concise evidence;
+- `task` work should use the lightweight artifact shape unless stage attempts
+  are needed;
+- `feature` work should create feature artifacts only when real decomposition is
+  useful;
 - `module_sized_work` requires a work brief before execution approval;
 - `high_risk` work requires explicit approval gates before implementation or
   release.

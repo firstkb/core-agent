@@ -7,6 +7,7 @@
     "route_tier",
     "state_required",
     "artifact_root",
+    "artifact_shape",
     "stages",
     "agents",
     "approvals_required",
@@ -34,6 +35,16 @@
       "type": [
         "string",
         "null"
+      ]
+    },
+    "artifact_shape": {
+      "type": "string",
+      "enum": [
+        "none",
+        "lightweight",
+        "staged_task",
+        "feature_work",
+        "full"
       ]
     },
     "risk_level": {

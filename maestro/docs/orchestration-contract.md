@@ -29,6 +29,8 @@ context is valuable, reconciles outputs, and owns closeout.
 
 ## Routing Tiers
 
+Detailed routing rules live in `routing-tier-contract.md`.
+
 ### Tier 0: Direct
 
 Use for tiny low-risk changes.
@@ -54,6 +56,8 @@ State:
 - no work brief;
 - no persisted run unless the owner requests it;
 - concise evidence in final response.
+- artifact shape: none by default, or lightweight `task.md + closeout.md` when
+  the owner wants a durable record.
 
 ### Tier 1: Task
 
@@ -74,6 +78,8 @@ State:
 
 - task is first-class;
 - stages are optional but recommended when the task needs verification or review.
+- artifact shape: `task.md + closeout.md` for simple tasks, expanded to
+  `stages/<stage>/attempt-*` only when handoff, verification, or review needs it.
 
 ### Tier 2: Feature
 
@@ -96,6 +102,8 @@ State:
 
 - feature and tasks are first-class;
 - evidence and approvals are recorded.
+- artifact shape: `brief.md + features/<feature>/tasks/<task>` only when feature
+  decomposition is useful; otherwise stay at the staged-task shape.
 
 ### Tier 3: Module-Sized Work
 
@@ -119,6 +127,8 @@ State:
 - work brief is required;
 - feature order and dependencies are explicit;
 - execution does not begin without owner approval.
+- artifact shape: feature-work or full shape depending on approval, evidence,
+  and snapshot needs.
 
 ### Tier 4: High Risk
 
@@ -146,8 +156,12 @@ Required gates:
 - explicit approval before implementation when risk is high;
 - explicit approval before release or production-impacting action;
 - verification evidence before closeout.
+- artifact shape: full shape when approvals, release, snapshots, or audit trail
+  are needed.
 
 ## Default Stage Chain
+
+Detailed stage rules live in `stage-contract.md`.
 
 The default full chain is:
 

@@ -44,7 +44,10 @@ maestro/
   docs/
     README.md
     orchestration-contract.md
+    routing-tier-contract.md
     artifact-model.md
+    artifact-file-contract.md
+    stage-contract.md
     agent-roles.md
     state-model.md
     api-contract.md

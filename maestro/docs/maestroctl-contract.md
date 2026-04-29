@@ -63,7 +63,7 @@ maestroctl stage pause <stage-id>
 maestroctl stage resume <stage-id>
 maestroctl stage cancel <stage-id>
 maestroctl stage submit-handoff <stage-id> --handoff handoff.json --readme README.md
-maestroctl stage review <stage-id> --decision <accept|revise|block> --reason "<reason>"
+maestroctl stage review <stage-id> --decision <accept|revise|block|cancel> --reason "<reason>"
 
 maestroctl evidence attach --task <task-id> --attempt <attempt-id> --file <path> --type <type>
 maestroctl approval request --task <task-id> --type <type> --reason "<reason>"

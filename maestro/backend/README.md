@@ -19,6 +19,14 @@ MAESTRO_MIGRATIONS_DIR=migrations
 MAESTRO_RUN_MIGRATIONS=false
 ```
 
+Tracked example:
+
+```text
+../env/local.env.example
+```
+
+Local env files under `maestro/env/*.env` are ignored by git.
+
 ## Commands
 
 Run migrations:
@@ -38,6 +46,16 @@ Run tests:
 ```bash
 go test ./...
 ```
+
+Run local smoke from the repository root:
+
+```bash
+node maestro/scripts/smoke-local.mjs --env maestro/env/local.env
+```
+
+Use `MAESTRO_SMOKE_DATABASE_URL` for a disposable smoke database. The smoke
+runner can reset only the known Maestro tables when
+`MAESTRO_SMOKE_RESET_DATABASE=true`.
 
 ## Health
 

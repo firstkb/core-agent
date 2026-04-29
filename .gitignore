@@ -8,6 +8,16 @@ artifacts/*
 !artifacts/.gitkeep
 maestro/artifacts/*
 !maestro/artifacts/.gitkeep
+maestro/.env
+maestro/.env.*
+!maestro/.env.example
+maestro/env/*.env
+!maestro/env/*.env.example
+maestro/frontend/.env
+maestro/frontend/.env.*
+!maestro/frontend/.env.example
+maestro/frontend/dist/
+maestro/frontend/*.tsbuildinfo
 platform/*
 !platform/.gitkeep
 !platform/AGENTS.md

@@ -351,6 +351,10 @@ async function payloadFromFlags(flags, cwd, required = []) {
 
 async function evidencePayload(flags, cwd) {
   const payload = await payloadFromFlags(flags, cwd);
+  delete payload.work_id;
+  delete payload.task_id;
+  delete payload.stage_id;
+  delete payload.attempt_id;
   if (flags.file) {
     const filePath = resolvePath(cwd, flags.file);
     payload.file = {

@@ -278,31 +278,64 @@ created later.
 - [x] Add `maestroctl approval request/decide`.
 - [x] Validate packet and handoff JSON before submit.
 
+### Local Integration Smoke
+
+- [x] Add tracked local env example.
+- [x] Ignore real local Maestro env files.
+- [x] Add Postgres/API/`maestroctl` smoke runner.
+- [x] Run smoke against a disposable local PostgreSQL database.
+- [x] Verify state persistence after API restart.
+- [x] Verify evidence and handoff files exist under the smoke artifact root.
+- [x] Verify run events are present for lifecycle transitions.
+
 ### Frontend Slice
 
-- [ ] Create `maestro/frontend/` skeleton.
-- [ ] Add API client layer.
-- [ ] Add Cockpit shell.
-- [ ] Add work table.
-- [ ] Add Kanban view.
-- [ ] Add task detail drawer.
-- [ ] Add evidence panel.
-- [ ] Add approval queue.
-- [ ] Add agent-runs panel.
-- [ ] Surface current gate, missing evidence, and next allowed action.
+- [x] Create `maestro/frontend/` skeleton.
+- [x] Add API client layer.
+- [x] Add Cockpit shell.
+- [x] Add work table.
+- [x] Add Kanban view.
+- [x] Add task detail drawer.
+- [x] Add evidence panel.
+- [x] Add approval queue.
+- [x] Add agent-runs panel.
+- [x] Surface current gate, missing evidence, and next allowed action.
+
+### Frontend Control Slice
+
+- [x] Add Cockpit command client methods for stage lifecycle actions.
+- [x] Add Cockpit command client methods for approval decisions.
+- [x] Add drawer controls for stage start, pause, resume, cancel, and review.
+- [x] Add drawer controls for approval approve/reject decisions.
+- [x] Refresh task detail and task list after Cockpit commands.
+
+### Frontend Evidence Slice
+
+- [x] Use same-origin `/api` proxy for local Cockpit API calls.
+- [x] Add Cockpit command client method for task evidence attachment.
+- [x] Add drawer evidence form for URI evidence.
+- [x] Add drawer evidence form for text-file artifact attachment.
+- [x] Refresh task detail after evidence attachment.
+
+### Frontend Intake Slice
+
+- [x] Add Cockpit command client methods for work, task, and stage creation.
+- [x] Add compact intake dialog for work/task/stage creation.
+- [x] Create work, task, and optional initial stage in one Cockpit flow.
+- [x] Select the new task and refresh drawer state after intake creation.
 
 ### Verification
 
-- [ ] Backend starts against local PostgreSQL.
-- [ ] Migrations can run on a clean database.
-- [ ] State survives backend restart.
-- [ ] `maestroctl` can complete the first vertical slice.
-- [ ] Cockpit reads the same state as `maestroctl`.
-- [ ] Evidence files exist under `maestro/artifacts/current`.
-- [ ] Run events are present for lifecycle transitions.
+- [x] Backend starts against local PostgreSQL.
+- [x] Migrations can run on a clean database.
+- [x] State survives backend restart.
+- [x] `maestroctl` can complete the first vertical slice.
+- [x] Cockpit reads the same state as `maestroctl`.
+- [x] Evidence files exist under the configured `maestro/artifacts/` root.
+- [x] Run events are present for lifecycle transitions.
 - [x] Targeted backend tests pass.
 - [x] Targeted CLI tests pass.
-- [ ] Targeted frontend tests pass.
+- [x] Targeted frontend tests pass.
 
 ## Acceptance
 

@@ -73,20 +73,60 @@ maestro/
     package.json
     bin/maestroctl
     src/maestroctl.mjs
+  env/
+    local.env.example
+  scripts/
+    smoke-local.mjs
+  frontend/
+    package.json
+    src/
   templates/
     task.md.tmpl
     stage-attempt.md.tmpl
     closeout.md.tmpl
 ```
 
-Future implementation directories should be added only after the foundation
-contracts are accepted:
+Implementation directories:
 
 ```text
 maestro/backend/
+maestro/cli/
 maestro/frontend/
 maestro/artifacts/
 ```
+
+`maestro/frontend/` uses React, TypeScript, Vite, and MUI Material for the
+local Cockpit UI.
+
+## Local Environment
+
+Tracked example:
+
+```text
+maestro/env/local.env.example
+```
+
+Ignored local files:
+
+```text
+maestro/env/*.env
+maestro/.env
+maestro/.env.*
+```
+
+Use a separate disposable database for smoke runs. The smoke runner refuses to
+touch an existing Maestro schema unless `MAESTRO_SMOKE_RESET_DATABASE=true` is
+set in the ignored local env.
+
+## Local Smoke
+
+```bash
+node maestro/scripts/smoke-local.mjs --env maestro/env/local.env
+```
+
+The smoke runner starts the Go API, drives the first vertical flow through
+`maestroctl`, writes API-owned artifacts, restarts the API, and verifies that
+state persisted in PostgreSQL.
 
 ## Source Of Truth Boundary
 

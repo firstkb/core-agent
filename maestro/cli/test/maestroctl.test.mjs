@@ -62,6 +62,7 @@ test('evidence attach reads file payload', async () => {
   assert.equal(calls[0].url.pathname, '/api/tasks/task-1/evidence');
   const body = JSON.parse(calls[0].init.body);
   assert.equal(body.type, 'test');
+  assert.equal(body.task_id, undefined);
   assert.equal(body.file.name, 'go-test.log');
   assert.equal(body.file.content, 'ok');
 });

@@ -12,6 +12,12 @@ MAESTRO_API_URL=http://127.0.0.1:8787
 
 `--api-url` overrides the environment value for one command.
 
+For local API smoke runs, use the repository-level runner:
+
+```bash
+node maestro/scripts/smoke-local.mjs --env maestro/env/local.env
+```
+
 ## Commands
 
 ```bash

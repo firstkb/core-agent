@@ -22,10 +22,17 @@ MAESTRO_RUN_MIGRATIONS=false
 Tracked example:
 
 ```text
+../env/dev.env.example
 ../env/local.env.example
 ```
 
 Local env files under `maestro/env/*.env` are ignored by git.
+
+Run the full local Cockpit stack from the repository root:
+
+```bash
+node maestro/scripts/dev-local.mjs --env maestro/env/dev.env
+```
 
 ## Commands
 

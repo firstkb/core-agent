@@ -74,8 +74,10 @@ maestro/
     bin/maestroctl
     src/maestroctl.mjs
   env/
+    dev.env.example
     local.env.example
   scripts/
+    dev-local.mjs
     smoke-local.mjs
   frontend/
     package.json
@@ -103,6 +105,7 @@ local Cockpit UI.
 Tracked example:
 
 ```text
+maestro/env/dev.env.example
 maestro/env/local.env.example
 ```
 
@@ -114,9 +117,22 @@ maestro/.env
 maestro/.env.*
 ```
 
-Use a separate disposable database for smoke runs. The smoke runner refuses to
-touch an existing Maestro schema unless `MAESTRO_SMOKE_RESET_DATABASE=true` is
-set in the ignored local env.
+Use `maestro_local` for daily Cockpit state and keep `maestro_smoke` as a
+separate disposable database for smoke runs. The smoke runner refuses to touch
+an existing Maestro schema unless `MAESTRO_SMOKE_RESET_DATABASE=true` is set in
+the ignored local env.
+
+## Local Dev Stack
+
+```bash
+node maestro/scripts/dev-local.mjs --env maestro/env/dev.env
+```
+
+The dev runner applies migrations, starts the Go API, starts the Vite/MUI
+frontend, and stops both processes on `Ctrl+C`. Before starting, it frees the
+configured API/frontend ports by stopping existing listeners. Use
+`--no-kill-ports` when you want the command to fail instead of stopping another
+local process.
 
 ## Local Smoke
 

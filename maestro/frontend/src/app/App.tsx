@@ -89,6 +89,9 @@ type DetailTab = 'stages' | 'evidence' | 'approvals' | 'runs';
 type StageAction = 'start' | 'pause' | 'resume' | 'cancel';
 type StageReviewDecision = 'accept' | 'revise' | 'block' | 'cancel';
 type ApprovalDecision = 'approved' | 'rejected';
+type LoadOptions = {
+  silent?: boolean;
+};
 
 type IntakeInput = {
   workTitle: string;
@@ -110,6 +113,9 @@ const initialState: CockpitState = {
   approvals: [],
   agentRuns: []
 };
+
+const COCKPIT_POLL_MS = 5000;
+const DETAIL_POLL_MS = 3000;
 
 export function App() {
   const api = useMemo(() => new MaestroAPI(), []);
@@ -137,28 +143,39 @@ export function App() {
   );
   const groupedTasks = useMemo(() => groupTasks(visibleTasks), [visibleTasks]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (options: LoadOptions = {}) => {
+    const silent = Boolean(options.silent);
+    if (!silent) {
+      setLoading(true);
+    }
     try {
       const next = await api.loadCockpit();
       setState(next);
+      setError(null);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : String(loadError));
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [api]);
 
   const loadDetail = useCallback(
-    async (taskID: string) => {
-      setDetailLoading(true);
+    async (taskID: string, options: LoadOptions = {}) => {
+      const silent = Boolean(options.silent);
+      if (!silent) {
+        setDetailLoading(true);
+      }
       try {
         setDetail(await api.loadTaskDetail(taskID));
+        setError(null);
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : String(loadError));
       } finally {
-        setDetailLoading(false);
+        if (!silent) {
+          setDetailLoading(false);
+        }
       }
     },
     [api]
@@ -289,11 +306,42 @@ export function App() {
   }, [load]);
 
   useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') {
+        void load({ silent: true });
+      }
+    };
+    const interval = window.setInterval(refresh, COCKPIT_POLL_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [load]);
+
+  useEffect(() => {
     if (selectedTaskID) {
       void loadDetail(selectedTaskID);
     } else {
       setDetail(null);
     }
+  }, [loadDetail, selectedTaskID]);
+
+  useEffect(() => {
+    if (!selectedTaskID) {
+      return undefined;
+    }
+    const refresh = () => {
+      if (document.visibilityState === 'visible') {
+        void loadDetail(selectedTaskID, { silent: true });
+      }
+    };
+    const interval = window.setInterval(refresh, DETAIL_POLL_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, [loadDetail, selectedTaskID]);
 
   return (

@@ -38,4 +38,14 @@ pnpm test
 pnpm build
 ```
 
+From the repository root, the preferred daily entrypoint is:
+
+```bash
+node maestro/scripts/dev-local.mjs --env maestro/env/dev.env
+```
+
+That runner applies backend migrations and starts both the Go API and Vite
+frontend together. It also frees the configured API/frontend ports before
+starting so the stack can be restarted with the same command.
+
 The Phase 1 UI reads the same Maestro API state that `maestroctl` writes.

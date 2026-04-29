@@ -61,10 +61,16 @@ platform/
     modules/
     migrations/
 
+maestro/
+  README.md
+  docs/
+  contracts/
+  templates/
+
 .agents/
   skills/
     atlas/
-    scribe/
+    archivist/
     ...
 
 .agent-cli/
@@ -86,6 +92,22 @@ Product code root.
 - `platform/backend/` owns Go runtimes, backend modules, migrations, seed/bootstrap flow, BE docs, and backend CI surface.
 - `platform/docs/ai/**` is retired and must not be reintroduced.
 
+### `maestro/`
+
+Proposed Maestro Cockpit and Maestro vNext foundation surface.
+
+- `maestro/docs/**` defines the target orchestration, agent role, artifact, and
+  state models.
+- `maestro/contracts/**` defines proposed portable schemas for task packets,
+  stage handoffs, evidence, and orchestration plans.
+- `maestro/templates/**` defines proposed Markdown templates for tasks,
+  attempts, and closeout records.
+
+This directory does not replace the current live `module_orchestrator` runtime
+until explicitly promoted. The current live runtime remains under
+`docs/maestro/module-orchestrator-v2-spec-pack/`, `.codex/contracts/`,
+`.codex/templates/`, and `.agents/skills/`.
+
 ### `ai-memory/`
 
 Compact operational memory for AI agents.
@@ -104,7 +126,7 @@ Repo-local Codex skills.
 Current important skills include:
 
 - `atlas` - Atlas, the default intake/routing/orchestration layer for platform work.
-- `scribe` - semantic docs/memory drift auditor.
+- `archivist` - semantic docs/memory drift auditor.
 
 Other skills may exist for specialized workflows. Skill bodies are active
 runtime instructions when invoked.

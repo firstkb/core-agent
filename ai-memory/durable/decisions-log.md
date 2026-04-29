@@ -846,15 +846,15 @@ Do not turn it into a task journal.
   - `scripts/ai/automation_versions.py`
   - `ai-memory/docs/docs-memory-score-audit.md`
 
-### DEC-071 Scribe Owns Semantic Docs Memory Audits
+### DEC-071 Archivist Owns Semantic Docs Memory Audits
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `Scribe` is the local semantic docs and ai-memory audit skill. It is invoked as `$scribe` for periodic source-of-truth drift review after large docs/memory, AGENTS, Atlas, or reference-code changes. Scribe complements mechanical checks and CI; it is not an implementation agent and should patch only when the owner asks to apply an audit.
+- Decision: `Archivist` is the local semantic docs and ai-memory audit skill. It is invoked as `$archivist` for periodic source-of-truth drift review after large docs/memory, AGENTS, Atlas, or reference-code changes. Archivist complements mechanical checks and CI; it is not an implementation agent and should patch only when the owner asks to apply an audit. The role was formerly named `Scribe`.
 - Sources:
-  - `.agents/skills/scribe/SKILL.md`
-  - `.agents/skills/scribe/agents/openai.yaml`
+  - `.agents/skills/archivist/SKILL.md`
+  - `.agents/skills/archivist/agents/openai.yaml`
   - `AGENTS.md`
   - `platform/AGENTS.md`
 
@@ -874,7 +874,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Agents must use `ai-memory/agent-workflow.md` as the memory maintenance matrix for new durable decisions, new modules/apps/packages/runtimes, doc status changes, reference-code changes, and Atlas/Scribe workflow changes. If no memory update is needed, the closeout should say so explicitly.
+- Decision: Agents must use `ai-memory/agent-workflow.md` as the memory maintenance matrix for new durable decisions, new modules/apps/packages/runtimes, doc status changes, reference-code changes, and Atlas/Archivist workflow changes. If no memory update is needed, the closeout should say so explicitly.
 - Sources:
   - `ai-memory/agent-workflow.md`
   - `platform/AGENTS.md`
@@ -995,7 +995,7 @@ Do not turn it into a task journal.
   - `platform/frontend/AGENTS.md`
   - `platform/backend/AGENTS.md`
   - `.agents/skills/atlas/SKILL.md`
-  - `.agents/skills/scribe/SKILL.md`
+  - `.agents/skills/archivist/SKILL.md`
   - `ai-memory/atlas/prompts/*.md`
   - `ai-memory/atlas/templates/chat-start.md`
   - `scripts/ai/docs_memory_check.py`
@@ -1005,7 +1005,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-27
 - Status: active
 - State: landed
-- Decision: Root orientation docs must describe this repository as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, not only as an agent orchestration reference scaffold. `README.md` points agents to `AGENTS.md`, `platform/AGENTS.md`, `ai-memory/START_HERE.md`, and product roots. `docs/codex-native-repo.md` remains the canonical repo runtime layout and source-of-truth boundary, including `ai-memory/`, `platform/`, `.agents/skills/atlas`, `.agents/skills/scribe`, `.agent-cli/`, and `.codex/`.
+- Decision: Root orientation docs must describe this repository as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, not only as an agent orchestration reference scaffold. `README.md` points agents to `AGENTS.md`, `platform/AGENTS.md`, `ai-memory/START_HERE.md`, and product roots. `docs/codex-native-repo.md` remains the canonical repo runtime layout and source-of-truth boundary, including `ai-memory/`, `platform/`, `.agents/skills/atlas`, `.agents/skills/archivist`, `.agent-cli/`, and `.codex/`.
 - Sources:
   - `README.md`
   - `docs/codex-native-repo.md`

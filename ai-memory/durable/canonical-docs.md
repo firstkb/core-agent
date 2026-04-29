@@ -1,7 +1,7 @@
 # Canonical Docs Registry
 
 Status: compact active registry
-Last compacted: 2026-04-25
+Last compacted: 2026-04-29
 
 This file lists current owner surfaces.
 Use it to avoid reading the full docs corpus.
@@ -18,7 +18,7 @@ Canonical:
 - `.agents/skills/maestro/SKILL.md`
 - `.agents/skills/charlie/SKILL.md`
 - `.agents/skills/grant/SKILL.md`
-- `.agents/skills/scribe/SKILL.md`
+- `.agents/skills/archivist/SKILL.md`
 - `.codex/contracts/**`
 - `.codex/templates/**`
 - `.codex/standards/**`
@@ -94,7 +94,7 @@ Operational scaffolds, not product truth:
 - `ai-memory/atlas/legacy-runs-triage.md`
 - `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
 - `.agents/skills/atlas/**`
-- `.agents/skills/scribe/**`
+- `.agents/skills/archivist/**`
 - `scripts/ai/**`
 - `.github/workflows/docs-memory-check.yml`
 

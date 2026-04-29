@@ -49,6 +49,16 @@ Treat:
 
 as a future-target architecture document, not as the live runtime contract.
 
+Treat:
+
+- `maestro/docs/**`
+- `maestro/contracts/**`
+- `maestro/templates/**`
+
+as the proposed Maestro Cockpit / Maestro vNext foundation surface. These files
+do not replace the current live `module_orchestrator` runtime until explicitly
+promoted.
+
 ## Runtime Read Policy
 
 Ordinary agent work should read only:
@@ -58,6 +68,7 @@ Ordinary agent work should read only:
 - `ai-memory/index/memory-index.yaml` when the task needs a broader route map
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
+- relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro Cockpit or Maestro vNext
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring
 - the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/features/<feature>/...`
 - product/runtime code and docs that materially answer the task
@@ -135,16 +146,16 @@ Grant does not:
 - change lifecycle state
 - write repository artifacts directly
 
-### Scribe
+### Archivist
 
-Use Scribe for semantic docs and ai-memory audit when the goal is to:
+Use Archivist for semantic docs and ai-memory audit when the goal is to:
 
 - find source-of-truth drift after large docs or memory changes
 - check AGENTS, Atlas, FE/BE docs, and `ai-memory` consistency
 - identify stale lifecycle language, duplicated ownership, or context-window bloat
 - review reference-code policy usage without opening raw packs by default
 
-Scribe is an audit workflow, not a feature owner or implementation agent.
+Archivist is an audit workflow, not a feature owner or implementation agent.
 It should report findings first and patch files only when the owner asks to apply the audit.
 
 ## Naming
@@ -152,7 +163,10 @@ It should report findings first and patch files only when the owner asks to appl
 - `maestro` -> `module_orchestrator`
 - `charlie` -> `research_codebase`
 - `grant` -> `brief_auditor`
-- `scribe` -> semantic docs/memory auditor skill; no backed system agent
+- `archivist` -> semantic docs/memory auditor skill; no backed system agent
+
+Maestro vNext reserves `scribe` for a future orchestration closeout role. The
+current semantic docs/memory auditor skill is `archivist`.
 
 ## Artifact model
 

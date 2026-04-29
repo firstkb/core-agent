@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "task_id",
+    "type",
+    "title",
+    "uri",
+    "metadata",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "attempt_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^attempt-[0-9]{3}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "command",
+        "test",
+        "ci",
+        "storybook",
+        "browser",
+        "visual",
+        "security",
+        "migration",
+        "review",
+        "approval",
+        "artifact",
+        "external_link",
+        "memory"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "uri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -97,7 +97,7 @@ When reference-code or donor material changes:
 - update `ai-memory/durable/reference-code-policy.md` only if policy changes
 - never route normal agents directly to raw `reference-code/**`
 
-When Atlas/Scribe/agent workflow changes:
+When Atlas/Archivist/agent workflow changes:
 
 - update the relevant `.agents/skills/**/SKILL.md`
 - update matching `.agents/skills/**/agents/openai.yaml`
@@ -122,8 +122,8 @@ For non-trivial closeout or PR body text, use
 `ai-memory/atlas/templates/agent-evidence.md`. Keep it compact and do not create
 a standalone evidence file unless the owner asks.
 
-Use `Scribe` (`$scribe`) after large docs/memory, AGENTS, Atlas, or reference-code changes.
-Do not run Scribe on every commit by default.
+Use `Archivist` (`$archivist`) after large docs/memory, AGENTS, Atlas, or reference-code changes.
+Do not run Archivist on every commit by default.
 
 ## Memory Write Matrix
 

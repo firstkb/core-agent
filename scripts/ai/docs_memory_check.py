@@ -125,7 +125,7 @@ READ_ORDER_SURFACES = [
     "platform/frontend/AGENTS.md",
     "platform/backend/AGENTS.md",
     ".agents/skills/atlas/SKILL.md",
-    ".agents/skills/scribe/SKILL.md",
+    ".agents/skills/archivist/SKILL.md",
     "ai-memory/atlas/README.md",
     "ai-memory/README.md",
     "ai-memory/START_HERE.md",

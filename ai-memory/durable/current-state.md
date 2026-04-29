@@ -1,7 +1,7 @@
 # Current State
 
 Status: compact active snapshot
-Last compacted: 2026-04-28
+Last compacted: 2026-04-29
 
 This is a compact AI retrieval snapshot.
 Use canonical docs and code for final verification before changing behavior.
@@ -60,8 +60,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks for relevant PRs and pushes.
 - `landed` `code-confirmed`: Minimal product CI now includes `.github/workflows/backend-ci.yml` for Go format/test/build and `.github/workflows/frontend-ci.yml` for pnpm frozen install, typecheck, and build. Frontend lint/test and UI visual gates remain deferred until baselines are stable.
 - `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
-- `landed` `doc-confirmed`: `Scribe` (`.agents/skills/scribe/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
-- `landed` `owner-confirmed`: Scribe should be used manually after large docs/memory changes and before major development phases, not on every commit.
+- `landed` `doc-confirmed`: `Archivist` (`.agents/skills/archivist/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
+- `landed` `owner-confirmed`: Archivist should be used manually after large docs/memory changes and before major development phases, not on every commit.
 - `landed` `doc-confirmed`: Memory maintenance rules for new decisions, modules, doc status changes, reference-code changes, and agent workflow changes live in `ai-memory/agent-workflow.md`.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `ai-memory`; exact old payload text is git-history provenance only.
@@ -133,7 +133,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Deferred composed UI surfaces can be misread as UI Kit/UI Lab scope. Treat `proposals/deferred-composed-surfaces.md` as future proposal and start app-layer-first only after owner activation.
 - `risk` `owner-confirmed`: Raw reference packs now live under ignored local `reference-code/`. Use `reference-pack:*` aliases and do not treat old pointer paths as product docs.
 - `risk` `doc-confirmed`: Docs/memory drift is covered by local check and GitHub Actions, but not by an installed local pre-commit/pre-push hook. Run `python3 scripts/ai/docs_memory_check.py --check` before docs/memory commits when working offline.
-- `risk` `doc-confirmed`: Scribe audit is manual and semantic; it should be run after large docs/memory slices or phase changes, not on every commit.
+- `risk` `doc-confirmed`: Archivist audit is manual and semantic; it should be run after large docs/memory slices or phase changes, not on every commit.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; active workflow artifacts live under `ai-memory/atlas/**`.

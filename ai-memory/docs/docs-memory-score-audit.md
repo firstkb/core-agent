@@ -34,7 +34,7 @@ It does not mean every historical exact-detail document has been deleted.
 - `ai-memory/atlas/templates/agent-evidence.md` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
 - Atlas direct no-run semantics are explicit: current-chat execution by default; separate FE/BE chats normally require a run, except owner-requested `MANUAL_HANDOFF_NO_RUN`.
 - `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks on relevant PRs and pushes.
-- `.agents/skills/scribe/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
+- `.agents/skills/archivist/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
 - Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.
 
 ## Scores
@@ -52,7 +52,7 @@ It does not mean every historical exact-detail document has been deleted.
 ## Remaining Work To Reach 100
 
 - Execute retained Form Builder exact-detail replacements only through explicit implementation slices that name replacement target and verification.
-- Use Scribe manually after large docs/memory changes and before major development phases; do not run it on every commit by default.
+- Use Archivist manually after large docs/memory changes and before major development phases; do not run it on every commit by default.
 - Keep future module work disciplined: every new durable decision should update `ai-memory/durable/decisions-log.md`, `current-state.md`, the relevant module pack, and the tracked doc owner.
 
 ## Current Policy

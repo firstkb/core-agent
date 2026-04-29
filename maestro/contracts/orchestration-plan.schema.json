@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_tier",
+    "state_required",
+    "artifact_root",
+    "stages",
+    "agents",
+    "approvals_required",
+    "evidence_required",
+    "next_action"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "route_tier": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "task",
+        "feature",
+        "module_sized_work",
+        "high_risk"
+      ]
+    },
+    "state_required": {
+      "type": "boolean"
+    },
+    "artifact_root": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "intake",
+          "planning",
+          "research",
+          "brief_audit",
+          "implementation",
+          "verification",
+          "review",
+          "release",
+          "closeout",
+          "memory_audit"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "stage",
+          "required"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "maestro",
+              "charlie",
+              "grant",
+              "mason",
+              "scout",
+              "lens",
+              "release",
+              "scribe",
+              "archivist"
+            ]
+          },
+          "stage": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "approvals_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "brief",
+          "execution",
+          "high_risk_implementation",
+          "release",
+          "security",
+          "migration",
+          "memory_update"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "commands",
+          "tests",
+          "ci",
+          "storybook",
+          "browser",
+          "visual",
+          "security",
+          "migration",
+          "review",
+          "approval",
+          "memory"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "artifact_targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "next_action": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

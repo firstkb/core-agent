@@ -1,7 +1,7 @@
 # Repository Map
 
 Status: compact active snapshot
-Last compacted: 2026-04-25
+Last compacted: 2026-04-29
 
 ## Top-Level Runtime
 
@@ -16,7 +16,7 @@ docs/
   workflows/docs-memory-check.yml
 .agents/
   skills/
-    scribe/
+    archivist/
 .codex/
   agents/
   contracts/
@@ -33,7 +33,7 @@ ai-memory/
 - `.agents/skills/maestro`: owner-facing module orchestration workflow.
 - `.agents/skills/charlie`: grounded codebase research workflow.
 - `.agents/skills/grant`: optional technical brief review workflow.
-- `.agents/skills/scribe`: manual semantic docs and ai-memory audit workflow.
+- `.agents/skills/archivist`: manual semantic docs and ai-memory audit workflow.
 - `.agents/skills/atlas`: product-level Atlas workflow for platform FE/BE orchestration; useful as product memory context but not the root Codex-native runtime.
 - `.codex/contracts`: machine-readable contracts and schemas.
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.

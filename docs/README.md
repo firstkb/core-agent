@@ -17,6 +17,7 @@ Future-target references:
 
 - [`future-implementations.md`](./future-implementations.md) - compact backlog of future-target runtime and packaging improvements
 - [`maestro/maestro-feature-formation-canonical.md`](./maestro/maestro-feature-formation-canonical.md) - target architecture for later Maestro evolution, not the live runtime contract
+- [`../maestro/docs/README.md`](../maestro/docs/README.md) - proposed Maestro Cockpit and Maestro vNext foundation docs, not the live runtime contract
 
 Opt-in reference metadata:
 

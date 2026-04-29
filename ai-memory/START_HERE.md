@@ -133,5 +133,5 @@ For non-trivial closeout or PR body text, use:
 ai-memory/atlas/templates/agent-evidence.md
 ```
 
-Use Scribe manually after large docs/memory changes or before a major development phase.
-Do not run Scribe on every commit by default.
+Use Archivist manually after large docs/memory changes or before a major development phase.
+Do not run Archivist on every commit by default.

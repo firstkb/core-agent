@@ -86,4 +86,14 @@ GET  /api/tasks/{id}/approvals
 POST /api/tasks/{id}/approvals
 GET  /api/approvals/{id}
 POST /api/approvals/{id}/decide
+
+GET  /api/agent-runs
+POST /api/agent-runs
+GET  /api/agent-runs/{id}
+POST /api/agent-runs/{id}/start
+POST /api/agent-runs/{id}/pause
+POST /api/agent-runs/{id}/resume
+POST /api/agent-runs/{id}/cancel
+POST /api/agent-runs/{id}/checkpoint
+POST /api/agent-runs/{id}/heartbeat
 ```

@@ -49,6 +49,15 @@ type DataStore interface {
 	ListTaskApprovals(context.Context, string) ([]store.Approval, error)
 	GetApproval(context.Context, string) (store.Approval, error)
 	DecideApproval(context.Context, string, store.ApprovalDecision, store.Actor, string) (store.Approval, error)
+	CreateAgentRun(context.Context, store.AgentRunInput, store.Actor, string) (store.AgentRun, error)
+	ListAgentRuns(context.Context, store.AgentRunFilters) ([]store.AgentRun, error)
+	GetAgentRun(context.Context, string) (store.AgentRun, error)
+	StartAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error)
+	PauseAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error)
+	ResumeAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error)
+	CancelAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error)
+	CheckpointAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
+	HeartbeatAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
 }
 
 type Options struct {

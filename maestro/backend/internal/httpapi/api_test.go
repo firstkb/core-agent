@@ -95,10 +95,67 @@ func TestAttachTaskEvidenceSetsTaskIDFromPath(t *testing.T) {
 	}
 }
 
+func TestCreateAgentRunEndpoint(t *testing.T) {
+	fake := &fakeStore{
+		createAgentRun: func(_ context.Context, input store.AgentRunInput, _ store.Actor, _ string) (store.AgentRun, error) {
+			if input.AgentRole != "mason" {
+				t.Fatalf("agent role = %q", input.AgentRole)
+			}
+			return store.AgentRun{
+				ID:        "run-1",
+				AgentRole: input.AgentRole,
+				Status:    "queued",
+			}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/agent-runs", bytes.NewBufferString(`{"agent_role":"mason"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestCheckpointAgentRunEndpoint(t *testing.T) {
+	fake := &fakeStore{
+		checkpointAgentRun: func(_ context.Context, id string, input store.AgentRunCheckpointInput, _ store.Actor, reason string) (store.AgentRun, error) {
+			if id != "run-1" {
+				t.Fatalf("id = %q", id)
+			}
+			if input.Checkpoint != "before-tests" {
+				t.Fatalf("checkpoint = %q", input.Checkpoint)
+			}
+			if reason != "Reached test gate" {
+				t.Fatalf("reason = %q", reason)
+			}
+			return store.AgentRun{
+				ID:                id,
+				AgentRole:         "scout",
+				Status:            "running",
+				CurrentCheckpoint: input.Checkpoint,
+			}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/agent-runs/run-1/checkpoint", bytes.NewBufferString(`{"changes":{"checkpoint":"before-tests"},"reason":"Reached test gate"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
 type fakeStore struct {
-	createWork     func(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
-	startStage     func(context.Context, string, store.Actor, string) (store.Stage, error)
-	attachEvidence func(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
+	createWork         func(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
+	startStage         func(context.Context, string, store.Actor, string) (store.Stage, error)
+	attachEvidence     func(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
+	createAgentRun     func(context.Context, store.AgentRunInput, store.Actor, string) (store.AgentRun, error)
+	checkpointAgentRun func(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
 }
 
 func (f *fakeStore) CreateWork(ctx context.Context, input store.WorkInput, actor store.Actor, reason string) (store.Work, error) {
@@ -216,4 +273,46 @@ func (f *fakeStore) GetApproval(context.Context, string) (store.Approval, error)
 
 func (f *fakeStore) DecideApproval(context.Context, string, store.ApprovalDecision, store.Actor, string) (store.Approval, error) {
 	return store.Approval{}, errors.New("unexpected DecideApproval")
+}
+
+func (f *fakeStore) CreateAgentRun(ctx context.Context, input store.AgentRunInput, actor store.Actor, reason string) (store.AgentRun, error) {
+	if f.createAgentRun != nil {
+		return f.createAgentRun(ctx, input, actor, reason)
+	}
+	return store.AgentRun{}, errors.New("unexpected CreateAgentRun")
+}
+
+func (f *fakeStore) ListAgentRuns(context.Context, store.AgentRunFilters) ([]store.AgentRun, error) {
+	return nil, errors.New("unexpected ListAgentRuns")
+}
+
+func (f *fakeStore) GetAgentRun(context.Context, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected GetAgentRun")
+}
+
+func (f *fakeStore) StartAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected StartAgentRun")
+}
+
+func (f *fakeStore) PauseAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected PauseAgentRun")
+}
+
+func (f *fakeStore) ResumeAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected ResumeAgentRun")
+}
+
+func (f *fakeStore) CancelAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected CancelAgentRun")
+}
+
+func (f *fakeStore) CheckpointAgentRun(ctx context.Context, id string, input store.AgentRunCheckpointInput, actor store.Actor, reason string) (store.AgentRun, error) {
+	if f.checkpointAgentRun != nil {
+		return f.checkpointAgentRun(ctx, id, input, actor, reason)
+	}
+	return store.AgentRun{}, errors.New("unexpected CheckpointAgentRun")
+}
+
+func (f *fakeStore) HeartbeatAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error) {
+	return store.AgentRun{}, errors.New("unexpected HeartbeatAgentRun")
 }

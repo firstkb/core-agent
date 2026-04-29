@@ -49,6 +49,16 @@ func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 
 	mux.HandleFunc("GET /api/approvals/{id}", s.handleGetApproval)
 	mux.HandleFunc("POST /api/approvals/{id}/decide", s.handleDecideApproval)
+
+	mux.HandleFunc("GET /api/agent-runs", s.handleListAgentRuns)
+	mux.HandleFunc("POST /api/agent-runs", s.handleCreateAgentRun)
+	mux.HandleFunc("GET /api/agent-runs/{id}", s.handleGetAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/start", s.handleStartAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/pause", s.handlePauseAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/resume", s.handleResumeAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/cancel", s.handleCancelAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/checkpoint", s.handleCheckpointAgentRun)
+	mux.HandleFunc("POST /api/agent-runs/{id}/heartbeat", s.handleHeartbeatAgentRun)
 }
 
 func (s *Server) handleCreateWork(w http.ResponseWriter, r *http.Request) {
@@ -274,6 +284,88 @@ func (s *Server) handleDecideApproval(w http.ResponseWriter, r *http.Request) {
 	}
 	approval, err := s.store.DecideApproval(r.Context(), r.PathValue("id"), input, actorFromRequest(r), input.Reason)
 	writeResult(w, approval, err)
+}
+
+func (s *Server) handleCreateAgentRun(w http.ResponseWriter, r *http.Request) {
+	var input store.AgentRunInput
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	run, err := s.store.CreateAgentRun(r.Context(), input, actorFromRequest(r), "")
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleListAgentRuns(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	runs, err := s.store.ListAgentRuns(r.Context(), store.AgentRunFilters{
+		WorkID:    q.Get("workId"),
+		TaskID:    q.Get("taskId"),
+		StageID:   q.Get("stageId"),
+		Status:    q.Get("status"),
+		AgentRole: q.Get("agentRole"),
+	})
+	writeResult(w, runs, err)
+}
+
+func (s *Server) handleGetAgentRun(w http.ResponseWriter, r *http.Request) {
+	run, err := s.store.GetAgentRun(r.Context(), r.PathValue("id"))
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleStartAgentRun(w http.ResponseWriter, r *http.Request) {
+	input := decodeCommand(w, r)
+	if input == nil {
+		return
+	}
+	run, err := s.store.StartAgentRun(r.Context(), r.PathValue("id"), input.Actor, input.Reason)
+	writeResult(w, run, err)
+}
+
+func (s *Server) handlePauseAgentRun(w http.ResponseWriter, r *http.Request) {
+	input := decodeCommand(w, r)
+	if input == nil {
+		return
+	}
+	run, err := s.store.PauseAgentRun(r.Context(), r.PathValue("id"), input.Actor, input.Reason)
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleResumeAgentRun(w http.ResponseWriter, r *http.Request) {
+	input := decodeCommand(w, r)
+	if input == nil {
+		return
+	}
+	run, err := s.store.ResumeAgentRun(r.Context(), r.PathValue("id"), input.Actor, input.Reason)
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleCancelAgentRun(w http.ResponseWriter, r *http.Request) {
+	input := decodeCommand(w, r)
+	if input == nil {
+		return
+	}
+	run, err := s.store.CancelAgentRun(r.Context(), r.PathValue("id"), input.Actor, input.Reason)
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleCheckpointAgentRun(w http.ResponseWriter, r *http.Request) {
+	var input commandEnvelope[store.AgentRunCheckpointInput]
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	run, err := s.store.CheckpointAgentRun(r.Context(), r.PathValue("id"), input.Changes, input.Actor, input.Reason)
+	writeResult(w, run, err)
+}
+
+func (s *Server) handleHeartbeatAgentRun(w http.ResponseWriter, r *http.Request) {
+	var input commandEnvelope[store.AgentRunCheckpointInput]
+	if r.Body != nil && r.ContentLength != 0 {
+		if !decodeJSON(w, r, &input) {
+			return
+		}
+	}
+	run, err := s.store.HeartbeatAgentRun(r.Context(), r.PathValue("id"), input.Changes, input.Actor, input.Reason)
+	writeResult(w, run, err)
 }
 
 func decodeCommand(w http.ResponseWriter, r *http.Request) *commandEnvelope[map[string]any] {

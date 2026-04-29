@@ -242,3 +242,44 @@ type ApprovalDecision struct {
 	DecidedBy string `json:"decided_by"`
 	Reason    string `json:"reason"`
 }
+
+type AgentRun struct {
+	ID                string     `json:"id"`
+	WorkID            *string    `json:"work_id,omitempty"`
+	TaskID            *string    `json:"task_id,omitempty"`
+	StageID           *string    `json:"stage_id,omitempty"`
+	AttemptID         *string    `json:"attempt_id,omitempty"`
+	AgentRole         string     `json:"agent_role"`
+	Status            string     `json:"status"`
+	CurrentCheckpoint string     `json:"current_checkpoint"`
+	LastHeartbeatAt   *time.Time `json:"last_heartbeat_at,omitempty"`
+	PauseRequestedAt  *time.Time `json:"pause_requested_at,omitempty"`
+	CancelRequestedAt *time.Time `json:"cancel_requested_at,omitempty"`
+	StartedAt         *time.Time `json:"started_at,omitempty"`
+	CompletedAt       *time.Time `json:"completed_at,omitempty"`
+	Metadata          any        `json:"metadata_json"`
+}
+
+type AgentRunInput struct {
+	WorkID            *string `json:"work_id"`
+	TaskID            *string `json:"task_id"`
+	StageID           *string `json:"stage_id"`
+	AttemptID         *string `json:"attempt_id"`
+	AgentRole         string  `json:"agent_role"`
+	Status            string  `json:"status"`
+	CurrentCheckpoint string  `json:"current_checkpoint"`
+	Metadata          any     `json:"metadata_json"`
+}
+
+type AgentRunFilters struct {
+	WorkID    string
+	TaskID    string
+	StageID   string
+	Status    string
+	AgentRole string
+}
+
+type AgentRunCheckpointInput struct {
+	Checkpoint string `json:"checkpoint"`
+	Metadata   any    `json:"metadata_json"`
+}

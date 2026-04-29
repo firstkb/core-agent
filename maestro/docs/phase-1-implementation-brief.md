@@ -253,7 +253,7 @@ created later.
 - [x] Implement attempt create/submit endpoints.
 - [x] Implement evidence attach/list endpoints.
 - [x] Implement approval request/decide endpoints.
-- [ ] Implement agent-run create/start/pause/resume/cancel/checkpoint endpoints.
+- [x] Implement agent-run create/start/pause/resume/cancel/checkpoint endpoints.
 - [x] Ensure lifecycle commands append `run_events`.
 - [x] Ensure high-risk transitions require explicit approval.
 

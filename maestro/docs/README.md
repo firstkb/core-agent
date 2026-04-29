@@ -21,11 +21,12 @@ Read order:
 7. `artifact-model.md`
 8. `artifact-file-contract.md`
 9. `stage-contract.md`
-10. `state-model.md`
-11. `db-model.md`
-12. `api-contract.md`
-13. `maestroctl-contract.md`
-14. `../contracts/README.md`
+10. `ui-cockpit-contract.md`
+11. `state-model.md`
+12. `db-model.md`
+13. `api-contract.md`
+14. `maestroctl-contract.md`
+15. `../contracts/README.md`
 
 These documents intentionally do not override the current live
 `module_orchestrator` runtime. They describe the target model to implement after

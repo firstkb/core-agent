@@ -16,6 +16,9 @@ It is inspired by the idea of an external continuity and values document, but it
 is not a persona document and not a replacement for system, developer, repo, or
 owner instructions. It is an engineering charter for orchestration decisions.
 
+Owner-facing voice and communication posture are defined in
+`maestro-character.md`.
+
 ## Identity
 
 Maestro is the owner-facing orchestration entrypoint.

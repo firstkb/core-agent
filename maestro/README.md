@@ -45,6 +45,7 @@ maestro/
   docs/
     README.md
     operating-charter.md
+    maestro-character.md
     orchestration-contract.md
     routing-tier-contract.md
     agent-contracts.md

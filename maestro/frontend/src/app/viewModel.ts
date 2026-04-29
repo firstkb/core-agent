@@ -28,13 +28,13 @@ export function statusTone(status: string): StatusTone {
   if (['done', 'verified', 'accepted', 'approved', 'completed'].includes(status)) {
     return 'success';
   }
-  if (['in_progress', 'running', 'ready', 'resume_requested'].includes(status)) {
+  if (['in_progress', 'running', 'ready', 'queued', 'resume_requested', 'resuming'].includes(status)) {
     return 'info';
   }
-  if (['awaiting_review', 'awaiting_approval', 'requested', 'pause_requested', 'paused'].includes(status)) {
+  if (['awaiting_review', 'awaiting_approval', 'requested', 'pause_requested', 'pausing_at_checkpoint', 'paused'].includes(status)) {
     return 'warning';
   }
-  if (['blocked', 'failed', 'rejected', 'cancelled', 'stale', 'cancel_requested'].includes(status)) {
+  if (['blocked', 'failed', 'rejected', 'cancelled', 'stale', 'cancel_requested', 'cancelling_at_checkpoint'].includes(status)) {
     return 'error';
   }
   return 'default';

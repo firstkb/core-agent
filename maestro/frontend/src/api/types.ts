@@ -148,6 +148,22 @@ export type AgentRun = {
   metadata_json: unknown;
 };
 
+export type AgentRunInput = {
+  work_id?: string;
+  task_id?: string;
+  stage_id?: string;
+  attempt_id?: string;
+  agent_role: string;
+  status?: string;
+  current_checkpoint?: string;
+  metadata_json?: unknown;
+};
+
+export type AgentRunCheckpointInput = {
+  checkpoint: string;
+  metadata_json?: unknown;
+};
+
 export type Health = {
   ok: boolean;
   service: string;

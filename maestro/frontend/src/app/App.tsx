@@ -51,10 +51,12 @@ import TableRowsRoundedIcon from '@mui/icons-material/TableRowsRounded';
 import ViewKanbanRoundedIcon from '@mui/icons-material/ViewKanbanRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { MaestroAPI, apiBaseURL } from '../api/client';
 import type {
   AgentRun,
+  AgentRunCheckpointInput,
+  AgentRunInput,
   Approval,
   CockpitState,
   Evidence,
@@ -89,6 +91,7 @@ type DetailTab = 'stages' | 'evidence' | 'approvals' | 'runs';
 type StageAction = 'start' | 'pause' | 'resume' | 'cancel';
 type StageReviewDecision = 'accept' | 'revise' | 'block' | 'cancel';
 type ApprovalDecision = 'approved' | 'rejected';
+type AgentRunAction = 'start' | 'pause' | 'resume' | 'cancel';
 type LoadOptions = {
   silent?: boolean;
 };
@@ -104,6 +107,12 @@ type IntakeInput = {
   agentRole: string;
   stageName: string;
   checkpointPolicy: string;
+};
+
+type AgentRunCreateInput = {
+  stageID: string;
+  agentRole: string;
+  checkpoint: string;
 };
 
 const initialState: CockpitState = {
@@ -232,6 +241,59 @@ export function App() {
   const handleApprovalDecision = useCallback(
     async (approval: Approval, decision: ApprovalDecision) => {
       await runCommand(`approval:${approval.id}:${decision}`, () => api.decideApproval(approval.id, decision));
+    },
+    [api, runCommand]
+  );
+
+  const handleCreateAgentRun = useCallback(
+    async (task: Task, input: AgentRunCreateInput) => {
+      const agentRole = input.agentRole.trim();
+      if (!agentRole) {
+        return;
+      }
+      const runInput: AgentRunInput = {
+        work_id: task.work_id,
+        task_id: task.id,
+        stage_id: input.stageID || undefined,
+        agent_role: agentRole,
+        status: 'queued',
+        current_checkpoint: input.checkpoint.trim(),
+        metadata_json: {
+          source: 'cockpit'
+        }
+      };
+      await runCommand(`agent-run:${task.id}:create`, () => api.createAgentRun(runInput));
+    },
+    [api, runCommand]
+  );
+
+  const handleAgentRunAction = useCallback(
+    async (run: AgentRun, action: AgentRunAction) => {
+      const commands: Record<AgentRunAction, () => Promise<AgentRun>> = {
+        start: () => api.startAgentRun(run.id),
+        pause: () => api.pauseAgentRun(run.id),
+        resume: () => api.resumeAgentRun(run.id),
+        cancel: () => api.cancelAgentRun(run.id)
+      };
+      await runCommand(`agent-run:${run.id}:${action}`, commands[action]);
+    },
+    [api, runCommand]
+  );
+
+  const handleAgentRunCheckpoint = useCallback(
+    async (run: AgentRun, input: AgentRunCheckpointInput) => {
+      const checkpoint = input.checkpoint.trim();
+      if (!checkpoint) {
+        return;
+      }
+      await runCommand(`agent-run:${run.id}:checkpoint`, () =>
+        api.checkpointAgentRun(run.id, {
+          checkpoint,
+          metadata_json: input.metadata_json ?? {
+            source: 'cockpit'
+          }
+        })
+      );
     },
     [api, runCommand]
   );
@@ -469,6 +531,8 @@ export function App() {
                 runs={state.agentRuns}
                 tasks={state.tasks}
                 work={state.work}
+                actionKey={actionKey}
+                onRunAction={handleAgentRunAction}
                 onSelectTask={(taskID) => setSelectedTaskID(taskID)}
               />
             )}
@@ -488,6 +552,9 @@ export function App() {
         onStageAction={handleStageAction}
         onStageReview={handleStageReview}
         onApprovalDecision={handleApprovalDecision}
+        onCreateAgentRun={handleCreateAgentRun}
+        onAgentRunAction={handleAgentRunAction}
+        onAgentRunCheckpoint={handleAgentRunCheckpoint}
         onAttachEvidence={handleAttachEvidence}
         onClose={() => setSelectedTaskID(null)}
       />
@@ -753,12 +820,16 @@ function AgentRunsWorkspace({
   runs,
   tasks,
   work,
+  actionKey,
+  onRunAction,
   onSelectTask
 }: {
   loading: boolean;
   runs: AgentRun[];
   tasks: Task[];
   work: Work[];
+  actionKey: string | null;
+  onRunAction: (run: AgentRun, action: AgentRunAction) => void;
   onSelectTask: (taskID: string) => void;
 }) {
   const taskByID = new Map(tasks.map((task) => [task.id, task]));
@@ -788,6 +859,7 @@ function AgentRunsWorkspace({
                 <TableCell>Work</TableCell>
                 <TableCell>Checkpoint</TableCell>
                 <TableCell>Heartbeat</TableCell>
+                <TableCell align="right">Control</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -827,6 +899,14 @@ function AgentRunsWorkspace({
                     </TableCell>
                     <TableCell>{run.current_checkpoint || '-'}</TableCell>
                     <TableCell>{formatDate(run.last_heartbeat_at ?? run.started_at)}</TableCell>
+                    <TableCell align="right">
+                      <AgentRunControls
+                        run={run}
+                        actionKey={actionKey}
+                        compact
+                        onAction={onRunAction}
+                      />
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -1126,6 +1206,9 @@ type TaskDrawerProps = {
   onStageAction: (stage: Stage, action: StageAction) => void;
   onStageReview: (stage: Stage, decision: StageReviewDecision) => void;
   onApprovalDecision: (approval: Approval, decision: ApprovalDecision) => void;
+  onCreateAgentRun: (task: Task, input: AgentRunCreateInput) => void;
+  onAgentRunAction: (run: AgentRun, action: AgentRunAction) => void;
+  onAgentRunCheckpoint: (run: AgentRun, input: AgentRunCheckpointInput) => void;
   onAttachEvidence: (input: EvidenceAttachmentInput) => void;
   onClose: () => void;
 };
@@ -1142,6 +1225,9 @@ function TaskDrawer({
   onStageAction,
   onStageReview,
   onApprovalDecision,
+  onCreateAgentRun,
+  onAgentRunAction,
+  onAgentRunCheckpoint,
   onAttachEvidence,
   onClose
 }: TaskDrawerProps) {
@@ -1247,7 +1333,17 @@ function TaskDrawer({
                 {tab === 'approvals' && (
                   <ApprovalPanel approvals={detail?.approvals ?? []} actionKey={actionKey} onDecision={onApprovalDecision} />
                 )}
-                {tab === 'runs' && <AgentRunPanel runs={detail?.agentRuns ?? []} />}
+                {tab === 'runs' && (
+                  <AgentRunPanel
+                    task={task}
+                    stages={detail?.stages ?? []}
+                    runs={detail?.agentRuns ?? []}
+                    actionKey={actionKey}
+                    onCreate={onCreateAgentRun}
+                    onAction={onAgentRunAction}
+                    onCheckpoint={onAgentRunCheckpoint}
+                  />
+                )}
               </>
             )}
           </Box>
@@ -1606,15 +1702,35 @@ function ApprovalPanel({
   );
 }
 
-function AgentRunPanel({ runs }: { runs: AgentRun[] }) {
-  if (runs.length === 0) {
-    return <EmptyPanel compact />;
-  }
+function AgentRunPanel({
+  task,
+  stages,
+  runs,
+  actionKey,
+  onCreate,
+  onAction,
+  onCheckpoint
+}: {
+  task: Task;
+  stages: Stage[];
+  runs: AgentRun[];
+  actionKey: string | null;
+  onCreate: (task: Task, input: AgentRunCreateInput) => void;
+  onAction: (run: AgentRun, action: AgentRunAction) => void;
+  onCheckpoint: (run: AgentRun, input: AgentRunCheckpointInput) => void;
+}) {
   return (
     <Stack spacing={1.25}>
+      <AgentRunCreatePanel
+        task={task}
+        stages={stages}
+        busy={actionKey === `agent-run:${task.id}:create`}
+        onCreate={onCreate}
+      />
+      {runs.length === 0 && <EmptyPanel compact />}
       {runs.map((run) => (
         <Paper key={run.id} variant="outlined" sx={{ p: 1.5 }}>
-          <Stack spacing={0.75}>
+          <Stack spacing={1}>
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <Typography sx={{ flex: 1, fontWeight: 800 }}>
                 {run.agent_role}
@@ -1627,9 +1743,213 @@ function AgentRunPanel({ runs }: { runs: AgentRun[] }) {
             <Typography variant="caption" color="text.secondary">
               heartbeat {formatDate(run.last_heartbeat_at)}
             </Typography>
+            <AgentRunControls
+              run={run}
+              actionKey={actionKey}
+              onAction={onAction}
+              onCheckpoint={onCheckpoint}
+            />
           </Stack>
         </Paper>
       ))}
+    </Stack>
+  );
+}
+
+function AgentRunCreatePanel({
+  task,
+  stages,
+  busy,
+  onCreate
+}: {
+  task: Task;
+  stages: Stage[];
+  busy: boolean;
+  onCreate: (task: Task, input: AgentRunCreateInput) => void;
+}) {
+  const stageSignature = stages
+    .map((stage) => `${stage.id}:${stage.agent_role}:${stage.checkpoint_policy}`)
+    .join('|');
+  const [stageID, setStageID] = useState('');
+  const [agentRole, setAgentRole] = useState(task.agent_role || 'mason');
+  const [checkpoint, setCheckpoint] = useState('');
+
+  useEffect(() => {
+    const defaultStage = stages[0];
+    setStageID(defaultStage?.id ?? '');
+    setAgentRole(defaultStage?.agent_role || task.agent_role || 'mason');
+    setCheckpoint(defaultStage?.checkpoint_policy || 'created');
+  }, [stageSignature, task.agent_role, task.id]);
+
+  const handleStageChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const nextStageID = event.target.value;
+    const nextStage = stages.find((stage) => stage.id === nextStageID);
+    setStageID(nextStageID);
+    setAgentRole(nextStage?.agent_role || task.agent_role || agentRole || 'mason');
+    setCheckpoint(nextStage?.checkpoint_policy || checkpoint || 'created');
+  };
+
+  const canCreate = Boolean(agentRole.trim());
+  const submitCreate = () => {
+    if (!canCreate || busy) {
+      return;
+    }
+    onCreate(task, { stageID, agentRole, checkpoint });
+  };
+
+  return (
+    <Paper
+      component="form"
+      variant="outlined"
+      sx={{ p: 1.5 }}
+      onSubmit={(event) => {
+        event.preventDefault();
+        submitCreate();
+      }}
+    >
+      <Stack spacing={1.25}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography sx={{ flex: 1, fontWeight: 800 }}>
+            Create agent run
+          </Typography>
+          <StatusChip label="queued" tone="default" />
+        </Stack>
+        <TextField select value={stageID} onChange={handleStageChange} label="Stage" size="small">
+          <MenuItem value="">Task only</MenuItem>
+          {stages.map((stage) => (
+            <MenuItem key={stage.id} value={stage.id}>
+              {stage.name} / {stage.agent_role || task.agent_role || 'unassigned'}
+            </MenuItem>
+          ))}
+        </TextField>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <TextField
+            value={agentRole}
+            onChange={(event) => setAgentRole(event.target.value)}
+            label="Agent role"
+            size="small"
+            sx={{ flex: 1 }}
+          />
+          <TextField
+            value={checkpoint}
+            onChange={(event) => setCheckpoint(event.target.value)}
+            label="Checkpoint"
+            size="small"
+            sx={{ flex: 1 }}
+          />
+        </Stack>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            type="submit"
+            disabled={!canCreate || busy}
+          >
+            Create Run
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+function AgentRunControls({
+  run,
+  actionKey,
+  compact = false,
+  onAction,
+  onCheckpoint
+}: {
+  run: AgentRun;
+  actionKey: string | null;
+  compact?: boolean;
+  onAction: (run: AgentRun, action: AgentRunAction) => void;
+  onCheckpoint?: (run: AgentRun, input: AgentRunCheckpointInput) => void;
+}) {
+  const [checkpoint, setCheckpoint] = useState(run.current_checkpoint || '');
+
+  useEffect(() => {
+    setCheckpoint(run.current_checkpoint || '');
+  }, [run.current_checkpoint, run.id]);
+
+  const isTerminal = ['completed', 'cancelled', 'failed', 'stale'].includes(run.status);
+  const canStart = run.status === 'queued';
+  const canPause = ['running', 'resuming', 'resume_requested'].includes(run.status);
+  const canResume = ['pause_requested', 'pausing_at_checkpoint', 'paused'].includes(run.status);
+  const canCancel = !isTerminal && !['cancel_requested', 'cancelling_at_checkpoint'].includes(run.status);
+  const canCheckpoint = Boolean(onCheckpoint && checkpoint.trim());
+  const busyForRun = Boolean(actionKey?.startsWith(`agent-run:${run.id}:`));
+  const checkpointBusy = actionKey === `agent-run:${run.id}:checkpoint`;
+
+  const actionButton = (action: AgentRunAction, label: string, icon: ReactNode, enabled: boolean) => {
+    const busy = actionKey === `agent-run:${run.id}:${action}`;
+    if (compact) {
+      return (
+        <Tooltip key={action} title={label}>
+          <span>
+            <IconButton
+              size="small"
+              color={busy ? 'primary' : 'default'}
+              disabled={!enabled || busyForRun}
+              aria-label={`${label} agent run`}
+              onClick={() => onAction(run, action)}
+            >
+              {icon}
+            </IconButton>
+          </span>
+        </Tooltip>
+      );
+    }
+    return (
+      <Button
+        key={action}
+        size="small"
+        variant="outlined"
+        startIcon={icon}
+        disabled={!enabled || busyForRun}
+        onClick={() => onAction(run, action)}
+      >
+        {label}
+      </Button>
+    );
+  };
+
+  return (
+    <Stack spacing={1} onClick={(event) => event.stopPropagation()}>
+      <Stack direction="row" spacing={0.75} useFlexGap sx={{ justifyContent: compact ? 'flex-end' : 'flex-start', flexWrap: 'wrap' }}>
+        {actionButton('start', 'Start', <PlayArrowRoundedIcon fontSize="small" />, canStart)}
+        {actionButton('pause', 'Pause', <PauseRoundedIcon fontSize="small" />, canPause)}
+        {actionButton('resume', 'Resume', <ReplayRoundedIcon fontSize="small" />, canResume)}
+        {actionButton('cancel', 'Cancel', <BlockRoundedIcon fontSize="small" />, canCancel)}
+      </Stack>
+      {!compact && onCheckpoint && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <TextField
+            value={checkpoint}
+            onChange={(event) => setCheckpoint(event.target.value)}
+            label="Checkpoint"
+            size="small"
+            sx={{ flex: 1 }}
+          />
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<CheckCircleRoundedIcon />}
+            disabled={!canCheckpoint || busyForRun || checkpointBusy}
+            onClick={() =>
+              onCheckpoint(run, {
+                checkpoint: checkpoint.trim(),
+                metadata_json: {
+                  source: 'cockpit'
+                }
+              })
+            }
+          >
+            Checkpoint
+          </Button>
+        </Stack>
+      )}
     </Stack>
   );
 }

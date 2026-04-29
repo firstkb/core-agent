@@ -1,5 +1,7 @@
 import type {
   AgentRun,
+  AgentRunCheckpointInput,
+  AgentRunInput,
   Approval,
   CockpitState,
   Evidence,
@@ -74,6 +76,34 @@ export class MaestroAPI {
   async listAgentRuns(taskID?: string): Promise<AgentRun[]> {
     const query = taskID ? `?taskId=${encodeURIComponent(taskID)}` : '';
     return this.getList(`/api/agent-runs${query}`);
+  }
+
+  async createAgentRun(input: AgentRunInput): Promise<AgentRun> {
+    return this.post('/api/agent-runs', input);
+  }
+
+  async startAgentRun(runID: string): Promise<AgentRun> {
+    return this.agentRunCommand(runID, 'start', 'Started from Cockpit');
+  }
+
+  async pauseAgentRun(runID: string): Promise<AgentRun> {
+    return this.agentRunCommand(runID, 'pause', 'Pause requested from Cockpit');
+  }
+
+  async resumeAgentRun(runID: string): Promise<AgentRun> {
+    return this.agentRunCommand(runID, 'resume', 'Resume requested from Cockpit');
+  }
+
+  async cancelAgentRun(runID: string): Promise<AgentRun> {
+    return this.agentRunCommand(runID, 'cancel', 'Cancel requested from Cockpit');
+  }
+
+  async checkpointAgentRun(runID: string, input: AgentRunCheckpointInput): Promise<AgentRun> {
+    return this.post(`/api/agent-runs/${encodeURIComponent(runID)}/checkpoint`, {
+      changes: input,
+      actor: cockpitActor(),
+      reason: `Checkpoint ${input.checkpoint} from Cockpit`
+    });
   }
 
   async startStage(stageID: string): Promise<Stage> {
@@ -161,6 +191,14 @@ export class MaestroAPI {
 
   private stageCommand(stageID: string, action: 'start' | 'pause' | 'resume' | 'cancel', reason: string): Promise<Stage> {
     return this.post(`/api/stages/${encodeURIComponent(stageID)}/${action}`, {
+      command: action,
+      reason,
+      actor: cockpitActor()
+    });
+  }
+
+  private agentRunCommand(runID: string, action: 'start' | 'pause' | 'resume' | 'cancel', reason: string): Promise<AgentRun> {
+    return this.post(`/api/agent-runs/${encodeURIComponent(runID)}/${action}`, {
       command: action,
       reason,
       actor: cockpitActor()

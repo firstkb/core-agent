@@ -7,6 +7,8 @@ import type {
   Evidence,
   EvidenceAttachmentInput,
   Health,
+  RunEventEntry,
+  RunEventFilters,
   Stage,
   StageInput,
   Task,
@@ -78,6 +80,27 @@ export class MaestroAPI {
     return this.getList(`/api/agent-runs${query}`);
   }
 
+  async listRunEvents(filters: RunEventFilters = {}): Promise<RunEventEntry[]> {
+    const params = new URLSearchParams();
+    if (filters.workID) {
+      params.set('workId', filters.workID);
+    }
+    if (filters.taskID) {
+      params.set('taskId', filters.taskID);
+    }
+    if (filters.stageID) {
+      params.set('stageId', filters.stageID);
+    }
+    if (filters.attemptID) {
+      params.set('attemptId', filters.attemptID);
+    }
+    if (filters.limit) {
+      params.set('limit', String(filters.limit));
+    }
+    const query = params.toString();
+    return this.getList(`/api/run-events${query ? `?${query}` : ''}`);
+  }
+
   async createAgentRun(input: AgentRunInput): Promise<AgentRun> {
     return this.post('/api/agent-runs', input);
   }
@@ -143,26 +166,28 @@ export class MaestroAPI {
   }
 
   async loadCockpit(): Promise<CockpitState> {
-    const [health, work, tasks, agentRuns] = await Promise.all([
+    const [health, work, tasks, agentRuns, runEvents] = await Promise.all([
       this.health().catch(() => null),
       this.listWork(),
       this.listTasks(),
-      this.listAgentRuns()
+      this.listAgentRuns(),
+      this.listRunEvents({ limit: 100 })
     ]);
     const approvals = (
       await Promise.all(tasks.map((task) => this.listTaskApprovals(task.id).catch(() => [])))
     ).flat();
-    return { health, work, tasks, approvals, agentRuns };
+    return { health, work, tasks, approvals, agentRuns, runEvents };
   }
 
   async loadTaskDetail(taskID: string): Promise<TaskDetail> {
-    const [stages, evidence, approvals, agentRuns] = await Promise.all([
+    const [stages, evidence, approvals, agentRuns, runEvents] = await Promise.all([
       this.listStages(taskID),
       this.listTaskEvidence(taskID),
       this.listTaskApprovals(taskID),
-      this.listAgentRuns(taskID)
+      this.listAgentRuns(taskID),
+      this.listRunEvents({ taskID, limit: 100 })
     ]);
-    return { stages, evidence, approvals, agentRuns };
+    return { stages, evidence, approvals, agentRuns, runEvents };
   }
 
   private async get<T>(path: string): Promise<T> {

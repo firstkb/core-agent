@@ -164,6 +164,29 @@ export type AgentRunCheckpointInput = {
   metadata_json?: unknown;
 };
 
+export type RunEventEntry = {
+  id: string;
+  work_id?: string;
+  task_id?: string;
+  stage_id?: string;
+  attempt_id?: string;
+  actor_type: string;
+  actor_id: string;
+  command: string;
+  previous_state_json: unknown;
+  next_state_json: unknown;
+  reason: string;
+  created_at: string;
+};
+
+export type RunEventFilters = {
+  workID?: string;
+  taskID?: string;
+  stageID?: string;
+  attemptID?: string;
+  limit?: number;
+};
+
 export type Health = {
   ok: boolean;
   service: string;
@@ -175,6 +198,7 @@ export type TaskDetail = {
   evidence: Evidence[];
   approvals: Approval[];
   agentRuns: AgentRun[];
+  runEvents: RunEventEntry[];
 };
 
 export type CockpitState = {
@@ -183,4 +207,5 @@ export type CockpitState = {
   tasks: Task[];
   approvals: Approval[];
   agentRuns: AgentRun[];
+  runEvents: RunEventEntry[];
 };

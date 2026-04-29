@@ -61,6 +61,7 @@ type DataStore interface {
 	CancelAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error)
 	CheckpointAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
 	HeartbeatAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
+	ListRunEvents(context.Context, store.RunEventFilters) ([]store.RunEventEntry, error)
 }
 
 type Options struct {

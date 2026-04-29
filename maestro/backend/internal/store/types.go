@@ -283,3 +283,26 @@ type AgentRunCheckpointInput struct {
 	Checkpoint string `json:"checkpoint"`
 	Metadata   any    `json:"metadata_json"`
 }
+
+type RunEventEntry struct {
+	ID            string    `json:"id"`
+	WorkID        *string   `json:"work_id,omitempty"`
+	TaskID        *string   `json:"task_id,omitempty"`
+	StageID       *string   `json:"stage_id,omitempty"`
+	AttemptID     *string   `json:"attempt_id,omitempty"`
+	ActorType     string    `json:"actor_type"`
+	ActorID       string    `json:"actor_id"`
+	Command       string    `json:"command"`
+	PreviousState any       `json:"previous_state_json"`
+	NextState     any       `json:"next_state_json"`
+	Reason        string    `json:"reason"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+type RunEventFilters struct {
+	WorkID    string
+	TaskID    string
+	StageID   string
+	AttemptID string
+	Limit     int
+}

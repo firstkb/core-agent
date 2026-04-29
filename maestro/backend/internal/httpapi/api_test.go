@@ -232,6 +232,50 @@ func TestCheckpointAgentRunEndpoint(t *testing.T) {
 	}
 }
 
+func TestListRunEventsEndpoint(t *testing.T) {
+	createdAt := time.Date(2026, 4, 29, 18, 0, 0, 0, time.UTC)
+	fake := &fakeStore{
+		listRunEvents: func(_ context.Context, filters store.RunEventFilters) ([]store.RunEventEntry, error) {
+			if filters.TaskID != "task-1" {
+				t.Fatalf("task id = %q", filters.TaskID)
+			}
+			if filters.Limit != 25 {
+				t.Fatalf("limit = %d", filters.Limit)
+			}
+			return []store.RunEventEntry{
+				{
+					ID:            "event-1",
+					TaskID:        &filters.TaskID,
+					ActorType:     "cockpit",
+					ActorID:       "maestro-cockpit",
+					Command:       "agent_run.start",
+					PreviousState: map[string]any{"status": "queued"},
+					NextState:     map[string]any{"status": "running"},
+					Reason:        "Started from test",
+					CreatedAt:     createdAt,
+				},
+			}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/run-events?taskId=task-1&limit=25", nil)
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var events []store.RunEventEntry
+	if err := json.Unmarshal(rec.Body.Bytes(), &events); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(events) != 1 || events[0].Command != "agent_run.start" {
+		t.Fatalf("events = %+v", events)
+	}
+}
+
 type fakeStore struct {
 	createWork         func(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
 	getTask            func(context.Context, string) (store.Task, error)
@@ -241,6 +285,7 @@ type fakeStore struct {
 	attachEvidence     func(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
 	createAgentRun     func(context.Context, store.AgentRunInput, store.Actor, string) (store.AgentRun, error)
 	checkpointAgentRun func(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
+	listRunEvents      func(context.Context, store.RunEventFilters) ([]store.RunEventEntry, error)
 }
 
 func (f *fakeStore) CreateWork(ctx context.Context, input store.WorkInput, actor store.Actor, reason string) (store.Work, error) {
@@ -413,4 +458,11 @@ func (f *fakeStore) CheckpointAgentRun(ctx context.Context, id string, input sto
 
 func (f *fakeStore) HeartbeatAgentRun(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error) {
 	return store.AgentRun{}, errors.New("unexpected HeartbeatAgentRun")
+}
+
+func (f *fakeStore) ListRunEvents(ctx context.Context, filters store.RunEventFilters) ([]store.RunEventEntry, error) {
+	if f.listRunEvents != nil {
+		return f.listRunEvents(ctx, filters)
+	}
+	return nil, errors.New("unexpected ListRunEvents")
 }

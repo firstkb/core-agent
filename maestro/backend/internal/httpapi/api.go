@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"firstkb.dev/maestro/backend/internal/artifacts"
 	"firstkb.dev/maestro/backend/internal/store"
@@ -95,6 +96,8 @@ func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/agent-runs/{id}/cancel", s.handleCancelAgentRun)
 	mux.HandleFunc("POST /api/agent-runs/{id}/checkpoint", s.handleCheckpointAgentRun)
 	mux.HandleFunc("POST /api/agent-runs/{id}/heartbeat", s.handleHeartbeatAgentRun)
+
+	mux.HandleFunc("GET /api/run-events", s.handleListRunEvents)
 }
 
 func (s *Server) handleCreateWork(w http.ResponseWriter, r *http.Request) {
@@ -461,6 +464,23 @@ func (s *Server) handleHeartbeatAgentRun(w http.ResponseWriter, r *http.Request)
 	writeResult(w, run, err)
 }
 
+func (s *Server) handleListRunEvents(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	limit, err := intQuery(q.Get("limit"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_query", err.Error())
+		return
+	}
+	events, err := s.store.ListRunEvents(r.Context(), store.RunEventFilters{
+		WorkID:    q.Get("workId"),
+		TaskID:    q.Get("taskId"),
+		StageID:   q.Get("stageId"),
+		AttemptID: q.Get("attemptId"),
+		Limit:     limit,
+	})
+	writeResult(w, events, err)
+}
+
 func decodeCommand(w http.ResponseWriter, r *http.Request) *commandEnvelope[map[string]any] {
 	var input commandEnvelope[map[string]any]
 	if r.Body == nil || r.ContentLength == 0 {
@@ -470,6 +490,20 @@ func decodeCommand(w http.ResponseWriter, r *http.Request) *commandEnvelope[map[
 		return nil
 	}
 	return &input
+}
+
+func intQuery(raw string) (int, error) {
+	if raw == "" {
+		return 0, nil
+	}
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("limit must be an integer")
+	}
+	if value < 0 {
+		return 0, fmt.Errorf("limit must be positive")
+	}
+	return value, nil
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, target any) bool {

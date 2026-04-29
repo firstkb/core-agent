@@ -62,6 +62,7 @@ import type {
   Evidence,
   EvidenceAttachmentInput,
   Stage,
+  RunEventEntry,
   StageInput,
   Task,
   TaskDetail,
@@ -87,7 +88,7 @@ import {
 
 type ViewMode = 'table' | 'kanban';
 type MainView = 'dashboard' | 'table' | 'kanban' | 'agent-runs';
-type DetailTab = 'stages' | 'evidence' | 'approvals' | 'runs';
+type DetailTab = 'stages' | 'evidence' | 'approvals' | 'runs' | 'events';
 type StageAction = 'start' | 'pause' | 'resume' | 'cancel';
 type StageReviewDecision = 'accept' | 'revise' | 'block' | 'cancel';
 type ApprovalDecision = 'approved' | 'rejected';
@@ -120,7 +121,8 @@ const initialState: CockpitState = {
   work: [],
   tasks: [],
   approvals: [],
-  agentRuns: []
+  agentRuns: [],
+  runEvents: []
 };
 
 const COCKPIT_POLL_MS = 5000;
@@ -529,6 +531,7 @@ export function App() {
               <AgentRunsWorkspace
                 loading={loading}
                 runs={state.agentRuns}
+                runEvents={state.runEvents}
                 tasks={state.tasks}
                 work={state.work}
                 actionKey={actionKey}
@@ -818,6 +821,7 @@ function TaskWorkspace({
 function AgentRunsWorkspace({
   loading,
   runs,
+  runEvents,
   tasks,
   work,
   actionKey,
@@ -826,6 +830,7 @@ function AgentRunsWorkspace({
 }: {
   loading: boolean;
   runs: AgentRun[];
+  runEvents: RunEventEntry[];
   tasks: Task[];
   work: Work[];
   actionKey: string | null;
@@ -849,70 +854,73 @@ function AgentRunsWorkspace({
       ) : runs.length === 0 ? (
         <EmptyPanel />
       ) : (
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 220px)' }}>
-          <Table stickyHeader size="small" aria-label="Maestro agent runs">
-            <TableHead>
-              <TableRow>
-                <TableCell>Run</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Task</TableCell>
-                <TableCell>Work</TableCell>
-                <TableCell>Checkpoint</TableCell>
-                <TableCell>Heartbeat</TableCell>
-                <TableCell align="right">Control</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {runs.map((run) => {
-                const task = run.task_id ? taskByID.get(run.task_id) : undefined;
-                return (
-                  <TableRow
-                    key={run.id}
-                    hover={Boolean(task)}
-                    onClick={() => {
-                      if (task) {
-                        onSelectTask(task.id);
-                      }
-                    }}
-                    sx={{ cursor: task ? 'pointer' : 'default' }}
-                  >
-                    <TableCell sx={{ minWidth: 180 }}>
-                      <Typography noWrap sx={{ fontWeight: 800 }}>
-                        {run.agent_role}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {shortID(run.id)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <StatusChip label={run.status} tone={statusTone(run.status)} />
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 260 }}>
-                      <Typography variant="body2" noWrap>
-                        {task?.title ?? '-'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={{ maxWidth: 260 }}>
-                      <Typography variant="body2" noWrap>
-                        {task ? workTitle(work, task) : '-'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{run.current_checkpoint || '-'}</TableCell>
-                    <TableCell>{formatDate(run.last_heartbeat_at ?? run.started_at)}</TableCell>
-                    <TableCell align="right">
-                      <AgentRunControls
-                        run={run}
-                        actionKey={actionKey}
-                        compact
-                        onAction={onRunAction}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Stack spacing={1.5} sx={{ p: 1.5 }}>
+          <RunEventTrail events={runEvents.slice(0, 6)} />
+          <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+            <Table stickyHeader size="small" aria-label="Maestro agent runs">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Run</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Task</TableCell>
+                  <TableCell>Work</TableCell>
+                  <TableCell>Checkpoint</TableCell>
+                  <TableCell>Heartbeat</TableCell>
+                  <TableCell align="right">Control</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {runs.map((run) => {
+                  const task = run.task_id ? taskByID.get(run.task_id) : undefined;
+                  return (
+                    <TableRow
+                      key={run.id}
+                      hover={Boolean(task)}
+                      onClick={() => {
+                        if (task) {
+                          onSelectTask(task.id);
+                        }
+                      }}
+                      sx={{ cursor: task ? 'pointer' : 'default' }}
+                    >
+                      <TableCell sx={{ minWidth: 180 }}>
+                        <Typography noWrap sx={{ fontWeight: 800 }}>
+                          {run.agent_role}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {shortID(run.id)}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip label={run.status} tone={statusTone(run.status)} />
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 260 }}>
+                        <Typography variant="body2" noWrap>
+                          {task?.title ?? '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 260 }}>
+                        <Typography variant="body2" noWrap>
+                          {task ? workTitle(work, task) : '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{run.current_checkpoint || '-'}</TableCell>
+                      <TableCell>{formatDate(run.last_heartbeat_at ?? run.started_at)}</TableCell>
+                      <TableCell align="right">
+                        <AgentRunControls
+                          run={run}
+                          actionKey={actionKey}
+                          compact
+                          onAction={onRunAction}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
       )}
     </Paper>
   );
@@ -1306,6 +1314,7 @@ function TaskDrawer({
             <Tab value="evidence" label="Evidence" />
             <Tab value="approvals" label="Approvals" />
             <Tab value="runs" label="Agent Runs" />
+            <Tab value="events" label="Events" />
           </Tabs>
 
           <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
@@ -1344,6 +1353,7 @@ function TaskDrawer({
                     onCheckpoint={onAgentRunCheckpoint}
                   />
                 )}
+                {tab === 'events' && <RunEventTimeline events={detail?.runEvents ?? []} />}
               </>
             )}
           </Box>
@@ -1702,6 +1712,67 @@ function ApprovalPanel({
   );
 }
 
+function RunEventTrail({ events }: { events: RunEventEntry[] }) {
+  if (events.length === 0) {
+    return null;
+  }
+  return (
+    <Paper variant="outlined" sx={{ p: 1.25 }}>
+      <Stack spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography sx={{ flex: 1, fontWeight: 800 }}>
+            Recent Events
+          </Typography>
+          <StatusChip label={String(events.length)} />
+        </Stack>
+        <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
+          {events.map((event) => (
+            <StatusChip
+              key={event.id}
+              label={`${eventCommandLabel(event.command)} ${eventStatusLabel(event)}`}
+              tone={eventTone(event)}
+            />
+          ))}
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+function RunEventTimeline({ events }: { events: RunEventEntry[] }) {
+  if (events.length === 0) {
+    return <EmptyPanel compact />;
+  }
+  return (
+    <Stack spacing={1.25}>
+      {events.map((event) => (
+        <Paper key={event.id} variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={0.75}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Typography sx={{ flex: 1, fontWeight: 800 }}>
+                {eventCommandLabel(event.command)}
+              </Typography>
+              <StatusChip label={eventStatusLabel(event)} tone={eventTone(event)} />
+            </Stack>
+            <Typography variant="body2" color="text.secondary">
+              {event.reason || `${event.actor_type}:${event.actor_id}`}
+            </Typography>
+            <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <StatusChip label={event.actor_type} />
+              {event.task_id && <StatusChip label={`task ${shortID(event.task_id)}`} />}
+              {event.stage_id && <StatusChip label={`stage ${shortID(event.stage_id)}`} />}
+              {event.attempt_id && <StatusChip label={`attempt ${shortID(event.attempt_id)}`} />}
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              {formatDate(event.created_at)}
+            </Typography>
+          </Stack>
+        </Paper>
+      ))}
+    </Stack>
+  );
+}
+
 function AgentRunPanel({
   task,
   stages,
@@ -1952,6 +2023,35 @@ function AgentRunControls({
       )}
     </Stack>
   );
+}
+
+function eventCommandLabel(command: string): string {
+  return command
+    .split(/[._]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function eventStatusLabel(event: RunEventEntry): string {
+  const nextStatus = statusFromState(event.next_state_json);
+  const previousStatus = statusFromState(event.previous_state_json);
+  if (nextStatus && previousStatus && nextStatus !== previousStatus) {
+    return `${previousStatus} -> ${nextStatus}`;
+  }
+  return nextStatus || previousStatus || 'recorded';
+}
+
+function eventTone(event: RunEventEntry) {
+  return statusTone(statusFromState(event.next_state_json) || event.command);
+}
+
+function statusFromState(value: unknown): string {
+  if (!value || typeof value !== 'object') {
+    return '';
+  }
+  const status = (value as { status?: unknown }).status;
+  return typeof status === 'string' ? status : '';
 }
 
 function EmptyPanel({ compact = false }: { compact?: boolean }) {

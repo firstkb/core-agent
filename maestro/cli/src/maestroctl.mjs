@@ -75,12 +75,56 @@ async function buildCommand({ group, action, idOrSubcommand, maybeSubcommand, fl
       return buildEvidence(action, flags, apiURL, cwd);
     case 'approval':
       return buildApproval(action, idOrSubcommand, flags, apiURL, cwd);
+    case 'agent':
+      return buildAgent(action, idOrSubcommand, flags, apiURL);
     case 'agent-run':
       return buildAgentRun(action, idOrSubcommand, maybeSubcommand, flags, apiURL, cwd);
+    case 'task-packet':
+      return buildTaskPacket(action, flags, apiURL);
     case 'run-events':
       return buildRunEvents(action, flags, apiURL);
     default:
       throw cliError('unknown_command', `Unknown command group: ${group}`);
+  }
+}
+
+function buildTaskPacket(action, flags, apiURL) {
+  switch (action) {
+    case 'generate':
+      requireValue(flags.task ?? flags.taskId, '--task');
+      return postCommand('task-packet generate', apiURL, '/api/task-packets/generate', {
+        task_id: flags.task ?? flags.taskId,
+        stage_id: flags.stage ?? flags.stageId ?? '',
+        agent_role: flags.agentRole ?? flags.role ?? ''
+      });
+    case 'launch':
+      requireValue(flags.task ?? flags.taskId, '--task');
+      return postCommand('task-packet launch', apiURL, '/api/task-packets/launch', {
+        task_id: flags.task ?? flags.taskId,
+        stage_id: flags.stage ?? flags.stageId ?? '',
+        agent_role: flags.agentRole ?? flags.role ?? '',
+        current_checkpoint: flags.currentCheckpoint ?? flags.checkpoint ?? '',
+        start: Boolean(flags.start)
+      });
+    default:
+      throw cliError('unknown_command', `Unknown task-packet command: ${action}`);
+  }
+}
+
+function buildAgent(action, id, flags, apiURL) {
+  switch (action) {
+    case 'list':
+      return getCommand('agent list', apiURL, '/api/agents');
+    case 'capabilities':
+      return getCommand('agent capabilities', apiURL, '/api/agent-capabilities');
+    case 'handoff':
+      requireValue(id, 'agent-run id');
+      return getCommand('agent handoff', apiURL, `/api/agent-runs/${encodeURIComponent(id)}/handoff`);
+    case 'claim':
+      requireValue(id, 'agent-run id');
+      return postCommand('agent claim', apiURL, `/api/agent-runs/${encodeURIComponent(id)}/claim`, commandPayload(flags));
+    default:
+      throw cliError('unknown_command', `Unknown agent command: ${action}`);
   }
 }
 
@@ -588,7 +632,9 @@ Groups:
   attempt    create|get|submit
   evidence   attach
   approval   request|decide
+  agent      list|capabilities|handoff|claim
   agent-run  list|create|get|start|pause|resume|cancel|checkpoint|heartbeat
+  task-packet generate|launch
   run-events list
 
 Global:

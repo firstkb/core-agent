@@ -44,6 +44,13 @@ maestroctl evidence attach --attempt <attempt-id> --uri artifact://current/path 
 maestroctl approval request --task <task-id> --type execution --reason "High-risk gate"
 maestroctl approval decide <approval-id> --decision approved --reason "Approved by owner"
 
+maestroctl agent list
+maestroctl agent capabilities
+maestroctl agent handoff <agent-run-id>
+maestroctl agent claim <agent-run-id> --reason "Take work"
+maestroctl task-packet generate --task <task-id> --stage <stage-id> --role mason
+maestroctl task-packet launch --task <task-id> --stage <stage-id> --role mason
+
 maestroctl agent-run create --agent-role mason --task <task-id> --stage <stage-id>
 maestroctl agent-run start <agent-run-id>
 maestroctl agent-run checkpoint <agent-run-id> --checkpoint before-tests

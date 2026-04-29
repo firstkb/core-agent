@@ -148,6 +148,113 @@ test('agent-run list accepts id-suffixed filter flags', async () => {
   assert.equal(calls[0].url.searchParams.get('agentRole'), 'mason');
 });
 
+test('agent capabilities calls catalog endpoint', async () => {
+  const calls = [];
+  const result = await run(['--api-url', 'http://maestro.local', 'agent', 'capabilities'], {
+    fetch: fakeFetch(calls, [{ role: 'mason' }])
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'agent capabilities');
+  assert.equal(calls[0].url.pathname, '/api/agent-capabilities');
+  assert.equal(calls[0].init.method, 'GET');
+});
+
+test('agent handoff fetches launch packet for a run', async () => {
+  const calls = [];
+  const result = await run(['--api-url', 'http://maestro.local', 'agent', 'handoff', 'run-1'], {
+    fetch: fakeFetch(calls, { agent_run: { id: 'run-1' }, packet: { task_id: 'task-1' } })
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'agent handoff');
+  assert.equal(calls[0].url.pathname, '/api/agent-runs/run-1/handoff');
+  assert.equal(calls[0].init.method, 'GET');
+});
+
+test('agent claim starts queued run and returns handoff', async () => {
+  const calls = [];
+  const result = await run([
+    '--api-url',
+    'http://maestro.local',
+    'agent',
+    'claim',
+    'run-1',
+    '--reason',
+    'Take work'
+  ], {
+    fetch: fakeFetch(calls, { agent_run: { id: 'run-1', status: 'running' }, packet: { task_id: 'task-1' } })
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'agent claim');
+  assert.equal(calls[0].url.pathname, '/api/agent-runs/run-1/claim');
+  assert.equal(calls[0].init.method, 'POST');
+  assert.deepEqual(JSON.parse(calls[0].init.body), {
+    command: '',
+    reason: 'Take work',
+    actor: { type: 'maestro', id: 'maestro' }
+  });
+});
+
+test('task-packet generate posts selected task and role', async () => {
+  const calls = [];
+  const result = await run([
+    '--api-url',
+    'http://maestro.local',
+    'task-packet',
+    'generate',
+    '--task',
+    'task-1',
+    '--stage',
+    'stage-1',
+    '--role',
+    'mason'
+  ], {
+    fetch: fakeFetch(calls, { task_id: 'task-1', agent_role: 'mason' })
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'task-packet generate');
+  assert.equal(calls[0].url.pathname, '/api/task-packets/generate');
+  assert.deepEqual(JSON.parse(calls[0].init.body), {
+    task_id: 'task-1',
+    stage_id: 'stage-1',
+    agent_role: 'mason'
+  });
+});
+
+test('task-packet launch can queue run from selected packet', async () => {
+  const calls = [];
+  const result = await run([
+    '--api-url',
+    'http://maestro.local',
+    'task-packet',
+    'launch',
+    '--task',
+    'task-1',
+    '--stage',
+    'stage-1',
+    '--role',
+    'mason',
+    '--checkpoint',
+    'packet-ready'
+  ], {
+    fetch: fakeFetch(calls, { agent_run: { id: 'run-1' }, attempt: { id: 'attempt-1' } })
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'task-packet launch');
+  assert.equal(calls[0].url.pathname, '/api/task-packets/launch');
+  assert.deepEqual(JSON.parse(calls[0].init.body), {
+    task_id: 'task-1',
+    stage_id: 'stage-1',
+    agent_role: 'mason',
+    current_checkpoint: 'packet-ready',
+    start: false
+  });
+});
+
 test('API errors become stable JSON errors', async () => {
   const result = await run(['--api-url', 'http://maestro.local', 'stage', 'start', 'stage-1'], {
     fetch: async () => new Response(JSON.stringify({

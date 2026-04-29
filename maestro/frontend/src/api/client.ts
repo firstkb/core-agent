@@ -1,8 +1,14 @@
 import type {
+  AgentCapability,
+  AgentLaunch,
+  AgentLaunchInput,
   AgentRun,
   AgentRunCheckpointInput,
   AgentRunInput,
   Approval,
+  Attempt,
+  AttemptInput,
+  AttemptSubmitInput,
   CockpitState,
   Evidence,
   EvidenceAttachmentInput,
@@ -14,6 +20,8 @@ import type {
   Task,
   TaskDetail,
   TaskInput,
+  TaskPacket,
+  TaskPacketGenerateInput,
   Work,
   WorkInput
 } from './types';
@@ -67,12 +75,44 @@ export class MaestroAPI {
     return this.post(`/api/tasks/${encodeURIComponent(taskID)}/stages`, input);
   }
 
+  async listAttempts(taskID: string): Promise<Attempt[]> {
+    return this.getList(`/api/tasks/${encodeURIComponent(taskID)}/attempts`);
+  }
+
+  async createAttempt(taskID: string, input: AttemptInput): Promise<Attempt> {
+    return this.post(`/api/tasks/${encodeURIComponent(taskID)}/attempts`, input);
+  }
+
+  async submitAttempt(attemptID: string, input: AttemptSubmitInput): Promise<Attempt> {
+    return this.post(`/api/attempts/${encodeURIComponent(attemptID)}/submit`, {
+      changes: input,
+      actor: cockpitActor(),
+      reason: `Attempt submitted from Cockpit: ${input.summary}`
+    });
+  }
+
   async listTaskEvidence(taskID: string): Promise<Evidence[]> {
     return this.getList(`/api/tasks/${encodeURIComponent(taskID)}/evidence`);
   }
 
   async listTaskApprovals(taskID: string): Promise<Approval[]> {
     return this.getList(`/api/tasks/${encodeURIComponent(taskID)}/approvals`);
+  }
+
+  async listAgents(): Promise<string[]> {
+    return this.getList('/api/agents');
+  }
+
+  async listAgentCapabilities(): Promise<AgentCapability[]> {
+    return this.getList('/api/agent-capabilities');
+  }
+
+  async generateTaskPacket(input: TaskPacketGenerateInput): Promise<TaskPacket> {
+    return this.post('/api/task-packets/generate', input);
+  }
+
+  async launchTaskPacket(input: AgentLaunchInput): Promise<AgentLaunch> {
+    return this.post('/api/task-packets/launch', input);
   }
 
   async listAgentRuns(taskID?: string): Promise<AgentRun[]> {
@@ -166,28 +206,30 @@ export class MaestroAPI {
   }
 
   async loadCockpit(): Promise<CockpitState> {
-    const [health, work, tasks, agentRuns, runEvents] = await Promise.all([
+    const [health, work, tasks, agentCapabilities, agentRuns, runEvents] = await Promise.all([
       this.health().catch(() => null),
       this.listWork(),
       this.listTasks(),
+      this.listAgentCapabilities(),
       this.listAgentRuns(),
       this.listRunEvents({ limit: 100 })
     ]);
     const approvals = (
       await Promise.all(tasks.map((task) => this.listTaskApprovals(task.id).catch(() => [])))
     ).flat();
-    return { health, work, tasks, approvals, agentRuns, runEvents };
+    return { health, work, tasks, approvals, agentCapabilities, agentRuns, runEvents };
   }
 
   async loadTaskDetail(taskID: string): Promise<TaskDetail> {
-    const [stages, evidence, approvals, agentRuns, runEvents] = await Promise.all([
+    const [stages, attempts, evidence, approvals, agentRuns, runEvents] = await Promise.all([
       this.listStages(taskID),
+      this.listAttempts(taskID),
       this.listTaskEvidence(taskID),
       this.listTaskApprovals(taskID),
       this.listAgentRuns(taskID),
       this.listRunEvents({ taskID, limit: 100 })
     ]);
-    return { stages, evidence, approvals, agentRuns, runEvents };
+    return { stages, attempts, evidence, approvals, agentRuns, runEvents };
   }
 
   private async get<T>(path: string): Promise<T> {

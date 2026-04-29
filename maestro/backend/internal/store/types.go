@@ -284,6 +284,75 @@ type AgentRunCheckpointInput struct {
 	Metadata   any    `json:"metadata_json"`
 }
 
+type AgentCapability struct {
+	Role              string   `json:"role"`
+	DisplayName       string   `json:"display_name"`
+	Type              string   `json:"type"`
+	Purpose           string   `json:"purpose"`
+	WritesCode        string   `json:"writes_code"`
+	WritesArtifacts   string   `json:"writes_artifacts"`
+	BrowserAccess     string   `json:"browser_access"`
+	ReleaseAccess     string   `json:"release_access"`
+	HighRiskAccess    string   `json:"high_risk_access"`
+	DefaultStages     []string `json:"default_stages"`
+	RecommendedSkills []string `json:"recommended_skills"`
+	ApprovalTriggers  []string `json:"approval_triggers"`
+	FormalChainRole   bool     `json:"formal_chain_role"`
+	IndependentHelper bool     `json:"independent_helper"`
+	SourceContract    string   `json:"source_contract"`
+	NextHandoff       string   `json:"next_handoff"`
+}
+
+type TaskPacketGenerateInput struct {
+	TaskID    string `json:"task_id"`
+	StageID   string `json:"stage_id"`
+	AgentRole string `json:"agent_role"`
+}
+
+type AgentLaunchInput struct {
+	TaskID            string `json:"task_id"`
+	StageID           string `json:"stage_id"`
+	AgentRole         string `json:"agent_role"`
+	CurrentCheckpoint string `json:"current_checkpoint"`
+	Start             bool   `json:"start"`
+}
+
+type AgentLaunch struct {
+	Packet             TaskPacket `json:"packet"`
+	Attempt            Attempt    `json:"attempt"`
+	AgentRun           AgentRun   `json:"agent_run"`
+	NextAllowedActions []string   `json:"next_allowed_actions"`
+}
+
+type AgentHandoff struct {
+	AgentRun           AgentRun    `json:"agent_run"`
+	Attempt            *Attempt    `json:"attempt,omitempty"`
+	Packet             *TaskPacket `json:"packet,omitempty"`
+	NextAllowedActions []string    `json:"next_allowed_actions"`
+}
+
+type TaskPacket struct {
+	SchemaVersion     int             `json:"schema_version"`
+	WorkID            string          `json:"work_id"`
+	TaskID            string          `json:"task_id"`
+	StageID           string          `json:"stage_id"`
+	AgentRole         string          `json:"agent_role"`
+	AgentDisplayName  string          `json:"agent_display_name"`
+	RouteTier         string          `json:"route_tier"`
+	RiskLevel         string          `json:"risk_level"`
+	Title             string          `json:"title"`
+	Goal              string          `json:"goal"`
+	AllowedScope      []string        `json:"allowed_scope"`
+	OutOfScope        []string        `json:"out_of_scope"`
+	RequiredReads     []string        `json:"required_reads"`
+	RequiredChecks    []string        `json:"required_checks"`
+	ExpectedHandoff   []string        `json:"expected_handoff"`
+	RecommendedSkills []string        `json:"recommended_skills"`
+	ApprovalTriggers  []string        `json:"approval_triggers"`
+	Capability        AgentCapability `json:"capability"`
+	PacketMarkdown    string          `json:"packet_markdown"`
+}
+
 type RunEventEntry struct {
 	ID            string    `json:"id"`
 	WorkID        *string   `json:"work_id,omitempty"`

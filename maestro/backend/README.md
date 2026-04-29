@@ -114,9 +114,16 @@ POST /api/tasks/{id}/approvals
 GET  /api/approvals/{id}
 POST /api/approvals/{id}/decide
 
+GET  /api/agents
+GET  /api/agent-capabilities
+POST /api/task-packets/generate
+POST /api/task-packets/launch
+
 GET  /api/agent-runs
 POST /api/agent-runs
 GET  /api/agent-runs/{id}
+GET  /api/agent-runs/{id}/handoff
+POST /api/agent-runs/{id}/claim
 POST /api/agent-runs/{id}/start
 POST /api/agent-runs/{id}/pause
 POST /api/agent-runs/{id}/resume

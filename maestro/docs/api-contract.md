@@ -110,6 +110,10 @@ Agents:
 ```text
 GET /api/agents
 GET /api/agent-capabilities
+POST /api/task-packets/generate
+POST /api/task-packets/launch
+GET /api/agent-runs/:id/handoff
+POST /api/agent-runs/:id/claim
 ```
 
 Events, comments, and links:
@@ -197,6 +201,8 @@ Agent runs:
 
 ```text
 POST /api/agent-runs
+GET  /api/agent-runs/:id/handoff
+POST /api/agent-runs/:id/claim
 POST /api/agent-runs/:id/start
 POST /api/agent-runs/:id/pause
 POST /api/agent-runs/:id/resume
@@ -290,6 +296,15 @@ Preferred path:
 ```text
 Codex/local agent -> maestroctl -> Maestro API -> DB/artifacts
 ```
+
+The first runnable boundary is intentionally small:
+
+- `task-packets/launch` queues an `agent_run`, creates its attempt, and stores
+  the launch packet in run metadata.
+- `agent-runs/:id/handoff` returns the run, linked attempt, packet, and next
+  allowed actions without changing state.
+- `agent-runs/:id/claim` starts a queued run and returns the same handoff shape.
+- The real agent or skill runner is outside Phase 1 until explicitly accepted.
 
 The API remains the canonical service boundary. `maestroctl` is the local driver
 that stabilizes auth, workspace discovery, artifact paths, schema validation,

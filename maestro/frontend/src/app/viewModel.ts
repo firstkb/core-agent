@@ -25,10 +25,10 @@ export const boardColumns = [
 ] as const;
 
 export function statusTone(status: string): StatusTone {
-  if (['done', 'verified', 'accepted', 'approved', 'completed'].includes(status)) {
+  if (['done', 'verified', 'accepted', 'approved', 'completed', 'submitted'].includes(status)) {
     return 'success';
   }
-  if (['in_progress', 'running', 'ready', 'queued', 'resume_requested', 'resuming'].includes(status)) {
+  if (['created', 'in_progress', 'running', 'ready', 'queued', 'resume_requested', 'resuming'].includes(status)) {
     return 'info';
   }
   if (['awaiting_review', 'awaiting_approval', 'requested', 'pause_requested', 'pausing_at_checkpoint', 'paused'].includes(status)) {

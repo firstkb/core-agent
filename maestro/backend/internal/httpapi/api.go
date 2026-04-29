@@ -52,6 +52,11 @@ type attemptSubmitChanges struct {
 }
 
 func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/agents", s.handleListAgents)
+	mux.HandleFunc("GET /api/agent-capabilities", s.handleListAgentCapabilities)
+	mux.HandleFunc("POST /api/task-packets/generate", s.handleGenerateTaskPacket)
+	mux.HandleFunc("POST /api/task-packets/launch", s.handleLaunchTaskPacket)
+
 	mux.HandleFunc("GET /api/work", s.handleListWork)
 	mux.HandleFunc("POST /api/work", s.handleCreateWork)
 	mux.HandleFunc("GET /api/work/{id}", s.handleGetWork)
@@ -90,6 +95,8 @@ func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agent-runs", s.handleListAgentRuns)
 	mux.HandleFunc("POST /api/agent-runs", s.handleCreateAgentRun)
 	mux.HandleFunc("GET /api/agent-runs/{id}", s.handleGetAgentRun)
+	mux.HandleFunc("GET /api/agent-runs/{id}/handoff", s.handleGetAgentRunHandoff)
+	mux.HandleFunc("POST /api/agent-runs/{id}/claim", s.handleClaimAgentRun)
 	mux.HandleFunc("POST /api/agent-runs/{id}/start", s.handleStartAgentRun)
 	mux.HandleFunc("POST /api/agent-runs/{id}/pause", s.handlePauseAgentRun)
 	mux.HandleFunc("POST /api/agent-runs/{id}/resume", s.handleResumeAgentRun)
@@ -98,6 +105,14 @@ func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/agent-runs/{id}/heartbeat", s.handleHeartbeatAgentRun)
 
 	mux.HandleFunc("GET /api/run-events", s.handleListRunEvents)
+}
+
+func (s *Server) handleListAgents(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, store.AgentNames())
+}
+
+func (s *Server) handleListAgentCapabilities(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, store.AgentCapabilities())
 }
 
 func (s *Server) handleCreateWork(w http.ResponseWriter, r *http.Request) {

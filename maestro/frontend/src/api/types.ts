@@ -93,6 +93,48 @@ export type StageInput = {
   checkpoint_policy?: string;
 };
 
+export type Attempt = {
+  id: string;
+  task_id: string;
+  stage_id: string;
+  attempt_no: number;
+  agent_role: string;
+  agent_run_id?: string;
+  status: string;
+  summary: string;
+  handoff_path: string;
+  readme_path: string;
+  files_changed_json: unknown;
+  commands_run_json: unknown;
+  evidence_json: unknown;
+  created_at: string;
+  submitted_at?: string;
+};
+
+export type AttemptInput = {
+  stage_id: string;
+  agent_role?: string;
+};
+
+export type AttemptSubmitInput = {
+  summary: string;
+  handoff_path?: string;
+  readme_path?: string;
+  files_changed_json?: unknown;
+  commands_run_json?: unknown;
+  evidence_json?: unknown;
+  handoff_file?: {
+    name: string;
+    content: string;
+    encoding: 'text' | 'base64';
+  };
+  readme_file?: {
+    name: string;
+    content: string;
+    encoding: 'text' | 'base64';
+  };
+};
+
 export type Evidence = {
   id: string;
   work_id?: string;
@@ -164,6 +206,68 @@ export type AgentRunCheckpointInput = {
   metadata_json?: unknown;
 };
 
+export type AgentCapability = {
+  role: string;
+  display_name: string;
+  type: string;
+  purpose: string;
+  writes_code: string;
+  writes_artifacts: string;
+  browser_access: string;
+  release_access: string;
+  high_risk_access: string;
+  default_stages: string[];
+  recommended_skills: string[];
+  approval_triggers: string[];
+  formal_chain_role: boolean;
+  independent_helper: boolean;
+  source_contract: string;
+  next_handoff: string;
+};
+
+export type TaskPacketGenerateInput = {
+  task_id: string;
+  stage_id?: string;
+  agent_role?: string;
+};
+
+export type AgentLaunchInput = {
+  task_id: string;
+  stage_id?: string;
+  agent_role?: string;
+  current_checkpoint?: string;
+  start?: boolean;
+};
+
+export type AgentLaunch = {
+  packet: TaskPacket;
+  attempt: Attempt;
+  agent_run: AgentRun;
+  next_allowed_actions: string[];
+};
+
+export type TaskPacket = {
+  schema_version: number;
+  work_id: string;
+  task_id: string;
+  stage_id: string;
+  agent_role: string;
+  agent_display_name: string;
+  route_tier: string;
+  risk_level: string;
+  title: string;
+  goal: string;
+  allowed_scope: string[];
+  out_of_scope: string[];
+  required_reads: string[];
+  required_checks: string[];
+  expected_handoff: string[];
+  recommended_skills: string[];
+  approval_triggers: string[];
+  capability: AgentCapability;
+  packet_markdown: string;
+};
+
 export type RunEventEntry = {
   id: string;
   work_id?: string;
@@ -195,6 +299,7 @@ export type Health = {
 
 export type TaskDetail = {
   stages: Stage[];
+  attempts: Attempt[];
   evidence: Evidence[];
   approvals: Approval[];
   agentRuns: AgentRun[];
@@ -206,6 +311,7 @@ export type CockpitState = {
   work: Work[];
   tasks: Task[];
   approvals: Approval[];
+  agentCapabilities: AgentCapability[];
   agentRuns: AgentRun[];
   runEvents: RunEventEntry[];
 };

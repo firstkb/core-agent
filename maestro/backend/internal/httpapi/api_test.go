@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -232,6 +233,278 @@ func TestCheckpointAgentRunEndpoint(t *testing.T) {
 	}
 }
 
+func TestListAgentCapabilitiesEndpoint(t *testing.T) {
+	srv := New(Options{Store: &fakeStore{}})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/agent-capabilities", nil)
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body []store.AgentCapability
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(body) == 0 {
+		t.Fatal("expected capabilities")
+	}
+	if body[0].Role != "maestro" {
+		t.Fatalf("first role = %q", body[0].Role)
+	}
+}
+
+func TestGenerateTaskPacketEndpoint(t *testing.T) {
+	fake := &fakeStore{
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{
+				ID:          "task-1",
+				WorkID:      "work-1",
+				Title:       "Build packet bridge",
+				Description: "Generate a launch packet",
+				RiskLevel:   "low",
+				StackScope:  "frontend",
+				AgentRole:   "mason",
+			}, nil
+		},
+		getWork: func(context.Context, string) (store.Work, error) {
+			return store.Work{ID: "work-1", Type: "task", RiskLevel: "low"}, nil
+		},
+		listStages: func(context.Context, string) ([]store.Stage, error) {
+			return []store.Stage{{ID: "stage-1", Name: "implementation", AgentRole: "mason"}}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/task-packets/generate", bytes.NewBufferString(`{"task_id":"task-1"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body store.TaskPacket
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.AgentRole != "mason" {
+		t.Fatalf("agent role = %q", body.AgentRole)
+	}
+	if !strings.Contains(body.PacketMarkdown, "ui-designer") {
+		t.Fatalf("packet markdown missing skill: %s", body.PacketMarkdown)
+	}
+}
+
+func TestLaunchTaskPacketEndpoint(t *testing.T) {
+	fake := &fakeStore{
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{
+				ID:          "task-1",
+				WorkID:      "work-1",
+				Title:       "Launch agent",
+				Description: "Queue an agent run",
+				RiskLevel:   "low",
+				StackScope:  "frontend",
+				AgentRole:   "mason",
+			}, nil
+		},
+		getWork: func(context.Context, string) (store.Work, error) {
+			return store.Work{ID: "work-1", Type: "task", RiskLevel: "low"}, nil
+		},
+		listStages: func(context.Context, string) ([]store.Stage, error) {
+			return []store.Stage{{ID: "stage-1", Name: "implementation", AgentRole: "mason"}}, nil
+		},
+		createAttempt: func(_ context.Context, input store.AttemptInput, _ store.Actor, reason string) (store.Attempt, error) {
+			if input.StageID != "stage-1" {
+				t.Fatalf("stage id = %q", input.StageID)
+			}
+			if reason != "Agent launch attempt created" {
+				t.Fatalf("reason = %q", reason)
+			}
+			return store.Attempt{ID: "attempt-1", TaskID: input.TaskID, StageID: input.StageID, AgentRole: input.AgentRole}, nil
+		},
+		createAgentRun: func(_ context.Context, input store.AgentRunInput, _ store.Actor, reason string) (store.AgentRun, error) {
+			if input.AttemptID == nil || *input.AttemptID != "attempt-1" {
+				t.Fatalf("attempt id = %#v", input.AttemptID)
+			}
+			if input.CurrentCheckpoint != "packet-ready" {
+				t.Fatalf("checkpoint = %q", input.CurrentCheckpoint)
+			}
+			if reason != "Agent launch queued from task packet" {
+				t.Fatalf("reason = %q", reason)
+			}
+			return store.AgentRun{ID: "run-1", TaskID: input.TaskID, StageID: input.StageID, AttemptID: input.AttemptID, AgentRole: input.AgentRole, Status: "queued"}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/task-packets/launch", bytes.NewBufferString(`{"task_id":"task-1","stage_id":"stage-1","agent_role":"mason"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body store.AgentLaunch
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.Attempt.ID != "attempt-1" || body.AgentRun.ID != "run-1" {
+		t.Fatalf("launch = %+v", body)
+	}
+}
+
+func TestGetAgentRunHandoffEndpoint(t *testing.T) {
+	attemptID := "attempt-1"
+	fake := &fakeStore{
+		getAgentRun: func(context.Context, string) (store.AgentRun, error) {
+			return store.AgentRun{
+				ID:        "run-1",
+				AttemptID: &attemptID,
+				AgentRole: "mason",
+				Status:    "queued",
+				Metadata: map[string]any{
+					"launch_packet": store.TaskPacket{
+						SchemaVersion: 1,
+						TaskID:        "task-1",
+						StageID:       "stage-1",
+						AgentRole:     "mason",
+						Title:         "Implement bridge",
+					},
+				},
+			}, nil
+		},
+		getAttempt: func(context.Context, string) (store.Attempt, error) {
+			return store.Attempt{ID: "attempt-1", TaskID: "task-1", StageID: "stage-1"}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/agent-runs/run-1/handoff", nil)
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body store.AgentHandoff
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.Packet == nil || body.Packet.Title != "Implement bridge" {
+		t.Fatalf("packet = %+v", body.Packet)
+	}
+	if body.Attempt == nil || body.Attempt.ID != "attempt-1" {
+		t.Fatalf("attempt = %+v", body.Attempt)
+	}
+	if len(body.NextAllowedActions) == 0 || body.NextAllowedActions[0] != "claim agent run" {
+		t.Fatalf("next actions = %+v", body.NextAllowedActions)
+	}
+}
+
+func TestClaimAgentRunEndpointStartsQueuedRun(t *testing.T) {
+	attemptID := "attempt-1"
+	packet := store.TaskPacket{
+		SchemaVersion: 1,
+		TaskID:        "task-1",
+		StageID:       "stage-1",
+		AgentRole:     "mason",
+		Title:         "Claim bridge",
+	}
+	fake := &fakeStore{
+		getAgentRun: func(context.Context, string) (store.AgentRun, error) {
+			return store.AgentRun{
+				ID:        "run-1",
+				AttemptID: &attemptID,
+				AgentRole: "mason",
+				Status:    "queued",
+				Metadata:  map[string]any{"launch_packet": packet},
+			}, nil
+		},
+		startAgentRun: func(_ context.Context, id string, _ store.Actor, reason string) (store.AgentRun, error) {
+			if id != "run-1" {
+				t.Fatalf("id = %q", id)
+			}
+			if reason != "Take work" {
+				t.Fatalf("reason = %q", reason)
+			}
+			return store.AgentRun{
+				ID:        id,
+				AttemptID: &attemptID,
+				AgentRole: "mason",
+				Status:    "running",
+				Metadata:  map[string]any{"launch_packet": packet},
+			}, nil
+		},
+		getAttempt: func(context.Context, string) (store.Attempt, error) {
+			return store.Attempt{ID: "attempt-1", TaskID: "task-1", StageID: "stage-1"}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/agent-runs/run-1/claim", bytes.NewBufferString(`{"reason":"Take work"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body store.AgentHandoff
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.AgentRun.Status != "running" {
+		t.Fatalf("status = %q", body.AgentRun.Status)
+	}
+	if body.Packet == nil || body.Packet.Title != "Claim bridge" {
+		t.Fatalf("packet = %+v", body.Packet)
+	}
+}
+
+func TestClaimAgentRunEndpointBlocksHighRiskPacket(t *testing.T) {
+	fake := &fakeStore{
+		getAgentRun: func(context.Context, string) (store.AgentRun, error) {
+			return store.AgentRun{
+				ID:        "run-1",
+				AgentRole: "mason",
+				Status:    "queued",
+				Metadata: map[string]any{
+					"launch_packet": store.TaskPacket{
+						SchemaVersion: 1,
+						TaskID:        "task-1",
+						StageID:       "stage-1",
+						AgentRole:     "mason",
+						RouteTier:     "high_risk",
+						Title:         "Touch auth",
+					},
+				},
+			}, nil
+		},
+		startAgentRun: func(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+			t.Fatal("high-risk claim must not start the agent run")
+			return store.AgentRun{}, nil
+		},
+	}
+	srv := New(Options{Store: fake})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/agent-runs/run-1/claim", bytes.NewBufferString(`{"reason":"Take work"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusConflict {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "approval") {
+		t.Fatalf("body = %s", rec.Body.String())
+	}
+}
+
 func TestListRunEventsEndpoint(t *testing.T) {
 	createdAt := time.Date(2026, 4, 29, 18, 0, 0, 0, time.UTC)
 	fake := &fakeStore{
@@ -278,12 +551,17 @@ func TestListRunEventsEndpoint(t *testing.T) {
 
 type fakeStore struct {
 	createWork         func(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
+	getWork            func(context.Context, string) (store.Work, error)
 	getTask            func(context.Context, string) (store.Task, error)
+	listStages         func(context.Context, string) ([]store.Stage, error)
 	getAttempt         func(context.Context, string) (store.Attempt, error)
+	createAttempt      func(context.Context, store.AttemptInput, store.Actor, string) (store.Attempt, error)
 	submitAttempt      func(context.Context, string, store.AttemptSubmitInput, store.Actor, string) (store.Attempt, error)
 	startStage         func(context.Context, string, store.Actor, string) (store.Stage, error)
 	attachEvidence     func(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
 	createAgentRun     func(context.Context, store.AgentRunInput, store.Actor, string) (store.AgentRun, error)
+	getAgentRun        func(context.Context, string) (store.AgentRun, error)
+	startAgentRun      func(context.Context, string, store.Actor, string) (store.AgentRun, error)
 	checkpointAgentRun func(context.Context, string, store.AgentRunCheckpointInput, store.Actor, string) (store.AgentRun, error)
 	listRunEvents      func(context.Context, store.RunEventFilters) ([]store.RunEventEntry, error)
 }
@@ -299,7 +577,10 @@ func (f *fakeStore) ListWork(context.Context, store.WorkFilters) ([]store.Work, 
 	return nil, errors.New("unexpected ListWork")
 }
 
-func (f *fakeStore) GetWork(context.Context, string) (store.Work, error) {
+func (f *fakeStore) GetWork(ctx context.Context, id string) (store.Work, error) {
+	if f.getWork != nil {
+		return f.getWork(ctx, id)
+	}
 	return store.Work{}, errors.New("unexpected GetWork")
 }
 
@@ -330,7 +611,10 @@ func (f *fakeStore) CreateStage(context.Context, store.StageInput, store.Actor, 
 	return store.Stage{}, errors.New("unexpected CreateStage")
 }
 
-func (f *fakeStore) ListStages(context.Context, string) ([]store.Stage, error) {
+func (f *fakeStore) ListStages(ctx context.Context, taskID string) ([]store.Stage, error) {
+	if f.listStages != nil {
+		return f.listStages(ctx, taskID)
+	}
 	return nil, errors.New("unexpected ListStages")
 }
 
@@ -361,7 +645,10 @@ func (f *fakeStore) ReviewStage(context.Context, string, string, store.Actor, st
 	return store.Stage{}, errors.New("unexpected ReviewStage")
 }
 
-func (f *fakeStore) CreateAttempt(context.Context, store.AttemptInput, store.Actor, string) (store.Attempt, error) {
+func (f *fakeStore) CreateAttempt(ctx context.Context, input store.AttemptInput, actor store.Actor, reason string) (store.Attempt, error) {
+	if f.createAttempt != nil {
+		return f.createAttempt(ctx, input, actor, reason)
+	}
 	return store.Attempt{}, errors.New("unexpected CreateAttempt")
 }
 
@@ -429,11 +716,17 @@ func (f *fakeStore) ListAgentRuns(context.Context, store.AgentRunFilters) ([]sto
 	return nil, errors.New("unexpected ListAgentRuns")
 }
 
-func (f *fakeStore) GetAgentRun(context.Context, string) (store.AgentRun, error) {
+func (f *fakeStore) GetAgentRun(ctx context.Context, id string) (store.AgentRun, error) {
+	if f.getAgentRun != nil {
+		return f.getAgentRun(ctx, id)
+	}
 	return store.AgentRun{}, errors.New("unexpected GetAgentRun")
 }
 
-func (f *fakeStore) StartAgentRun(context.Context, string, store.Actor, string) (store.AgentRun, error) {
+func (f *fakeStore) StartAgentRun(ctx context.Context, id string, actor store.Actor, reason string) (store.AgentRun, error) {
+	if f.startAgentRun != nil {
+		return f.startAgentRun(ctx, id, actor, reason)
+	}
 	return store.AgentRun{}, errors.New("unexpected StartAgentRun")
 }
 

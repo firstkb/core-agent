@@ -54,10 +54,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { MaestroAPI, apiBaseURL } from '../api/client';
 import type {
+  AgentCapability,
+  AgentLaunch,
+  AgentLaunchInput,
   AgentRun,
   AgentRunCheckpointInput,
   AgentRunInput,
   Approval,
+  Attempt,
+  AttemptInput,
+  AttemptSubmitInput,
   CockpitState,
   Evidence,
   EvidenceAttachmentInput,
@@ -67,6 +73,8 @@ import type {
   Task,
   TaskDetail,
   TaskInput,
+  TaskPacket,
+  TaskPacketGenerateInput,
   Work
 } from '../api/types';
 import { MetricStrip } from '../components/MetricStrip';
@@ -88,7 +96,7 @@ import {
 
 type ViewMode = 'table' | 'kanban';
 type MainView = 'dashboard' | 'table' | 'kanban' | 'agent-runs';
-type DetailTab = 'stages' | 'evidence' | 'approvals' | 'runs' | 'events';
+type DetailTab = 'stages' | 'attempts' | 'packet' | 'evidence' | 'approvals' | 'runs' | 'events';
 type StageAction = 'start' | 'pause' | 'resume' | 'cancel';
 type StageReviewDecision = 'accept' | 'revise' | 'block' | 'cancel';
 type ApprovalDecision = 'approved' | 'rejected';
@@ -116,11 +124,22 @@ type AgentRunCreateInput = {
   checkpoint: string;
 };
 
+type AttemptCreateInput = {
+  stageID: string;
+  agentRole: string;
+};
+
+type PacketGenerateInput = {
+  stageID: string;
+  agentRole: string;
+};
+
 const initialState: CockpitState = {
   health: null,
   work: [],
   tasks: [],
   approvals: [],
+  agentCapabilities: [],
   agentRuns: [],
   runEvents: []
 };
@@ -132,6 +151,7 @@ export function App() {
   const api = useMemo(() => new MaestroAPI(), []);
   const [state, setState] = useState<CockpitState>(initialState);
   const [detail, setDetail] = useState<TaskDetail | null>(null);
+  const [packetPreview, setPacketPreview] = useState<TaskPacket | null>(null);
   const [selectedTaskID, setSelectedTaskID] = useState<string | null>(null);
   const [mainView, setMainView] = useState<MainView>('dashboard');
   const [detailTab, setDetailTab] = useState<DetailTab>('stages');
@@ -238,6 +258,75 @@ export function App() {
       await runCommand(`stage:${stage.id}:review:${decision}`, () => api.reviewStage(stage.id, decision));
     },
     [api, runCommand]
+  );
+
+  const handleCreateAttempt = useCallback(
+    async (task: Task, input: AttemptCreateInput) => {
+      if (!input.stageID) {
+        return;
+      }
+      const attemptInput: AttemptInput = {
+        stage_id: input.stageID,
+        agent_role: input.agentRole.trim() || task.agent_role || 'mason'
+      };
+      await runCommand(`attempt:${task.id}:create`, () => api.createAttempt(task.id, attemptInput));
+    },
+    [api, runCommand]
+  );
+
+  const handleSubmitAttempt = useCallback(
+    async (attempt: Attempt, input: AttemptSubmitInput) => {
+      if (!input.summary.trim()) {
+        return;
+      }
+      await runCommand(`attempt:${attempt.id}:submit`, () => api.submitAttempt(attempt.id, input));
+    },
+    [api, runCommand]
+  );
+
+  const handleGenerateTaskPacket = useCallback(
+    async (task: Task, input: PacketGenerateInput) => {
+      const payload: TaskPacketGenerateInput = {
+        task_id: task.id,
+        stage_id: input.stageID,
+        agent_role: input.agentRole.trim() || task.agent_role || 'mason'
+      };
+      setActionKey(`packet:${task.id}:generate`);
+      setError(null);
+      try {
+        setPacketPreview(await api.generateTaskPacket(payload));
+      } catch (packetError) {
+        setError(packetError instanceof Error ? packetError.message : String(packetError));
+      } finally {
+        setActionKey(null);
+      }
+    },
+    [api]
+  );
+
+  const handleLaunchTaskPacket = useCallback(
+    async (task: Task, input: PacketGenerateInput) => {
+      const payload: AgentLaunchInput = {
+        task_id: task.id,
+        stage_id: input.stageID,
+        agent_role: input.agentRole.trim() || task.agent_role || 'mason',
+        current_checkpoint: 'packet-ready',
+        start: false
+      };
+      setActionKey(`packet:${task.id}:launch`);
+      setError(null);
+      try {
+        const launch: AgentLaunch = await api.launchTaskPacket(payload);
+        setPacketPreview(launch.packet);
+        await refreshAfterCommand(task.id);
+        setDetailTab('runs');
+      } catch (launchError) {
+        setError(launchError instanceof Error ? launchError.message : String(launchError));
+      } finally {
+        setActionKey(null);
+      }
+    },
+    [api, refreshAfterCommand]
   );
 
   const handleApprovalDecision = useCallback(
@@ -389,6 +478,7 @@ export function App() {
     } else {
       setDetail(null);
     }
+    setPacketPreview(null);
   }, [loadDetail, selectedTaskID]);
 
   useEffect(() => {
@@ -530,6 +620,7 @@ export function App() {
             {mainView === 'agent-runs' && (
               <AgentRunsWorkspace
                 loading={loading}
+                capabilities={state.agentCapabilities}
                 runs={state.agentRuns}
                 runEvents={state.runEvents}
                 tasks={state.tasks}
@@ -548,12 +639,18 @@ export function App() {
         task={selectedTask}
         work={state.work}
         detail={detail}
+        capabilities={state.agentCapabilities}
+        packetPreview={packetPreview}
         loading={detailLoading}
         tab={detailTab}
         actionKey={actionKey}
         onTabChange={setDetailTab}
         onStageAction={handleStageAction}
         onStageReview={handleStageReview}
+        onCreateAttempt={handleCreateAttempt}
+        onSubmitAttempt={handleSubmitAttempt}
+        onGenerateTaskPacket={handleGenerateTaskPacket}
+        onLaunchTaskPacket={handleLaunchTaskPacket}
         onApprovalDecision={handleApprovalDecision}
         onCreateAgentRun={handleCreateAgentRun}
         onAgentRunAction={handleAgentRunAction}
@@ -564,6 +661,7 @@ export function App() {
       <IntakeDialog
         open={intakeOpen}
         busy={intakeBusy}
+        capabilities={state.agentCapabilities}
         onClose={() => setIntakeOpen(false)}
         onCreate={handleCreateIntake}
       />
@@ -820,6 +918,7 @@ function TaskWorkspace({
 
 function AgentRunsWorkspace({
   loading,
+  capabilities,
   runs,
   runEvents,
   tasks,
@@ -829,6 +928,7 @@ function AgentRunsWorkspace({
   onSelectTask
 }: {
   loading: boolean;
+  capabilities: AgentCapability[];
   runs: AgentRun[];
   runEvents: RunEventEntry[];
   tasks: Task[];
@@ -843,102 +943,167 @@ function AgentRunsWorkspace({
     <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', p: 1.5, borderBottom: 1, borderColor: 'divider' }}>
         <Typography variant="h3" sx={{ flex: 1 }}>
-          Agent Runs
+          Agents & Runs
         </Typography>
+        <StatusChip label={`${capabilities.length} roles`} />
         <StatusChip label={String(runs.length)} />
       </Stack>
       {loading ? (
         <Box sx={{ p: 4 }}>
           <LinearProgress />
         </Box>
-      ) : runs.length === 0 ? (
-        <EmptyPanel />
       ) : (
         <Stack spacing={1.5} sx={{ p: 1.5 }}>
+          <AgentCapabilityOverview capabilities={capabilities} runs={runs} />
           <RunEventTrail events={runEvents.slice(0, 6)} />
-          <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-            <Table stickyHeader size="small" aria-label="Maestro agent runs">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Run</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Task</TableCell>
-                  <TableCell>Work</TableCell>
-                  <TableCell>Checkpoint</TableCell>
-                  <TableCell>Heartbeat</TableCell>
-                  <TableCell align="right">Control</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {runs.map((run) => {
-                  const task = run.task_id ? taskByID.get(run.task_id) : undefined;
-                  return (
-                    <TableRow
-                      key={run.id}
-                      hover={Boolean(task)}
-                      onClick={() => {
-                        if (task) {
-                          onSelectTask(task.id);
-                        }
-                      }}
-                      sx={{ cursor: task ? 'pointer' : 'default' }}
-                    >
-                      <TableCell sx={{ minWidth: 180 }}>
-                        <Typography noWrap sx={{ fontWeight: 800 }}>
-                          {run.agent_role}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {shortID(run.id)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <StatusChip label={run.status} tone={statusTone(run.status)} />
-                      </TableCell>
-                      <TableCell sx={{ maxWidth: 260 }}>
-                        <Typography variant="body2" noWrap>
-                          {task?.title ?? '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ maxWidth: 260 }}>
-                        <Typography variant="body2" noWrap>
-                          {task ? workTitle(work, task) : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{run.current_checkpoint || '-'}</TableCell>
-                      <TableCell>{formatDate(run.last_heartbeat_at ?? run.started_at)}</TableCell>
-                      <TableCell align="right">
-                        <AgentRunControls
-                          run={run}
-                          actionKey={actionKey}
-                          compact
-                          onAction={onRunAction}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          {runs.length === 0 ? (
+            <EmptyPanel compact />
+          ) : (
+            <TableContainer sx={{ maxHeight: 'calc(100vh - 420px)', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+              <Table stickyHeader size="small" aria-label="Maestro agent runs">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Run</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Task</TableCell>
+                    <TableCell>Work</TableCell>
+                    <TableCell>Checkpoint</TableCell>
+                    <TableCell>Heartbeat</TableCell>
+                    <TableCell align="right">Control</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {runs.map((run) => {
+                    const task = run.task_id ? taskByID.get(run.task_id) : undefined;
+                    return (
+                      <TableRow
+                        key={run.id}
+                        hover={Boolean(task)}
+                        onClick={() => {
+                          if (task) {
+                            onSelectTask(task.id);
+                          }
+                        }}
+                        sx={{ cursor: task ? 'pointer' : 'default' }}
+                      >
+                        <TableCell sx={{ minWidth: 180 }}>
+                          <Typography noWrap sx={{ fontWeight: 800 }}>
+                            {run.agent_role}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {shortID(run.id)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <StatusChip label={run.status} tone={statusTone(run.status)} />
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 260 }}>
+                          <Typography variant="body2" noWrap>
+                            {task?.title ?? '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ maxWidth: 260 }}>
+                          <Typography variant="body2" noWrap>
+                            {task ? workTitle(work, task) : '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{run.current_checkpoint || '-'}</TableCell>
+                        <TableCell>{formatDate(run.last_heartbeat_at ?? run.started_at)}</TableCell>
+                        <TableCell align="right">
+                          <AgentRunControls
+                            run={run}
+                            actionKey={actionKey}
+                            compact
+                            onAction={onRunAction}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </Stack>
       )}
     </Paper>
   );
 }
 
+function AgentCapabilityOverview({ capabilities, runs }: { capabilities: AgentCapability[]; runs: AgentRun[] }) {
+  if (capabilities.length === 0) {
+    return <EmptyPanel compact />;
+  }
+  const runCounts = runs.reduce<Record<string, number>>((counts, run) => {
+    counts[run.agent_role] = (counts[run.agent_role] ?? 0) + 1;
+    return counts;
+  }, {});
+  const visibleCapabilities = capabilities.filter((capability) => capability.formal_chain_role || capability.independent_helper);
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(5, minmax(0, 1fr))' },
+        gap: 1
+      }}
+    >
+      {visibleCapabilities.map((capability) => (
+        <Paper
+          key={capability.role}
+          variant="outlined"
+          sx={{
+            p: 1.25,
+            minHeight: 168,
+            bgcolor: capability.independent_helper ? alpha('#19736b', 0.05) : 'background.paper'
+          }}
+        >
+          <Stack spacing={0.75}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Typography sx={{ flex: 1, fontWeight: 900 }} noWrap>
+                {capability.display_name}
+              </Typography>
+              <StatusChip label={String(runCounts[capability.role] ?? 0)} tone={runCounts[capability.role] ? 'info' : 'default'} />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 800 }}>
+              {capability.type}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ minHeight: 42 }}>
+              {capability.purpose}
+            </Typography>
+            <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <StatusChip label={`code: ${capability.writes_code}`} tone={capability.writes_code === 'no' ? 'default' : 'warning'} />
+              <StatusChip label={`browser: ${capability.browser_access}`} />
+              <StatusChip label={capability.independent_helper ? 'helper' : 'chain'} tone={capability.independent_helper ? 'success' : 'info'} />
+            </Stack>
+            <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+              skills: {capability.recommended_skills.slice(0, 3).join(', ') || '-'}
+            </Typography>
+          </Stack>
+        </Paper>
+      ))}
+    </Box>
+  );
+}
+
 function IntakeDialog({
   open,
   busy,
+  capabilities,
   onClose,
   onCreate
 }: {
   open: boolean;
   busy: boolean;
+  capabilities: AgentCapability[];
   onClose: () => void;
   onCreate: (input: IntakeInput) => Promise<void>;
 }) {
   const [form, setForm] = useState<IntakeInput>(defaultIntakeInput);
   const canSubmit = Boolean(form.workTitle.trim() && form.taskTitle.trim());
+  const agentOptions = capabilities.length > 0
+    ? capabilities.filter((capability) => capability.formal_chain_role && capability.role !== 'maestro')
+    : [];
 
   useEffect(() => {
     if (open) {
@@ -1019,11 +1184,21 @@ function IntakeDialog({
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
               <TextField select value={form.agentRole} onChange={update('agentRole')} label="Agent" size="small" sx={{ flex: 1 }}>
-                <MenuItem value="mason">Mason</MenuItem>
-                <MenuItem value="charlie">Charlie</MenuItem>
-                <MenuItem value="scout">Scout</MenuItem>
-                <MenuItem value="lens">Lens</MenuItem>
-                <MenuItem value="scribe">Scribe</MenuItem>
+                {agentOptions.length > 0 ? (
+                  agentOptions.map((capability) => (
+                    <MenuItem key={capability.role} value={capability.role}>
+                      {capability.display_name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  [
+                    <MenuItem key="mason" value="mason">Mason</MenuItem>,
+                    <MenuItem key="charlie" value="charlie">Charlie</MenuItem>,
+                    <MenuItem key="scout" value="scout">Scout</MenuItem>,
+                    <MenuItem key="lens" value="lens">Lens</MenuItem>,
+                    <MenuItem key="scribe" value="scribe">Scribe</MenuItem>
+                  ]
+                )}
               </TextField>
               <TextField
                 select
@@ -1207,12 +1382,18 @@ type TaskDrawerProps = {
   task: Task | null;
   work: Work[];
   detail: TaskDetail | null;
+  capabilities: AgentCapability[];
+  packetPreview: TaskPacket | null;
   loading: boolean;
   tab: DetailTab;
   actionKey: string | null;
   onTabChange: (tab: DetailTab) => void;
   onStageAction: (stage: Stage, action: StageAction) => void;
   onStageReview: (stage: Stage, decision: StageReviewDecision) => void;
+  onCreateAttempt: (task: Task, input: AttemptCreateInput) => void;
+  onSubmitAttempt: (attempt: Attempt, input: AttemptSubmitInput) => void;
+  onGenerateTaskPacket: (task: Task, input: PacketGenerateInput) => void;
+  onLaunchTaskPacket: (task: Task, input: PacketGenerateInput) => void;
   onApprovalDecision: (approval: Approval, decision: ApprovalDecision) => void;
   onCreateAgentRun: (task: Task, input: AgentRunCreateInput) => void;
   onAgentRunAction: (run: AgentRun, action: AgentRunAction) => void;
@@ -1226,12 +1407,18 @@ function TaskDrawer({
   task,
   work,
   detail,
+  capabilities,
+  packetPreview,
   loading,
   tab,
   actionKey,
   onTabChange,
   onStageAction,
   onStageReview,
+  onCreateAttempt,
+  onSubmitAttempt,
+  onGenerateTaskPacket,
+  onLaunchTaskPacket,
   onApprovalDecision,
   onCreateAgentRun,
   onAgentRunAction,
@@ -1311,6 +1498,8 @@ function TaskDrawer({
             sx={{ px: 2, borderBottom: 1, borderColor: 'divider', mt: 1 }}
           >
             <Tab value="stages" label="Stages" />
+            <Tab value="attempts" label="Attempts" />
+            <Tab value="packet" label="Packet" />
             <Tab value="evidence" label="Evidence" />
             <Tab value="approvals" label="Approvals" />
             <Tab value="runs" label="Agent Runs" />
@@ -1330,6 +1519,27 @@ function TaskDrawer({
                     actionKey={actionKey}
                     onAction={onStageAction}
                     onReview={onStageReview}
+                  />
+                )}
+                {tab === 'attempts' && (
+                  <AttemptPanel
+                    task={task}
+                    stages={detail?.stages ?? []}
+                    attempts={detail?.attempts ?? []}
+                    actionKey={actionKey}
+                    onCreate={onCreateAttempt}
+                    onSubmit={onSubmitAttempt}
+                  />
+                )}
+                {tab === 'packet' && (
+                  <PacketPanel
+                    task={task}
+                    stages={detail?.stages ?? []}
+                    capabilities={capabilities}
+                    packet={packetPreview}
+                    actionKey={actionKey}
+                    onGenerate={onGenerateTaskPacket}
+                    onLaunch={onLaunchTaskPacket}
                   />
                 )}
                 {tab === 'evidence' && (
@@ -1522,6 +1732,390 @@ function StageControls({
         <Button size="small" variant="text" color="error" disabled={busy} onClick={() => onAction(stage, 'cancel')}>
           Cancel
         </Button>
+      )}
+    </Stack>
+  );
+}
+
+function AttemptPanel({
+  task,
+  stages,
+  attempts,
+  actionKey,
+  onCreate,
+  onSubmit
+}: {
+  task: Task;
+  stages: Stage[];
+  attempts: Attempt[];
+  actionKey: string | null;
+  onCreate: (task: Task, input: AttemptCreateInput) => void;
+  onSubmit: (attempt: Attempt, input: AttemptSubmitInput) => void;
+}) {
+  return (
+    <Stack spacing={1.25}>
+      <AttemptCreatePanel
+        task={task}
+        stages={stages}
+        busy={actionKey === `attempt:${task.id}:create`}
+        onCreate={onCreate}
+      />
+      {attempts.length === 0 && <EmptyPanel compact />}
+      {attempts.map((attempt) => (
+        <AttemptCard
+          key={attempt.id}
+          attempt={attempt}
+          stage={stages.find((item) => item.id === attempt.stage_id)}
+          busy={actionKey === `attempt:${attempt.id}:submit`}
+          onSubmit={onSubmit}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+function AttemptCreatePanel({
+  task,
+  stages,
+  busy,
+  onCreate
+}: {
+  task: Task;
+  stages: Stage[];
+  busy: boolean;
+  onCreate: (task: Task, input: AttemptCreateInput) => void;
+}) {
+  const stageSignature = stages.map((stage) => `${stage.id}:${stage.agent_role}`).join('|');
+  const [stageID, setStageID] = useState('');
+  const [agentRole, setAgentRole] = useState(task.agent_role || 'mason');
+
+  useEffect(() => {
+    const firstStage = stages[0];
+    setStageID(firstStage?.id ?? '');
+    setAgentRole(firstStage?.agent_role || task.agent_role || 'mason');
+  }, [stageSignature, task.agent_role, task.id]);
+
+  const selectedStage = stages.find((stage) => stage.id === stageID);
+  const canCreate = Boolean(stageID && agentRole.trim());
+
+  return (
+    <Paper
+      component="form"
+      variant="outlined"
+      sx={{ p: 1.5 }}
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (canCreate && !busy) {
+          onCreate(task, { stageID, agentRole });
+        }
+      }}
+    >
+      <Stack spacing={1.25}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography sx={{ flex: 1, fontWeight: 800 }}>
+            Create attempt
+          </Typography>
+          <StatusChip label={selectedStage?.status ?? 'stage'} tone={statusTone(selectedStage?.status ?? '')} />
+        </Stack>
+        <TextField
+          select
+          value={stageID}
+          onChange={(event) => {
+            const nextStageID = event.target.value;
+            const nextStage = stages.find((stage) => stage.id === nextStageID);
+            setStageID(nextStageID);
+            setAgentRole(nextStage?.agent_role || task.agent_role || agentRole || 'mason');
+          }}
+          label="Stage"
+          size="small"
+          disabled={stages.length === 0}
+        >
+          {stages.map((stage) => (
+            <MenuItem key={stage.id} value={stage.id}>
+              {stage.name} / {stage.agent_role || task.agent_role || 'unassigned'}
+            </MenuItem>
+          ))}
+        </TextField>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <TextField
+            value={agentRole}
+            onChange={(event) => setAgentRole(event.target.value)}
+            label="Agent role"
+            size="small"
+            sx={{ flex: 1 }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            startIcon={<AddRoundedIcon />}
+            disabled={!canCreate || busy}
+          >
+            Create Attempt
+          </Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
+
+function AttemptCard({
+  attempt,
+  stage,
+  busy,
+  onSubmit
+}: {
+  attempt: Attempt;
+  stage?: Stage;
+  busy: boolean;
+  onSubmit: (attempt: Attempt, input: AttemptSubmitInput) => void;
+}) {
+  const [summary, setSummary] = useState(attempt.summary || '');
+  const isSubmitted = attempt.status === 'submitted' || Boolean(attempt.submitted_at);
+  const effectiveSummary = summary.trim();
+  const canSubmit = Boolean(effectiveSummary) && !isSubmitted;
+
+  useEffect(() => {
+    setSummary(attempt.summary || '');
+  }, [attempt.id, attempt.summary]);
+
+  const submitAttempt = () => {
+    if (!canSubmit || busy) {
+      return;
+    }
+    onSubmit(attempt, buildAttemptSubmitInput(attempt, stage, effectiveSummary));
+  };
+
+  return (
+    <Paper variant="outlined" sx={{ p: 1.5 }}>
+      <Stack spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography sx={{ flex: 1, fontWeight: 800 }}>
+            Attempt {attempt.attempt_no}
+          </Typography>
+          <StatusChip label={attempt.status} tone={statusTone(attempt.status)} />
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          {stage?.name ?? 'Unknown stage'} / {attempt.agent_role || 'unassigned'}
+        </Typography>
+        {isSubmitted ? (
+          <Stack spacing={0.5}>
+            <Typography variant="body2">{attempt.summary || 'Submitted handoff'}</Typography>
+            {attempt.handoff_path && (
+              <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                handoff: {attempt.handoff_path}
+              </Typography>
+            )}
+            {attempt.readme_path && (
+              <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+                readme: {attempt.readme_path}
+              </Typography>
+            )}
+          </Stack>
+        ) : (
+          <Stack spacing={1}>
+            <TextField
+              value={summary}
+              onChange={(event) => setSummary(event.target.value)}
+              label="Handoff summary"
+              minRows={3}
+              multiline
+              size="small"
+            />
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+                Generates handoff.json and README.md artifacts.
+              </Typography>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<CheckCircleRoundedIcon />}
+                disabled={!canSubmit || busy}
+                onClick={submitAttempt}
+              >
+                Submit Handoff
+              </Button>
+            </Stack>
+          </Stack>
+        )}
+        <Typography variant="caption" color="text.secondary">
+          Created {formatDate(attempt.created_at)} / Submitted {formatDate(attempt.submitted_at)}
+        </Typography>
+      </Stack>
+    </Paper>
+  );
+}
+
+function buildAttemptSubmitInput(attempt: Attempt, stage: Stage | undefined, summary: string): AttemptSubmitInput {
+  const handoff = {
+    result: 'complete',
+    summary,
+    task_id: attempt.task_id,
+    stage_id: attempt.stage_id,
+    attempt_id: attempt.id,
+    stage: stage?.name ?? '',
+    evidence: []
+  };
+  const readme = [
+    `# Attempt ${attempt.attempt_no}`,
+    '',
+    `Stage: ${stage?.name ?? attempt.stage_id}`,
+    `Agent: ${attempt.agent_role || 'unassigned'}`,
+    '',
+    summary,
+    ''
+  ].join('\n');
+
+  return {
+    summary,
+    files_changed_json: [],
+    commands_run_json: [],
+    evidence_json: [],
+    handoff_file: {
+      name: 'handoff.json',
+      content: JSON.stringify(handoff, null, 2),
+      encoding: 'text'
+    },
+    readme_file: {
+      name: 'README.md',
+      content: readme,
+      encoding: 'text'
+    }
+  };
+}
+
+function PacketPanel({
+  task,
+  stages,
+  capabilities,
+  packet,
+  actionKey,
+  onGenerate,
+  onLaunch
+}: {
+  task: Task;
+  stages: Stage[];
+  capabilities: AgentCapability[];
+  packet: TaskPacket | null;
+  actionKey: string | null;
+  onGenerate: (task: Task, input: PacketGenerateInput) => void;
+  onLaunch: (task: Task, input: PacketGenerateInput) => void;
+}) {
+  const stageSignature = stages.map((stage) => `${stage.id}:${stage.agent_role}`).join('|');
+  const [stageID, setStageID] = useState('');
+  const [agentRole, setAgentRole] = useState(task.agent_role || 'mason');
+  const roleOptions = capabilities.filter((capability) => capability.formal_chain_role && capability.role !== 'maestro');
+
+  useEffect(() => {
+    const firstStage = stages[0];
+    setStageID(firstStage?.id ?? '');
+    setAgentRole(firstStage?.agent_role || task.agent_role || 'mason');
+  }, [stageSignature, task.agent_role, task.id]);
+
+  const selectedCapability = capabilities.find((capability) => capability.role === agentRole);
+  const canGenerate = Boolean(agentRole.trim());
+  const canLaunch = Boolean(stageID && agentRole.trim());
+  const generateBusy = actionKey === `packet:${task.id}:generate`;
+  const launchBusy = actionKey === `packet:${task.id}:launch`;
+
+  return (
+    <Stack spacing={1.25}>
+      <Paper
+        component="form"
+        variant="outlined"
+        sx={{ p: 1.5 }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (canGenerate && !generateBusy && !launchBusy) {
+            onGenerate(task, { stageID, agentRole });
+          }
+        }}
+      >
+        <Stack spacing={1.25}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Typography sx={{ flex: 1, fontWeight: 800 }}>
+              Generate launch packet
+            </Typography>
+            <StatusChip label={selectedCapability?.type ?? 'custom'} tone="info" />
+          </Stack>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <TextField
+              select
+              value={stageID}
+              onChange={(event) => {
+                const nextStageID = event.target.value;
+                const nextStage = stages.find((stage) => stage.id === nextStageID);
+                setStageID(nextStageID);
+                setAgentRole(nextStage?.agent_role || task.agent_role || agentRole || 'mason');
+              }}
+              label="Stage"
+              size="small"
+              sx={{ flex: 1 }}
+            >
+              <MenuItem value="">Task only</MenuItem>
+              {stages.map((stage) => (
+                <MenuItem key={stage.id} value={stage.id}>
+                  {stage.name} / {stage.agent_role || task.agent_role || 'unassigned'}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select={roleOptions.length > 0}
+              value={agentRole}
+              onChange={(event) => setAgentRole(event.target.value)}
+              label="Agent"
+              size="small"
+              sx={{ flex: 1 }}
+            >
+              {roleOptions.map((capability) => (
+                <MenuItem key={capability.role} value={capability.role}>
+                  {capability.display_name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+              Packet includes role scope, skills, checks, and handoff. Queue creates an attempt and agent run.
+            </Typography>
+            <Button type="submit" variant="outlined" startIcon={<FactCheckRoundedIcon />} disabled={!canGenerate || generateBusy || launchBusy}>
+              Generate Packet
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<PlayArrowRoundedIcon />}
+              disabled={!canLaunch || generateBusy || launchBusy}
+              onClick={() => onLaunch(task, { stageID, agentRole })}
+            >
+              Queue Agent Run
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+      {packet ? (
+        <Paper variant="outlined" sx={{ p: 1.5 }}>
+          <Stack spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Typography sx={{ flex: 1, fontWeight: 800 }}>
+                {packet.agent_display_name} packet
+              </Typography>
+              <StatusChip label={packet.route_tier} tone={packet.route_tier === 'high_risk' ? 'warning' : 'info'} />
+            </Stack>
+            <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              {packet.recommended_skills.map((skill) => (
+                <StatusChip key={skill} label={skill} />
+              ))}
+            </Stack>
+            <TextField
+              value={packet.packet_markdown}
+              multiline
+              minRows={16}
+              size="small"
+              slotProps={{ input: { readOnly: true } }}
+            />
+          </Stack>
+        </Paper>
+      ) : (
+        <EmptyPanel compact />
       )}
     </Stack>
   );

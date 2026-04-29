@@ -12,16 +12,19 @@ orchestration runtime.
 
 Read order:
 
-1. `orchestration-contract.md`
-2. `routing-tier-contract.md`
-3. `agent-roles.md`
-4. `artifact-model.md`
-5. `artifact-file-contract.md`
-6. `stage-contract.md`
-7. `state-model.md`
-8. `api-contract.md`
-9. `maestroctl-contract.md`
-10. `../contracts/README.md`
+1. `operating-charter.md`
+2. `orchestration-contract.md`
+3. `routing-tier-contract.md`
+4. `agent-roles.md`
+5. `agent-contracts.md`
+6. `artifact-model.md`
+7. `artifact-file-contract.md`
+8. `stage-contract.md`
+9. `state-model.md`
+10. `db-model.md`
+11. `api-contract.md`
+12. `maestroctl-contract.md`
+13. `../contracts/README.md`
 
 These documents intentionally do not override the current live
 `module_orchestrator` runtime. They describe the target model to implement after

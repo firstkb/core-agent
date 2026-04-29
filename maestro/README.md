@@ -43,13 +43,16 @@ maestro/
   README.md
   docs/
     README.md
+    operating-charter.md
     orchestration-contract.md
     routing-tier-contract.md
+    agent-contracts.md
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
     agent-roles.md
     state-model.md
+    db-model.md
     api-contract.md
     maestroctl-contract.md
   contracts/

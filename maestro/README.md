@@ -56,6 +56,7 @@ maestro/
     stage-contract.md
     ui-cockpit-contract.md
     run-control-contract.md
+    phase-1-implementation-brief.md
     agent-roles.md
     state-model.md
     db-model.md

@@ -47,6 +47,9 @@ maestroctl approval decide <approval-id> --decision approved --reason "Approved 
 maestroctl agent-run create --agent-role mason --task <task-id> --stage <stage-id>
 maestroctl agent-run start <agent-run-id>
 maestroctl agent-run checkpoint <agent-run-id> --checkpoint before-tests
+
+maestroctl run-events list --task-id <task-id> --limit 50
+maestroctl run-events list --stage-id <stage-id>
 ```
 
 ## Output

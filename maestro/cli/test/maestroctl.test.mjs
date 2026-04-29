@@ -99,6 +99,55 @@ test('attempt submit sends handoff and readme files', async () => {
   assert.equal(body.changes.readme_file.content, 'done');
 });
 
+test('run-events list maps filters to query params', async () => {
+  const calls = [];
+  const result = await run([
+    '--api-url',
+    'http://maestro.local',
+    'run-events',
+    'list',
+    '--task-id',
+    'task-1',
+    '--stage',
+    'stage-1',
+    '--limit',
+    '25'
+  ], {
+    fetch: fakeFetch(calls, [{ id: 'event-1', command: 'agent_run.start' }])
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(result.body.command, 'run-events list');
+  assert.equal(calls[0].url.pathname, '/api/run-events');
+  assert.equal(calls[0].url.searchParams.get('taskId'), 'task-1');
+  assert.equal(calls[0].url.searchParams.get('stageId'), 'stage-1');
+  assert.equal(calls[0].url.searchParams.get('limit'), '25');
+});
+
+test('agent-run list accepts id-suffixed filter flags', async () => {
+  const calls = [];
+  const result = await run([
+    '--api-url',
+    'http://maestro.local',
+    'agent-run',
+    'list',
+    '--task-id',
+    'task-1',
+    '--stage-id',
+    'stage-1',
+    '--role',
+    'mason'
+  ], {
+    fetch: fakeFetch(calls, [])
+  });
+
+  assert.equal(result.body.ok, true);
+  assert.equal(calls[0].url.pathname, '/api/agent-runs');
+  assert.equal(calls[0].url.searchParams.get('taskId'), 'task-1');
+  assert.equal(calls[0].url.searchParams.get('stageId'), 'stage-1');
+  assert.equal(calls[0].url.searchParams.get('agentRole'), 'mason');
+});
+
 test('API errors become stable JSON errors', async () => {
   const result = await run(['--api-url', 'http://maestro.local', 'stage', 'start', 'stage-1'], {
     fetch: async () => new Response(JSON.stringify({

@@ -77,6 +77,8 @@ async function buildCommand({ group, action, idOrSubcommand, maybeSubcommand, fl
       return buildApproval(action, idOrSubcommand, flags, apiURL, cwd);
     case 'agent-run':
       return buildAgentRun(action, idOrSubcommand, maybeSubcommand, flags, apiURL, cwd);
+    case 'run-events':
+      return buildRunEvents(action, flags, apiURL);
     default:
       throw cliError('unknown_command', `Unknown command group: ${group}`);
   }
@@ -228,9 +230,9 @@ async function buildAgentRun(action, id, maybeSubcommand, flags, apiURL, cwd) {
   switch (action) {
     case 'list':
       return getCommand('agent-run list', apiURL, '/api/agent-runs', filterQuery({
-        workId: flags.work,
-        taskId: flags.task,
-        stageId: flags.stage,
+        workId: flags.work ?? flags.workId,
+        taskId: flags.task ?? flags.taskId,
+        stageId: flags.stage ?? flags.stageId,
         status: flags.status,
         agentRole: flags.agentRole ?? flags.role
       }));
@@ -258,6 +260,21 @@ async function buildAgentRun(action, id, maybeSubcommand, flags, apiURL, cwd) {
       });
     default:
       throw cliError('unknown_command', `Unknown agent-run command: ${action ?? maybeSubcommand}`);
+  }
+}
+
+function buildRunEvents(action, flags, apiURL) {
+  switch (action) {
+    case 'list':
+      return getCommand('run-events list', apiURL, '/api/run-events', filterQuery({
+        workId: flags.work ?? flags.workId,
+        taskId: flags.task ?? flags.taskId,
+        stageId: flags.stage ?? flags.stageId,
+        attemptId: flags.attempt ?? flags.attemptId,
+        limit: flags.limit
+      }));
+    default:
+      throw cliError('unknown_command', `Unknown run-events command: ${action}`);
   }
 }
 
@@ -572,6 +589,7 @@ Groups:
   evidence   attach
   approval   request|decide
   agent-run  list|create|get|start|pause|resume|cancel|checkpoint|heartbeat
+  run-events list
 
 Global:
   --api-url <url>  Defaults to MAESTRO_API_URL or ${DEFAULT_API_URL}

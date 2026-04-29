@@ -397,6 +397,11 @@ async function runVerticalFlow({ apiURL, databaseURL, artifactRoot, tempDir }) {
     throw new Error('Expected task evidence to be listable after attachment.');
   }
 
+  const runEvents = await maestro(apiURL, ['run-events', 'list', '--task-id', task.id, '--limit', '50']);
+  if (!Array.isArray(runEvents) || !runEvents.some((event) => event.command === 'agent_run.checkpoint')) {
+    throw new Error('Expected maestroctl run-events list to include the agent_run.checkpoint event.');
+  }
+
   const migrated = await psql(databaseURL, `SELECT COUNT(*) FROM schema_migrations WHERE version = '001_initial_schema';`);
   if (Number(migrated.trim()) !== 1) {
     throw new Error('Expected migration 001_initial_schema to be recorded.');
@@ -410,7 +415,8 @@ async function runVerticalFlow({ apiURL, databaseURL, artifactRoot, tempDir }) {
     submittedAttempt,
     evidence,
     approval: decidedApproval,
-    agentRun
+    agentRun,
+    runEvents
   };
 }
 
@@ -429,6 +435,11 @@ async function verifyPersistence({ apiURL, result }) {
   const agentRun = await maestro(apiURL, ['agent-run', 'get', result.agentRun.id]);
   if (agentRun.current_checkpoint !== 'before-review') {
     throw new Error(`Persistence check failed: agent checkpoint is ${agentRun.current_checkpoint}.`);
+  }
+
+  const runEvents = await maestro(apiURL, ['run-events', 'list', '--task-id', result.task.id, '--limit', '50']);
+  if (!Array.isArray(runEvents) || !runEvents.some((event) => event.command?.startsWith('stage.review.'))) {
+    throw new Error('Persistence check failed: stage.review event not found.');
   }
 }
 

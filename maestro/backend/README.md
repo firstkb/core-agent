@@ -57,6 +57,8 @@ GET  /api/work
 POST /api/work
 GET  /api/work/{id}
 POST /api/work/{id}/update
+GET  /api/work/{id}/evidence
+POST /api/work/{id}/evidence
 
 GET  /api/tasks
 POST /api/tasks
@@ -97,3 +99,39 @@ POST /api/agent-runs/{id}/cancel
 POST /api/agent-runs/{id}/checkpoint
 POST /api/agent-runs/{id}/heartbeat
 ```
+
+## Artifact Payloads
+
+Evidence endpoints accept either an existing `uri` or a file payload:
+
+```json
+{
+  "type": "test",
+  "title": "go test output",
+  "file": {
+    "name": "go-test.log",
+    "content": "ok",
+    "encoding": "text"
+  }
+}
+```
+
+Attempt submit can write handoff and README files:
+
+```json
+{
+  "changes": {
+    "summary": "Implementation complete.",
+    "handoff_file": {
+      "content": "{}"
+    },
+    "readme_file": {
+      "content": "Done."
+    }
+  }
+}
+```
+
+The API writes files under `MAESTRO_ARTIFACT_ROOT`, returns
+`artifact://current/...` URIs, and stores those URIs in PostgreSQL. Artifact
+files are portable evidence and handoff records, not live state.

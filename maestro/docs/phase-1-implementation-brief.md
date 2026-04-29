@@ -259,11 +259,11 @@ created later.
 
 ### Artifact Slice
 
-- [ ] Create `maestro/artifacts/current/` root handling.
-- [ ] Normalize artifact paths through the API.
-- [ ] Attach evidence files to attempt/task/work records.
-- [ ] Write handoff and attempt files without treating them as live state.
-- [ ] Validate artifact path traversal protection.
+- [x] Create `maestro/artifacts/current/` root handling.
+- [x] Normalize artifact paths through the API.
+- [x] Attach evidence files to attempt/task/work records.
+- [x] Write handoff and attempt files without treating them as live state.
+- [x] Validate artifact path traversal protection.
 
 ### CLI Slice
 

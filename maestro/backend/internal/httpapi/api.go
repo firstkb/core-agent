@@ -1,10 +1,13 @@
 package httpapi
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
+	"firstkb.dev/maestro/backend/internal/artifacts"
 	"firstkb.dev/maestro/backend/internal/store"
 )
 
@@ -16,11 +19,44 @@ type commandEnvelope[T any] struct {
 	Decision string      `json:"decision"`
 }
 
+type evidenceAttachRequest struct {
+	Type     string               `json:"type"`
+	Title    string               `json:"title"`
+	URI      string               `json:"uri"`
+	Metadata any                  `json:"metadata_json"`
+	File     *artifactFilePayload `json:"file"`
+}
+
+type artifactFilePayload struct {
+	Name     string `json:"name"`
+	Content  string `json:"content"`
+	Encoding string `json:"encoding"`
+}
+
+type attemptSubmitRequest struct {
+	Changes attemptSubmitChanges `json:"changes"`
+	Actor   store.Actor          `json:"actor"`
+	Reason  string               `json:"reason"`
+}
+
+type attemptSubmitChanges struct {
+	Summary      string               `json:"summary"`
+	HandoffPath  string               `json:"handoff_path"`
+	ReadmePath   string               `json:"readme_path"`
+	FilesChanged any                  `json:"files_changed_json"`
+	CommandsRun  any                  `json:"commands_run_json"`
+	Evidence     any                  `json:"evidence_json"`
+	HandoffFile  *artifactFilePayload `json:"handoff_file"`
+	ReadmeFile   *artifactFilePayload `json:"readme_file"`
+}
+
 func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/work", s.handleListWork)
 	mux.HandleFunc("POST /api/work", s.handleCreateWork)
 	mux.HandleFunc("GET /api/work/{id}", s.handleGetWork)
 	mux.HandleFunc("POST /api/work/{id}/update", s.handleUpdateWork)
+	mux.HandleFunc("GET /api/work/{id}/evidence", s.handleListWorkEvidence)
+	mux.HandleFunc("POST /api/work/{id}/evidence", s.handleAttachWorkEvidence)
 
 	mux.HandleFunc("GET /api/tasks", s.handleListTasks)
 	mux.HandleFunc("POST /api/tasks", s.handleCreateTask)
@@ -93,6 +129,27 @@ func (s *Server) handleUpdateWork(w http.ResponseWriter, r *http.Request) {
 	}
 	work, err := s.store.UpdateWork(r.Context(), r.PathValue("id"), input.Changes, input.Actor, input.Reason)
 	writeResult(w, work, err)
+}
+
+func (s *Server) handleAttachWorkEvidence(w http.ResponseWriter, r *http.Request) {
+	var input evidenceAttachRequest
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	workID := r.PathValue("id")
+	evidenceInput, err := s.prepareEvidenceInput(input, artifacts.Target{WorkID: workID})
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	evidenceInput.WorkID = &workID
+	evidence, err := s.store.AttachEvidence(r.Context(), evidenceInput, actorFromRequest(r), "")
+	writeResult(w, evidence, err)
+}
+
+func (s *Server) handleListWorkEvidence(w http.ResponseWriter, r *http.Request) {
+	evidence, err := s.store.ListWorkEvidence(r.Context(), r.PathValue("id"))
+	writeResult(w, evidence, err)
 }
 
 func (s *Server) handleCreateTask(w http.ResponseWriter, r *http.Request) {
@@ -216,22 +273,38 @@ func (s *Server) handleGetAttempt(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSubmitAttempt(w http.ResponseWriter, r *http.Request) {
-	var input commandEnvelope[store.AttemptSubmitInput]
+	var input attemptSubmitRequest
 	if !decodeJSON(w, r, &input) {
 		return
 	}
-	attempt, err := s.store.SubmitAttempt(r.Context(), r.PathValue("id"), input.Changes, input.Actor, input.Reason)
+	attemptID := r.PathValue("id")
+	submitInput, err := s.prepareAttemptSubmitInput(r, attemptID, input.Changes)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	attempt, err := s.store.SubmitAttempt(r.Context(), attemptID, submitInput, input.Actor, input.Reason)
 	writeResult(w, attempt, err)
 }
 
 func (s *Server) handleAttachTaskEvidence(w http.ResponseWriter, r *http.Request) {
-	var input store.EvidenceInput
+	var input evidenceAttachRequest
 	if !decodeJSON(w, r, &input) {
 		return
 	}
 	taskID := r.PathValue("id")
-	input.TaskID = &taskID
-	evidence, err := s.store.AttachEvidence(r.Context(), input, actorFromRequest(r), "")
+	task, err := s.store.GetTask(r.Context(), taskID)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	evidenceInput, err := s.prepareEvidenceInput(input, artifacts.Target{WorkID: task.WorkID, TaskID: task.ID})
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	evidenceInput.TaskID = &taskID
+	evidence, err := s.store.AttachEvidence(r.Context(), evidenceInput, actorFromRequest(r), "")
 	writeResult(w, evidence, err)
 }
 
@@ -241,13 +314,33 @@ func (s *Server) handleListTaskEvidence(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *Server) handleAttachAttemptEvidence(w http.ResponseWriter, r *http.Request) {
-	var input store.EvidenceInput
+	var input evidenceAttachRequest
 	if !decodeJSON(w, r, &input) {
 		return
 	}
 	attemptID := r.PathValue("id")
-	input.AttemptID = &attemptID
-	evidence, err := s.store.AttachEvidence(r.Context(), input, actorFromRequest(r), "")
+	attempt, err := s.store.GetAttempt(r.Context(), attemptID)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	task, err := s.store.GetTask(r.Context(), attempt.TaskID)
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	evidenceInput, err := s.prepareEvidenceInput(input, artifacts.Target{
+		WorkID:    task.WorkID,
+		TaskID:    attempt.TaskID,
+		StageID:   attempt.StageID,
+		AttemptID: attempt.ID,
+	})
+	if err != nil {
+		writeStoreError(w, err)
+		return
+	}
+	evidenceInput.AttemptID = &attemptID
+	evidence, err := s.store.AttachEvidence(r.Context(), evidenceInput, actorFromRequest(r), "")
 	writeResult(w, evidence, err)
 }
 
@@ -406,9 +499,136 @@ func writeStoreError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
 	case errors.Is(err, store.ErrApprovalRequired):
 		writeError(w, http.StatusConflict, "approval_required", err.Error())
+	case errors.Is(err, artifacts.ErrUnsafePath):
+		writeError(w, http.StatusBadRequest, "invalid_artifact_path", err.Error())
 	default:
 		writeError(w, http.StatusInternalServerError, "internal_error", err.Error())
 	}
+}
+
+func (s *Server) prepareEvidenceInput(input evidenceAttachRequest, target artifacts.Target) (store.EvidenceInput, error) {
+	out := store.EvidenceInput{
+		Type:     input.Type,
+		Title:    input.Title,
+		URI:      input.URI,
+		Metadata: input.Metadata,
+	}
+
+	if input.File == nil {
+		return out, nil
+	}
+
+	if out.Type == "" {
+		out.Type = "artifact"
+	}
+	if out.Title == "" {
+		out.Title = input.File.Name
+	}
+
+	content, err := decodeArtifactContent(*input.File)
+	if err != nil {
+		return store.EvidenceInput{}, err
+	}
+	written, err := s.artifacts.WriteEvidenceFile(artifacts.File{
+		Target:  target,
+		Name:    input.File.Name,
+		Content: content,
+	})
+	if err != nil {
+		return store.EvidenceInput{}, err
+	}
+
+	out.URI = written.URI
+	out.Metadata = mergeArtifactMetadata(out.Metadata, written)
+	return out, nil
+}
+
+func (s *Server) prepareAttemptSubmitInput(r *http.Request, attemptID string, input attemptSubmitChanges) (store.AttemptSubmitInput, error) {
+	attempt, err := s.store.GetAttempt(r.Context(), attemptID)
+	if err != nil {
+		return store.AttemptSubmitInput{}, err
+	}
+	task, err := s.store.GetTask(r.Context(), attempt.TaskID)
+	if err != nil {
+		return store.AttemptSubmitInput{}, err
+	}
+
+	out := store.AttemptSubmitInput{
+		Summary:      input.Summary,
+		HandoffPath:  input.HandoffPath,
+		ReadmePath:   input.ReadmePath,
+		FilesChanged: input.FilesChanged,
+		CommandsRun:  input.CommandsRun,
+		Evidence:     input.Evidence,
+	}
+
+	target := artifacts.Target{
+		WorkID:    task.WorkID,
+		TaskID:    attempt.TaskID,
+		StageID:   attempt.StageID,
+		AttemptID: attempt.ID,
+	}
+
+	if input.HandoffFile != nil {
+		if input.HandoffFile.Name == "" {
+			input.HandoffFile.Name = "handoff.json"
+		}
+		written, err := s.writeAttemptArtifact(target, *input.HandoffFile)
+		if err != nil {
+			return store.AttemptSubmitInput{}, err
+		}
+		out.HandoffPath = written.URI
+	}
+	if input.ReadmeFile != nil {
+		if input.ReadmeFile.Name == "" {
+			input.ReadmeFile.Name = "README.md"
+		}
+		written, err := s.writeAttemptArtifact(target, *input.ReadmeFile)
+		if err != nil {
+			return store.AttemptSubmitInput{}, err
+		}
+		out.ReadmePath = written.URI
+	}
+
+	return out, nil
+}
+
+func (s *Server) writeAttemptArtifact(target artifacts.Target, payload artifactFilePayload) (artifacts.WrittenFile, error) {
+	content, err := decodeArtifactContent(payload)
+	if err != nil {
+		return artifacts.WrittenFile{}, err
+	}
+	return s.artifacts.WriteAttemptFile(artifacts.File{
+		Target:  target,
+		Name:    payload.Name,
+		Content: content,
+	})
+}
+
+func decodeArtifactContent(payload artifactFilePayload) ([]byte, error) {
+	switch payload.Encoding {
+	case "", "text", "plain":
+		return []byte(payload.Content), nil
+	case "base64":
+		content, err := base64.StdEncoding.DecodeString(payload.Content)
+		if err != nil {
+			return nil, fmt.Errorf("%w: invalid base64 content", store.ErrInvalidInput)
+		}
+		return content, nil
+	default:
+		return nil, fmt.Errorf("%w: unsupported artifact encoding", store.ErrInvalidInput)
+	}
+}
+
+func mergeArtifactMetadata(metadata any, written artifacts.WrittenFile) any {
+	base, ok := metadata.(map[string]any)
+	if !ok || base == nil {
+		base = map[string]any{}
+	}
+	base["artifact_uri"] = written.URI
+	base["artifact_rel_path"] = written.RelPath
+	base["artifact_size"] = written.Size
+	return base
 }
 
 func writeError(w http.ResponseWriter, status int, code string, message string) {

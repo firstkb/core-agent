@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"firstkb.dev/maestro/backend/internal/artifacts"
 	"firstkb.dev/maestro/backend/internal/store"
 )
 
@@ -16,6 +17,7 @@ type Server struct {
 	addr         string
 	db           *sql.DB
 	store        DataStore
+	artifacts    *artifacts.Store
 	artifactRoot string
 	logger       *slog.Logger
 	httpServer   *http.Server
@@ -43,6 +45,7 @@ type DataStore interface {
 	GetAttempt(context.Context, string) (store.Attempt, error)
 	SubmitAttempt(context.Context, string, store.AttemptSubmitInput, store.Actor, string) (store.Attempt, error)
 	AttachEvidence(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
+	ListWorkEvidence(context.Context, string) ([]store.Evidence, error)
 	ListTaskEvidence(context.Context, string) ([]store.Evidence, error)
 	ListAttemptEvidence(context.Context, string) ([]store.Evidence, error)
 	RequestApproval(context.Context, store.ApprovalInput, store.Actor, string) (store.Approval, error)
@@ -64,6 +67,7 @@ type Options struct {
 	Addr         string
 	DB           *sql.DB
 	Store        DataStore
+	Artifacts    *artifacts.Store
 	ArtifactRoot string
 	Logger       *slog.Logger
 }
@@ -77,12 +81,17 @@ func New(options Options) *Server {
 	if dataStore == nil && options.DB != nil {
 		dataStore = store.New(options.DB)
 	}
+	artifactStore := options.Artifacts
+	if artifactStore == nil {
+		artifactStore = artifacts.New(options.ArtifactRoot)
+	}
 
 	srv := &Server{
 		addr:         options.Addr,
 		db:           options.DB,
 		store:        dataStore,
-		artifactRoot: options.ArtifactRoot,
+		artifacts:    artifactStore,
+		artifactRoot: artifactStore.Root(),
 		logger:       logger,
 	}
 	srv.httpServer = &http.Server{

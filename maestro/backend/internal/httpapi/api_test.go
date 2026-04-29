@@ -71,6 +71,9 @@ func TestStartStageApprovalRequired(t *testing.T) {
 
 func TestAttachTaskEvidenceSetsTaskIDFromPath(t *testing.T) {
 	fake := &fakeStore{
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{ID: "task-1", WorkID: "work-1"}, nil
+		},
 		attachEvidence: func(_ context.Context, input store.EvidenceInput, _ store.Actor, _ string) (store.Evidence, error) {
 			if input.TaskID == nil || *input.TaskID != "task-1" {
 				t.Fatalf("task id = %#v", input.TaskID)
@@ -88,6 +91,85 @@ func TestAttachTaskEvidenceSetsTaskIDFromPath(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/tasks/task-1/evidence", bytes.NewBufferString(`{"type":"test","title":"go test","uri":"artifact://test"}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAttachTaskEvidenceFileWritesArtifact(t *testing.T) {
+	fake := &fakeStore{
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{ID: "task-1", WorkID: "work-1"}, nil
+		},
+		attachEvidence: func(_ context.Context, input store.EvidenceInput, _ store.Actor, _ string) (store.Evidence, error) {
+			if input.URI != "artifact://current/work/work-1/tasks/task-1/evidence/result.txt" {
+				t.Fatalf("uri = %q", input.URI)
+			}
+			return store.Evidence{
+				ID:     "evidence-1",
+				TaskID: input.TaskID,
+				Type:   input.Type,
+				Title:  input.Title,
+				URI:    input.URI,
+			}, nil
+		},
+	}
+	srv := New(Options{Store: fake, ArtifactRoot: t.TempDir()})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/tasks/task-1/evidence", bytes.NewBufferString(`{"type":"test","title":"result","file":{"name":"result.txt","content":"ok"}}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAttachEvidenceRejectsTraversal(t *testing.T) {
+	fake := &fakeStore{
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{ID: "task-1", WorkID: "work-1"}, nil
+		},
+	}
+	srv := New(Options{Store: fake, ArtifactRoot: t.TempDir()})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/tasks/task-1/evidence", bytes.NewBufferString(`{"type":"test","title":"bad","file":{"name":"../secret.txt","content":"no"}}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSubmitAttemptWritesHandoffAndReadme(t *testing.T) {
+	fake := &fakeStore{
+		getAttempt: func(context.Context, string) (store.Attempt, error) {
+			return store.Attempt{ID: "attempt-1", TaskID: "task-1", StageID: "stage-1"}, nil
+		},
+		getTask: func(context.Context, string) (store.Task, error) {
+			return store.Task{ID: "task-1", WorkID: "work-1"}, nil
+		},
+		submitAttempt: func(_ context.Context, id string, input store.AttemptSubmitInput, _ store.Actor, _ string) (store.Attempt, error) {
+			if id != "attempt-1" {
+				t.Fatalf("id = %q", id)
+			}
+			if input.HandoffPath != "artifact://current/work/work-1/tasks/task-1/stages/stage-1/attempts/attempt-1/handoff.json" {
+				t.Fatalf("handoff path = %q", input.HandoffPath)
+			}
+			if input.ReadmePath != "artifact://current/work/work-1/tasks/task-1/stages/stage-1/attempts/attempt-1/README.md" {
+				t.Fatalf("readme path = %q", input.ReadmePath)
+			}
+			return store.Attempt{ID: id, TaskID: "task-1", StageID: "stage-1", HandoffPath: input.HandoffPath, ReadmePath: input.ReadmePath}, nil
+		},
+	}
+	srv := New(Options{Store: fake, ArtifactRoot: t.TempDir()})
+
+	body := `{"changes":{"summary":"done","handoff_file":{"content":"{}"},"readme_file":{"content":"done"}}}`
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/attempts/attempt-1/submit", bytes.NewBufferString(body))
 	srv.routes().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
@@ -152,6 +234,9 @@ func TestCheckpointAgentRunEndpoint(t *testing.T) {
 
 type fakeStore struct {
 	createWork         func(context.Context, store.WorkInput, store.Actor, string) (store.Work, error)
+	getTask            func(context.Context, string) (store.Task, error)
+	getAttempt         func(context.Context, string) (store.Attempt, error)
+	submitAttempt      func(context.Context, string, store.AttemptSubmitInput, store.Actor, string) (store.Attempt, error)
 	startStage         func(context.Context, string, store.Actor, string) (store.Stage, error)
 	attachEvidence     func(context.Context, store.EvidenceInput, store.Actor, string) (store.Evidence, error)
 	createAgentRun     func(context.Context, store.AgentRunInput, store.Actor, string) (store.AgentRun, error)
@@ -185,7 +270,10 @@ func (f *fakeStore) ListTasks(context.Context, store.TaskFilters) ([]store.Task,
 	return nil, errors.New("unexpected ListTasks")
 }
 
-func (f *fakeStore) GetTask(context.Context, string) (store.Task, error) {
+func (f *fakeStore) GetTask(ctx context.Context, id string) (store.Task, error) {
+	if f.getTask != nil {
+		return f.getTask(ctx, id)
+	}
 	return store.Task{}, errors.New("unexpected GetTask")
 }
 
@@ -236,11 +324,17 @@ func (f *fakeStore) ListAttempts(context.Context, string) ([]store.Attempt, erro
 	return nil, errors.New("unexpected ListAttempts")
 }
 
-func (f *fakeStore) GetAttempt(context.Context, string) (store.Attempt, error) {
+func (f *fakeStore) GetAttempt(ctx context.Context, id string) (store.Attempt, error) {
+	if f.getAttempt != nil {
+		return f.getAttempt(ctx, id)
+	}
 	return store.Attempt{}, errors.New("unexpected GetAttempt")
 }
 
-func (f *fakeStore) SubmitAttempt(context.Context, string, store.AttemptSubmitInput, store.Actor, string) (store.Attempt, error) {
+func (f *fakeStore) SubmitAttempt(ctx context.Context, id string, input store.AttemptSubmitInput, actor store.Actor, reason string) (store.Attempt, error) {
+	if f.submitAttempt != nil {
+		return f.submitAttempt(ctx, id, input, actor, reason)
+	}
 	return store.Attempt{}, errors.New("unexpected SubmitAttempt")
 }
 
@@ -253,6 +347,10 @@ func (f *fakeStore) AttachEvidence(ctx context.Context, input store.EvidenceInpu
 
 func (f *fakeStore) ListTaskEvidence(context.Context, string) ([]store.Evidence, error) {
 	return nil, errors.New("unexpected ListTaskEvidence")
+}
+
+func (f *fakeStore) ListWorkEvidence(context.Context, string) ([]store.Evidence, error) {
+	return nil, errors.New("unexpected ListWorkEvidence")
 }
 
 func (f *fakeStore) ListAttemptEvidence(context.Context, string) ([]store.Evidence, error) {

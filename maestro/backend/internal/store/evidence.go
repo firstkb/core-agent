@@ -67,6 +67,10 @@ func (s *Store) ListTaskEvidence(ctx context.Context, taskID string) ([]Evidence
 	return s.listEvidence(ctx, "task_id", taskID)
 }
 
+func (s *Store) ListWorkEvidence(ctx context.Context, workID string) ([]Evidence, error) {
+	return s.listEvidence(ctx, "work_id", workID)
+}
+
 func (s *Store) ListAttemptEvidence(ctx context.Context, attemptID string) ([]Evidence, error) {
 	return s.listEvidence(ctx, "attempt_id", attemptID)
 }

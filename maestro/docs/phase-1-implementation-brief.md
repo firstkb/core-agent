@@ -237,13 +237,13 @@ created later.
 
 ### Backend Foundation
 
-- [ ] Create `maestro/backend/` skeleton.
-- [ ] Add config loading for `MAESTRO_DATABASE_URL`,
+- [x] Create `maestro/backend/` skeleton.
+- [x] Add config loading for `MAESTRO_DATABASE_URL`,
   `MAESTRO_ARTIFACT_ROOT`, and `MAESTRO_HTTP_ADDR`.
-- [ ] Add PostgreSQL connection and health endpoint.
-- [ ] Add migration runner.
-- [ ] Add initial migrations for Phase 1 tables.
-- [ ] Add run event append helper.
+- [x] Add PostgreSQL connection and health endpoint.
+- [x] Add migration runner.
+- [x] Add initial migrations for Phase 1 tables.
+- [x] Add run event append helper.
 
 ### API Slice
 

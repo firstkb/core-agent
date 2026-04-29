@@ -6,6 +6,8 @@ node_modules/
 ai-memory/local/
 artifacts/*
 !artifacts/.gitkeep
+maestro/artifacts/*
+!maestro/artifacts/.gitkeep
 platform/*
 !platform/.gitkeep
 !platform/AGENTS.md

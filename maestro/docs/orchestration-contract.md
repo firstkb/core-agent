@@ -13,13 +13,24 @@ Maestro vNext is the universal owner-facing orchestration entrypoint.
 
 The owner sends work to Maestro, not directly to individual specialist agents.
 Maestro classifies the request, selects the lightest sufficient execution path,
-opens state only when state is useful, assigns specialist agents when separate
-context is valuable, reconciles outputs, and owns closeout.
+opens a durable record only when it is useful, assigns specialist agents when
+separate context is valuable, reconciles outputs, and owns closeout.
+
+Maestro operates through the adaptive loop defined in
+`adaptive-loop-contract.md`. The canonical posture is to decide the next useful
+move, not to prebuild a fixed agent chain.
+
+Arrow diagrams in this document are shorthand for possible adaptive moves. They
+are not automatic chains that must run end to end.
 
 ## Hard Boundaries
 
-- Atlas remains independent and outside the formal Maestro chain.
+- Atlas remains independent and outside the formal Maestro chain during the
+  transition. After Maestro acceptance, Atlas is archived as provenance unless
+  the owner explicitly keeps it as a lightweight helper.
 - Maestro owns orchestration decisions, not product implementation by default.
+- Maestro must understand whether the owner is discussing, planning, executing,
+  or requesting gated execution before changing files.
 - Tiny direct work must not be forced into work-brief ceremony.
 - High-risk work must not proceed without explicit approval gates.
 - Agents do not silently advance lifecycle state.
@@ -43,7 +54,7 @@ Examples:
 - fix one obvious CSS bug;
 - update one small docs typo.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -57,14 +68,14 @@ State:
 - no work brief;
 - no persisted run unless the owner requests it;
 - concise evidence in final response.
-- artifact shape: none by default, or lightweight `task.md + closeout.md` when
-  the owner wants a durable record.
+- artifact shape: none by default, or lightweight `intent.md + closeout.md`
+  when the owner wants a durable record.
 
 ### Tier 1: Lightweight Task
 
 Use for bounded implementation with useful status, evidence, or review.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -79,15 +90,16 @@ State:
 
 - task is first-class;
 - stages are optional but recommended when the task needs verification or review.
-- artifact shape: `task.md + closeout.md` for simple tasks, expanded to
-  `stages/<stage>/attempt-*` only when handoff, verification, or review needs it.
+- artifact shape: `intent.md + task.md + closeout.md` for simple tasks,
+  expanded with `packet.md`, `handoff-<role>-NNN.json`, and `evidence.md` only
+  when handoff, verification, or review needs it.
 
 ### Tier 2: Staged Task
 
 Use for one task that needs explicit stages, meaningful verification, browser
 evidence, review, or handoff.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -104,14 +116,15 @@ State:
 
 - task and stages are first-class;
 - stage attempts and evidence are recorded when they improve the handoff.
-- artifact shape: staged task under `stages/<stage>/attempt-*`.
+- artifact shape: flat staged task under
+  `maestro/artifact/active/<work-slug>/`.
 
 ### Tier 3: Feature Work
 
 Use for one owner goal that needs decomposition into one or more feature slices
 or coordinated tasks.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -126,7 +139,7 @@ State:
 
 - feature and tasks are first-class;
 - work brief is required when decomposition or approval needs a durable anchor;
-- feature order and dependencies are explicit;
+- feature order and dependencies are explicit in `brief.md` or `plan.md`;
 - execution begins only after required approvals are satisfied.
 - artifact shape: feature-work, expanded only when needed.
 
@@ -135,7 +148,7 @@ State:
 Use for large initiatives that require an owner-approved brief, multi-feature
 plan, dependency ordering, or staged rollout.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -150,17 +163,17 @@ Maestro
 State:
 
 - work brief is required;
-- feature order and dependencies are explicit;
+- feature order and dependencies are explicit in `brief.md` or `plan.md`;
 - execution does not begin without owner approval.
 - artifact shape: feature-work or full shape depending on approval, evidence,
-  and snapshot needs.
+  review, release, or snapshot needs.
 
 ### Tier 4B: High Risk
 
 Use for auth, tenancy, permissions, migrations, secrets, release, deployment, or
 other irreversible or security-sensitive work.
 
-Expected path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -188,7 +201,7 @@ Required gates:
 
 Detailed stage rules live in `stage-contract.md`.
 
-The default full chain is:
+The available full stage set is:
 
 ```text
 intake
@@ -232,14 +245,14 @@ release notes are in scope.
 Use `closeout` when evidence and decisions should be captured as a portable run
 record.
 
-Use `memory_audit` when durable docs or `ai-memory` may need updates.
+Use `memory_audit` when durable docs or memory may need updates.
 
 ## Owner-Facing Output
 
 At intake Maestro should report:
 
 - route tier;
-- run/state required or not;
+- durable record required or not;
 - selected stages;
 - selected agents;
 - approvals required;

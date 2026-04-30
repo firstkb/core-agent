@@ -9,10 +9,12 @@ lang: en
 
 ## Purpose
 
-This document defines the default execution recipes Maestro may choose after
-routing a request. These sequences are recipes, not mandatory ceremony.
-Maestro should skip optional agents when they do not improve correctness,
-evidence, approval safety, or handoff quality.
+This document defines execution recipes Maestro may choose after routing a
+request. These recipes are not automatic chains.
+
+Maestro calls specialists one step at a time through the adaptive loop. It
+should skip optional agents when they do not improve correctness, evidence,
+approval safety, or handoff quality.
 
 ## Sequence Rules
 
@@ -21,23 +23,26 @@ evidence, approval safety, or handoff quality.
 - Specialist agents receive bounded packets.
 - Specialist agents recommend next actions but do not advance lifecycle alone.
 - Owner approvals happen at explicit gates.
-- Scribe records closeout; Archivist audits docs and `ai-memory` only when
-  durable memory is impacted.
-- Atlas remains independent and outside the formal chain.
+- Scribe records closeout; Archivist audits docs and durable memory only when
+  memory is impacted.
+- Atlas remains independent and outside the formal chain during transition; it
+  is archived after Maestro acceptance unless the owner keeps it separately.
 
-## Canonical Sequences
+## Sequence Recipes
 
-| Scenario | Route Tier | Default Sequence | Required Gates |
+| Scenario | Route Tier | Useful Specialist Moves | Required Gates |
 |---|---|---|---|
-| Tiny direct | T0 Direct Inline | Maestro | focused check |
-| Lightweight task | T1 Lightweight Task | Maestro -> Mason -> Scribe optional | closeout when persisted |
-| Staged task | T2 Staged Task | Maestro -> Mason -> Scout optional -> Lens optional -> Scribe | evidence before closeout |
-| UI task | T2 or T3 | Maestro -> Charlie optional -> Mason -> Scout/browser -> Lens -> Scribe | route, viewport, states, visual notes |
-| Feature work | T3 Feature Work | Maestro -> Charlie -> Maestro plan -> Grant optional -> Mason -> Scout -> Lens -> Scribe -> Archivist optional | approval when scope/risk requires it |
-| Module-sized work | T4A Module-Sized Work | Maestro -> Charlie -> Maestro brief -> Grant -> Owner approval -> staged execution -> Scribe -> Archivist optional | owner-approved brief |
-| High-risk work | T4B High Risk | Maestro -> Charlie -> Grant -> Owner/security approval -> Mason -> Scout -> Lens -> Owner/release approval optional -> Release optional -> Scribe -> Archivist optional | high-risk approvals and evidence |
-| Docs/memory work | T1-T3 | Maestro -> Mason or current chat -> Scribe optional -> Archivist | docs/memory consistency check |
-| Release work | T4B when production-impacting | Maestro -> Charlie optional -> Grant optional -> Owner release approval -> Release -> Scout -> Scribe | release approval and rollback notes |
+| Tiny direct | T0 Direct Inline | Maestro inline | focused check |
+| Lightweight task | T1 Lightweight Task | Mason only when inline work is not enough; Scribe optional | closeout when persisted |
+| Staged task | T2 Staged Task | Mason, then Scout or Lens only when evidence/review matters; Scribe when persisted | evidence before closeout |
+| UI task | T2 or T3 | Charlie optional, Mason with UI skill, Scout/browser, Lens only when useful | route, viewport, states, visual notes |
+| Feature work | T3 Feature Work | Charlie for unknowns, Grant for plan risk, Mason per slice, Scout/Lens/Scribe as needed | approval when scope/risk requires it |
+| Module-sized work | T4A Module-Sized Work | Charlie, Grant, owner approval, then adaptive staged slices | owner-approved brief |
+| High-risk work | T4B High Risk | Charlie, Grant, owner/security approval, Mason, Scout, Lens, Release only if approved | high-risk approvals and evidence |
+| Docs/memory work | T1-T3 | Mason or current chat, then Archivist when consistency matters | docs/memory consistency check |
+| Release work | T4B when production-impacting | Release only after approval, Scout evidence, Scribe closeout | release approval and rollback notes |
+
+The table lists available moves, not a fixed order that must run every time.
 
 ## Tiny Direct
 
@@ -57,12 +62,9 @@ wants a durable record or when evidence should survive the chat.
 Use when one bounded change benefits from a task packet or closeout but does not
 need staged handoff.
 
-```text
-Maestro
-  -> Mason
-  -> focused checks
-  -> Scribe optional
-```
+Possible moves: Maestro handles it inline, or calls Mason when the edit benefits
+from a separate implementation context. Scribe is optional when a durable
+closeout is useful.
 
 Scout is optional when checks are simple enough for Mason. Lens is optional when
 independent review would not materially reduce risk.
@@ -72,13 +74,9 @@ independent review would not materially reduce risk.
 Use when the task needs explicit stages, verification, review, or portable
 handoff evidence.
 
-```text
-Maestro
-  -> Mason
-  -> Scout
-  -> Lens
-  -> Scribe
-```
+Possible moves: Mason implements, Scout verifies when evidence is material,
+Lens reviews when independent review reduces risk, and Scribe records closeout
+when the work is persisted.
 
 Charlie may run before Mason when the code path is unclear.
 
@@ -87,14 +85,10 @@ Charlie may run before Mason when the code path is unclear.
 Use for visible frontend changes, Storybook work, interaction states, or browser
 verification.
 
-```text
-Maestro
-  -> Charlie optional
-  -> Mason with ui-designer skill when design decisions matter
-  -> Scout with browser or visual review
-  -> Lens
-  -> Scribe
-```
+Possible moves: Charlie researches only when the UI path is unclear, Mason uses
+the UI skill when design decisions matter, Scout performs browser or visual
+review, Lens reviews only when risk remains, and Scribe records closeout when
+useful.
 
 Required evidence:
 
@@ -109,17 +103,10 @@ Required evidence:
 Use when one owner goal needs decomposition into feature slices or coordinated
 tasks.
 
-```text
-Maestro
-  -> Charlie
-  -> Maestro plan
-  -> Grant optional
-  -> Mason per task
-  -> Scout
-  -> Lens
-  -> Scribe
-  -> Archivist optional
-```
+Possible moves: Charlie resolves unknowns, Maestro keeps decomposition in
+`brief.md` or `plan.md`, Grant audits only when plan risk is material, Mason
+works per slice, Scout/Lens/Scribe/Archivist are called only when their evidence
+or audit value is needed.
 
 Owner approval is required when the plan freezes scope, affects high-risk
 surfaces, or introduces meaningful dependency ordering.
@@ -129,16 +116,10 @@ surfaces, or introduces meaningful dependency ordering.
 Use when the request is large enough to need an owner-approved brief before
 execution.
 
-```text
-Maestro
-  -> Charlie
-  -> Maestro brief
-  -> Grant
-  -> Owner approval
-  -> staged feature execution
-  -> Scribe
-  -> Archivist optional
-```
+Possible moves: Charlie researches, Maestro writes the brief, Grant audits,
+owner approval gates execution, then Maestro runs adaptive slices until
+closeout. Scribe and Archivist are used only when closeout or memory value is
+material.
 
 No implementation stage starts until the brief gate is satisfied.
 
@@ -147,19 +128,10 @@ No implementation stage starts until the brief gate is satisfied.
 Use for auth, tenancy, permissions, migrations, secrets, production deployment,
 release, or other irreversible work.
 
-```text
-Maestro
-  -> Charlie
-  -> Grant
-  -> Owner/security approval
-  -> Mason
-  -> Scout
-  -> Lens
-  -> Owner/release approval optional
-  -> Release optional
-  -> Scribe
-  -> Archivist optional
-```
+Possible moves: Charlie researches risk, Grant audits the plan, owner/security
+approval gates implementation, Mason works inside approved scope, Scout and Lens
+verify and review, Release runs only after release approval, and Scribe or
+Archivist preserve durable closeout or memory value.
 
 High-risk work must not run as T0 or T1. It must record approval, evidence,
 residual risk, and rollback/recovery notes when release is in scope.

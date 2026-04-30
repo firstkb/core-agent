@@ -116,11 +116,11 @@ Examples of high-risk path classes:
 
 - records closeout, evidence summary, final decisions, and residual risks;
 - does not rewrite product behavior;
-- does not replace `ai-memory`.
+- does not replace durable memory.
 
 ### Archivist
 
-- audits docs and `ai-memory` consistency;
+- audits docs and memory consistency;
 - patches docs/memory only when assigned;
 - does not own feature closeout.
 

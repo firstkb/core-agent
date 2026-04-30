@@ -9,21 +9,22 @@ lang: en
 
 ## Purpose
 
-This document defines the contract for each artifact file that Maestro vNext may
-write when a route tier needs durable records.
+This document defines the file contract for flat Maestro work records under
+`maestro/artifact/active/<work-slug>/` and
+`maestro/artifact/archive/<work-slug>/`.
 
 It follows the jet rule: create only the files required by the selected
 `artifact_shape`.
 
 ## File Lifecycle Rules
 
-- `task.md`, `brief.md`, feature `README.md`, and `packet.md` are AI-authored
+- Work folders are one level deep under `active/` or `archive/`.
+- `intent.md`, `brief.md`, `plan.md`, `task.md`, and `packet.md` are AI-authored
   human-facing Markdown.
-- `handoff.json` and evidence indexes are machine-readable handoffs.
-- `*.snapshot.json` files are optional exports, not primary mutable state.
-- Attempt folders are append-only.
-- A submitted `handoff.json` is write-once.
-- Evidence files are immutable after attachment.
+- `handoff-<role>-NNN.json` files are machine-readable specialist handoffs.
+- `snapshot.json` is an optional export, not primary mutable state.
+- Handoff files are append-by-new-file, not overwritten.
+- Evidence files and links must not contain secrets.
 - `closeout.md` is written at closeout and may be amended only by appending a
   clearly marked correction block.
 
@@ -31,26 +32,55 @@ It follows the jet rule: create only the files required by the selected
 
 | File | none | lightweight | staged_task | feature_work | full |
 |---|---:|---:|---:|---:|---:|
-| `task.md` | no | yes | yes | yes | yes |
-| `closeout.md` | no | yes | yes | yes | yes |
-| `evidence/` at work root | no | optional | optional | optional | optional |
-| `stages/<stage>/attempt-*/README.md` | no | no | yes | yes | yes |
-| `stages/<stage>/attempt-*/handoff.json` | no | no | yes | yes | yes |
-| `stages/<stage>/attempt-*/evidence/` | no | no | optional | optional | optional |
+| `intent.md` | no | yes | yes | yes | yes |
+| `task.md` | no | optional | yes | yes | yes |
+| `plan.md` | no | optional | yes | yes | yes |
+| `packet.md` | no | no | optional | optional | optional |
+| `handoff-<role>-NNN.json` | no | no | yes | yes | yes |
+| `evidence.md` | no | optional | yes | yes | yes |
 | `brief.md` | no | no | optional | yes | yes |
-| `features/<feature>/README.md` | no | no | no | yes | yes |
-| `features/<feature>/tasks/<task>/...` | no | no | no | yes | yes |
-| `packet.md` | no | optional | optional | optional | optional |
-| `*.snapshot.json` | no | no | no | optional | optional |
-| `approvals/` | no | no | no | optional | optional |
+| `approval.md` | no | no | optional | optional | yes |
+| `review.md` | no | no | optional | optional | optional |
+| `release.md` | no | no | no | optional | optional |
+| `snapshot.json` | no | no | no | optional | optional |
+| `closeout.md` | no | yes | yes | yes | yes |
 
 ## Markdown Files
+
+### `intent.md`
+
+Role:
+
+- current owner request, intent mode, route decision, and compact work identity.
+
+Created when:
+
+- `artifact_shape` is `lightweight`, `staged_task`, `feature_work`, or `full`.
+
+Writer:
+
+- Maestro.
+
+Required sections:
+
+- `Request`
+- `Conversation Mode`
+- `Route`
+- `Current Goal`
+- `Scope Notes`
+- `Next Useful Action`
+
+Rules:
+
+- should stay short;
+- may be updated while work is active;
+- should not become a transcript.
 
 ### `brief.md`
 
 Role:
 
-- owner-facing work brief for feature, module-sized, approval-heavy, or
+- owner-facing scope brief for feature, module-sized, approval-heavy, or
   high-risk work.
 
 Created when:
@@ -71,7 +101,7 @@ Required sections:
 - `Constraints`
 - `Approval Policy`
 - `Acceptance Signals`
-- `Feature / Task Breakdown`
+- `Slices / Tasks`
 - `Open Questions`
 - `Owner Decisions`
 
@@ -81,15 +111,43 @@ Rules:
 - transient lifecycle narration does not;
 - after owner approval, changes require an explicit amendment block.
 
+### `plan.md`
+
+Role:
+
+- adaptive plan for the current work folder.
+
+Created when:
+
+- planning is useful beyond a direct final response.
+
+Writer:
+
+- Maestro.
+
+Required sections:
+
+- `Route`
+- `Current Decision`
+- `Next Useful Action`
+- `Possible Follow-Ups`
+- `Risks`
+- `Owner Decisions Needed`
+
+Rules:
+
+- represents the current plan, not a fixed workflow;
+- may be updated when evidence or owner decisions change the next action.
+
 ### `task.md`
 
 Role:
 
-- human-readable execution packet for one work item or one task.
+- bounded execution packet for one work item or slice.
 
 Created when:
 
-- `artifact_shape` is `lightweight`, `staged_task`, `feature_work`, or `full`.
+- the work needs implementation, verification, review, or handoff discipline.
 
 Writer:
 
@@ -116,46 +174,15 @@ Rules:
 - must be bounded enough for an agent to execute without expanding scope;
 - should be updated before execution starts, not rewritten after closeout.
 
-### Feature `README.md`
-
-Role:
-
-- feature packet for one decomposition slice inside work.
-
-Created when:
-
-- `artifact_shape` is `feature_work` or `full`;
-- a real feature decomposition is useful.
-
-Writer:
-
-- Maestro.
-
-Required sections:
-
-- `Identity`
-- `Mission`
-- `Purpose`
-- `Scope In`
-- `Scope Out`
-- `Dependencies`
-- `Constraints`
-- `Acceptance Signals`
-
-Rules:
-
-- feature packet is durable after feature execution starts;
-- mutable status stays in the active runtime context and optional snapshots.
-
 ### `packet.md`
 
 Role:
 
-- ready-to-launch packet for a specific agent or stage.
+- ready-to-launch packet for one specialist agent or stage.
 
 Created when:
 
-- a stage needs a portable launch prompt or handoff to another chat or agent.
+- a specialist subagent needs a portable launch prompt.
 
 Writer:
 
@@ -174,55 +201,120 @@ Required sections:
 
 Rules:
 
-- may be regenerated for a new stage or revised attempt;
+- may be regenerated for a new stage, revised attempt, or different specialist;
 - must not grant scope beyond `task.md`.
 
-### Attempt `README.md`
+### `evidence.md`
 
 Role:
 
-- human-readable report for one stage attempt.
+- human-readable evidence index for checks, links, screenshots, logs, and notes.
 
 Created when:
 
-- a stage attempt is submitted.
+- evidence should survive the chat.
 
 Writer:
 
-- stage agent for initial report;
-- Maestro appends `Orchestrator Decision`.
-
-Template:
-
-- `maestro/templates/stage-attempt.md.tmpl`
+- Maestro, Scout, Mason, Scribe, or Release when assigned.
 
 Required sections:
 
-- `Identity`
-- `Task`
-- `Work Performed`
-- `Files Changed`
-- `Commands Run`
-- `Evidence`
+- `Checks Run`
+- `Checks Skipped`
+- `Evidence Links`
+- `Visual / Browser Notes`
 - `Risks`
-- `Recommended Next Stage`
-- `Orchestrator Decision`
 
 Rules:
 
-- append-only after submission;
-- correction requires a new attempt unless the correction is a clearly marked
-  Maestro decision note.
+- reference large logs or screenshots instead of embedding them;
+- redact secrets and private credentials;
+- distinguish verified facts from assumptions.
+
+### `approval.md`
+
+Role:
+
+- approval gate requests and decisions.
+
+Created when:
+
+- execution, high-risk implementation, migration, release, security, or memory
+  update approval is needed.
+
+Writer:
+
+- Maestro; owner/security/release decisions are recorded by Maestro after the
+  decision is explicit.
+
+Required sections:
+
+- `Gate`
+- `Reason`
+- `Requested Action`
+- `Required Evidence`
+- `Decision`
+- `Decision Actor`
+- `Decision Time`
+
+Rules:
+
+- no high-risk execution proceeds before the required decision is recorded.
+
+### `review.md`
+
+Role:
+
+- human-readable review findings when a Markdown review is clearer than a JSON
+  handoff.
+
+Created when:
+
+- Lens review or owner review produces findings worth preserving.
+
+Writer:
+
+- Lens or Maestro.
+
+Required sections:
+
+- `Findings`
+- `Missing Evidence`
+- `Scope Drift`
+- `Recommendation`
+
+### `release.md`
+
+Role:
+
+- release, deployment, workflow dispatch, and rollback notes.
+
+Created when:
+
+- release or production-impacting action is in scope.
+
+Writer:
+
+- Release or Maestro.
+
+Required sections:
+
+- `Target`
+- `Approval`
+- `Commands / Workflow`
+- `Result`
+- `Rollback Notes`
 
 ### `closeout.md`
 
 Role:
 
-- final human-readable closeout for one work item.
+- final human-readable closeout for one work folder.
 
 Created when:
 
-- the work reaches completion, cancellation, or an owner-review boundary.
+- the work reaches completion, cancellation, freeze, or an owner-review boundary.
 
 Writer:
 
@@ -251,19 +343,19 @@ Rules:
 
 ## JSON Files
 
-### `handoff.json`
+### `handoff-<role>-NNN.json`
 
 Role:
 
-- machine-readable result of one stage attempt.
+- machine-readable result of one specialist attempt.
 
 Created when:
 
-- a stage attempt is submitted.
+- a specialist subagent returns a staged handoff.
 
 Writer:
 
-- stage agent.
+- the specialist stage agent.
 
 Schema:
 
@@ -271,43 +363,21 @@ Schema:
 
 Rules:
 
-- write-once per attempt;
-- must reference evidence rather than embedding large logs;
+- write a new incrementing file for each attempt;
+- do not overwrite prior handoffs;
+- reference evidence rather than embedding large logs;
 - may recommend the next stage but must not advance lifecycle.
 
-### `evidence-index.json`
+### `snapshot.json`
 
 Role:
 
-- machine-readable index of evidence attached to a work item or attempt.
+- optional portable export of repository/work context.
 
 Created when:
 
-- evidence files are attached.
-
-Writer:
-
-- Maestro or the assigned agent.
-
-Schema:
-
-- each item follows `maestro/contracts/evidence.schema.json`.
-
-Rules:
-
-- evidence entries point to files, URLs, or external systems;
-- evidence files are immutable after attachment.
-
-### `repository.snapshot.json`
-
-Role:
-
-- portable export of repository/workspace context.
-
-Created when:
-
-- full artifact export is requested;
-- cross-chat handoff or audit requires repo context.
+- cross-chat handoff, audit, or archive portability requires more context than
+  Markdown files provide.
 
 Writer:
 
@@ -316,98 +386,15 @@ Writer:
 Minimum fields:
 
 - `schema_version`
-- `repository_id`
+- `work_slug`
 - `root_path`
 - `branch`
 - `commit`
-- `remote`
 - `created_at`
+- `notes`
 
 Rules:
 
-- snapshot only; not live mutable state.
-
-### `work.snapshot.json`
-
-Role:
-
-- portable export of live work state.
-
-Created when:
-
-- full artifact export is requested.
-
-Writer:
-
-- Maestro or assigned export tooling.
-
-Minimum fields:
-
-- `schema_version`
-- `work_id`
-- `type`
-- `status`
-- `risk_level`
-- `feature_ids`
-- `task_ids`
-- `approval_ids`
-- `created_at`
-- `updated_at`
-
-Rules:
-
-- snapshot only; not hand-edited.
-
-### `feature.snapshot.json`
-
-Role:
-
-- portable export of one feature state.
-
-Created when:
-
-- feature state export is requested.
-
-Writer:
-
-- Maestro or assigned export tooling.
-
-Rules:
-
-- snapshot only; not hand-edited.
-
-### `task.snapshot.json`
-
-Role:
-
-- portable export of one task state.
-
-Created when:
-
-- task state export is requested.
-
-Writer:
-
-- Maestro or assigned export tooling.
-
-Rules:
-
-- snapshot only; not hand-edited.
-
-## Evidence Files
-
-Evidence may include:
-
-- command output logs;
-- test reports;
-- CI links;
-- Storybook notes;
-- browser screenshots;
-- visual review notes;
-- migration reports;
-- security review notes;
-- approval records;
-- external links.
-
-Large logs should live as files under `evidence/logs/` and be referenced from
-`evidence-index.json`, not copied into Markdown.
+- snapshot only;
+- not live mutable state;
+- not required for normal small work.

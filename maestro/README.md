@@ -39,8 +39,10 @@ Maestro decides:
 - which approval gates must be satisfied;
 - which evidence is required before closeout.
 
-Atlas remains an independent personal helper and does not become part of the
-formal Maestro chain.
+Atlas remains an independent personal helper during the transition and does not
+become part of the formal Maestro chain. After Maestro vNext is accepted as the
+default work entrypoint, Atlas should be archived as provenance unless the owner
+explicitly keeps it as a separate lightweight helper.
 
 ## Directory Layout
 
@@ -53,6 +55,8 @@ maestro/
     operating-charter.md
     maestro-character.md
     native-first-maestro.md
+    adaptive-loop-contract.md
+    atlas-memory-transition.md
     orchestration-contract.md
     routing-tier-contract.md
     agent-roles.md
@@ -68,9 +72,12 @@ maestro/
     task-packet.schema.json
     stage-handoff.schema.json
     evidence.schema.json
+  artifact/
+    README.md
+    active/
+    archive/
   templates/
     task.md.tmpl
-    stage-attempt.md.tmpl
     closeout.md.tmpl
   archive/
     README.md
@@ -84,9 +91,13 @@ Target boundary:
 
 - Maestro conversation and repository artifacts are the working source for
   native orchestration.
+- `maestro/artifact/active/` stores compact active work records.
+- `maestro/artifact/archive/` stores completed, cancelled, or frozen work
+  records.
 - `maestro/contracts/` defines portable packet, handoff, and evidence shapes.
 - `maestro/templates/` provides lightweight Markdown scaffolds.
-- `ai-memory/` remains durable compressed memory, not live task state.
+- `ai-memory/` remains durable compressed memory until the accepted Maestro
+  memory migration moves it under `maestro/memory/`.
 - `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
   until Maestro vNext is promoted.
 
@@ -99,7 +110,6 @@ The removed prototype scope included:
 - local CLI driver;
 - local env files;
 - dev and smoke scripts;
-- local artifact output folders;
 - service, database, UI, run-control, and implementation-slice documents.
 
 Do not reintroduce those surfaces unless the native Maestro loop proves that a

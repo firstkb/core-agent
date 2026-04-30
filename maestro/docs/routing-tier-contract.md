@@ -23,9 +23,12 @@ approval gates, and handoff quality.
 Do not create a work brief, feature decomposition, stage attempts, snapshots, or
 multiple agent runs unless the request actually needs them.
 
+Arrow diagrams in this document are shorthand for possible adaptive moves. They
+are not automatic chains that must run end to end.
+
 ## Tier Summary
 
-| Tier | Use When | `route_tier` | `artifact_shape` | Formal State |
+| Tier | Use When | `route_tier` | `artifact_shape` | Durable Record |
 |---|---|---|---|---|
 | 0 | Tiny inline work | `direct` | `none` | no |
 | 1 | Small bounded work with optional durable record | `task` | `lightweight` | optional |
@@ -62,7 +65,7 @@ Maestro should classify the owner request using these inputs:
 | Needs feature decomposition or dependency ordering | Tier 3 |
 | Needs owner-approved brief before execution | Tier 4A |
 | Auth, tenancy, permissions, secrets, migrations, security, release, or deploy | Tier 4B |
-| Touches durable docs or `ai-memory` policy | Add `memory_audit` / Archivist |
+| Touches durable docs or memory policy | Add `memory_audit` / Archivist |
 | Needs production-impacting action | Add Release and explicit release approval |
 
 ## Tier 0: Direct Inline
@@ -75,7 +78,7 @@ Use when all are true:
 - no durable handoff is needed;
 - verification can be summarized in the final response.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -86,7 +89,7 @@ Maestro
 
 State and artifacts:
 
-- `state_required = false`
+- `record_required = false`
 - `artifact_shape = none`
 - no persisted work folder by default
 
@@ -104,7 +107,7 @@ Escalate to Tier 1 or Tier 2 when evidence or review becomes useful.
 
 Use when the work is still small but a durable record is useful.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -116,17 +119,17 @@ Maestro
 
 State and artifacts:
 
-- `state_required = optional`
+- `record_required = optional`
 - `route_tier = task`
 - `artifact_shape = lightweight`
 
 Default artifact shape:
 
 ```text
-work/<work_id>/
+maestro/artifact/active/YYYY-MM-DD-<work-slug>/
+  intent.md
   task.md
   closeout.md
-  evidence/
 ```
 
 Typical examples:
@@ -143,7 +146,7 @@ needed.
 
 Use when the work is bounded but needs explicit stage execution.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -157,7 +160,7 @@ Maestro
 
 State and artifacts:
 
-- `state_required = true`
+- `record_required = true`
 - `route_tier = task`
 - `artifact_shape = staged_task`
 
@@ -172,12 +175,13 @@ Default stages:
 Default artifact shape:
 
 ```text
-work/<work_id>/
+maestro/artifact/active/YYYY-MM-DD-<work-slug>/
+  intent.md
+  plan.md
   task.md
-  stages/<stage_name>/attempt-001/
-    README.md
-    handoff.json
-    evidence/
+  packet.md
+  handoff-<role>-001.json
+  evidence.md
   closeout.md
 ```
 
@@ -196,7 +200,7 @@ feature decomposition.
 Use when one owner goal needs decomposition into feature slices or multiple
 tasks.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -211,28 +215,27 @@ Maestro
 
 State and artifacts:
 
-- `state_required = true`
+- `record_required = true`
 - `route_tier = feature`
 - `artifact_shape = feature_work`
 
 Default artifact shape:
 
 ```text
-work/<work_id>/
+maestro/artifact/active/YYYY-MM-DD-<work-slug>/
+  intent.md
   brief.md
-  features/<feature_id>/
-    README.md
-    tasks/<task_id>/
-      task.md
-      stages/<stage_name>/attempt-001/
-        README.md
-        handoff.json
-        evidence/
+  plan.md
+  task.md
+  packet.md
+  handoff-<role>-001.json
+  evidence.md
   closeout.md
 ```
 
 Use feature decomposition only when it removes ambiguity. Small work should
-stay in Tier 1 or Tier 2.
+stay in Tier 1 or Tier 2. Keep decomposition inside `plan.md` or `brief.md`
+unless the owner explicitly asks for a larger structure.
 
 Escalate to Tier 4A when the owner goal is module-sized and requires explicit
 brief approval before execution.
@@ -242,7 +245,7 @@ brief approval before execution.
 Use for large initiatives that require owner-approved scope, decomposition, and
 sequencing.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -258,11 +261,11 @@ Maestro
 
 State and artifacts:
 
-- `state_required = true`
+- `record_required = true`
 - `route_tier = module_sized_work`
 - `artifact_shape = feature_work` by default;
-- `artifact_shape = full` when snapshots, approvals, or audit trail must be
-  portable.
+- `artifact_shape = full` when approvals, release notes, review records, or a
+  snapshot must be portable.
 
 Required approvals:
 
@@ -283,7 +286,7 @@ secrets, release, or production impact.
 Use for any work where a wrong change can compromise security, tenant
 isolation, data integrity, or production stability.
 
-Default path:
+Typical adaptive moves:
 
 ```text
 Maestro
@@ -300,7 +303,7 @@ Maestro
 
 State and artifacts:
 
-- `state_required = true`
+- `record_required = true`
 - `route_tier = high_risk`
 - `artifact_shape = full`
 
@@ -337,7 +340,7 @@ High-risk work must not run as Tier 0 or Tier 1.
 | `review` | independent diff/evidence/acceptance review is useful |
 | `release` | deployment, production promotion, or rollback is in scope |
 | `closeout` | durable result/evidence summary is useful |
-| `memory_audit` | durable docs or `ai-memory` may need update |
+| `memory_audit` | durable docs or memory may need update |
 
 ## Agent Selection
 
@@ -350,7 +353,7 @@ High-risk work must not run as Tier 0 or Tier 1.
 | Lens | read-only review is material |
 | Release | deploy/release/promotion is in scope |
 | Scribe | durable closeout artifact is useful |
-| Archivist | docs or `ai-memory` consistency may be impacted |
+| Archivist | docs or memory consistency may be impacted |
 
 ## Escalation Rules
 
@@ -369,7 +372,7 @@ Escalate the route when:
 De-escalate the route when:
 
 - decomposition would not change execution quality;
-- feature folders would contain only one trivial task;
+- nested decomposition would contain only one trivial task;
 - stages would create ceremony without improving verification;
 - evidence can be captured in a compact closeout;
 - there is no memory/docs impact.
@@ -380,7 +383,7 @@ At intake Maestro should report:
 
 - `route_tier`;
 - `artifact_shape`;
-- whether state is required;
+- whether a durable record is required;
 - selected stages;
 - selected agents;
 - approvals required;

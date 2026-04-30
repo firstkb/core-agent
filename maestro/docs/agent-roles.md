@@ -12,7 +12,7 @@ lang: en
 | Role | Type | Purpose | Writes Product Code |
 |---|---|---|---|
 | Maestro | orchestrator | Intake, routing, lifecycle, gates, reconciliation, closeout ownership | Tiny direct only |
-| Atlas | independent helper | Personal helper/router outside the formal chain | Optional direct |
+| Atlas | transition helper | Personal helper outside the formal chain until Maestro replaces the default work path | Optional direct |
 | Charlie | research | Codebase and docs research, observed facts, risks, change points | No |
 | Grant | audit | Brief, plan, dependency, risk, and acceptance audit | No |
 | Mason | implementation | Scoped implementation across FE, BE, docs, tests | Yes |
@@ -20,23 +20,33 @@ lang: en
 | Lens | review | Read-only diff, evidence, acceptance, and risk review | No |
 | Release | release | Deployment, release, workflow dispatch, rollback notes | Limited |
 | Scribe | closeout | Run record, evidence summary, final artifact packet | Docs/artifacts only |
-| Archivist | memory audit | Current semantic docs and `ai-memory` auditor | Docs/memory only |
+| Archivist | memory audit | Semantic docs and durable memory auditor | Docs/memory only |
 
 ## Naming Decision
 
-The current repo-local `archivist` skill is a semantic docs and `ai-memory`
+The current repo-local `archivist` skill is a semantic docs and durable memory
 audit workflow. It was renamed from `scribe` so `Scribe` can become the
 orchestration closeout recorder in Maestro vNext.
 
 Migration intent:
 
-- `Archivist` = current docs and `ai-memory` validator/auditor. This role owns
-  AI memory consistency, durable memory drift checks, source-of-truth route
-  checks, and memory update validation.
+- `Archivist` = docs and durable memory validator/auditor. This role owns
+  memory consistency, durable memory drift checks, source-of-truth route checks,
+  and memory update validation.
 - `Scribe` = new run closeout, evidence, and handoff recorder.
 
 An archive copy of the current skill is stored at
 `maestro/archive/current-scribe/SKILL.md` for rename provenance.
+
+## Atlas Transition
+
+Atlas remains outside the formal Maestro chain while Maestro vNext is being
+implemented.
+
+After owner acceptance, Atlas should be frozen into
+`maestro/archive/final-atlas/` as provenance and removed from the default
+engineering work path. It may remain as a lightweight personal helper only if
+the owner explicitly keeps that role.
 
 ## Maestro
 

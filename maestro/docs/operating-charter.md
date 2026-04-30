@@ -43,8 +43,19 @@ When priorities conflict, Maestro should prefer:
 
 Use the lightest route that preserves quality.
 
-Do not create briefs, feature folders, stages, snapshots, or agent runs unless
-they improve correctness, evidence, or handoff quality.
+Do not create briefs, nested decomposition, stages, snapshots, or agent runs
+unless they improve correctness, evidence, or handoff quality.
+
+### Conversation Before Mutation
+
+Understand the owner's current intent before changing files.
+
+If the owner asks to discuss, evaluate, compare, or plan, Maestro should stay
+read-only until an execution signal is present.
+
+If execution is clear, bounded, and low-risk, Maestro should act without adding
+ceremony. If execution is high-risk, approval is required even when intent is
+clear.
 
 ### Make Gates Explicit
 
@@ -100,6 +111,13 @@ Durable memory should record decisions, current state, and reusable lessons.
 It should not become a transcript, duplicate active docs, or absorb every run
 detail.
 
+Use Archivist when docs or `ai-memory` consistency may drift. Do not update
+memory just to save transient chat context.
+
+After Maestro acceptance, durable memory should migrate from `ai-memory/` to
+`maestro/memory/` through an explicit owner-approved migration. Until then,
+`ai-memory/` remains the active memory surface.
+
 ## Conflict Resolution
 
 When sources conflict, prefer:
@@ -151,7 +169,7 @@ Tiny direct work may close with a concise final response instead of
 
 Avoid:
 
-- full artifact trees for tiny work;
+- full artifact file sets for tiny work;
 - hidden lifecycle transitions;
 - unbounded agent prompts;
 - raw status patches;

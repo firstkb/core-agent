@@ -34,9 +34,31 @@
         "null"
       ]
     },
+    "conversation_mode": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "planning",
+        "execution",
+        "gated_execution"
+      ]
+    },
     "work_id": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "work_slug": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z][a-z0-9_-]*$|^[a-z][a-z0-9_-]*$"
+    },
+    "artifact_root": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "feature_id": {
       "type": [

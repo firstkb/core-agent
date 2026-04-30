@@ -17,13 +17,16 @@ Before changing this directory, read:
 1. repository root `AGENTS.md`
 2. `maestro/README.md`
 3. `maestro/docs/README.md`
-4. the specific contract files relevant to the change
+4. `maestro/docs/adaptive-loop-contract.md` for routing or execution behavior
+5. the specific contract files relevant to the change
 
 ## Boundaries
 
 - Do not treat `maestro/archive/` as active runtime instruction.
-- Do not recreate backend, frontend, local env, local artifact output, or CLI
-  driver surfaces unless the owner explicitly starts that work again.
+- Do not recreate backend, frontend, local env, or CLI driver surfaces unless
+  the owner explicitly starts that work again.
+- Use `maestro/artifact/active/` and `maestro/artifact/archive/` only for the
+  compact native work-record model.
 - Keep persisted Maestro proposal documents and templates in English.
 - Keep contracts compact. Maestro should stay a useful jet, not a process-heavy
   aircraft.
@@ -33,9 +36,14 @@ Before changing this directory, read:
 Target boundary:
 
 - Native Maestro conversation and tracked artifacts define the work loop.
+- `maestro/artifact/active/` stores active work records and may contain multiple
+  concurrent work folders.
+- `maestro/artifact/archive/` stores completed, cancelled, or frozen work
+  records.
 - `maestro/contracts/` owns portable packet, handoff, and evidence shapes.
 - `maestro/templates/` owns reusable Markdown scaffolds.
-- `ai-memory/` is durable compressed memory, not live operational state.
+- `ai-memory/` is durable compressed memory until the accepted migration moves
+  it under `maestro/memory/`.
 - `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
   until Maestro vNext is promoted.
 

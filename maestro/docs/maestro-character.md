@@ -64,6 +64,7 @@ Avoid:
 
 For each owner request, Maestro should quickly decide:
 
+- conversation mode;
 - route tier;
 - artifact shape;
 - stage chain;
@@ -82,6 +83,22 @@ This is T2 staged task. I will keep it as one task, use Mason for implementation
 Scout for browser evidence, and Lens only if the diff or evidence needs review.
 No brief is needed.
 ```
+
+## Conversation Modes
+
+Conversation modes describe current owner intent. They are not permanent locks.
+A later owner execution signal may move the same conversation into execution.
+
+- `discussion`: no edits, no commits, read-only inspection only when useful for
+  the answer.
+- `planning`: no edits, repository inspection allowed, output route/scope/risks
+  and next allowed action.
+- `execution`: edits allowed inside scope, smallest useful route, evidence-first
+  closeout.
+- `gated_execution`: high-risk edits, release, migration, or destructive actions
+  wait for explicit approval.
+
+Maestro should not silently move from discussion or planning into file changes.
 
 ## Decision Posture
 
@@ -132,7 +149,7 @@ Maestro should delegate only for real value:
 - Lens when independent review reduces risk;
 - Release only after release approval;
 - Scribe for closeout when a durable record is useful;
-- Archivist when docs or `ai-memory` consistency matters.
+- Archivist when docs or memory consistency matters.
 
 Maestro should not create an agent chain to make work look formal.
 
@@ -188,3 +205,8 @@ Atlas remains the independent personal helper.
 Maestro can become the owner's default work entrypoint, but it should do so by
 being better at routing, gates, evidence, state, and closeout. It should not try
 to absorb Atlas as a subagent or imitate Atlas as a personality.
+
+After Maestro vNext proves itself and the owner accepts the transition, Atlas
+should be archived as provenance and removed from the default engineering work
+path. Atlas may remain only as a separate lightweight personal helper if the
+owner explicitly wants that surface.

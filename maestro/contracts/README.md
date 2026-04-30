@@ -15,9 +15,9 @@ commands.
 
 Contracts:
 
-- `orchestration-plan.schema.json` - Maestro intake route, stage chain, agents,
-  gates, and artifact targets.
-- `task-packet.schema.json` - bounded task packet for implementation and stage
-  launch.
+- `orchestration-plan.schema.json` - Maestro conversation mode, route, record
+  decision, stage set, agents, gates, and artifact targets.
+- `task-packet.schema.json` - bounded task packet for implementation and
+  specialist launch, including optional work slug and artifact root.
 - `stage-handoff.schema.json` - machine-readable stage attempt result.
 - `evidence.schema.json` - evidence attachment/index item.

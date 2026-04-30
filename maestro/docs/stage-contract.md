@@ -38,7 +38,7 @@ improve correctness, evidence, approval safety, or handoff quality.
 | `review` | Independent read-only review of diff/evidence | Lens | Risky or non-trivial work |
 | `release` | Deployment, workflow dispatch, release, rollback notes | Release | Release work only |
 | `closeout` | Summarize result, evidence, risks, next action | Scribe or Maestro | Persisted work |
-| `memory_audit` | Validate docs and `ai-memory` updates | Archivist | Memory/docs impact |
+| `memory_audit` | Validate docs and durable memory updates | Archivist | Memory/docs impact |
 
 ## Stage: `planning`
 
@@ -118,8 +118,7 @@ Input artifacts:
 
 Output artifacts:
 
-- attempt `README.md`;
-- `handoff.json`;
+- `handoff-charlie-NNN.json`;
 - evidence references.
 
 Required evidence:
@@ -164,7 +163,7 @@ Input artifacts:
 Output artifacts:
 
 - review note block;
-- stage attempt report only when the audit is run as a formal stage.
+- `handoff-grant-NNN.json` when the audit is run as a formal stage.
 
 Required evidence:
 
@@ -215,7 +214,7 @@ Input artifacts:
 Output artifacts:
 
 - changed files;
-- attempt `README.md` and `handoff.json` when staged;
+- `handoff-mason-NNN.json` when staged;
 - evidence references for commands run during implementation.
 
 Required evidence:
@@ -268,8 +267,7 @@ Input artifacts:
 
 Output artifacts:
 
-- attempt `README.md`;
-- `handoff.json`;
+- `handoff-scout-NNN.json`;
 - evidence files or links.
 
 Required evidence:
@@ -320,7 +318,7 @@ Output artifacts:
 
 - review findings;
 - accept/revise/block recommendation;
-- attempt report when review is staged.
+- `handoff-lens-NNN.json` when review is staged.
 
 Required evidence:
 
@@ -419,7 +417,7 @@ Input artifacts:
 Output artifacts:
 
 - `closeout.md`;
-- optional final evidence index.
+- optional final `evidence.md` update.
 
 Required evidence:
 
@@ -440,7 +438,7 @@ Failure behavior:
 
 Purpose:
 
-- validate docs and `ai-memory` consistency after meaningful docs/memory or
+- validate docs and durable memory consistency after meaningful docs/memory or
   source-of-truth changes.
 
 Allowed route tiers:
@@ -496,6 +494,12 @@ Every staged attempt should return:
 The machine-readable handoff must follow:
 
 - `maestro/contracts/stage-handoff.schema.json`
+
+Persisted handoffs use flat filenames:
+
+```text
+handoff-<role>-NNN.json
+```
 
 ## Stage Review Decisions
 

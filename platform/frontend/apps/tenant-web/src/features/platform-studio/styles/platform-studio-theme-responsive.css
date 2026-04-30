@@ -1,0 +1,148 @@
+[data-theme="dark"] .tenant-web__platform-studio-tabs .ui-tabs__list--surface {
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, black 10%);
+  border-color: color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-tabs .ui-tabs__trigger--surface.ui-tabs__trigger--active {
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 90%, black 10%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px color-mix(in srgb, var(--color-border-default) 70%, transparent);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item,
+[data-theme="dark"] .tenant-web__platform-studio-screen-item,
+[data-theme="dark"] .tenant-web__platform-studio-palette-item,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-placeholder {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface-elevated) 92%, black 8%) 0%,
+      color-mix(in srgb, var(--color-bg-surface) 88%, black 12%) 100%
+    );
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-screen-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-palette-item:hover,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item:hover {
+  box-shadow: 0 1rem 2rem -1.8rem rgba(0, 0, 0, 0.52);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-object-item--active,
+[data-theme="dark"] .tenant-web__platform-studio-canvas-item--selected {
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 22%, var(--color-bg-surface-elevated));
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-item-icon {
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 28%, var(--color-bg-surface-muted));
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-menu-trigger,
+[data-theme="dark"] .tenant-web__platform-studio-field-tag {
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, black 12%);
+}
+
+[data-theme="dark"] .tenant-web__platform-studio-menu-trigger:hover {
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 86%, black 14%);
+}
+
+@media (min-width: 1025px) {
+  .tenant-web__platform-studio-shell--desktop-panels {
+    --tenant-platform-studio-visual-bottom-compensation: 1.5rem;
+    height: calc(
+      100dvh - var(--ui-shell-header-height) - var(--workspace-shell-content-padding-top, var(--space-6)) -
+        var(--workspace-shell-content-padding-bottom, var(--space-6)) +
+        var(--tenant-platform-studio-visual-bottom-compensation)
+    );
+    min-height: calc(
+      100dvh - var(--ui-shell-header-height) - var(--workspace-shell-content-padding-top, var(--space-6)) -
+        var(--workspace-shell-content-padding-bottom, var(--space-6)) +
+        var(--tenant-platform-studio-visual-bottom-compensation)
+    );
+    overflow: hidden;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel > .ui-card__header {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel-header {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-master-detail,
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-workspace-grid,
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-builder-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .tenant-web__platform-studio-shell--desktop-panels .tenant-web__platform-studio-panel {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  .tenant-web__platform-studio-shell--workspace {
+    height: calc(100dvh - var(--ui-shell-header-height) - var(--tenant-platform-studio-workspace-offset));
+    min-height: calc(100dvh - var(--ui-shell-header-height) - var(--tenant-platform-studio-workspace-offset));
+    overflow: hidden;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-builder-grid {
+    flex: 1 1 auto;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-panel {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  .tenant-web__platform-studio-shell--workspace .tenant-web__platform-studio-panel > .tenant-web__platform-studio-scroll-area {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tenant-web__platform-studio-master-detail,
+  .tenant-web__platform-studio-workspace-grid,
+  .tenant-web__platform-studio-builder-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tenant-web__platform-studio-debug-schema-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tenant-web__platform-studio-panel {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .tenant-web__platform-studio-panel > .tenant-web__platform-studio-scroll-area {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .tenant-web__platform-studio-object-item,
+  .tenant-web__platform-studio-screen-item,
+  .tenant-web__platform-studio-panel-header,
+  .tenant-web__platform-studio-panel-actions,
+  .tenant-web__platform-studio-canvas-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tenant-web__platform-studio-canvas-actions {
+    justify-content: flex-start;
+  }
+}

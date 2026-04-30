@@ -1,0 +1,320 @@
+.tenant-web__platform-studio-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: 0;
+}
+
+.tenant-web__platform-studio-shell--workspace {
+  --tenant-platform-studio-workspace-offset: 3.5rem;
+}
+
+.tenant-web__platform-studio-tabs {
+  width: 100%;
+}
+
+.tenant-web__platform-studio-tabs .ui-tabs__list--surface {
+  background: #e9eef6;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.tenant-web__platform-studio-master-detail,
+.tenant-web__platform-studio-workspace-grid {
+  display: grid;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-master-detail {
+  grid-template-columns: minmax(19rem, 0.92fr) minmax(0, 1.38fr);
+}
+
+.tenant-web__platform-studio-workspace-grid {
+  grid-template-columns: minmax(16rem, 0.82fr) minmax(0, 1.18fr);
+}
+
+.tenant-web__platform-studio-workspace-grid--compact {
+  grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+}
+
+.tenant-web__platform-studio-builder-grid {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.86fr) minmax(0, 1.36fr) minmax(18rem, 0.98fr);
+  gap: var(--space-3);
+  align-items: stretch;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split {
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  padding: 0.7rem 0.85rem 1rem;
+}
+
+.tenant-web__platform-studio-panel-static {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 0 0.85rem;
+}
+
+.tenant-web__platform-studio-panel-static--compact-x {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split > .tenant-web__platform-studio-panel-scroll {
+  width: 100%;
+}
+
+.tenant-web__platform-studio-panel-content--split > .ui-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-content--split > .ui-tabs > .tenant-web__platform-studio-panel-scroll {
+  flex: 1 1 auto;
+}
+
+.tenant-web__platform-studio-panel-body--compact {
+  padding-top: 1rem;
+}
+
+.tenant-web__platform-studio-panel-body--compact-x {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.tenant-web__platform-studio-panel-header,
+.tenant-web__platform-studio-row,
+.tenant-web__platform-studio-badge-row,
+.tenant-web__platform-studio-missing,
+.tenant-web__platform-studio-workspace-topline {
+  display: flex;
+}
+
+.tenant-web__platform-studio-panel-header,
+.tenant-web__platform-studio-screen-item,
+.tenant-web__platform-studio-workspace-topline {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-panel-header--stacked {
+  align-items: flex-start;
+}
+
+.tenant-web__platform-studio-row,
+.tenant-web__platform-studio-badge-row,
+.tenant-web__platform-studio-workspace-topline {
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-badge-row {
+  gap: var(--space-2);
+}
+
+.tenant-web__platform-studio-badge-label,
+.tenant-web__platform-studio-screen-title-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tenant-web__platform-studio-badge-label {
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  line-height: 1.7em;
+}
+
+.tenant-web__platform-studio-badge-icon {
+  display: block;
+  width: 0.82rem;
+  height: 0.82rem;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-content-badges {
+  margin-bottom: var(--space-1);
+}
+
+.tenant-web__platform-studio-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.tenant-web__platform-studio-panel-actions--workspace-primary {
+  margin-left: 0;
+}
+
+.tenant-web__platform-studio-debug-surface {
+  max-width: min(78rem, calc(100vw - 2rem));
+}
+
+.tenant-web__platform-studio-debug-dialog {
+  width: 100%;
+  max-width: none;
+}
+
+.tenant-web__platform-studio-debug-dialog-body {
+  max-height: min(72vh, 52rem);
+}
+
+.tenant-web__platform-studio-debug-schema-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-debug-schema-card {
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-debug-schema-scroll {
+  overflow: auto;
+  max-height: min(56vh, 42rem);
+  padding-top: 0;
+}
+
+.tenant-web__platform-studio-debug-schema-pre {
+  margin: 0;
+  white-space: pre;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.tenant-web__platform-studio-action-button {
+  white-space: nowrap;
+}
+
+.tenant-web__platform-studio-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.2rem;
+}
+
+.tenant-web__platform-studio-button-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.tenant-web__platform-studio-back-icon {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.tenant-web__platform-studio-object-list,
+.tenant-web__platform-studio-screen-list,
+.tenant-web__platform-studio-missing,
+.tenant-web__platform-studio-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-scroll-area {
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-panel-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport {
+  height: 100%;
+  padding-left: 0.35rem;
+  padding-bottom: 1rem;
+  padding-right: 0.35rem;
+  scrollbar-gutter: stable;
+  scrollbar-color: transparent transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll--models .tenant-web__platform-studio-panel-scroll-viewport {
+  scrollbar-gutter: stable both-edges;
+}
+
+.tenant-web__platform-studio-panel-scroll--views .tenant-web__platform-studio-panel-scroll-viewport {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport > .tenant-web__platform-studio-object-list,
+.tenant-web__platform-studio-panel-scroll-viewport > .tenant-web__platform-studio-screen-list {
+  padding-top: 0.15rem;
+  padding-bottom: 0.35rem;
+}
+
+.tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll:hover .tenant-web__platform-studio-panel-scroll-viewport,
+.tenant-web__platform-studio-panel-scroll:focus-within .tenant-web__platform-studio-panel-scroll-viewport {
+  scrollbar-color: rgba(126, 132, 147, 0.42) transparent;
+}
+
+.tenant-web__platform-studio-panel-scroll:hover .tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb,
+.tenant-web__platform-studio-panel-scroll:focus-within .tenant-web__platform-studio-panel-scroll-viewport::-webkit-scrollbar-thumb {
+  background: rgba(126, 132, 147, 0.42);
+}
+
+.tenant-web__platform-studio-builder-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tenant-web__platform-studio-builder-panel-body--scroll {
+  min-height: 100%;
+  padding-bottom: 1.75rem;
+}
+
+.tenant-web__platform-studio-builder-panel-body--workspace-scroll {
+  padding-left: 1rem;
+  padding-right: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--palette-scroll {
+  padding-bottom: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--palette-scroll::after {
+  min-height: 0;
+}
+
+.tenant-web__platform-studio-builder-panel-body--scroll::after {
+  content: "";
+  display: block;
+  width: 100%;
+  min-height: 1.5rem;
+  flex: 0 0 auto;
+}
+

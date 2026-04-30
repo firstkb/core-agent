@@ -40,12 +40,10 @@ README.md
 maestro/memory/
   START_HERE.md
   agent-workflow.md
-  atlas/
   docs/
   durable/
   index/
   modules/
-  runs/
 
 platform/
   AGENTS.md
@@ -81,7 +79,6 @@ maestro/
     release/
     scribe/
     archivist/
-    atlas/
 
 .agent-cli/
 .codex/
@@ -122,8 +119,10 @@ Compact operational memory for AI agents.
 - `index/read-routes.yaml` selects focused read sets.
 - `modules/**` stores durable module facts, not copied docs.
 - `durable/**` stores current state, decisions, canonical-doc routing, and migrated legacy-memory summaries.
-- `atlas/**` stores Atlas prompt contracts, templates, automation metadata, and workflow notes.
-- `runs/active/**` and `runs/archive/**` are execution artifacts, not canonical product truth.
+- `docs/**`, `reference-code/**`, and `lessons/**` store compact governance, reference routing, and reusable lessons.
+
+Atlas-era prompts, templates, run packets, and scaffolder scripts are frozen
+under `maestro/archive/final-atlas/` and are not active memory.
 
 ### `.agents/skills/`
 
@@ -140,7 +139,6 @@ Current important skills include:
 - `release` - release/deploy after approval.
 - `scribe` - closeout and evidence summary.
 - `archivist` - semantic docs/memory drift auditor.
-- `atlas` - transitional independent helper.
 
 Skill bodies are active runtime instructions when invoked.
 
@@ -189,7 +187,7 @@ The former `platform/docs/ai/**` memory layer has been migrated into
 `maestro/memory/` and physically deleted. Use:
 
 - `maestro/memory/durable/legacy-memory-import.md`
-- `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
+- `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
 - git history only for explicit provenance recovery
 
 Do not recreate `platform/docs/ai/**`.

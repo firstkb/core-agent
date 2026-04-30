@@ -1053,3 +1053,18 @@ Do not turn it into a task journal.
   - `platform/frontend/docs/contracts/ui-kit.md`
   - `platform/frontend/docs/contracts/collection-table.md`
   - `.gitignore`
+
+### DEC-088 Atlas Archived And Maestro Owns Native Work Artifacts
+
+- Date: 2026-04-30
+- Status: active
+- State: landed
+- Decision: Atlas is frozen as provenance under `maestro/archive/final-atlas/` and removed from active runtime. New owner-led engineering work routes through Maestro and the native vNext skills. Durable memory remains under `maestro/memory/`; active task state uses `maestro/artifact/active/` and `maestro/artifact/archive/`, not `maestro/memory/runs/**`. Atlas-era run packets, prompts, templates, manifest, and scaffolder scripts are retained only in the final archive.
+- Sources:
+  - `AGENTS.md`
+  - `docs/codex-native-repo.md`
+  - `maestro/archive/final-atlas/README.md`
+  - `maestro/docs/runtime-contract.md`
+  - `maestro/docs/atlas-memory-transition.md`
+  - `maestro/memory/START_HERE.md`
+  - `scripts/ai/docs_memory_check.py`

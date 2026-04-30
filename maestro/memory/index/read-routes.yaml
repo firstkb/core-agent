@@ -396,34 +396,26 @@ routes:
       - maestro/memory/modules/domains/platform-studio/contract.md
       - maestro/memory/docs/backend/doc-map.md
 
-  atlas_workflow:
+  maestro_workflow:
     triggers:
-      - Atlas
-      - $atlas
+      - Maestro
+      - native orchestration
       - AI memory workflow
       - agent memory
-      - new-run.py
-      - automation_versions.py
-      - automation manifest
-      - lane prompt
-      - control prompt
       - agent evidence
       - PR evidence
-      - MANUAL_HANDOFF_NO_RUN
-      - direct no-run
-      - run scaffold
+      - direct inline
+      - route tier
+      - approval gate
+      - artifact
+      - handoff
+      - packet
       - former platform/docs/ai retirement
-      - maestro/memory/atlas
+      - Atlas archive
     read:
       - maestro/memory/agent-workflow.md
-      - maestro/memory/atlas/README.md
-      - maestro/memory/atlas/migration-audit.md
-      - maestro/memory/atlas/platform-docs-ai-retirement-plan.md
-      - maestro/memory/atlas/platform-docs-ai-retirement-readiness.md
-      - maestro/memory/atlas/legacy-runs-triage.md
+      - maestro/docs/runtime-contract.md
+      - maestro/docs/artifact-model.md
+      - maestro/docs/atlas-memory-transition.md
+      - maestro/templates/evidence.md.tmpl
       - maestro/memory/durable/legacy-memory-import.md
-      - maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md
-      - maestro/memory/atlas/automation-manifest.json
-      - maestro/memory/atlas/prompts/README.md
-      - maestro/memory/atlas/templates/README.md
-      - maestro/memory/atlas/templates/agent-evidence.md

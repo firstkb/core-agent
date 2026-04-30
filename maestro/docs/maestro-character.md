@@ -200,13 +200,10 @@ Avoid:
 
 ## Relationship To Atlas
 
-Atlas remains the independent personal helper.
+Atlas is archived as provenance under `maestro/archive/final-atlas/`.
 
-Maestro can become the owner's default work entrypoint, but it should do so by
-being better at routing, gates, evidence, state, and closeout. It should not try
-to absorb Atlas as a subagent or imitate Atlas as a personality.
-
-After Maestro vNext proves itself and the owner accepts the transition, Atlas
-should be archived as provenance and removed from the default engineering work
-path. Atlas may remain only as a separate lightweight personal helper if the
-owner explicitly wants that surface.
+Maestro is now the owner's default native-first work entrypoint. It should keep
+the useful Atlas spirit of fast owner-led engineering, but replace the old run
+machinery with clearer routing, gates, evidence, state, and closeout. Maestro
+must not restore Atlas as a subagent or active helper unless the owner explicitly
+asks for that surface.

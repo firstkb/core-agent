@@ -52,8 +52,10 @@ the task spans multiple modules.
 
 ## Local Visual Smoke
 
-- For non-trivial visible UI work, use `maestro/memory/atlas/templates/ui-task-packet.md` before implementation unless the change is a tiny copy/CSS fix.
-- UI workflow: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
+- For non-trivial visible UI work, use a compact Maestro packet before
+  implementation unless the change is a tiny copy/CSS fix.
+- UI workflow: packet -> implementation -> Storybook/product state -> Browser
+  Use or screenshot evidence -> evidence closeout.
 - Use Storybook for `ui-kit` primitive/state review and `CollectionTable` package-state review.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is already running or the owner asks for it.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
@@ -70,15 +72,15 @@ the task spans multiple modules.
 - Do not implement planned tool concerns inside Form Builder without an accepted boundary update.
 - Form Builder planned/open work lives in `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`.
 
-## Run Artifacts
+## Maestro Artifacts
 
-- Active local run packets go under `maestro/memory/runs/active/<task-id>/`.
-- Closed reusable run summaries go under `maestro/memory/runs/archive/`.
-- Temporary notes belong in the run folder, not canonical docs.
-- Completed or review-ready runs must move to archive. Active `final.md` files
-  must declare `Status: awaiting-owner-review`, `Next owner action:`, and
-  `Last updated:`.
-- Do not recreate `platform/docs/ai/runs/**`.
+- Active persisted Maestro work goes under
+  `maestro/artifact/active/YYYY-MM-DD-<work-slug>/`.
+- Closed, cancelled, superseded, or frozen work goes under
+  `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/`.
+- Temporary notes belong in the artifact folder or current chat, not canonical
+  docs or durable memory.
+- Do not recreate `platform/docs/ai/runs/**` or `maestro/memory/runs/**`.
 
 ## Never Default-Read
 
@@ -114,7 +116,6 @@ Open these only when a route, module pack, or owner request explicitly requires 
 ```bash
 python3 scripts/ai/docs_memory_check.py --check
 python3 scripts/ai/check-env-policy.py --check
-python3 scripts/ai/automation_versions.py --check
 ```
 
 For non-trivial implementation work, run:
@@ -130,7 +131,7 @@ backend/frontend sweep is needed.
 For non-trivial closeout or PR body text, use:
 
 ```text
-maestro/memory/atlas/templates/agent-evidence.md
+maestro/templates/evidence.md.tmpl
 ```
 
 Use Archivist manually after large docs/memory changes or before a major development phase.

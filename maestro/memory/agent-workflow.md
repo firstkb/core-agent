@@ -13,7 +13,7 @@ code, or tracked canonical FE/BE docs.
 
 Use `maestro/memory/` as the first retrieval layer before opening large platform docs.
 The goal is to keep agent context small while preserving accepted decisions,
-current state, module boundaries, and Atlas workflow state.
+current state, module boundaries, and Maestro workflow state.
 
 ## Required Read Order
 
@@ -29,12 +29,12 @@ For platform product work, read:
 8. `maestro/memory/durable/module-index.md` when module ownership is unclear
 9. only the exact canonical docs and source files named by that module pack
 
-For Atlas workflow changes, additionally read:
+For Maestro workflow changes, additionally read:
 
-- `maestro/memory/atlas/README.md`
-- `maestro/memory/atlas/migration-audit.md`
-- `maestro/memory/atlas/automation-manifest.json`
-- `.agents/skills/atlas/SKILL.md`
+- `maestro/README.md`
+- `maestro/docs/runtime-contract.md`
+- `.agents/skills/maestro/SKILL.md`
+- the relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files
 
 ## Conflict Rule
 
@@ -97,12 +97,12 @@ When reference-code or donor material changes:
 - update `maestro/memory/durable/reference-code-policy.md` only if policy changes
 - never route normal agents directly to raw `reference-code/**`
 
-When Atlas/Archivist/agent workflow changes:
+When Maestro/Archivist/agent workflow changes:
 
 - update the relevant `.agents/skills/**/SKILL.md`
 - update matching `.agents/skills/**/agents/openai.yaml`
-- update `maestro/memory/atlas/automation-changelog.md` for Atlas prompt/template/scaffolder changes
 - update `maestro/memory/durable/current-state.md` and `decisions-log.md` for durable workflow decisions
+- update `maestro/docs/**`, `maestro/contracts/**`, or `maestro/templates/**` when the native orchestration contract changes
 
 When no memory update is needed, say so explicitly in the closeout.
 For docs/memory work, run:
@@ -110,7 +110,6 @@ For docs/memory work, run:
 ```bash
 python3 scripts/ai/docs_memory_check.py --check
 python3 scripts/ai/check-env-policy.py --check
-python3 scripts/ai/automation_versions.py --check
 ```
 
 For non-trivial implementation work, run `scripts/ai/preflight.sh` or report
@@ -119,10 +118,10 @@ when a broader backend/frontend sweep is needed. The preflight is local/manual
 and must not install dependencies.
 
 For non-trivial closeout or PR body text, use
-`maestro/memory/atlas/templates/agent-evidence.md`. Keep it compact and do not create
+`maestro/templates/evidence.md.tmpl`. Keep it compact and do not create
 a standalone evidence file unless the owner asks.
 
-Use `Archivist` (`$archivist`) after large docs/memory, AGENTS, Atlas, or reference-code changes.
+Use `Archivist` (`$archivist`) after large docs/memory, AGENTS, Maestro, or reference-code changes.
 Do not run Archivist on every commit by default.
 
 ## Memory Write Matrix
@@ -133,10 +132,10 @@ Do not run Archivist on every commit by default.
 | New frontend contract | `platform/frontend/docs/contracts/**` and the relevant frontend docs map |
 | New backend contract | `platform/backend/docs/contracts/**` and the relevant backend docs map |
 | New module, app, package, runtime, or Platform Studio tool | `maestro/memory/durable/module-index.md`, `maestro/memory/durable/repo-map.md`, module memory, and read routes |
-| Active run artifact | `maestro/memory/runs/active/<task-id>/`; if `final.md` exists, it must either be archived or declare `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:` |
-| Closed reusable run summary | `maestro/memory/runs/archive/<task-id>/` |
+| Active Maestro artifact | `maestro/artifact/active/YYYY-MM-DD-<work-slug>/` |
+| Closed Maestro artifact | `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/` |
 | Verified lesson after an error | relevant module `lessons.md` or `maestro/memory/lessons/**` |
-| Temporary notes | the active run folder only |
+| Temporary notes | current chat or active Maestro artifact only |
 
 ## Module Memory Size Rule
 

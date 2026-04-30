@@ -25,8 +25,8 @@ approval safety, or handoff quality.
 - Owner approvals happen at explicit gates.
 - Scribe records closeout; Archivist audits docs and durable memory only when
   memory is impacted.
-- Atlas remains independent and outside the formal chain during transition; it
-  is archived after Maestro acceptance unless the owner keeps it separately.
+- Atlas is archived under `maestro/archive/final-atlas/` and is outside the
+  active chain.
 
 ## Sequence Recipes
 
@@ -118,7 +118,7 @@ surfaces, or introduces a real execution gate.
 ## Gated Work
 
 Use when execution must stop at an explicit approval gate: high-risk surfaces,
-release/deploy, destructive operations, memory migration, Atlas archive, or an
+release/deploy, destructive operations, memory migration, Atlas restore, or an
 owner-approved large work boundary.
 
 Possible moves: Charlie researches, Maestro writes the plan or brief, Grant

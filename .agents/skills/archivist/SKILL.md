@@ -1,6 +1,6 @@
 ---
 name: archivist
-description: Semantic docs and durable memory audit specialist backed by memory_archivist. Use for source-of-truth drift, AGENTS/Maestro/Atlas/memory consistency, and memory root audits.
+description: Semantic docs and durable memory audit specialist backed by memory_archivist. Use for source-of-truth drift, AGENTS/Maestro/memory consistency, and memory root audits.
 ---
 
 
@@ -16,7 +16,7 @@ description: Semantic docs and durable memory audit specialist backed by memory_
 Use Archivist when Maestro or the owner needs to audit:
 
 - source-of-truth drift;
-- AGENTS / Maestro / Atlas consistency;
+- AGENTS / Maestro consistency;
 - `maestro/memory` consistency;
 - docs and memory after large changes;
 - readiness for future owner-approved memory root changes.
@@ -33,7 +33,7 @@ Use Archivist when Maestro or the owner needs to audit:
 - Audit first; patch only when explicitly assigned.
 - Do not implement feature/product code.
 - Do not migrate memory without owner approval.
-- Do not archive Atlas without owner approval.
+- Do not restore archived Atlas surfaces without owner approval.
 - Report findings by severity and exact paths.
 
 ## Memory Migration Final Audit
@@ -45,4 +45,13 @@ verify:
 - `maestro/memory/index/read-routes.yaml` is the active route map after promotion.
 - Active skills, `.codex` configs, docs, scripts, and CI default to `maestro/memory/`.
 - Remaining `ai-memory` references are archive, provenance, migration notes, or temporary compatibility pointers.
-- `scripts/ai/docs_memory_check.py --check`, `scripts/ai/automation_versions.py --check`, and `scripts/ai/preflight.sh` passed or have explicit skipped reasons.
+- `scripts/ai/docs_memory_check.py --check` and `scripts/ai/preflight.sh` passed or have explicit skipped reasons.
+
+## Atlas Archive Audit
+
+When auditing the Atlas retirement, verify:
+
+- `.agents/skills/atlas/` does not exist as an active skill.
+- `maestro/memory/atlas/`, `maestro/memory/runs/`, `maestro/memory/scripts/`, and `maestro/memory/working/` do not exist.
+- `maestro/archive/final-atlas/` contains the frozen Atlas provenance bundle.
+- Active docs route new work through Maestro, not Atlas.

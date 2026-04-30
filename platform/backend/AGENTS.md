@@ -12,17 +12,11 @@ Read first:
 
 Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
-## Lane orchestration rule
+## Orchestration rule
 
-During the current platform workflow, the preferred entrypoint for new backend work is `Atlas` (`$atlas`).
-Atlas may route the task to:
-- direct backend no-run work
-- `BE_ONLY` run-backed work
-- cross-stack coordinated work
-
-Use this lane directly only when:
-- the task is obviously tiny and backend-local
-- or Atlas already issued a backend packet
+For new backend work, the preferred entrypoint is Maestro when the task is
+ambiguous, cross-stack, high-risk, or likely to need durable evidence. Tiny
+backend-local edits may stay direct in the current chat.
 
 ## Focus
 

@@ -51,7 +51,7 @@ question. Do not ask when a conservative bounded route is enough.
 | `T3_multi_step` | Multi-step work | `multi_step` | Charlie, Grant, Mason, Scout/Lens/Scribe as needed |
 | `T4_gated` | Gated work | `full` | Charlie/Grant, approval, Mason, Scout, Lens, optional Release/Scribe |
 
-High-risk, release, production-impacting, memory migration, Atlas archive, or
+High-risk, release, production-impacting, memory migration, Atlas restore, or
 approval-gated work must not run as T0 or T1.
 
 ## Artifact Shapes
@@ -89,8 +89,6 @@ maestro/artifact/archive/YYYY-MM-DD-<work-slug>/
 | Release | `release_manager` | Limited release files | release handoff |
 | Scribe | `closeout_scribe` | Docs/artifacts only | closeout artifact |
 | Archivist | `memory_archivist` | Docs/memory only | semantic drift audit |
-| Atlas | none formal | Optional direct | transitional helper only |
-
 Specialists receive bounded packets and recommend next action. Maestro owns
 lifecycle transitions.
 
@@ -119,7 +117,7 @@ Machine-readable approval is required for:
 - secrets or production configuration;
 - CI/CD or deploy/release surfaces;
 - production-impacting release actions;
-- Atlas archive or future memory-root migration.
+- future memory-root migration or Atlas restore.
 
 Use `approval-*.json` validated by `maestro/contracts/approval.schema.json`.
 Markdown approval notes may exist for humans but are not sufficient for gate
@@ -156,5 +154,5 @@ cancelled, or frozen.
 
 - Legacy `module_orchestrator`, `research_codebase`, and `auditor` remain available for old `artifacts/` runs.
 - New Maestro work should use `maestro_vnext` and the flat artifact model.
-- Do not move the memory root again or archive Atlas without explicit owner approval.
+- Do not move the memory root again or restore archived Atlas without explicit owner approval.
 - Do not reintroduce a Cockpit/backend/dashboard unless repeated native-loop pain proves it is needed.

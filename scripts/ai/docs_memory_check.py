@@ -99,12 +99,6 @@ OLD_ATLAS_INVOCATION_ALLOWED_FILES = {
     "scripts/ai/docs_memory_check.py",
 }
 
-ACTIVE_RUN_FINAL_REQUIRED_MARKERS = [
-    "Status: awaiting-owner-review",
-    "Next owner action:",
-    "Last updated:",
-]
-
 PRODUCT_IDENTITY_SCAN_SCOPES = [
     "AGENTS.md",
     "README.md",
@@ -117,25 +111,17 @@ PRODUCT_IDENTITY_SCAN_SCOPES = [
     "platform/frontend/docs",
     "platform/backend/docs",
     ".agents",
-    "scripts/ai/new-run.py",
 ]
 
 READ_ORDER_SURFACES = [
     "platform/AGENTS.md",
     "platform/frontend/AGENTS.md",
     "platform/backend/AGENTS.md",
-    ".agents/skills/atlas/SKILL.md",
+    ".agents/skills/maestro/SKILL.md",
     ".agents/skills/archivist/SKILL.md",
-    "maestro/memory/atlas/README.md",
     "maestro/memory/README.md",
     "maestro/memory/START_HERE.md",
     "maestro/memory/agent-workflow.md",
-    "maestro/memory/atlas/prompts/control-chat-prompt-v1.md",
-    "maestro/memory/atlas/prompts/frontend-prompt-v1.md",
-    "maestro/memory/atlas/prompts/frontend-prompt-compact-v1.md",
-    "maestro/memory/atlas/prompts/backend-prompt-v1.md",
-    "maestro/memory/atlas/prompts/backend-prompt-compact-v1.md",
-    "maestro/memory/atlas/templates/chat-start.md",
 ]
 
 
@@ -304,53 +290,37 @@ def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
     if (root / "ai-memory").exists():
         add_error(errors, "ai-memory", "retired memory root must not exist; use maestro/memory")
     if (root / ".agents/skills/ramp-conductor").exists():
-        add_error(errors, ".agents/skills/ramp-conductor", "retired Atlas skill path must not exist; use .agents/skills/atlas")
-    if not (root / ".agents/skills/atlas/SKILL.md").exists():
-        add_error(errors, ".agents/skills/atlas/SKILL.md", "Atlas skill must exist at the canonical path")
+        add_error(errors, ".agents/skills/ramp-conductor", "retired pre-Maestro skill path must not exist")
+    if (root / ".agents/skills/atlas").exists():
+        add_error(errors, ".agents/skills/atlas", "Atlas is archived; active Atlas skill must not exist")
+    if not (root / "maestro/archive/final-atlas/skill/SKILL.md").exists():
+        add_error(errors, "maestro/archive/final-atlas/skill/SKILL.md", "frozen Atlas skill archive is missing")
+    for rel in [
+        "maestro/memory/atlas",
+        "maestro/memory/runs",
+        "maestro/memory/scripts",
+        "maestro/memory/working",
+    ]:
+        if (root / rel).exists():
+            add_error(errors, rel, "Atlas-era operational folder must not exist in active memory")
+    for rel in [
+        "scripts/ai/new-run.py",
+        "scripts/ai/new-run.sh",
+        "scripts/ai/automation_versions.py",
+    ]:
+        if (root / rel).exists():
+            add_error(errors, rel, "Atlas-era scaffolding script must not exist in active scripts")
     if (root / "maestro/memory/AGENTS.override.md").exists():
         add_error(errors, "maestro/memory/AGENTS.override.md", "retired override file must not exist")
     if not (root / "maestro/memory/START_HERE.md").exists():
         add_error(errors, "maestro/memory/START_HERE.md", "first-read memory file must exist")
 
 
-def check_active_run_policy(root: Path, errors: list[str]) -> None:
-    active_root = root / "maestro/memory/runs/active"
-    if not active_root.exists():
-        add_error(errors, "maestro/memory/runs/active", "active run folder must exist")
-        return
-
-    for run_dir in sorted(path for path in active_root.iterdir() if path.is_dir()):
-        rel = run_dir.relative_to(root)
-        if not (run_dir / "task.md").exists():
-            add_error(errors, rel, "active run must include task.md")
-
-        final = run_dir / "final.md"
-        if not final.exists():
-            continue
-
-        final_text = read_text(final)
-        missing = [marker for marker in ACTIVE_RUN_FINAL_REQUIRED_MARKERS if marker not in final_text]
-        if missing:
-            add_error(
-                errors,
-                final.relative_to(root),
-                "active run final.md must either be archived or include explicit awaiting-owner-review closure markers: "
-                + ", ".join(missing),
-            )
-
-
 def check_product_identity(root: Path, tracked: list[str], errors: list[str]) -> None:
-    skill = root / ".agents/skills/atlas/SKILL.md"
-    if skill.exists():
-        skill_text = read_text(skill)
-        for marker in ["name: atlas", "VSM v1.0.0", "$atlas"]:
-            if marker not in skill_text:
-                add_error(errors, skill.relative_to(root), f"missing Atlas identity marker `{marker}`")
-
     for rel in tracked:
         if not any(rel == scope or rel.startswith(f"{scope}/") for scope in PRODUCT_IDENTITY_SCAN_SCOPES):
             continue
-        if "/archive/" in rel or rel.startswith("maestro/memory/runs/") or rel.startswith("artifacts/"):
+        if "/archive/" in rel or rel.startswith("artifacts/"):
             continue
         path = root / rel
         if not path.exists() or not path.is_file():
@@ -373,7 +343,7 @@ def check_product_identity(root: Path, tracked: list[str], errors: list[str]) ->
                 add_error(errors, rel, f"uses retired current-product identity `{term}`; use VSM v1.0.0")
         for term in OLD_ATLAS_INVOCATION_TERMS:
             if term in text and rel not in OLD_ATLAS_INVOCATION_ALLOWED_FILES:
-                add_error(errors, rel, f"uses retired Atlas invocation/path `{term}`; use $atlas and .agents/skills/atlas")
+                add_error(errors, rel, f"uses retired pre-Maestro invocation/path `{term}`; use Maestro")
 
 
 def check_platform_readme(root: Path, errors: list[str]) -> None:
@@ -411,16 +381,6 @@ def check_semantic_drift_pointers(root: Path, errors: list[str]) -> None:
         text = read_text(read_routes)
         if "# Use this after memory-index.yaml" in text:
             add_error(errors, read_routes.relative_to(root), "read-routes header must follow START_HERE-first read order")
-
-    atlas_readme = root / "maestro/memory/atlas/README.md"
-    if atlas_readme.exists():
-        text = read_text(atlas_readme)
-        if "read `maestro/memory/index/memory-index.yaml` and" in text:
-            add_error(errors, atlas_readme.relative_to(root), "Atlas read rule must not put memory-index before START_HERE")
-
-    automation_versions = root / "scripts/ai/automation_versions.py"
-    if automation_versions.exists() and ".agents/skills/ramp-conductor/SKILL.md" in read_text(automation_versions):
-        add_error(errors, automation_versions.relative_to(root), "automation fallback must use .agents/skills/atlas/SKILL.md")
 
     archive_readme = root / "platform/docs/archive/agent-prompts/README.md"
     if archive_readme.exists() and "platform/docs/ai/*" in read_text(archive_readme):
@@ -555,7 +515,6 @@ def run_check() -> int:
 
     check_root_file_sets(root, errors)
     check_retired_memory_paths(root, errors)
-    check_active_run_policy(root, errors)
     check_platform_readme(root, errors)
     check_product_identity(root, tracked, errors)
     check_docs_migration_plan_status(root, errors)

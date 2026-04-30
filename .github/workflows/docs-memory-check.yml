@@ -58,6 +58,3 @@ jobs:
 
       - name: Check env file policy
         run: python3 scripts/ai/check-env-policy.py --check
-
-      - name: Check Atlas automation versions
-        run: python3 scripts/ai/automation_versions.py --check

@@ -81,6 +81,7 @@ maestro/
   archive/
     current-maestro/
     current-scribe/
+    final-atlas/
 ```
 
 ## Source Of Truth Boundary
@@ -108,8 +109,10 @@ Maestro may use these specialists adaptively:
 - Lens: read-only review;
 - Release: release/deploy after explicit approval;
 - Scribe: closeout and evidence summary;
-- Archivist: docs and durable memory audit;
-- Atlas: transitional independent helper, not part of the formal chain.
+- Archivist: docs and durable memory audit.
+
+Atlas is archived under `maestro/archive/final-atlas/` and is no longer part of
+the active runtime.
 
 ## Artifact Roots
 
@@ -131,7 +134,7 @@ packets, handoffs, evidence, and closeout.
 
 ## Transition Rules
 
-- Do not migrate `maestro/memory/` to `maestro/memory/` without explicit owner approval.
-- Do not archive Atlas without explicit owner approval.
+- Do not move the `maestro/memory/` root without explicit owner approval.
+- Do not restore archived Atlas as active runtime without explicit owner approval.
 - Do not remove old `module_orchestrator` contracts until no active legacy run depends on them.
 - Do not rebuild a Cockpit unless repeated native-loop pain proves a UI/service is needed.

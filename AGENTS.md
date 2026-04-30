@@ -99,8 +99,8 @@ If preflight cannot run or optional checks fail, state exactly which checks ran,
 which did not, and why.
 
 For non-trivial task closeout or PR text, use the compact evidence shape in
-`maestro/memory/atlas/templates/agent-evidence.md`. Keep it short; do not turn it
-into a mandatory file for tiny changes.
+`maestro/templates/evidence.md.tmpl`. Keep it short; do not turn it into a
+mandatory file for tiny changes.
 
 
 ## Runtime roles
@@ -183,11 +183,12 @@ Use Archivist for semantic docs and durable memory audit when docs, source of
 truth, or `maestro/memory` consistency may drift.
 Archivist is an audit workflow, not a product owner.
 
-### Atlas
+### Archived Atlas
 
-Atlas remains a transitional independent helper. It is not part of Maestro's
-formal chain. Archive Atlas only after Maestro proves usable and the owner
-explicitly approves the transition.
+Atlas has been frozen as provenance under `maestro/archive/final-atlas/`.
+It is no longer an active skill or default platform entrypoint. Do not recreate
+`.agents/skills/atlas/` or route new work through Atlas unless the owner
+explicitly asks to inspect or restore the archived helper.
 
 
 ## Naming

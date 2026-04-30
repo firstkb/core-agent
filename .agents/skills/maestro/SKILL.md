@@ -91,8 +91,9 @@ For non-trivial platform product work, follow the repository read policy:
 - read `maestro/memory/index/read-routes.yaml`;
 - read the relevant `maestro/memory/modules/**` pack when product context matters.
 
-Use Archivist for docs or memory consistency audits. Do not migrate memory or
-archive Atlas without explicit owner approval.
+Use Archivist for docs or memory consistency audits. Atlas is archived under
+`maestro/archive/final-atlas/`; do not restore it as active runtime without
+explicit owner approval.
 
 ## Hard Rules
 
@@ -101,5 +102,5 @@ archive Atlas without explicit owner approval.
 - Do not edit in discussion/planning unless the owner asked to persist.
 - Do not claim tests, browser verification, review, release, or approval without evidence.
 - For UI-visible work, use Scout with Browser Use by default or record why it was unavailable.
-- Do not move the memory root again or archive Atlas without explicit owner approval.
+- Do not move the memory root again or restore archived Atlas without explicit owner approval.
 - Do not use legacy `module_orchestrator` for new work unless the owner asks to continue an old `artifacts/` run.

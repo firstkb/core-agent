@@ -12,17 +12,11 @@ Read first:
 
 Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
-## Lane orchestration rule
+## Orchestration rule
 
-During the current platform workflow, the preferred entrypoint for new frontend work is `Atlas` (`$atlas`).
-Atlas may route the task to:
-- direct frontend no-run work
-- `FE_ONLY` run-backed work
-- cross-stack coordinated work
-
-Use this lane directly only when:
-- the task is obviously tiny and frontend-local
-- or Atlas already issued a frontend packet
+For new frontend work, the preferred entrypoint is Maestro when the task is
+ambiguous, cross-stack, UI-visible enough to need evidence, or likely to need
+durable memory. Tiny frontend-local edits may stay direct in the current chat.
 
 ## Canonical app surfaces
 
@@ -107,8 +101,8 @@ Require extra care before finalizing changes that affect:
 
 ## Visual review loop
 
-- For non-trivial visible UI work, use `maestro/memory/atlas/templates/ui-task-packet.md` before implementation unless Atlas explicitly marks the change as a tiny copy/CSS fix.
-- The intended loop is: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
+- For non-trivial visible UI work, use a compact Maestro packet before implementation unless the change is a tiny copy/CSS fix.
+- The intended loop is: packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> evidence closeout.
 - Use Storybook for stable `ui-kit` primitives, `CollectionTable` package states, and low-risk shared pattern review.
 - Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.

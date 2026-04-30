@@ -39,4 +39,5 @@ Use the longer docs in `maestro/docs/` for rationale and edge cases.
 - Specialist packets must include allowed paths, forbidden paths, evidence expectations, stop conditions, and handoff expectations.
 - Subagents recommend next action; Maestro owns lifecycle decisions.
 - Scribe records closeout; Archivist audits docs/memory drift.
-- Atlas remains transitional until owner-approved archive.
+- Atlas is archived under `maestro/archive/final-atlas/`; do not treat it as
+  active runtime instruction.

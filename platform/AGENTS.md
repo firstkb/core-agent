@@ -42,8 +42,8 @@ available. Use `scripts/ai/preflight.sh --full` only when a broader backend and
 frontend sweep is needed.
 
 For non-trivial platform closeout or PR text, use
-`maestro/memory/atlas/templates/agent-evidence.md` as a compact evidence block.
-Tiny local edits can use a concise prose closeout instead.
+`maestro/templates/evidence.md.tmpl` as the compact evidence shape. Tiny local
+edits can use a concise prose closeout instead.
 
 ## Memory roles
 
@@ -62,118 +62,36 @@ Use `maestro/memory/` by role:
   - `maestro/memory/modules/backend/**`
 - docs governance:
   - `maestro/memory/docs/**`
-- prompt contracts:
-  - `maestro/memory/atlas/prompts/*`
-- operational templates:
-  - `maestro/memory/atlas/templates/*`
-- run artifacts:
-  - `maestro/memory/runs/active/*`
-  - `maestro/memory/runs/archive/*`
-- automation metadata:
-  - `maestro/memory/atlas/automation-manifest.json`
-  - `maestro/memory/atlas/automation-changelog.md`
-  - `.agents/skills/atlas/*`
-  - `.agents/skills/scribe/*`
-  - `scripts/ai/new-run.py`
-  - `scripts/ai/new-run.sh`
-  - `scripts/ai/automation_versions.py`
-  - `scripts/ai/docs_memory_check.py`
+- reference-code routing:
+  - `maestro/memory/reference-code/**`
 - archive / historical context:
   - `maestro/memory/durable/legacy-memory-import.md`
-  - `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - `maestro/archive/final-atlas/**`
   - git history for the former `platform/docs/ai/**` payloads
   - `platform/docs/archive/*`
 
-## Canonical durable memory surfaces
+## Maestro orchestration rule
 
-Shared durable memory lives here:
+For new platform work, use Maestro when the task is ambiguous, cross-stack,
+multi-session, high-risk, or likely to need durable evidence. Maestro chooses
+the smallest useful route:
 
-- `maestro/memory/durable/repo-map.md`
-- `maestro/memory/durable/platform-contract.md`
-- `maestro/memory/durable/current-state.md`
-- `maestro/memory/durable/decisions-log.md`
-- `maestro/memory/durable/module-index.md`
-- `maestro/memory/durable/canonical-docs.md`
-- `maestro/memory/modules/**`
+- `T0_inline` for tiny current-chat work;
+- `T1_task` for lightweight persisted work;
+- `T2_staged` when evidence or stage handoff matters;
+- `T3_multi_step` for one owner goal with several linear steps;
+- `T4_gated` for approvals, auth, tenancy, migrations, release, or destructive work.
 
-## Operational scaffolds
+Direct FE/BE lane work is acceptable for obviously local changes. If routing,
+shared contract, memory impact, or task duration is unclear, start with Maestro.
 
-These are workflow scaffolds, not canonical memory:
+Maestro work artifacts live under:
 
-- `maestro/memory/atlas/prompts/*`
-- `maestro/memory/atlas/templates/*`
-- `maestro/memory/runs/active/*`
-- `maestro/memory/runs/archive/*`
-- `maestro/memory/atlas/automation-manifest.json`
-- `maestro/memory/atlas/automation-changelog.md`
-- `.agents/skills/atlas/*`
-- `scripts/ai/new-run.py`
-- `scripts/ai/new-run.sh`
+- `maestro/artifact/active/YYYY-MM-DD-<work-slug>/`
+- `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/`
 
-## Atlas orchestration rule
-
-During the current platform workflow, `Atlas` (`$atlas`) is the default first-touch assistant for new work under `platform/`. Route new platform tasks through Atlas unless you are intentionally bypassing it for an obviously tiny local edit.
-Atlas owns:
-- intake
-- route selection
-- decision on whether a run is required
-- task-id selection when a run exists
-- prompt selection
-- chat topology
-- scaffolder invocation when a run should be materialized
-- reconciliation
-- final shared-memory updates
-
-Direct FE/BE lane use is still acceptable only as an intentional fast-path for obviously tiny local work.
-If there is any doubt about routing, shared contract, memory updates, or task duration, start with Atlas.
-
-## Control orchestration skill
-
-For any cross-stack, shared-contract, package-boundary, auth/session, tenancy-sensitive, or multi-session task, explicitly invoke `Atlas` (`$atlas`).
-
-Do not rely on implicit activation for this workflow.
-
-The control skill:
-- decides whether the task should be current-chat direct/no-run or run-backed
-- selects the route and mode
-- creates or updates `maestro/memory/runs/active/<task-id>/` when a run is needed
-- writes `task.md`
-- writes `frontend.md` and/or `backend.md` when lanes exist
-- executes small direct no-run tasks in the current chat when implementation was requested
-- returns ready-to-paste FE/BE launch prompts in the same response when run-backed lane chats are needed
-- returns manual no-run handoff prompts only when the owner explicitly asks for a separate chat without a run
-- writes the same launch prompts into the lane files when a run exists
-- reconciles lane reports
-- owns final shared-memory updates
-
-Task-id format:
-- `YYYY-MM-DD_<scope>_<short-kebab-purpose>`
-- append `-02`, `-03`, ... only for same-day collisions
-- reuse the same task-id across sessions while the objective stays the same
-
-Run file roles:
-- `task.md` = control contract
-- `frontend.md` = FE packet snapshot + FE report
-- `backend.md` = BE packet snapshot + BE report
-- `final.md` = control closeout
-
-Use these templates for coordinated work:
-- `maestro/memory/atlas/templates/control-task.md`
-- `maestro/memory/atlas/templates/lane-report.md`
-
-Use the scaffolder only after Atlas has chosen:
-- the task id
-- the primary mode
-- the active lanes
-
-The scaffolder is mechanical only.
-It creates the file skeletons and stamps versions from `maestro/memory/atlas/automation-manifest.json`.
-It does not decide task intent or memory updates.
-
-FE and BE lanes may propose memory deltas, but only Atlas finalizes updates to shared memory files.
-Do not make the user ask a second time for lane prompts after Atlas has already chosen the route and prompt plan.
-If Atlas chooses a separate FE/BE chat itself, it should normally create a run.
-No-run separate-chat handoff must be explicit owner intent and labeled `MANUAL_HANDOFF_NO_RUN`.
+Use `maestro/templates/**` for intent, plan, packet, handoff, evidence, review,
+release, and closeout records when persisted artifacts are useful.
 
 ## Ignore by default
 
@@ -246,12 +164,12 @@ Update `maestro/memory/durable/canonical-docs.md` and docs maps under `maestro/m
 - a plan/audit/handoff doc should be demoted to supporting or historical status
 - a new domain gets its own doc cluster
 
-Update `maestro/memory/atlas/automation-changelog.md` when:
+Update Maestro docs/templates when:
 
-- a prompt version changes
-- the Atlas skill behavior contract changes
-- a template structure changes materially
-- the scaffolder behavior changes materially
+- the Maestro skill behavior contract changes
+- a Maestro template structure changes materially
+- the native artifact model changes
+- a route tier or approval gate changes
 
 Update tracked FE/BE docs when code changes the canonical contract itself.
 Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
@@ -260,25 +178,16 @@ If no memory update is needed, state that explicitly in the closeout.
 
 ## Long-task support
 
-For long-running work, use these templates:
+For long-running work, keep the active record under `maestro/artifact/active/`
+and use the smallest useful set of `maestro/templates/**`. Keep handoffs compact
+and factual. Do not dump whole chat transcripts into durable memory.
 
-- `maestro/memory/atlas/templates/task-header.md`
-- `maestro/memory/atlas/templates/state-snapshot.md`
-- `maestro/memory/atlas/templates/handoff-packet.md`
-- `maestro/memory/atlas/templates/chat-start.md`
-- `maestro/memory/atlas/templates/chat-start-backend.md`
-- `maestro/memory/atlas/templates/chat-start-frontend.md`
-- `maestro/memory/atlas/templates/control-task.md`
-- `maestro/memory/atlas/templates/lane-report.md`
+## Artifact archive rule
 
-Keep handoffs compact and factual.
-Do not dump whole chat transcripts into durable memory.
-
-## Run archive rule
-
-Closed and superseded runs are historical execution artifacts.
-Move them out of `maestro/memory/runs/active/` once they stop being part of active work.
-Use `maestro/memory/runs/archive/` as the default archive target.
+Closed, cancelled, superseded, or frozen Maestro records move from
+`maestro/artifact/active/` to `maestro/artifact/archive/`. Legacy Atlas run
+packets are frozen under `maestro/archive/final-atlas/` and are not active
+memory.
 
 ## High-risk changes
 
@@ -295,4 +204,5 @@ Require explicit confirmation before finalizing changes that affect:
 ## Documentation rule
 
 If code changes a shared contract and the docs are not updated, the task is not actually complete.
-Use `Scribe` (`$scribe`) for periodic semantic docs/memory audits after large docs, memory, AGENTS, Atlas, or reference-code changes.
+Use `Archivist` (`$archivist`) for periodic semantic docs/memory audits after
+large docs, memory, AGENTS, Maestro, or reference-code changes.

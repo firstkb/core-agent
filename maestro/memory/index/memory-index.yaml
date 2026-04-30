@@ -406,35 +406,26 @@
     - maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-replacement-roadmap.md
   last_compacted: 2026-04-25
 
-- id: platform.atlas-workflow
+- id: platform.maestro-workflow
   memory_type: procedural
-  domain: atlas-orchestration
+  domain: maestro-orchestration
   state: landed
   confidence: doc-confirmed
-  summary: "Atlas now uses maestro/memory-first routing, direct no-run current-chat execution, active prompts/templates under maestro/memory/atlas, compact agent evidence for closeout/PR text, and new run artifacts under maestro/memory/runs/active; former platform/docs/ai payloads were migrated and deleted, with provenance in legacy import records and git history."
+  summary: "Maestro is the active native-first work partner. Durable product memory lives under maestro/memory, active work artifacts live under maestro/artifact, and Atlas-era prompts/runs/scripts are frozen under maestro/archive/final-atlas."
   read_when:
-    - "task touches Atlas, $atlas, AI memory workflow, direct no-run routing, manual no-run handoff, run scaffolding, lane prompts, prompt templates, agent evidence, automation versions, or former platform/docs/ai retirement"
-    - "task asks how agents should read memory or write Atlas run artifacts"
+    - "task touches Maestro, AI memory workflow, route tiers, handoffs, evidence, approval gates, artifacts, or former platform/docs/ai retirement"
+    - "task asks how agents should read memory or write Maestro work artifacts"
   canonical_docs:
     - AGENTS.md
     - platform/AGENTS.md
     - platform/backend/AGENTS.md
     - platform/frontend/AGENTS.md
-    - .agents/skills/atlas/SKILL.md
-    - scripts/ai/new-run.py
-    - scripts/ai/automation_versions.py
+    - .agents/skills/maestro/SKILL.md
+    - maestro/docs/runtime-contract.md
   memory_docs:
     - maestro/memory/agent-workflow.md
-    - maestro/memory/atlas/README.md
-    - maestro/memory/atlas/migration-audit.md
-    - maestro/memory/atlas/platform-docs-ai-retirement-plan.md
-    - maestro/memory/atlas/platform-docs-ai-retirement-readiness.md
-    - maestro/memory/atlas/legacy-runs-triage.md
-    - maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md
-    - maestro/memory/atlas/automation-manifest.json
-    - maestro/memory/atlas/automation-changelog.md
-    - maestro/memory/atlas/prompts/README.md
-    - maestro/memory/atlas/templates/README.md
-    - maestro/memory/atlas/templates/agent-evidence.md
+    - maestro/docs/artifact-model.md
+    - maestro/docs/atlas-memory-transition.md
+    - maestro/templates/evidence.md.tmpl
     - maestro/memory/durable/legacy-memory-import.md
-  last_compacted: 2026-04-26
+  last_compacted: 2026-04-30

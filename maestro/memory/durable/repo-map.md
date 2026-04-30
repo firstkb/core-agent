@@ -34,7 +34,7 @@ maestro/memory/
 - `.agents/skills/charlie`: grounded codebase research workflow.
 - `.agents/skills/grant`: optional technical brief review workflow.
 - `.agents/skills/archivist`: manual semantic docs and maestro/memory audit workflow.
-- `.agents/skills/atlas`: product-level Atlas workflow for platform FE/BE orchestration; useful as product memory context but not the root Codex-native runtime.
+- `maestro/archive/final-atlas/`: frozen Atlas provenance; not active runtime.
 - `.codex/contracts`: machine-readable contracts and schemas.
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.
 - `.codex/standards`: repository, engineering, frontend, backend, infra, library, and security standards.
@@ -96,4 +96,4 @@ Avoid unless the task explicitly needs them:
 - `platform/backend/migrations/postgres/archive/**`
 - `platform/docs/archive/**`
 - former legacy platform memory under `platform/docs/ai/**`; the path is deleted, so use `maestro/memory/durable/legacy-memory-import.md` and git history only when explicitly needed
-- former closed run folders under `platform/docs/ai/runs/**`; read `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md` first and recover exact old text from git history only if required
+- former closed run folders under `platform/docs/ai/runs/**`; read `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md` first and recover exact old text from git history only if required

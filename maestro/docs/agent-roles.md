@@ -12,7 +12,6 @@ lang: en
 | Role | Type | Purpose | Writes Product Code |
 |---|---|---|---|
 | Maestro | orchestrator | Intake, routing, lifecycle, gates, reconciliation, closeout ownership | Tiny direct only |
-| Atlas | transition helper | Personal helper outside the formal chain until Maestro replaces the default work path | Optional direct |
 | Charlie | research | Codebase and docs research, observed facts, risks, change points | No |
 | Grant | audit | Brief, plan, dependency, risk, and acceptance audit | No |
 | Mason | implementation | Scoped implementation across FE, BE, docs, tests | Yes |
@@ -38,15 +37,11 @@ Migration intent:
 An archive copy of the current skill is stored at
 `maestro/archive/current-scribe/SKILL.md` for rename provenance.
 
-## Atlas Transition
+## Archived Atlas
 
-Atlas remains outside the formal Maestro chain while Maestro vNext is being
-implemented.
-
-After owner acceptance, Atlas should be frozen into
-`maestro/archive/final-atlas/` as provenance and removed from the default
-engineering work path. It may remain as a lightweight personal helper only if
-the owner explicitly keeps that role.
+Atlas is frozen under `maestro/archive/final-atlas/` as provenance and removed
+from the default engineering work path. It is not part of the active Maestro
+chain and should not be restored without explicit owner approval.
 
 ## Maestro
 
@@ -106,7 +101,6 @@ The active vNext skill and Codex system-agent mapping is:
 | Release | `.agents/skills/release/` | `release_manager` | gated; requires release approval |
 | Scribe | `.agents/skills/scribe/` | `closeout_scribe` | active pilot |
 | Archivist | `.agents/skills/archivist/` | `memory_archivist` | active pilot |
-| Atlas | `.agents/skills/atlas/` | none formal | transitional independent helper |
 
 Legacy agents `module_orchestrator`, `research_codebase`, and `auditor`
 remain available only for old `artifacts/<module>/...` continuation.

@@ -83,20 +83,15 @@ Local docs rewrite planning surface:
 
 Operational scaffolds, not product truth:
 
-- `maestro/memory/atlas/prompts/**`
-- `maestro/memory/atlas/templates/**`
-- `maestro/memory/runs/active/**`
-- `maestro/memory/runs/archive/**`
-- `maestro/memory/atlas/automation-manifest.json`
-- `maestro/memory/atlas/automation-changelog.md`
-- `maestro/memory/atlas/migration-audit.md`
-- `maestro/memory/atlas/platform-docs-ai-retirement-plan.md`
-- `maestro/memory/atlas/legacy-runs-triage.md`
-- `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
-- `.agents/skills/atlas/**`
+- `maestro/artifact/**`
+- `maestro/templates/**`
 - `.agents/skills/archivist/**`
 - `scripts/ai/**`
 - `.github/workflows/docs-memory-check.yml`
+
+Archived operational scaffolds:
+
+- `maestro/archive/final-atlas/**`
 
 Former legacy sources, deleted from the working tree:
 

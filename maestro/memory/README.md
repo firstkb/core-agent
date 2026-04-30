@@ -30,13 +30,14 @@ Use this order for agent work:
 - Procedural memory: how agents should work. Keep this in `AGENTS.md`, `.codex/`, `.agents/`, and `maestro/memory/agent-workflow.md` when it is local routing guidance.
 - Semantic memory: durable project facts, contracts, state, and accepted decisions. Keep this in `durable/` and module `contract.md` / `state.md`.
 - Episodic memory: reusable lessons and pitfalls distilled from completed work. Keep this in module `lessons.md` or `lessons/`.
-- Working memory: active task state. Keep this in `working/active/` or `runs/active/`; do not treat it as durable truth.
+- Working memory: active task state. Keep this in `maestro/artifact/active/`
+  when it needs to persist. Do not store active task state under
+  `maestro/memory/`.
 
 ## Directory Roles
 
 - `index/`: compact retrieval index and read routing.
 - `START_HERE.md`: first compact memory read after repo/platform instructions.
-- `atlas/`: active Atlas prompts, templates, automation manifest, and migration audit.
 - `durable/`: small cross-project memory that should be read before deep docs.
 - `modules/domains/`: product/domain memory where frontend, backend, or multiple apps must stay aligned.
 - `modules/frontend/`: frontend-owned module packs and UI/package concerns.
@@ -44,8 +45,6 @@ Use this order for agent work:
 - `docs/`: compacted frontend/backend docs organized as contracts, guides, and archive.
 - `reference-code/`: local index and optional opt-in packs for donor/vendor/reference code.
 - `lessons/`: cross-module lessons that do not belong to one module pack.
-- `working/`: task-local active notes.
-- `runs/`: local run packets; closed runs must move to `runs/archive/`.
 
 Note: `modules/domains/` is an AI-memory classification name.
 It does not rename or reinterpret real code paths such as `platform/backend/modules/shared`.
@@ -75,6 +74,7 @@ The initial memory slice covers:
 - frontend and backend docs classification maps
 - target structure for future physical FE/BE docs rewrite
 - source-to-target migration plan for future physical docs rewrite
-- Atlas operational migration from the former `platform/docs/ai` layer to `maestro/memory/atlas` and `maestro/memory/runs`
+- Atlas operational migration from the former `platform/docs/ai` layer to the
+  frozen `maestro/archive/final-atlas/` provenance bundle
 - removal of pointer-only old docs after their payload moved to active contracts/modules
 - reference-code governance, alias registry, and relocation plan for Metronic, EXTDB, ezform, smartapp, old builder snapshots, and legacy MSSQL material

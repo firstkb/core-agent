@@ -37,7 +37,8 @@ Operational scaffolds, not durable product truth:
 - `platform/docs/ai/automation-manifest.json`
 - `platform/docs/ai/automation-changelog.md`
 
-Active Atlas operational copies now live under `maestro/memory/atlas/**`.
+Archived Atlas operational copies now live under
+`maestro/archive/final-atlas/memory-atlas/**`.
 
 Former retired pointer stubs, now deleted:
 
@@ -53,7 +54,7 @@ Historical/episodic artifacts, not active memory:
 
 Compact run triage:
 
-- `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
+- `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
 
 ## Transfer Status
 
@@ -88,8 +89,9 @@ Read `maestro/memory/durable/module-index.md` and the relevant
 
 Do not recreate or use `platform/docs/ai/prompts/**`,
 `platform/docs/ai/templates/**`, or `platform/docs/ai/automation-manifest.json`
-for active Atlas workflow. Read `maestro/memory/atlas/**` instead.
+for active workflow. Archived copies live under `maestro/archive/final-atlas/`
+for provenance only.
 
 Do not recreate or use `platform/docs/ai/runs/**` as active design input. Read
-`maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md` first; use git history
-only if the owner asks for exact historical reconstruction.
+`maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
+first; use git history only if the owner asks for exact historical reconstruction.

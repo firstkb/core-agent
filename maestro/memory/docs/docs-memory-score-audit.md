@@ -8,7 +8,7 @@ Last audited: 2026-04-25
 Overall docs/memory readiness score: 99/100.
 
 This score means the repository is ready for normal AI-agent work through
-`maestro/memory`, active FE/BE docs, AGENTS instructions, and Atlas workflow files.
+`maestro/memory`, active FE/BE docs, AGENTS instructions, and Maestro workflow files.
 It does not mean every historical exact-detail document has been deleted.
 
 ## Verified Signals
@@ -27,13 +27,12 @@ It does not mean every historical exact-detail document has been deleted.
 - Form Builder exact-detail audit has `14 keep_exact_detail`, `0 compact_more_then_delete`, and `9 deleted_after_payload_extraction`.
 - Form Builder retained exact-detail replacement has a docs-only roadmap; no retained detail doc should be deleted before its replacement target and verification are explicit.
 - Form Builder planned/open work has a dedicated code-verified memory doc, so import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work is not confused with implemented truth.
-- `scripts/ai/automation_versions.py --check` is the active Atlas automation metadata sync check.
 - `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, stale-layout, preflight-policy, and local markdown-link check.
 - `scripts/ai/check-env-policy.py --check` is the active env-file policy check for `.gitignore` rules, tracked local env files, and sanitized env examples.
 - `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs hygiene plus quick agent-cli checks, and `--full` is explicit for broader backend/frontend checks.
-- `maestro/memory/atlas/templates/agent-evidence.md` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
-- Atlas direct no-run semantics are explicit: current-chat execution by default; separate FE/BE chats normally require a run, except owner-requested `MANUAL_HANDOFF_NO_RUN`.
-- `.github/workflows/docs-memory-check.yml` runs docs/memory drift, env policy, and Atlas automation version checks on relevant PRs and pushes.
+- `maestro/templates/evidence.md.tmpl` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
+- Maestro direct inline semantics are explicit: tiny work stays in the current chat by default; persisted work uses flat `maestro/artifact/**` records.
+- `.github/workflows/docs-memory-check.yml` runs docs/memory drift and env policy checks on relevant PRs and pushes.
 - `.agents/skills/archivist/SKILL.md` provides manual semantic docs/memory audit guidance for drift that deterministic checks cannot prove.
 - Old reference-code pointer README directories under FE/BE docs were deleted; tracked docs now use `reference-pack:*` aliases and local-only `reference-code/**` raw-pack paths.
 
@@ -41,13 +40,13 @@ It does not mean every historical exact-detail document has been deleted.
 
 | Area | Score | Reason |
 | --- | ---: | --- |
-| AI memory routing | 99 | `maestro/memory/START_HERE.md`, `maestro/memory/index`, durable memory, module packs, and Atlas workflow now own active AI retrieval. |
+| AI memory routing | 99 | `maestro/memory/START_HERE.md`, `maestro/memory/index`, durable memory, module packs, and Maestro workflow now own active AI retrieval. |
 | Legacy memory retirement | 100 | `platform/docs/ai/**` was migrated, summarized, and physically deleted. |
 | FE docs structure | 98 | Active docs now route through `contracts/`, `modules/`, `guides/`, `proposals/`, `reference/`, and archive metadata; old root pointers and reference pointer folders are gone. |
 | BE docs structure | 98 | Active backend docs route through contracts/modules/runbooks/proposals/reference/archive; old root pointers and reference pointer folders are gone. |
 | Form Builder compaction | 93 | Hot Form Builder truth is compacted; 14 retained exact-detail docs remain by policy for exact payload/history. |
 | Reference-code governance | 99 | Raw packs moved to ignored `reference-code/`; tracked docs use `reference-pack:*` aliases and old pointer README folders were deleted. |
-| Atlas/Codex-local workflow | 99 | Atlas uses `maestro/memory` and active prompts/templates; docs/memory drift now has both local and CI checks. |
+| Maestro/Codex-local workflow | 99 | Maestro uses `maestro/memory`, flat artifacts, and native skills; docs/memory drift now has both local and CI checks. |
 
 ## Remaining Work To Reach 100
 

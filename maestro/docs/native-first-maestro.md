@@ -49,12 +49,11 @@ Maestro owns:
 - artifact and evidence discipline;
 - acceptance and closeout quality.
 
-Atlas owns:
+Archived Atlas owns:
 
-- personal helper behavior outside the formal Maestro chain;
-- quick owner-assist flows where formal orchestration is unnecessary.
-- after Maestro promotion, Atlas is archived as provenance unless the owner
-  explicitly keeps it as a separate lightweight helper.
+- provenance for the retired helper behavior and run machinery under
+  `maestro/archive/final-atlas/`;
+- no active runtime or default routing responsibility.
 
 Specialist agents own:
 
@@ -106,5 +105,6 @@ The next active work is a small native Maestro environment:
 - minimal role and skill contracts;
 - native subagent launch guidance;
 - artifact and evidence discipline;
-- clear boundary between Maestro, Atlas, skills, and optional future tooling.
-- accepted transition plan for Atlas archive and Maestro memory migration.
+- clear boundary between Maestro, archived Atlas provenance, skills, and
+  optional future tooling.
+- accepted transition plan for Maestro memory migration and Atlas archive.

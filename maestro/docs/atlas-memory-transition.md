@@ -13,16 +13,17 @@ This document tracks the Atlas and memory transition around Maestro vNext.
 
 ## Current State
 
-- Atlas remains an independent personal helper.
-- `maestro/memory/` remains the current durable memory layer.
+- Maestro is the active native-first work partner.
+- Atlas is archived as provenance under `maestro/archive/final-atlas/`.
+- `maestro/memory/` is the current durable memory layer.
 - `.codex/`, `.agents/`, `.agent-cli/`, and the active repo instructions remain
-  the live runtime surfaces until Maestro vNext is promoted.
+  the live runtime surfaces.
 
 ## Target State
 
-After Maestro proves itself as the default work entrypoint:
+Current accepted target state:
 
-- Maestro becomes the default engineering work partner.
+- Maestro is the default engineering work partner.
 - Atlas is frozen as provenance and removed from the default work path.
 - Durable memory remains under the Maestro surface.
 
@@ -34,24 +35,23 @@ maestro/
     START_HERE.md
     index/
     durable/
-    templates/
   archive/
     final-atlas/
 ```
 
 ## Atlas Final Archive
 
-Atlas should be archived only after all are true:
+Atlas archive acceptance requires:
 
 - Maestro handles discussion, planning, execution, gated execution, closeout,
   artifacts, and memory rhythm at least as well as Atlas;
 - owner confirms Maestro is the default work entrypoint;
 - active references to Atlas as the default helper are removed or rewritten;
-- the final Atlas source is copied into `maestro/archive/final-atlas/`;
+- the final Atlas source is available in `maestro/archive/final-atlas/`;
 - the archive clearly states that it is provenance, not active instruction.
 
-Atlas may remain as a lightweight personal helper only if the owner explicitly
-wants that separate surface after Maestro promotion.
+Atlas must not be restored as a lightweight helper unless the owner explicitly
+asks for that separate surface later.
 
 ## Memory Migration
 

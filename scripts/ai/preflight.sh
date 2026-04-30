@@ -82,7 +82,6 @@ node_supports_frontend() {
 
 run_required "docs memory check" python3 scripts/ai/docs_memory_check.py --check
 run_required "env policy check" python3 scripts/ai/check-env-policy.py --check
-run_required "Atlas automation version check" python3 scripts/ai/automation_versions.py --check
 
 if [ "$MODE" = "docs" ]; then
   :

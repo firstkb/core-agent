@@ -23,9 +23,6 @@ platform/
   README.md
   CHANGELOG.md
 
-  docs/
-    archive/
-
   backend/
     AGENTS.md
     README.md
@@ -55,7 +52,6 @@ platform/
 - shared durable project memory is maintained under `maestro/memory/durable/` and `maestro/memory/modules/`
 - Maestro work artifacts live under `maestro/artifact/active/` and `maestro/artifact/archive/`
 - former `platform/docs/ai/` memory has been migrated into `maestro/memory` and deleted; it is historical provenance only
-- archived one-off prompt artifacts live under `platform/`
 - retired runtime provenance is owner-managed outside the active repository
 
 ## Frontend decisions

@@ -402,10 +402,6 @@ def check_semantic_drift_pointers(root: Path, errors: list[str]) -> None:
         if "# Use this after memory-index.yaml" in text:
             add_error(errors, read_routes.relative_to(root), "read-routes header must follow START_HERE-first read order")
 
-    archive_readme = root / "platform/docs/archive/agent-prompts/README.md"
-    if archive_readme.exists() and "platform/docs/ai/*" in read_text(archive_readme):
-        add_error(errors, archive_readme.relative_to(root), "archive README must not point canonical memory to retired platform/docs/ai")
-
 
 def check_agents_name_status(root: Path, errors: list[str]) -> None:
     path = root / "AGENTS_NAME.md"

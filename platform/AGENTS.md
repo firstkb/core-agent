@@ -68,7 +68,6 @@ Use `maestro/memory/` by role:
   - `maestro/memory/durable/legacy-memory-import.md`
   - owner-managed external retired runtime provenance
   - git history for the former `platform/docs/ai/**` payloads
-  - `platform/docs/archive/*`
 
 ## Maestro orchestration rule
 
@@ -107,7 +106,6 @@ Do not read these unless the task explicitly needs them:
 - `platform/backend/bundle/tenant_schema_full.sql` unless the task is bundle or migration related
 - `platform/backend/certs/**`
 - deleted legacy AI memory path `platform/docs/ai/**`; use `maestro/memory` and git history instead
-- `platform/docs/archive/**`
 
 These are large, generated, donor, or historical surfaces and they slow down agent work.
 

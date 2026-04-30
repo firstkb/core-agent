@@ -95,6 +95,5 @@ Avoid unless the task explicitly needs them:
 - `platform/backend/docs/archive/**`
 - `platform/backend/docs/legacy/**`
 - `platform/backend/migrations/postgres/archive/**`
-- `platform/docs/archive/**`
 - former legacy platform memory under `platform/docs/ai/**`; the path is deleted, so use `maestro/memory/durable/legacy-memory-import.md` and git history only when explicitly needed
 - former closed run folders under `platform/docs/ai/runs/**`; use owner-managed external provenance or git history only if required

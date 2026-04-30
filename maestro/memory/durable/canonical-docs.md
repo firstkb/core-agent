@@ -230,4 +230,3 @@ Historical / opt-in:
 - `maestro/memory/docs/backend/archive/archive-candidates.md`
 - `platform/backend/docs/archive/postgres-archive/**`
 - `platform/backend/docs/legacy/**`
-- `platform/docs/archive/**`

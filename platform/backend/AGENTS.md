@@ -5,12 +5,12 @@ Scope: `platform/backend` only.
 Read first:
 
 1. `platform/AGENTS.md`
-2. `ai-memory/START_HERE.md`
-3. `ai-memory/index/read-routes.yaml`
-4. relevant module pack under `ai-memory/modules/**`
+2. `maestro/memory/START_HERE.md`
+3. `maestro/memory/index/read-routes.yaml`
+4. relevant module pack under `maestro/memory/modules/**`
 5. `platform/backend/docs/README.md`
 
-Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
+Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
 ## Lane orchestration rule
 
@@ -87,7 +87,7 @@ Do not read by default:
 - `migrations/postgres/archive/**`
 - `bundle/tenant_schema_full.sql` unless the task is bundle/migration specific
 - `certs/**`
-- deleted legacy AI memory path `../docs/ai/**`; use `ai-memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
+- deleted legacy AI memory path `../docs/ai/**`; use `maestro/memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas

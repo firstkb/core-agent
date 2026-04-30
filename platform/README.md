@@ -6,11 +6,11 @@ Manager) v1.0.0.
 ## Read order for product work
 
 - `platform/AGENTS.md`
-- `ai-memory/START_HERE.md`
-- `ai-memory/index/read-routes.yaml`
-- `ai-memory/durable/current-state.md`
+- `maestro/memory/START_HERE.md`
+- `maestro/memory/index/read-routes.yaml`
+- `maestro/memory/durable/current-state.md`
 - the relevant local `AGENTS.md` file under `backend/` or `frontend/`
-- `ai-memory/index/memory-index.yaml` only when broader routing is needed
+- `maestro/memory/index/memory-index.yaml` only when broader routing is needed
 
 For cross-stack or multi-session work, invoke:
 
@@ -53,11 +53,11 @@ platform/
 
 - backend lives under `platform/backend` as a modular monolith with multiple runtimes
 - frontend lives under `platform/frontend` as separate product applications plus shared packages
-- shared durable project memory is maintained under `ai-memory/durable/` and `ai-memory/modules/`
-- stable Atlas prompt contracts live under `ai-memory/atlas/prompts/`
-- workflow templates live under `ai-memory/atlas/templates/`
-- coordinated task run artifacts live under `ai-memory/runs/`
-- former `platform/docs/ai/` memory has been migrated into `ai-memory` and deleted; it is historical provenance only
+- shared durable project memory is maintained under `maestro/memory/durable/` and `maestro/memory/modules/`
+- stable Atlas prompt contracts live under `maestro/memory/atlas/prompts/`
+- workflow templates live under `maestro/memory/atlas/templates/`
+- coordinated task run artifacts live under `maestro/memory/runs/`
+- former `platform/docs/ai/` memory has been migrated into `maestro/memory` and deleted; it is historical provenance only
 - archived one-off prompt artifacts live under `platform/docs/archive/`
 - manual orchestration skill lives at `.agents/skills/atlas/`
 
@@ -70,12 +70,12 @@ platform/
 
 ## Docs
 
-- AI memory start point: `ai-memory/START_HERE.md`
-- shared AI memory: `ai-memory/README.md`
-- canonical docs registry: `ai-memory/durable/canonical-docs.md`
-- prompt registry: `ai-memory/atlas/prompts/README.md`
-- template registry: `ai-memory/atlas/templates/README.md`
-- run-artifact guide: `ai-memory/runs/README.md`
-- legacy memory import audit: `ai-memory/durable/legacy-memory-import.md`
+- AI memory start point: `maestro/memory/START_HERE.md`
+- shared AI memory: `maestro/memory/README.md`
+- canonical docs registry: `maestro/memory/durable/canonical-docs.md`
+- prompt registry: `maestro/memory/atlas/prompts/README.md`
+- template registry: `maestro/memory/atlas/templates/README.md`
+- run-artifact guide: `maestro/memory/runs/README.md`
+- legacy memory import audit: `maestro/memory/durable/legacy-memory-import.md`
 - backend docs index: `platform/backend/docs/README.md`
 - frontend docs index: `platform/frontend/docs/README.md`

@@ -57,7 +57,7 @@ Storage and static/external model details:
 Open those old docs only for exact historical detail or payload audit.
 For retention and deletion conditions, read:
 
-- `ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
+- `maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
 
 Low-risk exact-detail docs for advanced fields, content nodes, field rules, grid
 columns, and checklist subforms were compacted into this document and deleted.

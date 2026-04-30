@@ -19,17 +19,17 @@ Use these surfaces as the active runtime source of truth:
 - `platform/AGENTS.md` - platform product guidance and AI memory read order.
 - `platform/frontend/AGENTS.md` - frontend workspace rules.
 - `platform/backend/AGENTS.md` - backend workspace rules.
-- `ai-memory/START_HERE.md` - first compact product-memory read after instructions.
-- `ai-memory/index/read-routes.yaml` - route-specific memory/doc read sets.
-- `ai-memory/modules/**` - compact durable module packs.
-- `ai-memory/durable/**` - durable decisions, current state, canonical docs, and migrated legacy memory summaries.
+- `maestro/memory/START_HERE.md` - first compact product-memory read after instructions.
+- `maestro/memory/index/read-routes.yaml` - route-specific memory/doc read sets.
+- `maestro/memory/modules/**` - compact durable module packs.
+- `maestro/memory/durable/**` - durable decisions, current state, canonical docs, and migrated legacy memory summaries.
 - `.agents/skills/*/SKILL.md` - active local skill behavior.
 - `.codex/**` - Codex-native config, native agents, contracts, standards, and templates.
 - `maestro/**` - Maestro vNext native orchestration contracts, templates, examples, and flat work artifacts.
 - `.agent-cli/**` - typed lifecycle gateway for legacy module/feature/stage artifacts.
 - `platform/frontend/docs/**` and `platform/backend/docs/**` - canonical product docs.
 
-Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
+Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
 ## Runtime Layout
 
@@ -37,7 +37,7 @@ Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 AGENTS.md
 README.md
 
-ai-memory/
+maestro/memory/
   START_HERE.md
   agent-workflow.md
   atlas/
@@ -114,7 +114,7 @@ Maestro vNext native-first orchestration surface.
 
 New Maestro-routed work should prefer `maestro_vnext` and the flat artifact model under `maestro/artifact/`. Legacy `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available only for old `artifacts/<module>/...` continuation.
 
-### `ai-memory/`
+### `maestro/memory/`
 
 Compact operational memory for AI agents.
 
@@ -186,10 +186,10 @@ source of truth.
 ## Retired Surfaces
 
 The former `platform/docs/ai/**` memory layer has been migrated into
-`ai-memory/` and physically deleted. Use:
+`maestro/memory/` and physically deleted. Use:
 
-- `ai-memory/durable/legacy-memory-import.md`
-- `ai-memory/runs/archive/legacy-platform-docs-ai-runs.md`
+- `maestro/memory/durable/legacy-memory-import.md`
+- `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
 - git history only for explicit provenance recovery
 
 Do not recreate `platform/docs/ai/**`.

@@ -17,12 +17,12 @@ Read and follow:
 Your role:
 - audit semantic docs and durable memory consistency;
 - find source-of-truth drift;
-- check Maestro / Atlas / AGENTS / ai-memory alignment;
-- perform final `ai-memory/` -> `maestro/memory/` migration audits when assigned;
+- check Maestro / Atlas / AGENTS / `maestro/memory` alignment;
+- perform final legacy `ai-memory/` -> `maestro/memory/` migration audits when assigned;
 - recommend exact updates and risks.
 
 Critical invariants:
-- Do not migrate ai-memory without owner approval.
+- Do not move the memory root again without owner approval.
 - Do not archive Atlas without owner approval.
 - Do not implement feature code.
 - After memory promotion, verify active docs, skills, scripts, and CI default to maestro/memory.

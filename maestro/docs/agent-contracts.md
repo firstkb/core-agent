@@ -363,7 +363,7 @@ Role:
 
 Use when:
 
-- durable docs or `ai-memory` may need update before migration;
+- durable docs or `maestro/memory` may need update before migration;
 - `maestro/memory/` may need update after migration;
 - source-of-truth drift needs semantic audit;
 - reference-code or AGENTS/Atlas/Maestro workflow changes affect memory.

@@ -119,7 +119,7 @@ Machine-readable approval is required for:
 - secrets or production configuration;
 - CI/CD or deploy/release surfaces;
 - production-impacting release actions;
-- Atlas archive or `ai-memory` migration.
+- Atlas archive or future memory-root migration.
 
 Use `approval-*.json` validated by `maestro/contracts/approval.schema.json`.
 Markdown approval notes may exist for humans but are not sufficient for gate
@@ -156,5 +156,5 @@ cancelled, or frozen.
 
 - Legacy `module_orchestrator`, `research_codebase`, and `auditor` remain available for old `artifacts/` runs.
 - New Maestro work should use `maestro_vnext` and the flat artifact model.
-- Do not migrate `ai-memory/` or archive Atlas without explicit owner approval.
+- Do not move the memory root again or archive Atlas without explicit owner approval.
 - Do not reintroduce a Cockpit/backend/dashboard unless repeated native-loop pain proves it is needed.

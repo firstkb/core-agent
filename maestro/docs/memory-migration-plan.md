@@ -9,7 +9,7 @@ lang: en
 
 ## Purpose
 
-Move durable agent memory from `ai-memory/` to `maestro/memory/` so Maestro can
+Move durable agent memory from legacy `ai-memory/` to `maestro/memory/` so Maestro can
 be tested against its final native-first runtime surface.
 
 This migration is `T4_gated`: it changes source-of-truth routing, agent read

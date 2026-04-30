@@ -287,7 +287,7 @@ Typical examples:
 - auth, sessions, tenant isolation, permissions, secrets, or billing changes;
 - migrations or destructive operations;
 - release, deploy, workflow dispatch, or production-impacting work;
-- Atlas archive or `ai-memory` migration;
+- Atlas archive or `maestro/memory` migration;
 - owner-approved large work where execution must stop at a gate.
 
 Gated work must not run as Tier 0 or Tier 1.

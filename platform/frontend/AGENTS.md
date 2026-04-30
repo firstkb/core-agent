@@ -5,12 +5,12 @@ Scope: `platform/frontend` only.
 Read first:
 
 1. `platform/AGENTS.md`
-2. `ai-memory/START_HERE.md`
-3. `ai-memory/index/read-routes.yaml`
-4. relevant module pack under `ai-memory/modules/**`
+2. `maestro/memory/START_HERE.md`
+3. `maestro/memory/index/read-routes.yaml`
+4. relevant module pack under `maestro/memory/modules/**`
 5. `platform/frontend/docs/README.md`
 
-Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
+Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
 ## Lane orchestration rule
 
@@ -70,7 +70,7 @@ Do not read by default:
 - `**/.turbo/**`
 - `docs/vendor/**`
 - `docs/platform-studio/old-code-reference/**`
-- deleted legacy AI memory path `../docs/ai/**`; use `ai-memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
+- deleted legacy AI memory path `../docs/ai/**`; use `maestro/memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
 - archived prompts under `platform/docs/archive/**`
 
 ## High-risk areas
@@ -107,14 +107,14 @@ Require extra care before finalizing changes that affect:
 
 ## Visual review loop
 
-- For non-trivial visible UI work, use `ai-memory/atlas/templates/ui-task-packet.md` before implementation unless Atlas explicitly marks the change as a tiny copy/CSS fix.
+- For non-trivial visible UI work, use `maestro/memory/atlas/templates/ui-task-packet.md` before implementation unless Atlas explicitly marks the change as a tiny copy/CSS fix.
 - The intended loop is: UI Task Packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> Agent Evidence.
 - Use Storybook for stable `ui-kit` primitives, `CollectionTable` package states, and low-risk shared pattern review.
 - Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not replace an explicit Browser Use visual-smoke request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
-- Local Browser Use auth, when needed, must come from ignored `ai-memory/local/browser-use-auth.md`.
+- Local Browser Use auth, when needed, must come from ignored `maestro/memory/local/browser-use-auth.md`.
 - Do not copy local auth codes into tracked docs, run artifacts, or evidence blocks.
 - In evidence, write `Auth: local seeded dev login.` rather than the credentials.
 - If Storybook coverage does not exist for the target surface, use product state verification and record Storybook as follow-up instead of blocking the UI task.

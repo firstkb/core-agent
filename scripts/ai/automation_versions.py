@@ -34,9 +34,9 @@ def write_text(path: Path, text: str) -> None:
 
 
 def load_manifest(root: Path) -> dict:
-    manifest_path = root / "ai-memory/atlas/automation-manifest.json"
+    manifest_path = root / "maestro/memory/atlas/automation-manifest.json"
     if not manifest_path.exists():
-        raise SystemExit("ai-memory/atlas/automation-manifest.json not found")
+        raise SystemExit("maestro/memory/atlas/automation-manifest.json not found")
     return json.loads(read_text(manifest_path))
 
 

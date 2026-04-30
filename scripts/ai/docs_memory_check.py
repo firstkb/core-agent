@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate docs and ai-memory routing invariants.
+"""Validate docs and maestro/memory routing invariants.
 
 Usage:
   python3 scripts/ai/docs_memory_check.py --check
@@ -50,7 +50,7 @@ LOCAL_LINK_SCOPES = [
     "AGENTS.md",
     "AGENTS_NAME.md",
     "docs",
-    "ai-memory",
+    "maestro/memory",
     "platform/AGENTS.md",
     "platform/README.md",
     "platform/frontend/docs",
@@ -76,9 +76,9 @@ OLD_PRODUCT_IDENTITY_TERMS = [
 ]
 
 OLD_PRODUCT_IDENTITY_ALLOWED_FILES = {
-    "ai-memory/durable/current-state.md",
-    "ai-memory/durable/decisions-log.md",
-    "ai-memory/docs/docs-migration-plan.md",
+    "maestro/memory/durable/current-state.md",
+    "maestro/memory/durable/decisions-log.md",
+    "maestro/memory/docs/docs-migration-plan.md",
 }
 
 OLD_PRODUCT_IDENTITY_ALLOWED_MARKERS = [
@@ -95,7 +95,7 @@ OLD_ATLAS_INVOCATION_TERMS = [
 ]
 
 OLD_ATLAS_INVOCATION_ALLOWED_FILES = {
-    "ai-memory/durable/decisions-log.md",
+    "maestro/memory/durable/decisions-log.md",
     "scripts/ai/docs_memory_check.py",
 }
 
@@ -109,7 +109,7 @@ PRODUCT_IDENTITY_SCAN_SCOPES = [
     "AGENTS.md",
     "README.md",
     "docs",
-    "ai-memory",
+    "maestro/memory",
     "platform/AGENTS.md",
     "platform/README.md",
     "platform/frontend/AGENTS.md",
@@ -126,16 +126,16 @@ READ_ORDER_SURFACES = [
     "platform/backend/AGENTS.md",
     ".agents/skills/atlas/SKILL.md",
     ".agents/skills/archivist/SKILL.md",
-    "ai-memory/atlas/README.md",
-    "ai-memory/README.md",
-    "ai-memory/START_HERE.md",
-    "ai-memory/agent-workflow.md",
-    "ai-memory/atlas/prompts/control-chat-prompt-v1.md",
-    "ai-memory/atlas/prompts/frontend-prompt-v1.md",
-    "ai-memory/atlas/prompts/frontend-prompt-compact-v1.md",
-    "ai-memory/atlas/prompts/backend-prompt-v1.md",
-    "ai-memory/atlas/prompts/backend-prompt-compact-v1.md",
-    "ai-memory/atlas/templates/chat-start.md",
+    "maestro/memory/atlas/README.md",
+    "maestro/memory/README.md",
+    "maestro/memory/START_HERE.md",
+    "maestro/memory/agent-workflow.md",
+    "maestro/memory/atlas/prompts/control-chat-prompt-v1.md",
+    "maestro/memory/atlas/prompts/frontend-prompt-v1.md",
+    "maestro/memory/atlas/prompts/frontend-prompt-compact-v1.md",
+    "maestro/memory/atlas/prompts/backend-prompt-v1.md",
+    "maestro/memory/atlas/prompts/backend-prompt-compact-v1.md",
+    "maestro/memory/atlas/templates/chat-start.md",
 ]
 
 
@@ -225,7 +225,7 @@ def normalize_link_target(raw_target: str) -> str | None:
 
 def should_check_target(target: str) -> bool:
     if target.startswith("/"):
-        repo_abs_prefixes = ("/docs/", "/ai-memory/", "/platform/", "/AGENTS.md")
+        repo_abs_prefixes = ("/docs/", "/maestro/memory/", "/platform/", "/AGENTS.md")
         return target.startswith(repo_abs_prefixes)
     return True
 
@@ -263,7 +263,7 @@ def check_reference_code_retirement(root: Path, errors: list[str]) -> None:
         root / "docs/ref",
         root / "platform/frontend/docs",
         root / "platform/backend/docs",
-        root / "ai-memory/index",
+        root / "maestro/memory/index",
     ]
     retired_prefixes = [f"{rel}/" for rel in RETIRED_REFERENCE_DIRS]
     retired_prefixes.append("platform/backend/docs/MSSQL/**")
@@ -301,20 +301,22 @@ def check_root_file_sets(root: Path, errors: list[str]) -> None:
 def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
     if (root / "platform/docs/ai").exists():
         add_error(errors, "platform/docs/ai", "retired legacy memory path must not exist")
+    if (root / "ai-memory").exists():
+        add_error(errors, "ai-memory", "retired memory root must not exist; use maestro/memory")
     if (root / ".agents/skills/ramp-conductor").exists():
         add_error(errors, ".agents/skills/ramp-conductor", "retired Atlas skill path must not exist; use .agents/skills/atlas")
     if not (root / ".agents/skills/atlas/SKILL.md").exists():
         add_error(errors, ".agents/skills/atlas/SKILL.md", "Atlas skill must exist at the canonical path")
-    if (root / "ai-memory/AGENTS.override.md").exists():
-        add_error(errors, "ai-memory/AGENTS.override.md", "retired override file must not exist")
-    if not (root / "ai-memory/START_HERE.md").exists():
-        add_error(errors, "ai-memory/START_HERE.md", "first-read memory file must exist")
+    if (root / "maestro/memory/AGENTS.override.md").exists():
+        add_error(errors, "maestro/memory/AGENTS.override.md", "retired override file must not exist")
+    if not (root / "maestro/memory/START_HERE.md").exists():
+        add_error(errors, "maestro/memory/START_HERE.md", "first-read memory file must exist")
 
 
 def check_active_run_policy(root: Path, errors: list[str]) -> None:
-    active_root = root / "ai-memory/runs/active"
+    active_root = root / "maestro/memory/runs/active"
     if not active_root.exists():
-        add_error(errors, "ai-memory/runs/active", "active run folder must exist")
+        add_error(errors, "maestro/memory/runs/active", "active run folder must exist")
         return
 
     for run_dir in sorted(path for path in active_root.iterdir() if path.is_dir()):
@@ -348,7 +350,7 @@ def check_product_identity(root: Path, tracked: list[str], errors: list[str]) ->
     for rel in tracked:
         if not any(rel == scope or rel.startswith(f"{scope}/") for scope in PRODUCT_IDENTITY_SCAN_SCOPES):
             continue
-        if "/archive/" in rel or rel.startswith("ai-memory/runs/") or rel.startswith("artifacts/"):
+        if "/archive/" in rel or rel.startswith("maestro/memory/runs/") or rel.startswith("artifacts/"):
             continue
         path = root / rel
         if not path.exists() or not path.is_file():
@@ -383,19 +385,19 @@ def check_platform_readme(root: Path, errors: list[str]) -> None:
     layout = re.search(r"## Current layout\s+```text\n(.*?)```", text, flags=re.DOTALL)
     if layout and re.search(r"(^|\n)\s+ai/\s*(\n|$)", layout.group(1)):
         add_error(errors, path.relative_to(root), "current layout must not list retired platform/docs/ai")
-    if "`ai-memory/START_HERE.md`" not in text:
-        add_error(errors, path.relative_to(root), "read order must include ai-memory/START_HERE.md")
+    if "`maestro/memory/START_HERE.md`" not in text:
+        add_error(errors, path.relative_to(root), "read order must include maestro/memory/START_HERE.md")
 
 
 def check_docs_migration_plan_status(root: Path, errors: list[str]) -> None:
-    path = root / "ai-memory/docs/docs-migration-plan.md"
+    path = root / "maestro/memory/docs/docs-migration-plan.md"
     if not path.exists():
         add_error(errors, path.relative_to(root), "docs migration plan is missing")
         return
     text = read_text(path)
     if "Status: historical migration record" not in text:
         add_error(errors, path.relative_to(root), "migration plan must be historical, not current operational status")
-    if "ai-memory/docs/docs-memory-score-audit.md" not in text:
+    if "maestro/memory/docs/docs-memory-score-audit.md" not in text:
         add_error(errors, path.relative_to(root), "migration plan must point to the current readiness score owner")
     if re.search(r"overall readiness is \d+/?100", text, flags=re.IGNORECASE):
         add_error(errors, path.relative_to(root), "migration plan must not claim a current readiness score")
@@ -404,16 +406,16 @@ def check_docs_migration_plan_status(root: Path, errors: list[str]) -> None:
 
 
 def check_semantic_drift_pointers(root: Path, errors: list[str]) -> None:
-    read_routes = root / "ai-memory/index/read-routes.yaml"
+    read_routes = root / "maestro/memory/index/read-routes.yaml"
     if read_routes.exists():
         text = read_text(read_routes)
         if "# Use this after memory-index.yaml" in text:
             add_error(errors, read_routes.relative_to(root), "read-routes header must follow START_HERE-first read order")
 
-    atlas_readme = root / "ai-memory/atlas/README.md"
+    atlas_readme = root / "maestro/memory/atlas/README.md"
     if atlas_readme.exists():
         text = read_text(atlas_readme)
-        if "read `ai-memory/index/memory-index.yaml` and" in text:
+        if "read `maestro/memory/index/memory-index.yaml` and" in text:
             add_error(errors, atlas_readme.relative_to(root), "Atlas read rule must not put memory-index before START_HERE")
 
     automation_versions = root / "scripts/ai/automation_versions.py"
@@ -469,7 +471,7 @@ def check_form_builder_policy(root: Path, errors: list[str]) -> None:
     if count != 14:
         add_error(errors, platform_studio.relative_to(root), f"expected 14 retained exact-detail docs, found {count}")
 
-    audit = root / "ai-memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md"
+    audit = root / "maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md"
     if not audit.exists():
         add_error(errors, audit.relative_to(root), "Form Builder consolidation audit is missing")
         return
@@ -492,8 +494,8 @@ def check_gitignore(root: Path, errors: list[str]) -> None:
     lines = {line.strip() for line in read_text(gitignore).splitlines()}
     if "reference-code/" not in lines and "/reference-code/" not in lines:
         add_error(errors, ".gitignore", "reference-code/ must stay ignored")
-    if "ai-memory/local/" not in lines:
-        add_error(errors, ".gitignore", "ai-memory/local/ must stay ignored for local-only agent credentials")
+    if "maestro/memory/local/" not in lines:
+        add_error(errors, ".gitignore", "maestro/memory/local/ must stay ignored for local-only agent credentials")
     if "platform/frontend/storybook-static/" not in lines:
         add_error(errors, ".gitignore", "Storybook static build output must stay ignored")
     if "platform/docs/ai/" not in lines:
@@ -527,15 +529,15 @@ def check_read_order_policy(root: Path, errors: list[str]) -> None:
             continue
 
         text = read_text(path)
-        start_index = text.find("ai-memory/START_HERE.md")
-        routes_index = text.find("ai-memory/index/read-routes.yaml")
-        memory_index = text.find("ai-memory/index/memory-index.yaml")
+        start_index = text.find("maestro/memory/START_HERE.md")
+        routes_index = text.find("maestro/memory/index/read-routes.yaml")
+        memory_index = text.find("maestro/memory/index/memory-index.yaml")
 
         if start_index == -1:
-            add_error(errors, path.relative_to(root), "default read order must include ai-memory/START_HERE.md")
+            add_error(errors, path.relative_to(root), "default read order must include maestro/memory/START_HERE.md")
             continue
         if routes_index == -1:
-            add_error(errors, path.relative_to(root), "default read order must include ai-memory/index/read-routes.yaml")
+            add_error(errors, path.relative_to(root), "default read order must include maestro/memory/index/read-routes.yaml")
         elif start_index > routes_index:
             add_error(errors, path.relative_to(root), "START_HERE must appear before read-routes in default read order")
 
@@ -578,7 +580,7 @@ def run_check() -> int:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate docs and ai-memory routing invariants")
+    parser = argparse.ArgumentParser(description="Validate docs and maestro/memory routing invariants")
     parser.add_argument("--check", action="store_true", required=True, help="Fail on docs/memory drift")
     return parser.parse_args()
 

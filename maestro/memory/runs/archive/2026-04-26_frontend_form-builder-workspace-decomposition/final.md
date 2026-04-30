@@ -1,0 +1,233 @@
+# Final Closeout
+
+## Reconciliation Summary
+
+- Route: `FE_ONLY` Atlas run, executed inline in the current chat.
+- Scope stayed frontend-only and app-local to tenant-web Form Builder.
+- Goal checkpoint: the Form Builder decomposition remains on target, but the next priority is page route-shell reduction. Pause further state action micro-slices until page orchestration is thinner.
+- Draft save payload/response orchestration moved into `controller/form-builder-draft-save.ts`; the helper owns payload construction, save request/retry, missing-endpoint fallback, and saved response normalization.
+- Shared draft endpoint helper/types moved into `controller/form-builder-draft-api.ts`.
+- Draft load/hydration orchestration moved into `controller/use-form-builder-draft-hydration.ts`; the hook owns draft load request, unauthorized retry, missing-draft handling, draft load error state, hydration signature, and draft normalization/reconciliation.
+- Hydrated draft application remains page-owned for this slice: `replaceModel`, model/layout draft setters, and `hydrateDocument` stay in the page.
+- Lookup source model loading/cache orchestration moved into `controller/use-form-builder-lookup-source-models.ts`; the hook owns source model cache, available source model derivation, selected lookup source prefetch, and draft-backed load/retry/fallback/sign-out handling.
+- Lookup source picker UI state moved into `controller/use-form-builder-lookup-source-picker.ts`; the hook owns open/close state, selected model/fields/sort state, loading/error reaction, and default selected-field/sort normalization.
+- Lookup config mutation/save remains page-owned: `saveLookupSourcePicker` still applies the selected source model/display fields through the existing `updateSelectedField` flow.
+- Lookup source picker save/apply derivation moved into `controller/form-builder-workspace-lookup-source-picker.ts`; the pure helper builds the selected lookup field update from picker state and source model.
+- Unsaved-leave/navigation guard orchestration moved into `controller/use-form-builder-leave-guard.ts`; the hook owns leave confirmation open state, pending navigation path/resolver refs, browser `beforeunload`, and Platform Studio global leave guard registration.
+- Unsaved-leave dialog presentation remains page-owned through `UnsavedLeaveConfirmationDialog`.
+- Save action orchestration moved into `controller/use-form-builder-draft-save-action.ts`; the hook owns the access-token guard, save request invocation, save error handling, unauthorized sign-out handling, and saving-state transitions.
+- Saved-draft commit remains page-owned: `hydrateDocument`, model/layout draft setters, `replaceModel`, save pulse, and local authoring state application stay in the page.
+- Debug dialog open state and debug schema string derivation moved into `controller/use-form-builder-debug-dialog.ts`; debug dialog presentation remains page-owned.
+- Transient workspace UI effects moved into `controller/use-form-builder-transient-ui-effects.ts`; the hook owns selected-node editor reset, choice drag reset, selection inspector auto-scroll, invalid view-tab fallback, and default-filter field fallback.
+- Explicit user-action handlers remaining in the page are now mostly lookup picker close/save, choice/grid drag state, delete confirmation, selected-node basics, system field creation, and save/draft wiring.
+- Rule/default/quick filter editor UI state moved into `controller/use-form-builder-rule-filter-editors.ts`; the hook owns editor draft state, open/change/close handlers, and quick filter draft shaping.
+- Rule/default/quick filter save/delete orchestration moved into `form-builder-workspace-rule-filter-handlers.ts`; page still injects editor state and `updateDocument`.
+- Route workspace resolution and bootstrap loading/error state moved into `controller/use-form-builder-route-workspace.ts`; the page now receives resolved model/view state from a focused controller hook.
+- The decomposition slice extracted palette, canvas, workspace topline, inspector tab shell, selection inspector basic section, choice field settings, lookup field settings, lookup source picker dialog, debug dialog, delete-node confirmation dialog, unsaved-leave confirmation dialog, default/quick filter dialog chrome, scalar/lookup filter editors, rule condition editor, short text field settings, date-today field settings, tags field settings, selection delete/empty-state presentation, grid settings, view settings, selected-node rules, rule dialog chrome, loading, and missing/error presentation from the workspace page.
+- Canvas drag/drop/open/select/place/toggle interaction handlers moved into `form-builder-workspace-canvas-handlers.ts`; page still owns drag state and injects `updateDocument`.
+- Choice option and grid column drag/drop callbacks moved to named page handlers; page still owns drag state and selected-field/grid mutation callbacks.
+- RulesPanel delete callbacks and selection delete-open wiring moved to named page handlers; page still owns rule mutation helpers and delete dialog state.
+- Selected-field settings inline mutation callbacks moved to named page handlers for view-only binding, choice option add/remove, lookup display mode, text, date-today, and tags settings; page still owns `updateSelectedField`, `updateDocument`, and field mutation ownership.
+- Selected-field settings handler implementations moved into `controller/form-builder-workspace-selected-field-settings-handlers.ts`; page dependency-injects page-owned mutation callbacks and selected-node context, preserving behavior while shrinking the route shell.
+- Selected-field settings JSX moved into `components/selected-field-settings-section.tsx`; page now passes selected-field flags, summaries, and handlers into the focused component.
+- Selected-node rules/delete composition moved into `components/selected-node-rules-delete-section.tsx`; page still owns rule editor handlers, rule delete callbacks, and delete dialog state.
+- Selection inspector tab body moved into `components/selection-inspector-tab-body.tsx`; page still owns selected-node derivation, selection scroll ref, editor state, and mutation handlers.
+- Grid and view inspector tab bodies moved into `components/grid-inspector-tab-body.tsx` and `components/view-inspector-tab-body.tsx`; page still owns grid/view derivation, drag state, and mutation handlers.
+- Workspace inspector tab composition moved into `components/workspace-inspector.tsx`; page still owns tab body data derivation and mutation handlers.
+- Workspace dialog stack moved into `components/workspace-dialog-stack.tsx`; page still owns dialog state plus save/delete/confirm handlers and passes them into the component.
+- `WorkspaceDialogStack` was split into focused rule, filter, support, and tiny shared-types units; the stack is now a thin 35-line orchestrator and all dialog group files are under 170 lines.
+- Delete-node confirmation action derivation moved into `form-builder-workspace-delete-node.ts`; page still owns close calls, `deleteUnsavedField`, `updateDocument`, and `removeFormBuilderNode` invocation.
+- Root view metadata/model-lock mutation derivation moved into `form-builder-workspace-view-metadata.ts`; page still owns `updateDocument`, `updateCurrentModel`, and `updateCurrentViewMetadata` callbacks.
+- Selected-node basic inspector mutation derivation moved into `form-builder-workspace-selected-node-updates.ts`; page still owns `updateDocument`, `updateFieldById`, and `updateFormBuilderNode` callback ownership.
+- The unused page-local `EditableStringList` was removed after confirming it had no Form Builder call sites; no behavior changed.
+- Core workspace data derivation moved into `controller/use-form-builder-workspace-controller.ts`; route guards, mutation handlers, save UI state, and hydrated/saved authoring state application remain in the page.
+- Display item derivation moved into focused controller helpers: canvas/grid/rules/filter/lookup picker/view option item builders in `form-builder-workspace-display-items.ts`, and palette display section construction in `form-builder-workspace-palette-items.ts`.
+- Lookup source/model option helpers moved into `form-builder-workspace-lookup-options.ts`; lookup picker state, loading/validation, and save handlers remain in the page.
+- Lookup derived output definitions, derived pseudo-fields, view-only binding option derivation, view-only binding title-autofill update payload derivation, and shared storage-key normalization moved into focused controller helpers; the page still owns view-only binding mutation callbacks.
+- System Field key/template/compatibility-option helpers plus System Field palette and view-settings row builders moved into `form-builder-workspace-system-fields.ts`; pure System Field semantic-role binding, document binding, workflow-status option, and create-field binding derivation moved into `form-builder-workspace-system-field-derivation.ts`.
+- Default filter, quick filter, root view settings, current subform view settings, selected-node rules document update derivation, root/subform view action toggles, corrective-action toggle, sorting updates, and grid-column list update wrapping moved into `form-builder-workspace-document-updates.ts`; page still owns save/delete callbacks and `updateDocument`.
+- Choice field option update/rename/reorder and option style derivation moved into `controller/form-builder-workspace-choice-field.ts`; the page still owns selected-field mutation callbacks.
+- Field lookup/label helpers, scope field derivation, grid column sorting/order helpers, and grid-column visibility/reorder derivation moved into `form-builder-workspace-field-scope-grid.ts`; the page still owns field and grid mutation callbacks.
+- Rule cloning/defaults/summaries/single-condition normalization, rule save upsert derivation, rule delete derivation, and runtime preset compatibility helpers moved into `form-builder-workspace-rule-helpers.ts`; the page still owns visibility/requirement rule mutation callbacks.
+- Filter condition summaries, lookup clause summaries, quick filter summaries, filter token labels, quick-filter color normalization, default/quick filter save upsert derivation, and default-filter remove derivation moved into `form-builder-workspace-filter-helpers.ts`; the page still owns default/quick filter draft state and save/delete handlers.
+- Canonical data/UI/layout schema compile, schema compaction, schema scope helpers, document hydration from canonical schemas, debug/runtime schema compilation, and diff/attention helpers moved into focused controller helper files; the page still owns save/load, route guards, dirty-state, and mutation handlers.
+- Display labels, palette descriptions, node summary text, field title sync, choice option style sync, persisted-field checks, and visibility cycling moved into focused controller helper files; the page still owns handlers and mutation flow.
+- Read-only document/navigation selectors moved into `state/form-builder-selectors.ts`; `forms-builder-state.ts` imports and re-exports them, preserving existing import paths and behavior.
+- Read-only palette/access/display selectors moved into `state/form-builder-palette-selectors.ts`; `forms-builder-state.ts` imports and re-exports them, preserving existing import paths and behavior.
+- The first selection/navigation action group moved into `state/form-builder-actions.ts` via injected document internals: `updateFormBuilderNode`, `setFormBuilderCurrentParent`, and `selectFormBuilderNode`; `forms-builder-state.ts` keeps the original compatibility exports.
+- Add-element/add-field actions moved into `state/form-builder-actions.ts` using the same injected-internals pattern: `addFormBuilderElementNode` and `addFormBuilderFieldNode`; reconcile append helpers, remove/reorder, normalization, and save flow remain in `forms-builder-state.ts`.
+- Remove/move/reorder node actions moved into focused `state/form-builder-node-actions.ts`; `state/form-builder-actions.ts` composes that action group and `forms-builder-state.ts` keeps compatibility exports.
+- Scoped document normalization/finalization moved into `state/form-builder-scoped-document.ts`; low-level scope UI selected/current-parent/unplaced-field helpers moved into `state/form-builder-scope-ui.ts`; `forms-builder-state.ts` keeps the behavior-preserving compatibility surface.
+- Persistence/document storage read-write helpers moved into `state/form-builder-document-storage.ts`; `forms-builder-state.ts` keeps compatibility wrappers for `readFormBuilderDocument`, `saveFormBuilderDocument`, `createPersistedFormBuilderDocument`, and `useFormBuilderDocument`.
+- Flat-workspace reconstruction moved into `state/form-builder-flat-workspace.ts`; node-map, subform-scope localization, scoped UI node shaping, and `buildScopedDocumentFromFlatWorkspace` are now in a focused helper with injected normalization internals.
+- Default document factory/seed helpers moved into `state/form-builder-default-document.ts`; `forms-builder-state.ts` keeps the `createDefaultFormBuilderDocument` export and imports schema-scope seed helpers for reconciliation.
+- Persisted document normalization moved into `state/form-builder-document-normalization.ts`; `forms-builder-state.ts` keeps public wrappers for `normalizeFormBuilderDocument` and `normalizePersistedFormBuilderDocument`.
+- Runtime scope, system-field, filter definition, node-rule, and grid/view normalization clusters moved into focused state helper files; `forms-builder-state.ts` imports them and preserves compatibility exports for public runtime normalizers.
+- Layout-blueprint parsing, field/subform append helpers, and model reconciliation orchestration moved into focused state helper files; `forms-builder-state.ts` now only injects internals and preserves the public `reconcileFormBuilderDocumentWithModel` export.
+- Exported Form Builder domain/state types moved into focused type modules; `forms-builder-state.ts` re-exports them for compatibility and is now mostly wiring/factory code.
+- Closeout page-shell slice moved rule/filter save/delete handlers, view/grid settings handlers, and canvas interaction handlers into focused controller helpers.
+- Added a durable Platform Studio UI memory lesson so future builder UI work starts with app-local focused components and controller/helper units instead of growing workspace pages.
+- The workspace page still owns controller state, hydrated/saved draft application, route behavior, header navigation/debug/save wiring, save state wiring, unsaved-leave dialog presentation, debug dialog presentation, inspector tab state, delete dialog state and handler, choice mutation/reorder handlers, lookup config save/mutation handlers, short text field mutation handlers, autocomplete default calculation, date-today mutation callbacks, tags mutation callbacks, and selected-node basic mutation handlers.
+- Filter helper source-of-truth is now deduplicated: page imports scalar filter defaults/formatting and lookup clause definitions from the extracted app-local helper modules instead of carrying local copies.
+- Reducer/state architecture is still deferred; action extraction now covers selection/navigation and add-element/add-field groups only.
+- Page size after this slice: 1,580 lines; `forms-builder-state.ts` is now 392 lines. New page-shell handler helpers: rule/filter handlers 210 lines, view/grid handlers 188 lines, canvas handlers 96 lines. Type modules remain focused: main state/domain types 228 lines and filter/rule types 148 lines.
+- Final closeout review found no blocking boundary leaks or regressions. The remaining Form Builder route page is still an orchestrator, but the original 8k+ page/state monolith risk is reduced enough to stop Form Builder micro-slicing and move to the next global UI monolith.
+
+## Contract Drift Check
+
+- Contract drift: no.
+- Backend/API/storage/auth/tenancy/grants/route guard behavior changed: no.
+- Form Builder state architecture changed: no.
+- Cross-package abstraction introduced: no.
+- Navigation Builder, Action Builder, PDF Builder, Report Builder behavior touched: no.
+
+## Checks Summary
+
+- `pnpm --filter @platform/tenant-web typecheck` passed from `platform/frontend`.
+- Typecheck emitted the existing Node engine warning: current `v18.17.0`, expected `>=22.12.0`.
+- `scripts/ai/preflight.sh` passed.
+- `git diff --check` passed.
+- Browser smoke was not run.
+
+## Shared Memory Updates
+
+- Durable docs/memory updates: `maestro/memory/modules/frontend/platform-studio-ui/README.md` was updated earlier in this run with the builder UI decomposition lesson.
+- Rationale: this route-shell slice made no additional durable boundary, contract, API, route, or ownership decision.
+- Run artifacts updated: `task.md`, `frontend.md`, `final.md`.
+
+## Agent Evidence
+
+- Task: First safe decomposition slice for tenant-web Platform Studio Form Builder workspace page.
+- Route: Atlas run / FE lane executed inline.
+- Run folder: `maestro/memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/`
+- Changed files:
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-draft-api.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-draft-save.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-canvas-actions.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-delete-node.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-selected-node-updates.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-metadata.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-debug-dialog.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-draft-hydration.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-draft-save-action.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-leave-guard.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-lookup-source-models.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-lookup-source-picker.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-rule-filter-editors.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-route-workspace.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-transient-ui-effects.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-workspace-controller.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-display-items.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-palette-items.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-lookup-options.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-lookup-source-picker.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-lookup-derived-outputs.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-only-bindings.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-storage-keys.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-system-field-derivation.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-system-fields.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-field-scope-grid.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-rule-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-selected-field-settings-handlers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-filter-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-rule-filter-handlers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-schema-utils.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-schema-compact.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-data-schema.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-canvas-handlers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-layout-compile.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-ui-schema.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-document-hydration.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-document-updates.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-debug-schemas.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-display-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-normalization-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-grid-handlers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-choice-field.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-actions.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-document-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-default-document.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-document-storage.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-filter-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-filter-rule-types.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-flat-workspace.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-blueprint-reconciliation.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-layout-blueprint.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-node-actions.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-reconciliation.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-reconciliation-append.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-rule-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-runtime-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-scoped-document.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-scope-ui.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-selectors.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-system-field-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-types.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-view-normalization.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-palette-selectors.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/builder-canvas.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/builder-canvas-node-row.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/field-palette.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/grid-settings-panel.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-panel.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-root-sections.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-actions-sorting-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-system-fields-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-default-filters-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/inspector-panel.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-basic-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/choice-field-settings.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/choice-option-row.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/choice-button-styles-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-field-settings.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/text-field-settings.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/date-today-field-settings.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/tags-field-settings.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-delete-action.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-empty-state.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-topline.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-source-picker-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/debug-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/delete-node-confirmation-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/unsaved-leave-confirmation-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/default-filter-editor-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/quick-filter-editor-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/filter-condition-editor.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-filter-editor.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/filter-condition-editor-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/grid-inspector-tab-body.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-filter-editor-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/rules-panel.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/rule-editor-dialog.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/rule-condition-editor.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/rule-condition-editor-helpers.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-field-settings-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-node-rules-delete-section.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-tab-body.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-inspector-tab-body.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-dialog-stack.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-dialog-types.ts`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-filter-dialogs.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-inspector.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-rule-dialogs.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/workspace-support-dialogs.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/empty-state.tsx`
+  - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/error-state.tsx`
+  - `maestro/memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/task.md`
+  - `maestro/memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/frontend.md`
+  - `maestro/memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/final.md`
+- Docs/memory read: required repo/platform/memory/frontend/Form Builder sources plus Atlas templates/prompts needed for run scaffolding.
+- Contracts affected: none.
+- Checks run:
+  - `pnpm --filter @platform/tenant-web typecheck`
+  - `scripts/ai/preflight.sh`
+  - `git diff --check`
+- Checks not run: browser smoke.
+- Memory/docs updated: `maestro/memory/modules/frontend/platform-studio-ui/README.md` plus run artifacts.
+- Risks / follow-up: page route shell still owns high-level orchestration/data/save wiring; `forms-builder-state.ts` still owns node factory/labels plus compatibility wiring.
+
+## Recommended Next Step
+
+- Stop Form Builder refactoring for now and move to the next global UI monolith target. Recommended target: `platform/frontend/packages/collection-table/src/collection-table-page.tsx`, because it is a product UI page monolith with similar agent-edit risk and is safer to slice next than global `ui-kit/src/styles.css`.

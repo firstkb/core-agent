@@ -83,14 +83,13 @@ Use the smallest useful shape:
 
 ## Memory Policy
 
-`ai-memory/` remains the active durable memory surface until the owner approves a
-migration to `maestro/memory/`.
+`maestro/memory/` is the active durable memory surface.
 
 For non-trivial platform product work, follow the repository read policy:
 
-- read `ai-memory/START_HERE.md`;
-- read `ai-memory/index/read-routes.yaml`;
-- read the relevant `ai-memory/modules/**` pack when product context matters.
+- read `maestro/memory/START_HERE.md`;
+- read `maestro/memory/index/read-routes.yaml`;
+- read the relevant `maestro/memory/modules/**` pack when product context matters.
 
 Use Archivist for docs or memory consistency audits. Do not migrate memory or
 archive Atlas without explicit owner approval.
@@ -102,5 +101,5 @@ archive Atlas without explicit owner approval.
 - Do not edit in discussion/planning unless the owner asked to persist.
 - Do not claim tests, browser verification, review, release, or approval without evidence.
 - For UI-visible work, use Scout with Browser Use by default or record why it was unavailable.
-- Do not migrate `ai-memory/` or archive Atlas without explicit owner approval.
+- Do not move the memory root again or archive Atlas without explicit owner approval.
 - Do not use legacy `module_orchestrator` for new work unless the owner asks to continue an old `artifacts/` run.

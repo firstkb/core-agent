@@ -9,15 +9,12 @@ lang: en
 
 ## Purpose
 
-This document defines the target transition after Maestro vNext agents and
-skills are implemented and accepted by the owner.
-
-It does not change the active runtime today.
+This document tracks the Atlas and memory transition around Maestro vNext.
 
 ## Current State
 
 - Atlas remains an independent personal helper.
-- `ai-memory/` remains the current durable memory layer.
+- `maestro/memory/` remains the current durable memory layer.
 - `.codex/`, `.agents/`, `.agent-cli/`, and the active repo instructions remain
   the live runtime surfaces until Maestro vNext is promoted.
 
@@ -27,7 +24,7 @@ After Maestro proves itself as the default work entrypoint:
 
 - Maestro becomes the default engineering work partner.
 - Atlas is frozen as provenance and removed from the default work path.
-- Durable memory moves under the Maestro surface.
+- Durable memory remains under the Maestro surface.
 
 Target shape:
 
@@ -58,23 +55,25 @@ wants that separate surface after Maestro promotion.
 
 ## Memory Migration
 
-Move `ai-memory/` to `maestro/memory/` only after owner approval.
+The legacy `ai-memory/` root has been promoted to `maestro/memory/` after owner
+approval.
 
 Migration rules:
 
 - preserve existing durable memory content;
-- rewrite read routes and indexes to the new path;
-- remove stale references to the old root path;
+- keep read routes and indexes on the active `maestro/memory/` path;
+- keep stale references to the old root path only in archive or migration notes;
 - keep memory compact and route-oriented;
 - do not copy transient run detail into memory;
 - run docs/memory validation after the move.
 
-Archivist owns semantic audit of the migration. Maestro owns the decision to
-perform it.
+Archivist owns semantic audit after the migration. Maestro owns any future
+decision to move the memory root again.
 
 ## Non-Goals
 
-- Do not move memory before Maestro agents and skills are usable.
+- Do not move memory again before Maestro agents and skills prove the current
+  surface works.
 - Do not delete Atlas history.
 - Do not make memory a live task-state store.
 - Do not use the transition as an excuse to rebuild separate UI/service.

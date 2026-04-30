@@ -27,7 +27,7 @@ RUN_MODE_CHOICES = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Create a new run directory under ai-memory/runs/active/<task-id>/"
+        description="Create a new run directory under maestro/memory/runs/active/<task-id>/"
     )
     parser.add_argument("--task-id", required=True, help="Task id chosen by Atlas / Control")
     parser.add_argument("--mode", required=True, choices=sorted(RUN_MODE_CHOICES))
@@ -108,9 +108,9 @@ def write_text(path: Path, content: str) -> None:
 
 
 def load_manifest(root: Path) -> dict:
-    manifest_path = root / "ai-memory" / "atlas" / "automation-manifest.json"
+    manifest_path = root / "maestro/memory" / "atlas" / "automation-manifest.json"
     if not manifest_path.exists():
-        raise SystemExit("ai-memory/atlas/automation-manifest.json not found. Apply the Atlas memory bundle first.")
+        raise SystemExit("maestro/memory/atlas/automation-manifest.json not found. Apply the Atlas memory bundle first.")
     return json.loads(read_text(manifest_path))
 
 
@@ -174,7 +174,7 @@ def render_control_task(template: str, *, task_id: str, title: str, created_at: 
     rendered = set_bullet_value(rendered, "active_lanes", ", ".join(lanes) if lanes else "none")
     rendered = set_bullet_value(rendered, "execution_order", execution_order(mode))
     rendered = set_bullet_value(rendered, "scaffolder_action", f"created via new-run {manifest['scaffolder']['version']}")
-    rendered = set_bullet_value(rendered, "run_artifact_scope", f"ai-memory/runs/active/{task_id}/")
+    rendered = set_bullet_value(rendered, "run_artifact_scope", f"maestro/memory/runs/active/{task_id}/")
     rendered = set_bullet_value(rendered, "goal", goal)
     rendered = set_bullet_value(rendered, "why_now", why_now)
     rendered = set_bullet_value(rendered, "lane_plan", f"mode={mode}; lanes={', '.join(lanes) if lanes else 'none'}")
@@ -184,11 +184,11 @@ def render_control_task(template: str, *, task_id: str, title: str, created_at: 
     rendered = set_bullet_value(rendered, "next_control_step", "Atlas to fill packets, render ready lane prompts, launch the planned lane topology, and reconcile outputs")
 
     if "frontend" in lanes:
-        rendered = set_bullet_value(rendered, "fe_expected_report_path", f"ai-memory/runs/active/{task_id}/frontend.md")
-        rendered = set_bullet_value(rendered, "frontend_launch_prompt_path", f"ai-memory/runs/active/{task_id}/frontend.md#ready-chat-launch-prompt")
+        rendered = set_bullet_value(rendered, "fe_expected_report_path", f"maestro/memory/runs/active/{task_id}/frontend.md")
+        rendered = set_bullet_value(rendered, "frontend_launch_prompt_path", f"maestro/memory/runs/active/{task_id}/frontend.md#ready-chat-launch-prompt")
     if "backend" in lanes:
-        rendered = set_bullet_value(rendered, "be_expected_report_path", f"ai-memory/runs/active/{task_id}/backend.md")
-        rendered = set_bullet_value(rendered, "backend_launch_prompt_path", f"ai-memory/runs/active/{task_id}/backend.md#ready-chat-launch-prompt")
+        rendered = set_bullet_value(rendered, "be_expected_report_path", f"maestro/memory/runs/active/{task_id}/backend.md")
+        rendered = set_bullet_value(rendered, "backend_launch_prompt_path", f"maestro/memory/runs/active/{task_id}/backend.md#ready-chat-launch-prompt")
 
     rendered = set_bullet_value(rendered, "final_status", "draft")
     rendered = set_bullet_value(rendered, "shared_memory_updates_applied", "not yet")
@@ -213,7 +213,7 @@ def render_lane_file(template: str, *, task_id: str, lane: str, created_at: str,
     rendered = set_bullet_value(rendered, "base_prompt_version", prompt_version)
     rendered = set_bullet_value(rendered, "prompt_variant", "full")
     rendered = set_bullet_value(rendered, "launch_prompt_status", "pending")
-    rendered = set_bullet_value(rendered, "expected_report_path", f"ai-memory/runs/active/{task_id}/{lane}.md")
+    rendered = set_bullet_value(rendered, "expected_report_path", f"maestro/memory/runs/active/{task_id}/{lane}.md")
     rendered = set_bullet_value(rendered, "memory_delta_expectation", "propose shared-memory deltas only; Atlas finalizes")
     rendered = set_bullet_value(rendered, "ready_for_reconciliation", "no")
     rendered = set_bullet_value(rendered, "ready_for_closeout", "no")
@@ -234,10 +234,10 @@ def main() -> int:
 
     root = repo_root()
     manifest = load_manifest(root)
-    runs_dir = root / "ai-memory" / "runs" / "active"
+    runs_dir = root / "maestro/memory" / "runs" / "active"
     run_dir = runs_dir / args.task_id
-    task_template_path = root / "ai-memory" / "atlas" / "templates" / "control-task.md"
-    lane_template_path = root / "ai-memory" / "atlas" / "templates" / "lane-report.md"
+    task_template_path = root / "maestro/memory" / "atlas" / "templates" / "control-task.md"
+    lane_template_path = root / "maestro/memory" / "atlas" / "templates" / "lane-report.md"
 
     if not task_template_path.exists() or not lane_template_path.exists():
         raise SystemExit("Required templates not found. Apply the memory bundle first.")
@@ -295,7 +295,7 @@ def main() -> int:
     print(f"- task_id: {args.task_id}")
     print(f"- mode: {args.mode}")
     print(f"- lanes: {', '.join(lanes) if lanes else 'none'}")
-    print("- versions sourced from: ai-memory/atlas/automation-manifest.json")
+    print("- versions sourced from: maestro/memory/atlas/automation-manifest.json")
     print("Next step: Atlas should fill packets and launch the active lane topology.")
     return 0
 

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "approval_id": "approval-001",
+  "work_id": "memory-migration",
+  "packet_id": null,
+  "approval_type": "memory_migration",
+  "requested_action": "Move durable agent memory from legacy ai-memory/ to maestro/memory/ and update active runtime references.",
+  "reason": "Maestro should be tested against its final native-first memory root rather than the legacy Atlas-era path.",
+  "decision": "approved",
+  "decision_actor": "owner",
+  "decision_at": "2026-04-30T00:00:00Z",
+  "expires_at": null,
+  "scope": {
+    "allowed_paths": [
+      "ai-memory/",
+      "maestro/memory/",
+      "AGENTS.md",
+      "README.md",
+      "docs/",
+      "platform/",
+      ".agents/",
+      ".codex/",
+      ".github/workflows/docs-memory-check.yml",
+      ".gitignore",
+      "scripts/ai/"
+    ],
+    "forbidden_paths": [
+      "platform/docs/ai/",
+      "maestro/archive/final-atlas/"
+    ],
+    "allowed_actions": [
+      "move memory root",
+      "update active references",
+      "update validation scripts",
+      "run local checks",
+      "record migration artifact"
+    ],
+    "forbidden_actions": [
+      "archive Atlas",
+      "recreate platform/docs/ai/",
+      "change product runtime behavior"
+    ]
+  },
+  "evidence_required": [
+    "docs memory check",
+    "automation version check",
+    "preflight",
+    "remaining legacy reference review"
+  ],
+  "notes": "Approval was provided by owner in chat: commit current prep and proceed with memory migration."
+}

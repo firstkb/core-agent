@@ -131,7 +131,7 @@ packets, handoffs, evidence, and closeout.
 
 ## Transition Rules
 
-- Do not migrate `ai-memory/` to `maestro/memory/` without explicit owner approval.
+- Do not migrate `maestro/memory/` to `maestro/memory/` without explicit owner approval.
 - Do not archive Atlas without explicit owner approval.
 - Do not remove old `module_orchestrator` contracts until no active legacy run depends on them.
 - Do not rebuild a Cockpit unless repeated native-loop pain proves a UI/service is needed.

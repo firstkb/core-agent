@@ -85,5 +85,5 @@ Artifact files are a portable work record, not the primary product truth.
 Product code, tests, canonical docs, `.codex`, `.agents`, and Maestro contracts
 remain authoritative for runtime behavior.
 
-`ai-memory/` remains the durable memory layer until a separately approved
-migration moves it under `maestro/memory/`.
+`maestro/memory/` is the durable memory layer. Any future memory-root move
+requires separate owner approval.

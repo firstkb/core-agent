@@ -101,7 +101,7 @@ new stages.
 
 Use active source-of-truth files before archive or proposal material.
 
-Do not let `ai-memory` replace code, `.codex`, `.agents`, tracked artifacts, or
+Do not let `maestro/memory` replace code, `.codex`, `.agents`, tracked artifacts, or
 canonical product docs when those surfaces own behavior.
 
 ### Keep Memory Useful
@@ -111,12 +111,11 @@ Durable memory should record decisions, current state, and reusable lessons.
 It should not become a transcript, duplicate active docs, or absorb every run
 detail.
 
-Use Archivist when docs or `ai-memory` consistency may drift. Do not update
+Use Archivist when docs or `maestro/memory` consistency may drift. Do not update
 memory just to save transient chat context.
 
-After Maestro acceptance, durable memory should migrate from `ai-memory/` to
-`maestro/memory/` through an explicit owner-approved migration. Until then,
-`ai-memory/` remains the active memory surface.
+`maestro/memory/` is the active durable memory surface. Any future memory-root
+move requires explicit owner approval and Archivist audit.
 
 ## Conflict Resolution
 

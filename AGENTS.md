@@ -25,9 +25,9 @@ Retired surfaces:
 
 Platform product memory:
 
-- `ai-memory/` is the compact retrieval and durable-memory layer for platform product work.
-- `ai-memory/` does not replace `.codex/`, `.agents/`, `.agent-cli/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
-- the former `platform/docs/ai/**` layer is fully retired and deleted; use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
+- `maestro/memory/` is the compact retrieval and durable-memory layer for platform product work.
+- `maestro/memory/` does not replace `.codex/`, `.agents/`, `.agent-cli/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
+- the former `platform/docs/ai/**` layer is fully retired and deleted; use `maestro/memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
 ## Docs classification
 
@@ -66,8 +66,8 @@ runs, but new Maestro-routed work should prefer `maestro_vnext` and
 Ordinary agent work should read only:
 
 - `AGENTS.md`
-- `ai-memory/START_HERE.md` and `ai-memory/index/read-routes.yaml` for non-trivial platform product work
-- `ai-memory/index/memory-index.yaml` when the task needs a broader route map
+- `maestro/memory/START_HERE.md` and `maestro/memory/index/read-routes.yaml` for non-trivial platform product work
+- `maestro/memory/index/memory-index.yaml` when the task needs a broader route map
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro vNext
@@ -99,7 +99,7 @@ If preflight cannot run or optional checks fail, state exactly which checks ran,
 which did not, and why.
 
 For non-trivial task closeout or PR text, use the compact evidence shape in
-`ai-memory/atlas/templates/agent-evidence.md`. Keep it short; do not turn it
+`maestro/memory/atlas/templates/agent-evidence.md`. Keep it short; do not turn it
 into a mandatory file for tiny changes.
 
 
@@ -180,7 +180,7 @@ implementation.
 ### Archivist
 
 Use Archivist for semantic docs and durable memory audit when docs, source of
-truth, or `ai-memory` / future `maestro/memory` consistency may drift.
+truth, or `maestro/memory` consistency may drift.
 Archivist is an audit workflow, not a product owner.
 
 ### Atlas

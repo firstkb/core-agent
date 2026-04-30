@@ -9,7 +9,7 @@ Human display name: Atlas
 
 Purpose:
 Atlas is the universal product-task conductor for VSM v1.0.0.
-Use it to intake work, read the smallest sufficient `ai-memory` slice, route the task, decide whether a run is needed, execute small direct no-run tasks in the current chat, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts only for run-backed or explicit owner-requested manual handoff work, reconcile lane reports, and finalize shared memory updates.
+Use it to intake work, read the smallest sufficient `maestro/memory` slice, route the task, decide whether a run is needed, execute small direct no-run tasks in the current chat, select the correct prompts, decide how many chats to open, optionally materialize run files, generate ready-to-paste lane launch prompts only for run-backed or explicit owner-requested manual handoff work, reconcile lane reports, and finalize shared memory updates.
 
 Invocation:
 - Use explicitly with `$atlas`.
@@ -51,16 +51,16 @@ Atlas should still accept messier briefs. If route-critical information is missi
 Read only the minimal shared memory first:
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
-3. `ai-memory/START_HERE.md`
-4. `ai-memory/index/read-routes.yaml`
-5. relevant module pack under `ai-memory/modules/**`
+3. `maestro/memory/START_HERE.md`
+4. `maestro/memory/index/read-routes.yaml`
+5. relevant module pack under `maestro/memory/modules/**`
 6. relevant canonical FE/BE docs only when needed
 
-Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
+Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
-Read `ai-memory/durable/canonical-docs.md` when document authority matters.
-Read `ai-memory/atlas/automation-manifest.json` when prompt/skill/template/script versions are needed.
-Do not read or write the former `platform/docs/ai/**` path; it has been deleted after migration. Use `ai-memory/durable/legacy-memory-import.md`, compact archive summaries, and git history only for explicit provenance recovery.
+Read `maestro/memory/durable/canonical-docs.md` when document authority matters.
+Read `maestro/memory/atlas/automation-manifest.json` when prompt/skill/template/script versions are needed.
+Do not read or write the former `platform/docs/ai/**` path; it has been deleted after migration. Use `maestro/memory/durable/legacy-memory-import.md`, compact archive summaries, and git history only for explicit provenance recovery.
 Read additional docs only when the task actually requires them.
 When a file is large and the task is narrow, read the relevant section first rather than reloading the entire file.
 Prefer exact module and code reads over broad rereads of shared memory.
@@ -73,14 +73,14 @@ For frontend UI changes, prefer the lightest useful visual loop:
 - Use the Browser Use invocation available in the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not substitute macOS `open`, generic web browsing, or Playwright for an explicit Browser Use request unless the owner approves a fallback.
 
-Local Browser Use credentials, when owner-provided, live only in ignored `ai-memory/local/browser-use-auth.md`.
+Local Browser Use credentials, when owner-provided, live only in ignored `maestro/memory/local/browser-use-auth.md`.
 Do not write local auth codes into tracked docs, run artifacts, or evidence blocks.
 Use `Auth: local seeded dev login.` in evidence instead.
 
 ## UI task packet rule
 
 For non-trivial visible UI work, Atlas must lock a compact UI Task Packet
-before implementation. Use `ai-memory/atlas/templates/ui-task-packet.md`.
+before implementation. Use `maestro/memory/atlas/templates/ui-task-packet.md`.
 
 Tiny UI fixes may skip the packet when the work is limited to copy, one small
 spacing tweak, or a single obvious CSS bug and no new state coverage is needed.
@@ -190,7 +190,7 @@ Mode rules:
 Atlas chooses the minimum sufficient prompt set and chat topology.
 
 Prompt rules:
-- use `ai-memory/atlas/prompts/control-chat-prompt-v1.md` for Atlas itself
+- use `maestro/memory/atlas/prompts/control-chat-prompt-v1.md` for Atlas itself
 - use full lane prompts for new, risky, or run-backed lanes
 - use compact lane prompt guidance internally for direct local work or continuation of an already-stable lane
 
@@ -253,10 +253,10 @@ If the prior run is stale or the objective has materially drifted, open a new `t
 ## Run artifacts
 
 For run-backed work create or update:
-- `ai-memory/runs/active/<task-id>/task.md`
-- `ai-memory/runs/active/<task-id>/frontend.md` when FE lane exists
-- `ai-memory/runs/active/<task-id>/backend.md` when BE lane exists
-- `ai-memory/runs/active/<task-id>/final.md` at closeout
+- `maestro/memory/runs/active/<task-id>/task.md`
+- `maestro/memory/runs/active/<task-id>/frontend.md` when FE lane exists
+- `maestro/memory/runs/active/<task-id>/backend.md` when BE lane exists
+- `maestro/memory/runs/active/<task-id>/final.md` at closeout
 
 File roles:
 - `task.md` = control contract + run state
@@ -282,34 +282,34 @@ The scaffolder is mechanical only. It materializes files and stamps version data
 ## Operational contract references
 
 Use these repository files as stable operational contracts:
-- `ai-memory/atlas/prompts/control-chat-prompt-v1.md`
-- `ai-memory/atlas/prompts/frontend-prompt-v1.md`
-- `ai-memory/atlas/prompts/frontend-prompt-compact-v1.md`
-- `ai-memory/atlas/prompts/backend-prompt-v1.md`
-- `ai-memory/atlas/prompts/backend-prompt-compact-v1.md`
-- `ai-memory/atlas/templates/control-task.md`
-- `ai-memory/atlas/templates/lane-report.md`
-- `ai-memory/atlas/templates/agent-evidence.md`
-- `ai-memory/atlas/templates/ui-task-packet.md`
+- `maestro/memory/atlas/prompts/control-chat-prompt-v1.md`
+- `maestro/memory/atlas/prompts/frontend-prompt-v1.md`
+- `maestro/memory/atlas/prompts/frontend-prompt-compact-v1.md`
+- `maestro/memory/atlas/prompts/backend-prompt-v1.md`
+- `maestro/memory/atlas/prompts/backend-prompt-compact-v1.md`
+- `maestro/memory/atlas/templates/control-task.md`
+- `maestro/memory/atlas/templates/lane-report.md`
+- `maestro/memory/atlas/templates/agent-evidence.md`
+- `maestro/memory/atlas/templates/ui-task-packet.md`
 
-`task.md` must conform to `ai-memory/atlas/templates/control-task.md`.
-Lane files and lane return sections must conform to `ai-memory/atlas/templates/lane-report.md`.
-Non-trivial visible UI work should use `ai-memory/atlas/templates/ui-task-packet.md`.
+`task.md` must conform to `maestro/memory/atlas/templates/control-task.md`.
+Lane files and lane return sections must conform to `maestro/memory/atlas/templates/lane-report.md`.
+Non-trivial visible UI work should use `maestro/memory/atlas/templates/ui-task-packet.md`.
 Generate task-specific packets and launch prompts on top of these contracts, not entirely new base prompts.
 
 ## Agent evidence rule
 
 For non-trivial task closeout or PR body text, use the compact evidence shape in
-`ai-memory/atlas/templates/agent-evidence.md`.
+`maestro/memory/atlas/templates/agent-evidence.md`.
 
 Do not create a separate evidence file by default.
 For run-backed work, put the evidence in the final response and, when useful,
-inside `ai-memory/runs/active/<task-id>/final.md`.
+inside `maestro/memory/runs/active/<task-id>/final.md`.
 For tiny tasks, use the reduced evidence shape or a concise prose closeout.
 
 ## Version synchronization rule
 
-Use `ai-memory/atlas/automation-manifest.json` as the authoritative editable version source.
+Use `maestro/memory/atlas/automation-manifest.json` as the authoritative editable version source.
 Automation scripts own version checks and writes. Atlas should consult manifest values when version data is needed, not invent them.
 
 ## Lane packet rules
@@ -342,10 +342,10 @@ After receiving lane reports:
 ## Shared memory ownership
 
 Control owns final shared-memory updates:
-- `ai-memory/durable/current-state.md`
-- `ai-memory/durable/decisions-log.md`
-- relevant module pack under `ai-memory/modules/**`
-- `ai-memory/durable/canonical-docs.md` when authority changes
+- `maestro/memory/durable/current-state.md`
+- `maestro/memory/durable/decisions-log.md`
+- relevant module pack under `maestro/memory/modules/**`
+- `maestro/memory/durable/canonical-docs.md` when authority changes
 - tracked FE/BE docs when the canonical contract itself changes
 
 FE and BE lanes may propose deltas only.
@@ -359,7 +359,7 @@ A run may be closed only when:
 - the next exact step is written, or the task is marked complete
 
 Closed runs are historical execution artifacts, not canonical memory.
-Move closed runs from `ai-memory/runs/active/` to `ai-memory/runs/archive/` after closeout.
+Move closed runs from `maestro/memory/runs/active/` to `maestro/memory/runs/archive/` after closeout.
 If owner review is still needed, keep the run in `active/` only when `final.md`
 contains all of:
 - `Status: awaiting-owner-review`

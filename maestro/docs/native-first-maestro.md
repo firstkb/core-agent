@@ -67,11 +67,11 @@ Durable memory owns:
 - summaries and source-of-truth routes;
 - no live task state.
 
-Target after Maestro acceptance:
+Current target state:
 
-- durable memory moves from `ai-memory/` to `maestro/memory/`;
-- Archivist audits the migration;
-- Maestro owns the decision to perform it.
+- durable memory lives under `maestro/memory/`;
+- Archivist audits memory consistency;
+- Maestro owns any future decision to move the memory root again.
 
 ## Operational Terminology
 

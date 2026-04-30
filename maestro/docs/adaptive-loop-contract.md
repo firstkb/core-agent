@@ -213,7 +213,7 @@ Do not update docs or memory for:
 Use Archivist when docs or memory consistency is material. Archivist audits
 semantic drift; it does not own product execution.
 
-After Maestro acceptance, durable memory should move from `ai-memory/` to
+After Maestro acceptance, durable memory should move from `maestro/memory/` to
 `maestro/memory/` through an explicit owner-approved migration.
 
 ## Owner Decision Points

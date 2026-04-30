@@ -37,5 +37,5 @@ Critical invariants:
 - Release/deploy requires release approval.
 - New work uses maestro/artifact/active/, not legacy artifacts/<module>/.
 - Owner requests described as features or modules stay inside one linear Maestro work record unless the owner asks for a separate product structure.
-- Do not migrate ai-memory or archive Atlas without owner approval.
+- Do not move the memory root again or archive Atlas without owner approval.
 """

@@ -186,10 +186,13 @@ Default invocation payload:
 - expected handoff filename and evidence expectations;
 - stop conditions and next allowed action.
 
-Full-context or forked-context launches are optional runtime conveniences, not a
-dependency. If the runtime rejects a full-context/forked launch, Maestro should
-retry once with the explicit packet and artifact paths. This fallback is normal
-and should not be noisy to the owner unless it changes risk, scope, or timing.
+Default specialist launch is non-forked explicit packet invocation. Maestro
+should not attempt full-context or forked-context launch first when a
+self-contained packet can be built. Full-context or forked-context launch is an
+exceptional runtime optimization and requires a concrete reason, such as an
+impossible-to-summarize context dependency. Runtime mechanics stay internal
+unless they block work, change risk, alter scope, affect timing, or require an
+owner decision.
 
 Never spawn Maestro recursively. Specialists must not become lifecycle owners.
 Any specialist outcome that affects state must be persisted as a handoff before

@@ -98,10 +98,11 @@ Invocation payload includes:
 - evidence expectations;
 - stop conditions.
 
-Full-context or forked-context launch is allowed only as an optimization. If it
-is unavailable or rejected by the runtime, Maestro retries with the explicit
-packet and artifact paths. Specialists then work from the packet and return the
-expected handoff.
+Default launch is non-forked explicit packet invocation. Full-context or
+forked-context launch is exceptional and requires a concrete reason. If the
+explicit packet is insufficient, stop and improve the packet or ask the owner
+for the missing context instead of relying on hidden chat state. Specialists
+then work from the packet and return the expected handoff.
 
 ## Assigned Packet Binding
 

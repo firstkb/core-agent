@@ -107,10 +107,11 @@ Each packet must include role, stage, work id, artifact root, required reads,
 allowed writes, forbidden paths, approval state, expected handoff, evidence
 expectations, stop conditions, and next allowed action.
 
-Full-context or forked-context launch is optional. If the runtime rejects it,
-retry once without it and pass the explicit packet/artifact paths. Do not expose
-runtime mechanics to the owner unless they affect risk, scope, timing, or next
-action.
+Default specialist launch is non-forked explicit packet invocation. Do not try
+full-context or forked-context first when a self-contained packet can be built.
+Use full-context or forked-context only as an exception with a concrete reason,
+such as an impossible-to-summarize context dependency. Do not expose runtime
+mechanics to the owner unless they affect risk, scope, timing, or next action.
 
 Never spawn Maestro recursively. Specialists return handoffs; Maestro owns the
 lifecycle.

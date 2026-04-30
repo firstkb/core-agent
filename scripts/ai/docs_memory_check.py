@@ -78,7 +78,6 @@ OLD_PRODUCT_IDENTITY_TERMS = [
 OLD_PRODUCT_IDENTITY_ALLOWED_FILES = {
     "maestro/memory/durable/current-state.md",
     "maestro/memory/durable/decisions-log.md",
-    "maestro/memory/docs/docs-migration-plan.md",
 }
 
 OLD_PRODUCT_IDENTITY_ALLOWED_MARKERS = [
@@ -379,22 +378,6 @@ def check_platform_readme(root: Path, errors: list[str]) -> None:
         add_error(errors, path.relative_to(root), "read order must include maestro/memory/START_HERE.md")
 
 
-def check_docs_migration_plan_status(root: Path, errors: list[str]) -> None:
-    path = root / "maestro/memory/docs/docs-migration-plan.md"
-    if not path.exists():
-        add_error(errors, path.relative_to(root), "docs migration plan is missing")
-        return
-    text = read_text(path)
-    if "Status: historical migration record" not in text:
-        add_error(errors, path.relative_to(root), "migration plan must be historical, not current operational status")
-    if "maestro/memory/docs/docs-memory-score-audit.md" not in text:
-        add_error(errors, path.relative_to(root), "migration plan must point to the current readiness score owner")
-    if re.search(r"overall readiness is \d+/?100", text, flags=re.IGNORECASE):
-        add_error(errors, path.relative_to(root), "migration plan must not claim a current readiness score")
-    if "96/100 readiness score" in text:
-        add_error(errors, path.relative_to(root), "historical score must not be phrased as an active readiness score")
-
-
 def check_semantic_drift_pointers(root: Path, errors: list[str]) -> None:
     read_routes = root / "maestro/memory/index/read-routes.yaml"
     if read_routes.exists():
@@ -533,7 +516,6 @@ def run_check() -> int:
     check_retired_memory_paths(root, errors)
     check_platform_readme(root, errors)
     check_product_identity(root, tracked, errors)
-    check_docs_migration_plan_status(root, errors)
     check_semantic_drift_pointers(root, errors)
     check_agents_name_status(root, errors)
     check_reference_code_retirement(root, errors)

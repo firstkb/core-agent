@@ -186,7 +186,6 @@
   memory_docs:
     - maestro/memory/docs/README.md
     - maestro/memory/docs/target-docs-structure.md
-    - maestro/memory/docs/docs-migration-plan.md
     - maestro/memory/docs/frontend/drift-report.md
     - maestro/memory/docs/backend/drift-report.md
   last_compacted: 2026-04-25

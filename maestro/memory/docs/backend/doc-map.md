@@ -54,8 +54,8 @@ bootstrap root files were deleted after compaction.
 | `platform/backend/docs/modules/auth.md` | active module doc | Host-to-tenant resolution, no master user mirror for auth, direct tenant user read, OTP, refresh/logout | Hot auth module doc. |
 
 Pointer-only auth gateway/control/projection/key-source/KMS/gateway root files
-were deleted after compaction. Historical cookie migration payload remains under
-`platform/backend/backend-auth-cookie-migration-plan.md`.
+were deleted after compaction. The historical cookie migration payload was
+removed from the working tree; recover exact old text from git history only.
 
 Future proposal docs:
 

@@ -123,15 +123,9 @@ or git history for exact old text.
 
 ## Archive
 
-Read only when the task explicitly needs rationale or rollout history:
+Read only when the task explicitly needs legacy PostgreSQL archaeology:
 
 - `archive/README.md`
-- `archive/backend-admin-module-registry-refactor-plan.md`
-- `archive/backend-auth-cookie-migration-plan.md`
-- `archive/backend-tenant-starter-field-targets.md`
-- `archive/ramp_v_108_backend_standard_v_2.md`
-- `archive/GO_AGENT_RULES.md`
-- `archive/backend-export-architecture-agent-prompt.md`
 - `archive/postgres-archive/README.md`
 
 Archive compatibility pointer, not active read-order doc:
@@ -139,6 +133,8 @@ Archive compatibility pointer, not active read-order doc:
 - `legacy/postgres-archive/README.md`
 
 Old root compatibility/archive pointer files were deleted after compaction.
+Older backend plans, prompts, and standards were removed from the working tree.
+Use git history only when exact historical wording is explicitly needed.
 Only the legacy PostgreSQL path remains as a narrow compatibility pointer.
 
 Legacy MSSQL schema material is reference-code only.

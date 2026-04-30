@@ -5,7 +5,7 @@ Owner: backend
 Last audited: 2026-04-25
 Canonical scope: archived backend docs index
 
-This folder contains historical backend plans, prompts, older standards, and archived SQL reference material.
+This folder contains archived SQL reference material only.
 Do not use these files as active runtime truth.
 
 Read active docs first:
@@ -17,12 +17,9 @@ Read active docs first:
 - `platform/backend/docs/proposals/`
 - `platform/backend/docs/reference/`
 
-Archived files:
+Archived files retained here:
 
-- `backend-admin-module-registry-refactor-plan.md`
-- `backend-auth-cookie-migration-plan.md`
-- `backend-tenant-starter-field-targets.md`
-- `backend-export-architecture-agent-prompt.md`
-- `GO_AGENT_RULES.md`
-- `ramp_v_108_backend_standard_v_2.md`
 - `postgres-archive/README.md`
+
+Older backend plans, prompts, and standards were removed from the working tree.
+Recover exact historical text from git history only when explicitly needed.

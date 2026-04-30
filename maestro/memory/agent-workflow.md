@@ -87,8 +87,8 @@ When a doc changes status:
 
 - update `maestro/memory/durable/canonical-docs.md`
 - update the relevant docs map under `maestro/memory/docs/**`
-- update `maestro/memory/docs/docs-migration-plan.md` for physical move, delete, archive, supersede, or compatibility decisions
 - update archive/proposal maps when old docs are demoted
+- use git history for exact historical migration records
 
 When reference-code or donor material changes:
 

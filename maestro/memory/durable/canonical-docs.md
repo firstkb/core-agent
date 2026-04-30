@@ -72,8 +72,6 @@ Local docs rewrite planning surface:
 - `maestro/memory/START_HERE.md`
 - `maestro/memory/docs/README.md`
 - `maestro/memory/docs/target-docs-structure.md`
-- `maestro/memory/docs/docs-migration-plan.md`
-- `maestro/memory/docs/docs-memory-score-audit.md`
 
 Operational scaffolds, not product truth:
 

@@ -1,10 +1,11 @@
 # Documentation Memory
 
-Status: local planning and compaction layer
-Last compacted: 2026-04-25
+Status: compact docs governance layer
+Last compacted: 2026-04-30
 
-This folder contains compact maps and future rewrite plans for tracked product docs.
-It does not move or replace tracked docs by itself.
+This folder contains compact maps and governance notes for tracked product docs.
+The old FE/BE docs migration is complete; exact migration history lives in git
+history only.
 
 ## Read This When
 
@@ -17,8 +18,6 @@ It does not move or replace tracked docs by itself.
 
 - `maestro/memory/START_HERE.md`
 - `maestro/memory/docs/target-docs-structure.md`
-- `maestro/memory/docs/docs-migration-plan.md`
-- `maestro/memory/docs/docs-memory-score-audit.md`
 - `maestro/memory/docs/frontend/README.md`
 - `maestro/memory/docs/frontend/doc-map.md`
 - `maestro/memory/docs/frontend/drift-report.md`
@@ -32,10 +31,10 @@ It does not move or replace tracked docs by itself.
 
 ## Rule
 
-Use `docs-memory-score-audit.md` for current readiness.
-Use `docs-migration-plan.md` as historical migration record only.
 Use compact maps to plan the tracked docs rewrite.
 Do not physically move tracked docs until a rewrite task explicitly names the target slice.
+Use `scripts/ai/docs_memory_check.py --check` and `scripts/ai/preflight.sh`
+for current readiness instead of score snapshots.
 Use `reference-pack:*` aliases when planning raw reference-code relocation.
 Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
 CI also runs the same gate through `.github/workflows/docs-memory-check.yml`.

@@ -268,12 +268,12 @@ Do not turn it into a task journal.
 ### DEC-025 Physical Docs Migration Requires Explicit Source-To-Target Mapping
 
 - Date: 2026-04-25
-- Status: active
-- State: accepted
-- Decision: Before moving tracked FE/BE docs, use a migration map that records old path, current role, new role, target path, action, reason, and risk/blocker. The migration plan is a planning artifact only until the owner approves a concrete tracked-doc slice.
+- Status: historical
+- State: superseded
+- Decision: During the FE/BE docs rewrite, physical doc moves required an explicit source-to-target map. The migration is complete, and the old migration snapshot was removed from the working tree; use active doc maps for current routing and git history only for exact migration ledger text.
 - Sources:
-  - `maestro/memory/docs/docs-migration-plan.md`
   - `maestro/memory/docs/target-docs-structure.md`
+  - git history
 
 ### DEC-026 Frontend Workspace Docs Use Contract-First Tracked Paths
 
@@ -764,11 +764,11 @@ Do not turn it into a task journal.
 - State: landed
 - Decision: `maestro/memory/AGENTS.override.md` and pointer-only FE/BE docs carrying compacted-pointer headers, moved-pointer headers, or no-longer-active auth follow-up wording were deleted after active references were updated. Active docs/maps now route directly to canonical contracts/modules. Exact old pointer text is available only through git history.
 - Sources:
-  - `maestro/memory/docs/docs-migration-plan.md`
   - `platform/frontend/docs/README.md`
   - `platform/backend/docs/README.md`
   - `maestro/memory/docs/frontend/doc-map.md`
   - `maestro/memory/docs/backend/doc-map.md`
+  - git history
 
 ### DEC-065 Form Builder Low-Risk Exact Details Extracted
 
@@ -780,7 +780,7 @@ Do not turn it into a task journal.
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
-  - `maestro/memory/docs/docs-migration-plan.md`
+  - git history
 
 ### DEC-066 Form Builder Preset Exact Details Extracted
 
@@ -792,7 +792,7 @@ Do not turn it into a task journal.
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
-  - `maestro/memory/docs/docs-migration-plan.md`
+  - git history
 
 ### DEC-067 Form Builder Schema Scope Exact Detail Extracted
 
@@ -804,7 +804,7 @@ Do not turn it into a task journal.
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
-  - `maestro/memory/docs/docs-migration-plan.md`
+  - git history
 
 ### DEC-068 Form Builder Retained Exact-Detail Policy
 
@@ -829,7 +829,6 @@ Do not turn it into a task journal.
   - `maestro/memory/reference-code/packs-index.md`
   - `maestro/memory/reference-code/relocation-checkpoint.md`
   - `scripts/ai/docs_memory_check.py`
-  - `maestro/memory/docs/docs-memory-score-audit.md`
 
 ### DEC-070 Docs Memory Drift Runs In CI
 
@@ -842,7 +841,6 @@ Do not turn it into a task journal.
   - `scripts/ai/docs_memory_check.py`
   - `scripts/ai/check-env-policy.py`
   - `scripts/ai/automation_versions.py`
-  - `maestro/memory/docs/docs-memory-score-audit.md`
 
 ### DEC-071 Archivist Owns Semantic Docs Memory Audits
 
@@ -893,12 +891,10 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Agent product work should use `maestro/memory/START_HERE.md` as the first compact memory read after repo/platform instructions. `docs-migration-plan.md` is historical and must not own the current readiness score. `AGENTS_NAME.md` is non-authoritative. Local backend env files must remain untracked; only `*.env.example` files may be tracked under `platform/backend/env/`.
+- Decision: Agent product work should use `maestro/memory/START_HERE.md` as the first compact memory read after repo/platform instructions. Deleted migration and score snapshots must not own current readiness. `AGENTS_NAME.md` is non-authoritative. Local backend env files must remain untracked; only `*.env.example` files may be tracked under `platform/backend/env/`.
 - Sources:
   - `maestro/memory/START_HERE.md`
   - `maestro/memory/agent-workflow.md`
-  - `maestro/memory/docs/docs-memory-score-audit.md`
-  - `maestro/memory/docs/docs-migration-plan.md`
   - `.gitignore`
   - `scripts/ai/check-env-policy.py`
   - `scripts/ai/docs_memory_check.py`

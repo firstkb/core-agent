@@ -1,25 +1,26 @@
-# Backend Docs Archive Candidates
+# Backend Docs Archive Cleanup
 
-Status: local archive planning list
-Last audited: 2026-04-25
+Status: landed archive cleanup record
+Last audited: 2026-04-30
 
-This list tracks backend archive/history files and deleted pointer paths during the backend docs rewrite.
-Operational/proposal/reference/archive moves have already landed for the files listed here.
+This list records backend archive/history files and deleted pointer paths from
+the backend docs rewrite. Old prose plans, prompts, and standards have been
+removed from the working tree. Recover exact historical text from git history
+only when explicitly needed.
 
-## Archive Or Historical Reference
+## Deleted Historical Payloads
 
-- `platform/backend/backend-admin-module-registry-refactor-plan.md`
-  - Reason: completed implementation plan; durable outcomes belong in admin module memory and current contracts.
-- `platform/backend/backend-auth-cookie-migration-plan.md`
-  - Reason: completed migration history; current behavior belongs in active auth contracts.
-- `platform/backend/backend-tenant-starter-field-targets.md`
-  - Reason: explicitly superseded by canonical tenant schema and field-mapping contracts.
-- `platform/backend/backend-export-architecture-agent-prompt.md`
-  - Reason: prompt artifact, not runtime/product truth.
-- `platform/backend/GO_AGENT_RULES.md`
-  - Reason: older agent guidance overlaps with current root/backend agent guidance and compact memory.
-- `platform/backend/ramp_v_108_backend_standard_v_2.md`
-  - Reason: large historical pre-VSM standard; useful facts should be distilled into active contracts.
+The removed prose archive covered completed admin registry refactor planning,
+auth cookie migration history, superseded tenant starter fields, one backend
+export prompt artifact, older Go agent guidance, and the large historical
+RAMP v108 backend standard.
+
+These payloads no longer have tracked archive copies. Use active backend
+contracts and compact memory first; recover exact old wording from git history
+only when explicitly needed.
+
+## Remaining Physical Archive
+
 - `platform/backend/docs/archive/postgres-archive/README.md`
   - Reason: legacy PostgreSQL SQL inventory; useful only for explicit schema archaeology or migration-history checks.
 

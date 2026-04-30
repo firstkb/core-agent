@@ -26,7 +26,7 @@ Use it before treating older backend docs as active runtime truth.
 - The schema/tenancy slice now stores current schema and migration behavior in `platform/backend/docs/contracts/schema-tenancy.md` and `platform/backend/docs/contracts/migrations.md`.
 - The old migration baseline said only `000_tenant_baseline.sql` was active, but code now has tenant migrations `001..006`; the new migrations contract is the current source for active migration set.
 - `runbooks/local-bootstrap.md` now clarifies that local seed rows do not make master user mirroring the auth source of truth. Verify current seed/code behavior before changing auth.
-- `archive/backend-auth-cookie-migration-plan.md` is migration history, not current behavior. Current compact memory says refresh is cookie-backed and access token state is frontend runtime state.
+- The old backend auth cookie migration plan is migration history, not current behavior. Current compact memory says refresh is cookie-backed and access token state is frontend runtime state. Exact old plan text is git-history only.
 - The backend auth slice now stores current auth gateway behavior in `platform/backend/docs/contracts/auth-gateway.md`, auth schema in `platform/backend/docs/contracts/auth-control-schema.md`, and auth module behavior in `platform/backend/docs/modules/auth.md`.
 - The admin control-plane slice now stores current admin access behavior in `platform/backend/docs/contracts/admin-control-plane.md` and Module Registry behavior in `platform/backend/docs/contracts/admin-module-registry.md`.
 - The Collection Table slice now stores backend DTO/helper/preference and endpoint-family behavior in `platform/backend/docs/contracts/collection-table.md`.

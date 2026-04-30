@@ -11,7 +11,7 @@ Read instead:
 
 - `AGENTS.md`
 - `platform/backend/AGENTS.md`
-- `docs/codex-native-repo.md`
+- `AGENTS.md`
 
 > This file is mirrored across CLAUDE.md, AGENTS.md, and GEMINI.md so the same operating rules load in any AI environment.
 

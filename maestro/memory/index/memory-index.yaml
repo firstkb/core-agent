@@ -6,13 +6,14 @@
   domain: repository-runtime
   state: landed
   confidence: doc-confirmed
-  summary: "The active repo runtime is Codex-native: AGENTS.md, .codex/, .agents/skills/, .agent-cli/, docs/codex-native-repo.md, and docs/maestro/module-orchestrator-v2-spec-pack/."
+  summary: "The active repo runtime is Codex-native: AGENTS.md, README.md, .codex/, .agents/skills/, maestro/docs, maestro/contracts, and maestro/templates."
   read_when:
     - "task changes agent runtime, orchestration, contracts, templates, or lifecycle artifacts"
     - "task mentions Maestro, Charlie, Grant, module_orchestrator, research_codebase, or brief_auditor"
   canonical_docs:
     - AGENTS.md
-    - docs/codex-native-repo.md
+    - README.md
+    - maestro/docs/runtime-contract.md
     - .codex/standards/runtime/repository.md
     - .agents/skills/maestro/SKILL.md
     - .agents/skills/charlie/SKILL.md
@@ -35,7 +36,7 @@
   canonical_docs:
     - platform/frontend/docs/README.md
     - platform/backend/docs/README.md
-    - docs/codex-native-repo.md
+    - AGENTS.md
   memory_docs:
     - maestro/memory/START_HERE.md
     - maestro/memory/durable/current-state.md
@@ -368,7 +369,7 @@
   read_when:
     - "task explicitly asks to use reference code, donor code, Metronic, EXTDB, ezform, smartapp, old-code-reference, legacy MSSQL, UI template extraction, vendor template comparison, or raw reference-code relocation"
   canonical_docs:
-    - docs/ref/reference-code.md
+    - maestro/memory/reference-code/README.md
   memory_docs:
     - maestro/memory/durable/reference-code-policy.md
     - maestro/memory/reference-code/README.md

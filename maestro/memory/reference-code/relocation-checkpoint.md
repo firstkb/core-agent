@@ -22,7 +22,7 @@ It is a review artifact for AI memory maintenance and should not become a tracke
 - `reference-code/` is ignored by `.gitignore`.
 - Old raw-pack pointer README files were deleted from tracked docs paths.
 - Six local raw-pack metadata files exist as `REFERENCE-PACK.md`.
-- `docs/ref/reference-code.md` is the tracked alias registry.
+- `maestro/memory/reference-code/README.md` is the tracked alias registry.
 - `maestro/memory/reference-code/packs-index.md` marks all six packs as `raw_local_only`.
 - Tracked FE/BE docs must cite `reference-pack:*` aliases, not local raw paths.
 - Product docs must not link to `maestro/memory/`.
@@ -45,7 +45,7 @@ Expected tracked changes include:
 
 Do not treat the raw deletion count as data loss before checking:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `maestro/memory/reference-code/packs-index.md`
 - local `reference-code/**/REFERENCE-PACK.md`
 
@@ -54,4 +54,4 @@ Do not treat the raw deletion count as data loss before checking:
 - Raw pack licensing and allowed-use metadata still need owner-level review before reusing code or assets.
 - Raw packs are local-only and must be backed up or synchronized through the owner's separate private reference-code workflow.
 - Agents should not infer product behavior directly from raw packs; durable findings must be distilled into active tracked docs or module memory first.
-- Old raw-pack pointer paths are not compatibility anchors; use `docs/ref/reference-code.md` and `reference-pack:*` aliases.
+- Old raw-pack pointer paths are not compatibility anchors; use `maestro/memory/reference-code/README.md` and `reference-pack:*` aliases.

@@ -8,17 +8,17 @@ Operational/proposal/reference/archive moves have already landed for the files l
 
 ## Archive Or Historical Reference
 
-- `platform/backend/docs/archive/backend-admin-module-registry-refactor-plan.md`
+- `platform/backend/backend-admin-module-registry-refactor-plan.md`
   - Reason: completed implementation plan; durable outcomes belong in admin module memory and current contracts.
-- `platform/backend/docs/archive/backend-auth-cookie-migration-plan.md`
+- `platform/backend/backend-auth-cookie-migration-plan.md`
   - Reason: completed migration history; current behavior belongs in active auth contracts.
-- `platform/backend/docs/archive/backend-tenant-starter-field-targets.md`
+- `platform/backend/backend-tenant-starter-field-targets.md`
   - Reason: explicitly superseded by canonical tenant schema and field-mapping contracts.
-- `platform/backend/docs/archive/backend-export-architecture-agent-prompt.md`
+- `platform/backend/backend-export-architecture-agent-prompt.md`
   - Reason: prompt artifact, not runtime/product truth.
-- `platform/backend/docs/archive/GO_AGENT_RULES.md`
+- `platform/backend/GO_AGENT_RULES.md`
   - Reason: older agent guidance overlaps with current root/backend agent guidance and compact memory.
-- `platform/backend/docs/archive/ramp_v_108_backend_standard_v_2.md`
+- `platform/backend/ramp_v_108_backend_standard_v_2.md`
   - Reason: large historical pre-VSM standard; useful facts should be distilled into active contracts.
 - `platform/backend/docs/archive/postgres-archive/README.md`
   - Reason: legacy PostgreSQL SQL inventory; useful only for explicit schema archaeology or migration-history checks.

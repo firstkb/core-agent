@@ -37,9 +37,9 @@ Use `scripts/ai/preflight.sh` as the lightweight local preflight before closing
 non-trivial implementation work.
 
 The script does not install dependencies and is not a required GitHub Actions
-gate. Default mode runs docs/memory/env hygiene and quick agent-cli checks when
-available. Use `scripts/ai/preflight.sh --full` only when a broader backend and
-frontend sweep is needed.
+gate. Default mode runs docs/memory/env hygiene. Use
+`scripts/ai/preflight.sh --full` only when a broader backend and frontend sweep
+is needed.
 
 For non-trivial platform closeout or PR text, use
 `maestro/templates/evidence.md.tmpl` as the compact evidence shape. Tiny local

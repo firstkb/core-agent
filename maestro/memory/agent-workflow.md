@@ -92,7 +92,7 @@ When a doc changes status:
 
 When reference-code or donor material changes:
 
-- update `docs/ref/reference-code.md`
+- update `maestro/memory/reference-code/README.md`
 - update `maestro/memory/reference-code/packs-index.md`
 - update `maestro/memory/durable/reference-code-policy.md` only if policy changes
 - never route normal agents directly to raw `reference-code/**`
@@ -157,7 +157,7 @@ archive the raw artifact.
 ## Reference Code Rule
 
 Reference code such as Metronic is opt-in only.
-Read `docs/ref/reference-code.md` and `maestro/memory/durable/reference-code-policy.md`
+Read `maestro/memory/reference-code/README.md` and `maestro/memory/durable/reference-code-policy.md`
 before opening any raw reference pack, use `reference-pack:*` aliases, and
 distill reusable findings into module memory instead of making donor code a
 default context source.

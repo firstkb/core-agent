@@ -39,7 +39,7 @@ Move or update these surfaces:
 - `ai-memory/**` -> `maestro/memory/**`
 - `AGENTS.md`
 - `README.md`
-- `docs/codex-native-repo.md`
+- `AGENTS.md`
 - `.agents/skills/maestro/SKILL.md`
 - `.agents/skills/archivist/SKILL.md`
 - `.codex/agents/maestro_vnext.toml`
@@ -57,9 +57,9 @@ Update these scripts:
 Review these legacy surfaces but do not make them active source of truth:
 
 - owner-managed external archive
-- `docs/archive/**`
+- `**`
 - legacy `artifacts/**`
-- `.agent-cli/**`
+- `**`
 
 ## Compatibility Policy
 

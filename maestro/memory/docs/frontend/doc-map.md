@@ -135,7 +135,7 @@ deleting or further compacting them.
 
 Tracked alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 ## Proposed Future Tracked Layout
 
@@ -145,7 +145,7 @@ If the owner approves physical docs reorg later, use this target:
 - `platform/frontend/docs/modules/`
 - `platform/frontend/docs/guides/`
 - `platform/frontend/docs/reference/`
-- `platform/frontend/docs/archive/`
+- `platform/frontend/`
 
 Recommended grouping:
 

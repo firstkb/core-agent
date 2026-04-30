@@ -13,7 +13,7 @@ prepare the first real implementation plan for Platform Studio based on the new 
 Primary source of truth:
 - AGENTS.md
 - docs/README.md
-- docs/codex-native-repo.md
+- AGENTS.md
 - platform/frontend/docs/platform-studio/README.md
 
 Reference inputs:
@@ -84,7 +84,7 @@ The owner will open a new chat for each prompt, run that prompt with another age
 Primary source of truth:
 - AGENTS.md
 - docs/README.md
-- docs/codex-native-repo.md
+- AGENTS.md
 - platform/frontend/docs/platform-studio/README.md
 - platform/frontend/docs/platform-studio/agent-prompts.md
 
@@ -166,7 +166,7 @@ retire the current Platform Studio implementation from the live product directio
 Primary source of truth:
 - AGENTS.md
 - docs/README.md
-- docs/codex-native-repo.md
+- AGENTS.md
 - platform/frontend/docs/platform-studio/README.md
 - platform/frontend/docs/platform-studio/old-code-reference/README.md
 

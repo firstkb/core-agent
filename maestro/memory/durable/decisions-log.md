@@ -202,10 +202,10 @@ Do not turn it into a task journal.
 - Date: 2026-04-24
 - Status: active
 - State: landed
-- Decision: Root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `.agent-cli/`, and `docs/maestro/module-orchestrator-v2-spec-pack/` define current repo runtime. `maestro/memory/` is a local retrieval layer, not a replacement runtime source.
+- Decision: Root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` define current repo runtime. `maestro/memory/` is a local retrieval layer, not a replacement runtime source.
 - Sources:
   - `AGENTS.md`
-  - `docs/codex-native-repo.md`
+  - `AGENTS.md`
   - `.codex/standards/runtime/repository.md`
 
 ### DEC-020 Platform Studio Is A Tool Suite, Not Form Builder Alone
@@ -506,9 +506,9 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Raw donor/legacy packs are addressed by stable `reference-pack:*` aliases and moved out of active FE/BE docs paths into ignored local `reference-code/` raw-pack storage. The tracked registry is `docs/ref/reference-code.md`; local memory keeps the pack index and relocation plan.
+- Decision: Raw donor/legacy packs are addressed by stable `reference-pack:*` aliases and moved out of active FE/BE docs paths into ignored local `reference-code/` raw-pack storage. The tracked registry is `maestro/memory/reference-code/README.md`; local memory keeps the pack index and relocation plan.
 - Sources:
-  - `docs/ref/reference-code.md`
+  - `maestro/memory/reference-code/README.md`
   - `maestro/memory/reference-code/packs-index.md`
   - `maestro/memory/reference-code/relocation-plan.md`
   - `maestro/memory/durable/reference-code-policy.md`
@@ -569,12 +569,12 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Backend event actor identity now lives under `platform/backend/docs/contracts/`; events/mail cleanup and schema drift checks live under `platform/backend/docs/proposals/`; completed plans, old standards, and prompt artifacts live under `platform/backend/docs/archive/`. Old root pointer paths were later deleted.
+- Decision: Backend event actor identity now lives under `platform/backend/docs/contracts/`; events/mail cleanup and schema drift checks live under `platform/backend/docs/proposals/`; completed plans, old standards, and prompt artifacts live under `platform/backend/`. Old root pointer paths were later deleted.
 - Sources:
   - `platform/backend/docs/contracts/events-identity.md`
   - `platform/backend/docs/proposals/events-mails-cleanup.md`
   - `platform/backend/docs/proposals/schema-drift-checks.md`
-  - `platform/backend/docs/archive/README.md`
+  - `platform/backend/README.md`
 
 ### DEC-051 Legacy PostgreSQL SQL Is Archive-Only
 
@@ -649,12 +649,10 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `docs/ref/` is reserved for stable opt-in reference registries. Memory reorganization prompts and blueprints moved to `docs/archive/memory-reorg/`. The former `platform/docs/ai/**` layer has moved through retirement into final physical deletion; provenance is now `maestro/memory/durable/legacy-memory-import.md`, compact summaries, and git history.
+- Decision: `maestro/memory/reference-code/README.md` is the stable opt-in reference-code registry. The former root docs archive and `platform/docs/ai/**` layer have moved through retirement into final physical deletion; provenance is now `maestro/memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 - Sources:
-  - `docs/ref/README.md`
-  - `docs/archive/memory-reorg/README.md`
-  - `platform/docs/ai/README.md`
-  - `platform/docs/ai/prompts/README.md`
+  - `maestro/memory/reference-code/README.md`
+  - `git history`
   - `platform/docs/ai/templates/README.md`
   - `platform/docs/ai/runs/README.md`
   - `maestro/memory/retired-runtime/platform-docs-ai-retirement-plan.md`
@@ -825,9 +823,9 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Old reference-code pointer README folders under `platform/frontend/docs/**` and `platform/backend/docs/**` are deleted instead of retained as compatibility shells. Tracked docs must use `reference-pack:*` aliases plus `docs/ref/reference-code.md`; raw packs remain local-only under `reference-code/**`. Docs/memory drift is now checked by `scripts/ai/docs_memory_check.py --check`.
+- Decision: Old reference-code pointer README folders under `platform/frontend/docs/**` and `platform/backend/docs/**` are deleted instead of retained as compatibility shells. Tracked docs must use `reference-pack:*` aliases plus `maestro/memory/reference-code/README.md`; raw packs remain local-only under `reference-code/**`. Docs/memory drift is now checked by `scripts/ai/docs_memory_check.py --check`.
 - Sources:
-  - `docs/ref/reference-code.md`
+  - `maestro/memory/reference-code/README.md`
   - `maestro/memory/reference-code/packs-index.md`
   - `maestro/memory/reference-code/relocation-checkpoint.md`
   - `scripts/ai/docs_memory_check.py`
@@ -910,7 +908,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `scripts/ai/preflight.sh` is the local/manual preflight for non-trivial implementation work. Default mode runs docs/memory, env, retired runtime automation, and quick agent-cli checks when available. Use `scripts/ai/preflight.sh --full` only when a broader backend/frontend sweep is needed. It does not install dependencies and is not wired as a required GitHub Actions gate.
+- Decision: `scripts/ai/preflight.sh` is the local/manual preflight for non-trivial implementation work. Default mode runs docs/memory and env checks. Use `scripts/ai/preflight.sh --full` only when a broader backend/frontend sweep is needed. It does not install dependencies and is not wired as a required GitHub Actions gate.
 - Sources:
   - `scripts/ai/preflight.sh`
   - `AGENTS.md`
@@ -1005,10 +1003,10 @@ Do not turn it into a task journal.
 - Date: 2026-04-27
 - Status: active
 - State: landed
-- Decision: Root orientation docs must describe this repository as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, not only as an agent orchestration reference scaffold. `README.md` points agents to `AGENTS.md`, `platform/AGENTS.md`, `maestro/memory/START_HERE.md`, and product roots. `docs/codex-native-repo.md` remains the canonical repo runtime layout and source-of-truth boundary, including `maestro/memory/`, `platform/`, `.agents/skills/retired-runtime`, `.agents/skills/archivist`, `.agent-cli/`, and `.codex/`.
+- Decision: Root orientation docs describe this repository as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, not only as an agent orchestration reference scaffold. `README.md` points agents to `AGENTS.md`, `platform/AGENTS.md`, `maestro/memory/START_HERE.md`, and product roots. `AGENTS.md` remains the canonical repo runtime layout and source-of-truth boundary, including `maestro/memory/`, `platform/`, `.agents/skills/`, `.codex/`, and Maestro contracts.
 - Sources:
   - `README.md`
-  - `docs/codex-native-repo.md`
+  - `AGENTS.md`
 
 ### DEC-085 Product Identity Is VSM v1.0.0
 
@@ -1019,7 +1017,7 @@ Do not turn it into a task journal.
 - Sources:
   - `README.md`
   - `platform/README.md`
-  - `docs/codex-native-repo.md`
+  - `AGENTS.md`
   - `maestro/memory/START_HERE.md`
   - `.agents/skills/retired-runtime/SKILL.md`
   - `maestro/memory/retired-runtime/automation-manifest.json`
@@ -1062,7 +1060,7 @@ Do not turn it into a task journal.
 - Decision: Retired runtime provenance is owner-managed outside the active repository. New owner-led engineering work routes through Maestro and the native vNext skills. Durable memory remains under `maestro/memory/`; active task state uses `maestro/artifact/active/` and `maestro/artifact/archive/`, not `maestro/memory/runs/**`. Retired run packets, prompts, templates, manifest, and scaffolder scripts are retained only outside the active repository or in git history.
 - Sources:
   - `AGENTS.md`
-  - `docs/codex-native-repo.md`
+  - `AGENTS.md`
   - `maestro/docs/runtime-contract.md`
   - `maestro/docs/memory-migration-plan.md`
   - `maestro/memory/START_HERE.md`

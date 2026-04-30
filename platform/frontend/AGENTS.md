@@ -65,7 +65,7 @@ Do not read by default:
 - `docs/vendor/**`
 - `docs/platform-studio/old-code-reference/**`
 - deleted legacy AI memory path `../docs/ai/**`; use `maestro/memory/durable/legacy-memory-import.md` and git history only for explicit historical reconstruction
-- archived prompts under `platform/docs/archive/**`
+- archived prompts under `platform/**`
 
 ## High-risk areas
 

@@ -18,7 +18,7 @@ Reference code is not a source of truth for this product.
 
 ## Local Folder Strategy
 
-Use `docs/ref/reference-code.md` as the tracked alias registry.
+Use `maestro/memory/reference-code/README.md` as the tracked alias registry.
 Use `maestro/memory/reference-code/` as the local governance, pack-index, and relocation-planning surface.
 
 If raw reference packs must be stored locally inside this workspace after relocation, keep them below:
@@ -57,7 +57,7 @@ Acceptable locations are:
 
 - local-only `reference-code/**`
 - a separate private reference repository synchronized outside this repo
-- a tracked `docs/ref/**` index that contains metadata and links, not raw bulky donor trees
+- a tracked `maestro/memory/reference-code/**` index that contains metadata and links, not raw bulky donor trees
 
 The preferred long-term model is a separate private reference repository plus a compact local index in `maestro/memory`.
 

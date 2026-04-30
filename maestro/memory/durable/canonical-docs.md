@@ -12,9 +12,10 @@ Canonical:
 
 - `AGENTS.md`
 - `README.md`
-- `docs/README.md`
-- `docs/codex-native-repo.md`
-- `docs/maestro/module-orchestrator-v2-spec-pack/`
+- `maestro/docs/runtime-contract.md`
+- `maestro/docs/**`
+- `maestro/contracts/**`
+- `maestro/templates/**`
 - `.agents/skills/maestro/SKILL.md`
 - `.agents/skills/charlie/SKILL.md`
 - `.agents/skills/grant/SKILL.md`
@@ -22,25 +23,18 @@ Canonical:
 - `.codex/contracts/**`
 - `.codex/templates/**`
 - `.codex/standards/**`
-- `.agent-cli/config.json`
 
 Automation gates:
 
 - `.github/workflows/docs-memory-check.yml`
 
-Future-target only:
-
-- `docs/maestro/maestro-feature-formation-canonical.md`
-
 Reference:
 
-- `docs/ref/README.md`
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 Historical archive:
 
-- `docs/archive/README.md`
-- `docs/archive/memory-reorg/README.md`
+- `git history`
 
 Local reference-code policy:
 

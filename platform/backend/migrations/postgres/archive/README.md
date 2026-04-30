@@ -17,5 +17,5 @@ Rules:
 Important:
 
 - this is not the legacy SQL dump storage
-- old historical SQL reference was moved to `docs/archive/postgres-archive/`
+- old historical SQL reference was moved to `platform/backend/docs/archive/postgres-archive/`
 - only future archive-worthy tenant migrations should live here

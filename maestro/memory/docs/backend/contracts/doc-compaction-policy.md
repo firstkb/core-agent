@@ -33,13 +33,13 @@ For backend implementation tasks, read:
 
 Avoid by default:
 
-- `platform/backend/docs/archive/**`
+- `platform/backend/**`
 - `platform/backend/docs/legacy/**`
 - `platform/backend/docs/archive/postgres-archive/**`
 - completed refactor plans unless investigating history
 
 Old root archive pointer files for Go rules, historical RAMP standard, and export prompt
-were deleted after compaction. Use `platform/backend/docs/archive/**` or git
+were deleted after compaction. Use `platform/backend/**` or git
 history only for explicit history tasks.
 
 ## Rewrite Rules For Later Docs Reorg

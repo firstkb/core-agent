@@ -39,7 +39,7 @@ Do not mirror the entire `platform/backend/docs` corpus here.
 - `platform/backend/docs/proposals/schema-drift-checks.md`
 - `platform/backend/docs/reference/import-field-mapping.md`
 - `platform/backend/docs/reference/tenant-import-boundary.md`
-- `platform/backend/docs/archive/README.md`
+- `platform/backend/README.md`
 - `platform/backend/docs/archive/postgres-archive/README.md`
 
 ## Migrated Admin Source Docs
@@ -102,7 +102,7 @@ Use tracked source docs for deep detail after reading compact memory:
 - `platform/backend/docs/modules/platform-studio/form-builder.md`
 
 Compatibility pointer docs for migrated runtime/auth/schema/admin slices should not be used as first-read docs.
-Legacy MSSQL raw schema files are reference-code material only; read `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` before opening them.
+Legacy MSSQL raw schema files are reference-code material only; read `maestro/memory/reference-code/README.md` and alias `reference-pack:mssql-legacy-schema` before opening them.
 Legacy PostgreSQL SQL under `platform/backend/docs/archive/postgres-archive/**` is archive/reference material only.
 
 ## Archive Rule

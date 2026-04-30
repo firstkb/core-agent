@@ -55,7 +55,7 @@ bootstrap root files were deleted after compaction.
 
 Pointer-only auth gateway/control/projection/key-source/KMS/gateway root files
 were deleted after compaction. Historical cookie migration payload remains under
-`platform/backend/docs/archive/backend-auth-cookie-migration-plan.md`.
+`platform/backend/backend-auth-cookie-migration-plan.md`.
 
 Future proposal docs:
 
@@ -112,19 +112,19 @@ Import/reference docs:
 | Source | Status | Read for | Retrieval note |
 | --- | --- | --- | --- |
 | `reference-pack:mssql-legacy-schema` | `reference_only` | Legacy MSSQL schema archaeology and import mapping support | Raw pack is local-only under `reference-code/backend/mssql-legacy-schema/`; not active backend schema truth. |
-| `platform/backend/docs/archive/**` | archive | Historical backend plans, prompts, older standards, and archived SQL reference material | Opt-in only. |
+| `platform/backend/**` | archive | Historical backend plans, prompts, older standards, and archived SQL reference material | Opt-in only. |
 | `platform/backend/docs/archive/postgres-archive/README.md` | archive index | Legacy PostgreSQL SQL inventory and read rules | Read only for explicit PostgreSQL archaeology tasks. |
 | `platform/backend/docs/legacy/postgres-archive/README.md` | archive pointer | Old path for legacy PostgreSQL SQL archive | Read `archive/postgres-archive/README.md` instead. |
 | `platform/backend/docs/legacy/**` | archive pointer | Old legacy docs path | Do not read by default. |
 
 Old root archive pointer files for Go rules, historical RAMP standard, export prompt,
 auth cookie migration, Module Registry refactor, and tenant starter fields were
-deleted after compaction. Use `platform/backend/docs/archive/**` or git history
+deleted after compaction. Use `platform/backend/**` or git history
 for exact old text.
 
 Tracked reference-code alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 ## Active Compact Packs
 

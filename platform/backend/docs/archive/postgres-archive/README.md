@@ -39,4 +39,4 @@ Use this archive only when a task explicitly needs historical PostgreSQL archaeo
 - Do not copy SQL from this archive into active migrations without an explicit migration decision.
 - Do not infer current tenant schema from this archive.
 - Distill any useful historical fact into an active contract, proposal, or reference doc before implementing runtime behavior.
-- For legacy MSSQL material, use `docs/ref/reference-code.md` and alias `reference-pack:mssql-legacy-schema` instead.
+- For legacy MSSQL material, use `maestro/memory/reference-code/README.md` and alias `reference-pack:mssql-legacy-schema` instead.

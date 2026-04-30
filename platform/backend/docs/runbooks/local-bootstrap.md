@@ -46,7 +46,7 @@ The old backend already established a useful split:
 - new empty tenant databases should be bootstrapped from the bundle
 - new incremental tenant migrations should then run from `migrations/postgres/tenant`
 - tenant migrations already folded into the rebuilt full bundle may move to `migrations/postgres/archive`
-- legacy historical SQL stays only in `docs/archive/postgres-archive`
+- legacy historical SQL stays only in `postgres-archive`
 
 The current `cmd/migrate` runtime now follows that direction:
 

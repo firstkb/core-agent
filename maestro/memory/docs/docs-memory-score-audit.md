@@ -15,7 +15,7 @@ It does not mean every historical exact-detail document has been deleted.
 
 - FE docs root contains only `platform/frontend/docs/README.md`.
 - BE docs root contains only `platform/backend/docs/README.md`.
-- `docs/ref/` contains only stable reference registry docs: `README.md` and `reference-code.md`.
+- `` contains only stable reference registry docs: `README.md` and `reference-code.md`.
 - `platform/docs/ai/**` is absent from the working tree.
 - `maestro/memory/AGENTS.override.md` is absent from the working tree.
 - `maestro/memory/START_HERE.md` is the first compact memory read after repo/platform instructions.
@@ -29,7 +29,7 @@ It does not mean every historical exact-detail document has been deleted.
 - Form Builder planned/open work has a dedicated code-verified memory doc, so import/runtime grants/preview guards/runtime create-edit-save/non-lookup multivalue/package-extraction work is not confused with implemented truth.
 - `scripts/ai/docs_memory_check.py --check` is the active docs/memory drift, stale-layout, preflight-policy, and local markdown-link check.
 - `scripts/ai/check-env-policy.py --check` is the active env-file policy check for `.gitignore` rules, tracked local env files, and sanitized env examples.
-- `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs hygiene plus quick agent-cli checks, and `--full` is explicit for broader backend/frontend checks.
+- `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/memory/env hygiene, and `--full` is explicit for broader backend/frontend checks.
 - `maestro/templates/evidence.md.tmpl` is the compact evidence template for non-trivial closeout or PR text; it is not a mandatory persistent artifact.
 - Maestro direct inline semantics are explicit: tiny work stays in the current chat by default; persisted work uses flat `maestro/artifact/**` records.
 - `.github/workflows/docs-memory-check.yml` runs docs/memory drift and env policy checks on relevant PRs and pushes.

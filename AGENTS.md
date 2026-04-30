@@ -12,10 +12,12 @@ Read and treat these as authoritative before doing agent work:
 - `.codex/contracts/*`
 - `.codex/standards/*`
 - `.codex/templates/*`
-- `.agent-cli/config.json`
-- `.agent-cli/`
-- `docs/README.md`
-- `docs/codex-native-repo.md`
+- `maestro/docs/runtime-contract.md`
+- `maestro/contracts/**`
+- `maestro/templates/**`
+- `platform/AGENTS.md`
+- `platform/frontend/AGENTS.md`
+- `platform/backend/AGENTS.md`
 
 Persisted run outputs under `artifacts/` are runtime artifacts, not design-time source of truth.
 
@@ -26,29 +28,16 @@ Retired surfaces:
 Platform product memory:
 
 - `maestro/memory/` is the compact retrieval and durable-memory layer for platform product work.
-- `maestro/memory/` does not replace `.codex/`, `.agents/`, `.agent-cli/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
+- `maestro/memory/` does not replace `.codex/`, `.agents/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
 - the former `platform/docs/ai/**` layer is fully retired and deleted; use `maestro/memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
 ## Docs classification
 
 Treat:
 
-- `docs/codex-native-repo.md`
-
-as the live repository layout and source-of-truth boundary document.
-
-Treat the legacy working set under:
-
-- `docs/maestro/module-orchestrator-v2-spec-pack/`
-
-as the reference for old `module_orchestrator` runs only. New Maestro-routed
-work should use `maestro/docs/runtime-contract.md` and `maestro/contracts/**`.
-
-Treat:
-
-- `docs/maestro/maestro-feature-formation-canonical.md`
-
-as a future-target architecture document, not as the live runtime contract.
+- `AGENTS.md` and `README.md` as the live repository orientation.
+- `maestro/memory/durable/repo-map.md` as the compact layout map.
+- `maestro/docs/runtime-contract.md` as the live Maestro runtime contract.
 
 Treat:
 
@@ -77,8 +66,6 @@ Ordinary agent work should read only:
 
 Do not read build or plumbing surfaces during ordinary work:
 
-- `.agent-cli/src/`
-- `.agent-cli/test/`
 - artifact folders for other modules unless the owner explicitly asks
 - deleted legacy platform memory paths from `platform/docs/ai/**`; recover exact old text from git history only for explicit historical reconstruction
 
@@ -226,35 +213,10 @@ For legacy module-orchestrator continuation only, use the old model:
 - Treat only the exact target module and target feature artifact tree as the active run history.
 - Do not read or cite artifact folders from other modules as style references, structure examples, templates, or fallback context unless the owner explicitly asks.
 
-## V2 CLI
-
-The active CLI surface is the V2 typed state gateway.
-
-Use:
-
-```bash
-node .agent-cli/bin/agent-stack.mjs module <subcommand> ...
-node .agent-cli/bin/agent-stack.mjs feature <subcommand> ...
-node .agent-cli/bin/agent-stack.mjs stage <subcommand> ...
-```
-
-Do not assume the old validator-first commands still exist.
-
-Markdown authorship boundary:
-
-- AI authors `brief.md`, feature `README.md`, and stage attempt `README.md`
-- CLI owns mutable JSON state and lifecycle transitions
-
 ## Legacy Compatibility
 
-`render-runtimes` is retained only as a compatibility command during the final removal of the old generated multi-platform model.
-
-Use:
-
-```bash
-node .agent-cli/bin/agent-stack.mjs render-runtimes --check
-```
-
-only to confirm that no legacy render-managed surfaces are expected.
-
-Do not treat `render-runtimes` as the compiler for the active runtime. Active runtime behavior lives in `.agents/skills/`, `.codex/`, `AGENTS.md`, and the typed CLI.
+Legacy module-orchestrator agents remain available only for old
+`artifacts/<module>/...` continuation. Do not start new lifecycle work through
+deleted CLI or render-managed surfaces. Active runtime behavior lives in
+`.agents/skills/`, `.codex/`, `AGENTS.md`, `maestro/docs/**`, and
+`maestro/contracts/**`.

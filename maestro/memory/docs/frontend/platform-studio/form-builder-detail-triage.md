@@ -149,7 +149,7 @@ They are not product truth and should not be read by default.
 
 Alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 ## Read Rules
 

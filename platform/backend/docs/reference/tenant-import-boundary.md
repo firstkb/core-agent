@@ -13,7 +13,7 @@ Read with:
 
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/reference/import-field-mapping.md`
-- `docs/ref/reference-code.md` for `reference-pack:mssql-legacy-schema`
+- `maestro/memory/reference-code/README.md` for `reference-pack:mssql-legacy-schema`
 - `platform/backend/docs/archive/postgres-archive/README.md` only for legacy PostgreSQL archaeology
 
 ## Purpose

@@ -11,7 +11,7 @@ usage() {
 Usage: scripts/ai/preflight.sh [--lite|--full|--docs|--help]
 
 Modes:
-  --lite  Required docs/memory/env checks plus quick agent-cli tests when available. Default.
+  --lite  Required docs/memory/env checks. Default.
   --full  Lite checks plus backend and frontend checks when local tooling is present.
   --docs  Required docs/memory/env checks only.
 
@@ -85,10 +85,6 @@ run_required "env policy check" python3 scripts/ai/check-env-policy.py --check
 
 if [ "$MODE" = "docs" ]; then
   :
-elif have_cmd node; then
-  run_optional "agent-cli tests" bash -lc 'cd .agent-cli && node --test test/*.mjs'
-else
-  skip_optional "agent-cli tests require node"
 fi
 
 if [ "$MODE" = "full" ]; then

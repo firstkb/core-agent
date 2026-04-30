@@ -12,7 +12,6 @@ The current AI memory and agent workflow lives under:
 
 - `maestro/memory/` - compact operational memory, read routes, durable decisions, and module packs.
 - `.agents/skills/` - repo-local Codex skills, including `maestro`, `charlie`, `grant`, `mason`, `scout`, `lens`, `release`, `scribe`, and `archivist`.
-- `.agent-cli/` - typed lifecycle gateway for module/feature/stage artifacts.
 - `.codex/` - Codex-native runtime wiring, contracts, standards, and templates.
 
 ## Start Here
@@ -31,8 +30,8 @@ Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed
 
 For human orientation:
 
-- `docs/codex-native-repo.md` explains the live repository layout and runtime boundaries.
-- `docs/ref/reference-code.md` lists opt-in local reference-code pack aliases.
+- `AGENTS.md` explains the live repository layout and runtime boundaries.
+- `maestro/memory/reference-code/README.md` lists opt-in local reference-code pack aliases.
 - `platform/frontend/docs/README.md` and `platform/backend/docs/README.md` are the product docs entrypoints.
 
 ## Current Runtime

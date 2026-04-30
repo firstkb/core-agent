@@ -15,14 +15,14 @@ Confidence labels:
 
 ## Repository Runtime
 
-- `landed` `doc-confirmed`: The repository has a Codex-native runtime model rooted in `AGENTS.md`, `.agents/skills/`, `.codex/`, `.agent-cli/`, `docs/codex-native-repo.md`, and `docs/maestro/module-orchestrator-v2-spec-pack/`.
+- `landed` `doc-confirmed`: The repository has a Codex-native runtime model rooted in `AGENTS.md`, `README.md`, `.agents/skills/`, `.codex/`, `maestro/docs/`, `maestro/contracts/`, and `maestro/templates/`.
 - `landed` `owner-confirmed`: The current product identity is VSM (Virtual Safety Manager) v1.0.0. `Ramp Platform v108` is a historical working name only and must not be used as current product identity in active docs, prompts, or memory.
-- `landed` `doc-confirmed`: Root `README.md` and `docs/codex-native-repo.md` now describe the repo as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, with `platform/` as product root and `maestro/memory/` as current operational memory.
+- `landed` `doc-confirmed`: Root `README.md` and `AGENTS.md` now describe the repo as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, with `platform/` as product root and `maestro/memory/` as current operational memory.
 - `landed` `doc-confirmed`: Maestro vNext is the active native-first work partner for new owner-led engineering tasks.
 - `landed` `doc-confirmed`: Active vNext skill nicknames are `maestro`, `charlie`, `grant`, `mason`, `scout`, `lens`, `release`, `scribe`, and `archivist`.
 - `landed` `doc-confirmed`: Legacy system agent ids `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available only for old `artifacts/<module>/...` continuation.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.
-- `landed` `doc-confirmed`: `.agent-cli/` owns typed lifecycle state transitions and mutable JSON status files.
+- `landed` `owner-confirmed`: The old typed lifecycle CLI has been removed from the active tree. New Maestro work uses native Codex execution plus flat artifacts under `maestro/artifact/`.
 - `landed` `owner-confirmed`: retired runtime is archived in owner-managed external storage and is no longer an active skill or default platform entrypoint.
 
 ## Product Runtime
@@ -46,12 +46,12 @@ Confidence labels:
 - `landed` `code-confirmed`: Storybook V1 is available under `platform/frontend/.storybook` with stable `ui-kit` stories for actions, form controls, feedback, states, and table primitives plus `CollectionTable` states (`empty`, `loading`, `ready with rows`, `error`, `filters open`). It is manual/local only and not a CI gate.
 - `landed` `doc-confirmed`: The frontend foundation rollout and Phase E gap review are closed history; durable lessons are compacted into the UI Kit contract and UI Lab guide.
 - `planned` `doc-confirmed`: Deferred composed UI surfaces such as remote table workspaces, file uploads, AI assistant dialog, messenger, and kanban remain future/app-layer-first proposal scope at `platform/frontend/docs/proposals/deferred-composed-surfaces.md`.
-- `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `docs/ref/reference-code.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
+- `landed` `owner-confirmed`: Reference-code packs use stable `reference-pack:*` aliases in `maestro/memory/reference-code/README.md`; raw donor/legacy packs moved out of active FE/BE docs into local `reference-code/` raw-pack storage.
 - `landed` `doc-confirmed`: The reference-code relocation checkpoint is recorded in `maestro/memory/reference-code/relocation-checkpoint.md`; old raw-pack tracked pointer README directories were deleted.
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now validates docs/memory drift, deleted pointer folders, retained Form Builder exact-detail policy, and local markdown links.
 - `landed` `doc-confirmed`: `maestro/memory/START_HERE.md` is the first compact memory read after repo/platform instructions; `memory-index.yaml` is now broader routing, not mandatory first read for every task.
 - `landed` `doc-confirmed`: `scripts/ai/docs_memory_check.py --check` now also validates stale platform layout, historical migration-plan status, `AGENTS_NAME.md` non-authoritative status, `START_HERE`, unified active read-order surfaces, and manual preflight policy; `scripts/ai/check-env-policy.py --check` owns tracked env-file policy and sanitized env examples.
-- `landed` `doc-confirmed`: `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/env checks plus quick agent-cli tests when available, while `--full` is explicit for broader backend/frontend checks.
+- `landed` `doc-confirmed`: `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/env checks, while `--full` is explicit for broader backend/frontend checks.
 - `landed` `doc-confirmed`: `maestro/templates/evidence.md.tmpl` is the compact evidence shape for non-trivial closeout or PR text; it should not become a standalone artifact by default.
 - `landed` `doc-confirmed`: Maestro direct inline work stays in the current chat by default. Persisted work uses flat artifacts under `maestro/artifact/active/`.
 - `landed` `owner-confirmed`: Local visual smoke for app UI should use the Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) when requested. Owner-provided seeded dev logins live only in ignored `maestro/memory/local/browser-use-auth.md`; tracked evidence should say `Auth: local seeded dev login.` without recording codes.
@@ -62,7 +62,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: `Archivist` (`.agents/skills/archivist/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
 - `landed` `owner-confirmed`: Archivist should be used manually after large docs/memory changes and before major development phases, not on every commit.
 - `landed` `doc-confirmed`: Memory maintenance rules for new decisions, modules, doc status changes, reference-code changes, and agent workflow changes live in `maestro/memory/agent-workflow.md`.
-- `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
+- `landed` `owner-confirmed`: The root `docs/` folder is retired. Reference-code aliases live under `maestro/memory/reference-code/README.md`, and historical root docs are git-history provenance only.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `maestro/memory`; exact old payload text is git-history provenance only.
 - `landed` `owner-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is frozen in owner-managed external provenance.
 - `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown, module memory, prompts/templates, automation metadata, and runs from the former `platform/docs/ai/**` layer are represented by `maestro/memory/durable/legacy-memory-import.md`, current module memory, owner-managed external provenance, and git history.
@@ -95,7 +95,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Backend legacy import mapping and import module boundary now live under `platform/backend/docs/reference/`; runtime schema truth remains `contracts/schema-tenancy.md`.
 - `landed` `doc-confirmed`: Backend event actor identity now lives at `platform/backend/docs/contracts/events-identity.md`.
 - `landed` `doc-confirmed`: Backend events/mail cleanup and schema drift checks now live under `platform/backend/docs/proposals/` and remain inactive until owner activation.
-- `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/docs/archive/`; old root archive pointer files were deleted.
+- `landed` `doc-confirmed`: Old backend standards, completed plans, and prompt artifacts now live under `platform/backend/`; old root archive pointer files were deleted.
 - `landed` `doc-confirmed`: Legacy PostgreSQL SQL now lives behind `platform/backend/docs/archive/postgres-archive/README.md`; `platform/backend/docs/legacy/postgres-archive/README.md` is only a compatibility pointer.
 - `landed` `doc-confirmed`: Active backend docs now use target-folder `Read with`/`Read Order` links; old root compatibility/archive pointer files were deleted.
 - `landed` `doc-confirmed`: Pointer-only FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording were deleted after their payload had fully moved into active contracts/modules; exact old text is git-history only.
@@ -165,7 +165,7 @@ Confidence labels:
 - Form Builder backend module map: `platform/backend/docs/modules/platform-studio/form-builder.md`
 - Platform Studio tool map: `maestro/memory/modules/domains/platform-studio/tools/README.md`
 - Reference code policy: `maestro/memory/durable/reference-code-policy.md`
-- Reference code alias registry: `docs/ref/reference-code.md`
+- Reference code alias registry: `maestro/memory/reference-code/README.md`
 - Reference code relocation checkpoint: `maestro/memory/reference-code/relocation-checkpoint.md`
 - Archived retired runtime workflow: owner-managed external provenance or git history
 - Platform docs AI retirement plan: owner-managed external provenance or git history

@@ -10,7 +10,7 @@ Use `reference-pack:metronic` as the stable alias; the raw pack is local-only un
 
 Read with:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `platform/frontend/docs/vendor/README.md`
 - `platform/frontend/docs/contracts/ui-kit.md` only after a donor extraction task is explicitly activated
 - `platform/frontend/docs/guides/ui-lab.md` only for UI review of extracted product-owned components

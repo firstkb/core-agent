@@ -25,10 +25,10 @@ It does not move or replace tracked docs by itself.
 - `maestro/memory/docs/backend/README.md`
 - `maestro/memory/docs/backend/doc-map.md`
 - `maestro/memory/docs/backend/drift-report.md`
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `maestro/memory/reference-code/packs-index.md`
 - `maestro/memory/reference-code/relocation-plan.md`
-- `docs/archive/memory-reorg/README.md`
+- `git history`
 
 ## Rule
 

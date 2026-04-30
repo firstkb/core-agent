@@ -71,9 +71,9 @@ Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Rep
 Opt-in only:
 
 - `vendor/**`
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `reference-pack:*` aliases for local-only raw packs
 
 Reference and donor material is not product truth and must not be read by default.
-Use `docs/ref/reference-code.md` for stable `reference-pack:*` aliases before opening donor code.
+Use `maestro/memory/reference-code/README.md` for stable `reference-pack:*` aliases before opening donor code.
 Raw donor/reference packs are local-only under `reference-code/**`; old donor compatibility directories under frontend docs were deleted.

@@ -14,12 +14,10 @@ Treat these as authoritative:
 - `.codex/contracts/*`
 - `.codex/templates/*`
 - `.codex/standards/*`
-- `.agent-cli/config.json`
-- `.agent-cli/`
+- `README.md`
 - `maestro/docs/runtime-contract.md`
 - `maestro/contracts/*`
 - `maestro/templates/*`
-- `docs/codex-native-repo.md`
 
 Persisted run outputs under `maestro/artifact/` and legacy `artifacts/` are
 runtime artifacts, not design-time source files.
@@ -67,7 +65,7 @@ Legacy system agent ids retained for old `artifacts/<module>/...` continuation:
 
 - Use Maestro vNext for new owner-led orchestration.
 - Use legacy module-orchestrator agents only for old run continuation.
-- Do not treat `render-runtimes` as the compiler for the active runtime.
+- Do not restore deleted CLI or render-managed surfaces as active runtime.
 - Prefer validation and contracts over prose when a typed surface exists.
 - Keep persisted artifacts in English.
 - Do not expand the runtime surface casually; new behavior should land in the active Codex-native layers and Maestro contracts.

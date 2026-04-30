@@ -48,8 +48,8 @@ DELETED_FORM_BUILDER_DOCS = [
 
 LOCAL_LINK_SCOPES = [
     "AGENTS.md",
-    "AGENTS_NAME.md",
-    "docs",
+    "README.md",
+    "maestro/docs",
     "maestro/memory",
     "platform/AGENTS.md",
     "platform/README.md",
@@ -102,7 +102,7 @@ OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES = {
 PRODUCT_IDENTITY_SCAN_SCOPES = [
     "AGENTS.md",
     "README.md",
-    "docs",
+    "maestro/docs",
     "maestro/memory",
     "platform/AGENTS.md",
     "platform/README.md",
@@ -246,7 +246,6 @@ def check_reference_code_retirement(root: Path, errors: list[str]) -> None:
             add_error(errors, rel, "retired reference-code docs directory must not exist")
 
     active_scan_roots = [
-        root / "docs/ref",
         root / "platform/frontend/docs",
         root / "platform/backend/docs",
         root / "maestro/memory/index",
@@ -268,7 +267,6 @@ def check_root_file_sets(root: Path, errors: list[str]) -> None:
     expected = {
         "platform/frontend/docs": {"README.md"},
         "platform/backend/docs": {"README.md"},
-        "docs/ref": {"README.md", "reference-code.md"},
     }
     for rel, allowed in expected.items():
         folder = root / rel
@@ -285,6 +283,8 @@ def check_root_file_sets(root: Path, errors: list[str]) -> None:
 
 
 def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
+    if (root / "docs").exists():
+        add_error(errors, "docs", "root docs folder is retired; use AGENTS.md, README.md, maestro/docs, maestro/memory, and platform docs")
     if (root / "platform/docs/ai").exists():
         add_error(errors, "platform/docs/ai", "retired legacy memory path must not exist")
     if (root / "ai-memory").exists():

@@ -10,11 +10,11 @@ default:
   avoid_by_default:
     - platform/frontend/docs/vendor/**
     - reference-code/**
-    - platform/backend/docs/archive/**
+    - platform/backend/**
     - platform/backend/docs/legacy/**
     - platform/backend/migrations/postgres/archive/**
     - maestro/memory/reference-code/packs/**
-    - platform/docs/archive/**
+    - platform/**
 
 routes:
   auth:
@@ -145,7 +145,7 @@ routes:
       - old-code-reference
       - UI reference
     read:
-      - docs/ref/reference-code.md
+      - maestro/memory/reference-code/README.md
       - maestro/memory/durable/reference-code-policy.md
       - maestro/memory/reference-code/README.md
       - maestro/memory/reference-code/packs-index.md
@@ -163,7 +163,7 @@ routes:
       - gitignore reference-code
       - physical reference-code move
     read:
-      - docs/ref/reference-code.md
+      - maestro/memory/reference-code/README.md
       - maestro/memory/durable/reference-code-policy.md
       - maestro/memory/reference-code/README.md
       - maestro/memory/reference-code/packs-index.md

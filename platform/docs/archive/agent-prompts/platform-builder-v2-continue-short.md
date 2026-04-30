@@ -7,7 +7,7 @@ Markdown docs в репозитории пиши на английском.
 Source of truth:
 - AGENTS.md
 - docs/README.md
-- docs/codex-native-repo.md
+- AGENTS.md
 - platform/frontend/docs/platform-studio/README.md
 - platform/frontend/docs/platform-studio/v2-foundation-brief.md
 - platform/frontend/docs/platform-studio/forms-foundation-a-technical-map.md

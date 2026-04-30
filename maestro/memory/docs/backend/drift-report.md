@@ -163,7 +163,7 @@ Tracked docs:
 - `platform/backend/docs/reference/import-field-mapping.md`
 - `platform/backend/docs/reference/tenant-import-boundary.md`
 - `platform/backend/docs/contracts/events-identity.md`
-- `platform/backend/docs/archive/README.md`
+- `platform/backend/README.md`
 - `platform/backend/docs/archive/postgres-archive/README.md`
 
 Observed state:

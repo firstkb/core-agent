@@ -10,7 +10,7 @@ Current repo/runtime and product contracts live in the active contract-first doc
 Read instead:
 
 - `AGENTS.md`
-- `docs/codex-native-repo.md`
+- `AGENTS.md`
 - `platform/backend/docs/README.md`
 
 **Document File:** `ramp-v108-backend-standard-v2.md`\

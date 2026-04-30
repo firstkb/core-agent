@@ -10,7 +10,7 @@ Raw vendor packs are reference-code material, not active frontend documentation.
 
 Read with:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `platform/frontend/docs/contracts/ui-kit.md` only after a donor extraction task is explicitly activated
 - `platform/frontend/docs/guides/ui-lab.md` only for UI review of extracted product-owned components
 
@@ -32,4 +32,4 @@ Stable reference alias:
 
 Alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`

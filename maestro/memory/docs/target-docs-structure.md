@@ -220,13 +220,13 @@ Use one of these:
 
 - local ignored `reference-code/**` for local-only raw packs
 - a separate private reference repository synchronized outside this repo
-- tracked `docs/ref/**` metadata without raw bulky donor trees
+- tracked `**` metadata without raw bulky donor trees
 
 Each reference pack needs metadata for origin, license, status, allowed use, forbidden use, owner modules, and distilled outputs.
 
 Stable tracked alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 Current aliases:
 

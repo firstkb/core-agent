@@ -85,7 +85,7 @@ the task spans multiple modules.
 ## Never Default-Read
 
 - `reference-code/**`
-- `platform/docs/archive/**`
+- `platform/**`
 - old closed runs
 - raw vendor/reference packs
 - retained Form Builder exact-detail docs

@@ -77,7 +77,7 @@ For Platform Studio, read the compact local map before opening the tracked sourc
 
 For donor/vendor/reference code, read the alias registry before opening raw packs:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 - `maestro/memory/reference-code/packs-index.md`
 
 For all other frontend docs, read:

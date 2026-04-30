@@ -8,10 +8,6 @@ Last compacted: 2026-04-29
 ```text
 AGENTS.md
 README.md
-docs/
-  codex-native-repo.md
-  maestro/module-orchestrator-v2-spec-pack/
-  ref/reference-code.md
 .github/
   workflows/docs-memory-check.yml
 .agents/
@@ -22,9 +18,14 @@ docs/
   contracts/
   standards/
   templates/
-.agent-cli/
+
 artifacts/
 platform/
+maestro/
+  docs/
+  contracts/
+  templates/
+  artifact/
 maestro/memory/
 ```
 
@@ -38,7 +39,7 @@ maestro/memory/
 - `.codex/contracts`: machine-readable contracts and schemas.
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.
 - `.codex/standards`: repository, engineering, frontend, backend, infra, library, and security standards.
-- `.agent-cli`: typed lifecycle gateway. Do not hand-edit CLI-owned JSON state.
+- `maestro/docs`, `maestro/contracts`, and `maestro/templates`: active Maestro native-first runtime contracts.
 
 ## Product Runtime
 

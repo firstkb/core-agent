@@ -113,7 +113,7 @@ Current progress:
 | `platform/frontend/docs/foundation-rollout-plan.md` | deleted archive pointer | UI Kit/UI Lab active docs | git history | delete | Landed: durable foundation baseline and review lessons compacted into active docs. | Exact old text is git-history only. |
 | `platform/frontend/docs/phase-e-gap-review.md` | deleted archive pointer | UI Kit/UI Lab active docs | git history | delete | Landed: durable gap-discipline and promotion lessons compacted into active docs. | Exact old text is git-history only. |
 | `platform/frontend/docs/vendor/**` | vendor reference | reference metadata | `platform/frontend/docs/reference/vendor/README.md` | reference | Vendor inventory should be opt-in reference. | License/origin metadata required. |
-| `platform/frontend/docs/metronic/**` | deleted reference pointer | external/local reference pack | `docs/ref/reference-code.md` + `reference-code/frontend/metronic/` | delete | Metronic is donor material, not product truth. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/metronic/**` | deleted reference pointer | external/local reference pack | `maestro/memory/reference-code/README.md` + `reference-code/frontend/metronic/` | delete | Metronic is donor material, not product truth. | Landed: old pointer path deleted; use alias only. |
 
 ## Frontend Platform Studio Docs
 
@@ -181,15 +181,15 @@ Current progress:
 | `platform/frontend/docs/platform-studio/promt-continue.md` | deleted archive pointer | git-history provenance | git history | delete | Prompt artifacts are not product truth. | Exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/promt-continue-short.md` | deleted archive pointer | git-history provenance | git history | delete | Prompt artifacts are not product truth. | Exact old text is git-history only. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-retired-runtime-task-v1.md` | deleted archive pointer | git-history provenance | git history | delete | Task prompt is not product truth. | Exact old text is git-history only. |
-| `platform/frontend/docs/platform-studio/old-code-reference/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/old-builder-reference/` | delete | Old code is opt-in reference only. | Landed: old pointer path deleted; use alias only. |
-| `platform/frontend/docs/platform-studio/ezform/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/ezform/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
-| `platform/frontend/docs/platform-studio/smartapp/**` | deleted reference pointer | reference material | `docs/ref/reference-code.md` + `reference-code/platform-studio/smartapp/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/old-code-reference/**` | deleted reference pointer | reference material | `maestro/memory/reference-code/README.md` + `reference-code/platform-studio/old-builder-reference/` | delete | Old code is opt-in reference only. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/ezform/**` | deleted reference pointer | reference material | `maestro/memory/reference-code/README.md` + `reference-code/platform-studio/ezform/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
+| `platform/frontend/docs/platform-studio/smartapp/**` | deleted reference pointer | reference material | `maestro/memory/reference-code/README.md` + `reference-code/platform-studio/smartapp/` | delete | Donor material is not active product truth. | Landed: old pointer path deleted; use alias only. |
 
 ## Reference Code Relocation
 
 Stable alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 Local relocation/control docs:
 
@@ -219,7 +219,7 @@ Local relocation/control docs:
 | `platform/backend/docs/backend-auth-projection-and-sync.md` | deleted compacted pointer | auth module doc | `platform/backend/docs/modules/auth.md` | delete | Landed: host-to-tenant and no-mirror rules moved to auth module doc. | Exact old text is git-history only. |
 | `platform/backend/docs/auth/auth-key-source-configuration.md` | deleted compatibility pointer | auth key source runbook | `platform/backend/docs/runbooks/auth-key-sources.md` | delete | Landed: key source config moved to operational runbook. | Exact old text is git-history only. |
 | `platform/backend/docs/auth/auth-kms-implementation-status.md` | deleted compatibility pointer | KMS proposal | `platform/backend/docs/proposals/kms-signing.md` | delete | Landed: KMS is future proposal scope, not active runtime. | Owner activation and implementation required. |
-| `platform/backend/docs/backend-auth-cookie-migration-plan.md` | deleted archive pointer | historical auth archive | `platform/backend/docs/archive/backend-auth-cookie-migration-plan.md` | delete | Migration history should not define current auth behavior. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/backend-auth-cookie-migration-plan.md` | deleted archive pointer | historical auth archive | `platform/backend/backend-auth-cookie-migration-plan.md` | delete | Migration history should not define current auth behavior. | Exact old text is git-history only; archive payload remains. |
 | `platform/backend/docs/backend-api-gateway-http-api-mapping-spec.md` | deleted compatibility pointer | gateway proposal | `platform/backend/docs/proposals/api-gateway-http-api-mapping.md` | delete | Landed: proposed deployment mapping moved to proposals. | Owner activation required before implementation. |
 | `platform/backend/docs/backend-api-gateway-proxy-routing-policy.md` | deleted compatibility pointer | gateway proposal | `platform/backend/docs/proposals/api-gateway-proxy-routing.md` | delete | Landed: proposed proxy policy moved to proposals. | Owner activation required before implementation. |
 | `platform/backend/docs/contracts/admin-control-plane.md` | synthesized active contract | admin control-plane contract | `platform/backend/docs/contracts/admin-control-plane.md` | keep | Landed as the new admin contract for profile/navigation boundaries, section grants, route-binding policy, and root/non-root behavior. | Keep aligned with route matrix. |
@@ -230,7 +230,7 @@ Local relocation/control docs:
 | `platform/backend/docs/backend-admin-module-registry-brief.md` | deleted compacted pointer | admin module registry contract | `platform/backend/docs/contracts/admin-module-registry.md` | delete | Landed: phase-heavy registry brief compacted into active contract. | Exact old text is git-history only. |
 | `platform/backend/docs/backend-admin-access-policy-layering.md` | deleted compacted pointer | admin control-plane contract | `platform/backend/docs/contracts/admin-control-plane.md` | delete | Landed: access layering compacted into active admin control-plane contract. | Exact old text is git-history only. |
 | `platform/backend/docs/backend-admin-tenant-events-mails-overlap-audit-v1.md` | deleted compatibility pointer | events/mail cleanup proposal | `platform/backend/docs/proposals/events-mails-cleanup.md` | delete | Landed: audit moved to future proposal scope. | Owner activation required before implementation. |
-| `platform/backend/docs/backend-admin-module-registry-refactor-plan.md` | deleted archive pointer | archive | `platform/backend/docs/archive/backend-admin-module-registry-refactor-plan.md` | delete | Landed: completed plan moved to archive. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/backend-admin-module-registry-refactor-plan.md` | deleted archive pointer | archive | `platform/backend/backend-admin-module-registry-refactor-plan.md` | delete | Landed: completed plan moved to archive. | Exact old text is git-history only; archive payload remains. |
 | `platform/backend/docs/contracts/schema-tenancy.md` | synthesized active contract | schema tenancy contract | `platform/backend/docs/contracts/schema-tenancy.md` | keep | Landed as the new schema/tenancy contract for master/tenant placement, naming, isolation, and import boundary. | Keep aligned with migrations and schema code. |
 | `platform/backend/docs/contracts/migrations.md` | synthesized active contract | migrations contract | `platform/backend/docs/contracts/migrations.md` | keep | Landed as the new migration contract for active master/tenant migrations, bundle rules, and `cmd/migrate`. | Keep bundle and migrations coherent. |
 | `platform/backend/docs/backend-schema-master-baseline.md` | deleted compacted pointer | schema tenancy contract | `platform/backend/docs/contracts/schema-tenancy.md` | delete | Landed: master schema facts merged into active schema/tenancy contract. | Exact old text is git-history only. |
@@ -243,10 +243,10 @@ Local relocation/control docs:
 | `platform/backend/docs/backend-tenant-import-module-boundary-v1.md` | deleted compatibility pointer | import boundary reference | `platform/backend/docs/reference/tenant-import-boundary.md` | delete | Landed: import module boundary moved to reference/future import material. | Future import repo strategy may change. |
 | `platform/backend/docs/backend-events-identity-contract.md` | deleted compatibility pointer | events identity contract | `platform/backend/docs/contracts/events-identity.md` | delete | Landed: event actor identity moved to active contract. | Exact old text is git-history only. |
 | `platform/backend/docs/backend-schema-drift-check-strategy.md` | deleted compatibility pointer | schema drift proposal | `platform/backend/docs/proposals/schema-drift-checks.md` | delete | Landed: verification strategy moved to proposal/backlog scope. | Owner activation required before implementation. |
-| `platform/backend/docs/backend-tenant-starter-field-targets.md` | deleted archive pointer | archive | `platform/backend/docs/archive/backend-tenant-starter-field-targets.md` | delete | Landed: superseded starter targets moved to archive. | Exact old text is git-history only; archive payload remains. |
-| `platform/backend/docs/backend-export-architecture-agent-prompt.md` | deleted archive pointer | archive | `platform/backend/docs/archive/backend-export-architecture-agent-prompt.md` | delete | Landed: prompt artifact moved to archive. | Exact old text is git-history only; archive payload remains. |
-| `platform/backend/docs/GO_AGENT_RULES.md` | deleted archive pointer | archive | `platform/backend/docs/archive/GO_AGENT_RULES.md` | delete | Landed: old agent rules moved to archive; current AGENTS docs win. | Exact old text is git-history only; archive payload remains. |
-| `platform/backend/docs/ramp_v_108_backend_standard_v_2.md` | deleted archive pointer | archive | `platform/backend/docs/archive/ramp_v_108_backend_standard_v_2.md` | delete | Landed: large historical standard moved to archive. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/backend-tenant-starter-field-targets.md` | deleted archive pointer | archive | `platform/backend/backend-tenant-starter-field-targets.md` | delete | Landed: superseded starter targets moved to archive. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/backend-export-architecture-agent-prompt.md` | deleted archive pointer | archive | `platform/backend/backend-export-architecture-agent-prompt.md` | delete | Landed: prompt artifact moved to archive. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/GO_AGENT_RULES.md` | deleted archive pointer | archive | `platform/backend/GO_AGENT_RULES.md` | delete | Landed: old agent rules moved to archive; current AGENTS docs win. | Exact old text is git-history only; archive payload remains. |
+| `platform/backend/docs/ramp_v_108_backend_standard_v_2.md` | deleted archive pointer | archive | `platform/backend/ramp_v_108_backend_standard_v_2.md` | delete | Landed: large historical standard moved to archive. | Exact old text is git-history only; archive payload remains. |
 | `platform/backend/docs/legacy/postgres-archive/**` | archive pointer | archive/reference | `platform/backend/docs/archive/postgres-archive/README.md` | archive | Landed: legacy SQL payload moved behind archive index and old legacy path is pointer-only. | Read only for explicit PostgreSQL archaeology. |
 
 ## Suggested First Migration Slices
@@ -269,7 +269,7 @@ Local relocation/control docs:
 16. Tenant Web module doc slice: landed with `modules/tenant-web.md` as the tenant shell/auth/bootstrap and app-boundary read path.
 17. Platform Studio supporting field/catalog slice: landed with `modules/platform-studio/form-builder-fields.md`.
 18. Remaining Form Builder detail triage: landed in `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`.
-19. Reference-code alias/relocation planning: landed with `docs/ref/reference-code.md`, `maestro/memory/reference-code/packs-index.md`, and `maestro/memory/reference-code/relocation-plan.md`.
+19. Reference-code alias/relocation planning: landed with `maestro/memory/reference-code/README.md`, `maestro/memory/reference-code/packs-index.md`, and `maestro/memory/reference-code/relocation-plan.md`.
 20. Physical reference-code relocation: landed with ignored `reference-code/` raw packs; old pointer README folders were later deleted.
 21. Physical pointer/archive rewrite for old Form Builder docs: landed for archive and future workstream files; retained exact-detail reference docs remain for payload/settings audit.
 22. Exact-detail Form Builder docs header pass: landed; retained detail files declare `Status: exact detail reference`.
@@ -282,12 +282,12 @@ Local relocation/control docs:
 29. FE/BE docs final index and stale pointer audit: landed; old FE/BE root paths and `platform/docs/ai/**` are not active ownership routes.
 30. Pre-commit docs/memory verification pass: landed before the docs/memory reorganization commit.
 30. retired runtime modernization audit slice: landed with `maestro/memory/retired-runtime/`, updated AGENTS read order, updated retired runtime skill, and updated run/version scripts.
-31. Docs/ref cleanup and `platform/docs/ai` retirement planning: landed with `docs/ref/README.md`, `docs/archive/memory-reorg/`, retired legacy AI READMEs, and `maestro/memory/retired-runtime/platform-docs-ai-retirement-plan.md`.
+31. Reference-code cleanup and `platform/docs/ai` retirement planning: landed with `maestro/memory/reference-code/README.md`, retired legacy AI READMEs, and owner-managed external provenance.
 32. Legacy run triage: landed with `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md` and `maestro/memory/retired-runtime/legacy-runs-triage.md`; old run folders were later deleted after summary acceptance.
 33. Legacy durable memory pointer pass: landed for top-level `platform/docs/ai/*.md`; active memory now routes to `maestro/memory`, while old payload text is git-history provenance only.
 34. Legacy module memory pointer pass: landed for `platform/docs/ai/modules/*.md`; active module memory now routes to `maestro/memory/modules/**` and tracked FE/BE docs.
-35. Legacy operational payload pass: landed for `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, and `platform/docs/ai/automation-manifest.json`; active retired runtime workflow now routes only to `maestro/memory/retired-runtime/**`.
-36. Final `platform/docs/ai/**` retirement readiness audit: landed in `maestro/memory/retired-runtime/platform-docs-ai-retirement-readiness.md`; hot-read retirement passed and physical deletion is now complete.
+35. Legacy operational payload pass: landed for `platform/docs/ai/prompts/**`, `platform/docs/ai/templates/**`, and `platform/docs/ai/automation-manifest.json`; active workflow now routes through Maestro.
+36. Final `platform/docs/ai/**` retirement readiness audit landed; hot-read retirement passed and physical deletion is now complete.
 37. Legacy run payload cleanup: landed; raw `platform/docs/ai/runs/**` payloads were deleted after accepting the compact archive summary.
 38. Final `platform/docs/ai/**` pointer-directory deletion: landed; remaining compatibility pointer files were removed after active reference checks. Provenance now uses `maestro/memory/durable/legacy-memory-import.md`, compact summaries, and git history.
 39. Pointer cleanup: landed for `maestro/memory/AGENTS.override.md`, old FE/BE docs with compacted-pointer headers, moved-pointer headers, and no-longer-active auth follow-up wording; active docs/maps now point directly to canonical contracts/modules and exact old text is git-history only.

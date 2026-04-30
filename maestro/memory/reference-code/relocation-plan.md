@@ -43,13 +43,13 @@ reference-code/
 - Keep exact relative paths only after the alias, for example `reference-pack:extdb-legacy / Template/ExtDBpg_edit.htm`.
 - Do not make tracked docs link to local `maestro/memory`.
 - Do not make active FE/BE docs read raw packs by default.
-- Do not keep old directory-level README pointers; use `docs/ref/reference-code.md` and `reference-pack:*` aliases.
+- Do not keep old directory-level README pointers; use `maestro/memory/reference-code/README.md` and `reference-pack:*` aliases.
 
 ## Docs To Update During Physical Move
 
 | Area | Files to update | Required change |
 | --- | --- | --- |
-| Root reference docs | `docs/ref/reference-code.md` | Mark raw packs relocated and remove temporary-path language. |
+| Root reference docs | `maestro/memory/reference-code/README.md` | Mark raw packs relocated and remove temporary-path language. |
 | Frontend index | `platform/frontend/docs/README.md` | Keep donor material opt-in and point to alias registry. |
 | Backend index | `platform/backend/docs/README.md` | Mark `MSSQL` as legacy reference pack only. |
 | Vendor inventory | `platform/frontend/docs/vendor/README.md`, `platform/frontend/docs/vendor/metronic-inventory.md` | Replace raw Metronic path wording with alias wording. |
@@ -60,14 +60,14 @@ reference-code/
 
 Before move:
 
-- Confirm all raw-pack aliases exist in `docs/ref/reference-code.md`.
+- Confirm all raw-pack aliases exist in `maestro/memory/reference-code/README.md`.
 - Confirm `maestro/memory/reference-code/packs-index.md` has a local raw-pack path for every pack.
 - Confirm no active contract depends on raw donor paths as product truth.
 
 After move:
 
 - Old tracked reference directories are deleted from git.
-- `rg -n "reference-pack:" platform/frontend/docs platform/backend/docs docs/ref maestro/memory`
+- `rg -n "reference-pack:" platform/frontend/docs platform/backend/docs maestro/memory`
 - `git check-ignore -v reference-code/frontend/metronic/REFERENCE-PACK.md reference-code/platform-studio/extdb/REFERENCE-PACK.md reference-code/backend/mssql-legacy-schema/REFERENCE-PACK.md`
 
 ## Current Decision

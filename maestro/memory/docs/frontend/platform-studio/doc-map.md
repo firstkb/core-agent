@@ -122,7 +122,7 @@ Use git history only for exact old prompt text.
 
 Reference-code alias registry:
 
-- `docs/ref/reference-code.md`
+- `maestro/memory/reference-code/README.md`
 
 ## Proposed Active Footprint After Tracked Docs Reorg
 

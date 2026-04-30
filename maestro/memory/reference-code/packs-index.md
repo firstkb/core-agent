@@ -9,7 +9,7 @@ It is not part of the default AI read path.
 ## Read Rule
 
 Read this only when a task explicitly asks for reference code, donor code, legacy behavior archaeology, or physical relocation of raw packs.
-Do not read the raw pack before reading `docs/ref/reference-code.md` and `maestro/memory/durable/reference-code-policy.md`.
+Do not read the raw pack before reading `maestro/memory/reference-code/README.md` and `maestro/memory/durable/reference-code-policy.md`.
 
 ## Pack Aliases
 

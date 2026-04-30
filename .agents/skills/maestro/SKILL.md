@@ -57,6 +57,22 @@ Maestro work record unless the owner explicitly asks for a separate product
 structure. High-risk work must be `gated_execution` and must have
 `approval-*.json` before implementation.
 
+## Operational Frame
+
+For `T2_staged`, `T3_multi_step`, and `T4_gated` planning responses, start with:
+
+- Mode;
+- Tier;
+- Artifact shape;
+- Risk / gates;
+- Suggested agents;
+- Next allowed action;
+- Not yet.
+
+For `T0_inline` and most `T1_task` work, keep this implicit unless the owner
+asks or persistence is useful. For large implementation ideas, proactively say
+whether persisted artifacts are recommended before architecture details.
+
 ## Delegation
 
 - Charlie: read-only research.

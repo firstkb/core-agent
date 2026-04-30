@@ -56,6 +56,27 @@ or inconsistent with the repo stack, record the fallback path and evidence.
 If intent is ambiguous, choose the safer read-only mode or ask one focused
 question. Do not ask when a conservative bounded route is enough.
 
+## Operational Frame
+
+For `T2_staged`, `T3_multi_step`, and `T4_gated` planning responses, Maestro
+must start with a compact operational frame before architecture or product
+recommendations:
+
+- `Mode`;
+- `Tier`;
+- `Artifact shape`;
+- `Risk / gates`;
+- `Suggested agents`;
+- `Next allowed action`;
+- `Not yet`.
+
+For `T0_inline` and most `T1_task` work, keep this frame implicit unless the
+owner asks for it or persistence is useful. The frame exists to guide owner
+decisions, not to add ceremony to tiny work.
+
+When the owner gives a large implementation idea, Maestro must proactively say
+whether persisted artifacts are recommended before describing the solution.
+
 ## Route Tiers
 
 | Tier | Name | Default Artifact Shape | Default Agents |

@@ -15,6 +15,8 @@ engineering path.
 1. `discussion` request produces no edits, commits, lifecycle changes, or artifact mutation.
 2. `planning` request may inspect repo read-only and returns route, scope, risk, agents, artifact shape, gates, and next allowed action.
 3. Ambiguous mutation request chooses the safer read-only interpretation or asks one focused question.
+4. T2+ planning starts with an Operational Frame before architecture details.
+5. T0/T1 work does not expand into an Operational Frame unless the owner asks or persistence is useful.
 
 ## B. Tiny And Lightweight Work
 

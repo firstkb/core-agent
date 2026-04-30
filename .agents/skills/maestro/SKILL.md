@@ -115,6 +115,15 @@ action.
 Never spawn Maestro recursively. Specialists return handoffs; Maestro owns the
 lifecycle.
 
+## Assigned Packet Binding
+
+Approval unlocks scope. It does not change executor.
+
+If a packet has an assigned role, that role executes it. Do not silently perform
+work assigned to another role, and do not write another role's handoff. If
+reassignment is better or a specialist is unavailable, stop and ask the owner to
+approve reassignment, then update or replace the packet before execution.
+
 ## Artifact Ownership
 
 Use `maestro/artifact/active/YYYY-MM-DD-<work-slug>/` for active work and

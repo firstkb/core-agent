@@ -195,6 +195,19 @@ Never spawn Maestro recursively. Specialists must not become lifecycle owners.
 Any specialist outcome that affects state must be persisted as a handoff before
 Maestro treats it as durable.
 
+## Assigned Packet Binding
+
+Approval unlocks scope. It does not change the assigned executor.
+
+When a packet names an assigned role, only that role may execute the packet.
+Maestro may reconcile, revise, or reassign the packet, but must not silently
+perform work assigned to another role or write that role's handoff.
+
+If the assigned specialist is unavailable, blocked, or Maestro believes inline
+execution is better, Maestro must stop and ask the owner to approve a role
+reassignment. After approval, update the packet or create a replacement packet
+before execution. The resulting handoff role must match the actual executor.
+
 ## Packet Requirements
 
 Every delegated packet must include:

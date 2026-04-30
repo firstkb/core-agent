@@ -37,6 +37,9 @@ engineering path.
 7. After Grant-driven revisions, `plan.md` records `Audit Status` with handoff ref and readiness.
 8. Specialist subagents receive self-contained packets and artifact paths.
 9. Full-context/forked launch failure falls back to explicit packet invocation.
+10. Execution approval does not change assigned role.
+11. A packet assigned to a specialist is not executed inline by Maestro unless owner approves reassignment and the packet is updated or replaced.
+12. Handoff role matches the actual executor.
 
 ## D. Artifact Resume
 

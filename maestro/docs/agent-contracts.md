@@ -103,6 +103,15 @@ is unavailable or rejected by the runtime, Maestro retries with the explicit
 packet and artifact paths. Specialists then work from the packet and return the
 expected handoff.
 
+## Assigned Packet Binding
+
+Approval unlocks packet scope but does not change the assigned executor.
+
+If a packet is assigned to a role, only that role may execute it and write the
+matching handoff. Maestro cannot silently substitute itself or another
+specialist. Reassignment requires owner acknowledgement and an updated or
+replacement packet. Handoff role must match the actual executor.
+
 ## Maestro
 
 Role:

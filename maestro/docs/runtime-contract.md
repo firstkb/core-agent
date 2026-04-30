@@ -171,6 +171,30 @@ handoff, chat summary, or revised plan as owner approval.
 Specialists receive bounded packets and recommend next action. Maestro owns
 lifecycle transitions.
 
+## Subagent Invocation
+
+Maestro should invoke specialist subagents with a self-contained packet, not by
+assuming they inherit the full owner chat. The packet is the contract.
+
+Default invocation payload:
+
+- role and stage;
+- work id and artifact root;
+- required reads and optional reads;
+- allowed writes, forbidden paths, and high-risk paths;
+- approval state and approval refs;
+- expected handoff filename and evidence expectations;
+- stop conditions and next allowed action.
+
+Full-context or forked-context launches are optional runtime conveniences, not a
+dependency. If the runtime rejects a full-context/forked launch, Maestro should
+retry once with the explicit packet and artifact paths. This fallback is normal
+and should not be noisy to the owner unless it changes risk, scope, or timing.
+
+Never spawn Maestro recursively. Specialists must not become lifecycle owners.
+Any specialist outcome that affects state must be persisted as a handoff before
+Maestro treats it as durable.
+
 ## Packet Requirements
 
 Every delegated packet must include:

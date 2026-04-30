@@ -142,6 +142,10 @@ Subagent rules:
 
 - pass a narrow packet with goal, scope, required reads, forbidden changes,
   evidence expectations, and expected handoff;
+- prefer explicit artifact packets over full chat context;
+- treat full-context or forked-context launches as optional runtime convenience;
+- if a full-context/forked launch is rejected, retry once with the explicit
+  packet, artifact root, and required paths;
 - prefer specialist subagents over a generic chain;
 - do not launch a full sequence just because roles exist;
 - do not let specialists become lifecycle owners;

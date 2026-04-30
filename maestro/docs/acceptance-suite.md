@@ -35,6 +35,8 @@ engineering path.
 5. Maestro inspects the handoff before continuing or closing.
 6. Grant audit that affects approval readiness writes `handoff-audit-grant-001.json`.
 7. After Grant-driven revisions, `plan.md` records `Audit Status` with handoff ref and readiness.
+8. Specialist subagents receive self-contained packets and artifact paths.
+9. Full-context/forked launch failure falls back to explicit packet invocation.
 
 ## D. Artifact Resume
 

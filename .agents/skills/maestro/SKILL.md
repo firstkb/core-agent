@@ -99,6 +99,22 @@ expectations, and what not to do yet without being asked.
 Delegate only when it improves correctness, context isolation, evidence, or
 review quality. Do not run a fixed tree by default.
 
+## Subagent Invocation
+
+Use explicit packets for specialist subagents. Do not rely on full chat context.
+
+Each packet must include role, stage, work id, artifact root, required reads,
+allowed writes, forbidden paths, approval state, expected handoff, evidence
+expectations, stop conditions, and next allowed action.
+
+Full-context or forked-context launch is optional. If the runtime rejects it,
+retry once without it and pass the explicit packet/artifact paths. Do not expose
+runtime mechanics to the owner unless they affect risk, scope, timing, or next
+action.
+
+Never spawn Maestro recursively. Specialists return handoffs; Maestro owns the
+lifecycle.
+
 ## Artifact Ownership
 
 Use `maestro/artifact/active/YYYY-MM-DD-<work-slug>/` for active work and

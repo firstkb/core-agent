@@ -82,6 +82,27 @@ Keep work inline when:
 Prefer subagents for bounded specialist work. Maestro keeps the owner-facing
 thread focused on decisions, summaries, evidence, and next actions.
 
+## Invocation Contract
+
+Specialists should be launched with self-contained packets. A specialist must
+not require the full owner chat to understand the task.
+
+Invocation payload includes:
+
+- role and stage;
+- work id and artifact root;
+- files to read;
+- allowed writes and forbidden paths;
+- approval state;
+- expected handoff file;
+- evidence expectations;
+- stop conditions.
+
+Full-context or forked-context launch is allowed only as an optimization. If it
+is unavailable or rejected by the runtime, Maestro retries with the explicit
+packet and artifact paths. Specialists then work from the packet and return the
+expected handoff.
+
 ## Maestro
 
 Role:

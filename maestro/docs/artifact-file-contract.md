@@ -223,6 +223,7 @@ Required sections:
 - `Checks Run`
 - `Checks Skipped`
 - `Evidence Links`
+- `Browser Use`
 - `Visual / Browser Notes`
 - `Risks`
 
@@ -231,6 +232,8 @@ Rules:
 - reference large logs or screenshots instead of embedding them;
 - redact secrets and private credentials;
 - distinguish verified facts from assumptions.
+- for UI-visible work, record that Browser Use was used or explain why it was
+  unavailable and what fallback evidence was used.
 
 ### `approval.md`
 

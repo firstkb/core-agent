@@ -228,6 +228,7 @@ Use when:
 - tests, CI, Storybook, browser, visual, security, or migration checks require
   explicit evidence;
 - verification should be independent from implementation.
+- UI-visible work needs Browser Use verification.
 
 Allowed stages:
 
@@ -248,7 +249,9 @@ Required evidence:
 
 - exact commands and results;
 - CI or workflow links when relevant;
-- browser route, viewport, and state notes when UI is visible;
+- Browser Use skill used, or explicit reason it was unavailable/skipped;
+- browser route, viewport, interaction state, and visual notes when UI is
+  visible;
 - migration/security notes when relevant.
 
 ## Lens

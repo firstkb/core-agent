@@ -259,6 +259,8 @@ Allowed agents:
 - Scout;
 - Mason when verification is simple and coupled to implementation.
 
+UI-visible work should use Scout with the `browser-use` skill by default.
+
 Input artifacts:
 
 - `task.md`;
@@ -273,7 +275,9 @@ Output artifacts:
 Required evidence:
 
 - commands run and result;
-- browser or visual notes when UI is visible;
+- Browser Use skill used, or explicit reason it was unavailable/skipped;
+- browser route, viewport, interaction state, and visual notes when UI is
+  visible;
 - CI links when CI is part of the gate;
 - migration/security notes when relevant.
 

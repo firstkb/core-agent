@@ -35,7 +35,7 @@ approval safety, or handoff quality.
 | Tiny direct | T0 Direct Inline | Maestro inline | focused check |
 | Lightweight task | T1 Lightweight Task | Mason only when inline work is not enough; Scribe optional | closeout when persisted |
 | Staged task | T2 Staged Task | Mason, then Scout or Lens only when evidence/review matters; Scribe when persisted | evidence before closeout |
-| UI task | T2 or T3 | Charlie optional, Mason with UI skill, Scout/browser, Lens only when useful | route, viewport, states, visual notes |
+| UI task | T2 or T3 | Charlie optional, Mason with UI skill, Scout with browser-use, Lens only when useful | route, viewport, states, visual notes |
 | Feature work | T3 Feature Work | Charlie for unknowns, Grant for plan risk, Mason per slice, Scout/Lens/Scribe as needed | approval when scope/risk requires it |
 | Module-sized work | T4A Module-Sized Work | Charlie, Grant, owner approval, then adaptive staged slices | owner-approved brief |
 | High-risk work | T4B High Risk | Charlie, Grant, owner/security approval, Mason, Scout, Lens, Release only if approved | high-risk approvals and evidence |
@@ -87,11 +87,16 @@ verification.
 
 Possible moves: Charlie researches only when the UI path is unclear, Mason uses
 the UI skill when design decisions matter, Scout performs browser or visual
-review, Lens reviews only when risk remains, and Scribe records closeout when
-useful.
+review with the `browser-use` skill, Lens reviews only when risk remains, and
+Scribe records closeout when useful.
+
+UI-visible work requires Scout with `browser-use` by default. If Browser Use is
+unavailable or cannot reach the target, Maestro must record the reason and the
+fallback evidence used before closeout.
 
 Required evidence:
 
+- Browser Use skill used, or explicit reason it was skipped;
 - route checked;
 - viewport checked;
 - relevant states checked;

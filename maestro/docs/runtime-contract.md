@@ -131,6 +131,30 @@ Archive root:
 maestro/artifact/archive/YYYY-MM-DD-<work-slug>/
 ```
 
+## Artifact Resume And Durable Handoffs
+
+When the owner provides an active artifact folder, Maestro must treat that
+folder as the current portable work state. Read `intent.md`, `plan.md`, latest
+`handoff-*.json`, `approval-*.json`, `evidence.md`, and `closeout.md` when
+present, then reconstruct mode, tier, approved scope, gates, risks, and next
+allowed action. Do not restart planning from scratch unless the artifact state
+is missing, stale, or contradictory.
+
+Any specialist result that affects the next allowed action, approval readiness,
+gate status, risk, or scope must be persisted as a handoff artifact. A chat-only
+specialist answer is not durable continuation state.
+
+Grant owns audit output. Grant writes `handoff-audit-grant-NNN.json` with the
+audit verdict, recommendation, findings, required revisions, residual risks,
+and next allowed action. Maestro owns orchestration state: it reads the handoff,
+applies or requests plan revisions, and may then add an `Audit Status` section
+to `plan.md` with the Grant handoff ref, verdict, revision status, and readiness
+for owner approval.
+
+Owner approval is separate durable state. Record it as `approval-NNN.json` only
+after the owner explicitly approves the scoped action. Do not treat a Grant
+handoff, chat summary, or revised plan as owner approval.
+
 ## Specialist Role Boundaries
 
 | Role | System Agent | Writes Product Code | Primary Output |

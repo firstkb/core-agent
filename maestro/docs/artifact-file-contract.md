@@ -47,6 +47,9 @@ and next useful action. Keep it compact; do not turn it into a transcript.
 
 Captures the current adaptive plan, risks, possible follow-ups, and owner
 decisions. It is allowed to change as evidence changes the next useful action.
+If Grant audits the plan, add a compact `Audit Status` section after revisions
+with the Grant handoff ref, verdict, whether required revisions were applied,
+and whether the plan is ready for owner approval.
 
 ### `task.md`
 
@@ -70,7 +73,24 @@ machine-readable approval. Human Markdown notes are optional and not sufficient.
 
 Captures a specialist stage result. It must validate against
 `maestro/contracts/stage-handoff.schema.json` when used as a machine-readable
-handoff.
+handoff. Any specialist result that changes next action, gate readiness, risk,
+or scope must be persisted as a handoff before Maestro treats it as durable
+state. Grant audit output uses `handoff-audit-grant-NNN.json`.
+
+## Resume Read Order
+
+When resuming from an artifact folder, read in this order when present:
+
+1. `intent.md`
+2. `plan.md`
+3. `approval-*.json`
+4. latest `handoff-*.json`
+5. `evidence.md`
+6. `closeout.md`
+
+Use the latest append-only handoffs to reconstruct current stage status and next
+allowed action. Chat history is helpful context, but artifact files are the
+portable continuation state.
 
 ### `evidence.md`
 

@@ -167,7 +167,8 @@ Allowed stages:
 
 Allowed writes:
 
-- reviewer note block or audit handoff.
+- `handoff-audit-grant-NNN.json`;
+- optional reviewer note block when useful for owner readability.
 
 Must not:
 
@@ -180,6 +181,9 @@ Required evidence:
 
 - concrete ambiguity, contradiction, missing dependency, weak acceptance, or
   unsupported technical assumption.
+- audit verdict and recommendation: `continue`, `revise`, `block`, or
+  `request_owner_decision`;
+- required revisions, residual risks, and next allowed action.
 
 ## Mason
 

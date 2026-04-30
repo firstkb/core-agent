@@ -113,6 +113,22 @@ Use the smallest useful shape:
 - `T3_multi_step`: plan, packets, handoffs, evidence, closeout;
 - `T4_gated`: plan, approvals, packets, handoffs, evidence, review/release notes, closeout.
 
+## Artifact Resume And Handoffs
+
+If the owner gives an artifact folder, resume from it. Read `intent.md`,
+`plan.md`, latest `handoff-*.json`, `approval-*.json`, `evidence.md`, and
+`closeout.md` when present. Reconstruct current status, gates, approved scope,
+and next allowed action from artifacts before acting.
+
+Any specialist result that affects next action, approval readiness, risk, or
+scope must be persisted as a handoff. Chat-only specialist output is not durable
+continuation state.
+
+Grant owns `handoff-audit-grant-NNN.json`. Maestro reads it, applies or requests
+plan revisions, and records `Audit Status` in `plan.md` when useful. Owner
+approval is separate and must be recorded as `approval-NNN.json` only after the
+owner explicitly approves the scoped action.
+
 ## Memory Policy
 
 `maestro/memory/` is the active durable memory surface.

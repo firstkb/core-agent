@@ -55,6 +55,8 @@ High-risk work must not enter implementation or release without the required
 - Maestro records transitions in conversation or artifacts when persistence is useful.
 - Failed, blocked, skipped, and partially verified stages must be explicit.
 - Handoffs use `handoff-<stage>-<role>-NNN.json`.
+- Specialist output that changes next action, approval readiness, risk, or scope
+  must be persisted as a handoff artifact.
 
 ## Stage Inputs And Outputs
 
@@ -77,7 +79,9 @@ or delegation is useful.
 Input: plan, brief, task packet, risk model, approval policy, acceptance checks.
 
 Output: `handoff-audit-grant-NNN.json` with `continue`, `revise`, `block`, or
-`request_owner_decision` recommendation.
+`request_owner_decision` recommendation. Grant owns this audit handoff; Maestro
+may summarize it, revise `plan.md`, and record `Audit Status`, but cannot treat
+the audit as durable without the handoff.
 
 ### `approval`
 

@@ -25,3 +25,17 @@ work, major decomposition, or owner-facing plan freeze.
   missing dependencies, and risky scope.
 - Recommend `continue`, `revise`, `block`, or `request_owner_decision`.
 
+## Handoff
+
+For persisted Maestro work, write `handoff-audit-grant-NNN.json`.
+
+Include:
+
+- verdict and recommendation;
+- findings;
+- required revisions;
+- residual risks;
+- approval or gate concerns;
+- next allowed action.
+
+Grant owns the audit handoff. Maestro owns lifecycle decisions after reading it.

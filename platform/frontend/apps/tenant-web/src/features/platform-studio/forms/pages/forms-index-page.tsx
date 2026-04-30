@@ -7,42 +7,6 @@ import {
 import { ApiClientError } from "@platform/api-client";
 import { useTranslation } from "@platform/i18n";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Dialog,
-  DialogBody,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  EyeIcon,
-  EyeOffIcon,
-  FormIcon,
-  Input,
-  Label,
-  LockIcon,
-  Menu,
-  MenuContent,
-  MenuItem,
-  MenuSeparator,
-  MenuTrigger,
-  PlusIcon,
-  SearchIcon,
-  StarIcon,
-} from "@platform/ui-kit";
-import {
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -62,148 +26,22 @@ import {
   getFormsPlaceholderModelRouteId,
   getFormsPlaceholderViewRouteId,
 } from "../forms-route-helpers";
-import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
+import { FormsIndexAuthoringDialog } from "../components/forms-index-authoring-dialog";
+import { FormsIndexDeleteDialogs } from "../components/forms-index-delete-dialogs";
+import { FormsIndexModelsPanel } from "../components/forms-index-models-panel";
+import {
+  type AuthoringDialogState,
+  createCopiedViewTitle,
+  type DeleteIntent,
+  type DeleteModelIntent,
+  isStaticFormsModel,
+  resolveMutationSelectedViewRouteId,
+  triggerBrowserDownload,
+} from "../components/forms-index-page-helpers";
+import { FormsIndexViewsPanel } from "../components/forms-index-views-panel";
 import { platformStudioPaths } from "../../platform-studio-route-meta";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
 import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
-
-function ScreenActionsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <circle cx="5.5" cy="12" r="1.75" />
-      <circle cx="12" cy="12" r="1.75" />
-      <circle cx="18.5" cy="12" r="1.75" />
-    </svg>
-  );
-}
-
-function ViewWarningIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 3.2 2.6 20.2h18.8L12 3.2Zm0 5.1c.5 0 .9.4.9.9v4.8a.9.9 0 1 1-1.8 0V9.2c0-.5.4-.9.9-.9Zm0 9.1a1.1 1.1 0 1 1 0-2.2 1.1 1.1 0 0 1 0 2.2Z" />
-    </svg>
-  );
-}
-
-function DatabaseModelIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <ellipse
-        cx="12"
-        cy="6"
-        rx="6.5"
-        ry="2.75"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M5.5 6v5.8c0 1.52 2.9 2.75 6.5 2.75s6.5-1.23 6.5-2.75V6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M5.5 11.6v6.4c0 1.52 2.9 2.75 6.5 2.75s6.5-1.23 6.5-2.75v-6.4"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
-function createCopiedViewTitle(title: string, existingTitles: ReadonlyArray<string>) {
-  const baseTitle = `${title} Copy`;
-  if (!existingTitles.includes(baseTitle)) {
-    return baseTitle;
-  }
-
-  let index = 2;
-  while (existingTitles.includes(`${baseTitle} ${index}`)) {
-    index += 1;
-  }
-
-  return `${baseTitle} ${index}`;
-}
-
-function getViewStatusKey(isActive: boolean) {
-  return isActive
-    ? "tenant.platformStudio.forms.viewActive"
-    : "tenant.platformStudio.forms.viewInactive";
-}
-
-function isStaticFormsModel(model: Pick<FormsPlaceholderModel, "sourceType"> | null | undefined) {
-  return Boolean(model?.sourceType && model.sourceType !== "managed");
-}
-
-function triggerBrowserDownload(file: {
-  blob: Blob;
-  fileName: string;
-}) {
-  const objectUrl = globalThis.URL.createObjectURL(file.blob);
-  const link = globalThis.document.createElement("a");
-  link.href = objectUrl;
-  link.download = file.fileName;
-  link.style.display = "none";
-  globalThis.document.body.append(link);
-  link.click();
-  link.remove();
-  globalThis.setTimeout(() => {
-    globalThis.URL.revokeObjectURL(objectUrl);
-  }, 0);
-}
-
-function resolveMutationSelectedViewRouteId(
-  model: Pick<FormsPlaceholderModel, "screens">,
-  selectedViewId: string | null,
-) {
-  const normalizedSelectedViewId = selectedViewId?.trim() ?? "";
-  if (!normalizedSelectedViewId) {
-    return null;
-  }
-
-  const selectedView = model.screens.find((screen) => screen.id === normalizedSelectedViewId);
-  return selectedView ? getFormsPlaceholderViewRouteId(selectedView) : null;
-}
-
-type AuthoringDialogState =
-  | {
-      kind: "create-model";
-      title: string;
-    }
-  | {
-      kind: "create-view";
-      modelId: string;
-      title: string;
-    }
-  | {
-      kind: "copy-view";
-      modelId: string;
-      title: string;
-      viewId: string;
-    };
-
-type DeleteIntent = {
-  kind: "view";
-  modelId: string;
-  title: string;
-  viewId: string;
-};
-
-type DeleteModelIntent = {
-  modelId: string;
-  title: string;
-};
 
 export function FormsPage() {
   const { t } = useTranslation();
@@ -549,6 +387,55 @@ export function FormsPage() {
     }
   }
 
+  function handleDialogTitleChange(title: string) {
+    if (!dialogState) {
+      return;
+    }
+
+    setDialogState({
+      ...dialogState,
+      title,
+    });
+    setDialogError(null);
+  }
+
+  function cancelDialog() {
+    setDialogState(null);
+    setDialogError(null);
+  }
+
+  function closeDeleteViewDialog(open: boolean) {
+    if (!open && !isDeletingView) {
+      setDeleteIntent(null);
+      setDeleteError(null);
+    }
+  }
+
+  function closeDeleteModelDialog(open: boolean) {
+    if (!open && !isDeletingModel) {
+      setDeleteModelIntent(null);
+      setDeleteError(null);
+    }
+  }
+
+  function navigateToModel(model: FormsPlaceholderModel) {
+    navigate(platformStudioPaths.model(getFormsPlaceholderModelRouteId(model)));
+  }
+
+  function navigateToView(model: FormsPlaceholderModel, view: FormsPlaceholderView) {
+    navigate(platformStudioPaths.view(
+      getFormsPlaceholderModelRouteId(model),
+      getFormsPlaceholderViewRouteId(view),
+    ));
+  }
+
+  function navigateToPreviewView(model: FormsPlaceholderModel, view: FormsPlaceholderView) {
+    navigate(platformStudioPaths.previewRuntimeView(
+      getFormsPlaceholderModelRouteId(model),
+      getFormsPlaceholderViewRouteId(view),
+    ));
+  }
+
   const addModelTitle = pageAccess.canManageStructure
     ? undefined
     : t(pageAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure");
@@ -561,548 +448,84 @@ export function FormsPage() {
       <PlatformStudioTabs />
 
       <section className="tenant-web__platform-studio-master-detail">
-        <Card className="tenant-web__platform-studio-panel">
-          <CardHeader>
-            <div className="tenant-web__platform-studio-panel-header">
-              <CardTitle>{t("tenant.platformStudio.forms.modelsTitle")}</CardTitle>
-              <Button
-                className="tenant-web__platform-studio-action-button"
-                disabled={!pageAccess.canManageStructure || isSubmittingDialog}
-                leadingIcon={<PlusIcon />}
-                onClick={openCreateModelDialog}
-                size="sm"
-                title={addModelTitle}
-                variant="secondary"
-              >
-                {t("tenant.platformStudio.forms.addModel")}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split">
-            <div className="tenant-web__platform-studio-panel-static tenant-web__platform-studio-panel-static--compact-x">
-              <div className="tenant-web__platform-studio-search">
-                <div className="tenant-web__platform-studio-search-field">
-                  <span className="tenant-web__platform-studio-search-icon">
-                    <SearchIcon />
-                  </span>
-                  <Input
-                    aria-label={t("tenant.platformStudio.forms.modelSearchPlaceholder")}
-                    className="tenant-web__platform-studio-search-input"
-                    onChange={(event) => setModelSearchQuery(event.target.value)}
-                    placeholder={t("tenant.platformStudio.forms.modelSearchPlaceholder")}
-                    value={modelSearchQuery}
-                  />
-                </div>
-              </div>
-            </div>
+        <FormsIndexModelsPanel
+          addModelTitle={addModelTitle}
+          canManageStructure={pageAccess.canManageStructure}
+          filteredModels={filteredModels}
+          isLoadingModels={isLoadingModels}
+          isSubmittingDialog={isSubmittingDialog}
+          modelSearchQuery={modelSearchQuery}
+          models={models}
+          modelsError={modelsError}
+          onAddModel={openCreateModelDialog}
+          onModelSearchChange={setModelSearchQuery}
+          onModelSelect={navigateToModel}
+          selectedModel={selectedModel}
+          t={t}
+        />
 
-            <PlatformStudioPanelScroll
-              aria-label={t("tenant.platformStudio.forms.modelsTitle")}
-              className="tenant-web__platform-studio-panel-scroll--models"
-            >
-              <div className="tenant-web__platform-studio-object-list">
-                {modelsError ? (
-                  <div className="tenant-web__platform-studio-inline-help">
-                    <span>{modelsError}</span>
-                  </div>
-                ) : null}
-
-                {isLoadingModels && models.length === 0 ? (
-                  <div className="tenant-web__platform-studio-builder-empty">
-                    <p>{t("tenant.platformStudio.forms.loadingModels")}</p>
-                  </div>
-                ) : null}
-
-                {!isLoadingModels && models.length === 0 ? (
-                  <div className="tenant-web__platform-studio-builder-empty">
-                    <p className="tenant-web__platform-studio-empty-title">
-                      {t("tenant.platformStudio.forms.emptyModelsTitle")}
-                    </p>
-                    <p>{t("tenant.platformStudio.forms.emptyModelsDescription")}</p>
-                  </div>
-                ) : null}
-
-                {!isLoadingModels && models.length > 0 && filteredModels.length === 0 ? (
-                  <div className="tenant-web__platform-studio-builder-empty">
-                    <p className="tenant-web__platform-studio-empty-title">
-                      {t("tenant.platformStudio.forms.emptyModelSearchTitle")}
-                    </p>
-                    <p>{t("tenant.platformStudio.forms.emptyModelSearchDescription")}</p>
-                  </div>
-                ) : null}
-
-                {filteredModels.map((model) => {
-                  const isActive = selectedModel?.id === model.id;
-                  const modelIsStatic = isStaticFormsModel(model);
-
-                  return (
-                    <button
-                      className={`tenant-web__platform-studio-object-item${isActive ? " tenant-web__platform-studio-object-item--active" : ""}`}
-                      key={model.id}
-                      onClick={() => navigate(platformStudioPaths.model(getFormsPlaceholderModelRouteId(model)))}
-                      type="button"
-                    >
-                      <span className="tenant-web__platform-studio-object-main">
-                        <span className={`tenant-web__platform-studio-object-icon${modelIsStatic ? " tenant-web__platform-studio-object-icon--static" : ""}`}>
-                          {modelIsStatic ? <DatabaseModelIcon /> : <FormIcon />}
-                        </span>
-                        <span className="tenant-web__platform-studio-object-copy">
-                          <span className="tenant-web__platform-studio-object-title">{model.title}</span>
-                          {model.description ? (
-                            <span className="tenant-web__platform-studio-screen-description">{model.description}</span>
-                          ) : null}
-                        </span>
-                      </span>
-                      <span className="tenant-web__platform-studio-object-meta">
-                        {typeof model.dataCount === "number" ? (
-                          <Badge
-                            appearance="soft"
-                            aria-label={t("tenant.platformStudio.forms.modelDataCount", { count: model.dataCount })}
-                            className="tenant-web__platform-studio-count-badge"
-                            size="sm"
-                            title={t("tenant.platformStudio.forms.modelDataCount", { count: model.dataCount })}
-                            variant="neutral"
-                          >
-                            {model.dataCount}
-                          </Badge>
-                        ) : null}
-                        {model.isStructureLocked ? (
-                          <Badge
-                            appearance="soft"
-                            aria-label={t("tenant.platformStudio.forms.structureLocked")}
-                            className="tenant-web__platform-studio-lock-badge"
-                            size="sm"
-                            title={t("tenant.platformStudio.forms.structureLocked")}
-                            variant="warning"
-                          >
-                            <LockIcon />
-                          </Badge>
-                        ) : null}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </PlatformStudioPanelScroll>
-          </CardContent>
-        </Card>
-
-        <Card className="tenant-web__platform-studio-panel">
-          {selectedModel ? (
-            <>
-              <CardHeader>
-                <div className="tenant-web__platform-studio-panel-header">
-                  <CardTitle>{selectedModel.title}</CardTitle>
-                  <div className="tenant-web__platform-studio-panel-actions">
-                    <Button
-                      className="tenant-web__platform-studio-action-button"
-                      disabled={!selectedModelAccess.canEditViews || isSubmittingDialog}
-                      leadingIcon={<PlusIcon />}
-                      onClick={() => openCreateViewDialog(selectedModel)}
-                      size="sm"
-                      title={addViewTitle}
-                      variant="secondary"
-                    >
-                      {t("tenant.platformStudio.forms.addView")}
-                    </Button>
-                    {!selectedModelIsStatic ? (
-                      <Menu align="end">
-                        <MenuTrigger>
-                          <button
-                            aria-label={t("tenant.platformStudio.forms.modelActions")}
-                            className="tenant-web__platform-studio-menu-trigger"
-                            type="button"
-                          >
-                            <ScreenActionsIcon />
-                          </button>
-                        </MenuTrigger>
-                        <MenuContent className="tenant-web__platform-studio-menu">
-                          <>
-                            <MenuItem
-                              disabled={isExportingModelData}
-                              onClick={() => void handleExportModelData(selectedModel)}
-                            >
-                              {t("tenant.platformStudio.forms.exportData")}
-                            </MenuItem>
-                            <MenuItem
-                              disabled={!canExportModelBundle || isExportingModelBundle}
-                              onClick={() => void handleExportModelBundle(selectedModel)}
-                              title={canExportModelBundle ? undefined : t("tenant.platformStudio.forms.permission.viewLocked")}
-                            >
-                              {t("tenant.platformStudio.forms.exportModel")}
-                            </MenuItem>
-                            <MenuSeparator />
-                            <MenuItem
-                              disabled={!selectedModelAccess.canDeleteModel || isDeletingModel}
-                              onClick={() => handleDeleteModelIntent(selectedModel)}
-                              title={selectedModelAccess.canDeleteModel ? undefined : t(selectedModelAccess.structureRestrictionKey ?? "tenant.platformStudio.forms.permission.ownerOnlyStructure")}
-                              tone="danger"
-                            >
-                              {t("tenant.platformStudio.forms.deleteModel")}
-                            </MenuItem>
-                          </>
-                        </MenuContent>
-                      </Menu>
-                    ) : null}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="tenant-web__platform-studio-panel-content">
-                <PlatformStudioPanelScroll className="tenant-web__platform-studio-panel-scroll--views">
-                  <div className="tenant-web__platform-studio-screen-list">
-                    <div className="tenant-web__platform-studio-badge-row tenant-web__platform-studio-content-badges">
-                      {selectedModel.isStructureLocked ? (
-                        <Badge appearance="soft" size="sm" variant="warning">
-                          {t("tenant.platformStudio.forms.structureLocked")}
-                        </Badge>
-                      ) : null}
-                      {selectedModel.canEditViewsOnly ? (
-                        <Badge appearance="soft" size="sm" variant="info">
-                          {t("tenant.platformStudio.forms.canEditViewsOnly")}
-                        </Badge>
-                      ) : null}
-                    </div>
-
-                    {selectedModelError ? (
-                      <div className="tenant-web__platform-studio-inline-help">
-                        <span>{selectedModelError}</span>
-                      </div>
-                    ) : null}
-
-                    {modelActionError ? (
-                      <div className="tenant-web__platform-studio-inline-help">
-                        <span>{modelActionError}</span>
-                      </div>
-                    ) : null}
-
-                    {isLoadingSelectedModel && sortedViews.length === 0 ? (
-                      <div className="tenant-web__platform-studio-builder-empty">
-                        <p>{t("tenant.platformStudio.forms.loadingViews")}</p>
-                      </div>
-                    ) : null}
-
-                    {!isLoadingSelectedModel && sortedViews.length === 0 ? (
-                      <div className="tenant-web__platform-studio-builder-empty">
-                        <p className="tenant-web__platform-studio-empty-title">
-                          {t("tenant.platformStudio.forms.emptyViewsTitle")}
-                        </p>
-                        <p>{t("tenant.platformStudio.forms.emptyViewsDescription")}</p>
-                      </div>
-                    ) : null}
-
-                    {sortedViews.map((view) => {
-                      const viewAccess = getFormsAuthoringAccess(currentActor, selectedModel, view);
-                      const viewHasModelDrift = (selectedModel.modelStructureVersion ?? 1) > (view.lastAlignedModelStructureVersion ?? 1);
-
-                      return (
-                        <div className="tenant-web__platform-studio-screen-item" key={view.id}>
-                          <div className="tenant-web__platform-studio-screen-copy">
-                            <div className="tenant-web__platform-studio-screen-title-row">
-                              <span className="tenant-web__platform-studio-screen-title">{view.title}</span>
-                              {view.isDefault ? (
-                                <Badge appearance="soft" size="sm" variant="brand">
-                                  <span className="tenant-web__platform-studio-badge-label">
-                                    <StarIcon
-                                      aria-hidden="true"
-                                      className="tenant-web__platform-studio-badge-icon"
-                                    />
-                                    {t("tenant.platformStudio.forms.builder.viewMode.default")}
-                                  </span>
-                                </Badge>
-                              ) : null}
-                            </div>
-                            <span className="tenant-web__platform-studio-screen-description">
-                              {view.description || t(`tenant.platformStudio.forms.screenKind.${view.kind}`)}
-                            </span>
-                          </div>
-                          <div className="tenant-web__platform-studio-screen-actions">
-                            {viewHasModelDrift ? (
-                              <span
-                                aria-label={t("tenant.platformStudio.forms.viewModelStructureChanged")}
-                                className="tenant-web__platform-studio-view-status tenant-web__platform-studio-view-status--warning"
-                                title={t("tenant.platformStudio.forms.viewModelStructureChanged")}
-                              >
-                                <ViewWarningIcon />
-                              </span>
-                            ) : null}
-                            {view.isViewLocked ? (
-                              <span
-                                aria-label={t("tenant.platformStudio.forms.viewLocked")}
-                                className="tenant-web__platform-studio-view-status tenant-web__platform-studio-view-status--inactive"
-                                title={t("tenant.platformStudio.forms.viewLocked")}
-                              >
-                                <LockIcon />
-                              </span>
-                            ) : null}
-                            <span
-                              aria-label={t(getViewStatusKey(view.isActive))}
-                              className={`tenant-web__platform-studio-view-status${view.isActive ? " tenant-web__platform-studio-view-status--active" : " tenant-web__platform-studio-view-status--inactive"}`}
-                              title={t(getViewStatusKey(view.isActive))}
-                            >
-                              {view.isActive ? <EyeIcon /> : <EyeOffIcon />}
-                            </span>
-                            <Button
-                              disabled={!viewAccess.canOpenWorkspace}
-                              onClick={() => {
-                                if (!viewAccess.canOpenWorkspace) {
-                                  return;
-                                }
-
-                                navigate(platformStudioPaths.view(
-                                  getFormsPlaceholderModelRouteId(selectedModel),
-                                  getFormsPlaceholderViewRouteId(view),
-                                ));
-                              }}
-                              size="sm"
-                              title={viewAccess.canOpenWorkspace ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewLocked")}
-                              variant="secondary"
-                            >
-                              {t("tenant.platformStudio.forms.openWorkspace")}
-                            </Button>
-                            <Menu align="end">
-                              <MenuTrigger>
-                                <button
-                                  aria-label={t("tenant.platformStudio.forms.viewActions")}
-                                  className="tenant-web__platform-studio-menu-trigger"
-                                  type="button"
-                                >
-                                  <ScreenActionsIcon />
-                                </button>
-                              </MenuTrigger>
-                            <MenuContent className="tenant-web__platform-studio-menu">
-                              <MenuItem
-                                onClick={() => navigate(platformStudioPaths.previewRuntimeView(
-                                  getFormsPlaceholderModelRouteId(selectedModel),
-                                  getFormsPlaceholderViewRouteId(view),
-                                ))}
-                              >
-                                {t("tenant.platformStudio.forms.viewData")}
-                              </MenuItem>
-                              <MenuSeparator />
-                              <MenuItem
-                                disabled={!viewAccess.canCopyView || isSubmittingDialog}
-                                onClick={() => openCopyViewDialog(selectedModel, view)}
-                                title={viewAccess.canCopyView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                              >
-                                {t("tenant.platformStudio.forms.copyView")}
-                              </MenuItem>
-                              {!view.isDefault ? (
-                                <>
-                                  <MenuSeparator />
-                                  <MenuItem
-                                    disabled={!viewAccess.canDeleteView || isDeletingView}
-                                    onClick={() => handleDeleteViewIntent(selectedModel, view)}
-                                    title={viewAccess.canDeleteView ? undefined : t(viewAccess.viewRestrictionKey ?? "tenant.platformStudio.forms.permission.viewAccessDisabled")}
-                                    tone="danger"
-                                  >
-                                    {t("tenant.platformStudio.forms.deleteView")}
-                                  </MenuItem>
-                                </>
-                              ) : null}
-                            </MenuContent>
-                          </Menu>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </PlatformStudioPanelScroll>
-              </CardContent>
-            </>
-          ) : hasModelParam ? (
-            <>
-              <CardHeader>
-                <div className="tenant-web__platform-studio-panel-header">
-                  <CardTitle>
-                    {selectedModelError
-                      ? t("tenant.platformStudio.forms.missingTitle")
-                      : t("tenant.platformStudio.forms.loadingModelTitle")}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="tenant-web__platform-studio-panel-content">
-                <PlatformStudioPanelScroll>
-                  <div className="tenant-web__platform-studio-builder-empty">
-                    <p>{selectedModelError ?? t("tenant.platformStudio.forms.loadingViews")}</p>
-                  </div>
-                </PlatformStudioPanelScroll>
-              </CardContent>
-            </>
-          ) : (
-            <>
-              <CardHeader>
-                <div className="tenant-web__platform-studio-panel-header">
-                  <CardTitle>{t("tenant.platformStudio.forms.emptySelectionTitle")}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="tenant-web__platform-studio-panel-content">
-                <PlatformStudioPanelScroll>
-                  <div className="tenant-web__platform-studio-builder-empty">
-                    <p>{t("tenant.platformStudio.forms.emptySelectionDescription")}</p>
-                  </div>
-                </PlatformStudioPanelScroll>
-              </CardContent>
-            </>
-          )}
-        </Card>
+        <FormsIndexViewsPanel
+          addViewTitle={addViewTitle}
+          canExportModelBundle={canExportModelBundle}
+          currentActor={currentActor}
+          hasModelParam={hasModelParam}
+          isDeletingModel={isDeletingModel}
+          isDeletingView={isDeletingView}
+          isExportingModelBundle={isExportingModelBundle}
+          isExportingModelData={isExportingModelData}
+          isLoadingSelectedModel={isLoadingSelectedModel}
+          isSubmittingDialog={isSubmittingDialog}
+          modelActionError={modelActionError}
+          onAddView={openCreateViewDialog}
+          onCopyView={openCopyViewDialog}
+          onDeleteModel={handleDeleteModelIntent}
+          onDeleteView={handleDeleteViewIntent}
+          onExportModelBundle={(model) => {
+            void handleExportModelBundle(model);
+          }}
+          onExportModelData={(model) => {
+            void handleExportModelData(model);
+          }}
+          onOpenWorkspace={navigateToView}
+          onPreviewView={navigateToPreviewView}
+          selectedModel={selectedModel}
+          selectedModelAccess={selectedModelAccess}
+          selectedModelError={selectedModelError}
+          selectedModelIsStatic={selectedModelIsStatic}
+          sortedViews={sortedViews}
+          t={t}
+        />
       </section>
 
-      <Dialog onOpenChange={closeDialog} open={Boolean(dialogState)}>
-        <DialogContent className="tenant-web__platform-studio-authoring-dialog">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogState?.kind === "create-model"
-                ? t("tenant.platformStudio.forms.createModelTitle")
-                : dialogState?.kind === "create-view"
-                  ? t("tenant.platformStudio.forms.createViewTitle")
-                  : t("tenant.platformStudio.forms.copyViewTitle")}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogState?.kind === "create-model"
-                ? t("tenant.platformStudio.forms.createModelDescription")
-                : dialogState?.kind === "create-view"
-                  ? t("tenant.platformStudio.forms.createViewDescription")
-                  : t("tenant.platformStudio.forms.copyViewDescription")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogBody className="tenant-web__platform-studio-authoring-dialog-body">
-            <form onSubmit={(event) => {
-              void handleDialogSubmit(event);
-            }}>
-              <div className="tenant-web__platform-studio-form-group">
-                <Label htmlFor="tenant-platform-studio-authoring-title">
-                  {t("tenant.platformStudio.forms.titleLabel")}
-                </Label>
-                <Input
-                  autoFocus
-                  id="tenant-platform-studio-authoring-title"
-                  onChange={(event) => {
-                    if (!dialogState) {
-                      return;
-                    }
-
-                    setDialogState({
-                      ...dialogState,
-                      title: event.target.value,
-                    });
-                    setDialogError(null);
-                  }}
-                  placeholder={t("tenant.platformStudio.forms.titlePlaceholder")}
-                  value={dialogState?.title ?? ""}
-                />
-              </div>
-
-              {dialogError ? (
-                <div className="tenant-web__platform-studio-inline-help">
-                  <span>{dialogError}</span>
-                </div>
-              ) : null}
-
-              <div className="tenant-web__platform-studio-button-row tenant-web__platform-studio-button-row--align-end">
-                <Button
-                  disabled={isSubmittingDialog}
-                  onClick={() => {
-                    setDialogState(null);
-                    setDialogError(null);
-                  }}
-                  type="button"
-                  variant="ghost"
-                >
-                  {t("tenant.platformStudio.forms.cancelAction")}
-                </Button>
-                <Button
-                  disabled={isSubmittingDialog}
-                  type="submit"
-                >
-                  {isSubmittingDialog
-                    ? t("tenant.platformStudio.forms.savingAction")
-                    : dialogState?.kind === "copy-view"
-                      ? t("tenant.platformStudio.forms.copyAction")
-                      : t("tenant.platformStudio.forms.createAction")}
-                </Button>
-              </div>
-            </form>
-          </DialogBody>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
-        onOpenChange={(open) => {
-          if (!open && !isDeletingView) {
-            setDeleteIntent(null);
-            setDeleteError(null);
-          }
+      <FormsIndexAuthoringDialog
+        dialogError={dialogError}
+        dialogState={dialogState}
+        isSubmittingDialog={isSubmittingDialog}
+        onCancel={cancelDialog}
+        onOpenChange={closeDialog}
+        onSubmit={(event) => {
+          void handleDialogSubmit(event);
         }}
-        open={Boolean(deleteIntent)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("tenant.platformStudio.forms.confirmDeleteScreen", { title: deleteIntent?.title ?? "" })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteError
-                ? deleteError
-                : t("tenant.platformStudio.forms.confirmDeleteScreenDescription", { title: deleteIntent?.title ?? "" })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingView}>
-              {t("tenant.platformStudio.forms.cancelDelete")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeletingView}
-              onClick={() => {
-                void handleConfirmDeleteView();
-              }}
-              variant="danger"
-            >
-              {isDeletingView
-                ? t("tenant.platformStudio.forms.deletingAction")
-                : t("tenant.platformStudio.forms.deleteView")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onTitleChange={handleDialogTitleChange}
+        t={t}
+      />
 
-      <AlertDialog
-        onOpenChange={(open) => {
-          if (!open && !isDeletingModel) {
-            setDeleteModelIntent(null);
-            setDeleteError(null);
-          }
+      <FormsIndexDeleteDialogs
+        deleteError={deleteError}
+        deleteIntent={deleteIntent}
+        deleteModelIntent={deleteModelIntent}
+        isDeletingModel={isDeletingModel}
+        isDeletingView={isDeletingView}
+        onConfirmDeleteModel={() => {
+          void handleConfirmDeleteModel();
         }}
-        open={Boolean(deleteModelIntent)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("tenant.platformStudio.forms.confirmDeleteModel", { title: deleteModelIntent?.title ?? "" })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteError
-                ? deleteError
-                : t("tenant.platformStudio.forms.confirmDeleteModelDescription", { title: deleteModelIntent?.title ?? "" })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingModel}>
-              {t("tenant.platformStudio.forms.cancelDelete")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeletingModel}
-              onClick={() => {
-                void handleConfirmDeleteModel();
-              }}
-              variant="danger"
-            >
-              {isDeletingModel
-                ? t("tenant.platformStudio.forms.deletingAction")
-                : t("tenant.platformStudio.forms.deleteModel")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirmDeleteView={() => {
+          void handleConfirmDeleteView();
+        }}
+        onModelOpenChange={closeDeleteModelDialog}
+        onViewOpenChange={closeDeleteViewDialog}
+        t={t}
+      />
     </div>
   );
 }

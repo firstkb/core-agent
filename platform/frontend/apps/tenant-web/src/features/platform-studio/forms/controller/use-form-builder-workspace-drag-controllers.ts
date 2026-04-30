@@ -40,19 +40,31 @@ export function useFormBuilderWorkspaceDragControllers({
   const [draggedChoiceOptionIndex, setDraggedChoiceOptionIndex] = useState<number | null>(null);
   const [dragOverChoiceOptionIndex, setDragOverChoiceOptionIndex] = useState<number | null>(null);
 
+  function setNextDragOverNodeId(nodeId: string | null) {
+    setDragOverNodeId((currentValue) => currentValue === nodeId ? currentValue : nodeId);
+  }
+
+  function setNextDragOverGridFieldId(fieldId: string | null) {
+    setDragOverGridFieldId((currentValue) => currentValue === fieldId ? currentValue : fieldId);
+  }
+
+  function setNextDragOverChoiceOptionIndex(optionIndex: number | null) {
+    setDragOverChoiceOptionIndex((currentValue) => currentValue === optionIndex ? currentValue : optionIndex);
+  }
+
   function resetChoiceOptionDragState() {
     setDraggedChoiceOptionIndex(null);
-    setDragOverChoiceOptionIndex(null);
+    setNextDragOverChoiceOptionIndex(null);
   }
 
   function handleChoiceOptionDragStart(optionIndex: number) {
     setDraggedChoiceOptionIndex(optionIndex);
-    setDragOverChoiceOptionIndex(optionIndex);
+    setNextDragOverChoiceOptionIndex(optionIndex);
   }
 
   function handleChoiceOptionDrop(optionIndex: number) {
     if (draggedChoiceOptionIndex === null || draggedChoiceOptionIndex === optionIndex) {
-      setDragOverChoiceOptionIndex(null);
+      setNextDragOverChoiceOptionIndex(null);
       return;
     }
 
@@ -62,12 +74,12 @@ export function useFormBuilderWorkspaceDragControllers({
 
   function resetGridFieldDragState() {
     setDraggedGridFieldId(null);
-    setDragOverGridFieldId(null);
+    setNextDragOverGridFieldId(null);
   }
 
   function handleGridFieldDragStart(fieldId: string) {
     setDraggedGridFieldId(fieldId);
-    setDragOverGridFieldId(fieldId);
+    setNextDragOverGridFieldId(fieldId);
   }
 
   function handleGridFieldDrop(fieldId: string) {
@@ -84,7 +96,7 @@ export function useFormBuilderWorkspaceDragControllers({
     currentScopeUnplacedFields,
     draggedNodeId,
     selectInspectorSelectionTab,
-    setDragOverNodeId,
+    setDragOverNodeId: setNextDragOverNodeId,
     setDraggedNodeId,
     updateDocument,
   });
@@ -103,9 +115,9 @@ export function useFormBuilderWorkspaceDragControllers({
     handleGridFieldDrop,
     resetChoiceOptionDragState,
     resetGridFieldDragState,
-    setDragOverChoiceOptionIndex,
-    setDragOverGridFieldId,
-    setDragOverNodeId,
+    setDragOverChoiceOptionIndex: setNextDragOverChoiceOptionIndex,
+    setDragOverGridFieldId: setNextDragOverGridFieldId,
+    setDragOverNodeId: setNextDragOverNodeId,
     setDraggedChoiceOptionIndex,
   } as const;
 }

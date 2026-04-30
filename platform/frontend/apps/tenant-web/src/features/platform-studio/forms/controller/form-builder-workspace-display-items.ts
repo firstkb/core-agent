@@ -14,7 +14,6 @@ import {
 } from "../components/view-settings-default-filters-section";
 import { type ViewSettingsSortingFieldItem } from "../components/view-settings-actions-sorting-section";
 import {
-  getFormBuilderChildren,
   getFormBuilderDisplayLabel,
   getFormBuilderNodeSummary,
   isFormBuilderContainer,
@@ -87,10 +86,13 @@ export function createCanvasNodeItems({
   getSummaryText: SummaryTextResolver;
   t: Translate;
 }): ReadonlyArray<BuilderCanvasNodeItem> {
+  const fieldsById = new Map(currentModel.fields.map((field) => [field.id, field]));
+  const childCountByParentId = createChildCountByParentId(document);
+
   return currentNodes.map((node) => {
     const summaryKey = getFormBuilderNodeSummary(node, document, currentModel);
     const iconKey = node.type === "field"
-      ? getFormsPlaceholderFieldIconKey(currentModel.fields.find((field) => field.id === node.fieldId) ?? {
+      ? getFormsPlaceholderFieldIconKey(fieldsById.get(node.fieldId ?? "") ?? {
           family: "core",
           id: "missing-field",
           isLocked: false,
@@ -112,11 +114,36 @@ export function createCanvasNodeItems({
         currentModel.fields,
         summaryKey,
         t,
-        getFormBuilderChildren(document, node.id).length,
+        childCountByParentId.get(node.id) ?? 0,
       ),
       visibility: node.visibility,
     };
   });
+}
+
+function createChildCountByParentId(document: FormBuilderDocument) {
+  const counts = new Map<string, number>();
+
+  for (const node of document.rootScope.uiSchema.nodes) {
+    if (node.parentId) {
+      counts.set(node.parentId, (counts.get(node.parentId) ?? 0) + 1);
+    }
+  }
+
+  for (const scope of document.subformScopes) {
+    let rootChildCount = 0;
+    for (const node of scope.uiSchema.nodes) {
+      if (node.parentId) {
+        counts.set(node.parentId, (counts.get(node.parentId) ?? 0) + 1);
+      } else {
+        rootChildCount += 1;
+      }
+    }
+
+    counts.set(scope.parentSubformNodeId, rootChildCount);
+  }
+
+  return counts;
 }
 
 export function createCanvasUnplacedFields({

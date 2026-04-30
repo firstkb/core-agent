@@ -5,6 +5,7 @@ import type {
   AgentRun,
   AgentRunCheckpointInput,
   AgentRunInput,
+  ArtifactReadResult,
   Approval,
   Attempt,
   AttemptInput,
@@ -113,6 +114,10 @@ export class MaestroAPI {
 
   async launchTaskPacket(input: AgentLaunchInput): Promise<AgentLaunch> {
     return this.post('/api/task-packets/launch', input);
+  }
+
+  async readArtifact(uri: string): Promise<ArtifactReadResult> {
+    return this.get(`/api/artifacts/read?uri=${encodeURIComponent(uri)}`);
   }
 
   async listAgentRuns(taskID?: string): Promise<AgentRun[]> {

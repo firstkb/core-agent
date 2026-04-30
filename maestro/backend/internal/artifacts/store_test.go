@@ -36,6 +36,45 @@ func TestWriteEvidenceFile(t *testing.T) {
 	}
 }
 
+func TestReadURI(t *testing.T) {
+	root := t.TempDir()
+	store := New(root)
+
+	written, err := store.WriteAttemptFile(File{
+		Target: Target{
+			WorkID:    "work-1",
+			TaskID:    "task-1",
+			StageID:   "stage-1",
+			AttemptID: "attempt-1",
+		},
+		Name:    "handoff.json",
+		Content: []byte(`{"ok":true}`),
+	})
+	if err != nil {
+		t.Fatalf("write attempt: %v", err)
+	}
+
+	read, err := store.ReadURI(written.URI)
+	if err != nil {
+		t.Fatalf("read artifact: %v", err)
+	}
+	if string(read.Content) != `{"ok":true}` {
+		t.Fatalf("content = %q", string(read.Content))
+	}
+	if read.ContentType != "application/json" {
+		t.Fatalf("content type = %q", read.ContentType)
+	}
+}
+
+func TestReadURIRejectsTraversal(t *testing.T) {
+	store := New(t.TempDir())
+
+	_, err := store.ReadURI("artifact://current/../secret.txt")
+	if !errors.Is(err, ErrUnsafePath) {
+		t.Fatalf("err = %v, want ErrUnsafePath", err)
+	}
+}
+
 func TestWriteRejectsTraversal(t *testing.T) {
 	store := New(t.TempDir())
 

@@ -66,7 +66,7 @@ export function metrics(tasks: Task[], approvals: Approval[], agentRuns: AgentRu
     },
     {
       label: 'Agent Runs',
-      value: agentRuns.filter((run) => run.status === 'running').length,
+      value: agentRuns.filter((run) => !['completed', 'cancelled', 'failed', 'stale'].includes(run.status)).length,
       tone: 'success',
       badge: 'active'
     }

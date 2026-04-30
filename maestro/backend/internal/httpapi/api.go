@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"unicode/utf8"
 
 	"firstkb.dev/maestro/backend/internal/artifacts"
 	"firstkb.dev/maestro/backend/internal/store"
@@ -51,11 +53,21 @@ type attemptSubmitChanges struct {
 	ReadmeFile   *artifactFilePayload `json:"readme_file"`
 }
 
+type artifactReadResponse struct {
+	URI         string `json:"uri"`
+	RelPath     string `json:"rel_path"`
+	ContentType string `json:"content_type"`
+	Encoding    string `json:"encoding"`
+	Content     string `json:"content"`
+	Size        int64  `json:"size"`
+}
+
 func (s *Server) registerAPIRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/agents", s.handleListAgents)
 	mux.HandleFunc("GET /api/agent-capabilities", s.handleListAgentCapabilities)
 	mux.HandleFunc("POST /api/task-packets/generate", s.handleGenerateTaskPacket)
 	mux.HandleFunc("POST /api/task-packets/launch", s.handleLaunchTaskPacket)
+	mux.HandleFunc("GET /api/artifacts/read", s.handleReadArtifact)
 
 	mux.HandleFunc("GET /api/work", s.handleListWork)
 	mux.HandleFunc("POST /api/work", s.handleCreateWork)
@@ -113,6 +125,37 @@ func (s *Server) handleListAgents(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) handleListAgentCapabilities(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, store.AgentCapabilities())
+}
+
+func (s *Server) handleReadArtifact(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.Query().Get("uri")
+	if uri == "" {
+		writeStoreError(w, fmt.Errorf("%w: uri is required", store.ErrInvalidInput))
+		return
+	}
+	read, err := s.artifacts.ReadURI(uri)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			writeError(w, http.StatusNotFound, "not_found", err.Error())
+			return
+		}
+		writeStoreError(w, err)
+		return
+	}
+
+	response := artifactReadResponse{
+		URI:         read.URI,
+		RelPath:     read.RelPath,
+		ContentType: read.ContentType,
+		Encoding:    "text",
+		Content:     string(read.Content),
+		Size:        read.Size,
+	}
+	if !utf8.Valid(read.Content) {
+		response.Encoding = "base64"
+		response.Content = base64.StdEncoding.EncodeToString(read.Content)
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (s *Server) handleCreateWork(w http.ResponseWriter, r *http.Request) {

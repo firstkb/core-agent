@@ -3,6 +3,7 @@ package artifacts
 import (
 	"errors"
 	"fmt"
+	"mime"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,6 +32,14 @@ type WrittenFile struct {
 	URI     string `json:"uri"`
 	RelPath string `json:"rel_path"`
 	Size    int64  `json:"size"`
+}
+
+type ReadFile struct {
+	URI         string `json:"uri"`
+	RelPath     string `json:"rel_path"`
+	ContentType string `json:"content_type"`
+	Content     []byte `json:"content"`
+	Size        int64  `json:"size"`
 }
 
 func New(root string) *Store {
@@ -70,6 +79,14 @@ func (s *Store) WriteAttemptFile(file File) (WrittenFile, error) {
 	}
 	segments = append(segments, file.Name)
 	return s.write(segments, file.Content)
+}
+
+func (s *Store) ReadURI(uri string) (ReadFile, error) {
+	relPath, err := relPathFromURI(uri)
+	if err != nil {
+		return ReadFile{}, err
+	}
+	return s.read(relPath, uri)
 }
 
 func (s *Store) write(segments []string, content []byte) (WrittenFile, error) {
@@ -116,6 +133,69 @@ func (s *Store) write(segments []string, content []byte) (WrittenFile, error) {
 		RelPath: filepath.ToSlash(relPath),
 		Size:    int64(n),
 	}, nil
+}
+
+func (s *Store) read(relPath string, uri string) (ReadFile, error) {
+	if s == nil || s.root == "" {
+		return ReadFile{}, errors.New("artifact root is not configured")
+	}
+
+	root, err := filepath.Abs(s.root)
+	if err != nil {
+		return ReadFile{}, err
+	}
+	cleanRelPath := filepath.Clean(filepath.FromSlash(relPath))
+	if cleanRelPath == "." || strings.HasPrefix(cleanRelPath, ".."+string(filepath.Separator)) || filepath.IsAbs(cleanRelPath) {
+		return ReadFile{}, fmt.Errorf("%w: %s", ErrUnsafePath, relPath)
+	}
+
+	fullPath := filepath.Join(root, cleanRelPath)
+	confirmedRelPath, err := filepath.Rel(root, fullPath)
+	if err != nil {
+		return ReadFile{}, err
+	}
+	if confirmedRelPath == "." || strings.HasPrefix(confirmedRelPath, ".."+string(filepath.Separator)) || filepath.IsAbs(confirmedRelPath) {
+		return ReadFile{}, fmt.Errorf("%w: %s", ErrUnsafePath, relPath)
+	}
+
+	info, err := os.Stat(fullPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return ReadFile{}, os.ErrNotExist
+		}
+		return ReadFile{}, err
+	}
+	if info.IsDir() {
+		return ReadFile{}, fmt.Errorf("%w: artifact URI points to a directory", ErrUnsafePath)
+	}
+
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		return ReadFile{}, err
+	}
+	contentType := mime.TypeByExtension(filepath.Ext(fullPath))
+	if contentType == "" {
+		contentType = "text/plain; charset=utf-8"
+	}
+	return ReadFile{
+		URI:         uri,
+		RelPath:     filepath.ToSlash(confirmedRelPath),
+		ContentType: contentType,
+		Content:     content,
+		Size:        info.Size(),
+	}, nil
+}
+
+func relPathFromURI(uri string) (string, error) {
+	const prefix = "artifact://current/"
+	if !strings.HasPrefix(uri, prefix) {
+		return "", fmt.Errorf("%w: unsupported artifact URI", ErrUnsafePath)
+	}
+	relPath := strings.TrimPrefix(uri, prefix)
+	if relPath == "" {
+		return "", fmt.Errorf("%w: empty artifact URI path", ErrUnsafePath)
+	}
+	return relPath, nil
 }
 
 func targetSegments(target Target) ([]string, error) {

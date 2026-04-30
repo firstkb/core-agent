@@ -14,6 +14,9 @@ not a generic project tracker. Its job is to make orchestration state visible:
 route tier, current gate, next allowed action, assigned agent, evidence,
 approval status, and residual risk.
 
+Cockpit is not the agent runtime. Native Codex subagents and skills remain the
+execution path. Cockpit records and displays what happened.
+
 ## Product Rule
 
 Keep the cockpit compact and calm. Prefer a small set of dense operational views
@@ -26,9 +29,9 @@ Phase 1 assumes one implicit current workspace and repository.
 Required views:
 
 - Dashboard
-- Work table
-- Work/task Kanban
-- Task detail drawer
+- Work queue
+- Work detail drawer
+- Artifacts viewer
 - Evidence panel
 - Approval queue
 - Agent runs panel
@@ -40,6 +43,7 @@ Out of scope for Phase 1:
 - cloud worker fleet administration;
 - long-term velocity reporting;
 - custom workflow builders.
+- automated native-agent runner.
 
 ## Dashboard
 
@@ -48,41 +52,45 @@ Purpose:
 - show current orchestration health;
 - highlight work requiring owner attention;
 - expose blocked, paused, high-risk, failed, and review-needed items.
+- avoid low-level event streams on the owner home screen.
 
 Required sections:
 
-- active work count by status;
+- owner work count;
+- agent task count;
 - active agent runs;
 - approvals waiting on owner;
 - blocked or paused work;
-- failed verification or review;
-- recent evidence and closeouts.
+- failed verification or review.
 
 The dashboard must answer one question quickly: "what needs action now?"
 
-## Work Table
+## Work Queue
 
 Purpose:
 
 - provide the densest operational list for scanning and triage.
+- record every meaningful owner request, including lightweight tasks solved
+  through Maestro.
+- make the distinction between owner work and agent task explicit.
 
-Required columns:
+Terminology:
+
+- Work: what the owner asked Maestro to do.
+- Agent task: the executable slice Maestro assigns or prepares for an agent.
+- Agent run: an observed execution attempt for an agent task.
+
+Canonical Phase 1 columns:
 
 - ID
-- title
-- type
-- route tier
-- artifact shape
+- work title
 - status
 - risk
 - priority
-- active stage
-- assigned agent
-- approvals
-- evidence status
-- CI status
-- visual status
-- PR
+- current agent task
+- agent role
+- run or gate status
+- owner signal
 - updated time
 
 Required filters:
@@ -100,11 +108,18 @@ Required filters:
 - docs/memory
 - no evidence
 
+Columns such as route tier, artifact shape, PR, CI, visual, events, and detailed
+evidence belong outside the primary queue until task volume proves they need
+table space.
+
 ## Kanban
 
 Purpose:
 
-- provide a lightweight stage/status board for owner steering.
+- optional secondary visualization when the owner needs a board.
+
+Kanban is parked for Phase 1 unless the task volume proves that board movement
+adds clarity. The Work queue remains canonical.
 
 Default columns:
 
@@ -124,14 +139,17 @@ Rules:
 - high-risk cards must visibly expose approval requirements;
 - Kanban is a view over state, not an independent state store.
 
-## Task Detail Drawer
+## Work Detail Drawer
 
 Purpose:
 
-- keep detail inspection fast without losing table or board context.
+- keep detail inspection fast without losing table context.
+- show the selected work first and the current agent task second.
 
 Required sections:
 
+- overview: compact signal tiles, current state, active runs, approvals, and
+  latest handoff;
 - identity: title, ID, type, route tier, artifact shape, risk, priority;
 - scope: goal, in scope, out of scope, do-not-change;
 - current gate: blocking approval, dependency, evidence, or review;
@@ -146,6 +164,17 @@ Required sections:
 
 The drawer should make it obvious whether the work can proceed, needs owner
 input, or should stay blocked.
+
+Phase 1 drawer tabs:
+
+- Overview
+- Evidence
+- Artifacts
+- Agent
+
+Do not expose stage, attempt, packet, approval, and event tabs as separate
+top-level tabs. Those are implementation details and may appear only inside the
+Agent tab or a future advanced mode.
 
 ## Evidence Panel
 
@@ -174,6 +203,24 @@ Required evidence types:
 - note
 
 The panel must show missing required evidence separately from attached evidence.
+
+## Artifacts Viewer
+
+Purpose:
+
+- make handoffs, evidence files, generated packets, JSON, Markdown, and logs
+  readable without leaving Cockpit.
+
+Required behavior:
+
+- read `artifact://current/...` files through the API;
+- reject path traversal and non-artifact URIs;
+- pretty-print JSON;
+- render Markdown in a compact readable preview;
+- show raw text for logs and unknown text files;
+- show binary files as downloadable or base64 metadata until a specialized
+  viewer exists;
+- link artifacts back to task, attempt, evidence, or agent run.
 
 ## Approval Queue
 
@@ -207,6 +254,8 @@ Approvals must append audit events and must not silently mutate unrelated state.
 Purpose:
 
 - show what agents are doing and where orchestration is waiting.
+- keep role capability information compact; do not turn the page into an agent
+  catalog.
 
 Required fields:
 
@@ -225,6 +274,7 @@ Rules:
 - specialist agents recommend next actions but do not advance lifecycle alone;
 - run status is observational until a typed transition is accepted;
 - stale or missing handoff state must be visible to the owner.
+- event streams are diagnostic detail, not a primary page section.
 
 ## Visual Style
 

@@ -16,6 +16,9 @@ of scope.
 Phase 1 should produce a local Maestro Cockpit that manages real operational
 state before automated cloud workers or GitHub integration exist.
 
+Update: Maestro is native-first. Cockpit is the operational dashboard and
+ledger, not a custom agent runtime.
+
 ## Product Rule
 
 Build a useful jet, not a process-heavy aircraft.
@@ -29,6 +32,9 @@ owner request -> work/task/stage state -> evidence/approval -> closeout
 Do not build cloud orchestration, portfolio management, analytics, or automated
 agent spawning until the local cockpit loop is working.
 
+Do not build a custom runner or CDK-like launch layer while native Codex
+subagents and skills remain the better execution mechanism.
+
 ## Scope
 
 Phase 1 includes:
@@ -41,17 +47,20 @@ Phase 1 includes:
 - Work, Feature, Task, Stage, Attempt, Evidence, Approval, Agent Run, and Run
   Event entities;
 - command endpoints for lifecycle transitions;
-- compact table, Kanban, drawer, evidence, approval, and agent-run views.
+- compact dashboard, tasks table, drawer, artifact viewer, evidence, approval,
+  and agent-run views.
 
 Phase 1 does not include:
 
 - cloud workers;
 - automated agent spawning;
+- custom agent runner;
 - multi-repository portfolio management;
 - GitHub PR or CI integration;
 - production deployment automation;
 - queue leases or worker fleet dashboards;
 - complex analytics;
+- Kanban as a required Phase 1 surface;
 - OpenAPI/code generation unless it clearly speeds up the first slice.
 
 ## Technical Decisions
@@ -105,8 +114,8 @@ maestro/frontend/
     views/
       dashboard/
       work-table/
-      kanban/
       task-drawer/
+      artifacts/
       evidence/
       approvals/
       agent-runs/
@@ -123,8 +132,9 @@ Recommended dependencies:
 - Vitest for focused UI logic tests.
 
 Avoid a heavy UI framework in Phase 1. Cockpit needs compact operational
-surfaces: table, Kanban, drawer, filters, status pills, evidence, approvals, and
-agent-run state. A small local component layer is enough.
+surfaces: dashboard, tasks table, drawer, filters, status pills, artifacts,
+evidence, approvals, and agent-run state. A small local component layer is
+enough.
 
 ### CLI
 
@@ -212,8 +222,8 @@ Build one end-to-end slice before broadening the system:
 8. Submit handoff.
 9. Review stage.
 10. Close task.
-11. See the state in Cockpit table, Kanban, drawer, evidence, approvals, and
-    agent-runs views.
+11. See the state in Cockpit dashboard, table, drawer, artifacts, evidence,
+    approvals, and agent-runs views.
 
 This slice should support T1 Lightweight Task and T2 Staged Task well enough to
 run real local work manually through Codex and `maestroctl`.
@@ -228,8 +238,8 @@ Recommended order:
    agent runs, and run events.
 4. Artifact root handling and evidence attachment.
 5. `maestroctl` commands for the first vertical slice.
-6. Frontend shell with table, Kanban, and detail drawer.
-7. Evidence, approvals, and agent-runs panels.
+6. Frontend shell with dashboard, task table, and detail drawer.
+7. Artifacts, evidence, approvals, and agent-runs panels.
 8. Targeted tests and local run docs.
 
 ## Execution Checklist
@@ -294,8 +304,9 @@ created later.
 - [x] Add API client layer.
 - [x] Add Cockpit shell.
 - [x] Add work table.
-- [x] Add Kanban view.
+- [x] Park Kanban as optional, not required Phase 1 navigation.
 - [x] Add task detail drawer.
+- [x] Add artifact viewer.
 - [x] Add evidence panel.
 - [x] Add approval queue.
 - [x] Add agent-runs panel.

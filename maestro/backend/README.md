@@ -116,6 +116,7 @@ POST /api/approvals/{id}/decide
 
 GET  /api/agents
 GET  /api/agent-capabilities
+GET  /api/artifacts/read?uri=artifact://current/...
 POST /api/task-packets/generate
 POST /api/task-packets/launch
 

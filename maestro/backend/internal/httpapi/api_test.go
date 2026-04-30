@@ -7,6 +7,9 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -138,6 +141,50 @@ func TestAttachEvidenceRejectsTraversal(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/api/tasks/task-1/evidence", bytes.NewBufferString(`{"type":"test","title":"bad","file":{"name":"../secret.txt","content":"no"}}`))
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestReadArtifactEndpoint(t *testing.T) {
+	root := t.TempDir()
+	relPath := filepath.Join("work", "work-1", "tasks", "task-1", "evidence", "result.json")
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(root, relPath)), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, relPath), []byte(`{"ok":true}`), 0o644); err != nil {
+		t.Fatalf("write artifact: %v", err)
+	}
+	srv := New(Options{Store: &fakeStore{}, ArtifactRoot: root})
+
+	artifactURI := "artifact://current/work/work-1/tasks/task-1/evidence/result.json"
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/artifacts/read?uri="+url.QueryEscape(artifactURI), nil)
+	srv.routes().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var body artifactReadResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.Content != `{"ok":true}` {
+		t.Fatalf("content = %q", body.Content)
+	}
+	if body.Encoding != "text" {
+		t.Fatalf("encoding = %q", body.Encoding)
+	}
+}
+
+func TestReadArtifactRejectsTraversal(t *testing.T) {
+	srv := New(Options{Store: &fakeStore{}, ArtifactRoot: t.TempDir()})
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/artifacts/read?uri="+url.QueryEscape("artifact://current/../secret.txt"), nil)
 	srv.routes().ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusBadRequest {

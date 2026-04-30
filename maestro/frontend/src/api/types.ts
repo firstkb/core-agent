@@ -160,6 +160,15 @@ export type EvidenceAttachmentInput = {
   };
 };
 
+export type ArtifactReadResult = {
+  uri: string;
+  rel_path: string;
+  content_type: string;
+  encoding: 'text' | 'base64';
+  content: string;
+  size: number;
+};
+
 export type Approval = {
   id: string;
   work_id?: string;

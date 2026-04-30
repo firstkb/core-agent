@@ -127,6 +127,7 @@ POST /api/external-links
 Artifacts:
 
 ```text
+GET /api/artifacts/read?uri=artifact://current/...
 POST /api/artifacts/import
 POST /api/artifacts/export
 POST /api/artifacts/validate

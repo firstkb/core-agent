@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "approval_id": "approval-001",
+  "work_id": "example-t4-gated",
+  "packet_id": "packet-implementation-mason-001",
+  "approval_type": "high_risk_implementation",
+  "requested_action": "Modify auth permission checks in the approved scope.",
+  "reason": "Auth and permissions are high-risk surfaces.",
+  "decision": "approved",
+  "decision_actor": "owner",
+  "decision_at": "2026-04-30T00:00:00Z",
+  "expires_at": null,
+  "scope": {
+    "allowed_paths": [
+      "platform/backend/internal/auth/"
+    ],
+    "forbidden_paths": [
+      "platform/backend/migrations/",
+      ".github/"
+    ],
+    "allowed_actions": [
+      "edit scoped auth permission checks",
+      "run targeted tests"
+    ],
+    "forbidden_actions": [
+      "deploy",
+      "run migrations",
+      "change secrets"
+    ]
+  },
+  "evidence_required": [
+    "targeted tests",
+    "Lens review"
+  ],
+  "notes": "Example fixture only."
+}

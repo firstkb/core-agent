@@ -1,77 +1,62 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/maestro/stage-handoff.schema.json",
+  "title": "Maestro stage handoff",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "handoff_id",
     "work_id",
-    "task_id",
+    "packet_id",
     "stage",
-    "attempt_id",
-    "agent_role",
+    "role",
     "result",
+    "recommendation",
     "summary",
-    "files_changed",
-    "commands_run",
     "evidence_refs",
+    "changed_files",
+    "checks",
     "risks",
-    "recommended_next_stage",
+    "owner_decision_required",
+    "next_actions",
     "created_at"
   ],
   "properties": {
     "schema_version": {
+      "type": "integer",
       "const": 1
     },
-    "workspace_id": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "repository_id": {
-      "type": [
-        "string",
-        "null"
-      ]
+    "handoff_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^handoff-[a-z]+-[a-z]+-[0-9]{3}$"
     },
     "work_id": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": "string",
+      "minLength": 1
     },
-    "work_slug": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z][a-z0-9_-]*$|^[a-z][a-z0-9_-]*$"
-    },
-    "artifact_root": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "feature_id": {
-      "type": [
-        "string",
-        "null"
-      ]
-    },
-    "task_id": {
+    "packet_id": {
       "type": "string",
       "minLength": 1
     },
     "stage": {
       "type": "string",
-      "minLength": 1
+      "enum": [
+        "research",
+        "planning",
+        "audit",
+        "approval",
+        "implementation",
+        "verification",
+        "review",
+        "release",
+        "closeout",
+        "archive",
+        "memory"
+      ]
     },
-    "attempt_id": {
-      "type": "string",
-      "pattern": "^attempt-[0-9]{3}$"
-    },
-    "agent_role": {
+    "role": {
       "type": "string",
       "enum": [
         "maestro",
@@ -94,63 +79,149 @@
         "cancelled"
       ]
     },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "none",
+        "continue",
+        "revise",
+        "block",
+        "approve",
+        "request_owner_decision",
+        "release",
+        "archive",
+        "close"
+      ]
+    },
     "summary": {
       "type": "string",
       "minLength": 1
     },
-    "files_changed": {
+    "observed_facts": {
       "type": "array",
       "items": {
-        "type": "string",
-        "minLength": 1
+        "type": "string"
       },
-      "uniqueItems": true
+      "default": []
     },
-    "commands_run": {
+    "inferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "changed_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checks": {
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "command",
-          "result"
+          "name",
+          "status"
         ],
         "properties": {
-          "command": {
-            "type": "string",
-            "minLength": 1
+          "name": {
+            "type": "string"
           },
-          "result": {
+          "status": {
             "type": "string",
-            "minLength": 1
+            "enum": [
+              "passed",
+              "failed",
+              "skipped",
+              "blocked",
+              "not_run"
+            ]
+          },
+          "details": {
+            "type": "string"
           }
         }
       }
     },
-    "evidence_refs": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
-    },
     "risks": {
       "type": "array",
       "items": {
-        "type": "string",
-        "minLength": 1
+        "type": "string"
       }
     },
-    "recommended_next_stage": {
-      "type": [
-        "string",
-        "null"
-      ]
+    "approvals_consumed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "owner_decision_required": {
+      "type": "boolean"
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "created_at": {
-      "type": "string",
-      "format": "date-time"
+      "type": "string"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "release"
+          }
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "role": {
+            "const": "release"
+          },
+          "approvals_consumed": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "recommendation": {
+            "enum": [
+              "request_owner_decision",
+              "block"
+            ]
+          }
+        },
+        "required": [
+          "recommendation"
+        ]
+      },
+      "then": {
+        "properties": {
+          "owner_decision_required": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
 }

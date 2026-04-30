@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: operating_charter
 lang: en

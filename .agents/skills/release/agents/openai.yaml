@@ -1,0 +1,8 @@
+interface:
+  display_name: "Release"
+  short_description: "Release and deployment specialist"
+  brand_color: "#B45309"
+  default_prompt: "Use $release only after explicit release approval."
+
+policy:
+  allow_implicit_invocation: false

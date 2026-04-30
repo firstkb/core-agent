@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: artifact_model
 lang: en
@@ -9,27 +9,14 @@ lang: en
 
 ## Design Goal
 
-Maestro artifacts are compact working records for native human-agent work.
+Maestro artifacts are compact work records for native human-agent engineering
+work. They preserve intent, decisions, handoffs, evidence, approvals, and
+closeout without becoming a project-management tree.
 
-They should feel closer to Atlas-style active notes than to a project-management
-tree. Maestro should create only the files that help the next decision, handoff,
-evidence, or closeout.
-
-## Source Of Truth Boundary
-
-Target boundary:
-
-- Native Maestro conversation and active repository files own live work context.
-- `maestro/artifact/active/` stores compact records for active work.
-- `maestro/artifact/archive/` stores completed, cancelled, or frozen work.
-- Artifact JSON files are packets, handoffs, evidence indexes, or optional
-  snapshots, not primary mutable state.
-- `ai-memory/` remains durable compressed memory until the accepted Maestro
-  memory migration moves it under `maestro/memory/`.
+Create only the files that help the next decision, delegation, evidence trail,
+or archive handoff.
 
 ## Active And Archive Layout
-
-Canonical layout:
 
 ```text
 maestro/artifact/
@@ -39,8 +26,10 @@ maestro/artifact/
       plan.md
       task.md
       packet.md
-      handoff-charlie-001.json
-      handoff-mason-001.json
+      approval-001.json
+      handoff-research-charlie-001.json
+      handoff-implementation-mason-001.json
+      handoff-verification-scout-001.json
       evidence.md
       closeout.md
   archive/
@@ -48,200 +37,53 @@ maestro/artifact/
       ...
 ```
 
-`active/` may contain multiple active work folders. Each folder represents one
-owner request or one meaningful work slice.
-
-`archive/` uses the same folder name after closeout, cancellation, or freeze.
-Archiving should be a simple move from `active/<work-slug>/` to
-`archive/<work-slug>/`.
+`active/` may contain multiple active work folders. `archive/` uses the same
+folder name after closeout, cancellation, or freeze.
 
 Do not confuse:
 
 - `maestro/artifact/archive/` = completed Maestro work records;
-- `maestro/archive/` = provenance copies of retired roles or skills.
+- `maestro/archive/` = provenance copies of retired roles, skills, or legacy surfaces.
 
-## Naming Rule
+## Work Folder Naming
 
-Preferred work folder:
+Preferred folder name:
 
 ```text
 YYYY-MM-DD-<work-slug>
 ```
 
-Use a plain `<work-slug>` only for short-lived local work where date-based
-archive naming adds no value.
+Use a short slug only for local scratch work that will not be archived.
+
+## Artifact Shapes
+
+| Shape | Use | Default Files |
+|---|---|---|
+| `none` | T0 direct inline work | no folder |
+| `lightweight` | small persisted work | `intent.md`, optional `task.md`, `closeout.md` |
+| `staged` | one or more delegated or evidence-heavy stages | `intent.md`, `task.md`, `packet.md`, handoff JSON, `evidence.md`, `closeout.md` |
+| `multi_step` | one owner goal needs several linear steps or dependencies | `intent.md`, `plan.md`, task/packet/handoff/evidence/closeout files |
+| `full` | gated, high-risk, approval-heavy, or release work | plan, approvals, packets, handoffs, evidence, review/release notes, closeout |
+
+## Naming Rules
+
+- Handoffs: `handoff-<stage>-<role>-NNN.json`.
+- Approvals: `approval-NNN.json`.
+- Evidence index: `evidence.md` unless a JSON evidence item is needed.
+- Closeout: `closeout.md`, optionally backed by a closeout JSON object.
+- Attempts are append-by-new-file; do not overwrite previous handoffs.
 
 ## Jet Rule
 
-Do not create every file for every request.
+Tiny work should leave no files by default. Lightweight work should not create
+packets or handoffs unless they help portability. Full shape is reserved for
+real risk, approvals, release, or multi-stage evidence.
 
-The full file list is a capability, not the default shape. A tiny task may leave
-only a final response. A lightweight task may use only `intent.md` and
-`closeout.md`. A staged task may add `packet.md`, handoffs, and `evidence.md`.
+## Artifact Source Of Truth
 
-## Artifact Shapes By Route Tier
+Artifact files are a portable work record, not the primary product truth.
+Product code, tests, canonical docs, `.codex`, `.agents`, and Maestro contracts
+remain authoritative for runtime behavior.
 
-### Tier 0: Direct Inline
-
-Use for tiny work that completes in the current chat and does not need durable
-run state.
-
-Default artifact shape:
-
-```text
-no persisted artifact folder
-```
-
-Allowed only when closeout evidence can stay in the final response.
-
-### Tier 1: Lightweight Task
-
-Use for small work that benefits from a portable record but does not need staged
-handoff.
-
-Default artifact shape:
-
-```text
-maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  task.md
-  closeout.md
-```
-
-`task.md` may be skipped when `intent.md` is enough to preserve context.
-
-### Tier 2: Staged Task
-
-Use when a task needs one or more explicit handoffs, verification, review, or
-portable evidence.
-
-Default artifact shape:
-
-```text
-maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  plan.md
-  task.md
-  packet.md
-  handoff-<role>-001.json
-  evidence.md
-  closeout.md
-```
-
-Add additional handoffs with incrementing suffixes:
-
-```text
-handoff-charlie-001.json
-handoff-mason-001.json
-handoff-scout-001.json
-handoff-lens-001.json
-```
-
-### Tier 3: Feature Work
-
-Use when one owner goal needs decomposition into slices or coordinated tasks.
-
-Default artifact shape:
-
-```text
-maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  brief.md
-  plan.md
-  task.md
-  packet.md
-  handoff-<role>-001.json
-  evidence.md
-  closeout.md
-```
-
-Keep decomposition inside `plan.md` or `brief.md`. Do not create nested
-`features/` and `tasks/` directories unless the owner explicitly chooses a
-larger artifact shape.
-
-### Tier 4A: Module-Sized Work
-
-Use when work is module-sized, approval-heavy, or needs a durable owner-approved
-brief.
-
-Default artifact shape:
-
-```text
-maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  brief.md
-  plan.md
-  approval.md
-  task.md
-  packet.md
-  handoff-<role>-001.json
-  evidence.md
-  closeout.md
-```
-
-Optional files:
-
-- `snapshot.json` when a portable context export is useful;
-- `review.md` when a human-readable review record is clearer than a handoff;
-- `release.md` when release is in scope.
-
-### Tier 4B: High-Risk Work
-
-Use when work touches auth, tenancy, permissions, migrations, secrets, release,
-deployment, or other irreversible or security-sensitive behavior.
-
-Default artifact shape:
-
-```text
-maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  brief.md
-  plan.md
-  approval.md
-  task.md
-  packet.md
-  handoff-<role>-001.json
-  evidence.md
-  review.md
-  release.md
-  closeout.md
-```
-
-High-risk work must capture approvals, evidence, residual risks, and release or
-rollback notes when production-impacting action is in scope.
-
-## Core Files
-
-Detailed per-file contracts live in `artifact-file-contract.md`.
-
-- `intent.md`: owner request, intent mode, route decision, and current goal.
-- `brief.md`: owner-approved scope for feature, module-sized, or high-risk work.
-- `plan.md`: current adaptive plan and next useful action.
-- `task.md`: bounded execution packet for one work item or slice.
-- `packet.md`: ready-to-launch packet for one specialist agent or stage.
-- `handoff-<role>-NNN.json`: machine-readable specialist result.
-- `evidence.md`: checks, links, screenshots, logs, and evidence notes.
-- `approval.md`: gate requests and owner/security/release decisions.
-- `review.md`: human-readable review findings when needed.
-- `release.md`: release, deployment, and rollback notes.
-- `closeout.md`: final result, evidence, residual risks, and next action.
-- `snapshot.json`: optional context export, not live mutable state.
-
-## Archive Rule
-
-At closeout, cancellation, or freeze:
-
-1. finish `closeout.md` or add a cancellation/freeze note;
-2. ensure evidence and approvals are linked;
-3. move the folder from `active/` to `archive/`;
-4. update durable memory only when the result has future value.
-
-Tiny T0 work may skip this entirely.
-
-## Compatibility With Current Runtime
-
-Current repository runtime still uses existing module/feature artifacts outside
-this proposal. Maestro vNext should not silently reinterpret old artifact
-folders as new active work.
-
-Migration must be explicit and owner-approved.
+`ai-memory/` remains the durable memory layer until a separately approved
+migration moves it under `maestro/memory/`.

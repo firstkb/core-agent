@@ -25,7 +25,8 @@ Use these surfaces as the active runtime source of truth:
 - `ai-memory/durable/**` - durable decisions, current state, canonical docs, and migrated legacy memory summaries.
 - `.agents/skills/*/SKILL.md` - active local skill behavior.
 - `.codex/**` - Codex-native config, native agents, contracts, standards, and templates.
-- `.agent-cli/**` - typed lifecycle gateway for module/feature/stage artifacts.
+- `maestro/**` - Maestro vNext native orchestration contracts, templates, examples, and flat work artifacts.
+- `.agent-cli/**` - typed lifecycle gateway for legacy module/feature/stage artifacts.
 - `platform/frontend/docs/**` and `platform/backend/docs/**` - canonical product docs.
 
 Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
@@ -66,12 +67,21 @@ maestro/
   docs/
   contracts/
   templates/
+  examples/
+  artifact/
 
 .agents/
   skills/
-    atlas/
+    maestro/
+    charlie/
+    grant/
+    mason/
+    scout/
+    lens/
+    release/
+    scribe/
     archivist/
-    ...
+    atlas/
 
 .agent-cli/
 .codex/
@@ -94,19 +104,15 @@ Product code root.
 
 ### `maestro/`
 
-Proposed Maestro Cockpit and Maestro vNext foundation surface.
+Maestro vNext native-first orchestration surface.
 
-- `maestro/docs/**` defines the target orchestration, agent role, artifact, and
-  state models.
-- `maestro/contracts/**` defines proposed portable schemas for task packets,
-  stage handoffs, evidence, and orchestration plans.
-- `maestro/templates/**` defines proposed Markdown templates for tasks,
-  attempts, and closeout records.
+- `maestro/docs/runtime-contract.md` defines the compact canonical vNext behavior.
+- `maestro/docs/**` documents orchestration, agent roles, artifacts, and transition policy.
+- `maestro/contracts/**` defines portable schemas for plans, packets, handoffs, evidence, approvals, and closeout.
+- `maestro/templates/**` defines Markdown templates for intent, plans, packets, approvals, evidence, release, and closeout.
+- `maestro/artifact/**` stores flat active and archived Maestro work records.
 
-This directory does not replace the current live `module_orchestrator` runtime
-until explicitly promoted. The current live runtime remains under
-`docs/maestro/module-orchestrator-v2-spec-pack/`, `.codex/contracts/`,
-`.codex/templates/`, and `.agents/skills/`.
+New Maestro-routed work should prefer `maestro_vnext` and the flat artifact model under `maestro/artifact/`. Legacy `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available only for old `artifacts/<module>/...` continuation.
 
 ### `ai-memory/`
 
@@ -125,19 +131,28 @@ Repo-local Codex skills.
 
 Current important skills include:
 
-- `atlas` - Atlas, the default intake/routing/orchestration layer for platform work.
+- `maestro` - owner-facing adaptive orchestration.
+- `charlie` - read-only research.
+- `grant` - plan/risk/acceptance audit.
+- `mason` - scoped implementation.
+- `scout` - verification and evidence.
+- `lens` - read-only review.
+- `release` - release/deploy after approval.
+- `scribe` - closeout and evidence summary.
 - `archivist` - semantic docs/memory drift auditor.
+- `atlas` - transitional independent helper.
 
-Other skills may exist for specialized workflows. Skill bodies are active
-runtime instructions when invoked.
+Skill bodies are active runtime instructions when invoked.
 
 ### `.agent-cli/`
 
-Typed lifecycle gateway and validation surface for module, feature, and stage
-artifacts under `artifacts/`.
+Typed lifecycle gateway and validation surface for legacy module, feature, and
+stage artifacts under `artifacts/`.
 
-The CLI owns mutable JSON lifecycle state. AI authors Markdown briefs and stage
-attempt reports; CLI commands own typed state transitions.
+For new Maestro vNext work, use `maestro/artifact/active/` and the contracts in
+`maestro/contracts/`. For legacy module-orchestrator continuation, the CLI owns
+mutable JSON lifecycle state. AI authors Markdown briefs and stage attempt
+reports; CLI commands own typed state transitions.
 
 ### `.codex/`
 

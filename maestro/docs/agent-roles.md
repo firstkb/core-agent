@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: agent_role_model
 lang: en
@@ -90,3 +90,23 @@ request includes deployment, production promotion, release packaging, rollback
 planning, or release notes.
 
 Release requires explicit approval before any production-impacting action.
+
+## Runtime Availability Matrix
+
+The active vNext skill and Codex system-agent mapping is:
+
+| Role | Skill | Codex system agent | Status |
+|---|---|---|---|
+| Maestro | `.agents/skills/maestro/` | `maestro_vnext` | active pilot |
+| Charlie | `.agents/skills/charlie/` | `research_charlie` | active pilot |
+| Grant | `.agents/skills/grant/` | `audit_grant` | active pilot |
+| Mason | `.agents/skills/mason/` | `implementation_mason` | active pilot |
+| Scout | `.agents/skills/scout/` | `verification_scout` | active pilot |
+| Lens | `.agents/skills/lens/` | `review_lens` | active pilot |
+| Release | `.agents/skills/release/` | `release_manager` | gated; requires release approval |
+| Scribe | `.agents/skills/scribe/` | `closeout_scribe` | active pilot |
+| Archivist | `.agents/skills/archivist/` | `memory_archivist` | active pilot |
+| Atlas | `.agents/skills/atlas/` | none formal | transitional independent helper |
+
+Legacy agents `module_orchestrator`, `research_codebase`, and `auditor`
+remain available only for old `artifacts/<module>/...` continuation.

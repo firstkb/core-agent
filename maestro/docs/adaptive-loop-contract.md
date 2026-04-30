@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: adaptive_loop_contract
 lang: en
@@ -177,7 +177,7 @@ Use the smallest useful artifact shape:
 
 - direct response only for tiny T0 work;
 - `intent.md`, optional `task.md`, and `closeout.md` for lightweight T1 records;
-- `packet.md`, `handoff-<role>-NNN.json`, and `evidence.md` for T2 work with
+- `packet.md`, `handoff-<stage>-<role>-NNN.json`, and `evidence.md` for T2 work with
   delegation, verification, or review;
 - `brief.md` and `plan.md` for T3 or T4 decomposition;
 - approvals, evidence, and snapshots only when risk or portability requires
@@ -211,7 +211,7 @@ Do not update docs or memory for:
 - details that belong in code, tests, or closeout evidence.
 
 Use Archivist when docs or memory consistency is material. Archivist audits
-semantic drift; it does not own feature execution.
+semantic drift; it does not own product execution.
 
 After Maestro acceptance, durable memory should move from `ai-memory/` to
 `maestro/memory/` through an explicit owner-approved migration.
@@ -237,7 +237,7 @@ Maestro should not return to the owner when:
 Avoid:
 
 - prebuilding a large agent tree before the first useful slice;
-- treating every owner request as a module-sized work item;
+- treating every owner request as a large gated work item;
 - creating artifacts because a template exists;
 - letting subagents expand scope;
 - dumping memory to save context instead of summarizing durable facts;

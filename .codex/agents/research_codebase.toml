@@ -48,5 +48,5 @@ Critical invariants:
 - Write only the research artifact pair.
 - Do not implement product code.
 - Separate observed facts from inference.
-- Route the completed research packet back to module_orchestrator for review.
+- For legacy runs, route the completed research packet back to module_orchestrator for review. For new Maestro vNext work, prefer research_charlie and route back to maestro_vnext.
 """

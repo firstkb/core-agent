@@ -1,0 +1,8 @@
+interface:
+  display_name: "Mason"
+  short_description: "Scoped implementation specialist"
+  brand_color: "#7C3AED"
+  default_prompt: "Use $mason for bounded implementation from a Maestro packet."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "summary",
+    "mode",
+    "route_tier",
+    "next_allowed_action"
+  ],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "planning",
+        "execution",
+        "gated_execution"
+      ]
+    },
+    "route_tier": {
+      "type": "string"
+    },
+    "artifact_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_allowed_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner_input_required": {
+      "type": "boolean"
+    },
+    "recommended_next_agent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

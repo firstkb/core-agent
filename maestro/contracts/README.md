@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: contracts_index
 lang: en
@@ -7,17 +7,16 @@ lang: en
 
 # Maestro vNext Contracts
 
-These schemas define the proposed portable contract layer for Maestro vNext.
-
-They are not active runtime schemas until the owner accepts the vNext model and
-the implementation wires them into native skills, agent packets, or validation
-commands.
+These schemas define the portable contract layer for Maestro vNext.
 
 Contracts:
 
-- `orchestration-plan.schema.json` - Maestro conversation mode, route, record
-  decision, stage set, agents, gates, and artifact targets.
-- `task-packet.schema.json` - bounded task packet for implementation and
-  specialist launch, including optional work slug and artifact root.
+- `orchestration-plan.schema.json` - Maestro mode, route, artifact shape, stages, agents, approvals, evidence, and next action.
+- `task-packet.schema.json` - bounded packet for specialist or inline staged work.
 - `stage-handoff.schema.json` - machine-readable stage attempt result.
 - `evidence.schema.json` - evidence attachment/index item.
+- `approval.schema.json` - machine-readable approval gate record.
+- `closeout.schema.json` - machine-readable closeout summary.
+
+Use Markdown templates for owner-readable artifacts and JSON contracts for gates,
+subagent boundaries, and validation.

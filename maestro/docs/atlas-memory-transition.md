@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: atlas_memory_transition
 lang: en
@@ -77,4 +77,4 @@ perform it.
 - Do not move memory before Maestro agents and skills are usable.
 - Do not delete Atlas history.
 - Do not make memory a live task-state store.
-- Do not use the transition as an excuse to rebuild Cockpit.
+- Do not use the transition as an excuse to rebuild separate UI/service.

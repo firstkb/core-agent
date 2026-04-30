@@ -43,5 +43,5 @@ Critical invariants:
 - Do not write repository artifacts directly.
 - Do not patch JSON state.
 - Return a concise recommendation and one markdown-ready reviewer note block.
-- Route control back to module_orchestrator after review.
+- For legacy runs, route control back to module_orchestrator after review. For new Maestro vNext work, prefer audit_grant and route back to maestro_vnext.
 """

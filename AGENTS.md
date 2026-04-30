@@ -37,11 +37,12 @@ Treat:
 
 as the live repository layout and source-of-truth boundary document.
 
-Treat the active working set under:
+Treat the legacy working set under:
 
 - `docs/maestro/module-orchestrator-v2-spec-pack/`
 
-as the current runtime reference for the Maestro control-plane model.
+as the reference for old `module_orchestrator` runs only. New Maestro-routed
+work should use `maestro/docs/runtime-contract.md` and `maestro/contracts/**`.
 
 Treat:
 
@@ -55,9 +56,10 @@ Treat:
 - `maestro/contracts/**`
 - `maestro/templates/**`
 
-as the proposed Maestro Cockpit / Maestro vNext foundation surface. These files
-do not replace the current live `module_orchestrator` runtime until explicitly
-promoted.
+as the active Maestro vNext foundation surface for native-first orchestration.
+The legacy `module_orchestrator` runtime remains available for old `artifacts/`
+runs, but new Maestro-routed work should prefer `maestro_vnext` and
+`maestro/artifact/active/<work-slug>/`.
 
 ## Runtime Read Policy
 
@@ -68,7 +70,7 @@ Ordinary agent work should read only:
 - `ai-memory/index/memory-index.yaml` when the task needs a broader route map
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
-- relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro Cockpit or Maestro vNext
+- relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro vNext
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring
 - the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/features/<feature>/...`
 - product/runtime code and docs that materially answer the task
@@ -100,80 +102,131 @@ For non-trivial task closeout or PR text, use the compact evidence shape in
 `ai-memory/atlas/templates/agent-evidence.md`. Keep it short; do not turn it
 into a mandatory file for tiny changes.
 
+
 ## Runtime roles
 
 ### Maestro
 
-Use Maestro for module-level orchestration when the goal is to:
+Use Maestro as the owner-facing adaptive orchestrator for new engineering work.
+Maestro runs inline in the main thread and uses `maestro_vnext` as the backing
+system agent when native delegation is available.
 
-- clarify a large request
-- establish module scope and decomposition
-- seed feature-root artifacts after explicit approval
-- launch the first downstream research loop
-- review downstream output before the next stage
+Maestro owns:
 
-Maestro runs inline in the main thread. Do not spawn a subagent version of Maestro.
+- owner intent clarification;
+- conversation mode selection: `discussion`, `planning`, `execution`, or `gated_execution`;
+- route tier selection: `T0_inline`, `T1_task`, `T2_staged`, `T3_multi_step`, or `T4_gated`;
+- artifact shape selection under `maestro/artifact/active/<work-slug>/`;
+- specialist packet creation;
+- approval gate enforcement;
+- evidence reconciliation;
+- closeout and archive decisions.
+
+Maestro must not recursively spawn itself, bypass approval gates, or turn tiny
+work into gated-work ceremony.
 
 ### Charlie
 
-Use Charlie for read-heavy codebase research when the goal is to:
+Use Charlie for read-only codebase and documentation research when facts,
+change points, dependencies, or risks are unclear.
 
-- find the real code path
-- trace behavior and dependencies
-- map architecture and change points
-- separate observed facts from inference
-- produce a reusable research artifact pair
-
-Charlie writes only:
-
-- `artifacts/<module>/features/<feature>/stages/research/<attempt>/README.md`
-- `artifacts/<module>/features/<feature>/stages/research/<attempt>/handoff.json`
+Charlie must not implement. Charlie returns a bounded research handoff to
+Maestro with observed facts, inference separated from evidence, and recommended
+next action.
 
 ### Grant
 
-Use Grant for optional technical brief review when the goal is to:
+Use Grant to audit a brief, plan, route, risk model, or acceptance criteria
+before approval. Grant challenges ambiguity, unsupported assumptions, weak
+scope, missing gates, and insufficient evidence.
 
-- audit `brief.md` before owner approval
-- validate the proposed solution, feature plan, and dependency ordering against the cited technical surface
-- find ambiguity, contradictions, weak decomposition, missing dependencies, unsupported technical assumptions, or transient lifecycle language
-- return a marked reviewer note block for `## Reviewer Notes`
+Grant does not approve work and does not mutate repository artifacts directly
+unless Maestro explicitly assigns a docs-only audit artifact.
 
-Grant should run as an optional helper to Maestro, not as a lifecycle owner.
+### Mason
 
-Grant does not:
+Use Mason for scoped implementation after Maestro has provided a packet with
+allowed paths, forbidden paths, evidence expectations, stop conditions, and any
+approval references.
 
-- approve the brief
-- change lifecycle state
-- write repository artifacts directly
+Mason may edit only assigned product/docs/test files and must return changed
+files, checks, skipped checks, residual risks, and a handoff.
+
+### Scout
+
+Use Scout for verification: tests, builds, browser/Storybook checks, CI review,
+security checks, migration dry runs, or other evidence collection.
+
+Scout should be independent from Mason when verification risk is material.
+
+### Lens
+
+Use Lens for read-only review of diff, evidence, security posture, acceptance,
+and residual risk. Lens recommends continue, revise, block, or owner decision;
+Maestro owns the lifecycle decision.
+
+### Release
+
+Use Release only for release packaging, deployment, production promotion,
+workflow dispatch, rollback notes, or release evidence. Release requires an
+explicit release approval before production-impacting action.
+
+### Scribe
+
+Use Scribe for durable closeout and evidence summary when persisted artifacts
+are useful. Scribe writes closeout artifacts and final summaries, not product
+implementation.
 
 ### Archivist
 
-Use Archivist for semantic docs and ai-memory audit when the goal is to:
+Use Archivist for semantic docs and durable memory audit when docs, source of
+truth, or `ai-memory` / future `maestro/memory` consistency may drift.
+Archivist is an audit workflow, not a product owner.
 
-- find source-of-truth drift after large docs or memory changes
-- check AGENTS, Atlas, FE/BE docs, and `ai-memory` consistency
-- identify stale lifecycle language, duplicated ownership, or context-window bloat
-- review reference-code policy usage without opening raw packs by default
+### Atlas
 
-Archivist is an audit workflow, not a feature owner or implementation agent.
-It should report findings first and patch files only when the owner asks to apply the audit.
+Atlas remains a transitional independent helper. It is not part of Maestro's
+formal chain. Archive Atlas only after Maestro proves usable and the owner
+explicitly approves the transition.
+
 
 ## Naming
 
-- `maestro` -> `module_orchestrator`
-- `charlie` -> `research_codebase`
-- `grant` -> `brief_auditor`
-- `archivist` -> semantic docs/memory auditor skill; no backed system agent
+Active vNext skill nicknames map to Codex system agent ids as follows:
 
-Maestro vNext reserves `scribe` for a future orchestration closeout role. The
-current semantic docs/memory auditor skill is `archivist`.
+- `maestro` -> `maestro_vnext`
+- `charlie` -> `research_charlie`
+- `grant` -> `audit_grant`
+- `mason` -> `implementation_mason`
+- `scout` -> `verification_scout`
+- `lens` -> `review_lens`
+- `release` -> `release_manager`
+- `scribe` -> `closeout_scribe`
+- `archivist` -> `memory_archivist`
+
+Legacy system agent ids remain available for old module-orchestrator runs:
+
+- `module_orchestrator`
+- `research_codebase`
+- `brief_auditor`
+
+Do not use legacy agents for new Maestro vNext work unless the owner explicitly
+asks to continue an old `artifacts/<module>/...` run.
 
 ## Artifact model
+
+For Maestro vNext work, use the flat native artifact model:
+
+- active work root: `maestro/artifact/active/YYYY-MM-DD-<work-slug>/...`
+- archived work root: `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/...`
+- common files: `intent.md`, `plan.md`, `task.md`, `packet.md`, `approval-*.json`, `handoff-<stage>-<role>-NNN.json`, `evidence.md`, `closeout.md`
+- persisted artifacts stay in English
+
+For legacy module-orchestrator continuation only, use the old model:
 
 - module root: `artifacts/<module>/...`
 - feature root: `artifacts/<module>/features/<feature>/...`
 - stage root: `artifacts/<module>/features/<feature>/stages/<stage>/...`
-- persisted artifacts stay in English
 
 ## Artifact History Policy
 

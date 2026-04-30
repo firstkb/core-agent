@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: routing_tier_contract
 lang: en
@@ -13,14 +13,14 @@ This document defines how Maestro chooses the lightest sufficient route for an
 owner request.
 
 The goal is to keep Maestro fast for small work while preserving enough
-structure for feature, module-sized, high-risk, and release work.
+structure for multi-step, approval-gated, high-risk, and release work.
 
 ## Core Rule
 
 Maestro must choose the cheapest route that preserves correctness, evidence,
 approval gates, and handoff quality.
 
-Do not create a work brief, feature decomposition, stage attempts, snapshots, or
+Do not create a work brief, nested decomposition, stage attempts, snapshots, or
 multiple agent runs unless the request actually needs them.
 
 Arrow diagrams in this document are shorthand for possible adaptive moves. They
@@ -30,12 +30,11 @@ are not automatic chains that must run end to end.
 
 | Tier | Use When | `route_tier` | `artifact_shape` | Durable Record |
 |---|---|---|---|---|
-| 0 | Tiny inline work | `direct` | `none` | no |
-| 1 | Small bounded work with optional durable record | `task` | `lightweight` | optional |
-| 2 | Work needs stage handoff, verification, or review | `task` | `staged_task` | yes |
-| 3 | Work needs feature decomposition | `feature` | `feature_work` | yes |
-| 4A | Module-sized initiative | `module_sized_work` | `feature_work` or `full` | yes |
-| 4B | High-risk, release, security, migration, or production-impacting work | `high_risk` | `full` | yes |
+| 0 | Tiny inline work | `T0_inline` | `none` | no |
+| 1 | Small bounded work with optional durable record | `T1_task` | `lightweight` | optional |
+| 2 | Work needs stage handoff, verification, or review | `T2_staged` | `staged` | yes |
+| 3 | One owner goal needs several linear steps | `T3_multi_step` | `multi_step` | yes |
+| 4 | High-risk, approval-gated, release, migration, or production-impacting work | `T4_gated` | `full` | yes |
 
 ## Decision Inputs
 
@@ -62,10 +61,10 @@ Maestro should classify the owner request using these inputs:
 | Needs tests, browser smoke, Storybook, CI, review, or handoff | Tier 2 |
 | Needs research before implementation | Tier 2 or Tier 3 |
 | Needs multiple tasks under one owner goal | Tier 3 |
-| Needs feature decomposition or dependency ordering | Tier 3 |
-| Needs owner-approved brief before execution | Tier 4A |
-| Auth, tenancy, permissions, secrets, migrations, security, release, or deploy | Tier 4B |
-| Touches durable docs or memory policy | Add `memory_audit` / Archivist |
+| Needs multiple steps or dependency ordering inside one owner goal | Tier 3 |
+| Needs owner-approved brief before execution | Tier 4 |
+| Auth, tenancy, permissions, secrets, migrations, security, release, or deploy | Tier 4 |
+| Touches durable docs or memory policy | Add `memory` / Archivist |
 | Needs production-impacting action | Add Release and explicit release approval |
 
 ## Tier 0: Direct Inline
@@ -120,7 +119,7 @@ Maestro
 State and artifacts:
 
 - `record_required = optional`
-- `route_tier = task`
+- `route_tier = T1_task`
 - `artifact_shape = lightweight`
 
 Default artifact shape:
@@ -161,8 +160,8 @@ Maestro
 State and artifacts:
 
 - `record_required = true`
-- `route_tier = task`
-- `artifact_shape = staged_task`
+- `route_tier = T2_staged`
+- `artifact_shape = staged`
 
 Default stages:
 
@@ -180,7 +179,7 @@ maestro/artifact/active/YYYY-MM-DD-<work-slug>/
   plan.md
   task.md
   packet.md
-  handoff-<role>-001.json
+  handoff-<stage>-<role>-001.json
   evidence.md
   closeout.md
 ```
@@ -192,19 +191,18 @@ Typical examples:
 - Storybook coverage work;
 - scoped refactor with review risk.
 
-Escalate to Tier 3 when one owner goal needs multiple coordinated tasks or
-feature decomposition.
+Escalate to Tier 3 when one owner goal needs multiple coordinated linear steps.
 
-## Tier 3: Feature Work
+## Tier 3: Multi-Step Work
 
-Use when one owner goal needs decomposition into feature slices or multiple
-tasks.
+Use when one owner goal needs several coordinated steps, slices, or dependencies
+but does not require a high-risk or release gate.
 
 Typical adaptive moves:
 
 ```text
 Maestro
-  -> feature/task plan
+  -> work plan
   -> Charlie when code path or dependency order is unclear
   -> Mason tasks
   -> Scout verification
@@ -216,34 +214,32 @@ Maestro
 State and artifacts:
 
 - `record_required = true`
-- `route_tier = feature`
-- `artifact_shape = feature_work`
+- `route_tier = T3_multi_step`
+- `artifact_shape = multi_step`
 
 Default artifact shape:
 
 ```text
 maestro/artifact/active/YYYY-MM-DD-<work-slug>/
   intent.md
-  brief.md
   plan.md
   task.md
   packet.md
-  handoff-<role>-001.json
+  handoff-<stage>-<role>-001.json
   evidence.md
   closeout.md
 ```
 
-Use feature decomposition only when it removes ambiguity. Small work should
-stay in Tier 1 or Tier 2. Keep decomposition inside `plan.md` or `brief.md`
-unless the owner explicitly asks for a larger structure.
+Keep all decomposition inside `plan.md` unless the owner explicitly asks for a
+larger product structure. Small work should stay in Tier 1 or Tier 2.
 
-Escalate to Tier 4A when the owner goal is module-sized and requires explicit
-brief approval before execution.
+Escalate to Tier 4 when the owner goal requires explicit approval before
+execution, touches high-risk surfaces, or includes release/deploy work.
 
-## Tier 4A: Module-Sized Work
+## Tier 4: Gated Work
 
-Use for large initiatives that require owner-approved scope, decomposition, and
-sequencing.
+Use for high-risk, release, production-impacting, destructive, memory migration,
+Atlas archive, or owner-approval-gated work.
 
 Typical adaptive moves:
 
@@ -251,64 +247,24 @@ Typical adaptive moves:
 Maestro
   -> work brief
   -> Charlie
-  -> feature/task decomposition
+  -> linear work plan
   -> Grant
-  -> owner brief approval
-  -> owner execution approval
+  -> owner approval
   -> staged execution
+  -> Scout/Lens as needed
   -> Scribe closeout
 ```
 
 State and artifacts:
 
 - `record_required = true`
-- `route_tier = module_sized_work`
-- `artifact_shape = feature_work` by default;
-- `artifact_shape = full` when approvals, release notes, review records, or a
-  snapshot must be portable.
+- `route_tier = T4_gated`
+- `artifact_shape = full`
 
 Required approvals:
 
-- `brief`
-- `execution`
-
-Typical examples:
-
-- build a new product module;
-- create AI chat capability across FE/BE;
-- introduce a new product workflow with multiple dependencies.
-
-Escalate to Tier 4B when the work includes security, migration, tenancy,
-secrets, release, or production impact.
-
-## Tier 4B: High Risk
-
-Use for any work where a wrong change can compromise security, tenant
-isolation, data integrity, or production stability.
-
-Typical adaptive moves:
-
-```text
-Maestro
-  -> Charlie
-  -> Grant
-  -> owner/security/migration approval
-  -> Mason
-  -> Scout with required gates
-  -> Lens
-  -> Release when deploy is in scope
-  -> Scribe closeout
-  -> Archivist when memory/docs are impacted
-```
-
-State and artifacts:
-
-- `record_required = true`
-- `route_tier = high_risk`
-- `artifact_shape = full`
-
-Required approvals depend on risk type:
-
+- `owner_plan_approval` when a plan/brief must be accepted;
+- `owner_execution_approval` when execution is gated by owner decision;
 - `high_risk_implementation`
 - `security`
 - `migration`
@@ -326,7 +282,15 @@ Required evidence depends on risk type:
 - approval records;
 - release or rollback notes.
 
-High-risk work must not run as Tier 0 or Tier 1.
+Typical examples:
+
+- auth, sessions, tenant isolation, permissions, secrets, or billing changes;
+- migrations or destructive operations;
+- release, deploy, workflow dispatch, or production-impacting work;
+- Atlas archive or `ai-memory` migration;
+- owner-approved large work where execution must stop at a gate.
+
+Gated work must not run as Tier 0 or Tier 1.
 
 ## Stage Selection
 
@@ -334,13 +298,13 @@ High-risk work must not run as Tier 0 or Tier 1.
 |---|---|
 | `planning` | Maestro needs to shape scope before execution |
 | `research` | code path, dependencies, or risks are unclear |
-| `brief_audit` | a work brief or high-risk plan needs Grant |
+| `audit` | a work brief or high-risk plan needs Grant |
 | `implementation` | product code, docs, tests, or artifacts change |
 | `verification` | checks or visual/browser/CI evidence matter |
 | `review` | independent diff/evidence/acceptance review is useful |
 | `release` | deployment, production promotion, or rollback is in scope |
 | `closeout` | durable result/evidence summary is useful |
-| `memory_audit` | durable docs or memory may need update |
+| `memory` | durable docs or memory may need update |
 
 ## Agent Selection
 

@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: stage_contract
 lang: en
@@ -9,514 +9,138 @@ lang: en
 
 ## Purpose
 
-This document defines the standard stages Maestro may use after selecting a
-route tier.
+Stages are optional building blocks in Maestro's adaptive loop. Maestro selects
+only the stages that improve correctness, evidence, approval safety, review
+quality, or closeout portability.
 
-Stages are optional building blocks. Maestro should select only the stages that
-improve correctness, evidence, approval safety, or handoff quality.
+A stage is not a workflow obligation. Maestro may skip any stage that does not
+help the current route.
 
-## Stage Rules
+## Canonical Stage Names
 
-- Do not create a stage just for ceremony.
-- A stage attempt is append-only.
-- A stage agent may recommend the next stage but does not advance lifecycle.
-- Stage transitions happen through Maestro's explicit orchestration decisions
-  and are recorded in conversation or artifacts when persistence is useful.
-- High-risk stages must not begin until required approvals are present.
-- A stage can be skipped only when its evidence value is not needed for the
-  selected route tier.
+Use these stage names in packets, handoffs, and orchestration plans:
 
-## Stage Summary
+| Stage | Typical Role | Purpose |
+|---|---|---|
+| `intake` | Maestro | Understand owner intent, mode, risk, and next useful action |
+| `research` | Charlie | Find code/docs facts, dependencies, risks, and change points |
+| `planning` | Maestro | Shape route, artifact shape, scope, approvals, and packets |
+| `audit` | Grant | Challenge plan, risk, acceptance, dependency order, and gates |
+| `approval` | Owner/Maestro | Capture machine-readable approval records |
+| `implementation` | Mason or Maestro | Apply scoped changes |
+| `verification` | Scout | Run checks and collect evidence |
+| `review` | Lens | Read-only review of diff, evidence, security, and acceptance |
+| `release` | Release | Release/deploy/package/rollback work after release approval |
+| `closeout` | Scribe or Maestro | Summarize result, evidence, skipped checks, and residual risk |
+| `archive` | Maestro/Scribe | Move completed, cancelled, or frozen work to archive |
+| `memory` | Archivist | Audit docs and durable memory drift |
 
-| Stage | Purpose | Typical Agent | Required By Default |
-|---|---|---|---|
-| `planning` | Shape scope, route, task packets, and decomposition | Maestro | Tier 3, Tier 4A, or Tier 4B |
-| `research` | Find code path, facts, dependencies, risks | Charlie | When unknowns matter |
-| `brief_audit` | Audit brief, decomposition, gates, and acceptance | Grant | Tier 4A or Tier 4B |
-| `implementation` | Apply scoped changes | Mason | Any code/docs change |
-| `verification` | Run checks and gather proof | Scout or Mason | When evidence matters |
-| `review` | Independent read-only review of diff/evidence | Lens | Risky or non-trivial work |
-| `release` | Deployment, workflow dispatch, release, rollback notes | Release | Release work only |
-| `closeout` | Summarize result, evidence, risks, next action | Scribe or Maestro | Persisted work |
-| `memory_audit` | Validate docs and durable memory updates | Archivist | Memory/docs impact |
+## Route Tier Compatibility
 
-## Stage: `planning`
+| Tier | Default Stages |
+|---|---|
+| `T0_inline` | `intake`, inline answer or tiny implementation, optional final evidence in response |
+| `T1_task` | `intake`, optional `planning`, optional `implementation`, `closeout` |
+| `T2_staged` | `intake`, `planning`, `implementation`, optional `verification`/`review`, `closeout` |
+| `T3_multi_step` | `intake`, optional `research`, `planning`, optional `audit`, staged slices, verification/review, closeout |
+| `T4_gated` | `intake`, research/audit as needed, approval, implementation, verification, review, optional release, closeout |
 
-Purpose:
+High-risk work must not enter implementation or release without the required
+`approval-*.json` records.
 
-- classify route tier;
-- select `artifact_shape`;
-- define task/feature breakdown;
-- identify approvals, evidence, and agent needs.
+## Stage Attempt Rules
 
-Allowed route tiers:
+- Stage attempts are append-only.
+- A stage agent may recommend the next action but does not advance lifecycle.
+- Maestro records transitions in conversation or artifacts when persistence is useful.
+- Failed, blocked, skipped, and partially verified stages must be explicit.
+- Handoffs use `handoff-<stage>-<role>-NNN.json`.
 
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
+## Stage Inputs And Outputs
 
-Allowed agents:
+### `research`
 
-- Maestro.
+Input: owner intent, route notes, target files/docs when known.
 
-Input artifacts:
+Output: `handoff-research-charlie-NNN.json` with observed facts, inferences,
+evidence refs, risks, and recommended next action.
 
-- owner request;
-- optional prior work artifacts;
-- relevant repository docs.
+### `planning`
 
-Output artifacts:
+Input: owner request, research handoff when available, relevant repo contracts.
 
-- orchestration plan;
-- `task.md` for persisted work;
-- `brief.md` when feature/module/high-risk work needs approval;
-- `packet.md` only when a launch packet is useful.
+Output: `intent.md`, `plan.md`, `task.md`, and/or `packet.md` when persistence
+or delegation is useful.
 
-Required evidence:
+### `audit`
 
-- none by default;
-- cite observed constraints when the plan depends on repository facts.
+Input: plan, brief, task packet, risk model, approval policy, acceptance checks.
 
-Allowed next stages:
+Output: `handoff-audit-grant-NNN.json` with `continue`, `revise`, `block`, or
+`request_owner_decision` recommendation.
 
-- `research`
-- `brief_audit`
-- `implementation`
-- `verification`
-- `closeout`
+### `approval`
 
-Failure behavior:
+Input: requested action, risk reason, scope, expected evidence, decision actor.
 
-- return to owner with one focused clarification question when route-critical
-  information is missing;
-- mark work blocked only when safe routing is impossible.
+Output: `approval-NNN.json` validated by `maestro/contracts/approval.schema.json`.
+Markdown approval notes are optional and not sufficient for gate checking.
 
-## Stage: `research`
+### `implementation`
 
-Purpose:
+Input: task packet with allowed paths, forbidden paths, approvals, evidence
+expectations, and stop conditions.
 
-- find real code paths;
-- identify dependencies, risks, contracts, and likely touched files;
-- separate observed facts from inference.
+Output: changed files and `handoff-implementation-mason-NNN.json` when staged.
 
-Allowed route tiers:
+### `verification`
 
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
+Input: implementation handoff, acceptance checks, evidence expectations.
 
-Allowed agents:
+Output: `handoff-verification-scout-NNN.json` and evidence records for commands,
+tests, browser checks, CI, migrations, security checks, or skipped checks.
 
-- Charlie.
+### `review`
 
-Input artifacts:
+Input: diff, implementation handoff, verification evidence, acceptance criteria,
+risk notes, and approval refs when relevant.
 
-- `task.md` or `brief.md`;
-- target feature packet when present.
+Output: `handoff-review-lens-NNN.json` with a recommendation to continue,
+revise, block, request owner decision, or close.
 
-Output artifacts:
+### `release`
 
-- `handoff-charlie-NNN.json`;
-- evidence references.
+Input: release packet, verification/review evidence, and release approval.
 
-Required evidence:
+Output: `handoff-release-release-NNN.json`, release evidence, target environment,
+command/workflow result, rollback or recovery notes.
 
-- file paths, symbols, docs, contracts, or commands read;
-- risks and unknowns.
+### `closeout`
 
-Allowed next stages:
+Input: stage handoffs, evidence refs, changed files, skipped checks, approvals,
+residual risks, and follow-ups.
 
-- `planning`
-- `brief_audit`
-- `implementation`
-- `closeout`
+Output: `closeout.md` and optional JSON closeout summary validated by
+`maestro/contracts/closeout.schema.json`.
 
-Failure behavior:
+### `memory`
 
-- return `blocked` when source-of-truth conflict prevents safe planning;
-- recommend clarification when the owner decision is missing.
+Input: closeout, changed docs/memory files, durable memory implications.
 
-## Stage: `brief_audit`
+Output: `handoff-memory-archivist-NNN.json` or owner-readable findings. Archivist
+patches docs/memory only when explicitly assigned.
 
-Purpose:
+## Review Decisions
 
-- challenge work brief, decomposition, dependencies, approvals, risks, and
-  acceptance before execution.
+Use these recommendations in `stage-handoff.schema.json`:
 
-Allowed route tiers:
-
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Grant.
-
-Input artifacts:
-
-- `brief.md`;
-- relevant `task.md` or feature packet when present.
-
-Output artifacts:
-
-- review note block;
-- `handoff-grant-NNN.json` when the audit is run as a formal stage.
-
-Required evidence:
-
-- specific ambiguity, contradiction, missing dependency, unsupported assumption,
-  or acceptance weakness.
-
-Allowed next stages:
-
-- `planning`
-- `implementation`
-- `closeout`
-
-Approval gates:
-
-- owner approval is required after a `revise` or `blocked` audit result before
-  execution can begin.
-
-Failure behavior:
-
-- return `revise` when the plan is fixable;
-- return `blocked` when execution would be unsafe.
-
-## Stage: `implementation`
-
-Purpose:
-
-- apply scoped product, docs, test, or artifact changes.
-
-Allowed route tiers:
-
-- `direct`
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Maestro only for tiny direct work;
-- Mason for scoped implementation work.
-
-Input artifacts:
-
-- `task.md`;
-- `packet.md` when launched as an agent/stage;
-- relevant prior research handoff.
-
-Output artifacts:
-
-- changed files;
-- `handoff-mason-NNN.json` when staged;
-- evidence references for commands run during implementation.
-
-Required evidence:
-
-- changed file list;
-- commands run and result;
-- unresolved risks.
-
-Allowed next stages:
-
-- `verification`
-- `review`
-- `closeout`
-
-Approval gates:
-
-- high-risk implementation approval must be present before high-risk work
-  begins.
-
-Failure behavior:
-
-- return `blocked` when implementation cannot proceed without owner or research
-  input;
-- return `failed` when checks prevent a useful handoff.
-
-## Stage: `verification`
-
-Purpose:
-
-- prove the result with checks, tests, CI, browser, Storybook, visual review,
-  migration checks, or security checks.
-
-Allowed route tiers:
-
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Scout;
-- Mason when verification is simple and coupled to implementation.
-
-UI-visible work should use Scout with the `browser-use` skill by default.
-
-Input artifacts:
-
-- `task.md`;
-- implementation handoff;
-- evidence expectations.
-
-Output artifacts:
-
-- `handoff-scout-NNN.json`;
-- evidence files or links.
-
-Required evidence:
-
-- commands run and result;
-- Browser Use skill used, or explicit reason it was unavailable/skipped;
-- browser route, viewport, interaction state, and visual notes when UI is
-  visible;
-- CI links when CI is part of the gate;
-- migration/security notes when relevant.
-
-Allowed next stages:
-
-- `review`
-- `implementation`
-- `closeout`
-
-Failure behavior:
-
-- return `failed` when checks fail;
-- return `blocked` when environment or missing approval prevents verification;
-- recommend `implementation` when fixes are needed.
-
-## Stage: `review`
-
-Purpose:
-
-- independently review diff, evidence, acceptance, security, tenant/auth risk,
-  and scope drift.
-
-Allowed route tiers:
-
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Lens.
-
-Input artifacts:
-
-- `task.md`;
-- changed file list;
-- implementation and verification handoffs;
-- evidence references.
-
-Output artifacts:
-
-- review findings;
-- accept/revise/block recommendation;
-- `handoff-lens-NNN.json` when review is staged.
-
-Required evidence:
-
-- concrete file/symbol references for findings;
-- missing test or evidence notes.
-
-Allowed next stages:
-
-- `implementation`
-- `verification`
-- `release`
-- `closeout`
-
-Failure behavior:
-
-- return `revise` for actionable defects;
-- return `blocked` for unsafe or unreviewable changes.
-
-## Stage: `release`
-
-Purpose:
-
-- perform or prepare production-impacting release actions, workflow dispatch,
-  deployment, release notes, or rollback notes.
-
-Allowed route tiers:
-
-- `high_risk`
-- `module_sized_work` only when release is explicitly in scope.
-
-Allowed agents:
-
-- Release.
-
-Input artifacts:
-
-- approved work/task;
-- verification and review evidence;
-- release approval.
-
-Output artifacts:
-
-- release notes;
-- deployment or workflow links;
-- rollback notes;
-- evidence references.
-
-Required evidence:
-
-- release approval;
-- target environment;
-- command/workflow result;
-- rollback path.
-
-Allowed next stages:
-
-- `verification`
-- `closeout`
-
-Approval gates:
-
-- release approval is required before production-impacting action.
-
-Failure behavior:
-
-- return `blocked` when approval or environment is missing;
-- return `failed` when release action fails.
-
-## Stage: `closeout`
-
-Purpose:
-
-- record final result, evidence, approvals, checks, memory/docs impact, residual
-  risks, and next action.
-
-Allowed route tiers:
-
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Scribe;
-- Maestro for simple work.
-
-Input artifacts:
-
-- task/work state;
-- stage handoffs;
-- evidence;
-- approvals;
-- changed file list.
-
-Output artifacts:
-
-- `closeout.md`;
-- optional final `evidence.md` update.
-
-Required evidence:
-
-- summary of checks;
-- approval summary when approvals existed;
-- residual risks or explicit none.
-
-Allowed next stages:
-
-- `memory_audit`
-- none.
-
-Failure behavior:
-
-- return `blocked` when required evidence or approval records are missing.
-
-## Stage: `memory_audit`
-
-Purpose:
-
-- validate docs and durable memory consistency after meaningful docs/memory or
-  source-of-truth changes.
-
-Allowed route tiers:
-
-- `task`
-- `feature`
-- `module_sized_work`
-- `high_risk`
-
-Allowed agents:
-
-- Archivist.
-
-Input artifacts:
-
-- closeout summary;
-- changed docs/memory files;
-- proposed memory deltas.
-
-Output artifacts:
-
-- audit findings;
-- recommended memory/doc updates;
-- optional applied docs/memory patch when owner asked for patching.
-
-Required evidence:
-
-- docs/memory checks run;
-- drift findings or explicit no findings.
-
-Allowed next stages:
-
-- `closeout`;
-- none.
-
-Failure behavior:
-
-- report findings first;
-- patch only when owner asked for patching.
-
-## Stage Handoff Contract
-
-Every staged attempt should return:
-
-- result: `complete`, `blocked`, `failed`, or `cancelled`;
-- summary;
-- files changed;
-- commands run;
-- evidence refs;
-- risks;
-- recommended next stage.
-
-The machine-readable handoff must follow:
-
-- `maestro/contracts/stage-handoff.schema.json`
-
-Persisted handoffs use flat filenames:
-
-```text
-handoff-<role>-NNN.json
-```
-
-## Stage Review Decisions
-
-Allowed review decisions:
-
-- `accept`
+- `continue`
 - `revise`
 - `block`
-- `cancel`
+- `request_owner_decision`
+- `release`
+- `archive`
+- `close`
+- `none`
 
-Rules:
-
-- `accept` may set a next stage or complete the stage chain.
-- `revise` routes back to the stage that needs correction.
-- `block` requires a blocker reason and next owner/system action.
-- `cancel` ends the stage chain without success.
+Maestro owns the final lifecycle decision.

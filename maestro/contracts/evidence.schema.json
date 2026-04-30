@@ -1,81 +1,164 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/maestro/evidence.schema.json",
+  "title": "Maestro evidence item",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
     "evidence_id",
-    "task_id",
-    "type",
-    "title",
-    "uri",
-    "metadata",
-    "created_at"
+    "work_id",
+    "evidence_type",
+    "summary",
+    "created_by",
+    "created_at",
+    "redacted"
   ],
   "properties": {
     "schema_version": {
+      "type": "integer",
       "const": 1
     },
     "evidence_id": {
       "type": "string",
       "minLength": 1
     },
-    "task_id": {
+    "work_id": {
       "type": "string",
       "minLength": 1
     },
-    "work_slug": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z][a-z0-9_-]*$|^[a-z][a-z0-9_-]*$"
-    },
-    "artifact_root": {
+    "packet_id": {
       "type": [
         "string",
         "null"
       ]
     },
-    "attempt_id": {
+    "handoff_id": {
       "type": [
         "string",
         "null"
-      ],
-      "pattern": "^attempt-[0-9]{3}$"
+      ]
     },
-    "type": {
+    "evidence_type": {
       "type": "string",
       "enum": [
         "command",
         "test",
-        "ci",
-        "storybook",
         "browser",
-        "visual",
-        "security",
-        "migration",
+        "ci",
         "review",
+        "diff",
+        "file",
         "approval",
-        "artifact",
-        "external_link",
-        "memory"
+        "release",
+        "migration",
+        "security",
+        "manual",
+        "other"
       ]
     },
-    "title": {
+    "summary": {
       "type": "string",
       "minLength": 1
     },
-    "uri": {
-      "type": "string",
-      "minLength": 1
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uri": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "artifact_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "content_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "duration_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "skipped",
+            "blocked",
+            "not_run"
+          ]
+        }
+      }
     },
     "metadata": {
-      "type": "object"
+      "type": "object",
+      "additionalProperties": true
+    },
+    "created_by": {
+      "type": "string",
+      "enum": [
+        "maestro",
+        "charlie",
+        "grant",
+        "mason",
+        "scout",
+        "lens",
+        "release",
+        "scribe",
+        "archivist",
+        "owner",
+        "ci"
+      ]
     },
     "created_at": {
-      "type": "string",
-      "format": "date-time"
+      "type": "string"
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "redaction_notes": {
+      "type": "string"
     }
   }
 }

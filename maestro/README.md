@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: product_root
 lang: en
@@ -7,42 +7,32 @@ lang: en
 
 # Maestro
 
-Maestro is the proposed native-first orchestration layer for owner-led AI work.
-It is intended to become an improved Atlas-style operating partner: the owner
-talks to Maestro in natural task terms, and Maestro chooses the smallest useful
-route, skill set, subagent usage, artifact shape, evidence needs, and closeout
-discipline.
+Maestro is the native-first orchestration layer for owner-led AI engineering
+work. It is an improved Atlas-style operating partner, not a Cockpit, backend,
+dashboard, queue, or workflow engine.
 
-This directory is now a contract and knowledge surface only. The previous local
-management prototype was intentionally removed from this tree.
+The owner talks to Maestro in natural task terms. Maestro understands the
+intent, chooses the smallest useful route, decides whether to work inline or
+delegate, inspects evidence, and returns to the owner only at real decision
+points.
 
-The current live repository runtime still remains under:
+```text
+Owner <-> Maestro
+  -> understand intent
+  -> choose next useful action
+  -> act inline or delegate
+  -> inspect handoff/evidence
+  -> ask owner, continue, revise, or close
+```
 
-- `docs/maestro/module-orchestrator-v2-spec-pack/`
-- `.codex/contracts/module_orchestrator/`
-- `.codex/templates/module_orchestrator/`
-- `.agents/skills/maestro/`
+## Runtime Status
 
-## Target Role
+This directory is now the Maestro vNext contract and artifact surface for new
+Maestro-routed work.
 
-Maestro vNext is the owner-facing entrypoint for work ranging from tiny direct
-changes to full module-sized initiatives.
-
-Maestro decides:
-
-- whether the request can be handled inline;
-- whether a lightweight artifact record is useful;
-- whether research, audit, implementation, verification, review, release, or
-  memory stages are needed;
-- which specialist agents should be used;
-- which skills should shape the work;
-- which approval gates must be satisfied;
-- which evidence is required before closeout.
-
-Atlas remains an independent personal helper during the transition and does not
-become part of the formal Maestro chain. After Maestro vNext is accepted as the
-default work entrypoint, Atlas should be archived as provenance unless the owner
-explicitly keeps it as a separate lightweight helper.
+The old `module_orchestrator` runtime is retained for legacy continuation and
+provenance. Do not delete or reinterpret old `artifacts/<module>/...` runs just
+because vNext exists.
 
 ## Directory Layout
 
@@ -51,12 +41,12 @@ maestro/
   AGENTS.md
   README.md
   docs/
-    README.md
+    runtime-contract.md
+    acceptance-suite.md
     operating-charter.md
     maestro-character.md
     native-first-maestro.md
     adaptive-loop-contract.md
-    atlas-memory-transition.md
     orchestration-contract.md
     routing-tier-contract.md
     agent-roles.md
@@ -66,51 +56,82 @@ maestro/
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
+    atlas-memory-transition.md
   contracts/
-    README.md
     orchestration-plan.schema.json
     task-packet.schema.json
     stage-handoff.schema.json
     evidence.schema.json
+    approval.schema.json
+    closeout.schema.json
+  templates/
+    intent.md.tmpl
+    plan.md.tmpl
+    task.md.tmpl
+    packet.md.tmpl
+    approval.md.tmpl
+    evidence.md.tmpl
+    review.md.tmpl
+    release.md.tmpl
+    closeout.md.tmpl
+  examples/
   artifact/
-    README.md
     active/
     archive/
-  templates/
-    task.md.tmpl
-    closeout.md.tmpl
   archive/
-    README.md
     current-maestro/
     current-scribe/
 ```
 
 ## Source Of Truth Boundary
 
-Target boundary:
+For Maestro vNext, treat these as authoritative:
 
-- Maestro conversation and repository artifacts are the working source for
-  native orchestration.
-- `maestro/artifact/active/` stores compact active work records.
-- `maestro/artifact/archive/` stores completed, cancelled, or frozen work
-  records.
-- `maestro/contracts/` defines portable packet, handoff, and evidence shapes.
-- `maestro/templates/` provides lightweight Markdown scaffolds.
-- `ai-memory/` remains durable compressed memory until the accepted Maestro
-  memory migration moves it under `maestro/memory/`.
-- `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
-  until Maestro vNext is promoted.
+1. repository root `AGENTS.md`;
+2. `.agents/skills/maestro/SKILL.md`;
+3. `maestro/docs/runtime-contract.md`;
+4. `maestro/contracts/*.json`;
+5. `maestro/templates/*.tmpl`;
+6. `.codex/config.toml` and `.codex/agents/*` for available system agents.
 
-## Removed Scope
+Supporting docs under `maestro/docs/` explain the model, but
+`runtime-contract.md` is the shortest normative contract.
 
-The removed prototype scope included:
+## Roles
 
-- backend service;
-- frontend management UI;
-- local CLI driver;
-- local env files;
-- dev and smoke scripts;
-- service, database, UI, run-control, and implementation-slice documents.
+Maestro may use these specialists adaptively:
 
-Do not reintroduce those surfaces unless the native Maestro loop proves that a
-separate UI or service would remove real repeated friction.
+- Charlie: read-only research;
+- Grant: plan/brief/risk/acceptance audit;
+- Mason: scoped implementation;
+- Scout: verification and evidence;
+- Lens: read-only review;
+- Release: release/deploy after explicit approval;
+- Scribe: closeout and evidence summary;
+- Archivist: docs and durable memory audit;
+- Atlas: transitional independent helper, not part of the formal chain.
+
+## Artifact Roots
+
+Active work:
+
+```text
+maestro/artifact/active/YYYY-MM-DD-<work-slug>/
+```
+
+Archived work:
+
+```text
+maestro/artifact/archive/YYYY-MM-DD-<work-slug>/
+```
+
+Use the smallest useful artifact shape. Tiny direct work may leave no file.
+High-risk, multi-stage, release, or portable work must leave approvals,
+packets, handoffs, evidence, and closeout.
+
+## Transition Rules
+
+- Do not migrate `ai-memory/` to `maestro/memory/` without explicit owner approval.
+- Do not archive Atlas without explicit owner approval.
+- Do not remove old `module_orchestrator` contracts until no active legacy run depends on them.
+- Do not rebuild a Cockpit unless repeated native-loop pain proves a UI/service is needed.

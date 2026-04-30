@@ -1,23 +1,40 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/maestro/orchestration-plan.schema.json",
+  "title": "Maestro orchestration plan",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "work_id",
     "conversation_mode",
     "route_tier",
-    "record_required",
-    "artifact_root",
     "artifact_shape",
+    "record_required",
+    "edit_allowed",
+    "owner_intent_summary",
     "stages",
     "agents",
     "approvals_required",
     "evidence_required",
-    "next_action"
+    "next_allowed_action"
   ],
   "properties": {
     "schema_version": {
+      "type": "integer",
       "const": 1
+    },
+    "work_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_\\-/]*$"
+    },
+    "work_slug": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9][a-z0-9-]*$"
     },
     "conversation_mode": {
       "type": "string",
@@ -31,27 +48,11 @@
     "route_tier": {
       "type": "string",
       "enum": [
-        "direct",
-        "task",
-        "feature",
-        "module_sized_work",
-        "high_risk"
-      ]
-    },
-    "record_required": {
-      "type": "boolean"
-    },
-    "work_slug": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z][a-z0-9_-]*$|^[a-z][a-z0-9_-]*$"
-    },
-    "artifact_root": {
-      "type": [
-        "string",
-        "null"
+        "T0_inline",
+        "T1_task",
+        "T2_staged",
+        "T3_multi_step",
+        "T4_gated"
       ]
     },
     "artifact_shape": {
@@ -59,118 +60,467 @@
       "enum": [
         "none",
         "lightweight",
-        "staged_task",
-        "feature_work",
+        "staged",
+        "multi_step",
         "full"
       ]
     },
-    "risk_level": {
+    "record_required": {
+      "type": "boolean"
+    },
+    "edit_allowed": {
+      "type": "boolean"
+    },
+    "owner_intent_summary": {
       "type": "string",
-      "enum": [
-        "low",
-        "medium",
-        "high"
-      ]
+      "minLength": 1
+    },
+    "scope_summary": {
+      "type": "string"
+    },
+    "risk_summary": {
+      "type": "string"
+    },
+    "high_risk_surfaces": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "auth",
+          "sessions",
+          "tenant_isolation",
+          "permissions",
+          "migrations",
+          "secrets",
+          "production_config",
+          "ci_cd",
+          "deploy",
+          "release",
+          "destructive_operation",
+          "protected_branch",
+          "billing",
+          "data_loss",
+          "none"
+        ]
+      },
+      "default": []
     },
     "stages": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [
           "intake",
-          "planning",
           "research",
-          "brief_audit",
+          "planning",
+          "audit",
+          "approval",
           "implementation",
           "verification",
           "review",
           "release",
           "closeout",
-          "memory_audit"
+          "archive",
+          "memory"
         ]
-      },
-      "uniqueItems": true
+      }
     },
     "agents": {
       "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "role",
-          "stage",
-          "required"
-        ],
-        "properties": {
-          "role": {
-            "type": "string",
-            "enum": [
-              "maestro",
-              "charlie",
-              "grant",
-              "mason",
-              "scout",
-              "lens",
-              "release",
-              "scribe",
-              "archivist"
-            ]
-          },
-          "stage": {
-            "type": "string"
-          },
-          "required": {
-            "type": "boolean"
-          }
-        }
+        "type": "string",
+        "enum": [
+          "maestro",
+          "charlie",
+          "grant",
+          "mason",
+          "scout",
+          "lens",
+          "release",
+          "scribe",
+          "archivist",
+          "atlas"
+        ]
       }
     },
     "approvals_required": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [
-          "brief",
-          "execution",
-          "high_risk_implementation",
-          "release",
-          "security",
-          "migration",
-          "memory_update"
+          "owner_plan_approval",
+          "owner_execution_approval",
+          "owner_high_risk_approval",
+          "owner_release_approval",
+          "owner_memory_migration_approval",
+          "owner_archive_approval"
         ]
-      },
-      "uniqueItems": true
+      }
     },
-    "evidence_required": {
+    "approval_refs": {
       "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "commands",
-          "tests",
-          "ci",
-          "storybook",
-          "browser",
-          "visual",
-          "security",
-          "migration",
-          "review",
-          "approval",
-          "memory"
-        ]
-      },
-      "uniqueItems": true
-    },
-    "artifact_targets": {
-      "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "minLength": 1
+      },
+      "default": []
+    },
+    "evidence_required": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "changed_files",
+          "commands",
+          "tests",
+          "browser",
+          "ci",
+          "review",
+          "approval",
+          "release",
+          "rollback",
+          "memory_audit",
+          "none"
+        ]
       }
     },
-    "next_action": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "work_root": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "work_root"
+      ]
+    },
+    "next_allowed_action": {
       "type": "string",
       "minLength": 1
+    },
+    "owner_input_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "conversation_mode": {
+            "enum": [
+              "discussion",
+              "planning"
+            ]
+          }
+        },
+        "required": [
+          "conversation_mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "edit_allowed": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "record_required": {
+            "const": false
+          }
+        },
+        "required": [
+          "record_required"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "none"
+          },
+          "artifact": {
+            "properties": {
+              "work_root": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "artifact_shape": {
+            "const": "none"
+          }
+        },
+        "required": [
+          "artifact_shape"
+        ]
+      },
+      "then": {
+        "properties": {
+          "record_required": {
+            "const": false
+          },
+          "artifact": {
+            "properties": {
+              "work_root": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T0_inline"
+          }
+        },
+        "required": [
+          "route_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "none"
+          },
+          "record_required": {
+            "const": false
+          },
+          "approvals_required": {
+            "maxItems": 0
+          },
+          "agents": {
+            "contains": {
+              "const": "maestro"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T1_task"
+          },
+          "record_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "route_tier",
+          "record_required"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "lightweight"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T2_staged"
+          }
+        },
+        "required": [
+          "route_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "staged"
+          },
+          "record_required": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T3_multi_step"
+          }
+        },
+        "required": [
+          "route_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "multi_step"
+          },
+          "record_required": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T4_gated"
+          }
+        },
+        "required": [
+          "route_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "artifact_shape": {
+            "const": "full"
+          },
+          "record_required": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "route_tier": {
+            "const": "T4_gated"
+          }
+        },
+        "required": [
+          "route_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "conversation_mode": {
+            "const": "gated_execution"
+          },
+          "approvals_required": {
+            "minItems": 1
+          },
+          "evidence_required": {
+            "contains": {
+              "const": "approval"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stages": {
+            "contains": {
+              "const": "release"
+            }
+          }
+        },
+        "required": [
+          "stages"
+        ]
+      },
+      "then": {
+        "properties": {
+          "agents": {
+            "contains": {
+              "const": "release"
+            }
+          },
+          "approvals_required": {
+            "contains": {
+              "const": "owner_release_approval"
+            }
+          },
+          "evidence_required": {
+            "contains": {
+              "const": "release"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "agents": {
+            "contains": {
+              "const": "release"
+            }
+          }
+        },
+        "required": [
+          "agents"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approvals_required": {
+            "contains": {
+              "const": "owner_release_approval"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "conversation_mode": {
+            "const": "gated_execution"
+          }
+        },
+        "required": [
+          "conversation_mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approvals_required": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
 }

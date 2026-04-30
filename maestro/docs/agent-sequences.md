@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: agent_sequences
 lang: en
@@ -32,15 +32,14 @@ approval safety, or handoff quality.
 
 | Scenario | Route Tier | Useful Specialist Moves | Required Gates |
 |---|---|---|---|
-| Tiny direct | T0 Direct Inline | Maestro inline | focused check |
-| Lightweight task | T1 Lightweight Task | Mason only when inline work is not enough; Scribe optional | closeout when persisted |
-| Staged task | T2 Staged Task | Mason, then Scout or Lens only when evidence/review matters; Scribe when persisted | evidence before closeout |
+| Tiny direct | T0 Inline | Maestro inline | focused check |
+| Lightweight task | T1 Task | Mason only when inline work is not enough; Scribe optional | closeout when persisted |
+| Staged task | T2 Staged | Mason, then Scout or Lens only when evidence/review matters; Scribe when persisted | evidence before closeout |
 | UI task | T2 or T3 | Charlie optional, Mason with UI skill, Scout with browser-use, Lens only when useful | route, viewport, states, visual notes |
-| Feature work | T3 Feature Work | Charlie for unknowns, Grant for plan risk, Mason per slice, Scout/Lens/Scribe as needed | approval when scope/risk requires it |
-| Module-sized work | T4A Module-Sized Work | Charlie, Grant, owner approval, then adaptive staged slices | owner-approved brief |
-| High-risk work | T4B High Risk | Charlie, Grant, owner/security approval, Mason, Scout, Lens, Release only if approved | high-risk approvals and evidence |
+| Multi-step work | T3 Multi-Step | Charlie for unknowns, Grant for plan risk, Mason per slice, Scout/Lens/Scribe as needed | approval only when scope/risk requires it |
+| Gated work | T4 Gated | Charlie, Grant, owner/security/release approval, Mason, Scout, Lens, Release only if approved | required approvals and evidence |
 | Docs/memory work | T1-T3 | Mason or current chat, then Archivist when consistency matters | docs/memory consistency check |
-| Release work | T4B when production-impacting | Release only after approval, Scout evidence, Scribe closeout | release approval and rollback notes |
+| Release work | T4 when production-impacting | Release only after approval, Scout evidence, Scribe closeout | release approval and rollback notes |
 
 The table lists available moves, not a fixed order that must run every time.
 
@@ -103,30 +102,32 @@ Required evidence:
 - screenshot or visual notes;
 - visual issues found and fixed, or remaining visual risks recorded.
 
-## Feature Work
+## Multi-Step Work
 
-Use when one owner goal needs decomposition into feature slices or coordinated
-tasks.
+Use when one owner goal needs several coordinated linear steps, slices, or
+dependencies.
 
 Possible moves: Charlie resolves unknowns, Maestro keeps decomposition in
-`brief.md` or `plan.md`, Grant audits only when plan risk is material, Mason
-works per slice, Scout/Lens/Scribe/Archivist are called only when their evidence
-or audit value is needed.
+`plan.md`, Grant audits only when plan risk is material, Mason works per slice,
+and Scout/Lens/Scribe/Archivist are called only when their evidence or audit
+value is needed.
 
-Owner approval is required when the plan freezes scope, affects high-risk
-surfaces, or introduces meaningful dependency ordering.
+Owner approval is required only when the plan freezes scope, affects high-risk
+surfaces, or introduces a real execution gate.
 
-## Module-Sized Work
+## Gated Work
 
-Use when the request is large enough to need an owner-approved brief before
-execution.
+Use when execution must stop at an explicit approval gate: high-risk surfaces,
+release/deploy, destructive operations, memory migration, Atlas archive, or an
+owner-approved large work boundary.
 
-Possible moves: Charlie researches, Maestro writes the brief, Grant audits,
-owner approval gates execution, then Maestro runs adaptive slices until
+Possible moves: Charlie researches, Maestro writes the plan or brief, Grant
+audits, owner approval gates execution, then Maestro runs adaptive slices until
 closeout. Scribe and Archivist are used only when closeout or memory value is
 material.
 
-No implementation stage starts until the brief gate is satisfied.
+No gated implementation, release, archive, or migration stage starts until the
+required approval is satisfied.
 
 ## High-Risk Work
 
@@ -138,5 +139,5 @@ approval gates implementation, Mason works inside approved scope, Scout and Lens
 verify and review, Release runs only after release approval, and Scribe or
 Archivist preserve durable closeout or memory value.
 
-High-risk work must not run as T0 or T1. It must record approval, evidence,
+High-risk work must run as T4_gated. It must record approval, evidence,
 residual risk, and rollback/recovery notes when release is in scope.

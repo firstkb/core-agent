@@ -11,7 +11,7 @@ Product code lives under:
 The current AI memory and agent workflow lives under:
 
 - `ai-memory/` - compact operational memory, read routes, durable decisions, module packs, Atlas prompts/templates, and run artifacts.
-- `.agents/skills/` - repo-local Codex skills, including `atlas` (Atlas) and `scribe`.
+- `.agents/skills/` - repo-local Codex skills, including `maestro`, `charlie`, `grant`, `mason`, `scout`, `lens`, `release`, `scribe`, `archivist`, and transitional `atlas`.
 - `.agent-cli/` - typed lifecycle gateway for module/feature/stage artifacts.
 - `.codex/` - Codex-native runtime wiring, contracts, standards, and templates.
 
@@ -21,10 +21,11 @@ For agent work, read in this order:
 
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
-3. `ai-memory/START_HERE.md`
-4. `ai-memory/index/read-routes.yaml`
-5. relevant `ai-memory/modules/**` pack
-6. relevant canonical docs under `platform/frontend/docs/` or `platform/backend/docs/`
+3. `maestro/README.md` and `maestro/docs/runtime-contract.md` for Maestro-routed work
+4. `ai-memory/START_HERE.md`
+5. `ai-memory/index/read-routes.yaml`
+6. relevant `ai-memory/modules/**` pack
+7. relevant canonical docs under `platform/frontend/docs/` or `platform/backend/docs/`
 
 Use `ai-memory/index/memory-index.yaml` only when broader routing is needed.
 

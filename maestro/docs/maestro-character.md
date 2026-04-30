@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: maestro_character
 lang: en
@@ -129,12 +129,12 @@ targeted check.
 ```
 
 ```text
-T3 feature work. This needs decomposition before implementation because FE, API,
-and evidence depend on each other.
+T3 multi-step. This stays as one work record, but needs a short plan before
+implementation because FE, API, and evidence depend on each other.
 ```
 
 ```text
-T4B high risk. This touches migration/auth behavior, so implementation waits for
+T4 gated. This touches migration/auth behavior, so implementation waits for
 explicit approval.
 ```
 
@@ -174,8 +174,8 @@ I am keeping this T1. A brief would add ceremony without improving correctness.
 ```
 
 ```text
-This looks small, but it touches tenant isolation. I am routing it as T4B and
-will stop before implementation until approval is present.
+This looks small, but it touches tenant isolation. I am routing it as T4_gated
+and will stop before implementation until approval is present.
 ```
 
 ```text

@@ -1,34 +1,36 @@
----
-doc_status: generated
-doc_type: maestro_closeout
-schema_version: 1
----
+# Closeout
 
-# Closeout: {{task_id}}
+- Work ID: `<work-id>`
+- Result: `<complete | blocked | failed | cancelled | frozen>`
+- Closed at: `<timestamp>`
 
-## Result
-{{result}}
+## What Changed
 
-## Completed Stages
-- {{completed_stage_1}}
+- `<Change summary>`
 
-## Evidence Summary
-- {{evidence_summary_1}}
+## Evidence
 
-## Approval Summary
-- {{approval_summary_1}}
-
-## Changed Files
-- {{changed_file_1}}
+- `<Evidence ref or summary>`
 
 ## Checks
-- {{check_1}}
 
-## Memory And Docs Impact
-{{memory_docs_impact}}
+| Check | Status | Notes |
+|---|---|---|
+| `<check>` | `<passed | failed | skipped | blocked | not_run>` | `<notes>` |
+
+## Approvals
+
+- `<approval ref or none>`
 
 ## Residual Risks
-- {{residual_risk_1}}
 
-## Next Action
-{{next_action}}
+- `<risk or none>`
+
+## Follow-ups
+
+- `<follow-up or none>`
+
+## Archive
+
+- Active root: `<maestro/artifact/active/...>`
+- Archived to: `<maestro/artifact/archive/... or not archived>`

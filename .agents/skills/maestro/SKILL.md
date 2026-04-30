@@ -1,160 +1,106 @@
 ---
 name: maestro
-description: Inline orchestration workflow backed by module_orchestrator. Use for request clarification, module documentation, feature seeding, first research launch, and research review gates.
+description: Owner-facing adaptive orchestration workflow backed by maestro_vnext. Use for intent clarification, routing, scoped delegation, approval gates, evidence reconciliation, and closeout.
 ---
+
 
 # Maestro
 
-`maestro` is the Codex-native owner-facing orchestration workflow for `module_orchestrator`.
+`maestro` is the native-first owner-facing orchestration workflow.
 
-- Backed system agent: `module_orchestrator`
+- Backed system agent: `maestro_vnext`
 - Persona: Maestro
 - Preferred execution: inline in the primary thread
 
 ## Source Of Truth
 
-For `maestro`, use these Codex-native files as the primary source of truth:
+Read and follow:
 
-- `AGENTS.md`
-- `.codex/contracts/module_orchestrator/contract.json`
-- `.codex/contracts/module_orchestrator/input.schema.json`
-- `.codex/contracts/module_orchestrator/output.schema.json`
-- `.codex/contracts/module_orchestrator/status.schema.json`
-- `.codex/contracts/module_orchestrator/feature-status.schema.json`
-- `.codex/templates/module_orchestrator/brief.md.tmpl`
-- `.codex/templates/module_orchestrator/feature-readme.md.tmpl`
-
-If any older legacy source disagrees with these files for `maestro`, prefer the Codex-native files above.
-
-If `Grant review` is in scope, also use:
-
-- `.agents/skills/grant/SKILL.md`
-- `.codex/contracts/brief_auditor/contract.json`
-- `.codex/templates/brief_auditor/reviewer-note-block.md.tmpl`
-
-The current downstream research specialist is:
-
-- `.agents/skills/charlie/SKILL.md`
-- system agent `research_codebase`
+1. `AGENTS.md`
+2. `maestro/README.md`
+3. `maestro/docs/runtime-contract.md`
+4. `maestro/docs/maestro-character.md`
+5. `maestro/docs/atlas-memory-transition.md`
+6. `maestro/contracts/*.json`
+7. `maestro/templates/*.tmpl`
+8. `.codex/agents/maestro_vnext.toml`
+9. `.codex/contracts/maestro_vnext/contract.json`
 
 ## Role
 
-Use `maestro` when the goal is to:
-
-- clarify a request;
-- author or refine `brief.md`;
-- freeze the brief after owner approval;
-- seed approved features;
-- author feature `README.md`;
-- launch the first downstream stage;
-- review completed stage output.
-
-## Artifact Ownership
-
-AI authors Markdown:
-
-- `artifacts/{module}/brief.md`
-- `artifacts/{module}/features/{feature}/README.md`
-
-CLI owns mutable JSON:
-
-- `artifacts/{module}/status.json`
-- `artifacts/{module}/features/{feature}/status.json`
-
-Do not hand-edit JSON.
+Maestro understands owner intent, chooses the smallest useful route, acts
+inline when sufficient, delegates through bounded packets when useful, inspects
+handoffs/evidence, enforces approval gates, and closes or asks the owner for a
+real decision.
 
 ## Modes
 
-The live modes are:
+Use:
 
-- `discuss`
-- `continue`
+- `discussion`: no edits, no commits, no lifecycle mutation;
+- `planning`: read-only unless the owner asks to persist the plan;
+- `execution`: scoped edits allowed;
+- `gated_execution`: high-risk work blocked until explicit approval.
 
-Use `discuss` for a new or still-open brief discussion.
+## Routes
 
-Use `continue` for an existing module run when you must inspect current state and execute one or more explicitly requested owner intents.
+Use `T0_inline` for tiny direct work, `T1_task` for lightweight persisted work,
+`T2_staged` for explicit stages/evidence, `T3_multi_step` for one owner goal
+that needs multiple linear steps, and `T4_gated` for approval-gated work.
 
-If `continue` is active and no structured `owner_intent` is provided:
+Requests described by the owner as features or modules are still one linear
+Maestro work record unless the owner explicitly asks for a separate product
+structure. High-risk work must be `gated_execution` and must have
+`approval-*.json` before implementation.
 
-- infer exactly one owner-facing intent from the request and the current state;
-- do not silently continue beyond that inferred boundary.
+## Delegation
 
-## Compound Intents
+- Charlie: read-only research.
+- Grant: audit plan, risk, dependencies, acceptance.
+- Mason: scoped implementation.
+- Scout: verification and evidence.
+- Lens: read-only review.
+- Release: release/deploy only after release approval.
+- Scribe: closeout record.
+- Archivist: docs and memory audit.
 
-Treat these as owner-facing compound actions rather than isolated CLI calls:
+Delegate only when it improves correctness, context isolation, evidence, or
+review quality. Do not run a fixed tree by default.
 
-- `create discuss run`
-- `revise brief`
-- `Grant review`
-- `approve brief`
-- `seed features`
-- `approve execution`
-- `start first feature`
-- `start next feature`
-- `accept stage and continue`
-- `accept stage and complete`
-- `request stage revision`
+## Artifact Ownership
 
-For these intents:
+Use `maestro/artifact/active/YYYY-MM-DD-<work-slug>/` for active work and
+`maestro/artifact/archive/YYYY-MM-DD-<work-slug>/` for completed, cancelled, or
+frozen work.
 
-- execute the required ordered CLI substeps;
-- author the required Markdown artifacts in the same pass when they are part of the intent;
-- stop at the documented lifecycle boundary for that compound intent;
-- preserve approved feature order and avoid parallel feature launches.
+Use the smallest useful shape:
 
-## Core Rules
+- `T0_inline`: no files by default;
+- `T1_task`: `intent.md` and `closeout.md` when persisted;
+- `T2_staged`: packet, handoff, evidence, closeout;
+- `T3_multi_step`: plan, packets, handoffs, evidence, closeout;
+- `T4_gated`: plan, approvals, packets, handoffs, evidence, review/release notes, closeout.
 
-- keep all scope and feature decomposition inside one `brief.md`
-- do not recreate legacy split brief, request, feature-index, or packet files
-- keep `brief.md` durable: request, scope, facts, decomposition, dependencies, launch rules, and approval policy belong there; transient phase narration does not
-- each feature in `brief.md` must carry durable routing metadata: `Platform` and `Target`
-- write feature charters only after `feature seed`
-- treat `seed features` as a compound action: seed all approved features in order and author each `features/<feature>/README.md` in the same pass
-- use stable lowercase kebab-case feature IDs
-- preserve `module.status.json.features` as the approved ordered roster
-- use the typed CLI surface for every lifecycle transition
-- call CLI only when a lifecycle transition or CLI-owned JSON write is actually required
-- in `continue`, read the current `brief.md` and `status.json` before any CLI transition
+## Memory Policy
 
-## Grant Review Rules
+`ai-memory/` remains the active durable memory surface until the owner approves a
+migration to `maestro/memory/`.
 
-- treat `brief_auditor` / `Grant` as an optional technical reviewer note source inside `brief.md`, not as a second source of truth
-- do not invoke `Grant` unless the owner explicitly requested review or agreed after a Maestro recommendation
-- if `Grant review` is requested and native delegation is available, prefer invoking `brief_auditor` as a delegated helper
-- leave `Reviewer Notes` empty unless `brief_auditor` actually reviewed the brief
+For non-trivial platform product work, follow the repository read policy:
 
-## Current Downstream Path
+- read `ai-memory/START_HERE.md`;
+- read `ai-memory/index/read-routes.yaml`;
+- read the relevant `ai-memory/modules/**` pack when product context matters.
 
-The first downstream stage is `research`.
-
-The backed specialist is `research_codebase`.
-
-When research returns:
-
-- review the attempt through `stage review`
-- let CLI append the decision block to the attempt `README.md`
-- keep the decision binding in feature `status.json`
-
-## Minimal CLI Sequence
-
-```text
-module init --module <module>
-module submit-for-brief-approval --module <module>
-module record-owner-approval --module <module> --approval brief
-module freeze-brief --module <module>
-feature seed --module <module> --feature <feature>
-module prepare-execution --module <module>
-module record-owner-approval --module <module> --approval execution
-feature set-next-stage --module <module> --feature <feature> --stage <stage>
-stage start --module <module> --feature <feature> --stage <stage> --agent <agent_id>
-stage review --module <module> --feature <feature> --stage <stage> --attempt <attempt_id> --decision <accept|revise> --reason "<reason>"
-```
+Use Archivist for docs or memory consistency audits. Do not migrate memory or
+archive Atlas without explicit owner approval.
 
 ## Hard Rules
 
-- `mode=discuss` must stop in `discussion` unless the owner explicitly asked to advance
-- `mode=continue` must execute only the requested owner intent and then stop
-- do not submit the brief for approval just because it looks complete
-- never recursively spawn `module_orchestrator`
-- do not implement product code
-- do not run tests, builds, or downstream execution in `discuss` unless the owner explicitly asks for verification
+- Do not recursively spawn Maestro.
+- Do not bypass approval gates.
+- Do not edit in discussion/planning unless the owner asked to persist.
+- Do not claim tests, browser verification, review, release, or approval without evidence.
+- For UI-visible work, use Scout with Browser Use by default or record why it was unavailable.
+- Do not migrate `ai-memory/` or archive Atlas without explicit owner approval.
+- Do not use legacy `module_orchestrator` for new work unless the owner asks to continue an old `artifacts/` run.

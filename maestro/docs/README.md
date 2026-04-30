@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: docs_index
 lang: en
@@ -7,29 +7,38 @@ lang: en
 
 # Maestro vNext Docs
 
-This directory defines the foundation for native-first Maestro: an improved
-Atlas-style owner assistant that routes work, uses skills and subagents
-selectively, and preserves concise artifacts and evidence.
+This directory documents native-first Maestro: a human-led,
+agent-accelerated operating partner for engineering work.
 
-Read order:
+Read order for normative behavior:
 
 1. `../AGENTS.md`
-2. `operating-charter.md`
-3. `maestro-character.md`
-4. `native-first-maestro.md`
-5. `adaptive-loop-contract.md`
-6. `atlas-memory-transition.md`
-7. `orchestration-contract.md`
-8. `routing-tier-contract.md`
-9. `agent-roles.md`
-10. `agent-contracts.md`
-11. `agent-sequences.md`
-12. `security-permissions-contract.md`
-13. `artifact-model.md`
-14. `artifact-file-contract.md`
-15. `stage-contract.md`
-16. `../contracts/README.md`
+2. `runtime-contract.md`
+3. `../contracts/README.md`
+4. `../templates/`
+5. role-specific skills under `.agents/skills/`
+6. role-specific Codex configs under `.codex/agents/`
 
-These documents intentionally do not override the current live
-`module_orchestrator` runtime. They describe the target model to implement after
-owner acceptance.
+Supporting model docs:
+
+- `operating-charter.md`
+- `maestro-character.md`
+- `native-first-maestro.md`
+- `adaptive-loop-contract.md`
+- `orchestration-contract.md`
+- `routing-tier-contract.md`
+- `agent-roles.md`
+- `agent-contracts.md`
+- `agent-sequences.md`
+- `security-permissions-contract.md`
+- `artifact-model.md`
+- `artifact-file-contract.md`
+- `stage-contract.md`
+- `atlas-memory-transition.md`
+
+Validation and promotion docs:
+
+- `acceptance-suite.md`
+
+`runtime-contract.md` is the compact canonical contract. The other documents
+explain rationale and edge cases and should not contradict it.

@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/maestro/approval.schema.json",
+  "title": "Maestro approval record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "approval_id",
+    "work_id",
+    "approval_type",
+    "requested_action",
+    "reason",
+    "decision",
+    "decision_actor",
+    "decision_at",
+    "scope"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "approval_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^approval-[0-9]{3}$"
+    },
+    "work_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packet_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approval_type": {
+      "type": "string",
+      "enum": [
+        "plan",
+        "execution",
+        "high_risk_implementation",
+        "release",
+        "memory_migration",
+        "archive_atlas",
+        "destructive_operation"
+      ]
+    },
+    "requested_action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "rejected",
+        "revise",
+        "expired"
+      ]
+    },
+    "decision_actor": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "security_owner",
+        "release_owner"
+      ]
+    },
+    "decision_at": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_paths",
+        "forbidden_paths",
+        "allowed_actions",
+        "forbidden_actions"
+      ],
+      "properties": {
+        "allowed_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowed_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forbidden_actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "evidence_required": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "approval_type": {
+            "const": "release"
+          }
+        },
+        "required": [
+          "approval_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "decision_actor": {
+            "enum": [
+              "owner",
+              "release_owner"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "approved"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "properties": {
+          "scope": {
+            "properties": {
+              "allowed_actions": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

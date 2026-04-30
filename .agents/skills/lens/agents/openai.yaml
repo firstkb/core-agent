@@ -1,0 +1,8 @@
+interface:
+  display_name: "Lens"
+  short_description: "Read-only diff and evidence review"
+  brand_color: "#334155"
+  default_prompt: "Use $lens to review diff, evidence, acceptance, and risk."
+
+policy:
+  allow_implicit_invocation: false

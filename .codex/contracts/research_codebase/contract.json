@@ -53,5 +53,7 @@
   },
   "recommended_next_agents": [
     "module_orchestrator"
-  ]
+  ],
+  "legacy_for": "module_orchestrator artifacts/<module> runs",
+  "prefer_for_new_work": "maestro_vnext"
 }

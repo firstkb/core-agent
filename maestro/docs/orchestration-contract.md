@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: orchestration_contract
 lang: en
@@ -91,7 +91,7 @@ State:
 - task is first-class;
 - stages are optional but recommended when the task needs verification or review.
 - artifact shape: `intent.md + task.md + closeout.md` for simple tasks,
-  expanded with `packet.md`, `handoff-<role>-NNN.json`, and `evidence.md` only
+  expanded with `packet.md`, `handoff-<stage>-<role>-NNN.json`, and `evidence.md` only
   when handoff, verification, or review needs it.
 
 ### Tier 2: Staged Task
@@ -119,17 +119,17 @@ State:
 - artifact shape: flat staged task under
   `maestro/artifact/active/<work-slug>/`.
 
-### Tier 3: Feature Work
+### Tier 3: Multi-Step Work
 
-Use for one owner goal that needs decomposition into one or more feature slices
-or coordinated tasks.
+Use for one owner goal that needs several coordinated linear steps, slices, or
+dependencies.
 
 Typical adaptive moves:
 
 ```text
 Maestro
   -> Charlie
-  -> feature/task decomposition
+  -> linear work plan
   -> Grant when plan audit is useful
   -> owner approval when scope/risk requires it
   -> staged execution
@@ -137,24 +137,25 @@ Maestro
 
 State:
 
-- feature and tasks are first-class;
-- work brief is required when decomposition or approval needs a durable anchor;
-- feature order and dependencies are explicit in `brief.md` or `plan.md`;
-- execution begins only after required approvals are satisfied.
-- artifact shape: feature-work, expanded only when needed.
+- work stays inside one linear Maestro artifact folder;
+- decomposition stays in `plan.md` unless the owner asks for a larger product
+  structure;
+- execution begins only after required approvals are satisfied;
+- artifact shape: `multi_step`, expanded only when needed.
 
-### Tier 4A: Module-Sized Work
+### Tier 4: Gated Work
 
-Use for large initiatives that require an owner-approved brief, multi-feature
-plan, dependency ordering, or staged rollout.
+Use for work that must stop at an explicit approval gate: high-risk surfaces,
+release/deploy, destructive operations, memory migration, Atlas archive, or an
+owner-approved large work boundary.
 
 Typical adaptive moves:
 
 ```text
 Maestro
-  -> brief
+  -> plan or brief
   -> Charlie
-  -> feature/task decomposition
+  -> linear work plan
   -> Grant
   -> owner approval
   -> staged execution
@@ -162,32 +163,10 @@ Maestro
 
 State:
 
-- work brief is required;
-- feature order and dependencies are explicit in `brief.md` or `plan.md`;
-- execution does not begin without owner approval.
-- artifact shape: feature-work or full shape depending on approval, evidence,
-  review, release, or snapshot needs.
-
-### Tier 4B: High Risk
-
-Use for auth, tenancy, permissions, migrations, secrets, release, deployment, or
-other irreversible or security-sensitive work.
-
-Typical adaptive moves:
-
-```text
-Maestro
-  -> Charlie
-  -> Grant
-  -> owner approval
-  -> Mason
-  -> Scout with required gates
-  -> Lens
-  -> owner/security/release approval
-  -> Release when deployment is in scope
-  -> Scribe
-  -> Archivist when memory/docs are impacted
-```
+- work brief is required only when it improves the approval decision;
+- dependencies are explicit in `plan.md`;
+- gated execution does not begin without owner approval;
+- artifact shape: `full`.
 
 Required gates:
 
@@ -207,13 +186,13 @@ The available full stage set is:
 intake
 planning
 research
-brief_audit
+audit
 implementation
 verification
 review
 release
 closeout
-memory_audit
+memory
 ```
 
 Not every task uses every stage. Maestro selects the minimum sufficient chain.
@@ -227,7 +206,7 @@ Use `research` when:
 - dependencies or risks are unknown;
 - prior artifacts are stale.
 
-Use `brief_audit` when:
+Use `audit` when:
 
 - a work brief or high-risk plan needs technical challenge before approval;
 - decomposition, dependencies, or acceptance are weak.
@@ -245,7 +224,7 @@ release notes are in scope.
 Use `closeout` when evidence and decisions should be captured as a portable run
 record.
 
-Use `memory_audit` when durable docs or memory may need updates.
+Use `memory` when durable docs or memory may need updates.
 
 ## Owner-Facing Output
 

@@ -1,0 +1,33 @@
+{
+  "agent_id": "closeout_scribe",
+  "persona_name": "Scribe",
+  "agent_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "step": "closeout",
+  "role": "closeout and evidence summary specialist",
+  "artifact_language": "en",
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "shared_contracts": [
+    "maestro/contracts/task-packet.schema.json",
+    "maestro/contracts/stage-handoff.schema.json",
+    "maestro/contracts/evidence.schema.json",
+    "maestro/contracts/closeout.schema.json"
+  ],
+  "allowed_execution_modes": [
+    "sub_agent",
+    "inline"
+  ],
+  "artifacts": {
+    "handoff_json": {
+      "path": "maestro/artifact/active/{work_slug}/handoff-closeout-scribe-{attempt}.json",
+      "media_type": "application/json",
+      "role": "machine_readable_stage_handoff",
+      "schema": "maestro/contracts/stage-handoff.schema.json",
+      "authored_by": "ai"
+    }
+  },
+  "recommended_next_agents": [
+    "maestro_vnext"
+  ]
+}

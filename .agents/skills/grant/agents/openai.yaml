@@ -1,10 +1,8 @@
 interface:
   display_name: "Grant"
-  short_description: "Technical brief review before approval"
-  icon_small: "./assets/grant-small.jpg"
-  icon_large: "./assets/grant-small.jpg"
+  short_description: "Plan, risk, and acceptance audit"
   brand_color: "#1F6FEB"
-  default_prompt: "Use $grant to review the current brief for technical soundness before approval."
+  default_prompt: "Use $grant to audit a Maestro plan before approval or high-risk execution."
 
 policy:
   allow_implicit_invocation: false

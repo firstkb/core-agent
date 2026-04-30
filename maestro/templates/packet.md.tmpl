@@ -1,0 +1,68 @@
+# Specialist Packet
+
+- Packet ID: `<packet-stage-role-001>`
+- Work ID: `<work-id>`
+- Assigned stage: `<research | audit | implementation | verification | review | release | closeout | memory>`
+- Assigned role: `<Charlie | Grant | Mason | Scout | Lens | Release | Scribe | Archivist>`
+- Route tier: `<tier>`
+- Artifact shape: `<shape>`
+
+## Goal
+
+`<Local goal for this specialist only.>`
+
+## Background
+
+`<Only the context needed to perform this packet.>`
+
+## Path Scope
+
+### Allowed Writes
+
+- `<path>`
+
+### Required Reads
+
+- `<path>`
+
+### Optional Reads
+
+- `<path>`
+
+### Forbidden
+
+- `<path>`
+
+### High Risk
+
+- `<path or surface>`
+
+## Approvals
+
+- Required: `<none | approval type>`
+- Satisfied: `<yes/no>`
+- Approval refs: `<approval-001 or none>`
+
+## Evidence Expectations
+
+- `<Evidence required>`
+
+## Acceptance Checks
+
+- `<Check>`
+
+## Stop Conditions
+
+- `<Condition requiring return to Maestro>`
+
+## Expected Handoff
+
+Return `handoff-<stage>-<role>-NNN.json` with:
+
+- result;
+- recommendation;
+- changed files;
+- evidence refs;
+- checks run or skipped;
+- residual risks;
+- next actions.

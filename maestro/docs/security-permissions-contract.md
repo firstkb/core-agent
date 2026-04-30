@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: security_permissions_contract
 lang: en
@@ -122,7 +122,7 @@ Examples of high-risk path classes:
 
 - audits docs and memory consistency;
 - patches docs/memory only when assigned;
-- does not own feature closeout.
+- does not own work closeout.
 
 ## Secret Handling
 

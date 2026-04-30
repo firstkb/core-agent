@@ -1,5 +1,5 @@
 ---
-doc_status: proposal
+doc_status: active_pilot
 doc_scope: maestro_vnext
 doc_type: native_first_maestro
 lang: en
@@ -76,7 +76,7 @@ Target after Maestro acceptance:
 ## Operational Terminology
 
 - Work: what the owner asked Maestro to do.
-- Feature: a meaningful deliverable slice inside larger work.
+- Slice: a meaningful deliverable step inside larger work.
 - Task: an executable unit for a person or agent.
 - Stage: a bounded lifecycle step such as research, implementation, verification,
   review, release, closeout, or memory audit.

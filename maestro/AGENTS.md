@@ -2,57 +2,41 @@
 
 ## Status
 
-This directory is a proposal and foundation surface for Maestro vNext. It does
-not override the active repository runtime until the owner explicitly promotes
-it.
+This directory is the active pilot surface for Maestro vNext. It defines the
+native adaptive loop, artifact model, contracts, templates, examples, and role
+boundaries for new Maestro-routed work.
 
-The removed management prototype is no longer part of this tree. Treat the
-remaining files as native Maestro contracts, role definitions, artifact
-guidance, and templates.
+The legacy `module_orchestrator` material is archived or retained only for old
+run continuation and provenance.
 
 ## Read Order
 
-Before changing this directory, read:
+Before changing Maestro behavior, read:
 
-1. repository root `AGENTS.md`
-2. `maestro/README.md`
-3. `maestro/docs/README.md`
-4. `maestro/docs/adaptive-loop-contract.md` for routing or execution behavior
-5. the specific contract files relevant to the change
+1. repository root `AGENTS.md`;
+2. `maestro/README.md`;
+3. `maestro/docs/runtime-contract.md`;
+4. relevant schemas under `maestro/contracts/`;
+5. relevant templates under `maestro/templates/`;
+6. the exact `.agents/skills/<role>/SKILL.md` or `.codex/agents/<agent>.toml` being changed.
+
+Use the longer docs in `maestro/docs/` for rationale and edge cases.
 
 ## Boundaries
 
 - Do not treat `maestro/archive/` as active runtime instruction.
-- Do not recreate backend, frontend, local env, or CLI driver surfaces unless
-  the owner explicitly starts that work again.
-- Use `maestro/artifact/active/` and `maestro/artifact/archive/` only for the
-  compact native work-record model.
-- Keep persisted Maestro proposal documents and templates in English.
-- Keep contracts compact. Maestro should stay a useful jet, not a process-heavy
-  aircraft.
+- Do not recreate backend, frontend, local env, service, or dashboard surfaces.
+- Use `maestro/artifact/active/` and `maestro/artifact/archive/` only for compact native work records.
+- Keep persisted Maestro docs, contracts, templates, and artifacts in English.
+- Keep contracts compact and enforceable. Prefer cross-field schema rules over prose-only gates.
+- Preserve old module artifacts; do not silently convert `artifacts/<module>/...` into vNext folders.
 
-## Source Of Truth
+## Required Invariants
 
-Target boundary:
-
-- Native Maestro conversation and tracked artifacts define the work loop.
-- `maestro/artifact/active/` stores active work records and may contain multiple
-  concurrent work folders.
-- `maestro/artifact/archive/` stores completed, cancelled, or frozen work
-  records.
-- `maestro/contracts/` owns portable packet, handoff, and evidence shapes.
-- `maestro/templates/` owns reusable Markdown scaffolds.
-- `ai-memory/` is durable compressed memory until the accepted migration moves
-  it under `maestro/memory/`.
-- `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
-  until Maestro vNext is promoted.
-
-## Authoring Rules
-
-- Use the canonical routing tiers from `maestro/docs/routing-tier-contract.md`:
-  T0 Direct Inline, T1 Lightweight Task, T2 Staged Task, T3 Feature Work, T4A
-  Module-Sized Work, and T4B High Risk.
-- Use the smallest sufficient artifact shape.
-- JSON contracts must remain valid JSON Schema files.
-- Archive copies are provenance only; do not update them to match new proposal
-  contracts.
+- Discussion and planning modes are read-only unless the owner explicitly asks to persist a file.
+- High-risk work is always `gated_execution` and requires a machine-readable approval record.
+- Release/deploy work requires a separate release approval.
+- Specialist packets must include allowed paths, forbidden paths, evidence expectations, stop conditions, and handoff expectations.
+- Subagents recommend next action; Maestro owns lifecycle decisions.
+- Scribe records closeout; Archivist audits docs/memory drift.
+- Atlas remains transitional until owner-approved archive.

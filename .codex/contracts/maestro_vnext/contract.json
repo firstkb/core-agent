@@ -1,0 +1,42 @@
+{
+  "agent_id": "maestro_vnext",
+  "persona_name": "Maestro",
+  "agent_version": "1.0.0",
+  "contract_version": "1.0.0",
+  "step": "orchestration",
+  "role": "owner-facing adaptive orchestrator",
+  "artifact_language": "en",
+  "input_schema": "input.schema.json",
+  "output_schema": "output.schema.json",
+  "shared_contracts": [
+    "maestro/contracts/orchestration-plan.schema.json",
+    "maestro/contracts/task-packet.schema.json",
+    "maestro/contracts/stage-handoff.schema.json",
+    "maestro/contracts/approval.schema.json",
+    "maestro/contracts/evidence.schema.json",
+    "maestro/contracts/closeout.schema.json"
+  ],
+  "allowed_execution_modes": [
+    "inline"
+  ],
+  "artifacts": {
+    "active_work_root": {
+      "path": "maestro/artifact/active/{work_slug}/",
+      "role": "active flat work record"
+    },
+    "archive_work_root": {
+      "path": "maestro/artifact/archive/{work_slug}/",
+      "role": "archived flat work record"
+    }
+  },
+  "recommended_next_agents": [
+    "research_charlie",
+    "audit_grant",
+    "implementation_mason",
+    "verification_scout",
+    "review_lens",
+    "release_manager",
+    "closeout_scribe",
+    "memory_archivist"
+  ]
+}

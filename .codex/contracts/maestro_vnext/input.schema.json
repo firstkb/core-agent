@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "task"
+  ],
+  "properties": {
+    "task": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mode_hint": {
+      "type": "string",
+      "enum": [
+        "discussion",
+        "planning",
+        "execution",
+        "gated_execution"
+      ]
+    },
+    "work_id": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

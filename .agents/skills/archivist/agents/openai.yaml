@@ -1,8 +1,8 @@
 interface:
   display_name: "Archivist"
-  short_description: "Semantic docs and ai-memory drift auditor"
+  short_description: "Docs and durable memory audit"
   brand_color: "#475569"
-  default_prompt: "Use $archivist to audit docs and ai-memory for source-of-truth drift, stale routes, and context-window risks."
+  default_prompt: "Use $archivist to audit docs, memory, and source-of-truth drift."
 
 policy:
   allow_implicit_invocation: false

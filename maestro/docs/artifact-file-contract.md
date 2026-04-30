@@ -10,7 +10,7 @@ lang: en
 ## Purpose
 
 This document defines the contract for each artifact file that Maestro vNext may
-write under `maestro/artifacts/`.
+write when a route tier needs durable records.
 
 It follows the jet rule: create only the files required by the selected
 `artifact_shape`.
@@ -20,7 +20,7 @@ It follows the jet rule: create only the files required by the selected
 - `task.md`, `brief.md`, feature `README.md`, and `packet.md` are AI-authored
   human-facing Markdown.
 - `handoff.json` and evidence indexes are machine-readable handoffs.
-- `*.snapshot.json` files are exports from API/DB, not primary mutable state.
+- `*.snapshot.json` files are optional exports, not primary mutable state.
 - Attempt folders are append-only.
 - A submitted `handoff.json` is write-once.
 - Evidence files are immutable after attachment.
@@ -145,7 +145,7 @@ Required sections:
 Rules:
 
 - feature packet is durable after feature execution starts;
-- mutable status stays in DB/API and optional snapshots.
+- mutable status stays in the active runtime context and optional snapshots.
 
 ### `packet.md`
 
@@ -155,7 +155,7 @@ Role:
 
 Created when:
 
-- a stage needs a portable launch prompt or handoff to another chat/worker.
+- a stage needs a portable launch prompt or handoff to another chat or agent.
 
 Writer:
 
@@ -263,7 +263,7 @@ Created when:
 
 Writer:
 
-- stage agent through `maestroctl stage submit-handoff`.
+- stage agent.
 
 Schema:
 
@@ -287,7 +287,7 @@ Created when:
 
 Writer:
 
-- `maestroctl evidence attach` or API export.
+- Maestro or the assigned agent.
 
 Schema:
 
@@ -307,11 +307,11 @@ Role:
 Created when:
 
 - full artifact export is requested;
-- cloud worker handoff or audit requires repo context.
+- cross-chat handoff or audit requires repo context.
 
 Writer:
 
-- Maestro API/DB export or `maestroctl artifacts export`.
+- Maestro or assigned export tooling.
 
 Minimum fields:
 
@@ -339,7 +339,7 @@ Created when:
 
 Writer:
 
-- Maestro API/DB export or `maestroctl artifacts export`.
+- Maestro or assigned export tooling.
 
 Minimum fields:
 
@@ -370,7 +370,7 @@ Created when:
 
 Writer:
 
-- Maestro API/DB export or `maestroctl artifacts export`.
+- Maestro or assigned export tooling.
 
 Rules:
 
@@ -388,7 +388,7 @@ Created when:
 
 Writer:
 
-- Maestro API/DB export or `maestroctl artifacts export`.
+- Maestro or assigned export tooling.
 
 Rules:
 

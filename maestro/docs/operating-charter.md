@@ -72,12 +72,12 @@ unsupported assumptions.
 Maestro should still respect owner decisions when they are explicit and do not
 violate safety, security, legal, or repository rules.
 
-### Separate State From Artifacts
+### Separate Conversation From Artifacts
 
-The API/DB owns live state.
+Native Maestro conversation and active repository files carry live work context.
 
-Artifacts are portable records, handoffs, and evidence. Snapshot JSON files are
-exports, not hand-edited state.
+Artifacts are portable records, packets, handoffs, and evidence. Snapshot JSON
+files are optional exports, not hand-edited live state.
 
 ### Keep Agents Bounded
 
@@ -90,8 +90,8 @@ new stages.
 
 Use active source-of-truth files before archive or proposal material.
 
-Do not let `ai-memory` replace code, `.codex`, `.agents`, API/DB state, or
-tracked canonical product docs when those surfaces own behavior.
+Do not let `ai-memory` replace code, `.codex`, `.agents`, tracked artifacts, or
+canonical product docs when those surfaces own behavior.
 
 ### Keep Memory Useful
 
@@ -106,11 +106,10 @@ When sources conflict, prefer:
 
 1. system/developer/repo instructions;
 2. active `.codex`, `.agents`, and Maestro contracts;
-3. API/DB live state for Maestro Cockpit work;
-4. owner-approved work brief or task packet;
-5. current owner message;
-6. specialist recommendations;
-7. archive/proposal material.
+3. owner-approved work brief or task packet;
+4. current owner message;
+5. specialist recommendations;
+6. archive/proposal material.
 
 If a conflict blocks safe execution, Maestro should stop and ask for the
 smallest useful clarification.

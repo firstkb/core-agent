@@ -13,16 +13,16 @@ Maestro is a native-first operating partner for owner-led AI work. The owner
 talks to Maestro, Maestro chooses the smallest useful route, and real execution
 uses native Codex subagents, skills, shell, browser, and review flows.
 
-Maestro Cockpit is not the runtime engine. It is the operational dashboard and
-ledger for work state, evidence, handoffs, approvals, and agent-run visibility.
+Maestro is not a custom runtime, dashboard, queue system, or process manager.
+Its value is judgement: choosing the right level of ceremony and coordinating
+work without burying the owner under machinery.
 
 ## Core Rule
 
-Prefer native Codex execution over a custom orchestration runtime.
+Prefer native Codex execution over custom orchestration infrastructure.
 
-Do not build a runner, CDK, queue worker, or complex lifecycle machine until
-manual native operation proves that the missing automation is worth the
-complexity.
+Do not build a runner, CDK, queue worker, or UI control plane until manual native
+operation proves that the missing automation is worth the complexity.
 
 ## Product Boundary
 
@@ -31,61 +31,42 @@ Maestro owns:
 - conversation with the owner;
 - task capture, decomposition, and routing;
 - native subagent and skill selection;
-- acceptance and closeout discipline.
+- artifact and evidence discipline;
+- acceptance and closeout quality.
 
-Maestro Cockpit owns:
+Atlas owns:
 
-- work queue;
-- current status, gate, blocker, and approval visibility;
-- agent-run observation;
-- evidence and artifact lookup;
-- handoff and closeout records.
+- personal helper behavior outside the formal Maestro chain;
+- quick owner-assist flows where formal orchestration is unnecessary.
 
-Codex runtime owns:
+Specialist agents own:
 
-- ephemeral agent execution;
-- tool calls;
-- browser sessions;
-- shell sessions;
-- native subagent work;
-- local reasoning context.
+- bounded research, audit, implementation, verification, review, release, or
+  memory work when isolated context materially helps.
 
-The Codex runtime must not be the source of truth. If a process dies, Maestro
-resumes from Cockpit DB state, artifacts, and durable memory.
+Durable memory owns:
 
-## Cockpit Shape
+- compressed long-term product memory;
+- summaries and source-of-truth routes;
+- no live task state.
 
-Required Phase 1 surfaces:
+## Operational Terminology
 
-- Dashboard: what needs action now.
-- Work queue: every meaningful owner request, including lightweight tasks.
-- Work drawer: overview, evidence, artifacts, and native-agent preparation.
-- Agents & Runs: instrumentation panel, not an agent launcher platform.
-- Artifacts viewer: readable JSON, Markdown, logs, packet metadata, and
-  evidence attachments.
-- Approvals and blockers: visible gates for owner/security decisions.
-
-Operational terminology:
-
-- Work is what the owner asked Maestro to do.
-- Agent task is the executable slice Maestro prepares for an agent.
-- Agent run is telemetry for an execution attempt.
-- Events are diagnostic audit detail, not the owner's primary interface.
-
-Optional or parked:
-
-- Kanban.
-- Cloud workers.
-- Runner automation.
-- multi-repository portfolio views.
-- velocity analytics.
+- Work: what the owner asked Maestro to do.
+- Feature: a meaningful deliverable slice inside larger work.
+- Task: an executable unit for a person or agent.
+- Stage: a bounded lifecycle step such as research, implementation, verification,
+  review, release, closeout, or memory audit.
+- Attempt: one execution pass inside a stage.
+- Evidence: proof that supports acceptance, review, or closeout.
+- Handoff: concise result record from one stage or agent to the next.
 
 ## Agentic Trap Guardrails
 
 - Keep prompts and packets concise.
 - Let native agents inspect code directly instead of over-prescribing every
   step.
-- Prefer CLI affordances that agents can discover and compose.
+- Prefer clear repository artifacts over custom state stores.
 - Add a skill only when it captures a repeated workflow.
 - Add a subagent only when isolated context materially helps.
 - Add automation only after the manual loop is painful and repeatable.
@@ -93,11 +74,11 @@ Optional or parked:
 
 ## Next Transition
 
-After Cockpit is refocused, the next work is not a runner. The next work is a
-small native Maestro environment:
+The next active work is a small native Maestro environment:
 
 - Maestro operating style;
 - task capture and closeout habit;
-- minimal role/skill contracts;
+- minimal role and skill contracts;
 - native subagent launch guidance;
-- artifact/evidence discipline through `maestroctl`.
+- artifact and evidence discipline;
+- clear boundary between Maestro, Atlas, skills, and optional future tooling.

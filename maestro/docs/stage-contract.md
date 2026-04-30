@@ -20,7 +20,8 @@ improve correctness, evidence, approval safety, or handoff quality.
 - Do not create a stage just for ceremony.
 - A stage attempt is append-only.
 - A stage agent may recommend the next stage but does not advance lifecycle.
-- Stage transitions happen through Maestro API or `maestroctl`.
+- Stage transitions happen through Maestro's explicit orchestration decisions
+  and are recorded in conversation or artifacts when persistence is useful.
 - High-risk stages must not begin until required approvals are present.
 - A stage can be skipped only when its evidence value is not needed for the
   selected route tier.

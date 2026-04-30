@@ -72,7 +72,7 @@ Examples of high-risk path classes:
 - secrets, env, deploy, CI, and infrastructure files;
 - release scripts;
 - production configuration;
-- generated state owned by API/DB or typed CLI.
+- generated state or lockfiles outside the assigned scope.
 
 ## Agent Constraints
 
@@ -146,5 +146,5 @@ Every gated action should have:
 - decision timestamp;
 - audit event.
 
-Agents may request gates. Maestro and the API decide whether the gate is
-satisfied.
+Agents may request gates. Maestro decides whether the gate is satisfied and
+whether owner confirmation is required before proceeding.

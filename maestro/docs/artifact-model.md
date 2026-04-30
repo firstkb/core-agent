@@ -11,8 +11,7 @@ lang: en
 
 The current Maestro artifact model is intentionally minimal and local. Maestro
 vNext keeps its strongest properties while making work, features, tasks,
-evidence, approvals, and agent runs first-class for Cockpit and future cloud
-workers.
+evidence, approvals, and handoffs portable for native agent workflows.
 
 The artifact model is intentionally tiered. Maestro should create only the
 smallest artifact shape that the selected route tier needs.
@@ -21,12 +20,13 @@ smallest artifact shape that the selected route tier needs.
 
 Target boundary:
 
-- API/DB owns live operational state.
-- `maestro/artifacts/` stores portable snapshots, handoffs, evidence, reports,
-  and append-only attempt records.
-- Artifact JSON files are exports or handoffs, not the primary mutable state.
-- `.agent-cli` remains a bridge for current local artifact validation and import
-  or export.
+- Native Maestro conversation and active repository files own live work context.
+- Persisted artifacts store portable handoffs, evidence, reports, and
+  append-only attempt records.
+- Artifact JSON files are packets, handoffs, evidence indexes, or snapshots, not
+  primary mutable state.
+- Active runtime tools may validate or import artifacts, but the artifact model
+  must remain tool-agnostic.
 - `ai-memory` stores durable compressed memory, not live task state.
 
 ## Jet Rule
@@ -59,7 +59,7 @@ attempts.
 Default artifact shape:
 
 ```text
-maestro/artifacts/workspace/work/<work_id>/
+artifacts/maestro/work/<work_id>/
   task.md
   closeout.md
   evidence/
@@ -73,7 +73,7 @@ or review.
 Default artifact shape:
 
 ```text
-maestro/artifacts/workspace/work/<work_id>/
+artifacts/maestro/work/<work_id>/
   task.md
   stages/<stage_name>/
     attempt-001/
@@ -90,7 +90,7 @@ Use when work needs decomposition into one or more feature slices.
 Default artifact shape:
 
 ```text
-maestro/artifacts/workspace/work/<work_id>/
+artifacts/maestro/work/<work_id>/
   brief.md
   features/<feature_id>/
     README.md
@@ -111,7 +111,7 @@ Use when work is module-sized, approval-heavy, or needs portable snapshots.
 Expanded artifact shape:
 
 ```text
-maestro/artifacts/workspace/
+artifacts/maestro/
   repository.snapshot.json
   work/<work_id>/
     brief.md
@@ -136,8 +136,8 @@ maestro/artifacts/workspace/
         closeout.md
 ```
 
-Snapshots are optional exports from API/DB. They are not required for normal
-small work.
+Snapshots are optional exports from the active orchestration context. They are
+not required for normal small work.
 
 ### Tier 4B: High-Risk Work
 
@@ -176,7 +176,8 @@ Rules:
 
 - explains the feature mission and bounds;
 - keeps feature metadata descriptive;
-- mutable lifecycle state stays in DB/API and exported snapshots.
+- mutable lifecycle state stays in the active runtime context and optional
+  exported snapshots.
 
 ### `task.md`
 
@@ -241,10 +242,10 @@ artifacts/<module>/
   features/<feature>/stages/<stage>/attempt-001/
 ```
 
-Target runtime:
+Target artifact shape:
 
 ```text
-maestro/artifacts/workspace/work/<work>/
+artifacts/maestro/work/<work>/
 ```
 
 Migration should be through explicit import/export. Do not silently reinterpret

@@ -22,9 +22,8 @@ handoff improves the result.
 - Agents must return structured handoff evidence.
 - Agents do not silently advance lifecycle state.
 - Agents do not bypass approval gates.
-- Agents do not write live DB state directly.
-- Agents use `maestroctl` when interacting with Maestro Cockpit state or
-  artifacts.
+- Agents do not mutate orchestration state by inventing their own lifecycle.
+- Agents write only assigned code/docs/artifacts and return handoff evidence.
 - Agents may recommend next stages but Maestro decides transitions.
 
 ## Standard Input Packet

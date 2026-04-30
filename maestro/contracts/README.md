@@ -10,7 +10,8 @@ lang: en
 These schemas define the proposed portable contract layer for Maestro vNext.
 
 They are not active runtime schemas until the owner accepts the vNext model and
-the implementation wires them into API, CLI, or validation commands.
+the implementation wires them into native skills, agent packets, or validation
+commands.
 
 Contracts:
 

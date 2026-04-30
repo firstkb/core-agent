@@ -23,7 +23,8 @@ context is valuable, reconciles outputs, and owns closeout.
 - Tiny direct work must not be forced into work-brief ceremony.
 - High-risk work must not proceed without explicit approval gates.
 - Agents do not silently advance lifecycle state.
-- State transitions must happen through typed commands or API transitions.
+- Lifecycle transitions must be explicit in Maestro's conversation, artifacts,
+  or closeout records.
 - Attempts are append-only.
 - Evidence belongs to attempts and gates, not to loose chat summaries.
 

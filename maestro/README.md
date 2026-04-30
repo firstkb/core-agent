@@ -7,11 +7,16 @@ lang: en
 
 # Maestro
 
-Maestro is the proposed orchestration product surface for the next generation
-control plane.
+Maestro is the proposed native-first orchestration layer for owner-led AI work.
+It is intended to become an improved Atlas-style operating partner: the owner
+talks to Maestro in natural task terms, and Maestro chooses the smallest useful
+route, skill set, subagent usage, artifact shape, evidence needs, and closeout
+discipline.
 
-This directory is a foundation surface, not a replacement for the current live
-runtime yet. The current live Maestro contract remains under:
+This directory is now a contract and knowledge surface only. The previous local
+management prototype was intentionally removed from this tree.
+
+The current live repository runtime still remains under:
 
 - `docs/maestro/module-orchestrator-v2-spec-pack/`
 - `.codex/contracts/module_orchestrator/`
@@ -23,13 +28,14 @@ runtime yet. The current live Maestro contract remains under:
 Maestro vNext is the owner-facing entrypoint for work ranging from tiny direct
 changes to full module-sized initiatives.
 
-The owner should be able to ask Maestro for work in natural task terms. Maestro
-then decides:
+Maestro decides:
 
-- whether formal state is required;
-- whether a run artifact tree is required;
-- which stage chain is needed;
+- whether the request can be handled inline;
+- whether a lightweight artifact record is useful;
+- whether research, audit, implementation, verification, review, release, or
+  memory stages are needed;
 - which specialist agents should be used;
+- which skills should shape the work;
 - which approval gates must be satisfied;
 - which evidence is required before closeout.
 
@@ -46,111 +52,55 @@ maestro/
     README.md
     operating-charter.md
     maestro-character.md
+    native-first-maestro.md
     orchestration-contract.md
     routing-tier-contract.md
+    agent-roles.md
     agent-contracts.md
     agent-sequences.md
     security-permissions-contract.md
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
-    ui-cockpit-contract.md
-    run-control-contract.md
-    phase-1-implementation-brief.md
-    agent-roles.md
-    state-model.md
-    db-model.md
-    api-contract.md
-    maestroctl-contract.md
   contracts/
     README.md
     orchestration-plan.schema.json
     task-packet.schema.json
     stage-handoff.schema.json
     evidence.schema.json
-  cli/
-    README.md
-    package.json
-    bin/maestroctl
-    src/maestroctl.mjs
-  env/
-    dev.env.example
-    local.env.example
-  scripts/
-    dev-local.mjs
-    smoke-local.mjs
-  frontend/
-    package.json
-    src/
   templates/
     task.md.tmpl
     stage-attempt.md.tmpl
     closeout.md.tmpl
+  archive/
+    README.md
+    current-maestro/
+    current-scribe/
 ```
-
-Implementation directories:
-
-```text
-maestro/backend/
-maestro/cli/
-maestro/frontend/
-maestro/artifacts/
-```
-
-`maestro/frontend/` uses React, TypeScript, Vite, and MUI Material for the
-local Cockpit UI.
-
-## Local Environment
-
-Tracked example:
-
-```text
-maestro/env/dev.env.example
-maestro/env/local.env.example
-```
-
-Ignored local files:
-
-```text
-maestro/env/*.env
-maestro/.env
-maestro/.env.*
-```
-
-Use `maestro_local` for daily Cockpit state and keep `maestro_smoke` as a
-separate disposable database for smoke runs. The smoke runner refuses to touch
-an existing Maestro schema unless `MAESTRO_SMOKE_RESET_DATABASE=true` is set in
-the ignored local env.
-
-## Local Dev Stack
-
-```bash
-node maestro/scripts/dev-local.mjs --env maestro/env/dev.env
-```
-
-The dev runner applies migrations, starts the Go API, starts the Vite/MUI
-frontend, and stops both processes on `Ctrl+C`. Before starting, it frees the
-configured API/frontend ports by stopping existing listeners. Use
-`--no-kill-ports` when you want the command to fail instead of stopping another
-local process.
-
-## Local Smoke
-
-```bash
-node maestro/scripts/smoke-local.mjs --env maestro/env/local.env
-```
-
-The smoke runner starts the Go API, drives the first vertical flow through
-`maestroctl`, writes API-owned artifacts, restarts the API, and verifies that
-state persisted in PostgreSQL.
 
 ## Source Of Truth Boundary
 
 Target boundary:
 
-- Maestro API/DB is the live operational state owner.
-- `maestro/artifacts/` stores portable snapshots, evidence, handoffs, and
-  append-only run records.
-- `.agent-cli` remains a local compatibility, validation, import, and export
-  bridge while the current artifact model is migrated.
+- Maestro conversation and repository artifacts are the working source for
+  native orchestration.
+- `maestro/contracts/` defines portable packet, handoff, and evidence shapes.
+- `maestro/templates/` provides lightweight Markdown scaffolds.
 - `ai-memory/` remains durable compressed memory, not live task state.
+- `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
+  until Maestro vNext is promoted.
+
+## Removed Scope
+
+The removed prototype scope included:
+
+- backend service;
+- frontend management UI;
+- local CLI driver;
+- local env files;
+- dev and smoke scripts;
+- local artifact output folders;
+- service, database, UI, run-control, and implementation-slice documents.
+
+Do not reintroduce those surfaces unless the native Maestro loop proves that a
+separate UI or service would remove real repeated friction.

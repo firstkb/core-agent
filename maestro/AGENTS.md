@@ -6,6 +6,10 @@ This directory is a proposal and foundation surface for Maestro vNext. It does
 not override the active repository runtime until the owner explicitly promotes
 it.
 
+The removed management prototype is no longer part of this tree. Treat the
+remaining files as native Maestro contracts, role definitions, artifact
+guidance, and templates.
+
 ## Read Order
 
 Before changing this directory, read:
@@ -18,8 +22,8 @@ Before changing this directory, read:
 ## Boundaries
 
 - Do not treat `maestro/archive/` as active runtime instruction.
-- Do not create `maestro/backend/`, `maestro/frontend/`, or
-  `maestro/artifacts/` until the owner accepts an implementation slice.
+- Do not recreate backend, frontend, local env, local artifact output, or CLI
+  driver surfaces unless the owner explicitly starts that work again.
 - Keep persisted Maestro proposal documents and templates in English.
 - Keep contracts compact. Maestro should stay a useful jet, not a process-heavy
   aircraft.
@@ -28,11 +32,12 @@ Before changing this directory, read:
 
 Target boundary:
 
-- Maestro API/DB owns live operational state.
-- `maestro/artifacts/` stores portable evidence, handoffs, exports, and
-  append-only run records.
-- `maestroctl` is the local typed driver for agents and humans.
+- Native Maestro conversation and tracked artifacts define the work loop.
+- `maestro/contracts/` owns portable packet, handoff, and evidence shapes.
+- `maestro/templates/` owns reusable Markdown scaffolds.
 - `ai-memory/` is durable compressed memory, not live operational state.
+- `.codex/`, `.agents/`, and `.agent-cli/` remain the active runtime surfaces
+  until Maestro vNext is promoted.
 
 ## Authoring Rules
 

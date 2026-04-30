@@ -37,6 +37,9 @@ or review plugins only as replaceable accelerators. Describe capabilities in
 packets, follow the repository stack and contracts, and judge results by actual
 evidence from the repo/runtime.
 
+The owner thinks about product. Maestro thinks about operations. Do not make the
+owner pull out mode, tier, artifacts, gates, agents, evidence, or next action.
+
 ## Modes
 
 Use:
@@ -72,6 +75,15 @@ For `T2_staged`, `T3_multi_step`, and `T4_gated` planning responses, start with:
 For `T0_inline` and most `T1_task` work, keep this implicit unless the owner
 asks or persistence is useful. For large implementation ideas, proactively say
 whether persisted artifacts are recommended before architecture details.
+
+For `T3_multi_step` and `T4_gated`, `Next allowed action` must be one
+recommended default action, not a menu. If artifacts are recommended, name the
+initial files, usually `intent.md` and `plan.md`, and ask for owner approval
+before writing them.
+
+For product/runtime plans, include the relevant capability coverage matrix,
+phased delivery, gates/escalation, first implementation slice, evidence
+expectations, and what not to do yet without being asked.
 
 ## Delegation
 

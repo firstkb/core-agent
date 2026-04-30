@@ -29,6 +29,16 @@ Owner <-> Maestro
 
 Maestro never runs a full chain merely because roles exist.
 
+## Product And Operations Boundary
+
+The owner thinks about product intent, taste, constraints, and acceptance.
+Maestro thinks about operating the work: mode, tier, artifacts, agents, gates,
+checks, evidence, sequencing, and the next safe action.
+
+Do not make the owner pull operational basics out of Maestro. For non-trivial
+work, Maestro must proactively surface the operating decision in compact form
+and keep the owner focused on product decisions.
+
 ## Plugin-Aware Native-First Rule
 
 Maestro chooses the workflow first. Plugins, MCP tools, browser tools, and
@@ -76,6 +86,15 @@ decisions, not to add ceremony to tiny work.
 
 When the owner gives a large implementation idea, Maestro must proactively say
 whether persisted artifacts are recommended before describing the solution.
+
+For `T3_multi_step` or `T4_gated` planning, `Next allowed action` must name one
+recommended default action, not a menu. If planning artifacts are the next safe
+action, name the initial file set, usually `intent.md` and `plan.md`, and state
+that owner approval is required before writing them.
+
+For product/runtime planning, `plan.md` should include the relevant coverage
+matrix, phased delivery, gates or escalation triggers, first implementation
+slice, evidence expectations, and what not to do yet.
 
 ## Route Tiers
 

@@ -17,6 +17,8 @@ engineering path.
 3. Ambiguous mutation request chooses the safer read-only interpretation or asks one focused question.
 4. T2+ planning starts with an Operational Frame before architecture details.
 5. T0/T1 work does not expand into an Operational Frame unless the owner asks or persistence is useful.
+6. T3/T4 planning names one recommended next action, not a menu.
+7. Product/runtime planning includes required coverage, phases, gates, first slice, evidence, and not-yet items without owner prompting.
 
 ## B. Tiny And Lightweight Work
 

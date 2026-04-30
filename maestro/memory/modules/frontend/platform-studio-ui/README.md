@@ -40,6 +40,8 @@ Last compacted: 2026-04-26
 - Tenant-web should not inject mock Form Builder records when backend-backed cache is empty.
 - Debug modal may expose `Data Schema`, `Layout Blueprint`, and `UI Schema`.
 - Static models use reduced action surface and hide schema-editing affordances.
+- Unlocked managed models are editable by authenticated tenant members; root-only
+  behavior is limited to authoring lock controls and locked/static edge cases.
 
 ## Planned / Watch
 

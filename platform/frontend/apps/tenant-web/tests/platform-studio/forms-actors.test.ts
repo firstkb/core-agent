@@ -36,16 +36,19 @@ describe("platform builder forms actor access", () => {
     expect(access.summaryKey).toBe("tenant.platformStudio.forms.canEditViewsOnly");
   });
 
-  it("blocks view-only editors when a model does not grant view-only editing", () => {
+  it("allows tenant members to manage unlocked managed models", () => {
     const access = getFormsAuthoringAccess(
       getFormsPlaceholderActor("view-only-editor"),
       editableFormBuilderModel,
     );
 
-    expect(access.canEditViews).toBe(false);
-    expect(access.canDeleteView).toBe(false);
-    expect(access.summaryKey).toBe("tenant.platformStudio.forms.permissionSummary.viewAccessUnavailable");
-    expect(access.viewRestrictionKey).toBe("tenant.platformStudio.forms.permission.viewAccessDisabled");
+    expect(access.canEditViews).toBe(true);
+    expect(access.canDeleteModel).toBe(true);
+    expect(access.canDeleteView).toBe(true);
+    expect(access.canManageStructure).toBe(true);
+    expect(access.summaryKey).toBe("tenant.platformStudio.forms.permissionSummary.manageAll");
+    expect(access.structureRestrictionKey).toBeNull();
+    expect(access.viewRestrictionKey).toBeNull();
   });
 
   it("keeps readonly users able to open workspaces while blocking mutations", () => {

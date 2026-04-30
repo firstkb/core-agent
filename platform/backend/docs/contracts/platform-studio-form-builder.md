@@ -51,7 +51,7 @@ Form Builder backend owns:
 - stable model/view identity resolution
 - authoring normalization, compatibility, validation, and compaction
 - optimistic concurrency through expected model/view versions
-- root/static access policy and authoring locks
+- static/external access policy and authoring locks
 - runtime metadata derivation
 - additive runtime apply
 - generated table/view/index/trigger/foreign-key orchestration
@@ -113,6 +113,17 @@ Export routes:
 
 - `GET /app/platform-studio/forms/models/{modelId}/export/model`
 - `GET /app/platform-studio/forms/models/{modelId}/export/data`
+
+Authoring access baseline:
+
+- authoring routes use the tenant-secure route baseline
+- authenticated tenant members may create, edit, and delete unlocked managed
+  models
+- readonly users cannot mutate authoring state
+- locked model/view state is enforced on save
+- static/external model structure remains read-only
+- root/non-root distinction currently matters for lock changes and locked
+  model/view behavior, not for unlocked managed model structure editing
 
 ## Runtime And Preview Routes
 
@@ -305,7 +316,7 @@ On save, backend must:
 - reject mismatched path/body model or view identity
 - load current model/view
 - enforce static/external read-only structure rules
-- enforce root/non-root actor lock rules
+- enforce static/external read-only rules and root/non-root actor lock rules
 - normalize model payload for default view when model structure is editable
 - normalize view payload against `dataSchema + layoutBlueprint`
 - validate runtime relation conflicts before persistence

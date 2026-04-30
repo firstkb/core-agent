@@ -173,6 +173,22 @@ describe("forms builder workspace state", () => {
     expect(palette.map((item) => item.nodeType)).toEqual(["tab_item"]);
   });
 
+  it("keeps unlocked managed model palettes editable for tenant members", () => {
+    const document = createDefaultFormBuilderDocument(editableObject, editableScreen, makeTestIdFactory());
+    const memberAccess = getFormsWorkspaceAccess(
+      getFormsAuthoringAccess(getFormsPlaceholderActor("view-only-editor"), editableObject, editableScreen),
+      editableObject,
+      editableScreen,
+    );
+
+    const elementPalette = getElementPaletteItems(document, memberAccess, "");
+    const fieldPalette = getFieldPaletteItems(document, memberAccess, "");
+
+    expect(elementPalette.every((item) => item.disabled)).toBe(false);
+    expect(fieldPalette.every((item) => item.disabled)).toBe(false);
+    expect(memberAccess.canEditSettings).toBe(true);
+  });
+
   it("disables field additions while leaving delegated view layout editing available", () => {
     const document = createDefaultFormBuilderDocument(lockedObject, lockedScreen, makeTestIdFactory());
     const lockedAccess = getFormsWorkspaceAccess(

@@ -243,6 +243,21 @@ Non-default views must not silently mutate:
 
 Until an explicit cross-view blueprint-edit mode exists, model-structure and blueprint-layout actions should stay disabled outside the default view.
 
+## Authoring Access And Locks
+
+Current authoring access follows the backend tenant-secure Form Builder
+baseline:
+
+- authenticated tenant members may create, edit, and delete unlocked managed
+  models and their default-view structure
+- readonly users can open workspaces but cannot mutate authoring state
+- non-root users cannot edit locked views
+- non-root users cannot edit locked managed model structure
+- static/external model structure is read-only even for root
+- root users may change model/view authoring locks
+- `canEditViewsOnly` means model structure is blocked for the current
+  model/source state while view-local editing may remain available
+
 ## View Creation And Reconciliation
 
 `Add View` creates a fresh `uiSchema` from:

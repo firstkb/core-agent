@@ -29,6 +29,9 @@ Last compacted: 2026-04-25
 - `ps_view.definition_json` owns `uiSchema`.
 - Runtime apply is additive only.
 - Static/external schema is read-only; root may manage views.
+- Unlocked managed authoring uses the tenant-secure route baseline: authenticated
+  tenant members may create/edit/delete managed models, while root/non-root
+  distinction applies to lock changes and locked/static behavior.
 - Runtime apply errors should include diagnostic context.
 - Active backend API/storage/runtime apply truth is tracked in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 - Backend implementation read order and code-surface mapping are tracked in `platform/backend/docs/modules/platform-studio/form-builder.md`.

@@ -108,8 +108,8 @@ export function getFormsAuthoringAccess(
     isStaticStructureReadOnlyModel(model);
   const structureReadOnlyForActor = isStaticStructureReadOnlyModel(model)
     || (Boolean(model?.isStructureLocked) && !isRootActor);
-  const canManageStructure = isRootActor && !isReadonlyUser && !viewLockedForActor && !structureReadOnlyForActor;
-  const canEditViews = !isReadonlyUser && !viewLockedForActor && (isRootActor || supportsDelegatedViewEditing);
+  const canManageStructure = !isReadonlyUser && !viewLockedForActor && !structureReadOnlyForActor;
+  const canEditViews = !isReadonlyUser && !viewLockedForActor && (canManageStructure || isRootActor || supportsDelegatedViewEditing);
 
   let summaryKey = "tenant.platformStudio.forms.permissionSummary.manageAll";
   let summaryVariant: FormsPermissionSummaryVariant = "brand";

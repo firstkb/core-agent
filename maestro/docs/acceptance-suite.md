@@ -50,3 +50,10 @@ engineering path.
 2. Example approval, packet, handoff, evidence, and closeout objects validate against their schemas.
 3. Route-tier invariants prevent T4 with `artifact_shape=none` or no approvals.
 4. `release` stage requires release approval and Release agent.
+
+## G. Plugin-Aware UI Work
+
+1. Maestro describes UI/web-app needs as capabilities, not mandatory plugin names.
+2. Available UI, browser, or web-app plugins may accelerate implementation or review.
+3. Plugin output is never accepted without repo-native route, viewport, state, and evidence checks.
+4. If a useful plugin is unavailable or mismatched with the repo stack, closeout records the fallback path.

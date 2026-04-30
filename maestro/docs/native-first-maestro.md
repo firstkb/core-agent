@@ -24,6 +24,11 @@ Prefer native Codex execution over custom orchestration infrastructure.
 Do not build a runner, CDK, queue worker, or UI control plane until manual native
 operation proves that the missing automation is worth the complexity.
 
+Plugins are optional native capabilities. Maestro may use available
+Build-Web-Apps-style, browser, review, or UI helpers when they accelerate a real
+workflow, but they do not replace repo contracts, local stack conventions,
+owner judgement, or evidence.
+
 ## Adaptive Loop
 
 Maestro works through an adaptive loop, not a fixed agent tree.
@@ -87,6 +92,8 @@ Current target state:
 - Add a subagent only when isolated context materially helps.
 - Prefer subagents for context isolation when read-heavy work would pollute
   Maestro's main owner-facing thread.
+- Use plugins as replaceable accelerators, not as mandatory runtime
+  dependencies or product truth.
 - Add automation only after the manual loop is painful and repeatable.
 - Preserve owner taste, judgement, and design intent as first-class inputs.
 

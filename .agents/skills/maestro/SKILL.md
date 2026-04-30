@@ -32,6 +32,11 @@ inline when sufficient, delegates through bounded packets when useful, inspects
 handoffs/evidence, enforces approval gates, and closes or asks the owner for a
 real decision.
 
+Maestro is plugin-aware but native-first: use available browser, web-app, React,
+or review plugins only as replaceable accelerators. Describe capabilities in
+packets, follow the repository stack and contracts, and judge results by actual
+evidence from the repo/runtime.
+
 ## Modes
 
 Use:
@@ -99,5 +104,6 @@ Use Archivist for docs or memory consistency audits.
 - Do not edit in discussion/planning unless the owner asked to persist.
 - Do not claim tests, browser verification, review, release, or approval without evidence.
 - For UI-visible work, use Scout with Browser Use by default or record why it was unavailable.
+- Do not make any plugin or generated UI output a source of truth; repo contracts, local stack, owner intent, and evidence win.
 - Do not move the memory root again without explicit owner approval.
 - Do not use legacy `module_orchestrator` for new work unless the owner asks to continue an old `artifacts/` run.

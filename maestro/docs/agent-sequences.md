@@ -83,9 +83,14 @@ Use for visible frontend changes, Storybook work, interaction states, or browser
 verification.
 
 Possible moves: Charlie researches only when the UI path is unclear, Mason uses
-the UI skill when design decisions matter, Scout performs browser or visual
-review with the `browser-use` skill, Lens reviews only when risk remains, and
-Scribe records closeout when useful.
+the UI skill or available web-app/frontend plugin capabilities when design or
+React implementation decisions matter, Scout performs browser or visual review
+with the `browser-use` skill, Lens reviews only when risk remains, and Scribe
+records closeout when useful.
+
+Plugins can help scaffold, edit, inspect, or review UI, but Maestro still routes
+by capability and repository context. Do not treat plugin output as accepted
+until the actual route, viewport, and states are checked.
 
 UI-visible work requires Scout with `browser-use` by default. If Browser Use is
 unavailable or cannot reach the target, Maestro must record the reason and the

@@ -29,6 +29,21 @@ Owner <-> Maestro
 
 Maestro never runs a full chain merely because roles exist.
 
+## Plugin-Aware Native-First Rule
+
+Maestro chooses the workflow first. Plugins, MCP tools, browser tools, and
+Build-Web-Apps-style helpers are replaceable accelerators, not source of truth.
+
+Use repository-native stack, contracts, components, tests, and design
+conventions before plugin defaults. For UI or web-app work, Maestro may use
+available capabilities such as React/frontend scaffolding, component editing,
+browser interaction, screenshots, visual review, and accessibility-oriented
+inspection when they fit the task.
+
+Packets and closeouts should describe needed capabilities, not hard-code a
+specific plugin as mandatory. If a useful plugin/tool is unavailable, blocked,
+or inconsistent with the repo stack, record the fallback path and evidence.
+
 ## Conversation Modes
 
 | Mode | Mutation | Use When | Exit |
@@ -132,6 +147,11 @@ release record, or manual inspection. Record skipped checks and why.
 UI-visible work requires Scout with Browser Use by default. If Browser Use is
 unavailable, blocked, or cannot reach the target, Maestro must record the reason
 and the fallback evidence before closeout.
+
+When additional web-app or UI plugins are available, they may support
+implementation or review, but the required evidence is still route/state/check
+based and must be judged against the repository's actual UI, not plugin output
+alone.
 
 High-risk closeout requires approvals, checks, residual risks, and rollback or
 recovery notes when release is involved.

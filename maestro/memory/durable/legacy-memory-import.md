@@ -37,8 +37,8 @@ Operational scaffolds, not durable product truth:
 - `platform/docs/ai/automation-manifest.json`
 - `platform/docs/ai/automation-changelog.md`
 
-Archived Atlas operational copies now live under
-`maestro/archive/final-atlas/memory-atlas/**`.
+Archived retired runtime operational copies are owner-managed outside the active
+repository.
 
 Former retired pointer stubs, now deleted:
 
@@ -52,9 +52,8 @@ Historical/episodic artifacts, not active memory:
 
 - `platform/docs/ai/runs/**`
 
-Compact run triage:
-
-- `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
+Compact run triage is available from owner-managed external provenance or git
+history when exact historical reconstruction is required.
 
 ## Transfer Status
 
@@ -67,7 +66,7 @@ Compact run triage:
 
 ## Important Drift Resolved
 
-- Old memory used Atlas product-orchestration operational language. Current repo runtime is Codex-native per root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `.agent-cli/`, and `docs/codex-native-repo.md`.
+- Old memory used retired runtime product-orchestration operational language. Current repo runtime is Codex-native per root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `.agent-cli/`, and `docs/codex-native-repo.md`.
 - Old Platform Studio memory focused on Form Builder plus planned Navigation/Action. New memory records owner clarification that Platform Studio is a larger suite including Form Builder, Navigation Builder, Action Builder, PDF Builder, Report Builder, and future tools.
 - Collection Table old wording sometimes described app-local proving state; current memory treats `@platform/collection-table` extraction as landed for admin consumers while keeping cross-app/full capability work planned.
 - Closed run artifacts remain useful for provenance only; they must not be used as canonical truth if compact module memory disagrees.
@@ -89,9 +88,9 @@ Read `maestro/memory/durable/module-index.md` and the relevant
 
 Do not recreate or use `platform/docs/ai/prompts/**`,
 `platform/docs/ai/templates/**`, or `platform/docs/ai/automation-manifest.json`
-for active workflow. Archived copies live under `maestro/archive/final-atlas/`
-for provenance only.
+for active workflow. Archived copies are owner-managed outside the active
+repository for provenance only.
 
-Do not recreate or use `platform/docs/ai/runs/**` as active design input. Read
-`maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
-first; use git history only if the owner asks for exact historical reconstruction.
+Do not recreate or use `platform/docs/ai/runs/**` as active design input. Use
+the owner-managed external archive or git history only if the owner asks for
+exact historical reconstruction.

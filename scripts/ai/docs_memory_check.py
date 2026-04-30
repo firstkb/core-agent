@@ -89,12 +89,12 @@ OLD_PRODUCT_IDENTITY_ALLOWED_MARKERS = [
     "historical",
 ]
 
-OLD_ATLAS_INVOCATION_TERMS = [
+OLD_ORCHESTRATION_INVOCATION_TERMS = [
     "$ramp-conductor",
     ".agents/skills/ramp-conductor",
 ]
 
-OLD_ATLAS_INVOCATION_ALLOWED_FILES = {
+OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES = {
     "maestro/memory/durable/decisions-log.md",
     "scripts/ai/docs_memory_check.py",
 }
@@ -291,25 +291,45 @@ def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
         add_error(errors, "ai-memory", "retired memory root must not exist; use maestro/memory")
     if (root / ".agents/skills/ramp-conductor").exists():
         add_error(errors, ".agents/skills/ramp-conductor", "retired pre-Maestro skill path must not exist")
-    if (root / ".agents/skills/atlas").exists():
-        add_error(errors, ".agents/skills/atlas", "Atlas is archived; active Atlas skill must not exist")
-    if not (root / "maestro/archive/final-atlas/skill/SKILL.md").exists():
-        add_error(errors, "maestro/archive/final-atlas/skill/SKILL.md", "frozen Atlas skill archive is missing")
-    for rel in [
-        "maestro/memory/atlas",
-        "maestro/memory/runs",
-        "maestro/memory/scripts",
-        "maestro/memory/working",
-    ]:
-        if (root / rel).exists():
-            add_error(errors, rel, "Atlas-era operational folder must not exist in active memory")
+    allowed_skills = {
+        "maestro",
+        "charlie",
+        "grant",
+        "mason",
+        "scout",
+        "lens",
+        "release",
+        "scribe",
+        "archivist",
+    }
+    skills_dir = root / ".agents/skills"
+    if skills_dir.exists():
+        for child in skills_dir.iterdir():
+            if child.is_dir() and child.name not in allowed_skills:
+                add_error(errors, child.relative_to(root), "unexpected active skill directory")
+    if (root / "maestro/archive").exists():
+        add_error(errors, "maestro/archive", "Maestro archive is owner-managed outside the repo; active tree must not contain it")
+    allowed_memory_dirs = {
+        "docs",
+        "durable",
+        "index",
+        "lessons",
+        "local",
+        "modules",
+        "reference-code",
+    }
+    memory_dir = root / "maestro/memory"
+    if memory_dir.exists():
+        for child in memory_dir.iterdir():
+            if child.is_dir() and child.name not in allowed_memory_dirs:
+                add_error(errors, child.relative_to(root), "unexpected active memory directory")
     for rel in [
         "scripts/ai/new-run.py",
         "scripts/ai/new-run.sh",
         "scripts/ai/automation_versions.py",
     ]:
         if (root / rel).exists():
-            add_error(errors, rel, "Atlas-era scaffolding script must not exist in active scripts")
+            add_error(errors, rel, "retired scaffolding script must not exist in active scripts")
     if (root / "maestro/memory/AGENTS.override.md").exists():
         add_error(errors, "maestro/memory/AGENTS.override.md", "retired override file must not exist")
     if not (root / "maestro/memory/START_HERE.md").exists():
@@ -341,8 +361,8 @@ def check_product_identity(root: Path, tracked: list[str], errors: list[str]) ->
                     if not bad_lines:
                         continue
                 add_error(errors, rel, f"uses retired current-product identity `{term}`; use VSM v1.0.0")
-        for term in OLD_ATLAS_INVOCATION_TERMS:
-            if term in text and rel not in OLD_ATLAS_INVOCATION_ALLOWED_FILES:
+        for term in OLD_ORCHESTRATION_INVOCATION_TERMS:
+            if term in text and rel not in OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES:
                 add_error(errors, rel, f"uses retired pre-Maestro invocation/path `{term}`; use Maestro")
 
 

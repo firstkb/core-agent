@@ -28,7 +28,6 @@ It does not move or replace tracked docs by itself.
 - `docs/ref/reference-code.md`
 - `maestro/memory/reference-code/packs-index.md`
 - `maestro/memory/reference-code/relocation-plan.md`
-- `maestro/archive/final-atlas/README.md`
 - `docs/archive/memory-reorg/README.md`
 
 ## Rule

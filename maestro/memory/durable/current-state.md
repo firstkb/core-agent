@@ -23,7 +23,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Legacy system agent ids `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available only for old `artifacts/<module>/...` continuation.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.
 - `landed` `doc-confirmed`: `.agent-cli/` owns typed lifecycle state transitions and mutable JSON status files.
-- `landed` `owner-confirmed`: Atlas is archived under `maestro/archive/final-atlas/` and is no longer an active skill or default platform entrypoint.
+- `landed` `owner-confirmed`: retired runtime is archived in owner-managed external storage and is no longer an active skill or default platform entrypoint.
 
 ## Product Runtime
 
@@ -55,7 +55,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: `maestro/templates/evidence.md.tmpl` is the compact evidence shape for non-trivial closeout or PR text; it should not become a standalone artifact by default.
 - `landed` `doc-confirmed`: Maestro direct inline work stays in the current chat by default. Persisted work uses flat artifacts under `maestro/artifact/active/`.
 - `landed` `owner-confirmed`: Local visual smoke for app UI should use the Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) when requested. Owner-provided seeded dev logins live only in ignored `maestro/memory/local/browser-use-auth.md`; tracked evidence should say `Auth: local seeded dev login.` without recording codes.
-- `landed` `doc-confirmed`: Atlas-era run folders were moved out of active memory into `maestro/archive/final-atlas/memory-runs/`.
+- `landed` `owner-confirmed`: retired runtime-era run folders were moved out of active memory and copied outside the active repository.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift and env policy checks for relevant PRs and pushes.
 - `landed` `code-confirmed`: Minimal product CI now includes `.github/workflows/backend-ci.yml` for Go format/test/build and `.github/workflows/frontend-ci.yml` for pnpm frozen install, typecheck, and build. Frontend lint/test and UI visual gates remain deferred until baselines are stable.
 - `landed` `doc-confirmed`: Local backend env files are ignored by `.gitignore`; tracked backend env files must be `*.env.example` only.
@@ -64,9 +64,9 @@ Confidence labels:
 - `landed` `doc-confirmed`: Memory maintenance rules for new decisions, modules, doc status changes, reference-code changes, and agent workflow changes live in `maestro/memory/agent-workflow.md`.
 - `landed` `doc-confirmed`: `docs/ref/` now contains only stable opt-in reference registry docs; memory-reorganization brainstorms moved to `docs/archive/memory-reorg/`.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `maestro/memory`; exact old payload text is git-history provenance only.
-- `landed` `doc-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is frozen in `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`.
-- `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown, module memory, prompts/templates, automation metadata, and runs from the former `platform/docs/ai/**` layer are represented by `maestro/memory/durable/legacy-memory-import.md`, current module memory, `maestro/archive/final-atlas/`, and git history.
-- `landed` `doc-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is frozen in `maestro/archive/final-atlas/memory-atlas/platform-docs-ai-retirement-readiness.md`; physical deletion is complete.
+- `landed` `owner-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is frozen in owner-managed external provenance.
+- `landed` `doc-confirmed`: Top-level legacy durable/governance/changelog markdown, module memory, prompts/templates, automation metadata, and runs from the former `platform/docs/ai/**` layer are represented by `maestro/memory/durable/legacy-memory-import.md`, current module memory, owner-managed external provenance, and git history.
+- `landed` `owner-confirmed`: Final `platform/docs/ai/**` retirement readiness audit is frozen in owner-managed external provenance; physical deletion is complete.
 - `landed` `owner-confirmed`: Raw legacy run payloads from former `platform/docs/ai/runs/**` were deleted after accepting a durable summary. Exact old run text is git-history provenance only.
 - `landed` `doc-confirmed`: `maestro/memory/AGENTS.override.md` was removed because it was not an active Codex instruction surface.
 
@@ -135,7 +135,7 @@ Confidence labels:
 - `risk` `doc-confirmed`: Archivist audit is manual and semantic; it should be run after large docs/memory slices or phase changes, not on every commit.
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
-- `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; archived Atlas workflow artifacts live under `maestro/archive/final-atlas/**` for provenance only.
+- `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; archived retired runtime workflow artifacts are external provenance only.
 
 ## Recommended Reads By Domain
 
@@ -167,6 +167,6 @@ Confidence labels:
 - Reference code policy: `maestro/memory/durable/reference-code-policy.md`
 - Reference code alias registry: `docs/ref/reference-code.md`
 - Reference code relocation checkpoint: `maestro/memory/reference-code/relocation-checkpoint.md`
-- Archived Atlas workflow: `maestro/archive/final-atlas/README.md`
-- Platform docs AI retirement plan: `maestro/archive/final-atlas/memory-atlas/platform-docs-ai-retirement-plan.md`
-- Legacy runs triage: `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
+- Archived retired runtime workflow: owner-managed external provenance or git history
+- Platform docs AI retirement plan: owner-managed external provenance or git history
+- Legacy runs triage: owner-managed external provenance or git history

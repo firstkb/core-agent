@@ -51,7 +51,7 @@ question. Do not ask when a conservative bounded route is enough.
 | `T3_multi_step` | Multi-step work | `multi_step` | Charlie, Grant, Mason, Scout/Lens/Scribe as needed |
 | `T4_gated` | Gated work | `full` | Charlie/Grant, approval, Mason, Scout, Lens, optional Release/Scribe |
 
-High-risk, release, production-impacting, memory migration, Atlas restore, or
+High-risk, release, production-impacting, memory migration, runtime restore, or
 approval-gated work must not run as T0 or T1.
 
 ## Artifact Shapes
@@ -117,7 +117,7 @@ Machine-readable approval is required for:
 - secrets or production configuration;
 - CI/CD or deploy/release surfaces;
 - production-impacting release actions;
-- future memory-root migration or Atlas restore.
+- future memory-root migration or runtime restore.
 
 Use `approval-*.json` validated by `maestro/contracts/approval.schema.json`.
 Markdown approval notes may exist for humans but are not sufficient for gate
@@ -154,5 +154,5 @@ cancelled, or frozen.
 
 - Legacy `module_orchestrator`, `research_codebase`, and `auditor` remain available for old `artifacts/` runs.
 - New Maestro work should use `maestro_vnext` and the flat artifact model.
-- Do not move the memory root again or restore archived Atlas without explicit owner approval.
+- Do not move the memory root again without explicit owner approval.
 - Do not reintroduce a Cockpit/backend/dashboard unless repeated native-loop pain proves it is needed.

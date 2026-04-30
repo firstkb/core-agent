@@ -17,4 +17,4 @@
 ## Notes
 
 - Product runtime code was not changed.
-- Atlas was not archived.
+- Retired runtime provenance was later moved outside the active repository.

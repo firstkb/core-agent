@@ -63,7 +63,7 @@ against `maestro/contracts/task-packet.schema.json`.
 ### `approval-*.json`
 
 Captures approval gates. High-risk implementation, release, memory migration,
-Atlas restore, destructive operations, and production-impacting actions require
+runtime restore, destructive operations, and production-impacting actions require
 machine-readable approval. Human Markdown notes are optional and not sufficient.
 
 ### `handoff-<stage>-<role>-NNN.json`

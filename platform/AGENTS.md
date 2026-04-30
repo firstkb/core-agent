@@ -66,7 +66,7 @@ Use `maestro/memory/` by role:
   - `maestro/memory/reference-code/**`
 - archive / historical context:
   - `maestro/memory/durable/legacy-memory-import.md`
-  - `maestro/archive/final-atlas/**`
+  - owner-managed external retired runtime provenance
   - git history for the former `platform/docs/ai/**` payloads
   - `platform/docs/archive/*`
 
@@ -185,9 +185,8 @@ and factual. Do not dump whole chat transcripts into durable memory.
 ## Artifact archive rule
 
 Closed, cancelled, superseded, or frozen Maestro records move from
-`maestro/artifact/active/` to `maestro/artifact/archive/`. Legacy Atlas run
-packets are frozen under `maestro/archive/final-atlas/` and are not active
-memory.
+`maestro/artifact/active/` to `maestro/artifact/archive/`. Legacy run packets
+are owner-managed outside the active repository and are not active memory.
 
 ## High-risk changes
 

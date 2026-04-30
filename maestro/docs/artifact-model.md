@@ -43,7 +43,7 @@ folder name after closeout, cancellation, or freeze.
 Do not confuse:
 
 - `maestro/artifact/archive/` = completed Maestro work records;
-- `maestro/archive/` = provenance copies of retired roles, skills, or legacy surfaces.
+- retired role/skill provenance = owner-managed outside the active repository.
 
 ## Work Folder Naming
 

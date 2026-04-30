@@ -411,7 +411,7 @@
   domain: maestro-orchestration
   state: landed
   confidence: doc-confirmed
-  summary: "Maestro is the active native-first work partner. Durable product memory lives under maestro/memory, active work artifacts live under maestro/artifact, and Atlas-era prompts/runs/scripts are frozen under maestro/archive/final-atlas."
+  summary: "Maestro is the active native-first work partner. Durable product memory lives under maestro/memory, active work artifacts live under maestro/artifact, and retired prompts/runs/scripts are owner-managed outside the active repository."
   read_when:
     - "task touches Maestro, AI memory workflow, route tiers, handoffs, evidence, approval gates, artifacts, or former platform/docs/ai retirement"
     - "task asks how agents should read memory or write Maestro work artifacts"
@@ -425,7 +425,6 @@
   memory_docs:
     - maestro/memory/agent-workflow.md
     - maestro/docs/artifact-model.md
-    - maestro/docs/atlas-memory-transition.md
     - maestro/templates/evidence.md.tmpl
     - maestro/memory/durable/legacy-memory-import.md
   last_compacted: 2026-04-30

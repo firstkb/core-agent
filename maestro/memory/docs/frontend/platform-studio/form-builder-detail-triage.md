@@ -125,7 +125,7 @@ current truth. Use git history only for exact old text.
 | `platform/frontend/docs/platform-studio/promt-continue.md` | Prompt artifact. |
 | `platform/frontend/docs/platform-studio/promt-continue-short.md` | Prompt artifact. |
 | `platform/frontend/docs/platform-studio/form-builder-approved-frontend-workstream-plan.md` | Workstream history; durable field/view facts compacted. |
-| `platform/frontend/docs/platform-studio/form-builder-static-models-atlas-task-v1.md` | Agent task prompt. |
+| `platform/frontend/docs/platform-studio/form-builder-static-models-retired-runtime-task-v1.md` | Agent task prompt. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-execution-plan-v1.md` | Execution history; verify code before using any remaining task. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-migration-draft-v1.md` | Draft migration detail; not canonical. |
 | `platform/frontend/docs/platform-studio/form-builder-static-models-phase-1-reference-schema-pack-v1.md` | Reference draft; not active contract. |

@@ -89,9 +89,7 @@ Operational scaffolds, not product truth:
 - `scripts/ai/**`
 - `.github/workflows/docs-memory-check.yml`
 
-Archived operational scaffolds:
-
-- `maestro/archive/final-atlas/**`
+Archived operational scaffolds are owner-managed outside the active repository.
 
 Former legacy sources, deleted from the working tree:
 

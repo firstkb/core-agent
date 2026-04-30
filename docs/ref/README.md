@@ -15,4 +15,4 @@ Current active registry:
 - `reference-code.md` - alias registry for donor/vendor/legacy reference-code packs.
 
 Do not place memory-reorganization brainstorms, prompts, or migration plans here.
-Those belong under `docs/archive/memory-reorg/` or `maestro/memory/**`.
+Those belong under `maestro/memory/**` or git history.

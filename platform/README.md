@@ -56,7 +56,7 @@ platform/
 - Maestro work artifacts live under `maestro/artifact/active/` and `maestro/artifact/archive/`
 - former `platform/docs/ai/` memory has been migrated into `maestro/memory` and deleted; it is historical provenance only
 - archived one-off prompt artifacts live under `platform/docs/archive/`
-- archived Atlas provenance lives under `maestro/archive/final-atlas/`
+- retired runtime provenance is owner-managed outside the active repository
 
 ## Frontend decisions
 

@@ -8,8 +8,8 @@ lang: en
 # Maestro
 
 Maestro is the native-first orchestration layer for owner-led AI engineering
-work. It is an improved Atlas-style operating partner, not a Cockpit, backend,
-dashboard, queue, or workflow engine.
+work. It is a practical operating partner, not a Cockpit, backend, dashboard,
+queue, or workflow engine.
 
 The owner talks to Maestro in natural task terms. Maestro understands the
 intent, chooses the smallest useful route, decides whether to work inline or
@@ -56,7 +56,7 @@ maestro/
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
-    atlas-memory-transition.md
+    memory-migration-plan.md
   contracts/
     orchestration-plan.schema.json
     task-packet.schema.json
@@ -78,10 +78,6 @@ maestro/
   artifact/
     active/
     archive/
-  archive/
-    current-maestro/
-    current-scribe/
-    final-atlas/
 ```
 
 ## Source Of Truth Boundary
@@ -111,9 +107,6 @@ Maestro may use these specialists adaptively:
 - Scribe: closeout and evidence summary;
 - Archivist: docs and durable memory audit.
 
-Atlas is archived under `maestro/archive/final-atlas/` and is no longer part of
-the active runtime.
-
 ## Artifact Roots
 
 Active work:
@@ -135,6 +128,5 @@ packets, handoffs, evidence, and closeout.
 ## Transition Rules
 
 - Do not move the `maestro/memory/` root without explicit owner approval.
-- Do not restore archived Atlas as active runtime without explicit owner approval.
 - Do not remove old `module_orchestrator` contracts until no active legacy run depends on them.
 - Do not rebuild a Cockpit unless repeated native-loop pain proves a UI/service is needed.

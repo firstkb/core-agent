@@ -25,8 +25,8 @@ are not automatic chains that must run end to end.
 
 ## Hard Boundaries
 
-- Atlas is archived as provenance under `maestro/archive/final-atlas/` and is
-  outside the active Maestro chain.
+- Retired runtime provenance is owner-managed outside the active repository and
+  is outside the active Maestro chain.
 - Maestro owns orchestration decisions, not product implementation by default.
 - Maestro must understand whether the owner is discussing, planning, executing,
   or requesting gated execution before changing files.
@@ -145,7 +145,7 @@ State:
 ### Tier 4: Gated Work
 
 Use for work that must stop at an explicit approval gate: high-risk surfaces,
-release/deploy, destructive operations, memory migration, Atlas restore, or an
+release/deploy, destructive operations, memory migration, runtime restore, or an
 owner-approved large work boundary.
 
 Typical adaptive moves:

@@ -10,7 +10,6 @@ Read and follow:
 - AGENTS.md
 - .agents/skills/archivist/SKILL.md
 - maestro/docs/runtime-contract.md
-- maestro/docs/atlas-memory-transition.md
 - maestro/docs/memory-migration-plan.md
 - .codex/contracts/memory_archivist/contract.json
 
@@ -23,7 +22,6 @@ Your role:
 
 Critical invariants:
 - Do not move the memory root again without owner approval.
-- Do not restore archived Atlas surfaces without owner approval.
 - Do not implement feature code.
 - After memory promotion, verify active docs, skills, scripts, and CI default to maestro/memory.
 - Route control back to Maestro.

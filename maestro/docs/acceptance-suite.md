@@ -41,8 +41,8 @@ engineering path.
 
 1. Old `artifacts/<module>/...` runs are not silently converted.
 2. Legacy `module_orchestrator` remains callable for old runs.
-3. Atlas archive is present under `maestro/archive/final-atlas/` and not active.
-4. `maestro/memory/` is not migrated to `maestro/memory/` without owner approval.
+3. Retired runtime provenance is not reintroduced into the active repository.
+4. `maestro/memory/` is not moved again without owner approval.
 
 ## F. Contract Hygiene
 

@@ -69,7 +69,7 @@ Tracked doc:
 
 Observed drift:
 
-- It now references Atlas routing through the `maestro/memory` read order.
+- It now references retired runtime routing through the `maestro/memory` read order.
 - Root repository guidance defines the active Codex-native runtime and this local `maestro/memory` overlay is the compact retrieval layer.
 
 Current read rule:

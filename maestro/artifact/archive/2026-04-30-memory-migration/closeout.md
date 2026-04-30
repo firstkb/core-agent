@@ -16,12 +16,11 @@ Durable agent memory was migrated from legacy `ai-memory/` to
 ## Evidence
 
 - `python3 scripts/ai/docs_memory_check.py --check`: passed.
-- `python3 scripts/ai/automation_versions.py --check`: passed.
 - `scripts/ai/preflight.sh`: passed in lite mode.
 
 ## Skipped
 
-- Atlas archive was intentionally skipped.
+- Retired runtime provenance was later moved to owner-managed external storage.
 - Full frontend/backend product checks were not required because this migration
   touched docs, runtime instructions, scripts, and memory paths only.
 

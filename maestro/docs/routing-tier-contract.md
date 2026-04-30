@@ -239,7 +239,7 @@ execution, touches high-risk surfaces, or includes release/deploy work.
 ## Tier 4: Gated Work
 
 Use for high-risk, release, production-impacting, destructive, memory migration,
-Atlas restore, or owner-approval-gated work.
+runtime restore, or owner-approval-gated work.
 
 Typical adaptive moves:
 
@@ -287,7 +287,7 @@ Typical examples:
 - auth, sessions, tenant isolation, permissions, secrets, or billing changes;
 - migrations or destructive operations;
 - release, deploy, workflow dispatch, or production-impacting work;
-- Atlas restore or `maestro/memory` migration;
+- runtime restore or memory-root migration;
 - owner-approved large work where execution must stop at a gate.
 
 Gated work must not run as Tier 0 or Tier 1.

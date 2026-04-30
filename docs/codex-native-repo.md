@@ -121,8 +121,8 @@ Compact operational memory for AI agents.
 - `durable/**` stores current state, decisions, canonical-doc routing, and migrated legacy-memory summaries.
 - `docs/**`, `reference-code/**`, and `lessons/**` store compact governance, reference routing, and reusable lessons.
 
-Atlas-era prompts, templates, run packets, and scaffolder scripts are frozen
-under `maestro/archive/final-atlas/` and are not active memory.
+Retired prompts, templates, run packets, and scaffolder scripts are
+owner-managed outside the active repository and are not active memory.
 
 ### `.agents/skills/`
 
@@ -187,7 +187,6 @@ The former `platform/docs/ai/**` memory layer has been migrated into
 `maestro/memory/` and physically deleted. Use:
 
 - `maestro/memory/durable/legacy-memory-import.md`
-- `maestro/archive/final-atlas/memory-runs/archive/legacy-platform-docs-ai-runs.md`
 - git history only for explicit provenance recovery
 
 Do not recreate `platform/docs/ai/**`.

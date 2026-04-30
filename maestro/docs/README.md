@@ -34,7 +34,6 @@ Supporting model docs:
 - `artifact-model.md`
 - `artifact-file-contract.md`
 - `stage-contract.md`
-- `atlas-memory-transition.md`
 - `memory-migration-plan.md`
 
 Validation and promotion docs:

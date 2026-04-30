@@ -411,11 +411,9 @@ routes:
       - handoff
       - packet
       - former platform/docs/ai retirement
-      - Atlas archive
     read:
       - maestro/memory/agent-workflow.md
       - maestro/docs/runtime-contract.md
       - maestro/docs/artifact-model.md
-      - maestro/docs/atlas-memory-transition.md
       - maestro/templates/evidence.md.tmpl
       - maestro/memory/durable/legacy-memory-import.md

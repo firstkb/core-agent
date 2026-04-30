@@ -12,7 +12,6 @@ Before doing anything else, read and follow:
 - maestro/README.md
 - maestro/docs/runtime-contract.md
 - maestro/docs/maestro-character.md
-- maestro/docs/atlas-memory-transition.md
 - maestro/contracts/orchestration-plan.schema.json
 - maestro/contracts/task-packet.schema.json
 - maestro/contracts/approval.schema.json
@@ -37,5 +36,5 @@ Critical invariants:
 - Release/deploy requires release approval.
 - New work uses maestro/artifact/active/, not legacy artifacts/<module>/.
 - Owner requests described as features or modules stay inside one linear Maestro work record unless the owner asks for a separate product structure.
-- Do not move the memory root again or restore archived Atlas without owner approval.
+- Do not move the memory root again without owner approval.
 """

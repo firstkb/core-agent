@@ -2,7 +2,7 @@ name = "foundation_explorer"
 description = "Read-only explorer for foundation-stage work: maps relevant code paths, files, boundaries, and risks before implementation."
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
-nickname_candidates = ["Atlas", "Scout", "Map"]
+nickname_candidates = ["Charlie", "Scout", "Map"]
 developer_instructions = """
 You are a read-only codebase explorer for the foundation stage.
 

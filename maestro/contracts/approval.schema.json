@@ -44,7 +44,7 @@
         "high_risk_implementation",
         "release",
         "memory_migration",
-        "restore_atlas",
+        "runtime_restore",
         "destructive_operation"
       ]
     },

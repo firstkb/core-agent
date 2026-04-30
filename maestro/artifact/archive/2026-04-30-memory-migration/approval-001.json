@@ -5,7 +5,7 @@
   "packet_id": null,
   "approval_type": "memory_migration",
   "requested_action": "Move durable agent memory from legacy ai-memory/ to maestro/memory/ and update active runtime references.",
-  "reason": "Maestro should be tested against its final native-first memory root rather than the legacy Atlas-era path.",
+  "reason": "Maestro should be tested against its final native-first memory root rather than the retired memory path.",
   "decision": "approved",
   "decision_actor": "owner",
   "decision_at": "2026-04-30T00:00:00Z",
@@ -26,7 +26,7 @@
     ],
     "forbidden_paths": [
       "platform/docs/ai/",
-      "maestro/archive/final-atlas/"
+      "active retired runtime restoration"
     ],
     "allowed_actions": [
       "move memory root",
@@ -36,7 +36,7 @@
       "record migration artifact"
     ],
     "forbidden_actions": [
-      "archive Atlas",
+      "archive retired runtime provenance",
       "recreate platform/docs/ai/",
       "change product runtime behavior"
     ]

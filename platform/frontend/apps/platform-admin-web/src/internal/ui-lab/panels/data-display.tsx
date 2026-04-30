@@ -106,7 +106,7 @@ const tablePaginationPreviewRows = [
   { id: "aurora", note: "3 regions · synced 12m ago", plan: "Enterprise", status: "Healthy" },
   { id: "cinder", note: "1 region · synced 39m ago", plan: "Growth", status: "Trial" },
   { id: "nova", note: "2 regions · synced 3h ago", plan: "Starter", status: "Paused" },
-  { id: "atlas", note: "5 regions · synced 8m ago", plan: "Enterprise", status: "Healthy" },
+  { id: "summit", note: "5 regions · synced 8m ago", plan: "Enterprise", status: "Healthy" },
   { id: "meridian", note: "2 regions · synced 27m ago", plan: "Growth", status: "Trial" },
   { id: "solstice", note: "4 regions · synced 56m ago", plan: "Enterprise", status: "Healthy" },
   { id: "ember", note: "1 region · synced 2h ago", plan: "Starter", status: "Paused" },

@@ -1008,7 +1008,7 @@ Pipeline:
 - Task Intake
 - Research (`Charlie`)
 - Human Approval Gate
-- Design (`Atlas`)
+- Design
 - Human Approval Gate
 - Plan (`Delta`)
 - Human Approval Gate

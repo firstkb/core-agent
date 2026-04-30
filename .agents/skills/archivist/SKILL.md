@@ -33,7 +33,6 @@ Use Archivist when Maestro or the owner needs to audit:
 - Audit first; patch only when explicitly assigned.
 - Do not implement feature/product code.
 - Do not migrate memory without owner approval.
-- Do not restore archived Atlas surfaces without owner approval.
 - Report findings by severity and exact paths.
 
 ## Memory Migration Final Audit
@@ -47,11 +46,11 @@ verify:
 - Remaining `ai-memory` references are archive, provenance, migration notes, or temporary compatibility pointers.
 - `scripts/ai/docs_memory_check.py --check` and `scripts/ai/preflight.sh` passed or have explicit skipped reasons.
 
-## Atlas Archive Audit
+## Retired Surface Audit
 
-When auditing the Atlas retirement, verify:
+When auditing retired runtime surfaces, verify:
 
-- `.agents/skills/atlas/` does not exist as an active skill.
-- `maestro/memory/atlas/`, `maestro/memory/runs/`, `maestro/memory/scripts/`, and `maestro/memory/working/` do not exist.
-- `maestro/archive/final-atlas/` contains the frozen Atlas provenance bundle.
-- Active docs route new work through Maestro, not Atlas.
+- retired skill folders do not exist as active skills;
+- `maestro/memory/runs/`, `maestro/memory/scripts/`, and `maestro/memory/working/` do not exist;
+- retired provenance is not in the active repository unless the owner explicitly restores it;
+- active docs route new work through Maestro.

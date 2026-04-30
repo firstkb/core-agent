@@ -34,14 +34,7 @@ Migration intent:
   and memory update validation.
 - `Scribe` = new run closeout, evidence, and handoff recorder.
 
-An archive copy of the current skill is stored at
-`maestro/archive/current-scribe/SKILL.md` for rename provenance.
-
-## Archived Atlas
-
-Atlas is frozen under `maestro/archive/final-atlas/` as provenance and removed
-from the default engineering work path. It is not part of the active Maestro
-chain and should not be restored without explicit owner approval.
+Rename provenance is available from git history when needed.
 
 ## Maestro
 

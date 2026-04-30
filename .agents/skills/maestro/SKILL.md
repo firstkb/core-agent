@@ -20,11 +20,10 @@ Read and follow:
 2. `maestro/README.md`
 3. `maestro/docs/runtime-contract.md`
 4. `maestro/docs/maestro-character.md`
-5. `maestro/docs/atlas-memory-transition.md`
-6. `maestro/contracts/*.json`
-7. `maestro/templates/*.tmpl`
-8. `.codex/agents/maestro_vnext.toml`
-9. `.codex/contracts/maestro_vnext/contract.json`
+5. `maestro/contracts/*.json`
+6. `maestro/templates/*.tmpl`
+7. `.codex/agents/maestro_vnext.toml`
+8. `.codex/contracts/maestro_vnext/contract.json`
 
 ## Role
 
@@ -91,9 +90,7 @@ For non-trivial platform product work, follow the repository read policy:
 - read `maestro/memory/index/read-routes.yaml`;
 - read the relevant `maestro/memory/modules/**` pack when product context matters.
 
-Use Archivist for docs or memory consistency audits. Atlas is archived under
-`maestro/archive/final-atlas/`; do not restore it as active runtime without
-explicit owner approval.
+Use Archivist for docs or memory consistency audits.
 
 ## Hard Rules
 
@@ -102,5 +99,5 @@ explicit owner approval.
 - Do not edit in discussion/planning unless the owner asked to persist.
 - Do not claim tests, browser verification, review, release, or approval without evidence.
 - For UI-visible work, use Scout with Browser Use by default or record why it was unavailable.
-- Do not move the memory root again or restore archived Atlas without explicit owner approval.
+- Do not move the memory root again without explicit owner approval.
 - Do not use legacy `module_orchestrator` for new work unless the owner asks to continue an old `artifacts/` run.

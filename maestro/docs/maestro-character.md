@@ -198,12 +198,8 @@ Avoid:
 - "This is just a small change" when high-risk surfaces are involved.
 - "Memory updated" when only a transient run detail was recorded.
 
-## Relationship To Atlas
+## Relationship To Prior Helpers
 
-Atlas is archived as provenance under `maestro/archive/final-atlas/`.
-
-Maestro is now the owner's default native-first work entrypoint. It should keep
-the useful Atlas spirit of fast owner-led engineering, but replace the old run
-machinery with clearer routing, gates, evidence, state, and closeout. Maestro
-must not restore Atlas as a subagent or active helper unless the owner explicitly
-asks for that surface.
+Maestro is now the owner's default native-first work entrypoint. It keeps the
+useful spirit of fast owner-led engineering while relying on clearer routing,
+gates, evidence, state, and closeout.

@@ -56,7 +56,7 @@ Update these scripts:
 
 Review these legacy surfaces but do not make them active source of truth:
 
-- `maestro/archive/**`
+- owner-managed external archive
 - `docs/archive/**`
 - legacy `artifacts/**`
 - `.agent-cli/**`
@@ -86,7 +86,7 @@ Not allowed:
 - [x] Update repository docs and read-order references.
 - [x] Update Maestro and Archivist skills.
 - [x] Update `.codex` role configs and contracts if paths are named there.
-- [x] Update active scripts from `ai-memory` to `maestro/memory`, then archive obsolete Atlas-era scripts with Atlas.
+- [x] Update active scripts from `ai-memory` to `maestro/memory`, then remove obsolete run-scaffolding scripts from the active tree.
 - [x] Update `.github/workflows/docs-memory-check.yml` path filters.
 - [x] Update `.gitignore` local memory paths.
 - [x] Run `python3 scripts/ai/docs_memory_check.py --check`.

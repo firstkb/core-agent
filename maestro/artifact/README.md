@@ -67,4 +67,5 @@ handoff-review-lens-001.json
 - Do not store secrets, tokens, cookies, private URLs, or credential-bearing logs.
 - Do not overwrite previous handoffs; append a new numbered attempt.
 - Markdown evidence may summarize command output, but raw sensitive logs must stay out of tracked artifacts.
-- Use `maestro/archive/` only for retired role/skill provenance; it is separate from `maestro/artifact/archive/`.
+- Retired role/skill provenance is owner-managed outside the active repository;
+  it is separate from `maestro/artifact/archive/`.

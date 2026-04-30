@@ -14,7 +14,6 @@ The current AI memory and agent workflow lives under:
 - `.agents/skills/` - repo-local Codex skills, including `maestro`, `charlie`, `grant`, `mason`, `scout`, `lens`, `release`, `scribe`, and `archivist`.
 - `.agent-cli/` - typed lifecycle gateway for module/feature/stage artifacts.
 - `.codex/` - Codex-native runtime wiring, contracts, standards, and templates.
-- `maestro/archive/final-atlas/` - frozen Atlas provenance, not active runtime.
 
 ## Start Here
 

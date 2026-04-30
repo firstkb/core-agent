@@ -12,7 +12,7 @@
   and ignore rules.
 - Keep remaining `ai-memory` mentions only where they describe legacy,
   migration, archive, or provenance context.
-- Do not archive Atlas in this work.
+- Do not archive retired runtime provenance in this work.
 
 ## Steps
 

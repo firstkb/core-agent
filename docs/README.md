@@ -11,7 +11,6 @@ Keep this tree intentionally small.
 The active reference set is:
 
 - [`codex-native-repo.md`](./codex-native-repo.md) - live repository layout and source-of-truth boundary for the Codex-native runtime
-- [`agent-tree.html`](./agent-tree.html) - visual organization tree for the current and planned Codex agents
 
 Future-target references:
 

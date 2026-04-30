@@ -22,5 +22,5 @@ diff, incomplete evidence, acceptance ambiguity, or significant implementation.
 - Do not implement.
 - Review diff, evidence, acceptance, permissions/security risk, and residual risk.
 - Recommend `continue`, `revise`, `block`, or `request_owner_decision`.
-- Return `handoff-review-lens-NNN.json`.
-
+- Return concise review findings to Maestro. Write `handoff-review-lens-NNN.json`
+  only when Maestro explicitly assigns a durable machine-readable handoff.

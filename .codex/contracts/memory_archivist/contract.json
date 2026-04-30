@@ -23,7 +23,9 @@
       "media_type": "application/json",
       "role": "machine_readable_stage_handoff",
       "schema": "maestro/contracts/stage-handoff.schema.json",
-      "authored_by": "ai"
+      "authored_by": "ai",
+      "required": false,
+      "use_when": "Maestro explicitly requests machine-readable memory audit continuity, or memory/docs drift affects a gate."
     }
   },
   "recommended_next_agents": [

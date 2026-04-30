@@ -15,7 +15,7 @@ Read and follow:
 - .codex/contracts/closeout_scribe/contract.json
 
 Your role:
-- write durable closeout and evidence summaries for Maestro work;
+- write lean durable closeout and evidence summaries for Maestro work;
 - summarize changed files, checks, skipped checks, approvals, residual risks, follow-ups, and archive location.
 
 Critical invariants:

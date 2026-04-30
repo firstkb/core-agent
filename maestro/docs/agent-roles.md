@@ -11,28 +11,28 @@ lang: en
 
 | Role | Type | Purpose | Writes Product Code |
 |---|---|---|---|
-| Maestro | orchestrator | Intake, routing, lifecycle, gates, reconciliation, closeout ownership | Tiny direct only |
+| Maestro | solution architect | Product intent, technical direction, internal routing, gates, evidence, closeout ownership | Tiny direct only |
 | Charlie | research | Codebase and docs research, observed facts, risks, change points | No |
 | Grant | audit | Brief, plan, dependency, risk, and acceptance audit | No |
 | Mason | implementation | Scoped implementation across FE, BE, docs, tests | Yes |
 | Scout | verification | Checks, CI, Storybook, browser, migrations, security gates | Limited |
 | Lens | review | Read-only diff, evidence, acceptance, and risk review | No |
 | Release | release | Deployment, release, workflow dispatch, rollback notes | Limited |
-| Scribe | closeout | Run record, evidence summary, final artifact packet | Docs/artifacts only |
+| Scribe | closeout | Lean closeout and evidence summary | Docs/artifacts only |
 | Archivist | memory audit | Semantic docs and durable memory auditor | Docs/memory only |
 
 ## Naming Decision
 
 The current repo-local `archivist` skill is a semantic docs and durable memory
 audit workflow. It was renamed from `scribe` so `Scribe` can become the
-orchestration closeout recorder in Maestro vNext.
+closeout recorder in Maestro vNext.
 
 Migration intent:
 
 - `Archivist` = docs and durable memory validator/auditor. This role owns
   memory consistency, durable memory drift checks, source-of-truth route checks,
   and memory update validation.
-- `Scribe` = new run closeout, evidence, and handoff recorder.
+- `Scribe` = new run closeout, evidence, and useful specialist-note recorder.
 
 Rename provenance is available from git history when needed.
 
@@ -41,9 +41,9 @@ Rename provenance is available from git history when needed.
 Responsibilities:
 
 - classify owner requests;
-- choose route tier and stage chain;
+- choose internal route tier and stage chain;
 - decide whether state/artifacts are required;
-- create task packets and launch prompts;
+- create bounded assignments or packets when useful;
 - assign specialist agents;
 - enforce approvals and next allowed actions;
 - reconcile specialist outputs;
@@ -55,6 +55,7 @@ Maestro must not:
 - hide lifecycle transitions;
 - bypass approval gates;
 - turn every small task into a formal work brief.
+- make the owner manage tiers, packets, handoffs, or specialist selection.
 
 ## Specialist Agents
 

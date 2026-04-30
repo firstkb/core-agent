@@ -18,15 +18,16 @@ help the current route.
 
 ## Canonical Stage Names
 
-Use these stage names in packets, handoffs, and orchestration plans:
+Use these stage names in internal packets, handoffs, and plans when
+machine-readable coordination is useful:
 
 | Stage | Typical Role | Purpose |
 |---|---|---|
 | `intake` | Maestro | Understand owner intent, mode, risk, and next useful action |
 | `research` | Charlie | Find code/docs facts, dependencies, risks, and change points |
-| `planning` | Maestro | Shape route, artifact shape, scope, approvals, and packets |
+| `planning` | Maestro | Shape product understanding, scope, risks, first slice, evidence, and optional internal route |
 | `audit` | Grant | Challenge plan, risk, acceptance, dependency order, and gates |
-| `approval` | Owner/Maestro | Capture machine-readable approval records |
+| `approval` | Owner/Maestro | Capture real gate decisions when required |
 | `implementation` | Mason or Maestro | Apply scoped changes |
 | `verification` | Scout | Run checks and collect evidence |
 | `review` | Lens | Read-only review of diff, evidence, security, and acceptance |
@@ -46,17 +47,19 @@ Use these stage names in packets, handoffs, and orchestration plans:
 | `T4_gated` | `intake`, research/audit as needed, approval, implementation, verification, review, optional release, closeout |
 
 High-risk work must not enter implementation or release without the required
-`approval-*.json` records.
+gate decision and `approval-*.json` record.
 
 ## Stage Attempt Rules
 
-- Stage attempts are append-only.
+- Stage attempts are append-only only when durable auditability matters.
 - A stage agent may recommend the next action but does not advance lifecycle.
 - Maestro records transitions in conversation or artifacts when persistence is useful.
 - Failed, blocked, skipped, and partially verified stages must be explicit.
-- Handoffs use `handoff-<stage>-<role>-NNN.json`.
+- Handoffs use `handoff-<stage>-<role>-NNN.json` when machine-readable
+  handoff is useful.
 - Specialist output that changes next action, approval readiness, risk, or scope
-  must be persisted as a handoff artifact.
+  must be persisted in `work.md`, `evidence.md`, an agent note, or a handoff
+  artifact.
 
 ## Stage Inputs And Outputs
 
@@ -64,53 +67,60 @@ High-risk work must not enter implementation or release without the required
 
 Input: owner intent, route notes, target files/docs when known.
 
-Output: `handoff-research-charlie-NNN.json` with observed facts, inferences,
-evidence refs, risks, and recommended next action.
+Output: observed facts, inferences, evidence refs, risks, and recommended next
+action. Use `handoff-research-charlie-NNN.json` only when machine-readable
+research continuity is useful.
 
 ### `planning`
 
 Input: owner request, research handoff when available, relevant repo contracts.
 
-Output: `intent.md`, `plan.md`, `task.md`, and/or `packet.md` when persistence
-or delegation is useful.
+Output: `work.md` when persistence is useful, with optional expanded
+`intent.md`, `plan.md`, `task.md`, and/or `packet.md` only when they improve
+continuation, delegation, or auditability.
 
 ### `audit`
 
-Input: plan, brief, task packet, risk model, approval policy, acceptance checks.
+Input: plan, brief, assignment, risk model, approval policy, acceptance checks.
 
-Output: `handoff-audit-grant-NNN.json` with `continue`, `revise`, `block`, or
-`request_owner_decision` recommendation. Grant owns this audit handoff; Maestro
-may summarize it, revise `plan.md`, and record `Audit Status`, but cannot treat
-the audit as durable without the handoff.
+Output: durable audit evidence with `continue`, `revise`, `block`, or
+`request_owner_decision` recommendation. Use `handoff-audit-grant-NNN.json`
+when machine-readable auditability is needed; otherwise a compact agent note may
+be enough. Maestro may summarize it, revise the work note, and record audit
+status when useful.
 
 ### `approval`
 
 Input: requested action, risk reason, scope, expected evidence, decision actor.
 
-Output: `approval-NNN.json` validated by `maestro/contracts/approval.schema.json`.
-Markdown approval notes are optional and not sufficient for gate checking.
+Output: `approval-NNN.json` validated by `maestro/contracts/approval.schema.json`
+for real gates. Markdown approval notes are optional and not sufficient for high
+risk gate checking.
 
 ### `implementation`
 
-Input: task packet with allowed paths, forbidden paths, approvals, evidence
+Input: assignment with allowed paths, forbidden paths, approvals, evidence
 expectations, and stop conditions.
 
-Output: changed files and `handoff-implementation-mason-NNN.json` when staged.
+Output: changed files and evidence. Use `handoff-implementation-mason-NNN.json`
+only when staged machine-readable handoff is useful.
 
 ### `verification`
 
 Input: implementation handoff, acceptance checks, evidence expectations.
 
-Output: `handoff-verification-scout-NNN.json` and evidence records for commands,
-tests, browser checks, CI, migrations, security checks, or skipped checks.
+Output: evidence records for commands, tests, browser checks, CI, migrations,
+security checks, or skipped checks. Use `handoff-verification-scout-NNN.json`
+when independent machine-readable verification is useful.
 
 ### `review`
 
 Input: diff, implementation handoff, verification evidence, acceptance criteria,
 risk notes, and approval refs when relevant.
 
-Output: `handoff-review-lens-NNN.json` with a recommendation to continue,
-revise, block, request owner decision, or close.
+Output: review findings with a recommendation to continue, revise, block,
+request owner decision, or close. Use `handoff-review-lens-NNN.json` when
+machine-readable review is useful.
 
 ### `release`
 
@@ -121,7 +131,7 @@ command/workflow result, rollback or recovery notes.
 
 ### `closeout`
 
-Input: stage handoffs, evidence refs, changed files, skipped checks, approvals,
+Input: work notes, stage handoffs when present, evidence refs, changed files, skipped checks, approvals,
 residual risks, and follow-ups.
 
 Output: `closeout.md` and optional JSON closeout summary validated by

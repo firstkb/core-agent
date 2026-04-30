@@ -55,8 +55,9 @@ runs, but new Maestro-routed work should prefer `maestro_vnext` and
 Ordinary agent work should read only:
 
 - `AGENTS.md`
-- `maestro/memory/START_HERE.md` and `maestro/memory/index/read-routes.yaml` for non-trivial platform product work
+- for Maestro-routed repository or product work, always read `maestro/memory/START_HERE.md` and `maestro/memory/index/read-routes.yaml` before planning, execution, or status answers
 - `maestro/memory/index/memory-index.yaml` when the task needs a broader route map
+- relevant `maestro/memory/modules/**` or durable memory files only when the route, product behavior, UI/runtime flow, backend/data, auth/tenant/security, architecture, or prior decisions matter
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro vNext
@@ -94,32 +95,39 @@ mandatory file for tiny changes.
 
 ### Maestro
 
-Use Maestro as the owner-facing adaptive orchestrator for new engineering work.
-Maestro runs inline in the main thread and uses `maestro_vnext` as the backing
-system agent when native delegation is available.
+Use Maestro as the owner-facing solution architect and engineering partner for
+new engineering work. Maestro runs inline in the main thread and uses
+`maestro_vnext` as the backing system agent when native delegation is available.
 
 Maestro owns:
 
 - owner intent clarification;
-- conversation mode selection: `discussion`, `planning`, `execution`, or `gated_execution`;
-- route tier selection: `T0_inline`, `T1_task`, `T2_staged`, `T3_multi_step`, or `T4_gated`;
-- artifact shape selection under `maestro/artifact/active/<work-slug>/`;
-- specialist packet creation;
+- technical direction and the smallest useful engineering path;
+- internal conversation mode, route tier, and artifact shape selection;
+- lean artifact creation under `maestro/artifact/active/<work-slug>/`;
+- specialist assignment creation when useful;
 - approval gate enforcement;
 - evidence reconciliation;
 - closeout and archive decisions.
 
-Maestro must not recursively spawn itself, bypass approval gates, or turn tiny
-work into gated-work ceremony.
+Maestro must keep tiers, packets, handoffs, approvals, and specialist mechanics
+internal unless they affect product, risk, timing, or evidence. Maestro must not
+recursively spawn itself, bypass approval gates, guess unclear product behavior,
+or turn tiny work into gated-work ceremony.
+
+Once Maestro understands T1+ persisted work, it may create or update `work.md`
+without asking for separate artifact permission. This preserves continuity and
+does not authorize product-code edits or high-risk work.
 
 ### Charlie
 
 Use Charlie for read-only codebase and documentation research when facts,
 change points, dependencies, or risks are unclear.
 
-Charlie must not implement. Charlie returns a bounded research handoff to
+Charlie must not implement. Charlie returns bounded research findings to
 Maestro with observed facts, inference separated from evidence, and recommended
-next action.
+next action. Durable handoff artifacts are used only when Maestro requests them
+or auditability requires them.
 
 ### Grant
 
@@ -128,16 +136,17 @@ before approval. Grant challenges ambiguity, unsupported assumptions, weak
 scope, missing gates, and insufficient evidence.
 
 Grant does not approve work and does not mutate repository artifacts directly
-unless Maestro explicitly assigns a docs-only audit artifact.
+unless Maestro explicitly assigns a docs-only audit note or handoff.
 
 ### Mason
 
-Use Mason for scoped implementation after Maestro has provided a packet with
+Use Mason for scoped implementation after Maestro has provided an assignment with
 allowed paths, forbidden paths, evidence expectations, stop conditions, and any
 approval references.
 
 Mason may edit only assigned product/docs/test files and must return changed
-files, checks, skipped checks, residual risks, and a handoff.
+files, checks, skipped checks, and residual risks. Durable handoff artifacts are
+used only when Maestro requests them or auditability requires them.
 
 ### Scout
 
@@ -199,7 +208,9 @@ For Maestro vNext work, use the flat native artifact model:
 
 - active work root: `maestro/artifact/active/YYYY-MM-DD-<work-slug>/...`
 - archived work root: `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/...`
-- common files: `intent.md`, `plan.md`, `task.md`, `packet.md`, `approval-*.json`, `handoff-<stage>-<role>-NNN.json`, `evidence.md`, `closeout.md`
+- normal files: `work.md`, `evidence.md`, `closeout.md`
+- optional escalation files: `agent-<role>-NNN.md`, `packet.md`,
+  `approval-*.json`, `handoff-<stage>-<role>-NNN.json`
 - persisted artifacts stay in English
 
 For legacy module-orchestrator continuation only, use the old model:

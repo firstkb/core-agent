@@ -12,6 +12,11 @@ lang: en
 This document defines how Maestro chooses the lightest sufficient route for an
 owner request.
 
+Routing tiers are internal operating mechanics. Maestro should not expose route
+tier labels to the owner by default. Owner-facing communication should describe
+the understood goal, recommended first step, real risks, evidence expectation,
+and what will not be touched yet.
+
 The goal is to keep Maestro fast for small work while preserving enough
 structure for multi-step, approval-gated, high-risk, and release work.
 
@@ -22,6 +27,9 @@ approval gates, and handoff quality.
 
 Do not create a work brief, nested decomposition, stage attempts, snapshots, or
 multiple agent runs unless the request actually needs them.
+
+If the task is not fully understood, clarify before execution. Do not pick a
+route to avoid asking a product or acceptance question.
 
 Arrow diagrams in this document are shorthand for possible adaptive moves. They
 are not automatic chains that must run end to end.
@@ -110,7 +118,7 @@ Typical adaptive moves:
 
 ```text
 Maestro
-  -> task packet
+  -> compact work note when persisted
   -> Mason or current chat
   -> focused checks
   -> closeout
@@ -126,8 +134,7 @@ Default artifact shape:
 
 ```text
 maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  task.md
+  work.md
   closeout.md
 ```
 
@@ -149,7 +156,7 @@ Typical adaptive moves:
 
 ```text
 Maestro
-  -> task packet
+  -> scoped assignment
   -> Charlie when research is useful
   -> Mason
   -> Scout when verification is material
@@ -175,13 +182,10 @@ Default artifact shape:
 
 ```text
 maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  plan.md
-  task.md
-  packet.md
-  handoff-<stage>-<role>-001.json
+  work.md
   evidence.md
   closeout.md
+  agent-<role>-001.md or handoff-<stage>-<role>-001.json only when useful
 ```
 
 Typical examples:
@@ -221,17 +225,15 @@ Default artifact shape:
 
 ```text
 maestro/artifact/active/YYYY-MM-DD-<work-slug>/
-  intent.md
-  plan.md
-  task.md
-  packet.md
-  handoff-<stage>-<role>-001.json
+  work.md
   evidence.md
   closeout.md
+  agent notes, packets, or handoffs only when useful
 ```
 
-Keep all decomposition inside `plan.md` unless the owner explicitly asks for a
-larger product structure. Small work should stay in Tier 1 or Tier 2.
+Keep all decomposition inside `work.md` unless the owner explicitly asks for a
+larger product structure or a separate expanded `plan.md` improves
+continuation. Small work should stay in Tier 1 or Tier 2.
 
 Escalate to Tier 4 when the owner goal requires explicit approval before
 execution, touches high-risk surfaces, or includes release/deploy work.
@@ -263,8 +265,8 @@ State and artifacts:
 
 Required approvals:
 
-- `owner_plan_approval` when a plan/brief must be accepted;
-- `owner_execution_approval` when execution is gated by owner decision;
+- owner decision when a plan/brief must be accepted;
+- owner decision when execution crosses a real product/risk boundary;
 - `high_risk_implementation`
 - `security`
 - `migration`
@@ -343,7 +345,7 @@ De-escalate the route when:
 
 ## Required Intake Output
 
-At intake Maestro should report:
+Internally at intake Maestro should determine:
 
 - `route_tier`;
 - `artifact_shape`;
@@ -354,5 +356,16 @@ At intake Maestro should report:
 - evidence required;
 - next allowed action.
 
-This intake output should map directly to
-`maestro/contracts/orchestration-plan.schema.json`.
+Owner-facing output should not dump this list by default. It should compress it
+into a Quiet Decision Frame:
+
+- what Maestro understood;
+- recommended first step;
+- real risks or owner decisions;
+- what Maestro will handle internally;
+- evidence expectation;
+- what is not touched yet.
+
+The internal output may still map to
+`maestro/contracts/orchestration-plan.schema.json` when machine-readable
+planning is useful.

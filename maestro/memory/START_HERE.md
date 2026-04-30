@@ -24,19 +24,29 @@ Last updated: 2026-04-25
 - Repo/runtime agent rules live in `AGENTS.md`, `platform/AGENTS.md`, `.agents/**`, and `.codex/**`.
 - Historical legacy memory from `platform/docs/ai/**` is deleted and recoverable only through summaries or git history.
 
-## Default Read Order
+## Maestro Baseline Read Order
 
 1. `AGENTS.md`
 2. `platform/AGENTS.md`
 3. `maestro/memory/START_HERE.md`
 4. `maestro/memory/index/read-routes.yaml`
-5. `maestro/memory/durable/current-state.md`
-6. relevant module memory under `maestro/memory/modules/**`
-7. relevant canonical FE/BE docs
-8. exact source files needed for the task
 
-Read `maestro/memory/index/memory-index.yaml` when you need a broader route map or
-the task spans multiple modules.
+For Maestro-routed repository or product work, steps 3 and 4 are always the
+compact memory baseline before planning, execution, or status answers.
+
+Then deepen only as needed:
+
+- read `maestro/memory/durable/current-state.md` when the task depends on what
+  exists now, active product direction, or current risks;
+- read `maestro/memory/durable/module-index.md` or relevant module memory under
+  `maestro/memory/modules/**` when the route points to a specific domain,
+  frontend/backend surface, or tool;
+- read `maestro/memory/index/memory-index.yaml` when you need a broader route
+  map or the task spans multiple modules;
+- read relevant canonical FE/BE docs and exact source files needed for the task.
+
+`maestro/memory/index/memory-index.yaml` is broader routing, not a default
+first-read file.
 
 ## Active Surfaces
 

@@ -17,20 +17,28 @@ This document defines the file contract for flat Maestro work records under
 
 - Work folders are one level deep under `active/` or `archive/`.
 - Use the smallest useful `artifact_shape`.
-- Handoffs are append-by-new-file.
+- Handoffs are append-by-new-file only when machine-readable handoff is needed.
 - Evidence and logs must not contain secrets.
 - `closeout.md` may be amended only by appending a clearly marked correction.
+- Normal persisted work should prefer `work.md`, `evidence.md`, and
+  `closeout.md`.
+- For T1+ persisted work, Maestro creates or updates `work.md` once the task is
+  understood; the owner should not need to approve artifact creation as a
+  separate process step.
+- Product-code edits and high-risk gates still follow conversation mode and
+  approval rules.
 
 ## Shape Matrix
 
 | File | none | lightweight | staged | multi_step | full |
 |---|---:|---:|---:|---:|---:|
-| `intent.md` | no | yes | yes | yes | yes |
-| `plan.md` | no | optional | optional | yes | yes |
+| `work.md` | no | yes | yes | yes | yes |
+| `intent.md` / `plan.md` | no | optional legacy/expanded | optional legacy/expanded | optional expanded | optional expanded |
 | `task.md` | no | optional | yes | yes | yes |
-| `packet.md` | no | no | yes | yes | yes |
-| `approval-*.json` | no | no | optional | optional | yes |
-| `handoff-<stage>-<role>-NNN.json` | no | no | yes | yes | yes |
+| `packet.md` | no | no | optional | optional | optional |
+| `approval-*.json` | no | no | no unless gated | no unless gated | yes for real gates |
+| `agent-<role>-NNN.md` | no | no | optional | optional | optional |
+| `handoff-<stage>-<role>-NNN.json` | no | no | optional | optional | optional/required when gated |
 | `evidence.md` | no | optional | yes | yes | yes |
 | `review.md` | no | no | optional | optional | optional |
 | `release.md` | no | no | no | optional | optional |
@@ -38,10 +46,17 @@ This document defines the file contract for flat Maestro work records under
 
 ## Required File Semantics
 
+### `work.md`
+
+Captures the owner request, Maestro's understanding, current status, agreed
+scope, decisions, plan, risks, agent/tool notes, and next useful action. Keep it
+compact and owner-readable. It is the preferred continuation file.
+
 ### `intent.md`
 
 Captures owner request, conversation mode, route tier, current goal, scope notes,
-and next useful action. Keep it compact; do not turn it into a transcript.
+and next useful action. This remains valid for expanded or legacy artifacts, but
+new normal work should prefer `work.md`.
 
 ### `plan.md`
 
@@ -63,28 +78,42 @@ assigned stage/role, path scope, approvals, evidence expectations, stop
 conditions, and handoff expectations. Machine-readable packets should validate
 against `maestro/contracts/task-packet.schema.json`.
 
+Do not create packet files for every internal step. Use them when delegation,
+resume, or auditability needs a bounded machine-readable assignment.
+
 ### `approval-*.json`
 
 Captures approval gates. High-risk implementation, release, memory migration,
 runtime restore, destructive operations, and production-impacting actions require
 machine-readable approval. Human Markdown notes are optional and not sufficient.
 
+Do not create approval records for ordinary specialist launch, low-risk
+follow-up fixes inside accepted scope, checks, Browser Use, or evidence updates.
+
+### `agent-<role>-NNN.md`
+
+Optional human-readable specialist note. Use when a specialist result is useful
+for continuation but does not need machine-readable handoff structure.
+
 ### `handoff-<stage>-<role>-NNN.json`
 
 Captures a specialist stage result. It must validate against
 `maestro/contracts/stage-handoff.schema.json` when used as a machine-readable
 handoff. Any specialist result that changes next action, gate readiness, risk,
-or scope must be persisted as a handoff before Maestro treats it as durable
-state. Grant audit output uses `handoff-audit-grant-NNN.json`.
+or scope must be persisted in `work.md`, `evidence.md`, an agent note, or a
+handoff before Maestro treats it as durable state.
+
+For low-risk normal work, prefer `agent-<role>-NNN.md` or a short note in
+`work.md`/`evidence.md` unless a machine-readable handoff adds real value.
 
 ## Resume Read Order
 
 When resuming from an artifact folder, read in this order when present:
 
-1. `intent.md`
-2. `plan.md`
+1. `work.md`
+2. legacy or expanded `intent.md` / `plan.md`
 3. `approval-*.json`
-4. latest `handoff-*.json`
+4. latest `agent-*.md` and `handoff-*.json`
 5. `evidence.md`
 6. `closeout.md`
 

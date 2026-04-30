@@ -5,16 +5,23 @@ doc_type: orchestration_contract
 lang: en
 ---
 
-# Maestro vNext Orchestration Contract
+# Maestro vNext Internal Coordination Contract
 
 ## Purpose
 
-Maestro vNext is the universal owner-facing orchestration entrypoint.
+Maestro vNext is the universal owner-facing solution architect and engineering
+partner. This document describes internal coordination mechanics, not the
+owner-facing UX.
 
-The owner sends work to Maestro, not directly to individual specialist agents.
-Maestro classifies the request, selects the lightest sufficient execution path,
-opens a durable record only when it is useful, assigns specialist agents when
-separate context is valuable, reconciles outputs, and owns closeout.
+The owner sends product work to Maestro, not directly to individual specialist
+agents. Maestro classifies the request internally, selects the lightest
+sufficient execution path, opens a durable record only when it is useful,
+assigns specialist agents when separate context is valuable, reconciles
+outputs, and owns closeout.
+
+Maestro should not expose tier, packet, handoff, approval, or agent mechanics to
+the owner by default. Expose them only when the owner asks, an artifact resume
+requires precision, or a real risk/evidence gate must be clear.
 
 Maestro operates through the adaptive loop defined in
 `adaptive-loop-contract.md`. The canonical posture is to decide the next useful
@@ -27,7 +34,7 @@ are not automatic chains that must run end to end.
 
 - Retired runtime provenance is owner-managed outside the active repository and
   is outside the active Maestro chain.
-- Maestro owns orchestration decisions, not product implementation by default.
+- Maestro owns internal coordination decisions, not product implementation by default.
 - Maestro must understand whether the owner is discussing, planning, executing,
   or requesting gated execution before changing files.
 - Tiny direct work must not be forced into work-brief ceremony.
@@ -67,7 +74,7 @@ State:
 - no work brief;
 - no persisted run unless the owner requests it;
 - concise evidence in final response.
-- artifact shape: none by default, or lightweight `intent.md + closeout.md`
+- artifact shape: none by default, or lightweight `work.md + closeout.md`
   when the owner wants a durable record.
 
 ### Tier 1: Lightweight Task
@@ -78,7 +85,7 @@ Typical adaptive moves:
 
 ```text
 Maestro
-  -> task packet
+  -> scoped assignment
   -> Mason
   -> Scout when checks need separate handling
   -> Lens when review is material
@@ -89,9 +96,9 @@ State:
 
 - task is first-class;
 - stages are optional but recommended when the task needs verification or review.
-- artifact shape: `intent.md + task.md + closeout.md` for simple tasks,
-  expanded with `packet.md`, `handoff-<stage>-<role>-NNN.json`, and `evidence.md` only
-  when handoff, verification, or review needs it.
+- artifact shape: `work.md + closeout.md` for simple tasks, expanded with
+  specialist notes, packet/handoff JSON, and `evidence.md` only when
+  continuation, verification, or review needs it.
 
 ### Tier 2: Staged Task
 
@@ -103,7 +110,7 @@ Typical adaptive moves:
 ```text
 Maestro
   -> Charlie when research is useful
-  -> task packet
+  -> scoped assignment
   -> Mason
   -> Scout
   -> Lens
@@ -137,8 +144,8 @@ Maestro
 State:
 
 - work stays inside one linear Maestro artifact folder;
-- decomposition stays in `plan.md` unless the owner asks for a larger product
-  structure;
+- decomposition stays in `work.md` unless the owner asks for a larger product
+  structure or a separate expanded `plan.md` improves continuation;
 - execution begins only after required approvals are satisfied;
 - artifact shape: `multi_step`, expanded only when needed.
 

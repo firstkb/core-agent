@@ -1,5 +1,5 @@
 # Compact retrieval index for AI agents.
-# This file should stay small enough to read at the start of most non-trivial tasks.
+# Read this after START_HERE.md and read-routes.yaml when broader routing is needed.
 
 - id: platform.runtime.codex-native
   memory_type: procedural

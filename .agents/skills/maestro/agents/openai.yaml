@@ -1,8 +1,8 @@
 interface:
   display_name: "Maestro"
-  short_description: "Owner-facing adaptive orchestration"
+  short_description: "Owner-facing solution architect"
   brand_color: "#C2410C"
-  default_prompt: "Use $maestro to route work, delegate only when useful, enforce gates, and reconcile evidence."
+  default_prompt: "Use $maestro to understand product intent, choose the smallest safe engineering path, use agents/tools when useful, verify evidence, and return only for real decisions."
 
 policy:
   allow_implicit_invocation: false

@@ -33,7 +33,7 @@ approval safety, or handoff quality.
 | Tiny direct | T0 Inline | Maestro inline | focused check |
 | Lightweight task | T1 Task | Mason only when inline work is not enough; Scribe optional | closeout when persisted |
 | Staged task | T2 Staged | Mason, then Scout or Lens only when evidence/review matters; Scribe when persisted | evidence before closeout |
-| UI task | T2 or T3 | Charlie optional, Mason with UI skill, Scout with browser-use, Lens only when useful | route, viewport, states, visual notes |
+| UI task | T2 or T3 | Maestro uses Browser Use personally; Charlie/Mason/Scout/Lens only when useful | route, viewport, states, visual notes |
 | Multi-step work | T3 Multi-Step | Charlie for unknowns, Grant for plan risk, Mason per slice, Scout/Lens/Scribe as needed | approval only when scope/risk requires it |
 | Gated work | T4 Gated | Charlie, Grant, owner/security/release approval, Mason, Scout, Lens, Release only if approved | required approvals and evidence |
 | Docs/memory work | T1-T3 | Mason or current chat, then Archivist when consistency matters | docs/memory consistency check |
@@ -56,7 +56,7 @@ wants a durable record or when evidence should survive the chat.
 
 ## Lightweight Task
 
-Use when one bounded change benefits from a task packet or closeout but does not
+Use when one bounded change benefits from a scoped assignment or closeout but does not
 need staged handoff.
 
 Possible moves: Maestro handles it inline, or calls Mason when the edit benefits
@@ -84,21 +84,23 @@ verification.
 
 Possible moves: Charlie researches only when the UI path is unclear, Mason uses
 the UI skill or available web-app/frontend plugin capabilities when design or
-React implementation decisions matter, Scout performs browser or visual review
-with the `browser-use` skill, Lens reviews only when risk remains, and Scribe
-records closeout when useful.
+React implementation decisions matter, Scout can supplement browser or visual
+review, Lens reviews only when risk remains, and Scribe records closeout when
+useful.
 
 Plugins can help scaffold, edit, inspect, or review UI, but Maestro still routes
 by capability and repository context. Do not treat plugin output as accepted
 until the actual route, viewport, and states are checked.
 
-UI-visible work requires Scout with `browser-use` by default. If Browser Use is
-unavailable or cannot reach the target, Maestro must record the reason and the
-fallback evidence used before closeout.
+UI-visible work requires Maestro to personally use Browser Use when available.
+If Browser Use is unavailable or cannot reach the target, Maestro must record
+the reason and the fallback evidence used before closeout. Scout can add
+independent verification, but it does not replace Maestro's owner-facing UI
+quality responsibility.
 
 Required evidence:
 
-- Browser Use skill used, or explicit reason it was skipped;
+- Browser Use used by Maestro, or explicit reason it was skipped;
 - route checked;
 - viewport checked;
 - relevant states checked;

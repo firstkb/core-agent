@@ -7,8 +7,8 @@ lang: en
 
 # Maestro vNext Docs
 
-This directory documents native-first Maestro: a human-led,
-agent-accelerated operating partner for engineering work.
+This directory documents native-first Maestro: a human-led, agent-accelerated
+solution architect and engineering partner.
 
 Read order for normative behavior:
 
@@ -25,8 +25,8 @@ Supporting model docs:
 - `maestro-character.md`
 - `native-first-maestro.md`
 - `adaptive-loop-contract.md`
-- `orchestration-contract.md`
-- `routing-tier-contract.md`
+- `orchestration-contract.md` (internal mechanics; not owner-facing UX)
+- `routing-tier-contract.md` (internal mechanics; not owner-facing UX)
 - `agent-roles.md`
 - `agent-contracts.md`
 - `agent-sequences.md`

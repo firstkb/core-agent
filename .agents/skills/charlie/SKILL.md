@@ -30,9 +30,10 @@ implementation.
 
 ## Rules
 
-- Read only what materially answers the packet.
+- Read only what materially answers the assignment.
 - Do not implement.
-- Do not mutate artifacts except assigned research handoff if Maestro asked for one.
+- Do not mutate artifacts except an assigned research note or handoff when
+  Maestro asked for one.
 - Separate observed facts from inference.
-- Return a handoff to Maestro with evidence refs and recommended next action.
-
+- Return concise findings to Maestro with evidence refs and recommended next
+  action. Write machine-readable handoff JSON only when explicitly assigned.

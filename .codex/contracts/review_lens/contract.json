@@ -23,7 +23,9 @@
       "media_type": "application/json",
       "role": "machine_readable_stage_handoff",
       "schema": "maestro/contracts/stage-handoff.schema.json",
-      "authored_by": "ai"
+      "authored_by": "ai",
+      "required": false,
+      "use_when": "Maestro explicitly requests machine-readable review continuity, or review affects risk/closeout readiness."
     }
   },
   "recommended_next_agents": [

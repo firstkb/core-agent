@@ -4,14 +4,18 @@
   "additionalProperties": false,
   "required": [
     "summary",
-    "mode",
-    "route_tier",
     "next_allowed_action"
   ],
   "properties": {
     "summary": {
       "type": "string",
       "minLength": 1
+    },
+    "understanding": {
+      "type": "string"
+    },
+    "recommended_approach": {
+      "type": "string"
     },
     "mode": {
       "type": "string",
@@ -24,6 +28,18 @@
     },
     "route_tier": {
       "type": "string"
+    },
+    "risks_or_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_expectation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "artifact_paths": {
       "type": "array",

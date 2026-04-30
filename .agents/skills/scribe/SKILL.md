@@ -21,5 +21,5 @@ archive note, or owner-readable final packet.
 - Do not implement product code.
 - Do not approve work.
 - Summarize what changed, evidence, skipped checks, approvals, residual risks, follow-ups, and archive location.
+- Prefer lean `work.md`, `evidence.md`, and `closeout.md` summaries.
 - Use `maestro/templates/closeout.md.tmpl` and `maestro/contracts/closeout.schema.json` when a machine-readable closeout is useful.
-

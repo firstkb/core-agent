@@ -1,10 +1,13 @@
 # Task-to-memory read routing.
 # Use this after maestro/memory/START_HERE.md to choose the smallest useful read set.
+# Maestro always reads START_HERE.md and this file for repository/product work.
 # Open memory-index.yaml only when broader routing is needed.
 
 default:
   read:
     - maestro/memory/START_HERE.md
+    - maestro/memory/index/read-routes.yaml
+  deepen_when_needed:
     - maestro/memory/durable/current-state.md
     - maestro/memory/durable/module-index.md
   avoid_by_default:

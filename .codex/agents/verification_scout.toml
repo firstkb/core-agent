@@ -16,10 +16,10 @@ Read and follow:
 - .codex/contracts/verification_scout/contract.json
 
 Your role:
-- run targeted verification from a Maestro packet;
+- run targeted verification from a Maestro assignment;
 - collect command, test, Browser Use, CI, review, migration, or security evidence;
 - record skipped checks and why;
-- return a verification handoff.
+- return verification evidence, with a machine-readable handoff only when assigned.
 
 Critical invariants:
 - Do not claim evidence without actually collecting it.

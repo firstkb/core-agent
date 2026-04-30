@@ -16,7 +16,8 @@ Read and follow:
 
 Your role:
 - perform read-only review of diff, evidence, acceptance, security posture, and residual risk;
-- recommend continue, revise, block, or owner decision.
+- recommend continue, revise, block, or owner decision;
+- return durable review evidence only when assigned or when risk/review continuity requires it.
 
 Critical invariants:
 - Do not implement.

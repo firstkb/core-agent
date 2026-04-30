@@ -17,18 +17,19 @@ handoff improves the result.
 
 ## Shared Agent Rules
 
-- Agents receive bounded packets from Maestro.
+- Agents receive bounded assignments from Maestro.
 - Agents must stay inside assigned scope.
-- Agents must return structured handoff evidence.
+- Agents must return useful evidence; machine-readable handoff evidence is used
+  when resume, audit, or accountability needs it.
 - Agents do not silently advance lifecycle state.
 - Agents do not bypass approval gates.
-- Agents do not mutate orchestration state by inventing their own lifecycle.
-- Agents write only assigned code/docs/artifacts and return handoff evidence.
+- Agents do not mutate Maestro state by inventing their own lifecycle.
+- Agents write only assigned code/docs/artifacts and return scoped evidence.
 - Agents may recommend next stages but Maestro decides transitions.
 
-## Standard Input Packet
+## Standard Assignment
 
-Every specialist packet should include:
+Every specialist assignment should include:
 
 - work id;
 - route tier;
@@ -42,10 +43,10 @@ Every specialist packet should include:
 - required checks;
 - evidence expectations;
 - approval gates;
-- expected handoff;
+- expected output or handoff;
 - next allowed action.
 
-## Standard Handoff
+## Standard Output
 
 Every staged specialist should return:
 
@@ -61,6 +62,10 @@ Every staged specialist should return:
 Machine-readable handoff uses:
 
 - `maestro/contracts/stage-handoff.schema.json`
+
+Use machine-readable handoff only when it adds real continuation, audit, or
+accountability value. Otherwise a compact `agent-<role>-NNN.md` note or an
+entry in `work.md`/`evidence.md` is enough.
 
 ## Spawn Policy
 
@@ -84,8 +89,9 @@ thread focused on decisions, summaries, evidence, and next actions.
 
 ## Invocation Contract
 
-Specialists should be launched with self-contained packets. A specialist must
-not require the full owner chat to understand the task.
+Specialists should be launched with self-contained assignments. A specialist
+must not require the full owner chat to understand the task. Machine-readable
+packets are used only when resume, auditability, or accountability needs them.
 
 Invocation payload includes:
 
@@ -94,30 +100,30 @@ Invocation payload includes:
 - files to read;
 - allowed writes and forbidden paths;
 - approval state;
-- expected handoff file;
+- expected output or handoff file;
 - evidence expectations;
 - stop conditions.
 
-Default launch is non-forked explicit packet invocation. Full-context or
+Default launch is non-forked explicit assignment invocation. Full-context or
 forked-context launch is exceptional and requires a concrete reason. If the
-explicit packet is insufficient, stop and improve the packet or ask the owner
-for the missing context instead of relying on hidden chat state. Specialists
-then work from the packet and return the expected handoff.
+explicit assignment is insufficient, stop and improve the assignment or ask the
+owner for the missing context instead of relying on hidden chat state.
+Specialists then work from the assignment and return the expected output.
 
-## Assigned Packet Binding
+## Assigned Work Binding
 
-Approval unlocks packet scope but does not change the assigned executor.
+Approval unlocks assignment scope but does not change the assigned executor.
 
-If a packet is assigned to a role, only that role may execute it and write the
-matching handoff. Maestro cannot silently substitute itself or another
+If an assignment is assigned to a role, only that role may execute it and write
+matching durable evidence. Maestro cannot silently substitute itself or another
 specialist. Reassignment requires owner acknowledgement and an updated or
-replacement packet. Handoff role must match the actual executor.
+replacement assignment. Durable evidence role must match the actual executor.
 
 ## Maestro
 
 Role:
 
-- owner-facing orchestrator and lifecycle owner.
+- owner-facing solution architect and lifecycle owner.
 
 Use when:
 
@@ -132,11 +138,12 @@ Allowed stages:
 Allowed writes:
 
 - planning artifacts;
+- `work.md`;
 - `brief.md`;
 - `task.md`;
-- work packets;
-- `packet.md`;
-- orchestration decisions;
+- scoped assignments;
+- `packet.md` when machine-readable assignment is useful;
+- internal coordination decisions;
 - compact closeout for simple work.
 
 Must not:
@@ -165,7 +172,7 @@ Allowed stages:
 
 Allowed writes:
 
-- `handoff-research-charlie-NNN.json`;
+- `agent-charlie-NNN.md` or `handoff-research-charlie-NNN.json` when assigned;
 - evidence notes when assigned.
 
 Must not:
@@ -198,7 +205,7 @@ Allowed stages:
 
 Allowed writes:
 
-- `handoff-audit-grant-NNN.json`;
+- `agent-grant-NNN.md` or `handoff-audit-grant-NNN.json` when assigned;
 - optional reviewer note block when useful for owner readability.
 
 Must not:
@@ -234,7 +241,7 @@ Allowed stages:
 Allowed writes:
 
 - files in assigned scope;
-- `handoff-implementation-mason-NNN.json`;
+- `handoff-implementation-mason-NNN.json` when assigned;
 - local evidence files generated by assigned checks.
 
 Must not:
@@ -263,7 +270,8 @@ Use when:
 - tests, CI, Storybook, browser, visual, security, or migration checks require
   explicit evidence;
 - verification should be independent from implementation.
-- UI-visible work needs Browser Use verification.
+- UI-visible work needs independent Browser Use or visual verification in
+  addition to Maestro's owner-facing Browser Use responsibility.
 
 Allowed stages:
 
@@ -271,7 +279,7 @@ Allowed stages:
 
 Allowed writes:
 
-- `handoff-verification-scout-NNN.json`;
+- `handoff-verification-scout-NNN.json` when assigned;
 - evidence files and links.
 
 Must not:
@@ -306,7 +314,7 @@ Allowed stages:
 
 Allowed writes:
 
-- `handoff-review-lens-NNN.json`;
+- `handoff-review-lens-NNN.json` when assigned;
 - `review.md` when a human-readable review record is useful.
 
 Must not:

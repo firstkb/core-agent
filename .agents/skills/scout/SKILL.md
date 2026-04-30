@@ -24,4 +24,6 @@ security checks, or independent verification after Mason.
 - If Browser Use is unavailable, blocked, or cannot reach the target, record the reason and fallback evidence.
 - Record skipped checks and why.
 - Do not implement broad fixes; return to Maestro or Mason when implementation is needed.
-- Return `handoff-verification-scout-NNN.json`.
+- Return concise verification evidence to Maestro. Write
+  `handoff-verification-scout-NNN.json` only when Maestro explicitly assigns a
+  durable machine-readable handoff.

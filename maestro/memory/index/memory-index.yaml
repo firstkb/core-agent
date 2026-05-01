@@ -51,6 +51,24 @@
     - maestro/memory/durable/legacy-memory-import.md
   last_compacted: 2026-04-25
 
+- id: platform.durable-decisions
+  memory_type: semantic
+  domain: decisions-memory
+  state: landed
+  confidence: doc-confirmed
+  summary: "Durable decisions use a compact index plus topic files. Read the index first; open topic files only when exact decision history or full decision bodies matter."
+  read_when:
+    - "task asks about decisions-log, durable decisions, DEC IDs, decision history, product decisions, workflow decisions, or memory decisions"
+    - "task needs to append, normalize, split, or audit durable decision records"
+  canonical_docs:
+    - maestro/memory/durable/decisions-log.md
+  memory_docs:
+    - maestro/memory/durable/decisions/product-platform.md
+    - maestro/memory/durable/decisions/docs-memory-routing.md
+    - maestro/memory/durable/decisions/agent-runtime-workflow.md
+    - maestro/memory/durable/decisions/legacy-retirement-provenance.md
+  last_compacted: 2026-05-01
+
 - id: platform.auth-session
   memory_type: semantic
   domain: auth-and-session
@@ -192,6 +210,7 @@
   memory_docs:
     - maestro/memory/docs/README.md
     - maestro/memory/docs/target-docs-structure.md
+    - maestro/memory/durable/decisions/docs-memory-routing.md
     - maestro/memory/docs/frontend/drift-report.md
     - maestro/memory/docs/backend/drift-report.md
   last_compacted: 2026-04-25
@@ -429,6 +448,7 @@
     - maestro/docs/runtime-contract.md
   memory_docs:
     - maestro/memory/agent-workflow.md
+    - maestro/memory/durable/decisions/agent-runtime-workflow.md
     - maestro/docs/artifact-model.md
     - maestro/templates/evidence.md.tmpl
     - maestro/memory/durable/legacy-memory-import.md

@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/maestro/orchestration-plan.schema.json",
   "title": "Maestro internal coordination plan",
+  "description": "Machine-readable internal plan schema used only when a plan record is useful. It is not required for every T0 inline action.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -107,6 +108,7 @@
       "default": []
     },
     "stages": {
+      "description": "Recorded stages for a machine-readable plan. T0 inline work does not require creating this record; if recorded, keep it minimal.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -129,6 +131,7 @@
       }
     },
     "agents": {
+      "description": "Recorded agents for a machine-readable plan. T0 inline work should normally record only maestro if this schema is used at all.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -148,6 +151,7 @@
       }
     },
     "approvals_required": {
+      "description": "Gate requirement names used by Maestro. Map to approval records as: owner_plan_approval -> approval_type plan; owner_execution_approval -> execution; owner_high_risk_approval -> high_risk_implementation; owner_release_approval -> release; owner_memory_migration_approval -> memory_migration; owner_archive_approval -> archive.",
       "type": "array",
       "uniqueItems": true,
       "items": {

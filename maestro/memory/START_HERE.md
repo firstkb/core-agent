@@ -120,7 +120,9 @@ Open these only when a route, module pack, or owner request explicitly requires 
 ## Memory Updates
 
 - New durable product/workflow decision: update
-  `maestro/memory/durable/decisions-log.md` and
+  `maestro/memory/durable/decisions-log.md` as the compact index, add or update
+  the full entry in the relevant `maestro/memory/durable/decisions/*.md` topic
+  file, and update
   `maestro/memory/durable/current-state.md` when it changes active state, risk,
   or future work.
 - New module/runtime/app/tool: update `maestro/memory/durable/module-index.md`, `repo-map.md`, module memory, and read routes.

@@ -186,6 +186,40 @@ artifact permission. This usually starts with `work.md`; `evidence.md` and
 process capture, not product-code execution approval and not permission to cross
 high-risk gates.
 
+## Context Compaction And Continuity
+
+Automatic context compaction, thread summaries, and resumed chat context are
+not durable state and are never approval. After compaction or resume, Maestro
+must sanity-check the latest owner request against the current work state before
+acting.
+
+T0 inline work remains artifact-free by default. When no `work.md` exists after
+compaction, Maestro should reconstruct the latest owner request from the
+available thread summary and current owner message, reread
+`maestro/memory/START_HERE.md` and `maestro/memory/index/read-routes.yaml` for
+repository or product work, inspect repo state only when it materially affects
+the task, and continue only when scope, acceptance, and next action are clear.
+If they are not clear, ask one focused owner question instead of guessing.
+
+Do not create an artifact only because compaction could happen. Promote T0 to
+T1 and create or update `work.md` when work becomes continuity-sensitive:
+multi-turn state matters, owner corrections or constraints must not be lost,
+multiple files/packages/apps or FE/BE boundaries are involved, delegation,
+evidence, review, approval gates, auth, tenancy, migrations, release, security,
+destructive action, pause/resume, or unclear next action would make chat-only
+continuation fragile.
+
+For T1+ work, `work.md` is the continuity anchor. After compaction or resume,
+Maestro should reread `work.md`, then read `evidence.md`, `closeout.md`,
+approval records, specialist notes, or handoffs only when they affect the next
+allowed action. Maestro must verify whether the latest owner message changes
+stored scope or direction and update stale `work.md` state before acting.
+
+Do not reopen archived work as active work unless the owner explicitly
+continues that archived work or asks for historical reconstruction. Do not
+continue high-risk or gated work after compaction until gates, approvals, and
+scope are revalidated.
+
 ## Artifact Resume And Durable Handoffs
 
 When the owner provides an active artifact folder, Maestro must treat that
@@ -288,7 +322,7 @@ When a delegated machine-readable packet is useful, it must include:
 - approval requirements and approval references;
 - evidence expectations;
 - stop conditions;
-- expected handoff shape.
+- output mode and handoff expectations.
 
 ## Approval Gates
 

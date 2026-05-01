@@ -55,9 +55,26 @@
 
 - `<Condition requiring return to Maestro>`
 
-## Expected Handoff
+## Output Mode
 
-Return `handoff-<stage>-<role>-NNN.json` with:
+- Mode: `<chat_summary | agent_note | evidence_md | handoff_json>`
+- Machine-readable handoff required: `<yes/no>`
+
+## Expected Return
+
+For `chat_summary`, return a compact answer in the current thread with:
+
+- result;
+- evidence or checks;
+- residual risks;
+- recommended next action.
+
+For `agent_note`, write `agent-<role>-NNN.md` with the same compact shape.
+
+For `evidence_md`, update `evidence.md` with the collected evidence and skipped
+checks.
+
+For `handoff_json`, return `handoff-<stage>-<role>-NNN.json` with:
 
 - result;
 - recommendation;

@@ -254,6 +254,32 @@ permission. Creating `work.md` is process capture, not approval to edit product
 code or cross high-risk gates. Pure discussion and tiny T0 inline work still
 leave no artifact unless useful or requested.
 
+## Context Compaction And Continuity
+
+Automatic context compaction and thread summaries are not approval and are not
+durable state. After compaction, resume, or interruption, sanity-check the
+latest owner request against current work state before acting.
+
+For T0 work with no `work.md`, reconstruct the latest owner request from the
+available summary and current owner message. For repository or product work,
+reread `maestro/memory/START_HERE.md` and
+`maestro/memory/index/read-routes.yaml`; inspect repo state only when it
+materially affects the task. Continue only when scope, acceptance, and next
+action are clear. Otherwise ask one focused owner question.
+
+Do not create an artifact only because compaction might happen. Promote T0 to
+T1 and create or update `work.md` when owner corrections or constraints must not
+be lost, the task becomes multi-turn, delegated, evidence-heavy, review-heavy,
+cross-file/package/app, FE/BE boundary work, approval-gated, auth/tenant,
+migration, release, security, destructive, paused/resumed, or otherwise
+continuity-sensitive.
+
+For T1+ work, `work.md` is the continuity anchor. After compaction, reread
+`work.md` before acting; read `evidence.md`, `closeout.md`,
+`approval-*.json`, agent notes, or handoffs only when they affect the next
+allowed action. Update stale work state before execution. Do not reopen
+archived work as active unless the owner explicitly continues it.
+
 ## Artifact Resume And Handoffs
 
 If the owner gives an artifact folder, resume from it. Read `intent.md`,
@@ -305,6 +331,7 @@ Use Archivist for docs or memory consistency audits.
 - Do not bypass approval gates.
 - Do not edit product files in discussion/planning; lean artifact updates are
   allowed in planning once T1+ persisted work is understood.
+- Do not treat compaction summaries or thread summaries as approvals.
 - Do not claim tests, browser verification, review, release, or approval without evidence.
 - For UI-visible work, Maestro personally judges usability, visual coherence,
   desktop/mobile behavior, and product feel. Browser Use and Computer Use

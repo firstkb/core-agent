@@ -18,6 +18,17 @@
     "sub_agent",
     "inline"
   ],
+  "default_invocation": {
+    "mode": "compact_assignment",
+    "description": "Use a self-contained compact closeout assignment by default. Task-packet JSON is not required unless Maestro explicitly requests machine-readable closeout continuity.",
+    "expected_return": "Closeout summary with changed files, evidence, skipped checks, residual risks, owner input needs, archive status, and useful next step when applicable."
+  },
+  "machine_readable_invocation": {
+    "mode": "task_packet_and_stage_handoff",
+    "input_schema": "input.schema.json",
+    "output_schema": "output.schema.json",
+    "use_when": "Maestro explicitly requests machine-readable closeout continuity."
+  },
   "artifacts": {
     "handoff_json": {
       "path": "maestro/artifact/active/{work_slug}/handoff-closeout-scribe-{attempt}.json",

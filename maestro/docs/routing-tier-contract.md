@@ -263,15 +263,20 @@ State and artifacts:
 - `route_tier = T4_gated`
 - `artifact_shape = full`
 
-Required approvals:
+Required approval requirements:
 
-- owner decision when a plan/brief must be accepted;
-- owner decision when execution crosses a real product/risk boundary;
-- `high_risk_implementation`
-- `security`
-- `migration`
-- `release`
-- `memory_update`
+- `owner_plan_approval` when a plan/brief must be accepted;
+- `owner_execution_approval` when execution crosses a real product/risk boundary;
+- `owner_high_risk_approval` for high-risk implementation, auth/session,
+  tenant isolation, permissions, migrations, destructive operations, secrets,
+  production config, CI/CD, deploy, billing, or data-loss risk;
+- `owner_release_approval` for release/deploy or production promotion;
+- `owner_memory_migration_approval` for future memory-root migration or runtime restore;
+- `owner_archive_approval` for owner-gated archive operations.
+
+Approval records use `approval_type` values from
+`maestro/contracts/approval.schema.json`; the requirement-to-record mapping is
+documented in `maestro/contracts/README.md`.
 
 Required evidence depends on risk type:
 

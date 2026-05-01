@@ -54,7 +54,8 @@ After a significant task, decide explicitly whether to update:
 
 - no memory update
 - `maestro/memory/durable/current-state.md`
-- `maestro/memory/durable/decisions-log.md`
+- `maestro/memory/durable/decisions-log.md` plus the relevant
+  `maestro/memory/durable/decisions/*.md` topic file
 - `maestro/memory/durable/canonical-docs.md`
 - relevant module `contract.md`
 - relevant module `state.md`
@@ -75,7 +76,8 @@ full planning artifacts in the active artifact or chat.
 
 When a new durable decision is accepted:
 
-- update `maestro/memory/durable/decisions-log.md`
+- update `maestro/memory/durable/decisions-log.md` as the compact index
+- add the full decision body to the relevant `maestro/memory/durable/decisions/*.md` topic file
 - update `maestro/memory/durable/current-state.md` if the decision changes active state, risk, or next work
 - update the relevant `maestro/memory/modules/**/README.md` when a module boundary, contract, or integration seam changes
 - update tracked FE/BE docs only when they own the changed contract
@@ -133,7 +135,7 @@ Do not run Archivist on every commit by default.
 
 | Change | Write to |
 | --- | --- |
-| New durable product decision | `maestro/memory/durable/decisions-log.md` and `maestro/memory/durable/current-state.md` |
+| New durable product decision | `maestro/memory/durable/decisions-log.md`, relevant `maestro/memory/durable/decisions/*.md` topic file, and `maestro/memory/durable/current-state.md` when active state/risk changes |
 | New frontend contract | `platform/frontend/docs/contracts/**` and the relevant frontend docs map |
 | New backend contract | `platform/backend/docs/contracts/**` and the relevant backend docs map |
 | New module, app, package, runtime, or Platform Studio tool | `maestro/memory/durable/module-index.md`, `maestro/memory/durable/repo-map.md`, module memory, and read routes |

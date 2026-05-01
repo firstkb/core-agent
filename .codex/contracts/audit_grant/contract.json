@@ -17,6 +17,17 @@
     "sub_agent",
     "inline"
   ],
+  "default_invocation": {
+    "mode": "compact_assignment",
+    "description": "Use a self-contained compact assignment by default. Task-packet JSON is not required unless Maestro explicitly requests machine-readable audit continuity.",
+    "expected_return": "Concise audit verdict with findings, required revisions, residual risks, and recommended next action."
+  },
+  "machine_readable_invocation": {
+    "mode": "task_packet_and_stage_handoff",
+    "input_schema": "input.schema.json",
+    "output_schema": "output.schema.json",
+    "use_when": "Maestro explicitly requests machine-readable audit continuity, or the audit affects gate readiness."
+  },
   "artifacts": {
     "handoff_json": {
       "path": "maestro/artifact/active/{work_slug}/handoff-audit-grant-{attempt}.json",

@@ -37,6 +37,7 @@
       ]
     },
     "approval_type": {
+      "description": "Approval record type. Plans/packets use gate requirement names: owner_plan_approval maps to plan; owner_execution_approval maps to execution; owner_high_risk_approval maps to high_risk_implementation; owner_release_approval maps to release; owner_memory_migration_approval maps to memory_migration; owner_archive_approval maps to archive.",
       "type": "string",
       "enum": [
         "plan",
@@ -44,6 +45,7 @@
         "high_risk_implementation",
         "release",
         "memory_migration",
+        "archive",
         "runtime_restore",
         "destructive_operation"
       ]

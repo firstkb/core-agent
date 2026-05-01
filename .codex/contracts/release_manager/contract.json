@@ -18,6 +18,17 @@
     "sub_agent",
     "inline"
   ],
+  "default_invocation": {
+    "mode": "gated_release_assignment",
+    "description": "Release planning can be discussed compactly, but production-impacting release/deploy execution requires explicit approval plus machine-readable release evidence.",
+    "expected_return": "Release readiness, approval refs, checks, release/rollback evidence, residual risks, and recommended next action."
+  },
+  "machine_readable_invocation": {
+    "mode": "task_packet_and_stage_handoff",
+    "input_schema": "input.schema.json",
+    "output_schema": "output.schema.json",
+    "use_when": "Required for release/deploy execution or durable release evidence; optional only for preliminary non-impacting release discussion."
+  },
   "artifacts": {
     "handoff_json": {
       "path": "maestro/artifact/active/{work_slug}/handoff-release-release-{attempt}.json",

@@ -19,6 +19,9 @@
   "allowed_execution_modes": [
     "inline"
   ],
+  "schema_use": {
+    "description": "Maestro runs inline by default. JSON schemas validate persisted coordination records only when route tier, gates, resume, auditability, or release evidence make a machine-readable record useful; they are not required for every T0 action."
+  },
   "artifacts": {
     "active_work_root": {
       "path": "maestro/artifact/active/{work_slug}/",

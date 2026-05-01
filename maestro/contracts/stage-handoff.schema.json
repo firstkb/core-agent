@@ -80,13 +80,14 @@
       ]
     },
     "recommendation": {
+      "description": "Specialist recommendation only. This is not owner approval and does not satisfy an approval gate.",
       "type": "string",
       "enum": [
         "none",
         "continue",
         "revise",
         "block",
-        "approve",
+        "gate_ready",
         "request_owner_decision",
         "release",
         "archive",

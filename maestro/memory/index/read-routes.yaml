@@ -109,10 +109,28 @@ routes:
     read:
       - maestro/memory/docs/README.md
       - maestro/memory/docs/target-docs-structure.md
+      - maestro/memory/durable/decisions/docs-memory-routing.md
       - maestro/memory/docs/frontend/doc-map.md
       - maestro/memory/docs/backend/doc-map.md
       - maestro/memory/docs/frontend/drift-report.md
       - maestro/memory/docs/backend/drift-report.md
+
+  decision_history:
+    triggers:
+      - decisions-log
+      - decision log
+      - durable decision
+      - decision history
+      - DEC-
+      - product decision
+      - workflow decision
+      - memory decision
+    read:
+      - maestro/memory/durable/decisions-log.md
+      - maestro/memory/durable/decisions/product-platform.md
+      - maestro/memory/durable/decisions/docs-memory-routing.md
+      - maestro/memory/durable/decisions/agent-runtime-workflow.md
+      - maestro/memory/durable/decisions/legacy-retirement-provenance.md
 
   backend_docs:
     triggers:
@@ -420,6 +438,7 @@ routes:
       - former platform/docs/ai retirement
     read:
       - maestro/memory/agent-workflow.md
+      - maestro/memory/durable/decisions/agent-runtime-workflow.md
       - maestro/docs/runtime-contract.md
       - maestro/docs/agent-selection-thresholds.md
       - maestro/docs/artifact-model.md

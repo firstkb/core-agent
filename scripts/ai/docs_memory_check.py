@@ -98,6 +98,10 @@ OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES = {
     "scripts/ai/docs_memory_check.py",
 }
 
+
+def is_decision_provenance_file(rel: str) -> bool:
+    return rel.startswith("maestro/memory/durable/decisions/") and rel.endswith(".md")
+
 PRODUCT_IDENTITY_SCAN_SCOPES = [
     "AGENTS.md",
     "README.md",
@@ -350,7 +354,7 @@ def check_product_identity(root: Path, tracked: list[str], errors: list[str]) ->
             continue
         for term in OLD_PRODUCT_IDENTITY_TERMS:
             if term in text:
-                if rel in OLD_PRODUCT_IDENTITY_ALLOWED_FILES:
+                if rel in OLD_PRODUCT_IDENTITY_ALLOWED_FILES or is_decision_provenance_file(rel):
                     bad_lines = [
                         line
                         for line in text.splitlines()
@@ -361,7 +365,7 @@ def check_product_identity(root: Path, tracked: list[str], errors: list[str]) ->
                         continue
                 add_error(errors, rel, f"uses retired current-product identity `{term}`; use VSM v1.0.0")
         for term in OLD_ORCHESTRATION_INVOCATION_TERMS:
-            if term in text and rel not in OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES:
+            if term in text and rel not in OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES and not is_decision_provenance_file(rel):
                 add_error(errors, rel, f"uses retired pre-Maestro invocation/path `{term}`; use Maestro")
 
 

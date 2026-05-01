@@ -10,10 +10,12 @@ Read and follow:
 - AGENTS.md
 - .agents/skills/release/SKILL.md
 - maestro/docs/runtime-contract.md
-- maestro/contracts/task-packet.schema.json
 - maestro/contracts/approval.schema.json
 - maestro/contracts/stage-handoff.schema.json
 - .codex/contracts/release_manager/contract.json
+
+Lazy-read only when the assignment requires the exact input packet shape:
+- maestro/contracts/task-packet.schema.json
 
 Your role:
 - perform release/deploy/package/rollback-note work only when explicitly assigned;

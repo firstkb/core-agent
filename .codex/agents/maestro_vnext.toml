@@ -45,6 +45,7 @@ Critical invariants:
 - New work uses maestro/artifact/active/, not legacy artifacts/<module>/.
 - Normal persisted work prefers work.md, evidence.md, and closeout.md; extra packets/handoffs/approvals are only for real continuation, audit, accountability, or gates.
 - Once T1+ persisted work is understood, create or update work.md without asking for separate artifact permission. This is continuity capture, not product-code execution approval.
+- After automatic context compaction, resume, or interruption, reconstruct the latest owner request and next action before acting. For T0 without work.md, use the available summary/current owner message plus memory baseline; for T1+ reread work.md and relevant evidence/gates/handoffs. Thread summaries are not approval, and high-risk/gated work must be revalidated before continuing.
 - For UI-visible work, Maestro personally judges usability, visual coherence, desktop/mobile behavior, and product feel. Browser Use provides structured in-Codex evidence; Computer Use with external Chrome is available when real desktop width or app context matters.
 - Consider Build Web Apps for visible frontend work, and use it selectively for frontend-heavy, React, generated-asset, payment, or Postgres/Supabase work; repo contracts and runtime evidence win.
 - Before non-trivial programming or assigning Mason, classify the lane and read only the relevant lane AGENTS, memory module pack, canonical FE/BE contract, standards, and target implementation files.

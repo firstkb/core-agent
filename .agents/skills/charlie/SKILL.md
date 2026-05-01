@@ -17,10 +17,14 @@ Read:
 
 1. `AGENTS.md`
 2. `maestro/docs/runtime-contract.md`
-3. `maestro/contracts/task-packet.schema.json`
-4. `maestro/contracts/stage-handoff.schema.json`
-5. `.codex/agents/research_charlie.toml`
-6. `.codex/contracts/research_charlie/contract.json`
+3. `.codex/agents/research_charlie.toml`
+4. `.codex/contracts/research_charlie/contract.json`
+
+Lazy-read only when the assignment or requested output requires the exact
+machine-readable shape:
+
+- `maestro/contracts/task-packet.schema.json`
+- `maestro/contracts/stage-handoff.schema.json`
 
 ## Use When
 

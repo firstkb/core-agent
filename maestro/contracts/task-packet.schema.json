@@ -18,6 +18,7 @@
     "approvals",
     "evidence_expectations",
     "stop_conditions",
+    "output_mode",
     "handoff_expectations"
   ],
   "properties": {
@@ -168,6 +169,7 @@
       ],
       "properties": {
         "required": {
+          "description": "Gate requirement names used in plans/packets. Map these to approval records as: owner_plan_approval -> approval_type plan; owner_execution_approval -> execution; owner_high_risk_approval -> high_risk_implementation; owner_release_approval -> release; owner_memory_migration_approval -> memory_migration; owner_archive_approval -> archive.",
           "type": "array",
           "uniqueItems": true,
           "items": {
@@ -214,9 +216,20 @@
         "type": "string"
       }
     },
+    "output_mode": {
+      "description": "Default specialist return shape. Use handoff_json only when machine-readable continuity, auditability, release evidence, or resume/accountability requires it.",
+      "type": "string",
+      "enum": [
+        "chat_summary",
+        "agent_note",
+        "evidence_md",
+        "handoff_json"
+      ]
+    },
     "handoff_expectations": {
+      "description": "Expected handoff details. May be empty when output_mode is chat_summary, agent_note, or evidence_md.",
       "type": "array",
-      "minItems": 1,
+      "default": [],
       "items": {
         "type": "string"
       }
@@ -259,6 +272,25 @@
     {
       "if": {
         "properties": {
+          "output_mode": {
+            "const": "handoff_json"
+          }
+        },
+        "required": [
+          "output_mode"
+        ]
+      },
+      "then": {
+        "properties": {
+          "handoff_expectations": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "assigned_stage": {
             "const": "release"
           }
@@ -271,6 +303,12 @@
         "properties": {
           "assigned_role": {
             "const": "release"
+          },
+          "output_mode": {
+            "const": "handoff_json"
+          },
+          "handoff_expectations": {
+            "minItems": 1
           },
           "approvals": {
             "properties": {

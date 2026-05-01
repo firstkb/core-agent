@@ -35,6 +35,8 @@ maestro/
   templates/
   artifact/
 maestro/memory/
+  durable/
+    decisions/
 ```
 
 ## Codex-Native Runtime
@@ -53,6 +55,8 @@ maestro/memory/
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.
 - `.codex/standards`: repository, engineering, frontend, backend, infra, library, and security standards.
 - `maestro/docs`, `maestro/contracts`, and `maestro/templates`: active Maestro native-first runtime contracts.
+- `maestro/memory/durable/decisions-log.md`: compact durable-decision index.
+- `maestro/memory/durable/decisions/`: route-specific full durable decision bodies.
 
 ## Product Runtime
 

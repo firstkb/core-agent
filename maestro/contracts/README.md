@@ -18,5 +18,17 @@ Contracts:
 - `approval.schema.json` - machine-readable approval gate record.
 - `closeout.schema.json` - machine-readable closeout summary.
 
-Use Markdown templates for owner-readable artifacts and JSON contracts for gates,
-subagent boundaries, and validation.
+Use Markdown templates for owner-readable artifacts and compact normal work.
+Use JSON contracts when gates, machine-readable subagent boundaries, resume,
+auditability, release evidence, or validation require them.
+
+Approval requirement names in plans/packets map to approval records as follows:
+
+| Requirement | Approval record `approval_type` |
+|---|---|
+| `owner_plan_approval` | `plan` |
+| `owner_execution_approval` | `execution` |
+| `owner_high_risk_approval` | `high_risk_implementation` |
+| `owner_release_approval` | `release` |
+| `owner_memory_migration_approval` | `memory_migration` |
+| `owner_archive_approval` | `archive` |

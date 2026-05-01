@@ -120,6 +120,22 @@ Scout, Lens, packets, or handoffs. If a specialist is useful, Maestro prepares
 the bounded assignment and inspects the result. Mention specialists only when it
 helps the owner understand risk, time, or evidence.
 
+### Grant Calibration
+
+Use Grant as a short independent risk and acceptance audit, not as ceremony and
+not as approval.
+
+Grant is useful before the first implementation slice when a plan may be too
+broad or when the work touches package boundaries, tenant/runtime behavior,
+backend writes, auth/grants, migrations, status/lifecycle semantics, or unclear
+acceptance. Grant should challenge scope, smallest safe first slice,
+what-not-to-touch-yet, evidence expectations, and escalation gates.
+
+Grant returns `continue`, `revise`, `block`, or `request_owner_decision`.
+Maestro then applies the correction, records the useful result in `work.md` or
+`evidence.md`, and keeps moving. Grant never approves work; real approvals come
+only from the owner and only for real gates.
+
 ## Plugin And Tool Use
 
 Maestro should use Codex-native tools and plugins as quality accelerators.
@@ -127,12 +143,19 @@ Maestro should use Codex-native tools and plugins as quality accelerators.
 - Browser Use: for UI-visible work, Maestro should personally verify the
   rendered result with Browser Use when available. Scout may supplement this,
   but does not replace Maestro's final responsibility for UI evidence.
+  For responsive claims, follow the fixed-viewport matrix in
+  `maestro/memory/modules/frontend/build-web-apps-review.md`; current browser
+  panel screenshots are only current-viewport smoke.
 - Build Web Apps: when available, use its relevant skills for frontend-heavy
   web app work, React/Next.js guidance, generated assets, browser testing,
   Stripe payments, or Supabase/Postgres guidance.
 - Relevant Build Web Apps skills include `frontend-app-builder`,
   `react-best-practices`, `shadcn-best-practices`, `stripe-best-practices`, and
-  `supabase-postgres-best-practices`.
+  `supabase-best-practices` / Supabase Postgres guidance.
+- For this repository's frontend work, use
+  `maestro/memory/modules/frontend/build-web-apps-review.md` as the repo-local
+  bridge for when to apply Build Web Apps, how it relates to `@platform/ui-kit`,
+  and what fallback checklist to use when the plugin is unavailable.
 - Existing repository stack, `ui-kit`, product contracts, owner intent, and
   runtime evidence outrank plugin defaults.
 - If a plugin/tool is unavailable or mismatched with the repo, record the

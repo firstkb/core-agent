@@ -70,6 +70,10 @@ first-read file.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is already running or the owner asks for it.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not replace an explicit Browser Use request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
+- Current in-app browser screenshots are current-viewport smoke only. For
+  responsive evidence, use fixed viewport checks and record dimensions.
+- Standard UI viewport matrix: desktop `1440x900`, mobile `390x844`; add
+  tablet/narrow desktop `768x1024` when shell/sidebar/grid breakpoints matter.
 - Local Browser Use auth lives only in ignored `maestro/memory/local/browser-use-auth.md` when owner-provided.
 - Never copy local auth codes into tracked docs, run artifacts, or evidence.
 - Evidence wording: `Auth: local seeded dev login.`

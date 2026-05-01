@@ -108,6 +108,13 @@ Require extra care before finalizing changes that affect:
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not replace an explicit Browser Use visual-smoke request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
+- Treat the current in-app browser size as `current viewport smoke`, not as
+  desktop/mobile responsive evidence. For responsive claims, use fixed viewport
+  checks and record dimensions.
+- Standard viewport evidence for non-trivial visible UI work is desktop
+  `1440x900` and mobile portrait `390x844`. Add tablet/narrow desktop
+  `768x1024` when shell layout, sidebars, sticky toolbars, dense grids, or
+  breakpoint-sensitive controls are affected.
 - Local Browser Use auth, when needed, must come from ignored `maestro/memory/local/browser-use-auth.md`.
 - Do not copy local auth codes into tracked docs, run artifacts, or evidence blocks.
 - In evidence, write `Auth: local seeded dev login.` rather than the credentials.

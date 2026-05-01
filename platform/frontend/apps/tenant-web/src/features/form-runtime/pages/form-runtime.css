@@ -9,6 +9,15 @@
   overflow: hidden;
 }
 
+.tenant-web__form-runtime-form-page {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
 .tenant-web__form-runtime-list-page > .admin-web__collection-surface {
   min-height: 24rem;
   max-width: 100%;

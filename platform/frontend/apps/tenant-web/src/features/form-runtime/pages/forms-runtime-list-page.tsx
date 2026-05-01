@@ -279,14 +279,21 @@ export function FormsRuntimeListPage({
     <div className="tenant-web__form-runtime-list-page">
       <CollectionTablePage
         adapter={adapter}
+        getCreatePath={() => formRuntimePaths.create(modelId, viewId)}
         isIgnorableError={isUnauthorizedApiError}
         key={`${entryContext}:${modelId}:${viewId}`}
-        onFrontendRowAction={(action, row) => {
-          if (action.id === "view") {
-            setActiveDocGuid(row.id);
-          }
-        }}
         onFavoriteToggleSuccess={onFavoritesRefresh}
+        resolveFrontendRowActionPath={(action, row) => {
+          if (action.id === "edit") {
+            return formRuntimePaths.edit(modelId, viewId, row.id);
+          }
+
+          if (action.id === "view") {
+            return formRuntimePaths.view(modelId, viewId, row.id);
+          }
+
+          return null;
+        }}
         tableId={`form-runtime:${modelId}:${viewId}`}
       />
       <Dialog

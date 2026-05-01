@@ -5,7 +5,15 @@
   "type": "module",
   "scripts": {
     "lint": "eslint src",
+    "test": "vitest run src",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@platform/ui-kit": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "exports": {
     ".": "./src/index.ts"

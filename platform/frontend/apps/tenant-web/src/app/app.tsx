@@ -30,6 +30,7 @@ import { renderPlatformStudioRoutes } from "../features/platform-studio";
 import {
   PublishedAppRoutePage,
 } from "../features/published-app";
+import { FormsRuntimeFormPage } from "../features/form-runtime/pages/forms-runtime-form-page";
 import { FormsRuntimeListPage } from "../features/form-runtime/pages/forms-runtime-list-page";
 import { TenantDashboardPage } from "../pages/dashboard/page";
 import { PrivateApp } from "./private-app";
@@ -404,6 +405,8 @@ export function App({
               <Route element={<Navigate replace to="/dashboard" />} index />
               <Route element={<TenantDashboardPage />} path="dashboard" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId" />
+              <Route element={<FormsRuntimeFormPage mode="create" />} path="app/forms/:modelId/views/:viewId/new" />
+              <Route element={<FormsRuntimeFormPage mode="edit" />} path="app/forms/:modelId/views/:viewId/edit/:docGuid" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId/view/:docGuid" />
               <Route
                 element={<FormsRuntimeListPage entryContext="preview" />}

@@ -2,7 +2,7 @@ interface:
   display_name: "Charlie"
   short_description: "Read-only codebase research"
   brand_color: "#0F9D58"
-  default_prompt: "Use $charlie to investigate code/docs and return grounded facts to Maestro."
+  default_prompt: "Use $charlie for read-only code/docs research with exact paths, facts vs inference, risks, and next action."
 
 policy:
   allow_implicit_invocation: false

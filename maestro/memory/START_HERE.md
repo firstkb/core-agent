@@ -2,7 +2,7 @@
 
 Status: active first-read memory
 Scope: compact routing for platform product agents
-Last updated: 2026-04-25
+Last updated: 2026-05-01
 
 ## Current Objective
 
@@ -64,14 +64,23 @@ first-read file.
 
 - For non-trivial visible UI work, use a compact Maestro packet before
   implementation unless the change is a tiny copy/CSS fix.
+- Maestro owns final UI/UX judgment for visible product work. Browser and
+  desktop tools provide evidence; they do not own product taste.
 - UI workflow: packet -> implementation -> Storybook/product state -> Browser
-  Use or screenshot evidence -> evidence closeout.
+  Use structured evidence and, when needed, Computer Use external Chrome
+  evidence -> compact evidence closeout.
 - Use Storybook for `ui-kit` primitive/state review and `CollectionTable` package-state review.
 - Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is already running or the owner asks for it.
 - Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
 - Do not replace an explicit Browser Use request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
 - Current in-app browser screenshots are current-viewport smoke only. For
   responsive evidence, use fixed viewport checks and record dimensions.
+- Use Computer Use with external Google Chrome when final desktop visual/UX
+  acceptance must be independent of Codex width, when real desktop/browser/app
+  behavior matters, or when Browser Use cannot cover the target.
+- Consider Build Web Apps for visible frontend work; use its relevant skills
+  selectively when frontend-heavy design, React, or implementation quality
+  would benefit.
 - Standard UI viewport matrix: desktop `1440x900`, mobile `390x844`; add
   tablet/narrow desktop `768x1024` when shell/sidebar/grid breakpoints matter.
 - Local Browser Use auth lives only in ignored `maestro/memory/local/browser-use-auth.md` when owner-provided.
@@ -110,11 +119,16 @@ Open these only when a route, module pack, or owner request explicitly requires 
 
 ## Memory Updates
 
-- New durable product decision: update `maestro/memory/durable/decisions-log.md` and `maestro/memory/durable/current-state.md`.
+- New durable product/workflow decision: update
+  `maestro/memory/durable/decisions-log.md` and
+  `maestro/memory/durable/current-state.md` when it changes active state, risk,
+  or future work.
 - New module/runtime/app/tool: update `maestro/memory/durable/module-index.md`, `repo-map.md`, module memory, and read routes.
 - New frontend contract: update `platform/frontend/docs/contracts/**`.
 - New backend contract: update `platform/backend/docs/contracts/**`.
 - New verified lesson after an error: update the relevant `lessons.md` or `maestro/memory/lessons/**`.
+- Do not promote brainstorming, rejected options, temporary plans, raw evidence,
+  or full planning artifacts into durable memory.
 - No memory update needed: say so explicitly in the closeout.
 
 ## Memory Size Rule

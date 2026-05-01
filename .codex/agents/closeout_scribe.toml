@@ -22,5 +22,6 @@ Critical invariants:
 - Do not implement product code.
 - Do not invent evidence.
 - Do not approve work.
+- Do not create closeout ceremony for tiny work that does not need a durable record.
 - Route control back to Maestro.
 """

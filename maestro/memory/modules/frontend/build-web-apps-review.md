@@ -55,43 +55,13 @@ For visible frontend implementation or review, include the relevant subset:
   component systems; UI Lab visual language remains intact.
 - Accessibility pass: labels, required markers, error messages, readonly values,
   radio/checkbox groups, focusable controls, and button semantics.
-- Browser pass: verify the rendered workflow with Browser Use or the built-in
-  browser when available; record fallback if unavailable.
+- Evidence pass: follow Maestro runtime and `maestro/memory/START_HERE.md` for
+  browser/desktop evidence policy; this bridge does not define final UI/UX
+  acceptance or tool-selection rules.
 - No-write pass: for frontend-only slices, verify there are no hidden API calls,
   backend mutations, migrations, or grant changes.
-- Evidence pass: record the Build Web Apps skills used, skipped skills with
+- Closeout pass: record the Build Web Apps skills used, skipped skills with
   reason, checks run, visual route/state inspected, and residual risks.
-
-## Visual Verification Standard
-
-Use this standard for UI-visible frontend work unless the owner asks for a
-different surface.
-
-- Default interactive smoke: use the Codex Browser Use plugin/in-app browser for
-  local product routes when the dev stack is running. This is the preferred
-  agent surface because it provides DOM inspection and screenshot evidence
-  inside Codex.
-- Chrome/Computer Use: use only as a fallback or secondary check when Browser
-  Use is unavailable, mismatched with the task, or the owner explicitly wants
-  the real Chrome window/profile checked.
-- Current-width screenshots: acceptable only as quick smoke evidence. Do not
-  treat the current Codex browser panel width as desktop or mobile responsive
-  evidence, because the panel can be resized by the owner or app shell.
-- Fixed viewport evidence: when claiming responsive behavior, use a browser
-  runner/tool that can set an explicit viewport. If no fixed-viewport tool is
-  available in the session, record the gap and do not overstate the evidence.
-
-Required viewport matrix for non-trivial visible UI work:
-
-- Desktop: `1440x900`.
-- Mobile portrait: `390x844`.
-- Add tablet/narrow desktop `768x1024` when the change touches shell layout,
-  sidebars, sticky toolbars, dense grids, or breakpoint-sensitive controls.
-
-Evidence for each checked viewport should name the route/state, tool surface,
-viewport label and dimensions, and auth context. Use `current viewport smoke`
-when the screenshot came from the current in-app browser size rather than a
-fixed viewport.
 
 ## Fallback Rule
 

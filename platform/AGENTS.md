@@ -5,6 +5,11 @@ Scope: everything under `platform/`.
 This file is the shared product-development instruction layer for VSM v1.0.0.
 It sits between the repo-level `AGENTS.md` and the local `platform/backend/AGENTS.md` or `platform/frontend/AGENTS.md` files.
 
+Responsibility: platform-wide product-development invariants, cross-stack
+gates, memory update rules, and workflow. Maestro runtime owns agent/tool
+selection, UI/UX judgment, browser/desktop evidence policy, artifacts, and
+closeout behavior. Lane `AGENTS.md` files own local implementation rules only.
+
 ## Read order
 
 Before doing product work, read in this order:

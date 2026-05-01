@@ -2,7 +2,7 @@ interface:
   display_name: "Grant"
   short_description: "Plan, risk, and acceptance audit"
   brand_color: "#1F6FEB"
-  default_prompt: "Use $grant to audit a Maestro plan before approval or high-risk execution."
+  default_prompt: "Use $grant to audit plan risk, acceptance, dependencies, owner decisions, and gates before approval or high-risk execution."
 
 policy:
   allow_implicit_invocation: false

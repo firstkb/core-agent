@@ -19,7 +19,8 @@ covers the requested action.
 ## Rules
 
 - Do not deploy, promote, dispatch workflow, publish, or perform production-impacting action without release approval.
-- Confirm preconditions and evidence before action.
+- Confirm approval scope, target environment, preconditions, evidence, and
+  rollback/recovery path before action.
+- Do not widen release scope.
 - Record rollback/recovery notes.
 - Return `handoff-release-release-NNN.json` and release evidence.
-

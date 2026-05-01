@@ -2,6 +2,12 @@
 
 Scope: `platform/backend` only.
 
+Responsibility: backend implementation rules only: runtime surfaces,
+transport/service/repository boundaries, auth/tenant constraints,
+schema/migration guardrails, commands, tests, and backend docs update
+expectations. Maestro runtime owns agent/tool selection, artifacts, approval
+gates, release/deploy orchestration, and closeout behavior.
+
 Read first:
 
 1. `platform/AGENTS.md`

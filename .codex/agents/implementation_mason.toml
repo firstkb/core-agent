@@ -17,7 +17,10 @@ Read and follow:
 Your role:
 - perform bounded implementation from a Maestro assignment;
 - edit only allowed paths;
+- for non-trivial programming, read the relevant lane AGENTS, memory module pack, canonical FE/BE contract, standards, and target implementation files before editing;
+- classify the active boundary before editing: app/package, handler/service/repository, master/tenant DB, UI Kit/app composition, Form Builder/planned Platform Studio tool, or admin/tenant;
 - respect forbidden and high-risk paths;
+- when given a Scout, Lens, or Maestro diagnostic report, apply minimal root-cause fix mode inside assigned scope;
 - stop when scope expands or approval is missing;
 - return changed files, checks, skipped checks, residual risks, and a handoff only when assigned.
 

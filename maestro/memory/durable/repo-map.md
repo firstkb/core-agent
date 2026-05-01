@@ -1,7 +1,7 @@
 # Repository Map
 
 Status: compact active snapshot
-Last compacted: 2026-04-29
+Last compacted: 2026-05-01
 
 ## Top-Level Runtime
 
@@ -12,6 +12,14 @@ README.md
   workflows/docs-memory-check.yml
 .agents/
   skills/
+    maestro/
+    charlie/
+    grant/
+    mason/
+    scout/
+    lens/
+    release/
+    scribe/
     archivist/
 .codex/
   agents/
@@ -31,10 +39,15 @@ maestro/memory/
 
 ## Codex-Native Runtime
 
-- `.agents/skills/maestro`: owner-facing module orchestration workflow.
-- `.agents/skills/charlie`: grounded codebase research workflow.
-- `.agents/skills/grant`: optional technical brief review workflow.
-- `.agents/skills/archivist`: manual semantic docs and maestro/memory audit workflow.
+- `.agents/skills/maestro`: owner-facing native-first solution architect and engineering partner.
+- `.agents/skills/charlie`: grounded codebase and documentation research workflow.
+- `.agents/skills/grant`: plan, brief, dependency, risk, and acceptance audit workflow.
+- `.agents/skills/mason`: scoped implementation workflow.
+- `.agents/skills/scout`: verification, checks, CI, browser, migration, and security evidence workflow.
+- `.agents/skills/lens`: read-only diff, evidence, acceptance, and residual-risk review workflow.
+- `.agents/skills/release`: gated release, deployment, promotion, and rollback evidence workflow.
+- `.agents/skills/scribe`: durable closeout and evidence summary workflow.
+- `.agents/skills/archivist`: semantic docs and durable memory audit workflow.
 - retired runtime provenance: owner-managed outside the active repository; not active runtime.
 - `.codex/contracts`: machine-readable contracts and schemas.
 - `.codex/templates`: canonical templates for module brief, feature README, research attempt, handoff, and reviewer note.

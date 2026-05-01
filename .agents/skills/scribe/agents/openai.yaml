@@ -2,7 +2,7 @@ interface:
   display_name: "Scribe"
   short_description: "Closeout and evidence summary"
   brand_color: "#64748B"
-  default_prompt: "Use $scribe to create a durable closeout and evidence summary."
+  default_prompt: "Use $scribe to create lean durable closeout and evidence summaries when persisted work needs them."
 
 policy:
   allow_implicit_invocation: false

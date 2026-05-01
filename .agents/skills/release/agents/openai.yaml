@@ -2,7 +2,7 @@ interface:
   display_name: "Release"
   short_description: "Release and deployment specialist"
   brand_color: "#B45309"
-  default_prompt: "Use $release only after explicit release approval."
+  default_prompt: "Use $release only after explicit release approval with scope, target, evidence, and rollback path."
 
 policy:
   allow_implicit_invocation: false

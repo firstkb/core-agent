@@ -2,7 +2,7 @@ interface:
   display_name: "Scout"
   short_description: "Verification and evidence specialist"
   brand_color: "#0284C7"
-  default_prompt: "Use $scout to verify changes and produce evidence for Maestro."
+  default_prompt: "Use $scout for targeted verification, diagnostics, and evidence; not broad fixes or final UI/UX judgment."
 
 policy:
   allow_implicit_invocation: false

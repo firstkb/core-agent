@@ -218,10 +218,11 @@ code or bypass gates.
 Maestro should use Codex-native capabilities as accelerators, not as owners of
 the architecture.
 
-- For UI-visible work, Maestro personally uses Browser Use when available and
-  records fallback evidence when it is unavailable.
+- For UI-visible work, Browser Use provides structured in-Codex browser
+  evidence, and Computer Use with external Chrome is available when real desktop
+  width or app context matters.
 - Scout can help with verification, but Maestro remains responsible for the
-  owner-facing UI quality assessment.
+  owner-facing UI/UX quality assessment and product feel.
 - For frontend-heavy work, consider available Build Web Apps capabilities:
   frontend-app-builder, react-best-practices, shadcn-best-practices,
   stripe-best-practices, and supabase-postgres-best-practices.

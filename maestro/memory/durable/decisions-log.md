@@ -1,10 +1,16 @@
 # Decisions Log
 
 Status: compact durable decisions
-Last compacted: 2026-04-25
+Last compacted: 2026-05-01
 
 Use this file for durable decisions only.
 Do not turn it into a task journal.
+
+## Normalization Notes
+
+- `DEC-049` was historically duplicated. On 2026-05-01 the backend docs entry
+  was normalized to `DEC-049B` to avoid shifting stable later IDs. New numeric
+  decisions continue from `DEC-089`.
 
 ## Active Decisions
 
@@ -202,10 +208,19 @@ Do not turn it into a task journal.
 - Date: 2026-04-24
 - Status: active
 - State: landed
-- Decision: Root `AGENTS.md`, `.codex/`, `.agents/skills/maestro|charlie|grant`, `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` define current repo runtime. `maestro/memory/` is a local retrieval layer, not a replacement runtime source.
+- Decision: Root `AGENTS.md`, `.codex/`, the active nine-role `.agents/skills/**` team, `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` define current repo runtime. `maestro/memory/` is the compact retrieval and durable-memory layer, not a replacement runtime source.
 - Sources:
   - `AGENTS.md`
-  - `AGENTS.md`
+  - `.agents/skills/maestro/SKILL.md`
+  - `.agents/skills/charlie/SKILL.md`
+  - `.agents/skills/grant/SKILL.md`
+  - `.agents/skills/mason/SKILL.md`
+  - `.agents/skills/scout/SKILL.md`
+  - `.agents/skills/lens/SKILL.md`
+  - `.agents/skills/release/SKILL.md`
+  - `.agents/skills/scribe/SKILL.md`
+  - `.agents/skills/archivist/SKILL.md`
+  - `maestro/docs/runtime-contract.md`
   - `.codex/standards/runtime/repository.md`
 
 ### DEC-020 Platform Studio Is A Tool Suite, Not Form Builder Alone
@@ -540,15 +555,13 @@ Do not turn it into a task journal.
   - `maestro/memory/docs/frontend/platform-studio/form-builder-exact-detail-consolidation-audit.md`
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
-- Sources:
   - `platform/frontend/docs/platform-studio/form-builder-accepted-registry.md`
   - `platform/frontend/docs/platform-studio/form-builder-field-catalog.md`
   - `platform/frontend/docs/platform-studio/form-builder-view-settings-contract.md`
   - `platform/frontend/docs/platform-studio/form-builder-static-models-integration-v1.md`
   - `platform/frontend/docs/platform-studio/data-schema-storage-rules.md`
-  - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
 
-### DEC-049 Backend Operational, Proposal, And Import Docs Use Target Folders
+### DEC-049B Backend Operational, Proposal, And Import Docs Use Target Folders
 
 - Date: 2026-04-25
 - Status: active
@@ -631,8 +644,8 @@ Do not turn it into a task journal.
 ### DEC-055 retired runtime Workflow Uses Ai-Memory Operational Layer
 
 - Date: 2026-04-25
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-088 final retired-runtime provenance removal
 - Decision: retired runtime now uses `maestro/memory` as the first retrieval layer, active prompt/template/version metadata under `maestro/memory/retired-runtime`, and run artifacts under `maestro/memory/runs/active`. Old `platform/docs/ai/**` is legacy provenance only until final retirement.
 - Sources:
   - `platform/AGENTS.md`
@@ -847,12 +860,13 @@ Do not turn it into a task journal.
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `Archivist` is the local semantic docs and maestro/memory audit skill. It is invoked as `$archivist` for periodic source-of-truth drift review after large docs/memory, AGENTS, retired runtime, or reference-code changes. Archivist complements mechanical checks and CI; it is not an implementation agent and should patch only when the owner asks to apply an audit. The role was formerly named `Scribe`.
+- Decision: `Archivist` is the local semantic docs and `maestro/memory` audit skill. It is invoked as `$archivist` for periodic source-of-truth drift review after large docs/memory, AGENTS, runtime, or reference-code changes. Archivist complements mechanical checks and CI; it is not an implementation agent and should patch only when explicitly assigned. `Scribe` is a separate closeout/evidence summary role.
 - Sources:
   - `.agents/skills/archivist/SKILL.md`
   - `.agents/skills/archivist/agents/openai.yaml`
+  - `.agents/skills/scribe/SKILL.md`
   - `AGENTS.md`
-  - `platform/AGENTS.md`
+  - `maestro/docs/agent-roles.md`
 
 ### DEC-072 Form Builder Exact-Detail Replacement Is Owner-Gated
 
@@ -916,18 +930,18 @@ Do not turn it into a task journal.
 - Date: 2026-04-26
 - Status: active
 - State: landed
-- Decision: `maestro/memory/retired-runtime/templates/agent-evidence.md` is the compact evidence shape for non-trivial agent closeout or PR body text. It should be pasted into the final response, PR body, or run `final.md` when useful. It must not become a mandatory standalone artifact for tiny tasks.
+- Decision: `maestro/templates/evidence.md.tmpl` is the compact evidence shape for non-trivial Maestro closeout or PR body text. Use it as a concise response/PR shape when useful; do not turn it into a mandatory standalone artifact for tiny tasks.
 - Sources:
-  - `maestro/memory/retired-runtime/templates/agent-evidence.md`
-  - `.agents/skills/retired-runtime/SKILL.md`
+  - `maestro/templates/evidence.md.tmpl`
   - `AGENTS.md`
-  - `platform/AGENTS.md`
+  - `.agents/skills/maestro/SKILL.md`
+  - `maestro/docs/runtime-contract.md`
 
 ### DEC-078 Direct No-Run Means Current-Chat Execution
 
 - Date: 2026-04-26
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-088 native Maestro artifact model
 - Decision: retired runtime direct no-run routes mean current-chat execution by default. If retired runtime decides a separate FE/BE chat should be opened, the task should normally become run-backed with a task id and `maestro/memory/runs/active/<task-id>/` artifacts. A separate no-run prompt is allowed only when the owner explicitly requests `MANUAL_HANDOFF_NO_RUN`; that handoff is owner-managed and not retired runtime lane orchestration.
 - Sources:
   - `.agents/skills/retired-runtime/SKILL.md`
@@ -1023,8 +1037,8 @@ Do not turn it into a task journal.
 ### DEC-086 Active Runs Must Have Explicit Closure
 
 - Date: 2026-04-28
-- Status: active
-- State: landed
+- Status: superseded
+- State: superseded by DEC-088 native Maestro artifact model
 - Decision: `maestro/memory/runs/active/` must stay small and operational. Completed, closeout-ready, or review-ready runs move to `maestro/memory/runs/archive/<task-id>/`. A run may remain in `active/` with a `final.md` only when `final.md` explicitly declares `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:`. `scripts/ai/docs_memory_check.py --check` enforces this rule.
 - Sources:
   - `maestro/memory/runs/README.md`
@@ -1038,7 +1052,7 @@ Do not turn it into a task journal.
 - Date: 2026-04-28
 - Status: active
 - State: landed
-- Decision: Storybook V1 is a lightweight manual/local visual review loop under `platform/frontend/.storybook`, starting with stable `ui-kit` actions, form controls, feedback, state patterns, table primitives, and `CollectionTable` states (`empty`, `loading`, `ready with rows`, `error`, `filters open`). It is not a CI visual gate until baselines and screenshot policy are explicitly accepted. The Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) is the preferred local app visual-smoke tool when requested; do not substitute macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback. Owner-provided local login data must live only in ignored `maestro/memory/local/browser-use-auth.md`, and tracked evidence must not record local auth codes.
+- Decision: Storybook V1 is a lightweight manual/local visual review loop under `platform/frontend/.storybook`, starting with stable `ui-kit` actions, form controls, feedback, state patterns, table primitives, and `CollectionTable` states (`empty`, `loading`, `ready with rows`, `error`, `filters open`). It is not a CI visual gate until baselines and screenshot policy are explicitly accepted. Browser Use is the default structured in-Codex browser surface for local route/state smoke and evidence. Computer Use with external Chrome is available for final desktop visual/UX acceptance when Codex width or browser context could bias judgment. Owner-provided local login data must live only in ignored `maestro/memory/local/browser-use-auth.md`, and tracked evidence must not record local auth codes.
 - Sources:
   - `platform/frontend/.storybook/`
   - `platform/frontend/packages/ui-kit/src/stories/`
@@ -1046,6 +1060,8 @@ Do not turn it into a task journal.
   - `platform/frontend/AGENTS.md`
   - `platform/frontend/docs/contracts/ui-kit.md`
   - `platform/frontend/docs/contracts/collection-table.md`
+  - `maestro/docs/runtime-contract.md`
+  - `maestro/docs/agent-selection-thresholds.md`
   - `.gitignore`
 
 ### DEC-088 Retired Runtime Provenance Removed From Active Tree
@@ -1056,8 +1072,101 @@ Do not turn it into a task journal.
 - Decision: Retired runtime provenance is owner-managed outside the active repository. New owner-led engineering work routes through Maestro and the native vNext skills. Durable memory remains under `maestro/memory/`; active task state uses `maestro/artifact/active/` and `maestro/artifact/archive/`, not `maestro/memory/runs/**`. Retired run packets, prompts, templates, manifest, and scaffolder scripts are retained only outside the active repository or in git history.
 - Sources:
   - `AGENTS.md`
-  - `AGENTS.md`
   - `maestro/docs/runtime-contract.md`
   - `maestro/docs/memory-migration-plan.md`
   - `maestro/memory/START_HERE.md`
   - `scripts/ai/docs_memory_check.py`
+
+### DEC-089 Human-Agent Symbiosis Defines Owner And Maestro Responsibilities
+
+- Date: 2026-05-01
+- Status: active
+- State: owner-confirmed
+- Decision: The owner owns product strategy, business/domain direction, product taste, priorities, and final product decisions. Maestro owns the engineering path, code quality, UI/UX analysis and evidence, agents/tools, checks, and safe execution. Maestro returns to the owner for material UX/product decisions, disputed taste, scope changes, strategic tradeoffs, approval gates, unclear acceptance, or choices that change business/domain behavior.
+- Rationale: Future agents need this split to keep the owner focused on product direction while Maestro handles execution quality and team/tool coordination.
+- Sources:
+  - `maestro/docs/runtime-contract.md`
+  - `.agents/skills/maestro/SKILL.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/work.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/ux-product-decision-protocol.md`
+
+### DEC-090 Visible UI Work Uses Maestro-Owned UX Judgment And Browser Evidence
+
+- Date: 2026-05-01
+- Status: active
+- State: owner-confirmed
+- Decision: For visible frontend work, Maestro owns final UI/UX judgment and should use evidence rather than code inspection alone. Browser Use is the default structured in-Codex browser evidence surface for route/state/DOM/screenshot smoke. Computer Use with external Chrome is used when final desktop visual judgment must be independent of Codex width or real desktop/browser/app behavior matters. Build Web Apps must be considered for visible frontend work and used selectively when frontend-heavy expertise improves the result. Scout may supplement evidence but does not own product feel.
+- Rationale: UI/UX quality is a product-quality responsibility, while browser and desktop tools provide evidence for that judgment.
+- Sources:
+  - `maestro/docs/runtime-contract.md`
+  - `maestro/docs/agent-selection-thresholds.md`
+  - `.agents/skills/maestro/SKILL.md`
+  - `.agents/skills/scout/SKILL.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/outsourced-capability-policy.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/quality-evidence-model.md`
+
+### DEC-091 Adaptive Agent Selection Replaces Fixed Chains
+
+- Date: 2026-05-01
+- Status: active
+- State: landed
+- Decision: Maestro uses specialists and outsourced capabilities adaptively, not through fixed chains. Delegate only when it improves correctness, speed, context isolation, implementation focus, verification, review, or evidence. Existing roles should be strengthened before hiring a new role; a new specialist is considered only after repeated failures or a durable missing professional standard.
+- Rationale: This preserves the human-agent symbiosis model without turning Maestro into classical orchestration bureaucracy.
+- Sources:
+  - `maestro/docs/agent-selection-thresholds.md`
+  - `maestro/docs/runtime-contract.md`
+  - `.agents/skills/maestro/SKILL.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/quality-evidence-model.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/prompt-hardening.md`
+
+### DEC-092 Definition Of Done And Evidence Budget Are Risk-Based
+
+- Date: 2026-05-01
+- Status: active
+- State: owner-confirmed
+- Decision: "Done" means the work meets the quality bar for its task type and risk level, with evidence sufficient to trust the result. Tiny work needs focused inspection or a targeted check; UI-visible work needs browser/desktop evidence for relevant routes/states/viewports; backend work needs targeted tests/builds appropriate to touched behavior; high-risk auth/tenant/security/migration/release work needs approval and stronger verification/review evidence. Avoid broad checks or subagents when focused evidence is enough.
+- Rationale: Future work should be checked enough to be trusted without becoming a ceremony-heavy process.
+- Sources:
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/quality-evidence-model.md`
+  - `maestro/docs/runtime-contract.md`
+  - `maestro/templates/evidence.md.tmpl`
+
+### DEC-093 Durable Memory Promotes Accepted Standards, Not Working Notes
+
+- Date: 2026-05-01
+- Status: active
+- State: owner-confirmed
+- Decision: Durable memory records accepted decisions that affect future strategy, standards, architecture, ownership, risk, or workflow. Brainstorming, rejected options, temporary plans, one-off implementation notes, and raw evidence stay in active artifacts or chat. Non-trivial closeout should explicitly say whether memory update is not needed, proposed, or completed.
+- Rationale: Memory should improve future agent decisions without becoming a task journal or copying planning artifacts wholesale.
+- Sources:
+  - `maestro/memory/agent-workflow.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/memory-update-policy.md`
+  - `maestro/memory/START_HERE.md`
+
+### DEC-094 Maestro And Mason Use Existing Architecture Sources Before Coding
+
+- Date: 2026-05-01
+- Status: active
+- State: landed
+- Decision: Before non-trivial programming, Maestro or Mason classifies the lane and reads only the relevant existing sources: `platform/AGENTS.md`, the lane `AGENTS.md`, relevant memory module pack, exact canonical FE/BE contract, relevant `.codex/standards/**`, and target implementation files. Do not create a new project-architecture standard unless repeated work shows agents still miss ownership, source selection, or FE/BE boundary reads.
+- Rationale: Existing repo guidance already covers most architecture intake; prompt-level routing is enough unless repeated failures prove a new standard is needed.
+- Sources:
+  - `.agents/skills/maestro/SKILL.md`
+  - `.agents/skills/mason/SKILL.md`
+  - `.codex/standards/README.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/project-architecture-intake.md`
+
+### DEC-095 AGENTS Files Have Narrow Ownership Boundaries
+
+- Date: 2026-05-01
+- Status: active
+- State: owner-confirmed
+- Decision: `AGENTS.md` files must avoid duplicated Maestro policy. Root `AGENTS.md` owns repository-wide runtime boundaries, role map, artifact model, read policy, and completion checks. `platform/AGENTS.md` owns shared platform product-development invariants, cross-stack gates, memory update rules, and workflow. Lane files such as `platform/frontend/AGENTS.md` and `platform/backend/AGENTS.md` own local implementation rules, commands, tests, and docs update expectations. Maestro runtime and memory own owner-facing workflow, UI/UX judgment, browser/desktop evidence policy, agent/tool selection, delegation, artifacts, gates, and closeout behavior.
+- Rationale: Keeping AGENTS files narrow prevents multiple places from defining UI/UX acceptance, browser/tool policy, or agent-routing behavior with slightly different wording.
+- Sources:
+  - `AGENTS.md`
+  - `platform/AGENTS.md`
+  - `platform/frontend/AGENTS.md`
+  - `platform/backend/AGENTS.md`
+  - `.codex/standards/runtime/repository.md`
+  - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/work.md`

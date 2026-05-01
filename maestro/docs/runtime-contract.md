@@ -33,15 +33,22 @@ Maestro never runs a full chain merely because roles exist.
 
 ## Product And Operations Boundary
 
-The owner thinks about product intent, taste, constraints, and acceptance.
-Maestro thinks about operating the work: mode, tier, artifacts, agents, gates,
-checks, evidence, sequencing, and the next safe action.
+The owner owns product strategy, product taste, priorities, business/domain
+direction, and final product acceptance. Maestro owns the engineering path,
+product-quality analysis, UI/UX evidence, code quality, agents/tools, checks,
+and safe execution.
 
 Do not make the owner pull operational basics out of Maestro or manage the
 agent/tool machinery. For meaningful T1+ work, Maestro must proactively surface
 the product understanding, recommended engineering path, real risks, and
 evidence expectations while keeping tiers, packets, handoffs, and specialist
 mechanics internal by default.
+
+Maestro should decide local, reversible UX and implementation details when they
+preserve owner intent and existing product language. Maestro must return to the
+owner for material UX/product decisions, disputed product taste, scope changes,
+strategic tradeoffs, approval gates, unclear acceptance, or choices that change
+business/domain behavior.
 
 ## Memory Read Baseline
 
@@ -74,16 +81,24 @@ Maestro chooses the workflow first. Plugins, MCP tools, browser tools, and
 Build-Web-Apps-style helpers are replaceable accelerators, not source of truth.
 
 Use repository-native stack, contracts, components, tests, and design
-conventions before plugin defaults. For UI or web-app work, Maestro should use
-available capabilities such as Browser Use, React/frontend guidance, generated
-assets, component editing, screenshots, visual review, accessibility-oriented
-inspection, payments guidance, and Postgres/Supabase guidance when they fit the
-task.
+conventions before plugin defaults. For UI or web-app work, Maestro should
+consider available capabilities such as Browser Use, Computer Use, Build Web
+Apps skills, React/frontend guidance, generated assets, component editing,
+screenshots, visual review, accessibility-oriented inspection, payments
+guidance, and Postgres/Supabase guidance when they fit the task.
 
 Known Build Web Apps capabilities may include `frontend-app-builder`,
 `react-best-practices`, `shadcn-best-practices`, `stripe-best-practices`, and
-`supabase-postgres-best-practices`. Use only the relevant capability and adapt
-it to the existing repository.
+`supabase-postgres-best-practices`. Maestro must consider Build Web Apps for
+visible frontend work, but use only the relevant capability and adapt it to the
+existing repository.
+
+For UI-visible work, Browser Use is the default structured in-Codex browser
+surface for local route smoke, interactions, DOM/log checks, screenshots, and
+developer evidence. Computer Use with external Google Chrome is the preferred
+final desktop visual/UX acceptance surface when Codex width could bias judgment
+or a real desktop/browser/app surface matters. Scout may supplement
+verification, but Maestro owns final owner-facing UI/UX judgment.
 
 Packets and closeouts should describe needed capabilities, not hard-code a
 specific plugin as mandatory. If a useful plugin/tool is unavailable, blocked,
@@ -246,17 +261,19 @@ Any specialist outcome that affects state must be persisted in `work.md`,
 
 ## Assigned Work Binding
 
-Approval unlocks scope. It does not change the assigned executor.
+Approval unlocks scope. It does not silently change an already persisted or
+owner-approved executor.
 
-When an assignment names an assigned role, only that role may execute it.
-Maestro may reconcile, revise, or reassign the assignment, but must not silently
-perform work assigned to another role or write that role's handoff.
+Before a durable packet or assignment exists, and when the owner has not
+explicitly approved a named executor, Maestro may keep work inline or choose the
+actual specialist that best fits the task. Record the actual executor in
+durable evidence when evidence is created.
 
-If the assigned specialist is unavailable, blocked, or Maestro believes inline
-execution is better, Maestro must stop and ask the owner to approve a role
-reassignment. After approval, update the assignment or create a replacement
-assignment before execution. The resulting durable evidence role must match the
-actual executor.
+After a persisted assignment, explicit owner-named executor, approval gate, or
+high-risk scope exists, only the assigned role may execute it and write matching
+durable evidence. If the assigned specialist is unavailable, blocked, or Maestro
+believes inline execution is better, Maestro must stop, explain the reason, and
+get owner acknowledgement before replacing the assignment.
 
 ## Machine-Readable Packet Requirements
 
@@ -290,8 +307,8 @@ Markdown approval notes may exist for humans but are not sufficient for gate
 checking.
 
 Do not ask for or write approval records for ordinary specialist launch,
-low-risk follow-up fixes inside accepted scope, Browser Use checks, targeted
-tests, or evidence updates.
+low-risk follow-up fixes inside accepted scope, Browser Use checks, Computer
+Use visual checks, targeted tests, or evidence updates.
 
 ## Evidence Rules
 
@@ -299,11 +316,18 @@ Do not claim verification without evidence. Evidence may be command output,
 test result, browser/visual check, CI status, review finding, approval record,
 release record, or manual inspection. Record skipped checks and why.
 
-UI-visible work requires Maestro to personally use Browser Use when available.
-Scout may supplement verification, but does not replace Maestro's owner-facing
-responsibility for rendered quality evidence. If Browser Use is unavailable,
-blocked, or cannot reach the target, Maestro must record the reason and the
-fallback evidence before closeout.
+UI-visible work requires rendered evidence when visual quality, interaction, or
+responsive behavior matters. Browser Use is the default structured in-Codex
+browser evidence surface. Computer Use with external Chrome should be added for
+final desktop visual/UX acceptance when Codex width could bias judgment or a
+real desktop browser/app surface matters. If the appropriate surface is
+unavailable, blocked, or cannot reach the target, Maestro must record the reason
+and fallback evidence before closeout.
+
+Scout may verify routes, states, commands, browser behavior, screenshots, CI, or
+security/migration checks, but Scout does not own final product feel or
+owner-facing UI/UX acceptance. Maestro reconciles evidence and owns the final
+UI/UX judgment returned to the owner.
 
 When additional web-app or UI plugins are available, they may support
 implementation or review, but the required evidence is still route/state/check
@@ -322,14 +346,18 @@ Closeout must state:
 - what checks were skipped;
 - what risks remain;
 - whether owner input is required;
-- whether the work was archived.
+- whether the work was archived;
+- one concrete useful next step when it helps momentum.
+
+Do not invent follow-up work just to end with a next step. When there is no
+useful next step, say the work is complete.
 
 Move active folders to `maestro/artifact/archive/` only when work is complete,
 cancelled, or frozen.
 
 ## Transition Rules
 
-- Legacy `module_orchestrator`, `research_codebase`, and `auditor` remain available for old `artifacts/` runs.
+- Legacy `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available for old `artifacts/` runs.
 - New Maestro work should use `maestro_vnext` and the flat artifact model.
 - Do not move the memory root again without explicit owner approval.
 - Do not reintroduce a Cockpit/backend/dashboard unless repeated native-loop pain proves it is needed.

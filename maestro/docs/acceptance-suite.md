@@ -22,6 +22,7 @@ engineering path.
 8. Internal tier/packet/handoff/agent mechanics are hidden unless the owner asks or a real gate requires precision.
 9. T3/T4 planning names one recommended next action, not a menu.
 10. Product/runtime planning includes required coverage, phases, real gates, first slice, evidence, and not-yet items without owner prompting.
+11. Maestro returns to the owner for material UX/product decisions, disputed product taste, scope changes, strategic tradeoffs, approval gates, or unclear acceptance.
 
 ## B. Tiny And Lightweight Work
 
@@ -43,9 +44,10 @@ engineering path.
 7. After Grant-driven revisions, the work note records audit status and readiness when useful.
 8. Specialist subagents receive self-contained assignments by default.
 9. Full-context/forked launch is exceptional, reasoned, and not attempted before explicit assignment invocation.
-10. Execution approval does not change assigned role.
-11. An assignment given to a specialist is not executed inline by Maestro unless owner approves reassignment and the assignment is updated or replaced.
-12. Durable evidence role matches the actual executor.
+10. Before a durable assignment or explicit owner-named executor exists, Maestro may keep work inline or choose the actual specialist without a reassignment ceremony.
+11. Execution approval does not change an already persisted assigned role.
+12. A persisted assignment given to a specialist is not executed inline by Maestro unless owner acknowledges reassignment and the assignment is updated or replaced.
+13. Durable evidence role matches the actual executor.
 
 ## D. Artifact Resume
 
@@ -61,7 +63,7 @@ engineering path.
 2. Implementation of real gated surfaces is blocked until `approval-*.json` exists and covers the requested scope.
 3. Release/deploy actions require a separate release approval.
 4. Closeout records approvals, evidence, skipped checks, residual risk, and rollback/recovery notes.
-5. Ordinary specialist launch, low-risk fixes inside accepted scope, checks, Browser Use, and evidence updates do not create approval gates.
+5. Ordinary specialist launch, low-risk fixes inside accepted scope, checks, Browser Use, Computer Use visual checks, and evidence updates do not create approval gates.
 
 ## F. Transition Safety
 
@@ -83,5 +85,13 @@ engineering path.
 2. Available UI, browser, or web-app plugins may accelerate implementation or review.
 3. Plugin output is never accepted without repo-native route, viewport, state, and evidence checks.
 4. If a useful plugin is unavailable or mismatched with the repo stack, closeout records the fallback path.
-5. For UI-visible work, Maestro personally uses Browser Use when available; Scout can supplement but does not replace Maestro's owner-facing UI evidence responsibility.
-6. Build Web Apps capabilities are considered for frontend-heavy, React, generated-asset, payment, or Postgres/Supabase work when available.
+5. For UI-visible work, Browser Use is the default structured in-Codex browser evidence surface.
+6. Computer Use with external Chrome is used for final desktop visual/UX acceptance when Codex width could bias judgment or a real desktop/browser/app surface matters.
+7. Scout can supplement UI verification, but does not replace Maestro's owner-facing UI/UX judgment.
+8. Build Web Apps capabilities are considered for visible frontend work and used selectively for frontend-heavy, React, generated-asset, payment, or Postgres/Supabase work when available.
+
+## I. Closeout Momentum
+
+1. Non-trivial closeout recommends one concrete useful next step when it helps momentum.
+2. Maestro does not invent follow-up work just to include a next step.
+3. Maestro does not provide a menu of next steps unless a real owner decision is needed.

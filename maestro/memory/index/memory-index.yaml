@@ -6,10 +6,10 @@
   domain: repository-runtime
   state: landed
   confidence: doc-confirmed
-  summary: "The active repo runtime is Codex-native: AGENTS.md, README.md, .codex/, .agents/skills/, maestro/docs, maestro/contracts, and maestro/templates."
+  summary: "The active repo runtime is Codex-native: AGENTS.md, README.md, .codex/, .agents/skills/, maestro/docs, maestro/contracts, and maestro/templates. New owner-led engineering work uses Maestro vNext and the active nine-role team."
   read_when:
     - "task changes agent runtime, orchestration, contracts, templates, or lifecycle artifacts"
-    - "task mentions Maestro, Charlie, Grant, module_orchestrator, research_codebase, or brief_auditor"
+    - "task mentions Maestro, Charlie, Grant, Mason, Scout, Lens, Release, Scribe, Archivist, module_orchestrator, research_codebase, or brief_auditor"
   canonical_docs:
     - AGENTS.md
     - README.md
@@ -18,10 +18,16 @@
     - .agents/skills/maestro/SKILL.md
     - .agents/skills/charlie/SKILL.md
     - .agents/skills/grant/SKILL.md
+    - .agents/skills/mason/SKILL.md
+    - .agents/skills/scout/SKILL.md
+    - .agents/skills/lens/SKILL.md
+    - .agents/skills/release/SKILL.md
+    - .agents/skills/scribe/SKILL.md
+    - .agents/skills/archivist/SKILL.md
   memory_docs:
     - maestro/memory/durable/repo-map.md
     - maestro/memory/durable/platform-contract.md
-  last_compacted: 2026-04-25
+  last_compacted: 2026-05-01
 
 - id: platform.product.current-state
   memory_type: semantic
@@ -371,7 +377,6 @@
     - maestro/memory/reference-code/README.md
   memory_docs:
     - maestro/memory/durable/reference-code-policy.md
-    - maestro/memory/reference-code/README.md
     - maestro/memory/reference-code/packs-index.md
     - maestro/memory/reference-code/relocation-plan.md
     - maestro/memory/reference-code/relocation-checkpoint.md

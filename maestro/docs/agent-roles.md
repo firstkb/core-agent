@@ -15,11 +15,11 @@ lang: en
 | Charlie | research | Codebase and docs research, observed facts, risks, change points | No |
 | Grant | audit | Brief, plan, dependency, risk, and acceptance audit | No |
 | Mason | implementation | Scoped implementation across FE, BE, docs, tests | Yes |
-| Scout | verification | Checks, CI, Storybook, browser, migrations, security gates | Limited |
+| Scout | verification | Checks, CI, Storybook, browser evidence, migrations, security gates | Limited |
 | Lens | review | Read-only diff, evidence, acceptance, and risk review | No |
 | Release | release | Deployment, release, workflow dispatch, rollback notes | Limited |
 | Scribe | closeout | Lean closeout and evidence summary | Docs/artifacts only |
-| Archivist | memory audit | Semantic docs and durable memory auditor | Docs/memory only |
+| Archivist | memory audit | Semantic docs and durable memory audit specialist | Docs/memory only |
 
 ## Naming Decision
 
@@ -29,7 +29,7 @@ closeout recorder in Maestro vNext.
 
 Migration intent:
 
-- `Archivist` = docs and durable memory validator/auditor. This role owns
+- `Archivist` = docs and durable memory validation/audit. This role owns
   memory consistency, durable memory drift checks, source-of-truth route checks,
   and memory update validation.
 - `Scribe` = new run closeout, evidence, and useful specialist-note recorder.
@@ -41,7 +41,7 @@ Rename provenance is available from git history when needed.
 Responsibilities:
 
 - classify owner requests;
-- choose internal route tier and stage chain;
+- choose internal route tier and execution shape;
 - decide whether state/artifacts are required;
 - create bounded assignments or packets when useful;
 - assign specialist agents;
@@ -96,5 +96,5 @@ The active vNext skill and Codex system-agent mapping is:
 | Scribe | `.agents/skills/scribe/` | `closeout_scribe` | active pilot |
 | Archivist | `.agents/skills/archivist/` | `memory_archivist` | active pilot |
 
-Legacy agents `module_orchestrator`, `research_codebase`, and `auditor`
+Legacy agents `module_orchestrator`, `research_codebase`, and `brief_auditor`
 remain available only for old `artifacts/<module>/...` continuation.

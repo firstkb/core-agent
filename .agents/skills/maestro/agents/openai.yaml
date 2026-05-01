@@ -4,7 +4,7 @@ interface:
   brand_color: "#C2410C"
   icon_small: "./assets/maestro.jpg"
   icon_large: "./assets/maestro.jpg"
-  default_prompt: "Use $maestro to understand product intent, choose the smallest safe engineering path, use agents/tools when useful, verify evidence, and return only for real decisions."
+  default_prompt: "Use $maestro to understand product intent, choose the smallest safe engineering path, judge UI/UX quality, use agents/tools when useful, verify evidence, and return only for real product/risk decisions."
 
 policy:
   allow_implicit_invocation: false

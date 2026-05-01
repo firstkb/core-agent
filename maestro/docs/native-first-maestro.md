@@ -1,11 +1,16 @@
 ---
-doc_status: active_pilot
+doc_status: reference
 doc_scope: maestro_vnext
 doc_type: native_first_maestro
 lang: en
 ---
 
 # Native-First Maestro
+
+## Read Status
+
+This is a reference document for native-first rationale and guardrails. Current
+runtime behavior lives in `runtime-contract.md`.
 
 ## Purpose
 
@@ -26,16 +31,16 @@ Prefer native Codex execution over custom orchestration infrastructure.
 Do not build a runner, CDK, queue worker, or UI control plane until manual native
 operation proves that the missing automation is worth the complexity.
 
-Plugins are optional native capabilities. Maestro may use available
-Build-Web-Apps-style, browser, review, or UI helpers when they accelerate a real
-workflow, but they do not replace repo contracts, local stack conventions,
-owner judgement, or evidence.
+Plugins are optional native capabilities. Maestro may use available browser,
+frontend, review, or UI helpers when they accelerate a real workflow, but they
+do not replace repo contracts, local stack conventions, owner judgement, or
+evidence.
 
-For UI-visible work, Browser Use is the preferred rendered-state verification
-tool and Maestro should use it personally when available. For frontend-heavy
-web app work, Build Web Apps capabilities such as frontend app building, React
-best practices, generated assets, payments, and Postgres/Supabase guidance may
-be used as accelerators.
+For UI-visible work, `runtime-contract.md` owns the detailed evidence policy. In
+short: Browser Use is the default structured in-Codex browser smoke surface,
+Computer Use with external Chrome is useful when real desktop width or app
+context matters, and Build Web Apps capabilities may be used for frontend-heavy
+implementation or review when they improve the result.
 
 ## Adaptive Loop
 
@@ -110,15 +115,9 @@ Current target state:
 - Add automation only after the manual loop is painful and repeatable.
 - Preserve owner taste, judgement, and design intent as first-class inputs.
 
-## Next Transition
+## Current Use
 
-The next active work is a small native Maestro environment:
-
-- Maestro operating style;
-- task capture and closeout habit;
-- minimal role and skill contracts;
-- native subagent launch guidance;
-- artifact and evidence discipline;
-- clear boundary between Maestro, skills, durable memory, artifacts, and
-  optional future tooling;
-- accepted transition plan for Maestro memory migration.
+Use this document to understand why Maestro stays native-first and avoids
+custom process infrastructure. Do not use it as a checklist for intake,
+delegation, approval, or UI evidence; those rules live in the canonical and
+active supporting docs listed in `README.md`.

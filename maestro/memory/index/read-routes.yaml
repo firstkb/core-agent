@@ -149,7 +149,6 @@ routes:
     read:
       - maestro/memory/reference-code/README.md
       - maestro/memory/durable/reference-code-policy.md
-      - maestro/memory/reference-code/README.md
       - maestro/memory/reference-code/packs-index.md
       - maestro/memory/reference-code/relocation-checkpoint.md
 
@@ -167,7 +166,6 @@ routes:
     read:
       - maestro/memory/reference-code/README.md
       - maestro/memory/durable/reference-code-policy.md
-      - maestro/memory/reference-code/README.md
       - maestro/memory/reference-code/packs-index.md
       - maestro/memory/reference-code/relocation-plan.md
       - maestro/memory/reference-code/relocation-checkpoint.md
@@ -405,6 +403,13 @@ routes:
       - AI memory workflow
       - agent memory
       - agent evidence
+      - agent selection
+      - specialist
+      - delegation
+      - outsourced capability
+      - Browser Use
+      - Computer Use
+      - Build Web Apps
       - PR evidence
       - direct inline
       - route tier
@@ -416,6 +421,7 @@ routes:
     read:
       - maestro/memory/agent-workflow.md
       - maestro/docs/runtime-contract.md
+      - maestro/docs/agent-selection-thresholds.md
       - maestro/docs/artifact-model.md
       - maestro/templates/evidence.md.tmpl
       - maestro/memory/durable/legacy-memory-import.md

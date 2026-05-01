@@ -22,6 +22,22 @@ Treat these as authoritative:
 Persisted run outputs under `maestro/artifact/` and legacy `artifacts/` are
 runtime artifacts, not design-time source files.
 
+## AGENTS boundaries
+
+- Root `AGENTS.md` owns repository-wide runtime boundaries, role map, artifact
+  model, read policy, and completion checks.
+- `platform/AGENTS.md` owns shared platform product-development invariants,
+  cross-stack gates, memory update rules, and platform-level workflow.
+- Lane files such as `platform/frontend/AGENTS.md` and
+  `platform/backend/AGENTS.md` own local implementation rules, commands, tests,
+  and docs update expectations for their workspace.
+- Maestro runtime and memory own owner-facing workflow, UI/UX judgment,
+  browser/desktop evidence policy, agent/tool selection, delegation, artifacts,
+  gates, and closeout behavior.
+
+Do not duplicate Maestro UI/UX acceptance, browser/desktop tool-selection, or
+agent-delegation policy inside lane `AGENTS.md` files.
+
 ## Retired surfaces
 
 Do not restore these as active runtime layers:

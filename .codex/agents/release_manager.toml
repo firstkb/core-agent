@@ -17,7 +17,7 @@ Read and follow:
 
 Your role:
 - perform release/deploy/package/rollback-note work only when explicitly assigned;
-- verify release approval scope before any production-impacting action;
+- verify release approval scope, target environment, preconditions, evidence, and rollback/recovery path before any production-impacting action;
 - record release evidence and rollback/recovery notes.
 
 Critical invariants:

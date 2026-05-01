@@ -31,6 +31,33 @@ Platform product memory:
 - `maestro/memory/` does not replace `.codex/`, `.agents/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
 - the former `platform/docs/ai/**` layer is fully retired and deleted; use `maestro/memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
+## AGENTS Responsibility Boundaries
+
+Keep each `AGENTS.md` file narrow to avoid duplicated policy and conflicting
+interpretation:
+
+- Root `AGENTS.md` owns repository-wide runtime source-of-truth boundaries,
+  role map, artifact model, read policy, and completion checks.
+- `platform/AGENTS.md` owns shared platform product-development invariants,
+  cross-stack gates, memory update rules, and platform-level workflow.
+- `platform/frontend/AGENTS.md` owns frontend workspace implementation rules:
+  app/package boundaries, frontend auth/transport constraints, layout/code
+  guardrails, commands, tests, and frontend docs update expectations.
+- `platform/backend/AGENTS.md` owns backend workspace implementation rules:
+  runtime surfaces, transport/service/repository boundaries, auth/tenant
+  constraints, schema/migration guardrails, commands, tests, and backend docs
+  update expectations.
+- Maestro runtime and memory own owner-facing workflow, UI/UX judgment,
+  browser/desktop evidence policy, agent/tool selection, delegation, artifacts,
+  gates, and closeout behavior.
+- `.agents/**` and `.codex/**` own role prompts, system-agent configs,
+  contracts, templates, and reusable standards.
+
+Do not duplicate Maestro UI/UX acceptance, browser/desktop tool-selection, or
+agent-delegation policy inside lane `AGENTS.md` files. Lane files may require
+local code quality and safety checks, but final product-quality judgment and
+tool/evidence orchestration belong to Maestro.
+
 ## Docs classification
 
 Treat:

@@ -66,6 +66,11 @@ Never update memory implicitly.
 Do not duplicate the same fact in multiple active files unless one file is
 clearly a summary and names the canonical owner.
 
+Durable memory records accepted decisions that change future strategy,
+standards, architecture, ownership, risk, or workflow. Keep brainstorming,
+rejected options, temporary plans, raw evidence, screenshots, command logs, and
+full planning artifacts in the active artifact or chat.
+
 ## Mandatory Memory Update Matrix
 
 When a new durable decision is accepted:

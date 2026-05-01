@@ -58,16 +58,17 @@ maestro/
     maestro-character.md
     native-first-maestro.md
     adaptive-loop-contract.md
-    orchestration-contract.md
     routing-tier-contract.md
+    agent-selection-thresholds.md
     agent-roles.md
     agent-contracts.md
-    agent-sequences.md
     security-permissions-contract.md
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
     memory-migration-plan.md
+    orchestration-contract.md       # retired compatibility pointer
+    agent-sequences.md              # retired compatibility pointer
   contracts/
     orchestration-plan.schema.json
     task-packet.schema.json
@@ -104,7 +105,9 @@ For Maestro vNext, treat these as authoritative:
 6. `.codex/config.toml` and `.codex/agents/*` for available system agents.
 
 Supporting docs under `maestro/docs/` explain the model, but
-`runtime-contract.md` is the shortest normative contract.
+`runtime-contract.md` is the shortest normative contract. Use
+`maestro/docs/README.md` to distinguish canonical, active supporting,
+historical, and retired docs.
 
 ## Roles
 

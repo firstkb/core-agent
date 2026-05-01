@@ -1,7 +1,7 @@
 # Current State
 
 Status: compact active snapshot
-Last compacted: 2026-04-29
+Last compacted: 2026-05-01
 
 This is a compact AI retrieval snapshot.
 Use canonical docs and code for final verification before changing behavior.
@@ -20,6 +20,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: Root `README.md` and `AGENTS.md` now describe the repo as the VSM (Virtual Safety Manager) v1.0.0 product workspace plus Codex-native agent runtime, with `platform/` as product root and `maestro/memory/` as current operational memory.
 - `landed` `doc-confirmed`: Maestro vNext is the active native-first work partner for new owner-led engineering tasks.
 - `landed` `doc-confirmed`: Active vNext skill nicknames are `maestro`, `charlie`, `grant`, `mason`, `scout`, `lens`, `release`, `scribe`, and `archivist`.
+- `landed` `owner-confirmed`: Human-agent symbiosis is the operating model. The owner owns product strategy, business/domain direction, product taste, priorities, and final product decisions. Maestro owns the engineering path, code quality, UI/UX analysis and evidence, agents/tools, checks, and safe execution.
+- `landed` `doc-confirmed`: Maestro uses specialists and outsourced capabilities adaptively, not through fixed chains. `maestro/docs/agent-selection-thresholds.md` defines default thresholds for when to keep work inline, call internal roles, or use outsourced tools.
 - `landed` `doc-confirmed`: Legacy system agent ids `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available only for old `artifacts/<module>/...` continuation.
 - `landed` `doc-confirmed`: Persisted module/feature/stage artifacts live under `artifacts/` and are runtime artifacts, not design-time source of truth.
 - `landed` `owner-confirmed`: The old typed lifecycle CLI has been removed from the active tree. New Maestro work uses native Codex execution plus flat artifacts under `maestro/artifact/`.
@@ -54,7 +56,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: `scripts/ai/preflight.sh` is the lightweight local/manual preflight for non-trivial implementation work; default mode runs docs/env checks, while `--full` is explicit for broader backend/frontend checks.
 - `landed` `doc-confirmed`: `maestro/templates/evidence.md.tmpl` is the compact evidence shape for non-trivial closeout or PR text; it should not become a standalone artifact by default.
 - `landed` `doc-confirmed`: Maestro direct inline work stays in the current chat by default. Persisted work uses flat artifacts under `maestro/artifact/active/`.
-- `landed` `owner-confirmed`: Local visual smoke for app UI should use the Codex Browser Use plugin/skill (`$Browser`, `@browser-use`, or `browser-use:browser`, depending on Codex surface) when requested. Owner-provided seeded dev logins live only in ignored `maestro/memory/local/browser-use-auth.md`; tracked evidence should say `Auth: local seeded dev login.` without recording codes.
+- `landed` `owner-confirmed`: For visible UI work, Maestro owns final UI/UX judgment. Browser Use is the default structured in-Codex evidence surface for local route/state/DOM/screenshot smoke. Computer Use with external Chrome is used when final desktop visual judgment must be independent of Codex width or real desktop/browser/app behavior matters. Build Web Apps must be considered for visible frontend work and used selectively when frontend-heavy expertise improves the result.
+- `landed` `owner-confirmed`: Owner-provided seeded dev logins for browser checks live only in ignored `maestro/memory/local/browser-use-auth.md`; tracked evidence should say `Auth: local seeded dev login.` without recording codes.
 - `landed` `owner-confirmed`: retired runtime-era run folders were moved out of active memory and copied outside the active repository.
 - `landed` `doc-confirmed`: `.github/workflows/docs-memory-check.yml` runs docs/memory drift and env policy checks for relevant PRs and pushes.
 - `landed` `code-confirmed`: Minimal product CI now includes `.github/workflows/backend-ci.yml` for Go format/test/build and `.github/workflows/frontend-ci.yml` for pnpm frozen install, typecheck, and build. Frontend lint/test and UI visual gates remain deferred until baselines are stable.
@@ -62,6 +65,8 @@ Confidence labels:
 - `landed` `doc-confirmed`: `Archivist` (`.agents/skills/archivist/SKILL.md`) is the manual semantic docs/memory audit skill for source-of-truth drift, stale routes, and context-window risks.
 - `landed` `owner-confirmed`: Archivist should be used manually after large docs/memory changes and before major development phases, not on every commit.
 - `landed` `doc-confirmed`: Memory maintenance rules for new decisions, modules, doc status changes, reference-code changes, and agent workflow changes live in `maestro/memory/agent-workflow.md`.
+- `landed` `owner-confirmed`: Durable memory should promote accepted decisions that affect future strategy, standards, architecture, ownership, risk, or workflow. Brainstorming, rejected options, temporary plans, raw evidence, and full planning artifacts stay in active artifacts or chat.
+- `landed` `owner-confirmed`: `AGENTS.md` files have narrow ownership boundaries. Root `AGENTS.md` owns repo runtime boundaries; `platform/AGENTS.md` owns shared platform invariants and workflow; lane `AGENTS.md` files own local implementation rules only; Maestro runtime/memory owns UI/UX judgment, browser/desktop evidence policy, agent/tool selection, artifacts, gates, and closeout.
 - `landed` `owner-confirmed`: The root `docs/` folder is retired. Reference-code aliases live under `maestro/memory/reference-code/README.md`, and historical root docs are git-history provenance only.
 - `landed` `owner-confirmed`: The former `platform/docs/ai/**` memory layer has been fully retired and physically deleted after migration into `maestro/memory`; exact old payload text is git-history provenance only.
 - `landed` `owner-confirmed`: Legacy run triage for former `platform/docs/ai/runs/**` artifacts is frozen in owner-managed external provenance.

@@ -35,5 +35,8 @@ implementation.
 - Do not mutate artifacts except an assigned research note or handoff when
   Maestro asked for one.
 - Separate observed facts from inference.
+- Prefer exact paths, symbols, contracts, call/data flow, dependencies, risks,
+  and open questions over broad summaries.
+- Stop once the assignment is answered; do not keep expanding research scope.
 - Return concise findings to Maestro with evidence refs and recommended next
   action. Write machine-readable handoff JSON only when explicitly assigned.

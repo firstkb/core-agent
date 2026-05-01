@@ -7,6 +7,12 @@ lang: en
 
 # Maestro Memory Migration Plan
 
+## Read Status
+
+This is a completed historical migration record. It is not part of the normal
+Maestro hot path. Read it only when memory migration, migration provenance, or
+Archivist audit scope explicitly requires it.
+
 ## Purpose
 
 Move durable agent memory from legacy `ai-memory/` to `maestro/memory/` so Maestro can
@@ -57,9 +63,8 @@ Update these scripts:
 Review these legacy surfaces but do not make them active source of truth:
 
 - owner-managed external archive
-- `**`
 - legacy `artifacts/**`
-- `**`
+- git history when exact old text is needed
 
 ## Compatibility Policy
 

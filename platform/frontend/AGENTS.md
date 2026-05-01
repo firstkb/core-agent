@@ -2,6 +2,12 @@
 
 Scope: `platform/frontend` only.
 
+Responsibility: frontend implementation rules only: app/package boundaries,
+frontend auth/transport constraints, layout/code guardrails, commands, tests,
+and frontend docs update expectations. Maestro runtime owns UI/UX judgment,
+browser/desktop evidence policy, agent/tool selection, artifacts, and closeout
+behavior.
+
 Read first:
 
 1. `platform/AGENTS.md`
@@ -98,27 +104,6 @@ Require extra care before finalizing changes that affect:
 - app shells use explicit sidebar width plus `minmax(0, 1fr)` content
 - shared surfaces should prefer `min-width: 0` and `width: 100%`
 - avoid `auto-fit` / `auto-fill` grids in shared shells or primitives without explicit review
-
-## Visual review loop
-
-- For non-trivial visible UI work, use a compact Maestro packet before implementation unless the change is a tiny copy/CSS fix.
-- The intended loop is: packet -> implementation -> Storybook/product state -> Browser Use or screenshot evidence -> evidence closeout.
-- Use Storybook for stable `ui-kit` primitives, `CollectionTable` package states, and low-risk shared pattern review.
-- Storybook V1 is manual/local only; it is not a CI gate until baselines become stable.
-- Use the Codex Browser Use plugin/skill for local app visual smoke when the dev stack is running and the task changes visible UI.
-- Invoke Browser Use through the current Codex surface (`$Browser`, `@browser-use`, or `browser-use:browser`).
-- Do not replace an explicit Browser Use visual-smoke request with macOS `open`, generic web browsing, or Playwright unless the owner approves a fallback.
-- Treat the current in-app browser size as `current viewport smoke`, not as
-  desktop/mobile responsive evidence. For responsive claims, use fixed viewport
-  checks and record dimensions.
-- Standard viewport evidence for non-trivial visible UI work is desktop
-  `1440x900` and mobile portrait `390x844`. Add tablet/narrow desktop
-  `768x1024` when shell layout, sidebars, sticky toolbars, dense grids, or
-  breakpoint-sensitive controls are affected.
-- Local Browser Use auth, when needed, must come from ignored `maestro/memory/local/browser-use-auth.md`.
-- Do not copy local auth codes into tracked docs, run artifacts, or evidence blocks.
-- In evidence, write `Auth: local seeded dev login.` rather than the credentials.
-- If Storybook coverage does not exist for the target surface, use product state verification and record Storybook as follow-up instead of blocking the UI task.
 
 ## File size guardrails
 

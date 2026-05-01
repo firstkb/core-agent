@@ -112,12 +112,19 @@ Specialists then work from the assignment and return the expected output.
 
 ## Assigned Work Binding
 
-Approval unlocks assignment scope but does not change the assigned executor.
+Approval unlocks assignment scope but does not silently change an already
+persisted or owner-approved executor.
 
-If an assignment is assigned to a role, only that role may execute it and write
-matching durable evidence. Maestro cannot silently substitute itself or another
-specialist. Reassignment requires owner acknowledgement and an updated or
-replacement assignment. Durable evidence role must match the actual executor.
+Before a durable packet or assignment exists, and when the owner has not
+explicitly approved a named executor, Maestro may keep work inline or choose the
+actual specialist that best fits the task. Record the actual executor in
+durable evidence when evidence is created.
+
+After a persisted assignment, explicit owner-named executor, approval gate, or
+high-risk scope exists, only the assigned role may execute it and write matching
+durable evidence. Reassignment then requires owner acknowledgement and an
+updated or replacement assignment. Durable evidence role must match the actual
+executor.
 
 ## Maestro
 
@@ -270,8 +277,8 @@ Use when:
 - tests, CI, Storybook, browser, visual, security, or migration checks require
   explicit evidence;
 - verification should be independent from implementation.
-- UI-visible work needs independent Browser Use or visual verification in
-  addition to Maestro's owner-facing Browser Use responsibility.
+- UI-visible work needs independent browser/visual verification to supplement
+  Maestro's owner-facing UI/UX judgment.
 
 Allowed stages:
 
@@ -292,7 +299,8 @@ Required evidence:
 
 - exact commands and results;
 - CI or workflow links when relevant;
-- Browser Use skill used, or explicit reason it was unavailable/skipped;
+- Browser Use, Computer Use, or other assigned visual evidence surface used, or
+  explicit reason it was unavailable/skipped;
 - browser route, viewport, interaction state, and visual notes when UI is
   visible;
 - migration/security notes when relevant.
@@ -366,12 +374,13 @@ Required evidence:
 
 Role:
 
-- orchestration closeout recorder.
+- closeout recorder.
 
 Use when:
 
 - persisted work needs compact final record;
-- evidence, approvals, checks, risks, and next action should be captured.
+- evidence, approvals, checks, risks, and one useful next action should be
+  captured.
 
 Allowed stages:
 
@@ -402,7 +411,7 @@ Required evidence:
 
 Role:
 
-- semantic docs and memory auditor.
+- semantic docs and memory audit specialist.
 
 Use when:
 

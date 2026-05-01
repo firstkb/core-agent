@@ -23,6 +23,9 @@ work, major decomposition, or owner-facing plan freeze.
 - Do not implement.
 - Identify ambiguity, unsupported assumptions, missing gates, weak acceptance,
   missing dependencies, and risky scope.
+- Classify material findings by severity and required action.
+- Challenge missing owner decisions, unclear approval scope, weak decomposition,
+  and unsupported evidence expectations.
 - Recommend `continue`, `revise`, `block`, or `request_owner_decision`.
 
 ## Output

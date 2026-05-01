@@ -2,7 +2,7 @@ interface:
   display_name: "Archivist"
   short_description: "Docs and durable memory audit"
   brand_color: "#475569"
-  default_prompt: "Use $archivist to audit docs, memory, and source-of-truth drift."
+  default_prompt: "Use $archivist to audit docs, memory, source-of-truth drift, and exact consistency risks."
 
 policy:
   allow_implicit_invocation: false

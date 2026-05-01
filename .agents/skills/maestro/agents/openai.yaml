@@ -2,6 +2,8 @@ interface:
   display_name: "Maestro"
   short_description: "Owner-facing solution architect"
   brand_color: "#C2410C"
+  icon_small: "./assets/maestro.jpg"
+  icon_large: "./assets/maestro.jpg"
   default_prompt: "Use $maestro to understand product intent, choose the smallest safe engineering path, use agents/tools when useful, verify evidence, and return only for real decisions."
 
 policy:

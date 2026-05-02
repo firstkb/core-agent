@@ -89,7 +89,10 @@ Ordinary agent work should read only:
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro vNext
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring
-- the exact target artifacts under `artifacts/<module>/...` and `artifacts/<module>/features/<feature>/...`
+- for explicit legacy module-orchestrator continuation only, the exact target
+  files under `artifacts/<module>/...` and
+  `artifacts/<module>/features/<feature>/...`; new Maestro vNext work uses
+  `maestro/artifact/active/` and `maestro/artifact/archive/`
 - product/runtime code and docs that materially answer the task
 
 Do not read build or plumbing surfaces during ordinary work:

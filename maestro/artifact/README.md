@@ -17,15 +17,13 @@ project-management system.
 maestro/artifact/
   active/
     YYYY-MM-DD-<work-slug>/
-      intent.md
-      plan.md
-      task.md
-      packet.md
-      approval-001.json
-      handoff-implementation-mason-001.json
-      handoff-verification-scout-001.json
-      evidence.md
-      closeout.md
+      work.md                         # normal continuity anchor
+      evidence.md                     # when evidence exists
+      closeout.md                     # when closed
+      packet.md                       # optional specialist packet
+      agent-<role>-NNN.md             # optional specialist notes
+      approval-001.json               # only for real approval gates
+      handoff-<stage>-<role>-NNN.json # only for delegated/staged work
   archive/
     YYYY-MM-DD-<work-slug>/
       ...
@@ -33,6 +31,11 @@ maestro/artifact/
 
 `active/` may contain multiple concurrent work folders. Each active folder is a
 compact working record for one owner request or work slice.
+
+Normal persisted work starts with `work.md`. Use `evidence.md` and
+`closeout.md` when evidence or closeout exists. Add packets, handoffs, agent
+notes, approval records, or expanded planning files only when delegation,
+resume, accountability, release, or real gates make them useful.
 
 `archive/` stores completed, cancelled, or frozen work folders. A work folder
 keeps the same name when moved from `active/` to `archive/`.
@@ -64,6 +67,8 @@ handoff-review-lens-001.json
 
 - Keep the folder one level deep under `active/` or `archive/`.
 - Add only files that help the next decision, handoff, evidence, or closeout.
+- Do not create `intent.md`, `plan.md`, or `task.md` as a default baseline;
+  use `work.md` unless an expanded legacy-compatible shape is explicitly useful.
 - Do not store secrets, tokens, cookies, private URLs, or credential-bearing logs.
 - Do not overwrite previous handoffs; append a new numbered attempt.
 - Markdown evidence may summarize command output, but raw sensitive logs must stay out of tracked artifacts.

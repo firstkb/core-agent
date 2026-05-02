@@ -111,14 +111,16 @@ first-read file.
 ## Never Default-Read
 
 - `reference-code/**`
-- `platform/**`
+- broad `platform/**` trees or whole-platform globs
 - old closed runs
 - raw vendor/reference packs
 - retained Form Builder exact-detail docs
 - backend archive/legacy SQL
 - git history
 
-Open these only when a route, module pack, or owner request explicitly requires them.
+Open these only when a route, module pack, or owner request explicitly requires
+them. This does not block reading exact target files, routed canonical docs, or
+focused source files needed for the task.
 
 ## Memory Updates
 

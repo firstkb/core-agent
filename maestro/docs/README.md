@@ -12,12 +12,13 @@ solution architect and engineering partner.
 
 Read order for normative behavior:
 
-1. `../AGENTS.md`
-2. `runtime-contract.md`
-3. `../contracts/README.md`
-4. `../templates/`
-5. role-specific skills under `.agents/skills/`
-6. role-specific Codex configs under `.codex/agents/`
+1. repository root `../../AGENTS.md`
+2. local `../AGENTS.md`
+3. `runtime-contract.md`
+4. `../contracts/README.md`
+5. `../templates/`
+6. role-specific skills under `.agents/skills/`
+7. role-specific Codex configs under `.codex/agents/`
 
 ## Doc Classes
 

@@ -7,8 +7,6 @@ node_modules/
 maestro/memory/local/
 artifacts/*
 !artifacts/.gitkeep
-maestro/artifacts/*
-!maestro/artifacts/.gitkeep
 maestro/.env
 maestro/.env.*
 !maestro/.env.example

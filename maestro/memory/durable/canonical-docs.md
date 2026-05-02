@@ -78,7 +78,8 @@ Operational scaffolds, not product truth:
 - `maestro/artifact/**`
 - `maestro/templates/**`
 - `.agents/skills/archivist/**`
-- `scripts/ai/**`
+- `scripts/preflight.sh`
+- `scripts/checks/**`
 - `.github/workflows/docs-memory-check.yml`
 
 Archived operational scaffolds are owner-managed outside the active repository.

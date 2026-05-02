@@ -40,7 +40,7 @@ An exact-detail doc may be deleted only when all are true:
 - `form-builder-exact-detail-consolidation-audit.md` is updated in the same change
 - `form-builder-detail-triage.md` is updated in the same change
 - `maestro/memory/durable/current-state.md` is updated if the retained count changes
-- `scripts/ai/docs_memory_check.py --check` still passes
+- `scripts/checks/docs_memory_check.py --check` still passes
 
 ## Replacement Matrix
 

@@ -70,17 +70,17 @@ Codex/Maestro runtime, agent/team behavior, evidence budget, engineering standar
   - `maestro/memory/START_HERE.md`
   - `maestro/memory/agent-workflow.md`
   - `.gitignore`
-  - `scripts/ai/check-env-policy.py`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/check_env_policy.py`
+  - `scripts/checks/docs_memory_check.py`
 
 ### DEC-076 Lightweight Local Preflight Is Manual
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: `scripts/ai/preflight.sh` is the local/manual preflight for non-trivial implementation work. Default mode runs docs/memory and env checks. Use `scripts/ai/preflight.sh --full` only when a broader backend/frontend sweep is needed. It does not install dependencies and is not wired as a required GitHub Actions gate.
+- Decision: `scripts/preflight.sh` is the local/manual preflight for non-trivial implementation work. Default mode runs docs/memory and env checks. Use `scripts/preflight.sh --full` only when a broader backend/frontend sweep is needed. It does not install dependencies and is not wired as a required GitHub Actions gate.
 - Sources:
-  - `scripts/ai/preflight.sh`
+  - `scripts/preflight.sh`
   - `AGENTS.md`
   - `platform/AGENTS.md`
   - `maestro/memory/START_HERE.md`
@@ -127,14 +127,14 @@ Codex/Maestro runtime, agent/team behavior, evidence budget, engineering standar
 - Sources:
   - `.github/workflows/backend-ci.yml`
   - `.github/workflows/frontend-ci.yml`
-  - `scripts/ai/preflight.sh`
+  - `scripts/preflight.sh`
 
 ### DEC-083 Active Agent Read Order Starts With START_HERE
 
 - Date: 2026-04-27
 - Status: active
 - State: landed
-- Decision: Active agent instructions, retired runtime prompts, and chat-start templates use the same default read order: `AGENTS.md`, `platform/AGENTS.md`, `maestro/memory/START_HERE.md`, `maestro/memory/index/read-routes.yaml`, relevant `maestro/memory/modules/**` pack, then relevant canonical FE/BE docs and exact code/docs. `maestro/memory/index/memory-index.yaml` is broader routing only and must not appear before `START_HERE` in active read-order surfaces. `scripts/ai/docs_memory_check.py --check` enforces this deterministic read-order policy.
+- Decision: Active agent instructions, retired runtime prompts, and chat-start templates use the same default read order: `AGENTS.md`, `platform/AGENTS.md`, `maestro/memory/START_HERE.md`, `maestro/memory/index/read-routes.yaml`, relevant `maestro/memory/modules/**` pack, then relevant canonical FE/BE docs and exact code/docs. `maestro/memory/index/memory-index.yaml` is broader routing only and must not appear before `START_HERE` in active read-order surfaces. `scripts/checks/docs_memory_check.py --check` enforces this deterministic read-order policy.
 - Sources:
   - `platform/AGENTS.md`
   - `platform/frontend/AGENTS.md`
@@ -143,7 +143,7 @@ Codex/Maestro runtime, agent/team behavior, evidence budget, engineering standar
   - `.agents/skills/archivist/SKILL.md`
   - `maestro/memory/retired-runtime/prompts/*.md`
   - `maestro/memory/retired-runtime/templates/chat-start.md`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/docs_memory_check.py`
 
 ### DEC-084 Root Docs Describe Product Workspace
 
@@ -248,3 +248,31 @@ Codex/Maestro runtime, agent/team behavior, evidence budget, engineering standar
   - `platform/backend/AGENTS.md`
   - `.codex/standards/runtime/repository.md`
   - `maestro/artifact/archive/2026-05-01-human-agent-symbiosis/work.md`
+
+### DEC-096 Repo Checks Use Preflight And Checks Layout
+
+- Date: 2026-05-02
+- Status: active
+- State: owner-confirmed
+- Decision: Repository checks use `scripts/preflight.sh` as the stable entrypoint and `scripts/checks/**` for check implementations. The old `scripts/ai/**` folder is retired and must not be recreated for active checks.
+- Rationale: `scripts/ai` was an unclear historical name. The new layout keeps the repo-level preflight visible while grouping check implementations under an explicit checks folder.
+- Sources:
+  - `scripts/preflight.sh`
+  - `scripts/checks/docs_memory_check.py`
+  - `scripts/checks/check_env_policy.py`
+  - `scripts/checks/runtime_drift_check.py`
+  - `AGENTS.md`
+  - `maestro/artifact/archive/2026-05-02-scripts-checks-and-artifact-promotion/work.md`
+
+### DEC-097 Maestro Artifacts Promote On Continuity Or Accountability
+
+- Date: 2026-05-02
+- Status: active
+- State: owner-confirmed
+- Decision: Maestro does not create artifacts for every chat turn. Maestro creates or promotes to a work artifact as soon as continuity, evidence, future resume, multi-step execution, owner decision, or file-change accountability matters.
+- Rationale: This protects context compaction and future resume without turning every small exchange into a run or management artifact.
+- Sources:
+  - `.agents/skills/maestro/SKILL.md`
+  - `maestro/docs/runtime-contract.md`
+  - `maestro/memory/START_HERE.md`
+  - `maestro/artifact/archive/2026-05-02-scripts-checks-and-artifact-promotion/work.md`

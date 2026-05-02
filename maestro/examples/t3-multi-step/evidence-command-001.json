@@ -7,14 +7,14 @@
   "evidence_type": "command",
   "summary": "Runtime drift validator passed.",
   "source": {
-    "path": "scripts/ai/runtime_drift_check.py",
+    "path": "scripts/checks/runtime_drift_check.py",
     "uri": null,
     "commit": null,
     "artifact_ref": "maestro/examples/t3-multi-step/evidence.md",
     "content_hash": null
   },
   "command": {
-    "command": "python3 scripts/ai/runtime_drift_check.py --check",
+    "command": "python3 scripts/checks/runtime_drift_check.py --check",
     "cwd": ".",
     "exit_code": 0,
     "duration_seconds": null,

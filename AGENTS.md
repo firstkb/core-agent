@@ -104,10 +104,10 @@ You are not the build system. Do not inspect validator source, fixtures, interna
 Before marking non-trivial implementation work complete, run:
 
 ```bash
-scripts/ai/preflight.sh
+scripts/preflight.sh
 ```
 
-Use `scripts/ai/preflight.sh --full` only when the task needs a broader
+Use `scripts/preflight.sh --full` only when the task needs a broader
 product sweep across backend/frontend checks.
 If the task is docs/memory-only, the targeted docs/memory checks are enough.
 If preflight cannot run or optional checks fail, state exactly which checks ran,

@@ -75,7 +75,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - `pnpm --filter @platform/tenant-web typecheck` passed.
 - `pnpm --filter @platform/tenant-web lint` passed.
 - `pnpm --filter @platform/tenant-web test` passed: 6 files, 23 tests.
-- `scripts/ai/preflight.sh` passed in lite mode.
+- `scripts/preflight.sh` passed in lite mode.
 - HTTP smoke passed: `curl -k -I https://demo.platform.localhost/app/forms/sor/views/default/new` returned `200`.
 - Visual smoke passed in Chrome on `https://demo.platform.localhost/app/forms/sor/views/default/new`: scaffold rendered, empty create state showed required validation on `Finish`.
 - Visual smoke passed in Chrome on `https://demo.platform.localhost/app/forms/sor/views/default/edit/demo-doc-guid`: edit fixture rendered prefilled fields and status display.

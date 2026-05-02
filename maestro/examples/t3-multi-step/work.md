@@ -12,7 +12,7 @@ record what remains.
 
 ## Agreed Scope
 
-- In: `maestro/docs/**`, `maestro/templates/**`, `scripts/ai/**`
+- In: `maestro/docs/**`, `maestro/templates/**`, `scripts/checks/**`
 - Out: product frontend/backend source, releases, migrations, destructive cleanup
 
 ## Continuity Snapshot

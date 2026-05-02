@@ -171,6 +171,10 @@ Artifacts are a flight recorder, not a management UI. If a file will not help a
 new chat continue the work, review the result, prove evidence, or preserve a
 real decision, do not create it.
 
+Maestro does not create artifacts for every chat turn. Maestro creates or
+promotes to a work artifact as soon as continuity, evidence, future resume,
+multi-step execution, owner decision, or file-change accountability matters.
+
 Once T1+ persisted work is understood, create or update `work.md` without
 separate artifact permission. This is continuity capture, not approval to edit
 product code or cross high-risk gates.

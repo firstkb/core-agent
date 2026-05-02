@@ -36,12 +36,12 @@ Do not use the former `platform/docs/ai/**` path for reads or writes; it has bee
 
 ## Local preflight
 
-Use `scripts/ai/preflight.sh` as the lightweight local preflight before closing
+Use `scripts/preflight.sh` as the lightweight local preflight before closing
 non-trivial implementation work.
 
 The script does not install dependencies and is not a required GitHub Actions
 gate. Default mode runs docs/memory/env hygiene. Use
-`scripts/ai/preflight.sh --full` only when a broader backend and frontend sweep
+`scripts/preflight.sh --full` only when a broader backend and frontend sweep
 is needed.
 
 For non-trivial platform closeout or PR text, use
@@ -162,7 +162,7 @@ Update Maestro docs/templates when:
 - a route tier or approval gate changes
 
 Update tracked FE/BE docs when code changes the canonical contract itself.
-Run `python3 scripts/ai/docs_memory_check.py --check` before committing docs or memory reorganizations.
+Run `python3 scripts/checks/docs_memory_check.py --check` before committing docs or memory reorganizations.
 The same docs/memory gate runs in `.github/workflows/docs-memory-check.yml` for relevant PRs and pushes.
 If no memory update is needed, state that explicitly in the closeout.
 

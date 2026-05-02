@@ -56,8 +56,8 @@ GitHub Actions currently include:
 Local lightweight preflight:
 
 ```bash
-scripts/ai/preflight.sh
+scripts/preflight.sh
 ```
 
-Use `scripts/ai/preflight.sh --full` only when a broader local product sweep is
+Use `scripts/preflight.sh --full` only when a broader local product sweep is
 worth the extra cost.

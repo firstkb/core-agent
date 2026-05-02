@@ -57,8 +57,8 @@ Move or update these surfaces:
 
 Update these scripts:
 
-- `scripts/ai/docs_memory_check.py`
-- `scripts/ai/preflight.sh`
+- `scripts/checks/docs_memory_check.py`
+- `scripts/preflight.sh`
 
 Review these legacy surfaces but do not make them active source of truth:
 
@@ -94,8 +94,8 @@ Not allowed:
 - [x] Update active scripts from `ai-memory` to `maestro/memory`, then remove obsolete run-scaffolding scripts from the active tree.
 - [x] Update `.github/workflows/docs-memory-check.yml` path filters.
 - [x] Update `.gitignore` local memory paths.
-- [x] Run `python3 scripts/ai/docs_memory_check.py --check`.
-- [x] Run `scripts/ai/preflight.sh`.
+- [x] Run `python3 scripts/checks/docs_memory_check.py --check`.
+- [x] Run `scripts/preflight.sh`.
 - [x] Run a focused `rg "ai-memory"` review and classify every remaining hit as legacy/provenance or bug.
 - [x] Archivist performs final memory migration audit.
 - [x] Maestro closes the migration record.

@@ -16,7 +16,8 @@ on:
       - "platform/backend/env/**"
       - "platform/backend/docs/**"
       - "platform/frontend/docs/**"
-      - "scripts/ai/**"
+      - "scripts/preflight.sh"
+      - "scripts/checks/**"
   push:
     branches:
       - develop
@@ -35,7 +36,8 @@ on:
       - "platform/backend/env/**"
       - "platform/backend/docs/**"
       - "platform/frontend/docs/**"
-      - "scripts/ai/**"
+      - "scripts/preflight.sh"
+      - "scripts/checks/**"
 
 permissions:
   contents: read
@@ -54,7 +56,7 @@ jobs:
           python-version: "3.11"
 
       - name: Check docs and memory drift
-        run: python3 scripts/ai/docs_memory_check.py --check
+        run: python3 scripts/checks/docs_memory_check.py --check
 
       - name: Check env file policy
-        run: python3 scripts/ai/check-env-policy.py --check
+        run: python3 scripts/checks/check_env_policy.py --check

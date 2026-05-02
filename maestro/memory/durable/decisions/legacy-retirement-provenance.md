@@ -221,10 +221,10 @@ Superseded, historical, and provenance-heavy decisions kept for recovery without
 - Date: 2026-04-28
 - Status: superseded
 - State: superseded by DEC-088 native Maestro artifact model
-- Decision: `maestro/memory/runs/active/` must stay small and operational. Completed, closeout-ready, or review-ready runs move to `maestro/memory/runs/archive/<task-id>/`. A run may remain in `active/` with a `final.md` only when `final.md` explicitly declares `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:`. `scripts/ai/docs_memory_check.py --check` enforces this rule.
+- Decision: `maestro/memory/runs/active/` must stay small and operational. Completed, closeout-ready, or review-ready runs move to `maestro/memory/runs/archive/<task-id>/`. A run may remain in `active/` with a `final.md` only when `final.md` explicitly declares `Status: awaiting-owner-review`, `Next owner action:`, and `Last updated:`. `scripts/checks/docs_memory_check.py --check` enforces this rule.
 - Sources:
   - `maestro/memory/runs/README.md`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/docs_memory_check.py`
   - `maestro/memory/runs/archive/2026-04-27_frontend_collection-table-page-decomposition/`
   - `maestro/memory/runs/archive/2026-04-27_frontend_ui-kit-styles-decomposition/`
   - `maestro/memory/runs/archive/2026-04-27_frontend_ui-lab-form-controls-decomposition/`
@@ -240,4 +240,4 @@ Superseded, historical, and provenance-heavy decisions kept for recovery without
   - `maestro/docs/runtime-contract.md`
   - `maestro/docs/memory-migration-plan.md`
   - `maestro/memory/START_HERE.md`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/docs_memory_check.py`

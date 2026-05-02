@@ -115,12 +115,12 @@ When no memory update is needed, say so explicitly in the closeout.
 For docs/memory work, run:
 
 ```bash
-python3 scripts/ai/docs_memory_check.py --check
-python3 scripts/ai/check-env-policy.py --check
+python3 scripts/checks/docs_memory_check.py --check
+python3 scripts/checks/check_env_policy.py --check
 ```
 
-For non-trivial implementation work, run `scripts/ai/preflight.sh` or report
-which checks could not run and why. Use `scripts/ai/preflight.sh --full` only
+For non-trivial implementation work, run `scripts/preflight.sh` or report
+which checks could not run and why. Use `scripts/preflight.sh --full` only
 when a broader backend/frontend sweep is needed. The preflight is local/manual
 and must not install dependencies.
 

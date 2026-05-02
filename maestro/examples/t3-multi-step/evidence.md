@@ -17,7 +17,7 @@ Example aggregate evidence for a multi-step runtime cleanup.
 ## Changed Files
 
 - `maestro/docs/runtime-contract.md`
-- `scripts/ai/runtime_drift_check.py`
+- `scripts/checks/runtime_drift_check.py`
 
 ## Browser / Visual Evidence
 

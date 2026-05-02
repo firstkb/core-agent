@@ -101,6 +101,9 @@ first-read file.
   `maestro/artifact/active/YYYY-MM-DD-<work-slug>/`.
 - Closed, cancelled, superseded, or frozen work goes under
   `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/`.
+- Maestro does not create artifacts for every chat turn. Maestro creates or
+  promotes to a work artifact as soon as continuity, evidence, future resume,
+  multi-step execution, owner decision, or file-change accountability matters.
 - Temporary notes belong in the artifact folder or current chat, not canonical
   docs or durable memory.
 - Do not recreate `platform/docs/ai/runs/**` or `maestro/memory/runs/**`.
@@ -147,18 +150,18 @@ Open these only when a route, module pack, or owner request explicitly requires 
 ## Required Checks For Docs/Memory Work
 
 ```bash
-python3 scripts/ai/docs_memory_check.py --check
-python3 scripts/ai/check-env-policy.py --check
+python3 scripts/checks/docs_memory_check.py --check
+python3 scripts/checks/check_env_policy.py --check
 ```
 
 For non-trivial implementation work, run:
 
 ```bash
-scripts/ai/preflight.sh
+scripts/preflight.sh
 ```
 
 The preflight is local/manual. It does not install dependencies and is not a
-GitHub Actions gate. Use `scripts/ai/preflight.sh --full` only when a broader
+GitHub Actions gate. Use `scripts/preflight.sh --full` only when a broader
 backend/frontend sweep is needed.
 
 For non-trivial closeout or PR body text, use:

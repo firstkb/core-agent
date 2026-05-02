@@ -2,7 +2,7 @@
 """Validate docs and maestro/memory routing invariants.
 
 Usage:
-  python3 scripts/ai/docs_memory_check.py --check
+  python3 scripts/checks/docs_memory_check.py --check
 """
 from __future__ import annotations
 
@@ -95,7 +95,7 @@ OLD_ORCHESTRATION_INVOCATION_TERMS = [
 
 OLD_ORCHESTRATION_INVOCATION_ALLOWED_FILES = {
     "maestro/memory/durable/decisions-log.md",
-    "scripts/ai/docs_memory_check.py",
+    "scripts/checks/docs_memory_check.py",
 }
 
 
@@ -326,6 +326,8 @@ def check_retired_memory_paths(root: Path, errors: list[str]) -> None:
         for child in memory_dir.iterdir():
             if child.is_dir() and child.name not in allowed_memory_dirs:
                 add_error(errors, child.relative_to(root), "unexpected active memory directory")
+    if (root / "scripts/ai").exists():
+        add_error(errors, "scripts/ai", "retired AI script folder must not exist; use scripts/preflight.sh and scripts/checks/**")
     for rel in [
         "scripts/ai/new-run.py",
         "scripts/ai/new-run.sh",
@@ -465,9 +467,9 @@ def check_gitignore(root: Path, errors: list[str]) -> None:
         add_error(errors, ".gitignore", "retired platform/docs/ai/ must stay ignored")
 
 def check_preflight_policy(root: Path, errors: list[str]) -> None:
-    path = root / "scripts/ai/preflight.sh"
+    path = root / "scripts/preflight.sh"
     if not path.exists():
-        add_error(errors, "scripts/ai/preflight.sh", "lightweight local preflight script must exist")
+        add_error(errors, "scripts/preflight.sh", "lightweight local preflight script must exist")
         return
     if not os.access(path, os.X_OK):
         add_error(errors, path.relative_to(root), "preflight script must be executable")
@@ -480,8 +482,11 @@ def check_preflight_policy(root: Path, errors: list[str]) -> None:
     workflow_root = root / ".github/workflows"
     if workflow_root.exists():
         for workflow in workflow_root.rglob("*"):
-            if workflow.is_file() and "preflight.sh" in read_text(workflow):
-                add_error(errors, workflow.relative_to(root), "preflight must stay manual/local until owner promotes it to a CI gate")
+            if not workflow.is_file():
+                continue
+            for line in read_text(workflow).splitlines():
+                if "run:" in line and "preflight.sh" in line:
+                    add_error(errors, workflow.relative_to(root), "preflight must stay manual/local until owner promotes it to a CI gate")
 
 
 def check_read_order_policy(root: Path, errors: list[str]) -> None:

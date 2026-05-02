@@ -220,10 +220,7 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - `platform/README.md`
   - `AGENTS.md`
   - `maestro/memory/START_HERE.md`
-  - `.agents/skills/retired-runtime/SKILL.md`
-  - `maestro/memory/retired-runtime/automation-manifest.json`
-  - `scripts/ai/new-run.py`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/docs_memory_check.py`
 
 ### DEC-087 Lightweight Storybook And Local Visual Smoke
 

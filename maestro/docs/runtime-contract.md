@@ -186,6 +186,10 @@ artifact permission. This usually starts with `work.md`; `evidence.md` and
 process capture, not product-code execution approval and not permission to cross
 high-risk gates.
 
+Maestro does not create artifacts for every chat turn. Maestro creates or
+promotes to a work artifact as soon as continuity, evidence, future resume,
+multi-step execution, owner decision, or file-change accountability matters.
+
 ## Context Compaction And Continuity
 
 Automatic context compaction, thread summaries, and resumed chat context are

@@ -456,24 +456,23 @@ Docs migration, compact memory routing, source-of-truth rules, reference-code po
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Old reference-code pointer README folders under `platform/frontend/docs/**` and `platform/backend/docs/**` are deleted instead of retained as compatibility shells. Tracked docs must use `reference-pack:*` aliases plus `maestro/memory/reference-code/README.md`; raw packs remain local-only under `reference-code/**`. Docs/memory drift is now checked by `scripts/ai/docs_memory_check.py --check`.
+- Decision: Old reference-code pointer README folders under `platform/frontend/docs/**` and `platform/backend/docs/**` are deleted instead of retained as compatibility shells. Tracked docs must use `reference-pack:*` aliases plus `maestro/memory/reference-code/README.md`; raw packs remain local-only under `reference-code/**`. Docs/memory drift is now checked by `scripts/checks/docs_memory_check.py --check`.
 - Sources:
   - `maestro/memory/reference-code/README.md`
   - `maestro/memory/reference-code/packs-index.md`
   - `maestro/memory/reference-code/relocation-checkpoint.md`
-  - `scripts/ai/docs_memory_check.py`
+  - `scripts/checks/docs_memory_check.py`
 
 ### DEC-070 Docs Memory Drift Runs In CI
 
 - Date: 2026-04-25
 - Status: active
 - State: landed
-- Decision: Docs/memory drift verification is now a tracked GitHub Actions gate. `.github/workflows/docs-memory-check.yml` runs `scripts/ai/docs_memory_check.py --check`, `scripts/ai/check-env-policy.py --check`, and `scripts/ai/automation_versions.py --check` for relevant PRs and pushes to `develop` or `main`.
+- Decision: Docs/memory drift verification is now a tracked GitHub Actions gate. `.github/workflows/docs-memory-check.yml` runs `scripts/checks/docs_memory_check.py --check` and `scripts/checks/check_env_policy.py --check` for relevant PRs and pushes to `develop` or `main`.
 - Sources:
   - `.github/workflows/docs-memory-check.yml`
-  - `scripts/ai/docs_memory_check.py`
-  - `scripts/ai/check-env-policy.py`
-  - `scripts/ai/automation_versions.py`
+  - `scripts/checks/docs_memory_check.py`
+  - `scripts/checks/check_env_policy.py`
 
 ### DEC-072 Form Builder Exact-Detail Replacement Is Owner-Gated
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -u
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FAILED=0
 OPTIONAL_FAILED=0
 MODE="lite"
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/ai/preflight.sh [--lite|--full|--docs|--help]
+Usage: scripts/preflight.sh [--lite|--full|--docs|--help]
 
 Modes:
   --lite  Required docs/memory/env checks. Default.
@@ -80,9 +80,9 @@ node_supports_frontend() {
   node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 12) ? 0 : 1);' >/dev/null 2>&1
 }
 
-run_required "docs memory check" python3 scripts/ai/docs_memory_check.py --check
-run_required "env policy check" python3 scripts/ai/check-env-policy.py --check
-run_required "runtime drift check" python3 scripts/ai/runtime_drift_check.py --check
+run_required "docs memory check" python3 scripts/checks/docs_memory_check.py --check
+run_required "env policy check" python3 scripts/checks/check_env_policy.py --check
+run_required "runtime drift check" python3 scripts/checks/runtime_drift_check.py --check
 
 if [ "$MODE" = "docs" ]; then
   :

@@ -2,7 +2,7 @@
 """Validate tracked environment-file policy.
 
 Usage:
-  python3 scripts/ai/check-env-policy.py --check
+  python3 scripts/checks/check_env_policy.py --check
 """
 from __future__ import annotations
 

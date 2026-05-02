@@ -2,9 +2,9 @@
 """Report mechanical drift in Codex/Maestro runtime surfaces.
 
 Usage:
-  python3 scripts/ai/runtime_drift_check.py --report
-  python3 scripts/ai/runtime_drift_check.py --check
-  python3 scripts/ai/runtime_drift_check.py --self-test
+  python3 scripts/checks/runtime_drift_check.py --report
+  python3 scripts/checks/runtime_drift_check.py --check
+  python3 scripts/checks/runtime_drift_check.py --self-test
 """
 from __future__ import annotations
 
@@ -104,7 +104,7 @@ def suggested_owner(display_path: str) -> str:
         return "backend lane owner"
     if display_path.startswith("platform/"):
         return "platform owner"
-    if display_path.startswith("scripts/ai/"):
+    if display_path.startswith("scripts/"):
         return "runtime validation owner"
     return "repo runtime owner"
 

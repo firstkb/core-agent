@@ -12,19 +12,17 @@ closeout behavior. Lane `AGENTS.md` files own local implementation rules only.
 
 ## Read order
 
-Before doing product work, read in this order:
+Before doing product work, start with the compact baseline and then deepen only
+when the route or implementation surface needs it:
 
 1. `platform/AGENTS.md`
 2. `maestro/memory/START_HERE.md`
 3. `maestro/memory/index/read-routes.yaml`
-4. `maestro/memory/durable/current-state.md`
-5. the relevant module pack under `maestro/memory/modules/**`
-6. `maestro/memory/index/memory-index.yaml` only when broader routing is needed
-7. `maestro/memory/durable/module-index.md` when module ownership is unclear
-8. the local runtime file:
+4. the local runtime file when working inside a lane:
    - `platform/backend/AGENTS.md` for backend work
    - `platform/frontend/AGENTS.md` for frontend work
-9. only then the implementation-specific docs in `platform/backend/docs/` or `platform/frontend/docs/`
+5. relevant module memory, current state, indexes, and implementation-specific
+   docs only when routed or materially needed.
 
 ## What this memory system is for
 
@@ -74,28 +72,17 @@ Use `maestro/memory/` by role:
   - owner-managed external retired runtime provenance
   - git history for the former `platform/docs/ai/**` payloads
 
-## Maestro orchestration rule
+## Maestro entrypoint
 
 For new platform work, use Maestro when the task is ambiguous, cross-stack,
-multi-session, high-risk, or likely to need durable evidence. Maestro chooses
-the smallest useful route:
-
-- `T0_inline` for tiny current-chat work;
-- `T1_task` for lightweight persisted work;
-- `T2_staged` when evidence or stage handoff matters;
-- `T3_multi_step` for one owner goal with several linear steps;
-- `T4_gated` for approvals, auth, tenancy, migrations, release, or destructive work.
+multi-session, high-risk, or likely to need durable evidence. Maestro owns the
+route tier, artifact shape, tool/agent selection, and closeout mechanics.
 
 Direct FE/BE lane work is acceptable for obviously local changes. If routing,
 shared contract, memory impact, or task duration is unclear, start with Maestro.
 
-Maestro work artifacts live under:
-
-- `maestro/artifact/active/YYYY-MM-DD-<work-slug>/`
-- `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/`
-
-Use `maestro/templates/**` for intent, plan, packet, handoff, evidence, review,
-release, and closeout records when persisted artifacts are useful.
+See root `AGENTS.md` and `maestro/docs/runtime-contract.md` for the active
+Maestro route and artifact model.
 
 ## Ignore by default
 
@@ -181,15 +168,15 @@ If no memory update is needed, state that explicitly in the closeout.
 
 ## Long-task support
 
-For long-running work, keep the active record under `maestro/artifact/active/`
-and use the smallest useful set of `maestro/templates/**`. Keep handoffs compact
-and factual. Do not dump whole chat transcripts into durable memory.
+For long-running work, keep handoffs compact and factual. Do not dump whole chat
+transcripts into durable memory. Maestro owns the artifact shape and active work
+record when persisted continuity is useful.
 
 ## Artifact archive rule
 
-Closed, cancelled, superseded, or frozen Maestro records move from
-`maestro/artifact/active/` to `maestro/artifact/archive/`. Legacy run packets
-are owner-managed outside the active repository and are not active memory.
+Closed, cancelled, superseded, or frozen Maestro records follow the active
+Maestro artifact model. Legacy run packets are owner-managed outside the active
+repository and are not active memory.
 
 ## High-risk changes
 

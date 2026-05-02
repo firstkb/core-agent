@@ -7,7 +7,8 @@ Scope: `platform/frontend/docs/**`
 
 This map classifies tracked frontend docs for selective AI retrieval.
 It does not physically move tracked files.
-Use `maestro/memory` module packs first, then open only the exact tracked docs needed for the task.
+Use the compact Maestro memory baseline first, then open only the exact tracked
+docs needed for the task.
 
 ## Global Rule
 
@@ -15,11 +16,16 @@ Do not start frontend work by reading the whole `platform/frontend/docs` tree.
 
 Read order:
 
-1. `maestro/memory/index/memory-index.yaml`
-2. relevant `maestro/memory/modules/frontend/**` or `maestro/memory/modules/domains/**`
-3. this map
-4. exact tracked source docs named below
-5. code
+1. `maestro/memory/START_HERE.md`
+2. `maestro/memory/index/read-routes.yaml`
+3. relevant `maestro/memory/modules/frontend/**` or
+   `maestro/memory/modules/domains/**` when routed
+4. this map when the `frontend_docs` route or a frontend docs task needs it
+5. exact tracked source docs named below
+6. code
+
+Use `maestro/memory/index/memory-index.yaml` only when broader routing is
+needed. It is not the first read for frontend docs work.
 
 ## Default Avoid Set
 

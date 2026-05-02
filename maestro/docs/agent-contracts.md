@@ -355,7 +355,8 @@ Allowed writes:
 
 - `release.md`;
 - release evidence;
-- `handoff-release-release-NNN.json`.
+- `handoff-release-release-NNN.json` (canonical
+  `handoff-<stage>-<role>-NNN`, with stage `release` and role `release`).
 
 Must not:
 

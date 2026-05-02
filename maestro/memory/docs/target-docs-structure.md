@@ -3,10 +3,10 @@
 Status: future physical rewrite plan
 Last compacted: 2026-04-25
 
-This is the target structure for a later rewrite of `platform/frontend/docs` and `platform/backend/docs`.
-No tracked files are moved by this plan.
+This is the target structure for a later rewrite of `platform/frontend/docs`
+and `platform/backend/docs`. No tracked files are moved by this plan.
 
-Migration progress:
+## Landed Slices
 
 - Frontend workspace slice landed: `contracts/workspace.md`, `contracts/app-surfaces.md`, `contracts/package-boundaries.md`, `contracts/tenant-model.md`, and `proposals/pwa-offline.md` exist in tracked docs.
 - Backend runtime slice landed: `contracts/runtime-wiring.md` and `modules/runtime.md` exist in tracked docs.
@@ -29,6 +29,28 @@ Migration progress:
 - Tenant Web module doc slice landed: frontend `modules/tenant-web.md` exists in tracked docs.
 - Remaining Form Builder detail triage landed locally at `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`.
 - Reference-code alias registry and relocation landed for raw donor/legacy packs.
+
+## Future-Only Target Paths
+
+The target trees below intentionally include future desired paths. The
+following entries are not current tracked docs as of 2026-05-01 and must not be
+treated as active sources unless a later slice creates them:
+
+- `platform/frontend/docs/modules/platform-studio/navigation-builder.md`
+- `platform/frontend/docs/modules/platform-studio/action-builder.md`
+- `platform/frontend/docs/modules/platform-studio/pdf-builder.md`
+- `platform/frontend/docs/modules/platform-studio/report-builder.md`
+- `platform/frontend/docs/guides/testing.md`
+- `platform/frontend/docs/guides/adding-frontend-package.md`
+- `platform/frontend/docs/proposals/flutter-hybrid-mobile.md`
+- `platform/frontend/docs/reference/**`
+- `platform/frontend/docs/archive/**`
+- `platform/backend/docs/modules/admin.md`
+- `platform/backend/docs/modules/tenant.md`
+- `platform/backend/docs/modules/migrations.md`
+
+Existing tracked docs listed in the target trees are the landed baseline.
+Future-only paths are planning placeholders, not read-order requirements.
 
 ## Goals
 
@@ -121,10 +143,10 @@ platform/frontend/docs/
 - `modules/platform-studio/README.md`: suite-level navigation for Platform Studio docs.
 - `modules/platform-studio/form-builder.md`: active Form Builder implementation contract.
 - `modules/platform-studio/form-builder-fields.md`: supporting Form Builder field catalog, palette registry, rules, grid/view settings, and scope boundaries.
-- `modules/platform-studio/navigation-builder.md`: planned navigation/sidebar/access-facing tool boundary.
-- `modules/platform-studio/action-builder.md`: planned authored events/actions/notifications boundary.
-- `modules/platform-studio/pdf-builder.md`: planned PDF configuration boundary.
-- `modules/platform-studio/report-builder.md`: planned report configuration boundary.
+- Future-only `modules/platform-studio/navigation-builder.md`: planned navigation/sidebar/access-facing tool boundary.
+- Future-only `modules/platform-studio/action-builder.md`: planned authored events/actions/notifications boundary.
+- Future-only `modules/platform-studio/pdf-builder.md`: planned PDF configuration boundary.
+- Future-only `modules/platform-studio/report-builder.md`: planned report configuration boundary.
 
 ### Frontend Archive Targets
 
@@ -196,9 +218,9 @@ platform/backend/docs/
 
 - `modules/runtime.md`: backend entrypoints and shared runtime composition.
 - `modules/auth.md`: auth module behavior and boundaries.
-- `modules/admin.md`: admin modules, grants, tenants, employees.
-- `modules/tenant.md`: tenant-facing module conventions.
-- `modules/migrations.md`: migration runtime and generated bundle.
+- Future-only `modules/admin.md`: admin modules, grants, tenants, employees.
+- Future-only `modules/tenant.md`: tenant-facing module conventions.
+- Future-only `modules/migrations.md`: migration runtime and generated bundle.
 - `modules/platform-studio/form-builder.md`: tenant Form Builder backend module.
 
 ### Backend Archive Targets

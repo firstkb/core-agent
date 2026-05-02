@@ -2,10 +2,14 @@
 
 - Packet ID: `<packet-stage-role-001>`
 - Work ID: `<work-id>`
-- Assigned stage: `<research | audit | implementation | verification | review | release | closeout | memory>`
-- Assigned role: `<Charlie | Grant | Mason | Scout | Lens | Release | Scribe | Archivist>`
+- Assigned stage: `<research | planning | audit | approval | implementation | verification | review | release | closeout | archive | memory>`
+- Assigned role: `<Maestro | Charlie | Grant | Mason | Scout | Lens | Release | Scribe | Archivist>`
 - Route tier: `<tier>`
 - Artifact shape: `<shape>`
+
+Stage note: `intake` is Maestro orchestration-only and never a packet stage.
+`approval` and `archive` are lifecycle stages; use them only for bounded
+Maestro/gated records, not normal specialist implementation packets.
 
 ## Goal
 

@@ -140,6 +140,9 @@ Open these only when a route, module pack, or owner request explicitly requires 
 - Do not copy implementation details that are easier to verify in code.
 - Do not preserve historical debates in hot memory.
 - Use archive docs or git history only for provenance.
+- If `maestro/memory/durable/current-state.md` grows past roughly 250 lines or
+  starts mixing stale history with current state, schedule a semantic
+  compaction slice instead of appending more status.
 
 ## Required Checks For Docs/Memory Work
 

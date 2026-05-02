@@ -18,11 +18,13 @@ Read first:
 
 Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
-## Orchestration rule
+## Maestro entrypoint
 
 For new backend work, the preferred entrypoint is Maestro when the task is
 ambiguous, cross-stack, high-risk, or likely to need durable evidence. Tiny
-backend-local edits may stay direct in the current chat.
+backend-local edits may stay direct in the current chat. Root `AGENTS.md` and
+`maestro/docs/runtime-contract.md` own the detailed route, artifact, approval,
+release, and agent/tool policy.
 
 ## Focus
 
@@ -92,7 +94,8 @@ Do not read by default:
 
 ## High-risk areas
 
-Treat these as confirmation-required before finalizing changes:
+Escalate through Maestro or treat these as confirmation-required before
+finalizing changes:
 
 - auth/session contracts
 - tenant resolution or tenant isolation

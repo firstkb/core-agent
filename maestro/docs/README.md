@@ -43,6 +43,7 @@ reads for every Maestro entry.
 - `artifact-model.md`
 - `artifact-file-contract.md`
 - `stage-contract.md`
+- `template-schema-mapping.md`
 
 ### Validation And Promotion Docs
 

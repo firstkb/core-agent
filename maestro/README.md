@@ -66,6 +66,7 @@ maestro/
     artifact-model.md
     artifact-file-contract.md
     stage-contract.md
+    template-schema-mapping.md
     memory-migration-plan.md
     orchestration-contract.md       # retired compatibility pointer
     agent-sequences.md              # retired compatibility pointer

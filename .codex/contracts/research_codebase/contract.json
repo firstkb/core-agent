@@ -18,14 +18,14 @@
       "path": "{artifacts_root}/{module}/features/{feature}/stages/research/{attempt_id}/README.md",
       "media_type": "text/markdown",
       "role": "human_readable_research_attempt",
-      "template": "../templates/README.md.tmpl",
+      "template": "../../templates/research_codebase/README.md.tmpl",
       "authored_by": "ai"
     },
     "handoff_json": {
       "path": "{artifacts_root}/{module}/features/{feature}/stages/research/{attempt_id}/handoff.json",
       "media_type": "application/json",
       "role": "machine_readable_stage_handoff",
-      "template": "../templates/handoff.template.json",
+      "template": "../../templates/research_codebase/handoff.template.json",
       "schema": "handoff.schema.json",
       "authored_by": "ai"
     }

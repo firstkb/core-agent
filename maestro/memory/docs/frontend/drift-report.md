@@ -343,7 +343,6 @@ Current read rule:
 
 - Collection Table, install helper, UI foundation, UI Lab, deferred composed surfaces, foundation rollout, and Phase E root pointer docs were deleted after compaction.
 - Tenant app source READMEs are source overviews; use `platform/frontend/docs/modules/tenant-web.md` as the active tenant app module doc.
-- Rewrite `auth-runtime-followups.md` as current state/open cleanup only, or archive it if all gaps are closed.
 - Update `platform/frontend/AGENTS.md` to align with current Codex-native and `maestro/memory` read path if the owner wants tracked docs to reflect local workflow.
 - Repair machine-local absolute links in tracked docs.
 - Reduce `platform/frontend/docs/README.md` to a compact index that points to active contracts and compact maps.

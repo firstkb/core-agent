@@ -13,6 +13,10 @@ Superseded, historical, and provenance-heavy decisions kept for recovery without
 - Decision IDs are stable and must not be renumbered.
 - Preserve deleted-path sources as provenance when they explain history.
 - Prefer current canonical docs or compact memory routes for active reads.
+- DEC-088 is the current active retired-runtime boundary. Older
+  retired-runtime decisions are historical or superseded provenance only; they
+  must not route new work to `maestro/memory/runs/**`,
+  `maestro/memory/retired-runtime/**`, or `platform/docs/ai/**`.
 - Add new decisions through `maestro/memory/durable/decisions-log.md` first, then place details in the relevant topic file.
 
 ## Decisions
@@ -138,17 +142,16 @@ Superseded, historical, and provenance-heavy decisions kept for recovery without
 ### DEC-060 Retired runtime Operational Payloads Are Pointers
 
 - Date: 2026-04-25
-- Status: active
-- State: landed
-- Decision: Retired runtime prompt/template files under `platform/docs/ai/prompts/**` and `platform/docs/ai/templates/**`, plus `platform/docs/ai/automation-manifest.json`, are no longer active operational payloads. They were pointer-only before deletion. Active prompt/template/version edits must use `maestro/memory/retired-runtime/**` and `scripts/ai/automation_versions.py`, not legacy `platform/docs/ai/**`.
+- Status: superseded
+- State: superseded by DEC-088 native Maestro runtime
+- Decision: Historical: retired runtime prompt/template files under `platform/docs/ai/prompts/**` and `platform/docs/ai/templates/**`, plus `platform/docs/ai/automation-manifest.json`, were pointer-only before deletion. Active vNext prompt, skill, contract, and template edits now use `.agents/skills/**`, `.codex/**`, `AGENTS.md`, `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**`; old retired-runtime payload text is git-history only.
 - Sources:
-  - `platform/docs/ai/prompts/README.md`
-  - `platform/docs/ai/templates/README.md`
-  - `platform/docs/ai/automation-manifest.json`
-  - `maestro/memory/retired-runtime/prompts/README.md`
-  - `maestro/memory/retired-runtime/templates/README.md`
-  - `maestro/memory/retired-runtime/automation-manifest.json`
-  - `maestro/memory/retired-runtime/platform-docs-ai-retirement-plan.md`
+  - git history for former `platform/docs/ai/prompts/**`
+  - git history for former `platform/docs/ai/templates/**`
+  - git history for former `platform/docs/ai/automation-manifest.json`
+  - git history for former `maestro/memory/retired-runtime/**`
+  - `AGENTS.md`
+  - `maestro/docs/runtime-contract.md`
 
 ### DEC-061 Platform Docs AI Physical Deletion Is Owner-Gated
 
@@ -165,14 +168,16 @@ Superseded, historical, and provenance-heavy decisions kept for recovery without
 ### DEC-062 Legacy Run Payloads Deleted After Summary Acceptance
 
 - Date: 2026-04-25
-- Status: active
-- State: landed
-- Decision: Raw retired runtime run payloads under `platform/docs/ai/runs/**` were deleted after owner approval and acceptance of `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md` as the durable archive summary. The former Form Builder stabilization run is superseded by current Form Builder contracts and memory; the admin tenant list navigation run was an incomplete draft scaffold. Exact old run text is available only through git history.
+- Status: superseded
+- State: superseded by DEC-088 final retired-runtime provenance removal
+- Decision: Historical: raw retired runtime run payloads under `platform/docs/ai/runs/**` were deleted after owner approval. The former local run summary path is no longer active; retired run provenance is owner-managed outside the active repository or recoverable through git history. Exact old run text is git-history only.
 - Sources:
-  - `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
-  - `maestro/memory/retired-runtime/legacy-runs-triage.md`
-  - `platform/docs/ai/runs/README.md`
-  - `maestro/memory/retired-runtime/platform-docs-ai-retirement-readiness.md`
+  - git history for former `maestro/memory/runs/archive/legacy-platform-docs-ai-runs.md`
+  - git history for former `maestro/memory/retired-runtime/legacy-runs-triage.md`
+  - git history for former `platform/docs/ai/runs/README.md`
+  - git history for former `maestro/memory/retired-runtime/platform-docs-ai-retirement-readiness.md`
+  - `AGENTS.md`
+  - `maestro/docs/runtime-contract.md`
 
 ### DEC-063 Platform Docs AI Directory Physically Deleted
 

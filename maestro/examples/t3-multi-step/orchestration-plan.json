@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "work_id": "example-t3-runtime-cleanup",
+  "work_slug": "2026-04-30-example-t3-runtime-cleanup",
+  "conversation_mode": "execution",
+  "route_tier": "T3_multi_step",
+  "artifact_shape": "multi_step",
+  "record_required": true,
+  "edit_allowed": true,
+  "owner_intent_summary": "Clean up runtime documentation drift without changing product code.",
+  "scope_summary": "Runtime docs, templates, and validator only.",
+  "risk_summary": "No product-code or high-risk surfaces in scope.",
+  "high_risk_surfaces": [
+    "none"
+  ],
+  "stages": [
+    "planning",
+    "implementation",
+    "verification",
+    "review",
+    "closeout"
+  ],
+  "agents": [
+    "maestro",
+    "mason",
+    "scout",
+    "lens",
+    "scribe"
+  ],
+  "approvals_required": [],
+  "approval_refs": [],
+  "evidence_required": [
+    "changed_files",
+    "commands",
+    "review"
+  ],
+  "artifact": {
+    "work_root": "maestro/artifact/active/2026-04-30-example-t3-runtime-cleanup/",
+    "files": [
+      "work.md",
+      "evidence.md",
+      "closeout.md"
+    ]
+  },
+  "next_allowed_action": "Run targeted validator and docs checks.",
+  "owner_input_required": false,
+  "notes": "Example fixture only."
+}

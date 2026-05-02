@@ -60,6 +60,7 @@
       ]
     },
     "assigned_stage": {
+      "description": "Packetable stage for a specialist or bounded Maestro assignment. `intake` is intentionally excluded because it is Maestro orchestration-only and does not produce a specialist packet.",
       "type": "string",
       "enum": [
         "research",
@@ -76,6 +77,7 @@
       ]
     },
     "assigned_role": {
+      "description": "Assigned role for the packet. Release is schema-hard-linked to the release stage; other stage-role pairings remain adaptive but should follow the stage contract unless Maestro intentionally assigns bounded inline work.",
       "type": "string",
       "enum": [
         "maestro",

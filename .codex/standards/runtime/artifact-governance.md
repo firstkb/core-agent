@@ -2,27 +2,54 @@
 
 ## Ownership
 
-- Maestro may author only module-root artifacts and feature seed packs.
-- Charlie may author only the research artifact pair.
-- Grant may return reviewer-note content but must not own lifecycle state or write repository artifacts directly.
-- CLI owns mutable JSON state and lifecycle transitions.
-- Do not modify product code, tests, or unrelated docs during orchestration or research flows unless the task explicitly expands scope.
+- Maestro owns the active vNext work record and decides the smallest useful
+  artifact shape.
+- Specialists may write assigned notes, evidence, or handoffs only when Maestro
+  assigns that output.
+- Product code, tests, and unrelated docs are changed only when the owner task
+  or Maestro assignment explicitly includes that scope.
+- Owner approval records are created only for real gates: high-risk
+  implementation, production impact, migrations, tenant/auth/security,
+  release, destructive actions, runtime restore, memory root moves, or archive
+  decisions that need owner confirmation.
 
-## Path model
+## Active Path Model
 
-- Module root: `artifacts/<module>/`
-- Feature root: `artifacts/<module>/features/<feature>/`
-- Stage root: `artifacts/<module>/features/<feature>/stages/<stage>/`
+New Maestro-routed work uses the flat vNext artifact model:
+
+- active root: `maestro/artifact/active/YYYY-MM-DD-<work-slug>/`
+- archive root: `maestro/artifact/archive/YYYY-MM-DD-<work-slug>/`
+- normal files: `work.md`, `evidence.md`, `closeout.md`
+- optional escalation files: `agent-<role>-NNN.md`, `packet.md`,
+  `approval-*.json`, `handoff-<stage>-<role>-NNN.json`
 
 ## Persistence
 
 - Persisted artifacts stay in English.
-- Keep machine-readable state in `status.json`.
-- Keep rationale, facts, and evidence in Markdown artifacts.
-- If a template exists for an artifact, preserve its headings and append extras under an explicit additional-notes section when needed.
+- Use `work.md` as the T1+ continuity anchor.
+- Use `evidence.md` for compact checks, browser/visual evidence, skipped
+  checks, and residual risk.
+- Use `closeout.md` when the result, evidence, and follow-ups need a durable
+  summary.
+- Use machine-readable packets or handoffs only when delegation, auditability,
+  resume, release evidence, or accountability genuinely needs them.
+- Do not create artifacts that will not help a new chat continue the work,
+  review evidence, preserve a real decision, or close the task.
 
 ## Validation
 
-- Validate lifecycle transitions at the CLI write boundary.
-- Validate machine-readable stage handoff files when they are submitted.
-- Do not invent sidecar lifecycle or review state outside the typed CLI surface.
+- Validate JSON records against the relevant schema when they are created or
+  changed.
+- Validate Markdown artifact files by preserving required headings from the
+  selected template when a template is used.
+- Do not treat chat summaries, specialist recommendations, or compaction
+  summaries as owner approval.
+- Do not invent a second lifecycle state outside the active vNext artifact
+  model.
+
+## Legacy Compatibility
+
+The legacy `artifacts/<module>/...` tree is for old module-orchestrator
+continuation only. Do not start new Maestro vNext work there, and do not convert
+old module artifacts into vNext folders unless the owner explicitly asks for
+historical reconstruction.

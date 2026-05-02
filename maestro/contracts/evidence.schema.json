@@ -132,8 +132,17 @@
       }
     },
     "metadata": {
+      "description": "Optional scalar metadata for filtering and compact context. Do not store raw logs, screenshots, secrets, or nested payloads here; use source.artifact_ref or another evidence item instead.",
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      }
     },
     "created_by": {
       "type": "string",

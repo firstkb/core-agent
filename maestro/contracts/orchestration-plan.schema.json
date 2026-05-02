@@ -108,7 +108,7 @@
       "default": []
     },
     "stages": {
-      "description": "Recorded stages for a machine-readable plan. T0 inline work does not require creating this record; if recorded, keep it minimal.",
+      "description": "Recorded stages for a machine-readable plan. T0 inline work does not require creating this record; if recorded, keep it minimal. `intake` is allowed here as Maestro orchestration-only metadata and is intentionally not a task-packet or stage-handoff stage.",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,

@@ -389,6 +389,27 @@ useful next step, say the work is complete.
 Move active folders to `maestro/artifact/archive/` only when work is complete,
 cancelled, or frozen.
 
+## Runtime Change Governance
+
+Critical runtime files may be edited only inside an owner-requested or
+owner-approved slice, and closeout must call out the changed runtime surface and
+checks run.
+
+Critical files:
+
+- root `AGENTS.md`;
+- `.codex/config.toml`;
+- `maestro/docs/runtime-contract.md`;
+- `maestro/memory/START_HERE.md`;
+- `maestro/memory/index/read-routes.yaml`;
+- `maestro/contracts/task-packet.schema.json`;
+- `maestro/contracts/stage-handoff.schema.json`;
+- `maestro/contracts/approval.schema.json`.
+
+This is an owner-review expectation, not a fixed workflow chain. It does not
+require new agents by default, but it does require focused evidence such as the
+runtime drift check, docs/memory check, schema parse, or targeted review.
+
 ## Transition Rules
 
 - Legacy `module_orchestrator`, `research_codebase`, and `brief_auditor` remain available for old `artifacts/` runs.

@@ -18,7 +18,7 @@
       "path": "{artifacts_root}/{module}/brief.md",
       "media_type": "text/markdown",
       "role": "owner_facing_working_brief",
-      "template": "../templates/brief.md.tmpl",
+      "template": "../../templates/module_orchestrator/brief.md.tmpl",
       "authored_by": "ai"
     },
     "status_json": {
@@ -32,7 +32,7 @@
       "path": "{artifacts_root}/{module}/features/{feature}/README.md",
       "media_type": "text/markdown",
       "role": "feature_charter",
-      "template": "../templates/feature-readme.md.tmpl",
+      "template": "../../templates/module_orchestrator/feature-readme.md.tmpl",
       "authored_by": "ai"
     },
     "feature_status_json": {

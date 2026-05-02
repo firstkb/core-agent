@@ -18,11 +18,13 @@ Read first:
 
 Use `maestro/memory/index/memory-index.yaml` only when broader routing is needed.
 
-## Orchestration rule
+## Maestro entrypoint
 
 For new frontend work, the preferred entrypoint is Maestro when the task is
 ambiguous, cross-stack, UI-visible enough to need evidence, or likely to need
 durable memory. Tiny frontend-local edits may stay direct in the current chat.
+Root `AGENTS.md` and `maestro/docs/runtime-contract.md` own the detailed route,
+artifact, browser evidence, and agent/tool policy.
 
 ## Canonical app surfaces
 
@@ -75,7 +77,8 @@ Do not read by default:
 
 ## High-risk areas
 
-Require extra care before finalizing changes that affect:
+Escalate through Maestro or apply extra care before finalizing changes that
+affect:
 
 - auth/session bootstrap
 - route guards

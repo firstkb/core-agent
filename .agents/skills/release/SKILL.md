@@ -23,4 +23,6 @@ covers the requested action.
   rollback/recovery path before action.
 - Do not widen release scope.
 - Record rollback/recovery notes.
-- Return `handoff-release-release-NNN.json` and release evidence.
+- Return `handoff-release-release-NNN.json` and release evidence. The repeated
+  word is intentional: canonical handoff ids use `handoff-<stage>-<role>-NNN`,
+  and release work has stage `release` plus role `release`.

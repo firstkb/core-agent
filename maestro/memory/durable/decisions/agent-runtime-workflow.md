@@ -106,7 +106,7 @@ Codex/Maestro runtime, agent/team behavior, evidence budget, engineering standar
 - Sources:
   - `platform/frontend/AGENTS.md`
   - `maestro/memory/modules/frontend/platform-studio-ui/README.md`
-  - `maestro/memory/runs/archive/2026-04-26_frontend_form-builder-workspace-decomposition/final.md`
+  - git history for the former Form Builder workspace-decomposition run
 
 ### DEC-081 Backend Files Stay Responsibility-Focused
 

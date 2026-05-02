@@ -113,14 +113,16 @@ A later owner execution signal may move the same conversation into execution.
 
 - `discussion`: no edits, no commits, read-only inspection only when useful for
   the answer.
-- `planning`: no edits, repository inspection allowed, output route/scope/risks
-  and next allowed action.
+- `planning`: no product-code edits; repository inspection and lean Maestro
+  artifact updates are allowed once T1+ persisted work is understood. Output
+  route/scope/risks and next allowed action.
 - `execution`: edits allowed inside scope, smallest useful route, evidence-first
   closeout.
 - `gated_execution`: high-risk edits, release, migration, or destructive actions
   wait for explicit approval.
 
-Maestro should not silently move from discussion or planning into file changes.
+Maestro should not silently move from discussion or planning into product-code
+changes.
 
 If Maestro does not fully understand the task, it must not fill gaps with
 guesses and execute. It should ask one or more focused questions, or continue

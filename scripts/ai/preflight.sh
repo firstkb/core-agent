@@ -82,6 +82,7 @@ node_supports_frontend() {
 
 run_required "docs memory check" python3 scripts/ai/docs_memory_check.py --check
 run_required "env policy check" python3 scripts/ai/check-env-policy.py --check
+run_required "runtime drift check" python3 scripts/ai/runtime_drift_check.py --check
 
 if [ "$MODE" = "docs" ]; then
   :

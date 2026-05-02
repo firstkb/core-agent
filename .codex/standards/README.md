@@ -7,7 +7,7 @@ Use these files as reusable guidance for design, implementation, review, and orc
 Reading order for repo/runtime work:
 
 1. `runtime/repository.md`
-2. `runtime/artifact-governance.md`
+2. `runtime/artifact-governance.md` for the active Maestro vNext artifact model
 3. `shared/security.md`
 4. relevant files under `engineering/`
 5. relevant domain notes under `backend/`, `frontend/`, `infra/`, and `library/`

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "evidence_id": "evidence-command-001",
+  "work_id": "example-t3-runtime-cleanup",
+  "packet_id": null,
+  "handoff_id": null,
+  "evidence_type": "command",
+  "summary": "Runtime drift validator passed.",
+  "source": {
+    "path": "scripts/ai/runtime_drift_check.py",
+    "uri": null,
+    "commit": null,
+    "artifact_ref": "maestro/examples/t3-multi-step/evidence.md",
+    "content_hash": null
+  },
+  "command": {
+    "command": "python3 scripts/ai/runtime_drift_check.py --check",
+    "cwd": ".",
+    "exit_code": 0,
+    "duration_seconds": null,
+    "outcome": "passed"
+  },
+  "metadata": {
+    "fixture": true,
+    "route_tier": "T3_multi_step"
+  },
+  "created_by": "maestro",
+  "created_at": "2026-04-30T00:00:00Z",
+  "redacted": false,
+  "redaction_notes": ""
+}

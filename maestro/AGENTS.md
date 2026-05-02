@@ -32,11 +32,13 @@ Use the longer docs in `maestro/docs/` for rationale and edge cases.
 - Keep contracts compact and enforceable. Prefer cross-field schema rules over prose-only gates.
 - Preserve old module artifacts; do not silently convert `artifacts/<module>/...` into vNext folders.
 
-## Required Invariants
+## Required Local Invariants
 
-- Discussion and planning modes are read-only unless the owner explicitly asks to persist a file.
-- High-risk work is always `gated_execution` and requires a machine-readable approval record.
-- Release/deploy work requires a separate release approval.
-- Specialist packets must include allowed paths, forbidden paths, evidence expectations, stop conditions, and handoff expectations.
-- Subagents recommend next action; Maestro owns lifecycle decisions.
-- Scribe records closeout; Archivist audits docs/memory drift.
+- Discussion mode is read-only unless the owner explicitly asks to persist a
+  file.
+- Planning mode allows lean Maestro artifact updates once T1+ work is
+  understood; it does not allow product-code edits or high-risk execution.
+- Canonical mode, approval, artifact, delegation, and closeout behavior lives in
+  `maestro/docs/runtime-contract.md`.
+- Keep local reminders here only when they do not conflict with the runtime
+  contract.

@@ -30,7 +30,7 @@
     ]
   },
   "support_templates": {
-    "reviewer_note_block": "../templates/reviewer-note-block.md.tmpl"
+    "reviewer_note_block": "../../templates/brief_auditor/reviewer-note-block.md.tmpl"
   },
   "authorship_boundary": {
     "writes_artifacts_directly": false,

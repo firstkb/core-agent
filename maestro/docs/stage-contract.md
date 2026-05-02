@@ -18,8 +18,10 @@ help the current route.
 
 ## Canonical Stage Names
 
-Use these stage names in internal packets, handoffs, and plans when
-machine-readable coordination is useful:
+Use these stage names in internal plans when machine-readable coordination is
+useful. `intake` is orchestration-only: it may appear in an orchestration plan
+or work note to describe Maestro's owner-intent intake, but it is not a
+specialist packet `assigned_stage` and does not produce a stage handoff.
 
 | Stage | Typical Role | Purpose |
 |---|---|---|
@@ -55,8 +57,8 @@ gate decision and `approval-*.json` record.
 - A stage agent may recommend the next action but does not advance lifecycle.
 - Maestro records transitions in conversation or artifacts when persistence is useful.
 - Failed, blocked, skipped, and partially verified stages must be explicit.
-- Handoffs use `handoff-<stage>-<role>-NNN.json` when machine-readable
-  handoff is useful.
+- Packetable stages use `handoff-<stage>-<role>-NNN.json` when
+  machine-readable handoff is useful. `intake` is not packetable.
 - Specialist output that changes next action, approval readiness, risk, or scope
   must be persisted in `work.md`, `evidence.md`, an agent note, or a handoff
   artifact.
@@ -126,8 +128,11 @@ machine-readable review is useful.
 
 Input: release packet, verification/review evidence, and release approval.
 
-Output: `handoff-release-release-NNN.json`, release evidence, target environment,
-command/workflow result, rollback or recovery notes.
+Output: `handoff-release-release-NNN.json`, release evidence, target
+environment, command/workflow result, rollback or recovery notes. The repeated
+word is intentional because canonical handoffs use
+`handoff-<stage>-<role>-NNN` and release work has stage `release` plus role
+`release`.
 
 ### `closeout`
 

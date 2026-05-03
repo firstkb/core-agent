@@ -96,19 +96,23 @@ function resolveFooterInfo(
 }
 
 function RuntimeNode({
+  activeTabs,
   definitionId,
   errors,
   labels,
   node,
+  onActiveTabChange,
   onFieldChange,
   revealFieldId,
   revealRequestKey,
   values,
 }: {
+  activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
   node: RuntimeFormNodeDefinition;
+  onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
   revealFieldId?: string;
   revealRequestKey?: number;
@@ -139,16 +143,20 @@ function RuntimeNode({
   if (isRuntimeFormLayoutNode(node)) {
     return (
       <RuntimeLayoutNode
+        activeTabs={activeTabs}
         layout={node}
+        onActiveTabChange={onActiveTabChange}
         revealFieldId={revealFieldId}
         revealRequestKey={revealRequestKey}
         renderNodes={(nodes, className) => (
           <RuntimeNodeList
+            activeTabs={activeTabs}
             className={className}
             definitionId={definitionId}
             errors={errors}
             labels={labels}
             nodes={nodes}
+            onActiveTabChange={onActiveTabChange}
             onFieldChange={onFieldChange}
             revealFieldId={revealFieldId}
             revealRequestKey={revealRequestKey}
@@ -163,21 +171,25 @@ function RuntimeNode({
 }
 
 function RuntimeNodeList({
+  activeTabs,
   className,
   definitionId,
   errors,
   labels,
   nodes,
+  onActiveTabChange,
   onFieldChange,
   revealFieldId,
   revealRequestKey,
   values,
 }: {
+  activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
   className?: string;
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>;
+  onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
   revealFieldId?: string;
   revealRequestKey?: number;
@@ -187,11 +199,13 @@ function RuntimeNodeList({
     <div className={cx("platform-runtime-form__node-grid", className)}>
       {nodes.map((node) => (
         <RuntimeNode
+          activeTabs={activeTabs}
           definitionId={definitionId}
           errors={errors}
           key={node.id}
           labels={labels}
           node={node}
+          onActiveTabChange={onActiveTabChange}
           onFieldChange={onFieldChange}
           revealFieldId={revealFieldId}
           revealRequestKey={revealRequestKey}
@@ -203,10 +217,12 @@ function RuntimeNodeList({
 }
 
 export function RuntimeFormScaffold({
+  activeTabs,
   className,
   definition,
   errors = {},
   labels,
+  onActiveTabChange,
   onBack,
   onFieldChange,
   onFinish,
@@ -264,11 +280,13 @@ export function RuntimeFormScaffold({
             <FormGrid className="platform-runtime-form__form-grid" columns={2}>
               {resolveRuntimeSectionNodes(section).map((node) => (
                 <RuntimeNode
+                  activeTabs={activeTabs}
                   definitionId={definition.id}
                   errors={errors}
                   key={node.id}
                   labels={resolvedLabels}
                   node={node}
+                  onActiveTabChange={onActiveTabChange}
                   onFieldChange={onFieldChange}
                   revealFieldId={revealFieldId}
                   revealRequestKey={revealRequestKey}

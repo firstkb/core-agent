@@ -8,6 +8,7 @@ import {
   findRuntimeFormField,
   RuntimeFormScaffold,
   validateRuntimeForm,
+  type RuntimeFormActiveTabs,
   type RuntimeFormCommitMode,
   type RuntimeFormDefinition,
   type RuntimeFormFieldType,
@@ -58,7 +59,9 @@ type RuntimeFormFieldRevealRequest = {
 
 type RuntimeFormNavigationState = {
   runtimeFormSession?: {
+    activeTabs?: RuntimeFormActiveTabs;
     docGuid?: string;
+    formResponse?: FormRuntimeFormResponse;
     revision?: string;
     values?: Record<string, unknown>;
   };
@@ -259,9 +262,10 @@ export function FormsRuntimeFormPage({
     [modelId, runtimeConfig.tenantApiUrl, viewId],
   );
   const [formLoadError, setFormLoadError] = useState("");
-  const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(null);
+  const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
+  const [activeTabs, setActiveTabs] = useState<RuntimeFormActiveTabs>(() => restoredSession?.activeTabs ?? {});
   const [fieldRevealRequest, setFieldRevealRequest] = useState<RuntimeFormFieldRevealRequest | null>(null);
   const [finishDialog, setFinishDialog] = useState<FinishDialogState | null>(null);
   const [saveState, setSaveState] = useState<RuntimeFormSaveState>("saving");
@@ -302,6 +306,7 @@ export function FormsRuntimeFormPage({
   const pendingPatchValuesRef = useRef<Record<string, unknown>>({});
   const revisionRef = useRef(restoredSession?.revision ?? "");
   const currentDocGuidRef = useRef(routeDocGuid || restoredSession?.docGuid || "");
+  const activeTabsRef = useRef<RuntimeFormActiveTabs>(restoredSession?.activeTabs ?? {});
 
   const getRuntimeAccessToken = useCallback(() => {
     const accessToken = getAccessToken();
@@ -311,6 +316,12 @@ export function FormsRuntimeFormPage({
     }
     return accessToken;
   }, [getAccessToken, signOut]);
+
+  useEffect(() => {
+    const restoredActiveTabs = restoredSession?.activeTabs ?? {};
+    activeTabsRef.current = restoredActiveTabs;
+    setActiveTabs(restoredActiveTabs);
+  }, [mode, modelId, restoredSession, routeDocGuid, viewId]);
 
   useEffect(() => {
     if (!client || !modelId || !viewId || (mode === "edit" && !routeDocGuid)) {
@@ -325,7 +336,9 @@ export function FormsRuntimeFormPage({
     let isCancelled = false;
     setSaveState("saving");
     setFormLoadError("");
-    setFormResponse(null);
+    if (!restoredSession?.formResponse) {
+      setFormResponse(null);
+    }
     void client.loadForm(accessToken, mode === "edit" ? routeDocGuid : undefined)
       .then((response) => {
         if (isCancelled) {
@@ -350,7 +363,7 @@ export function FormsRuntimeFormPage({
     return () => {
       isCancelled = true;
     };
-  }, [client, getRuntimeAccessToken, mode, modelId, routeDocGuid, signOut, viewId]);
+  }, [client, getRuntimeAccessToken, mode, modelId, restoredSession, routeDocGuid, signOut, viewId]);
 
   useEffect(() => {
     if (!definition || !formResponse) {
@@ -416,6 +429,7 @@ export function FormsRuntimeFormPage({
   }
   const runtimeClient = client;
   const runtimeDefinition = definition;
+  const runtimeFormResponse = formResponse;
 
   function handleRuntimeRequestError(requestError: unknown) {
     if (isUnauthorizedApiError(requestError)) {
@@ -618,16 +632,26 @@ export function FormsRuntimeFormPage({
         setSaveState("saved");
 
         if (response.docGuid) {
+          const restoredValues = {
+            ...serializeRuntimeFormValues(latestValuesRef.current),
+            ...response.values,
+          };
           navigate(formRuntimePaths.edit(modelId, viewId, response.docGuid), {
             replace: true,
             state: {
               runtimeFormSession: {
+                activeTabs: activeTabsRef.current,
                 docGuid: response.docGuid,
+                formResponse: runtimeFormResponse
+                  ? {
+                    ...runtimeFormResponse,
+                    docGuid: response.docGuid,
+                    revision: response.revision,
+                    values: restoredValues,
+                  }
+                  : undefined,
                 revision: response.revision,
-                values: {
-                  ...serializeRuntimeFormValues(latestValuesRef.current),
-                  ...response.values,
-                },
+                values: restoredValues,
               },
             },
           });
@@ -673,6 +697,19 @@ export function FormsRuntimeFormPage({
     }
 
     schedulePatch(patchValues);
+  }
+
+  function handleActiveTabChange(layoutId: string, tabId: string) {
+    if (activeTabsRef.current[layoutId] === tabId) {
+      return;
+    }
+
+    const nextActiveTabs = {
+      ...activeTabsRef.current,
+      [layoutId]: tabId,
+    };
+    activeTabsRef.current = nextActiveTabs;
+    setActiveTabs(nextActiveTabs);
   }
 
   function revealRuntimeField(fieldId: string | undefined) {
@@ -866,8 +903,10 @@ export function FormsRuntimeFormPage({
   return (
     <div className="tenant-web__form-runtime-form-page">
       <RuntimeFormScaffold
+        activeTabs={activeTabs}
         definition={runtimeDefinition}
         errors={errors}
+        onActiveTabChange={handleActiveTabChange}
         onBack={handleBackToList}
         onFieldChange={handleFieldChange}
         onFinish={() => {

@@ -362,6 +362,14 @@ View/read remains the existing `CollectionTable` modal path for now.
   - switch controls keep the form field label as the accessible label and use authored placeholder text only as optional inline description;
   - boolean control rows now use the same 2.5rem minimum control height as standard inputs so switches align vertically with responsive-inline labels;
   - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 11 tests.
+- Runtime create transition tab-preservation follow-up completed:
+  - runtime tabs now expose controlled active-tab state by layout id while preserving schema default-tab behavior;
+  - tenant runtime form captures active tabs and carries them through the silent `/new` to `/edit/:docGuid` route replace after first create;
+  - create transition also carries the current form response in route state so the edit route can render immediately while the canonical server form reloads in the background;
+  - this keeps required-field create/autosave from visually jumping users back to the first/default tab after a successful auto-create;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 11 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 34 tests;
+  - `git diff --check` passed.
 
 ## Next Action
 

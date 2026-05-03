@@ -7,6 +7,7 @@ export {
 } from "./runtime/runtime-form-validation";
 export type {
   RuntimeFormAccordionLayoutDefinition,
+  RuntimeFormActiveTabs,
   RuntimeFormChoiceLayout,
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,

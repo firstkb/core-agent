@@ -38,6 +38,7 @@ export type RuntimeFormTabsVariant = "surface" | "line";
 export type RuntimeFormValue = string | boolean | ReadonlyArray<string>;
 export type RuntimeFormValues = Record<string, RuntimeFormValue | undefined>;
 export type RuntimeFormValidationErrors = Record<string, string | undefined>;
+export type RuntimeFormActiveTabs = Record<string, string>;
 
 export type RuntimeFormFieldOption = {
   label: string;
@@ -235,6 +236,8 @@ export type RuntimeFormScaffoldProps = {
   definition: RuntimeFormDefinition;
   errors?: RuntimeFormValidationErrors;
   labels?: RuntimeFormLabels;
+  activeTabs?: RuntimeFormActiveTabs;
+  onActiveTabChange?: (layoutId: string, tabId: string) => void;
   onBack: () => void;
   onFieldChange: (fieldId: string, value: RuntimeFormValue, field: RuntimeFormFieldDefinition) => void;
   onFinish: () => void;

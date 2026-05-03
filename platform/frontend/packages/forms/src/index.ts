@@ -26,6 +26,7 @@ export {
 } from "./runtime-form";
 export type {
   RuntimeFormAccordionLayoutDefinition,
+  RuntimeFormActiveTabs,
   RuntimeFormChoiceLayout,
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,

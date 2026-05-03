@@ -17,6 +17,7 @@ import {
 } from "@platform/ui-kit";
 
 import type {
+  RuntimeFormActiveTabs,
   RuntimeFormLayoutDefinition,
   RuntimeFormNodeDefinition,
   RuntimeFormTabsLayoutDefinition,
@@ -68,12 +69,16 @@ function RuntimeLayoutHeader({
 }
 
 export function RuntimeLayoutNode({
+  activeTabs,
   layout,
+  onActiveTabChange,
   revealFieldId,
   revealRequestKey,
   renderNodes,
 }: {
+  activeTabs?: RuntimeFormActiveTabs;
   layout: RuntimeFormLayoutDefinition;
+  onActiveTabChange?: (layoutId: string, tabId: string) => void;
   revealFieldId?: string;
   revealRequestKey?: number;
   renderNodes: RenderNodes;
@@ -118,7 +123,9 @@ export function RuntimeLayoutNode({
   if (layout.layoutType === "tabs") {
     return (
       <RuntimeTabsLayout
+        activeTabs={activeTabs}
         layout={layout}
+        onActiveTabChange={onActiveTabChange}
         renderNodes={renderNodes}
         revealFieldId={revealFieldId}
         revealRequestKey={revealRequestKey}
@@ -153,12 +160,16 @@ export function RuntimeLayoutNode({
 }
 
 function RuntimeTabsLayout({
+  activeTabs,
   layout,
+  onActiveTabChange,
   renderNodes,
   revealFieldId,
   revealRequestKey,
 }: {
+  activeTabs?: RuntimeFormActiveTabs;
   layout: RuntimeFormTabsLayoutDefinition;
+  onActiveTabChange?: (layoutId: string, tabId: string) => void;
   renderNodes: RenderNodes;
   revealFieldId?: string;
   revealRequestKey?: number;
@@ -167,26 +178,42 @@ function RuntimeTabsLayout({
   const defaultTabId = layout.defaultTabId && layout.tabs.some((tab) => tab.id === layout.defaultTabId)
     ? layout.defaultTabId
     : fallbackTabId;
-  const [activeTabId, setActiveTabId] = useState(defaultTabId);
+  const restoredTabId = activeTabs?.[layout.id];
+  const initialTabId = restoredTabId && layout.tabs.some((tab) => tab.id === restoredTabId)
+    ? restoredTabId
+    : defaultTabId;
+  const [activeTabId, setActiveTabId] = useState(initialTabId);
 
   useEffect(() => {
     setActiveTabId((currentTabId) => layout.tabs.some((tab) => tab.id === currentTabId) ? currentTabId : defaultTabId);
   }, [defaultTabId, layout.tabs]);
 
   useEffect(() => {
+    if (restoredTabId && layout.tabs.some((tab) => tab.id === restoredTabId)) {
+      setActiveTabId(restoredTabId);
+    }
+  }, [layout.tabs, restoredTabId]);
+
+  useEffect(() => {
     const containingTab = layout.tabs.find((tab) => runtimeNodesContainField(tab.nodes, revealFieldId));
 
     if (containingTab) {
       setActiveTabId(containingTab.id);
+      onActiveTabChange?.(layout.id, containingTab.id);
     }
-  }, [layout.tabs, revealFieldId, revealRequestKey]);
+  }, [layout.id, layout.tabs, onActiveTabChange, revealFieldId, revealRequestKey]);
+
+  function handleTabChange(tabId: string) {
+    setActiveTabId(tabId);
+    onActiveTabChange?.(layout.id, tabId);
+  }
 
   return (
     <div className={cx("platform-runtime-form__tabs", layout.width === "full" && "platform-runtime-form__field--full")}>
       <RuntimeLayoutHeader description={layout.description} title={layout.title} />
       <Tabs
         defaultValue={defaultTabId}
-        onValueChange={setActiveTabId}
+        onValueChange={handleTabChange}
         size={layout.size ?? "sm"}
         value={activeTabId}
         variant={layout.styleVariant ?? "surface"}

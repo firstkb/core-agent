@@ -1,7 +1,4 @@
-import {
-  Label,
-  Select,
-} from "@platform/ui-kit";
+import { Select } from "@platform/ui-kit";
 
 import {
   formsPlaceholderChoiceOptionStyleVariants,
@@ -12,7 +9,6 @@ import {
 
 type ChoiceButtonStylesLabels = {
   buttonStyles: string;
-  styleVariant: string;
   styleVariantDanger: string;
   styleVariantDefault: string;
   styleVariantInfo: string;
@@ -60,8 +56,8 @@ export function ChoiceButtonStylesSection({
 
               <div className="tenant-web__platform-studio-choice-style-controls">
                 <ChoiceStyleVariantSelect
+                  ariaLabel={`${option} ${labels.buttonStyles}`}
                   id={`tenant-platform-studio-choice-style-${optionIndex}`}
-                  label={labels.styleVariant}
                   labels={labels}
                   onChange={(variant) => onOptionStyleChange(option, () =>
                     variant === "default" ? undefined : { option, variant }
@@ -78,24 +74,22 @@ export function ChoiceButtonStylesSection({
 }
 
 function ChoiceStyleVariantSelect({
+  ariaLabel,
   id,
-  label,
   labels,
   onChange,
   value,
 }: {
+  ariaLabel: string;
   id: string;
-  label: string;
   labels: ChoiceButtonStylesLabels;
   onChange: (value: FormsPlaceholderChoiceOptionStyleVariant) => void;
   value: FormsPlaceholderChoiceOptionStyleVariant;
 }) {
   return (
     <div className="tenant-web__platform-studio-form-group tenant-web__platform-studio-form-group--dense">
-      <Label htmlFor={id}>
-        {label}
-      </Label>
       <Select
+        aria-label={ariaLabel}
         id={id}
         onChange={(event) => onChange(event.target.value as FormsPlaceholderChoiceOptionStyleVariant)}
         value={value}

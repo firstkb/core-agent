@@ -149,7 +149,6 @@ export function SelectedFieldSettingsSection({
             renderStyleButtons: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleButtons"),
             renderStyleNative: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleNative"),
             selection: t("tenant.platformStudio.forms.builder.fieldSettings.selection"),
-            styleVariant: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariant"),
             styleVariantDanger: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantDanger"),
             styleVariantDefault: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantDefault"),
             styleVariantInfo: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantInfo"),

@@ -34,7 +34,6 @@ type ChoiceFieldSettingsLabels = ChoiceOptionRowLabels & {
   renderStyleButtons: string;
   renderStyleNative: string;
   selection: string;
-  styleVariant: string;
   styleVariantDanger: string;
   styleVariantDefault: string;
   styleVariantInfo: string;

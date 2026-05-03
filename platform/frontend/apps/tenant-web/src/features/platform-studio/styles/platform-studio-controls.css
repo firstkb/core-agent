@@ -244,13 +244,18 @@
 
 .tenant-web__platform-studio-choice-style-row {
   align-items: flex-start;
+  flex-direction: column;
+  gap: 0.7rem;
 }
 
 .tenant-web__platform-studio-choice-style-controls {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(5.25rem, 6rem));
-  gap: 0.6rem;
-  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.tenant-web__platform-studio-choice-style-controls .tenant-web__platform-studio-form-group {
+  width: 100%;
+  min-width: 0;
 }
 
 .tenant-web__platform-studio-lookup-picker-columns {
@@ -385,4 +390,3 @@
   width: 100%;
   padding-left: 2.45rem;
 }
-

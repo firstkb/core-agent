@@ -465,7 +465,6 @@ export const tenantSpanishMessages = {
             sourcePickerTitle: "Elegir origen de DB lookup",
             storedValueField: "Stored value field",
             selectedFields: "Campos seleccionados",
-            styleVariant: "Estilo",
             styleVariantDanger: "Danger",
             styleVariantDefault: "Default",
             styleVariantInfo: "Info",

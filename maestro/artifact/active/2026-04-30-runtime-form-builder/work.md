@@ -387,6 +387,13 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode with `GOCACHE=/private/tmp/core-agent-go-build`;
   - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
+- Subform table/error UX follow-up completed:
+  - parent subform tables now constrain tall row sets and keep the header sticky while table body content scrolls after roughly five rows;
+  - missing/deleted/incorrect form-record URLs now render a centered 404-style not-found state instead of a small red `Could not load form` line;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 12 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 35 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode with `GOCACHE=/private/tmp/core-agent-go-build`.
 
 ## Next Action
 

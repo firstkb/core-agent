@@ -301,8 +301,21 @@
   background: var(--color-bg-surface);
 }
 
+.platform-runtime-form__subform-table-scroll--constrained {
+  max-height: 18rem;
+  overflow: auto;
+}
+
 .platform-runtime-form__subform-table.ui-table {
   min-width: 38rem;
+}
+
+.platform-runtime-form__subform-table-scroll--constrained .ui-table__header-cell {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-bg-surface-muted);
+  box-shadow: 0 1px 0 var(--color-border-default);
 }
 
 .platform-runtime-form__subform-cell-value {

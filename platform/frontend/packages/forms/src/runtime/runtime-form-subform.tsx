@@ -114,6 +114,7 @@ export function RuntimeSubformNode({
   const canDelete = subform.actions.canDelete && Boolean(onDelete);
   const actionColumnCount = canEdit || canDelete ? 1 : 0;
   const colSpan = Math.max(subform.columns.length + actionColumnCount, 1);
+  const shouldConstrainTable = sortedRows.length > 5;
 
   return (
     <section className={cx("platform-runtime-form__subform", subform.width === "full" && "platform-runtime-form__field--full")}>
@@ -132,7 +133,12 @@ export function RuntimeSubformNode({
         ) : null}
       </div>
 
-      <div className="platform-runtime-form__subform-table-scroll">
+      <div
+        className={cx(
+          "platform-runtime-form__subform-table-scroll",
+          shouldConstrainTable && "platform-runtime-form__subform-table-scroll--constrained",
+        )}
+      >
         <Table className="platform-runtime-form__subform-table" density="compact">
           <TableHead>
             <TableRow>

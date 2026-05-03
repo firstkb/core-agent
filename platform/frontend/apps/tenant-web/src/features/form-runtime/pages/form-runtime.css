@@ -18,6 +18,12 @@
   overflow-y: auto;
 }
 
+.tenant-web__form-runtime-form-page--centered {
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
 .tenant-web__form-runtime-form-state {
   width: 100%;
   max-width: 72rem;
@@ -28,6 +34,51 @@
 
 .tenant-web__form-runtime-form-state--error {
   color: var(--color-danger);
+}
+
+.tenant-web__form-runtime-load-error {
+  display: flex;
+  width: min(100%, 30rem);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-1);
+  text-align: center;
+}
+
+.tenant-web__form-runtime-load-error-code {
+  display: inline-flex;
+  width: 5rem;
+  height: 5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 32%, var(--color-border-muted));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface));
+  color: var(--color-danger);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.tenant-web__form-runtime-load-error-title {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.tenant-web__form-runtime-load-error-description {
+  max-width: 24rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
 }
 
 .tenant-web__form-runtime-list-page > .admin-web__collection-surface {

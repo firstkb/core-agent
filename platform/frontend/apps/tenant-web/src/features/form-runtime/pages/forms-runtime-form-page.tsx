@@ -30,6 +30,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  Button,
   CheckCircleIcon,
   CloseIcon,
 } from "@platform/ui-kit";
@@ -56,6 +57,12 @@ type FinishDialogState = {
   fieldId?: string;
   message: string;
   tone: "danger" | "success";
+};
+
+type RuntimeFormLoadErrorState = {
+  code?: string;
+  description: string;
+  title: string;
 };
 
 type RuntimeFormFieldRevealRequest = {
@@ -261,6 +268,31 @@ function isConflictRuntimeError(requestError: unknown) {
     && (requestError.statusCode === 409 || requestError.code === "FORM_RUNTIME_CONFLICT");
 }
 
+function isNotFoundRuntimeError(requestError: unknown) {
+  return requestError instanceof ApiClientError
+    && (
+      requestError.statusCode === 404 ||
+      requestError.code === "FORM_RUNTIME_MODEL_NOT_FOUND" ||
+      requestError.code === "FORM_RUNTIME_VIEW_NOT_FOUND" ||
+      requestError.code === "FORM_RUNTIME_RECORD_NOT_FOUND"
+    );
+}
+
+function runtimeFormLoadErrorFromRequest(requestError: unknown): RuntimeFormLoadErrorState {
+  if (isNotFoundRuntimeError(requestError)) {
+    return {
+      code: "404",
+      description: "This form, view, or record was not found. It may have been deleted, or the link may contain an incorrect id.",
+      title: "Form not found",
+    };
+  }
+
+  return {
+    description: "Please try again. If the problem continues, return to the list and open the record again.",
+    title: "Could not load form",
+  };
+}
+
 export function FormsRuntimeFormPage({
   mode,
   scope = "root",
@@ -305,7 +337,7 @@ export function FormsRuntimeFormPage({
       : null,
     [modelId, runtimeConfig.tenantApiUrl, viewId],
   );
-  const [formLoadError, setFormLoadError] = useState("");
+  const [formLoadError, setFormLoadError] = useState<RuntimeFormLoadErrorState | null>(null);
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
@@ -385,7 +417,7 @@ export function FormsRuntimeFormPage({
 
     let isCancelled = false;
     setSaveState("saving");
-    setFormLoadError("");
+    setFormLoadError(null);
     if (!restoredSession?.formResponse) {
       setFormResponse(null);
     }
@@ -410,7 +442,7 @@ export function FormsRuntimeFormPage({
           return;
         }
         setFormResponse(null);
-        setFormLoadError("Could not load form.");
+        setFormLoadError(runtimeFormLoadErrorFromRequest(requestError));
         setSaveState("error");
       });
 
@@ -512,9 +544,26 @@ export function FormsRuntimeFormPage({
   }
   if (formLoadError) {
     return (
-      <div className="tenant-web__form-runtime-form-page">
-        <div className="tenant-web__form-runtime-form-state tenant-web__form-runtime-form-state--error">
-          {formLoadError}
+      <div className="tenant-web__form-runtime-form-page tenant-web__form-runtime-form-page--centered">
+        <div className="tenant-web__form-runtime-load-error" role="status">
+          {formLoadError.code ? (
+            <div aria-hidden="true" className="tenant-web__form-runtime-load-error-code">
+              {formLoadError.code}
+            </div>
+          ) : null}
+          <h1 className="tenant-web__form-runtime-load-error-title">
+            {formLoadError.title}
+          </h1>
+          <p className="tenant-web__form-runtime-load-error-description">
+            {formLoadError.description}
+          </p>
+          <Button
+            onClick={() => navigate(formRuntimePaths.list(modelId, viewId))}
+            type="button"
+            variant="secondary"
+          >
+            Back to list
+          </Button>
         </div>
       </div>
     );

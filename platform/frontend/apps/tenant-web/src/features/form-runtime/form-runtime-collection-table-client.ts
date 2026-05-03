@@ -414,22 +414,20 @@ export function createFormRuntimeCollectionTableClient(options: {
 
       return normalizeSearchSuggestionsResponse(response);
     },
-    runBulkAction: options.routeContext === "preview"
-      ? undefined
-      : async (accessToken, input) => {
-        await requestTenantCollectionTable<void>(
-          options.baseUrl,
-          `${pathPrefix}/bulk-actions/${encodeURIComponent(input.actionId)}`,
-          {
-            accessToken,
-            body: {
-              query: input.query,
-              rowIds: input.rowIds,
-            },
-            method: "POST",
+    async runBulkAction(accessToken, input) {
+      await requestTenantCollectionTable<void>(
+        options.baseUrl,
+        `${pathPrefix}/bulk-actions/${encodeURIComponent(input.actionId)}`,
+        {
+          accessToken,
+          body: {
+            query: input.query,
+            rowIds: input.rowIds,
           },
-        );
-      },
+          method: "POST",
+        },
+      );
+    },
     async toggleFavorite(accessToken) {
       return requestTenantCollectionTable<CollectionTableFavoriteToggleResult>(
         options.baseUrl,

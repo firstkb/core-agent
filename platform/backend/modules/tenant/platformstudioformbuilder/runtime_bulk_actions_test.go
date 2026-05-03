@@ -1,6 +1,8 @@
 package platformstudioformbuilder
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
@@ -32,6 +34,29 @@ func TestLoadRuntimeViewListMetaEnablesBulkActionsForVisibleActiveAndDelete(t *t
 	}
 	if out.BulkActions[2].ID != "delete" || out.BulkActions[2].Tone != "danger" || out.BulkActions[2].Confirmation == nil {
 		t.Fatalf("delete action = %#v, want danger with confirmation", out.BulkActions[2])
+	}
+}
+
+func TestPreviewRuntimeListMetaKeepsBulkActions(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	addActiveRuntimeListColumn(t, model, view, true, true, true)
+
+	handler := NewHandler(NewService(repo))
+	req := httptest.NewRequest(http.MethodGet, "/app/platform-studio/forms/"+model.ModelID+"/views/"+view.ViewID+"/runtime/meta", nil)
+	req.SetPathValue("modelId", model.ModelID)
+	req.SetPathValue("viewId", view.ViewID)
+
+	out, err := handler.LoadRuntimeViewListMeta(rootTestContext(), req, struct{}{})
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+
+	if !out.Selection.Enabled {
+		t.Fatalf("selection = %#v, want enabled preview selection", out.Selection)
+	}
+	if len(out.BulkActions) != 3 {
+		t.Fatalf("bulk actions = %#v, want active/inactive/delete in preview meta", out.BulkActions)
 	}
 }
 

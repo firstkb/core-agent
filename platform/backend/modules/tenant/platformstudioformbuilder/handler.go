@@ -76,10 +76,6 @@ func (h *Handler) LoadRuntimeViewListMeta(ctx context.Context, r *http.Request, 
 	if err != nil {
 		return nil, mapError(err)
 	}
-	if isPreviewRuntimeRequest(r) {
-		out.BulkActions = []collectiontable.BulkActionDefinition{}
-		out.Selection = collectiontable.SelectionMeta{Enabled: false}
-	}
 	return out, nil
 }
 
@@ -165,13 +161,6 @@ func (h *Handler) LoadRuntimeViewRecord(ctx context.Context, r *http.Request, _ 
 		return nil, mapError(err)
 	}
 	return out, nil
-}
-
-func isPreviewRuntimeRequest(r *http.Request) bool {
-	if r == nil || r.URL == nil {
-		return false
-	}
-	return strings.Contains(r.URL.Path, "/app/platform-studio/forms/") && strings.Contains(r.URL.Path, "/runtime/")
 }
 
 func (h *Handler) ListViews(ctx context.Context, r *http.Request, _ struct{}) (*ListViewsResponse, error) {

@@ -129,6 +129,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Inspected current active contracts/memory, tenant runtime list/read code, collection-table action seams, `forms` package boundary, `ui-kit`/UI Lab rules, backend runtime routes, and `reference-pack:smartapp-runtime` `edit.html`/EJS templates.
 - Grant audit completed with verdict `revise`: plan direction is right, but first implementation must be narrowed to a frontend-only scaffold/fixture matrix before any backend writes.
 - Added `maestro/memory/modules/frontend/build-web-apps-review.md` as the repo-local bridge for using official Build Web Apps capabilities in future frontend work. Maestro skill now points to that bridge instead of relying on local plugin cache paths.
+- Owner manual-testing findings are tracked separately in `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`; only items moved to `current-slice` are part of active implementation scope.
 
 ## Evidence
 

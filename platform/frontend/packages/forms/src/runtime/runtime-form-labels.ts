@@ -5,7 +5,10 @@ import type {
 
 const defaultRuntimeFormLabels: RuntimeFormResolvedLabels = {
   backToList: "Back to list",
+  createModeInfo: "Complete the required fields to create this record. Changes will save automatically after it is created.",
+  editModeInfo: "This form saves changes automatically as you work. You can continue working with it later.",
   finish: "Finish",
+  onlineFormTitle: "Online Form",
   requiredError: "This field is required.",
   saveStates: {
     dirty: "Unsaved",

@@ -51,6 +51,11 @@ type FinishDialogState = {
   tone: "danger" | "success";
 };
 
+type RuntimeFormFieldRevealRequest = {
+  fieldId: string;
+  requestKey: number;
+};
+
 type RuntimeFormNavigationState = {
   runtimeFormSession?: {
     docGuid?: string;
@@ -257,6 +262,7 @@ export function FormsRuntimeFormPage({
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(null);
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
+  const [fieldRevealRequest, setFieldRevealRequest] = useState<RuntimeFormFieldRevealRequest | null>(null);
   const [finishDialog, setFinishDialog] = useState<FinishDialogState | null>(null);
   const [saveState, setSaveState] = useState<RuntimeFormSaveState>("saving");
   const definition = useMemo(() => {
@@ -285,6 +291,7 @@ export function FormsRuntimeFormPage({
   const createInFlightRef = useRef(false);
   const lastCreateBlockedByValidationRef = useRef(false);
   const lastRuntimeRequestErrorKindRef = useRef<"auth" | "conflict" | "error" | null>(null);
+  const fieldRevealRequestKeyRef = useRef(0);
   const createPromiseRef = useRef<Promise<string | null> | null>(null);
   const hasAppliedInitialStatusRef = useRef(false);
   const hasServerRecordRef = useRef(mode === "edit" && routeDocGuid.length > 0);
@@ -356,6 +363,7 @@ export function FormsRuntimeFormPage({
 
     setValues(nextValues);
     setErrors({});
+    setFieldRevealRequest(null);
     setFinishDialog(null);
     setSaveState("idle");
     latestValuesRef.current = nextValues;
@@ -595,6 +603,7 @@ export function FormsRuntimeFormPage({
           }
           if (options?.showValidationDialog) {
             const firstError = findFirstValidationError(runtimeDefinition, serverErrors);
+            revealRuntimeField(firstError.fieldId);
             setFinishDialog({
               fieldId: firstError.fieldId,
               message: firstRuntimeValidationMessage(response.validationErrors) ?? `Please fill field: "${firstError.label}"`,
@@ -666,6 +675,18 @@ export function FormsRuntimeFormPage({
     schedulePatch(patchValues);
   }
 
+  function revealRuntimeField(fieldId: string | undefined) {
+    if (!fieldId) {
+      return;
+    }
+
+    fieldRevealRequestKeyRef.current += 1;
+    setFieldRevealRequest({
+      fieldId,
+      requestKey: fieldRevealRequestKeyRef.current,
+    });
+  }
+
   function focusRuntimeField(fieldId: string) {
     if (typeof document === "undefined") {
       return;
@@ -727,6 +748,7 @@ export function FormsRuntimeFormPage({
       const firstError = findFirstValidationError(runtimeDefinition, nextErrors);
 
       setErrors(nextErrors);
+      revealRuntimeField(firstError.fieldId);
       setSaveState("error");
       setFinishDialog({
         fieldId: firstError.fieldId,
@@ -834,9 +856,10 @@ export function FormsRuntimeFormPage({
     }
 
     if (currentDialog.fieldId) {
+      revealRuntimeField(currentDialog.fieldId);
       globalThis.setTimeout(() => {
         focusRuntimeField(currentDialog.fieldId ?? "");
-      }, 0);
+      }, 25);
     }
   }
 
@@ -850,6 +873,8 @@ export function FormsRuntimeFormPage({
         onFinish={() => {
           void handleFinish();
         }}
+        revealFieldId={fieldRevealRequest?.fieldId}
+        revealRequestKey={fieldRevealRequest?.requestKey}
         saveState={saveState}
         values={values}
       />

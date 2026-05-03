@@ -8,6 +8,7 @@ import {
 import type { RuntimeFormDefinition } from "./runtime-form";
 import { createRuntimeFormFixture } from "./runtime-form-fixtures";
 import { createRuntimeFormDefinitionFromSchema } from "./runtime-form-schema";
+import { formatReadonlyValue } from "./runtime/runtime-form-utils";
 
 describe("runtime form helpers", () => {
   it("validates required editable fields from a fixture definition", () => {
@@ -36,6 +37,19 @@ describe("runtime form helpers", () => {
 
     expect(findRuntimeFormField(definition, "crew_size")?.type).toBe("integer");
     expect(findRuntimeFormField(definition, "work_scope")?.type).toBe("long_text");
+  });
+
+  it("formats readonly date values in US display format", () => {
+    expect(formatReadonlyValue({
+      id: "inspection_date",
+      label: "Inspection date",
+      type: "date",
+    }, "2026-05-03")).toBe("05/03/2026");
+    expect(formatReadonlyValue({
+      id: "follow_up_at",
+      label: "Follow-up at",
+      type: "date_time",
+    }, "2026-05-03T14:05")).toBe("05/03/2026 2:05 PM");
   });
 
   it("applies same-scope requirement rules during validation", () => {

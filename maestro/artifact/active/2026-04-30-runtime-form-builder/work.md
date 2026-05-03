@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `managed_multiselect_storage_slice_complete`
+- Status: `ready_for_subform_runtime_slice`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -50,6 +50,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime list checkbox/bulk action behavior must stay metadata-driven by the runtime surface, not inferred inside the generic `CollectionTable`. Show bulk `Active` / `No active` only when a supported `active` field exists in the source/schema, that field is present in the current view/table output, and the view permits edit.
 - Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
 - Runtime choice fields should render from authored `choiceDisplay` settings, not preset-name inference: `Render style = Native` uses UI Kit Combobox (`single_select` simple values, `multi_select` multi-select), while `Render style = Buttons` uses UI Kit toggle buttons with authored horizontal/vertical orientation. Per-option Button styles remain deferred until Form Builder defines a runtime-ready styling contract.
+- Runtime `single_select` fields rendered as horizontal buttons should present as a segmented button group. This is a runtime-only visual refinement for single-select horizontal buttons and must not change multi-select or vertical button behavior.
 - Managed runtime `multi_select`/`tags` values should use the generated scope multivalue table. Runtime apply exposes aggregate label/count outputs for grids; runtime create/edit/load persists selected option values in `value_key`, labels in `value_label`, and preserves authored order with `sort_order`. Static/external multivalue writes remain deferred.
 - Runtime choice Native controls must keep the required-field left border affordance used by other controls, and selected choice buttons should make the selected state more explicit with underlined text.
 - Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
@@ -110,11 +111,13 @@ View/read remains the existing `CollectionTable` modal path for now.
 ## Deferred Subform Slice Notes
 
 - `Subform` renders as a child table inside the parent form.
+- Parent-form subtable rows must honor authored Subtable sorting when it is configured.
 - Child `Add` and `Edit` open a subform-scope form page by separate route, using the same create-after-required-complete and edit-autosave principles as root forms.
 - Subform page actions are `Back` and `Save`, not `Back to list` and `Finish`.
 - `Back` returns to the parent form route without changing parent status.
 - If the subform was opened from inside a parent tab, the child route should carry the parent tab context and restore that same tab when returning with `Back`.
 - Subform scope has no System Fields and no workflow status game.
+- Form Builder stabilization blockers for this slice are resolved in `findings.md`: subform Grid settings persist, root/subtable sorting pickers are constrained to active grid fields, draft save conflicts are guarded/atomic, and canvas tree context survives save.
 - Future post-processing/actions may exist, but they belong to the future Action Builder/runtime command layer, not the first subform renderer slice.
 
 ## Risks / Gates
@@ -325,7 +328,41 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode;
   - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
+- Runtime single-select segmented button follow-up completed:
+  - horizontal `single_select` button controls now render as a joined segmented group through a dedicated runtime class;
+  - `multi_select` button controls and vertical button controls keep the existing separated button layout;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
+- Runtime form informational chrome follow-up completed:
+  - top form chrome now shows an `Online Form` note with mode-specific create/edit autosave behavior;
+  - bottom form chrome now explains `Finish` and `Back to list`, including the configured final workflow status when present;
+  - footer informational note now uses the UI Kit neutral toolbar-notice panel without a marker;
+  - footer informational note is shown only when the current form includes the bound workflow/status field;
+  - top informational note now uses a transparent callout treatment with a 4px left border and no full border/background;
+  - the copy is exposed through runtime labels for future host-level localization/customization;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
+- Runtime validation tab reveal follow-up completed:
+  - runtime tabs now accept a field reveal request and switch to the tab containing that field, including nested layout nodes;
+  - tenant form `Finish` validation now sends a reveal request for the first invalid field before showing the dialog, so `OK` can focus fields inside previously inactive tabs;
+  - server validation errors during create/finish use the same reveal path;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 34 tests;
+  - `git diff --check` passed.
+- Runtime readonly date display follow-up completed:
+  - readonly/view-only runtime `date` values now display as US `MM/DD/YYYY` instead of raw ISO `YYYY-MM-DD`;
+  - readonly/view-only runtime `date_time` values now display as US date plus 12-hour time without timezone shifting stored local values;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 11 tests.
+- Runtime boolean visual follow-up completed:
+  - runtime `boolean` fields now render with UI Kit `Switch` instead of `Checkbox`;
+  - switch controls keep the form field label as the accessible label and use authored placeholder text only as optional inline description;
+  - boolean control rows now use the same 2.5rem minimum control height as standard inputs so switches align vertically with responsive-inline labels;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 11 tests.
 
 ## Next Action
 
-Next allowed action is owner review of the runtime choice visual follow-up, commit preparation for that small follow-up, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.
+Next allowed action is owner review of the runtime form visual follow-ups, commit preparation for that small follow-up, or an owner decision to continue into the Subform runtime slice.

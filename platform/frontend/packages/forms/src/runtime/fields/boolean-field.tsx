@@ -1,7 +1,5 @@
-import type { ChangeEvent } from "react";
-
 import {
-  Checkbox,
+  Switch,
 } from "@platform/ui-kit";
 
 import {
@@ -16,15 +14,20 @@ export function BooleanField({
   onFieldChange,
   value,
 }: RuntimeFieldControlProps) {
+  const descriptionId = field.placeholder ? `${controlId}-description` : undefined;
+
   return (
-    <label className="platform-runtime-form__boolean-control" htmlFor={controlId}>
-      <Checkbox
+    <div className="platform-runtime-form__boolean-control">
+      <Switch
+        aria-describedby={descriptionId}
+        aria-labelledby={`${controlId}-label`}
         checked={getBooleanValue(value)}
         disabled={disabled}
         id={controlId}
-        onChange={(event: ChangeEvent<HTMLInputElement>) => onFieldChange(field.id, event.currentTarget.checked, field)}
+        onCheckedChange={(checked) => onFieldChange(field.id, checked, field)}
+        size="md"
       />
-      <span>{field.placeholder ?? field.label}</span>
-    </label>
+      {field.placeholder ? <span id={descriptionId}>{field.placeholder}</span> : null}
+    </div>
   );
 }

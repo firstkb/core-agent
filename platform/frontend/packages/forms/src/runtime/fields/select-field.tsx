@@ -7,6 +7,7 @@ import {
 } from "@platform/ui-kit";
 
 import {
+  cx,
   getStringValue,
 } from "../runtime-form-utils";
 import {
@@ -28,13 +29,17 @@ export function SelectField({
 }: RuntimeFieldControlProps) {
   const stringValue = getStringValue(value);
   const comboboxOptions = useMemo(() => getComboboxOptions(field), [field.options]);
+  const choiceOrientation = getChoiceOrientation(field);
 
   if (getChoiceRenderStyle(field) === "buttons") {
     return (
       <ToggleGroup
         aria-invalid={error ? "true" : undefined}
         aria-labelledby={`${controlId}-label`}
-        className="platform-runtime-form__choice-button-group"
+        className={cx(
+          "platform-runtime-form__choice-button-group",
+          choiceOrientation === "horizontal" && "platform-runtime-form__choice-button-group--segmented-horizontal",
+        )}
         disabled={disabled}
         onValueChange={(nextValue) => {
           if (Array.isArray(nextValue)) {
@@ -47,7 +52,7 @@ export function SelectField({
 
           onFieldChange(field.id, nextValue, field);
         }}
-        orientation={getChoiceOrientation(field)}
+        orientation={choiceOrientation}
         type="single"
         value={stringValue}
         variant="outline"

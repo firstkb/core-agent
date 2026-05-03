@@ -216,7 +216,11 @@ export type RuntimeFormDefinition = {
 
 export type RuntimeFormResolvedLabels = {
   backToList: ReactNode;
+  createModeInfo: ReactNode;
+  editModeInfo: ReactNode;
   finish: ReactNode;
+  finishBackInfo?: ReactNode;
+  onlineFormTitle: ReactNode;
   requiredError: string;
   saveStates: Record<RuntimeFormSaveState, ReactNode>;
   selectPlaceholder: string;
@@ -234,6 +238,8 @@ export type RuntimeFormScaffoldProps = {
   onBack: () => void;
   onFieldChange: (fieldId: string, value: RuntimeFormValue, field: RuntimeFormFieldDefinition) => void;
   onFinish: () => void;
+  revealFieldId?: string;
+  revealRequestKey?: number;
   saveState?: RuntimeFormSaveState;
   values: RuntimeFormValues;
 };

@@ -1,4 +1,8 @@
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   Accordion,
@@ -15,12 +19,34 @@ import {
 import type {
   RuntimeFormLayoutDefinition,
   RuntimeFormNodeDefinition,
+  RuntimeFormTabsLayoutDefinition,
 } from "./runtime-form-types";
 import {
   cx,
+  getRuntimeLayoutChildNodes,
+  isRuntimeFormFieldNode,
+  isRuntimeFormLayoutNode,
 } from "./runtime-form-utils";
 
 type RenderNodes = (nodes: ReadonlyArray<RuntimeFormNodeDefinition>, className?: string) => ReactNode;
+
+function runtimeNodesContainField(nodes: ReadonlyArray<RuntimeFormNodeDefinition>, fieldId: string | undefined): boolean {
+  if (!fieldId) {
+    return false;
+  }
+
+  for (const node of nodes) {
+    if (isRuntimeFormFieldNode(node) && node.id === fieldId) {
+      return true;
+    }
+
+    if (isRuntimeFormLayoutNode(node) && runtimeNodesContainField(getRuntimeLayoutChildNodes(node), fieldId)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function RuntimeLayoutHeader({
   description,
@@ -43,9 +69,13 @@ function RuntimeLayoutHeader({
 
 export function RuntimeLayoutNode({
   layout,
+  revealFieldId,
+  revealRequestKey,
   renderNodes,
 }: {
   layout: RuntimeFormLayoutDefinition;
+  revealFieldId?: string;
+  revealRequestKey?: number;
   renderNodes: RenderNodes;
 }) {
   if (layout.layoutType === "divider") {
@@ -86,29 +116,13 @@ export function RuntimeLayoutNode({
   }
 
   if (layout.layoutType === "tabs") {
-    const fallbackTabId = layout.tabs[0]?.id ?? "";
-    const defaultTabId = layout.defaultTabId && layout.tabs.some((tab) => tab.id === layout.defaultTabId)
-      ? layout.defaultTabId
-      : fallbackTabId;
-
     return (
-      <div className={cx("platform-runtime-form__tabs", layout.width === "full" && "platform-runtime-form__field--full")}>
-        <RuntimeLayoutHeader description={layout.description} title={layout.title} />
-        <Tabs defaultValue={defaultTabId} size={layout.size ?? "sm"} variant={layout.styleVariant ?? "surface"}>
-          <TabsList scrollable={layout.scrollable ?? true}>
-            {layout.tabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id}>
-                {tab.title}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {layout.tabs.map((tab) => (
-            <TabsPanel className="platform-runtime-form__tabs-panel" key={tab.id} value={tab.id}>
-              {renderNodes(tab.nodes)}
-            </TabsPanel>
-          ))}
-        </Tabs>
-      </div>
+      <RuntimeTabsLayout
+        layout={layout}
+        renderNodes={renderNodes}
+        revealFieldId={revealFieldId}
+        revealRequestKey={revealRequestKey}
+      />
     );
   }
 
@@ -134,6 +148,62 @@ export function RuntimeLayoutNode({
     <div className={cx("platform-runtime-form__group", layout.width === "full" && "platform-runtime-form__field--full")}>
       <RuntimeLayoutHeader description={layout.description} title={layout.title} />
       {renderNodes(layout.nodes)}
+    </div>
+  );
+}
+
+function RuntimeTabsLayout({
+  layout,
+  renderNodes,
+  revealFieldId,
+  revealRequestKey,
+}: {
+  layout: RuntimeFormTabsLayoutDefinition;
+  renderNodes: RenderNodes;
+  revealFieldId?: string;
+  revealRequestKey?: number;
+}) {
+  const fallbackTabId = layout.tabs[0]?.id ?? "";
+  const defaultTabId = layout.defaultTabId && layout.tabs.some((tab) => tab.id === layout.defaultTabId)
+    ? layout.defaultTabId
+    : fallbackTabId;
+  const [activeTabId, setActiveTabId] = useState(defaultTabId);
+
+  useEffect(() => {
+    setActiveTabId((currentTabId) => layout.tabs.some((tab) => tab.id === currentTabId) ? currentTabId : defaultTabId);
+  }, [defaultTabId, layout.tabs]);
+
+  useEffect(() => {
+    const containingTab = layout.tabs.find((tab) => runtimeNodesContainField(tab.nodes, revealFieldId));
+
+    if (containingTab) {
+      setActiveTabId(containingTab.id);
+    }
+  }, [layout.tabs, revealFieldId, revealRequestKey]);
+
+  return (
+    <div className={cx("platform-runtime-form__tabs", layout.width === "full" && "platform-runtime-form__field--full")}>
+      <RuntimeLayoutHeader description={layout.description} title={layout.title} />
+      <Tabs
+        defaultValue={defaultTabId}
+        onValueChange={setActiveTabId}
+        size={layout.size ?? "sm"}
+        value={activeTabId}
+        variant={layout.styleVariant ?? "surface"}
+      >
+        <TabsList scrollable={layout.scrollable ?? true}>
+          {layout.tabs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.title}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {layout.tabs.map((tab) => (
+          <TabsPanel className="platform-runtime-form__tabs-panel" key={tab.id} value={tab.id}>
+            {renderNodes(tab.nodes)}
+          </TabsPanel>
+        ))}
+      </Tabs>
     </div>
   );
 }

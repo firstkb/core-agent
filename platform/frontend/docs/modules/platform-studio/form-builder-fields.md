@@ -283,9 +283,11 @@ Backend storage note:
 Ready-made fields are palette shortcuts over accepted base field types.
 They are not standalone backend primitives.
 
-`uniqueValue` may be authored for `Email`, `Phone`, and `short_text` fields with
-`validation = email | phone`. It means the field value is expected to be unique
-within the field's model/scope; `false` is omitted from compact payloads.
+`uniqueValue` may be authored for plain `short_text` fields and for email/phone
+text fields (`fieldPreset = email | phone` or `validation = email | phone`). It
+means the field value is expected to be unique within the field's model/scope;
+`false` is omitted from compact payloads. Specialized text presets such as
+`URL` and `suggest_text` do not expose this authoring switch.
 
 | Preset | Compile Target | Locked Settings | Runtime/Authoring Notes |
 | --- | --- | --- | --- |

@@ -8,6 +8,9 @@ import {
   getFieldSchemaScopeId,
   getModelSubformScopeDefinitions,
 } from "./form-builder-workspace-schema-utils";
+import {
+  supportsUniqueValue,
+} from "./form-builder-workspace-unique-value";
 
 function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
   const serializedField: Record<string, unknown> = {
@@ -24,7 +27,7 @@ function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
   if (serializedField.autocomplete === "on") {
     delete serializedField.autocomplete;
   }
-  if (serializedField.uniqueValue !== true) {
+  if (serializedField.uniqueValue !== true || !supportsUniqueValue(field)) {
     delete serializedField.uniqueValue;
   }
   if (serializedField.isLocked === false) {

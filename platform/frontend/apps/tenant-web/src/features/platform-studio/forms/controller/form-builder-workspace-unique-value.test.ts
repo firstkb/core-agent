@@ -39,13 +39,15 @@ function createModel(fields: ReadonlyArray<FormsPlaceholderField>): FormsPlaceho
 }
 
 describe("Form Builder unique text values", () => {
-  it("supports unique values for email and phone text fields only", () => {
+  it("supports unique values for plain short text and email/phone text fields only", () => {
     expect(supportsUniqueValue(createTextField("email", { preset: "email", validation: "email" }))).toBe(true);
     expect(supportsUniqueValue(createTextField("phone", { preset: "phone", validation: "phone" }))).toBe(true);
     expect(supportsUniqueValue(createTextField("short-email", { validation: "email" }))).toBe(true);
     expect(supportsUniqueValue(createTextField("short-phone", { validation: "phone" }))).toBe(true);
-    expect(supportsUniqueValue(createTextField("name"))).toBe(false);
+    expect(supportsUniqueValue(createTextField("name"))).toBe(true);
     expect(supportsUniqueValue(createTextField("url", { preset: "url", validation: "url" }))).toBe(false);
+    expect(supportsUniqueValue(createTextField("suggest", { preset: "suggest_text" }))).toBe(false);
+    expect(supportsUniqueValue({ kind: "long_text" })).toBe(false);
   });
 
   it("keeps uniqueValue true through model clone and omits disabled values from canonical schema", () => {
@@ -61,6 +63,14 @@ describe("Form Builder unique text values", () => {
         preset: "phone",
         validation: "phone",
       }),
+      createTextField("name", {
+        uniqueValue: true,
+      }),
+      createTextField("url", {
+        preset: "url",
+        uniqueValue: true,
+        validation: "url",
+      }),
     ]));
 
     const dataSchema = buildCanonicalDataSchema(model);
@@ -69,5 +79,7 @@ describe("Form Builder unique text values", () => {
     expect(model.fields[0]?.uniqueValue).toBe(true);
     expect(rootFields.find((field) => field.id === "email")?.uniqueValue).toBe(true);
     expect(rootFields.find((field) => field.id === "phone")?.uniqueValue).toBeUndefined();
+    expect(rootFields.find((field) => field.id === "name")?.uniqueValue).toBe(true);
+    expect(rootFields.find((field) => field.id === "url")?.uniqueValue).toBeUndefined();
   });
 });

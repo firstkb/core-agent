@@ -34,6 +34,26 @@ function getAllFormBuilderDocumentNodes(document: FormBuilderDocument) {
   ];
 }
 
+function createFormBuilderDocumentNodeIndex(document: FormBuilderDocument) {
+  const nodeById = new Map<string, FormBuilderNode>();
+  const parentSubformNodeIdByNodeId = new Map<string, string>();
+
+  document.rootScope.uiSchema.nodes.forEach((node) => {
+    nodeById.set(node.id, node);
+  });
+  document.subformScopes.forEach((scope) => {
+    scope.uiSchema.nodes.forEach((node) => {
+      nodeById.set(node.id, node);
+      parentSubformNodeIdByNodeId.set(node.id, scope.parentSubformNodeId);
+    });
+  });
+
+  return {
+    nodeById,
+    parentSubformNodeIdByNodeId,
+  };
+}
+
 export function getCanvasAttentionNodeIds(
   currentDocument: FormBuilderDocument,
   savedDocument: FormBuilderDocument,
@@ -41,9 +61,10 @@ export function getCanvasAttentionNodeIds(
   savedModel: FormsPlaceholderModel,
 ) {
   const currentNodes = getAllFormBuilderDocumentNodes(currentDocument);
-  const savedNodes = getAllFormBuilderDocumentNodes(savedDocument);
-  const currentNodeById = new Map(currentNodes.map((node) => [node.id, node]));
-  const savedNodeById = new Map(savedNodes.map((node) => [node.id, node]));
+  const currentNodeIndex = createFormBuilderDocumentNodeIndex(currentDocument);
+  const savedNodeIndex = createFormBuilderDocumentNodeIndex(savedDocument);
+  const currentNodeById = currentNodeIndex.nodeById;
+  const savedNodeById = savedNodeIndex.nodeById;
   const directlyChangedNodeIds = new Set<string>();
 
   new Set([...currentNodeById.keys(), ...savedNodeById.keys()]).forEach((nodeId) => {
@@ -70,22 +91,30 @@ export function getCanvasAttentionNodeIds(
 
   const attentionNodeIds = new Set<string>();
   const appendAncestorChain = (
-    nodeMap: ReadonlyMap<string, FormBuilderNode>,
+    nodeIndex: ReturnType<typeof createFormBuilderDocumentNodeIndex>,
     startNodeId: string,
   ) => {
     let cursor: string | null = startNodeId;
-    while (cursor) {
+    const visitedNodeIds = new Set<string>();
+
+    while (cursor && !visitedNodeIds.has(cursor)) {
+      visitedNodeIds.add(cursor);
       if (currentNodeById.has(cursor)) {
         attentionNodeIds.add(cursor);
       }
 
-      cursor = nodeMap.get(cursor)?.parentId ?? null;
+      const node = nodeIndex.nodeById.get(cursor);
+      if (!node) {
+        break;
+      }
+
+      cursor = node.parentId ?? nodeIndex.parentSubformNodeIdByNodeId.get(cursor) ?? null;
     }
   };
 
   directlyChangedNodeIds.forEach((nodeId) => {
-    appendAncestorChain(currentNodeById, nodeId);
-    appendAncestorChain(savedNodeById, nodeId);
+    appendAncestorChain(currentNodeIndex, nodeId);
+    appendAncestorChain(savedNodeIndex, nodeId);
   });
 
   return attentionNodeIds;

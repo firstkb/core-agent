@@ -8,6 +8,9 @@ import {
   getViewOnlyBindingNodeUpdate,
 } from "./form-builder-workspace-view-only-bindings";
 import {
+  supportsUniqueValue,
+} from "./form-builder-workspace-unique-value";
+import {
   type FormBuilderDocument,
   type FormBuilderNode,
   updateFormBuilderNode,
@@ -36,16 +39,8 @@ type ViewOnlyBindingOption = {
   label: string;
 };
 
-export function supportsUniqueValue(
-  field: Pick<FormsPlaceholderField, "kind" | "preset" | "validation"> | null | undefined,
-) {
-  return field?.kind === "short_text" && (
-    field.preset === "email"
-    || field.preset === "phone"
-    || field.validation === "email"
-    || field.validation === "phone"
-  );
-}
+export { supportsUniqueValue } from "./form-builder-workspace-unique-value";
+
 
 type SelectedFieldSettingsHandlersOptions = {
   defaultViewOnlyFieldTitle: string;

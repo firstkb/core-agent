@@ -57,6 +57,14 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm --filter @platform/platform-studio-core lint` | passed | `eslint src` exited 0 after Slice 6 | Same Node engine warning observed. |
 | `git diff --check` | passed | no output | Whitespace check after Slice 6. |
 | `scripts/preflight.sh` | passed | lite preflight passed after Slice 6 | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm --filter @platform/tenant-web test -- form-builder-workspace-unique-value.test.ts` | blocked | `EACCES` scanning `platform/frontend/.local/config/caddy` | Root workspace scan hit local root-owned Caddy config; reran from package directory. |
+| `pnpm test -- form-builder-workspace-unique-value.test.ts` | passed | 1 file / 2 tests passed | Ran from `platform/frontend/apps/tenant-web`; covers plain `short_text`, email/phone, and excluded URL/suggest text support rules. |
+| `pnpm test -- form-builder-workspace-diff-helpers.test.ts` | passed | 1 file / 1 test passed | Ran from `platform/frontend/apps/tenant-web`; covers Subform-scope child change propagation to parent Subform/root ancestors. |
+| `pnpm test` | passed | 13 files / 38 tests passed | Full `@platform/tenant-web` Vitest suite from package directory after Slice 6 follow-up. |
+| `pnpm typecheck` | passed | `tsc --noEmit` exited 0 | Ran from `platform/frontend/apps/tenant-web` after Slice 6 follow-up. |
+| `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web`; first lint attempt hit a transient deleted `vite.config.ts.timestamp-*` file, retry passed. |
+| `git diff --check` | passed | no output | Whitespace check after Slice 6 follow-up. |
+| `scripts/preflight.sh` | passed | lite preflight passed after Slice 6 follow-up | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -150,6 +158,21 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/packages/platform-studio-core/src/contracts/model.ts`
 - `platform/frontend/packages/platform-studio-core/src/schemas/model.schema.ts`
 
+## Slice 6 Follow-up Changed Files
+
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.test.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-data-schema.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-selected-field-settings-handlers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-unique-value.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-unique-value.test.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -171,3 +194,4 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Slice 4 visual appearance is covered by token-backed CSS and schema/unit tests; no browser screenshot evidence has been collected yet.
 - Slice 5 has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the Subform View title input.
 - Slice 6 intentionally does not enforce uniqueness at runtime/create/edit/save and does not touch `@platform/forms`; that work remains with the owner-selected follow-up.
+- Slice 6 follow-up has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the selected-field settings panel or canvas attention marker.

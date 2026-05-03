@@ -201,18 +201,34 @@ Statuses:
 - Fixed in: current change set.
 - Verification: `pnpm --filter @platform/tenant-web test -- form-builder-workspace-grid.test.ts` passed; `pnpm --filter @platform/tenant-web typecheck` passed; `pnpm --filter @platform/tenant-web lint` passed; `git diff --check` passed; `scripts/preflight.sh` passed.
 
-## FB-RT-013 - Email/phone text fields need a Unique value authoring flag
+## FB-RT-013 - Plain short text and email/phone fields need a Unique value authoring flag
 
 - Area: Form Builder field schema and selected field settings.
 - URL: not captured; owner requested on 2026-05-03.
-- Model/View: affected forms with ready-made `Email`/`Phone` fields or `short_text` fields validated as email/phone.
+- Model/View: affected forms with plain `short_text` fields, ready-made `Email`/`Phone` fields, or `short_text` fields validated as email/phone.
 - Symptom: Text input fields expose `Autocomplete`, but there is no adjacent authoring parameter for marking values that must be unique, such as email or phone.
-- Expected: Form Builder should expose a `Unique value` switch for ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`. The persisted schema parameter should be compact and explicit.
+- Expected: Form Builder should expose a `Unique value` switch for plain `short_text`, ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`. Specialized text presets such as `URL` and `suggest_text` should not expose this switch. The persisted schema parameter should be compact and explicit.
 - Actual: No authoring schema flag or field settings UI existed.
 - Evidence: Owner request on 2026-05-03.
 - Priority: medium.
 - Status: resolved.
 - Owner decision: Use `uniqueValue` as the schema parameter name and `Unique value` as the user-facing label. Implement only Form Builder authoring/schema now; runtime renderer/package enforcement is deferred to a separate chat.
-- Resolution: Added `uniqueValue?: boolean` to Form Builder field authoring state and platform-studio-core field schema, rendered a `Unique value` switch directly under `Autocomplete` for email/phone text fields, preserved `true` through clone/authoring summary/canonical data schema/backend normalization, and omitted disabled/false values from compact payloads.
+- Resolution: Added `uniqueValue?: boolean` to Form Builder field authoring state and platform-studio-core field schema, rendered a `Unique value` switch directly under `Autocomplete` for plain `short_text` and email/phone text fields, preserved supported `true` values through clone/authoring summary/canonical data schema/backend normalization, and omitted disabled/false or unsupported values from compact payloads. Owner retest found the switch missing on plain `short_text`; the support rule was corrected to include only plain `short_text` plus email/phone, while excluding URL and suggest text presets.
 - Fixed in: current change set.
 - Verification: `pnpm --filter @platform/tenant-web test -- form-builder-workspace-unique-value.test.ts` passed; `pnpm --filter @platform/tenant-web typecheck` passed; `pnpm --filter @platform/tenant-web lint` passed; `pnpm --filter @platform/platform-studio-core typecheck` passed; `pnpm --filter @platform/platform-studio-core lint` passed; `go test ./modules/tenant/platformstudioformbuilder` passed; `git diff --check` passed; `scripts/preflight.sh` passed.
+
+## FB-RT-014 - Subform child changes no longer mark the parent Subform in the tree
+
+- Area: Form Builder canvas dirty/attention markers across scoped Subform trees.
+- URL: not captured; owner reported on 2026-05-03 after testing Slice 6.
+- Model/View: affected forms with `Subform` scopes and changed fields inside a Subform.
+- Symptom: When a field inside a Subform is changed, that child field is marked yellow, but the parent Subform in the root tree is not marked.
+- Expected: Dirty/attention highlighting should show the full path to the changed node so the user can see where the change happened from the root tree. A changed field inside a Subform should mark the field, its in-scope ancestors, the parent Subform node, and any root-scope ancestors.
+- Actual: Attention propagation walked only `parentId` links inside a single flattened node map. Nodes inside `subformScopes[].uiSchema.nodes` can have `parentId = null`, so the walk stopped before reaching `subformScopes[].parentSubformNodeId`.
+- Evidence: Owner report on 2026-05-03.
+- Priority: medium.
+- Status: resolved.
+- Owner decision: Restore the previous tree-level visibility of changed Subform descendants.
+- Resolution: Indexed document nodes by scope and extended attention propagation to cross from Subform-scope nodes through `parentSubformNodeId`, then continue walking root-scope ancestors.
+- Fixed in: current change set.
+- Verification: `pnpm test -- form-builder-workspace-diff-helpers.test.ts` passed from `platform/frontend/apps/tenant-web`; broader checks are recorded in the active work artifact.

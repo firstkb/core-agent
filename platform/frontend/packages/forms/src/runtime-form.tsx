@@ -8,6 +8,7 @@ export {
 export type {
   RuntimeFormAccordionLayoutDefinition,
   RuntimeFormChoiceLayout,
+  RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
   RuntimeFormCommitMode,

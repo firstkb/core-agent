@@ -242,7 +242,7 @@ Recommended choice settings:
 - `controlType`
 - `renderStyle`
 - `orientation`
-- `optionStyles`
+- `optionStyles`: semantic per-option button style variants
 
 `single_select` control/render values:
 
@@ -255,6 +255,22 @@ Recommended choice settings:
 - `controlType`: `multi_select | checkbox`
 - `renderStyle`: `native | buttons | chips`
 - `optionStyles` is available when `controlType = checkbox` and `renderStyle = buttons`
+
+Choice button option styles are a strict semantic contract, not arbitrary
+colors. Each styled option stores `{ option, variant }`, where `option` is the
+current option value/label and `variant` is one of:
+
+- `default`
+- `primary`
+- `secondary`
+- `info`
+- `success`
+- `warning`
+- `danger`
+
+`default` means the runtime uses the normal button/toggle rendering and may be
+omitted from `optionStyles`. Runtime renderers must ignore raw color fields and
+must not guess text/background/border colors outside the accepted variants.
 
 Backend storage note:
 
@@ -275,8 +291,8 @@ They are not standalone backend primitives.
 | `suggest_text` | `baseType = short_text`, `fieldPreset = suggest_text` | `suggestConfig.sourceMode`, `suggestConfig.searchMode`, `suggestConfig.minQueryLength`, `suggestConfig.maxResults`, `suggestConfig.allowCustomValue` | Searchable text combobox with custom values; see `Suggest Text Contract` below. |
 | `date_today` | `baseType = date`, `fieldPreset = date_today` | `defaultValueMode = today`, `displayFormat`, optional `readonly` | Date field preconfigured with current-date default behavior. |
 | `tags` | `baseType = multi_select`, `fieldPreset = tags` | `tagMode`, `options`, optional `maxTags` | `tagMode = select_existing | select_or_create | create_only`; existing options are available when suggestions are used. |
-| `radio_group` | `baseType = single_select`, `fieldPreset = radio_group` | `options`, `renderStyle`, `orientation`, `optionStyles` | Single-choice preset rendered as native radio controls or colored buttons; options remain editable. |
-| `checkbox_group` | `baseType = multi_select`, `fieldPreset = checkbox_group` | `options`, `renderStyle`, `orientation`, `optionStyles`, `minSelections`, optional `maxSelections` | Multi-choice preset rendered as checkboxes or colored buttons; `isRequired` may shortcut to `minSelections = 1`. |
+| `radio_group` | `baseType = single_select`, `fieldPreset = radio_group` | `options`, `renderStyle`, `orientation`, `optionStyles` | Single-choice preset rendered as native radio controls or semantic styled buttons; options remain editable. |
+| `checkbox_group` | `baseType = multi_select`, `fieldPreset = checkbox_group` | `options`, `renderStyle`, `orientation`, `optionStyles`, `minSelections`, optional `maxSelections` | Multi-choice preset rendered as checkboxes or semantic styled buttons; `isRequired` may shortcut to `minSelections = 1`. |
 
 Ready-made locked decisions:
 

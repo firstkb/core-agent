@@ -2,6 +2,7 @@ import type {
   RuntimeFormAccordionLayoutDefinition,
   RuntimeFormCommitMode,
   RuntimeFormContentDefinition,
+  RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
   RuntimeFormDefinition,
@@ -71,6 +72,16 @@ const runtimeRuleOperators = new Set<RuntimeFormRuleOperator>([
   "neq",
   "not_empty",
   "not_in",
+]);
+
+const runtimeChoiceOptionStyleVariants = new Set<RuntimeFormChoiceOptionStyleVariant>([
+  "danger",
+  "default",
+  "info",
+  "primary",
+  "secondary",
+  "success",
+  "warning",
 ]);
 
 function isRecord(value: unknown): value is JsonRecord {
@@ -170,6 +181,7 @@ function readWorkflowStatus(uiSchema: JsonRecord) {
 
 function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
   const seen = new Set<string>();
+  const optionStyleVariantByOption = readChoiceOptionStyleVariants(field);
   return asArray(field.options)
     .flatMap((option) => {
       if (typeof option === "string" || typeof option === "number") {
@@ -178,7 +190,7 @@ function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
           return [];
         }
         seen.add(value);
-        return [{ label: value, value }];
+        return [createRuntimeOption(value, value, optionStyleVariantByOption.get(value))];
       }
 
       if (!isRecord(option)) {
@@ -200,10 +212,11 @@ function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
         return [];
       }
       seen.add(value);
-      return [{
-        label: labelCandidate || value,
+      return [createRuntimeOption(
+        labelCandidate || value,
         value,
-      }];
+        optionStyleVariantByOption.get(value) ?? optionStyleVariantByOption.get(labelCandidate),
+      )];
     });
 }
 
@@ -213,6 +226,31 @@ function isChoiceFieldType(type: RuntimeFormFieldType) {
 
 function readChoiceDisplay(field: JsonRecord) {
   return asRecord(field.choiceDisplay);
+}
+
+function createRuntimeOption(
+  label: string,
+  value: string,
+  styleVariant: RuntimeFormChoiceOptionStyleVariant | undefined,
+): RuntimeFormFieldOption {
+  return styleVariant && styleVariant !== "default"
+    ? { label, styleVariant, value }
+    : { label, value };
+}
+
+function readChoiceOptionStyleVariants(field: JsonRecord) {
+  const styles = new Map<string, RuntimeFormChoiceOptionStyleVariant>();
+  asArray(readChoiceDisplay(field).optionStyles).filter(isRecord).forEach((entry) => {
+    const option = stringValue(entry.option);
+    const variant = stringValue(entry.variant) as RuntimeFormChoiceOptionStyleVariant;
+
+    if (!option || !runtimeChoiceOptionStyleVariants.has(variant) || variant === "default") {
+      return;
+    }
+
+    styles.set(option, variant);
+  });
+  return styles;
 }
 
 function readChoiceRenderStyle(field: JsonRecord): RuntimeFormChoiceRenderStyle | undefined {

@@ -25,6 +25,14 @@ export type RuntimeFormFieldLabelLayout = "stacked" | "responsive-inline";
 export type RuntimeFormChoiceLayout = "inline" | "stacked";
 export type RuntimeFormChoiceOrientation = "horizontal" | "vertical";
 export type RuntimeFormChoiceRenderStyle = "buttons" | "native";
+export type RuntimeFormChoiceOptionStyleVariant =
+  | "danger"
+  | "default"
+  | "info"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning";
 export type RuntimeFormTabsSize = "sm" | "md" | "lg";
 export type RuntimeFormTabsVariant = "surface" | "line";
 export type RuntimeFormValue = string | boolean | ReadonlyArray<string>;
@@ -33,6 +41,7 @@ export type RuntimeFormValidationErrors = Record<string, string | undefined>;
 
 export type RuntimeFormFieldOption = {
   label: string;
+  styleVariant?: RuntimeFormChoiceOptionStyleVariant;
   value: string;
 };
 

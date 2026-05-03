@@ -83,7 +83,9 @@ export function syncChoiceOptionStyles(
   optionStyles: ReadonlyArray<FormsPlaceholderFieldOptionStyle> | undefined,
 ) {
   const optionSet = new Set(options ?? []);
-  const nextStyles = (optionStyles ?? []).filter((entry) => optionSet.has(entry.option));
+  const nextStyles = (optionStyles ?? []).filter((entry) =>
+    optionSet.has(entry.option) && entry.variant && entry.variant !== "default"
+  );
   return nextStyles.length > 0 ? nextStyles : undefined;
 }
 

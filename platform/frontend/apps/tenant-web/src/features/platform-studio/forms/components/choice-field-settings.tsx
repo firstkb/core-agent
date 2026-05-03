@@ -21,8 +21,6 @@ import {
 type ChoiceFieldSettingsLabels = ChoiceOptionRowLabels & {
   addOption: string;
   allowEmpty: string;
-  backgroundColor: string;
-  borderColor: string;
   buttonStyles: string;
   display: string;
   emptyOptions: string;
@@ -36,7 +34,14 @@ type ChoiceFieldSettingsLabels = ChoiceOptionRowLabels & {
   renderStyleButtons: string;
   renderStyleNative: string;
   selection: string;
-  textColor: string;
+  styleVariant: string;
+  styleVariantDanger: string;
+  styleVariantDefault: string;
+  styleVariantInfo: string;
+  styleVariantPrimary: string;
+  styleVariantSecondary: string;
+  styleVariantSuccess: string;
+  styleVariantWarning: string;
 };
 
 type ChoiceFieldSettingsProps = {

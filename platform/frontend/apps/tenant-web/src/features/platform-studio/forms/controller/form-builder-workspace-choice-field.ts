@@ -88,7 +88,9 @@ export function applyChoiceOptionStyleUpdate(
   const currentStyle = currentStyles.find((entry) => entry.option === option);
   const nextStyle = updater(currentStyle);
   const remainingStyles = currentStyles.filter((entry) => entry.option !== option);
-  const nextStyles = nextStyle ? [...remainingStyles, nextStyle] : remainingStyles;
+  const nextStyles = nextStyle?.variant && nextStyle.variant !== "default"
+    ? [...remainingStyles, nextStyle]
+    : remainingStyles;
 
   return {
     ...choiceDisplay,

@@ -5,6 +5,7 @@ import type {
 import type {
   RuntimeFormChoiceOrientation,
   RuntimeFormFieldDefinition,
+  RuntimeFormFieldOption,
 } from "../runtime-form-types";
 
 export function getChoiceOrientation(field: RuntimeFormFieldDefinition): RuntimeFormChoiceOrientation {
@@ -29,4 +30,10 @@ export function getComboboxOptions(field: RuntimeFormFieldDefinition): ComboboxO
     searchText: `${option.label} ${option.value}`,
     value: option.value,
   }));
+}
+
+export function getChoiceOptionStyleClassName(option: RuntimeFormFieldOption) {
+  return option.styleVariant && option.styleVariant !== "default"
+    ? `platform-runtime-form__choice-button--${option.styleVariant}`
+    : undefined;
 }

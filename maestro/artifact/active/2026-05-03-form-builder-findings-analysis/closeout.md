@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, and Slice 3 are implemented and verified.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified.
 
 ## Outcome
 
@@ -21,16 +21,18 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Made backend draft persistence atomic for model+view updates, preventing stale view conflicts from leaving a partially updated model.
 - Changed base `single_select` and `multi_select` authoring templates so new fields default to horizontal orientation.
 - Added a transient Grid settings switch to show only visible/list-active columns above the field list without persisting the filter or dropping hidden column metadata.
+- Replaced raw per-option color controls for choice button styles with strict semantic variants: `default`, `primary`, `secondary`, `info`, `success`, `warning`, and `danger`.
+- Mapped semantic option styles through `@platform/forms` runtime schema and button rendering while ignoring raw color-only legacy entries.
 
 ## Checks
 
 - Targeted frontend/backend checks are recorded in `evidence.md`.
-- Product lite preflight passed after Slice 3.
+- Product lite preflight evidence is recorded in `evidence.md`.
 
 ## Memory
 
-Updated planned-work memory to move Slice 1, Slice 2, and Slice 3 accepted behavior from planned/open work to code-confirmed current state.
+Updated planned-work memory to move Slice 1, Slice 2, Slice 3, and Slice 4 accepted behavior from planned/open work to code-confirmed current state.
 
 ## Next Step
 
-Continue with Slice 4 (`FB-RT-005` choice button option styles runtime contract) or another owner-selected stabilization item.
+Continue with another owner-selected stabilization item.

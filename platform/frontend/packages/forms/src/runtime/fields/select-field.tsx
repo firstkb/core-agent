@@ -11,6 +11,7 @@ import {
 } from "../runtime-form-utils";
 import {
   getChoiceOrientation,
+  getChoiceOptionStyleClassName,
   getChoiceRenderStyle,
   getComboboxOptions,
 } from "./choice-field-utils";
@@ -52,7 +53,11 @@ export function SelectField({
         variant="outline"
       >
         {(field.options ?? []).map((option) => (
-          <ToggleGroupItem key={option.value} value={option.value}>
+          <ToggleGroupItem
+            className={getChoiceOptionStyleClassName(option)}
+            key={option.value}
+            value={option.value}
+          >
             {option.label}
           </ToggleGroupItem>
         ))}

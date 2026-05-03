@@ -373,6 +373,12 @@ describe("runtime form helpers", () => {
             {
               choiceDisplay: {
                 orientation: "vertical",
+                optionStyles: [
+                  { option: "New", variant: "success" },
+                  { option: "In progress", variant: "warning" },
+                  { option: "Complete", variant: "default" },
+                  { backgroundColor: "#000000", option: "Legacy raw color" },
+                ],
                 renderStyle: "buttons",
               },
               id: "status",
@@ -383,6 +389,9 @@ describe("runtime form helpers", () => {
             {
               choiceDisplay: {
                 orientation: "horizontal",
+                optionStyles: [
+                  { option: "PPE", variant: "danger" },
+                ],
                 renderStyle: "buttons",
               },
               id: "categories",
@@ -443,9 +452,18 @@ describe("runtime form helpers", () => {
     expect(status?.type).toBe("single_select");
     expect(status?.choiceRenderStyle).toBe("buttons");
     expect(status?.choiceOrientation).toBe("vertical");
+    expect(status?.options).toEqual([
+      { label: "New", styleVariant: "success", value: "New" },
+      { label: "In progress", styleVariant: "warning", value: "In progress" },
+      { label: "Complete", value: "Complete" },
+    ]);
     expect(categories?.type).toBe("multi_select");
     expect(categories?.choiceRenderStyle).toBe("buttons");
     expect(categories?.choiceOrientation).toBe("horizontal");
+    expect(categories?.options).toEqual([
+      { label: "Aerial lifts", value: "Aerial lifts" },
+      { label: "PPE", styleVariant: "danger", value: "PPE" },
+    ]);
     expect(type?.type).toBe("single_select");
     expect(type?.choiceRenderStyle).toBe("native");
   });

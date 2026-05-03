@@ -241,6 +241,86 @@
   text-underline-offset: 0.18em;
 }
 
+.platform-runtime-form__choice-button--primary:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-accent-primary-soft);
+  --platform-runtime-form-choice-button-border: color-mix(in srgb, var(--color-accent-primary) 34%, var(--color-border-default));
+  --platform-runtime-form-choice-button-color: var(--color-accent-primary);
+  --platform-runtime-form-choice-button-solid: var(--color-accent-primary);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-on-solid);
+}
+
+.platform-runtime-form__choice-button--secondary:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-bg-surface-muted);
+  --platform-runtime-form-choice-button-border: var(--color-border-strong);
+  --platform-runtime-form-choice-button-color: var(--color-text-primary);
+  --platform-runtime-form-choice-button-solid: var(--color-bg-selected);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-primary);
+}
+
+.platform-runtime-form__choice-button--info:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-info-soft);
+  --platform-runtime-form-choice-button-border: color-mix(in srgb, var(--color-info) 34%, var(--color-border-default));
+  --platform-runtime-form-choice-button-color: var(--color-info);
+  --platform-runtime-form-choice-button-solid: var(--color-info);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-on-solid);
+}
+
+.platform-runtime-form__choice-button--success:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-success-soft);
+  --platform-runtime-form-choice-button-border: color-mix(in srgb, var(--color-success) 34%, var(--color-border-default));
+  --platform-runtime-form-choice-button-color: var(--color-success);
+  --platform-runtime-form-choice-button-solid: var(--color-success);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-on-solid);
+}
+
+.platform-runtime-form__choice-button--warning:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-warning-soft);
+  --platform-runtime-form-choice-button-border: color-mix(in srgb, var(--color-warning) 34%, var(--color-border-default));
+  --platform-runtime-form-choice-button-color: var(--color-warning);
+  --platform-runtime-form-choice-button-solid: var(--color-warning);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-on-solid);
+}
+
+.platform-runtime-form__choice-button--danger:not(:disabled) {
+  --platform-runtime-form-choice-button-bg: var(--color-danger-soft);
+  --platform-runtime-form-choice-button-border: color-mix(in srgb, var(--color-danger) 34%, var(--color-border-default));
+  --platform-runtime-form-choice-button-color: var(--color-danger);
+  --platform-runtime-form-choice-button-solid: var(--color-danger);
+  --platform-runtime-form-choice-button-solid-color: var(--color-text-on-solid);
+}
+
+.platform-runtime-form__choice-button--primary:not(:disabled),
+.platform-runtime-form__choice-button--secondary:not(:disabled),
+.platform-runtime-form__choice-button--info:not(:disabled),
+.platform-runtime-form__choice-button--success:not(:disabled),
+.platform-runtime-form__choice-button--warning:not(:disabled),
+.platform-runtime-form__choice-button--danger:not(:disabled) {
+  border-color: var(--platform-runtime-form-choice-button-border);
+  background: var(--platform-runtime-form-choice-button-bg);
+  color: var(--platform-runtime-form-choice-button-color);
+}
+
+.platform-runtime-form__choice-button--primary:not(:disabled):hover,
+.platform-runtime-form__choice-button--secondary:not(:disabled):hover,
+.platform-runtime-form__choice-button--info:not(:disabled):hover,
+.platform-runtime-form__choice-button--success:not(:disabled):hover,
+.platform-runtime-form__choice-button--warning:not(:disabled):hover,
+.platform-runtime-form__choice-button--danger:not(:disabled):hover {
+  border-color: var(--platform-runtime-form-choice-button-color);
+  background: color-mix(in srgb, var(--platform-runtime-form-choice-button-bg) 76%, var(--color-bg-surface));
+}
+
+.platform-runtime-form__choice-button--primary.ui-toggle--pressed:not(:disabled),
+.platform-runtime-form__choice-button--secondary.ui-toggle--pressed:not(:disabled),
+.platform-runtime-form__choice-button--info.ui-toggle--pressed:not(:disabled),
+.platform-runtime-form__choice-button--success.ui-toggle--pressed:not(:disabled),
+.platform-runtime-form__choice-button--warning.ui-toggle--pressed:not(:disabled),
+.platform-runtime-form__choice-button--danger.ui-toggle--pressed:not(:disabled) {
+  border-color: var(--platform-runtime-form-choice-button-solid);
+  background: var(--platform-runtime-form-choice-button-solid);
+  color: var(--platform-runtime-form-choice-button-solid-color);
+}
+
 .platform-runtime-form__choice-button-group.ui-toggle-group--horizontal {
   display: flex;
   width: 100%;

@@ -16,6 +16,14 @@ export type FormsPlaceholderFieldFamily = "advanced" | "choice" | "core" | "pres
 export type FormsPlaceholderFieldKind = FormsPlaceholderAcceptedFieldKind;
 export type FormsPlaceholderChoiceRenderStyle = "buttons" | "native";
 export type FormsPlaceholderChoiceOrientation = "horizontal" | "vertical";
+export type FormsPlaceholderChoiceOptionStyleVariant =
+  | "danger"
+  | "default"
+  | "info"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning";
 export type FormsPlaceholderFieldValidation = "email" | "phone" | "url";
 export type FormsPlaceholderFieldStatus = "draft" | "persisted" | "published";
 export type FormsPlaceholderFieldSemanticRole = "reportedBy" | "reportedDate" | "workflowStatus";
@@ -24,10 +32,8 @@ export type FormsPlaceholderLookupDisplayMode = "catalog_modal" | "search_select
 export type FormsPlaceholderLookupSearchBehavior = "ajax" | "prefetch";
 export type FormsPlaceholderSelectionMode = "multiple" | "single";
 export type FormsPlaceholderFieldOptionStyle = {
-  backgroundColor?: string;
-  borderColor?: string;
   option: string;
-  textColor?: string;
+  variant?: FormsPlaceholderChoiceOptionStyleVariant;
 };
 export type FormsPlaceholderChoiceDisplay = {
   allowEmpty?: boolean;
@@ -49,6 +55,16 @@ export type FormsPlaceholderLookupConfig = {
   storedTextFields?: ReadonlyArray<string>;
   storedValueField?: string;
 };
+
+export const formsPlaceholderChoiceOptionStyleVariants: ReadonlyArray<FormsPlaceholderChoiceOptionStyleVariant> = [
+  "default",
+  "primary",
+  "secondary",
+  "info",
+  "success",
+  "warning",
+  "danger",
+];
 export type FormsPlaceholderSuggestSearchMode = "contains" | "prefix";
 export type FormsPlaceholderSuggestSourceMode = "same_field_distinct_values";
 export type FormsPlaceholderSuggestConfig = {
@@ -749,10 +765,12 @@ function normalizeOptionalString(value: unknown, fallback: string | undefined) {
     : fallback;
 }
 
-function normalizeColor(value: unknown) {
-  return typeof value === "string" && /^#[0-9A-Fa-f]{6}$/.test(value.trim())
-    ? value.trim()
-    : undefined;
+function isChoiceOptionStyleVariant(value: unknown): value is FormsPlaceholderChoiceOptionStyleVariant {
+  return typeof value === "string" && formsPlaceholderChoiceOptionStyleVariants.includes(value as FormsPlaceholderChoiceOptionStyleVariant);
+}
+
+function normalizeChoiceOptionStyleVariant(value: unknown) {
+  return isChoiceOptionStyleVariant(value) && value !== "default" ? value : undefined;
 }
 
 function normalizeChoiceOptionStyles(
@@ -761,25 +779,22 @@ function normalizeChoiceOptionStyles(
   options: ReadonlyArray<string> | undefined,
 ) {
   const normalizedOptionSet = new Set(options ?? []);
+  const normalizeEntry = (entry: unknown) => {
+    if (!entry || typeof entry !== "object") {
+      return [];
+    }
+
+    const candidate = entry as Partial<FormsPlaceholderFieldOptionStyle>;
+    if (typeof candidate.option !== "string" || !normalizedOptionSet.has(candidate.option)) {
+      return [];
+    }
+
+    const variant = normalizeChoiceOptionStyleVariant(candidate.variant);
+    return variant ? [{ option: candidate.option, variant }] : [];
+  };
   const nextValues = Array.isArray(value)
-    ? value.flatMap((entry) => {
-        if (!entry || typeof entry !== "object") {
-          return [];
-        }
-
-        const candidate = entry as Partial<FormsPlaceholderFieldOptionStyle>;
-        if (typeof candidate.option !== "string" || !normalizedOptionSet.has(candidate.option)) {
-          return [];
-        }
-
-        return [{
-          backgroundColor: normalizeColor(candidate.backgroundColor),
-          borderColor: normalizeColor(candidate.borderColor),
-          option: candidate.option,
-          textColor: normalizeColor(candidate.textColor),
-        }];
-      })
-    : (fallback ? fallback.filter((style) => normalizedOptionSet.has(style.option)).map((style) => ({ ...style })) : []);
+    ? value.flatMap(normalizeEntry)
+    : (fallback ? fallback.flatMap(normalizeEntry) : []);
 
   return nextValues.length > 0 ? nextValues : undefined;
 }
@@ -1299,7 +1314,7 @@ export function getFormsPlaceholderFieldSearchText(field: FormsPlaceholderField)
     typeof field.maxTags === "number" ? String(field.maxTags) : "",
     field.choiceDisplay?.renderStyle,
     field.choiceDisplay?.orientation,
-    field.choiceDisplay?.optionStyles?.map((style) => style.option).join(" "),
+    field.choiceDisplay?.optionStyles?.map((style) => `${style.option} ${style.variant ?? ""}`).join(" "),
     field.displayFields?.join(" "),
     field.sourceFilters?.join(" "),
     field.options?.join(" "),

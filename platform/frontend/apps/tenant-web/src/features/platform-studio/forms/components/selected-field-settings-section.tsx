@@ -134,8 +134,6 @@ export function SelectedFieldSettingsSection({
             actionsMenu: t("tenant.platformStudio.forms.builder.rule.actionsMenu"),
             addOption: t("tenant.platformStudio.forms.builder.fieldSettings.addOption"),
             allowEmpty: t("tenant.platformStudio.forms.builder.fieldSettings.allowEmpty"),
-            backgroundColor: t("tenant.platformStudio.forms.builder.fieldSettings.backgroundColor"),
-            borderColor: t("tenant.platformStudio.forms.builder.fieldSettings.borderColor"),
             buttonStyles: t("tenant.platformStudio.forms.builder.fieldSettings.buttonStyles"),
             display: t("tenant.platformStudio.forms.builder.fieldSettings.display"),
             dragToReorder: t("tenant.platformStudio.forms.builder.dragToReorder"),
@@ -151,7 +149,14 @@ export function SelectedFieldSettingsSection({
             renderStyleButtons: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleButtons"),
             renderStyleNative: t("tenant.platformStudio.forms.builder.fieldSettings.renderStyleNative"),
             selection: t("tenant.platformStudio.forms.builder.fieldSettings.selection"),
-            textColor: t("tenant.platformStudio.forms.builder.fieldSettings.textColor"),
+            styleVariant: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariant"),
+            styleVariantDanger: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantDanger"),
+            styleVariantDefault: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantDefault"),
+            styleVariantInfo: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantInfo"),
+            styleVariantPrimary: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantPrimary"),
+            styleVariantSecondary: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantSecondary"),
+            styleVariantSuccess: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantSuccess"),
+            styleVariantWarning: t("tenant.platformStudio.forms.builder.fieldSettings.styleVariantWarning"),
           }}
           onAddOption={onAddOption}
           onChoiceDisplayChange={onChoiceDisplayChange}

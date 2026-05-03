@@ -70,7 +70,7 @@ export function buildWorkspaceDocumentFromCanonicalSchemas(
           : [];
         const scopeUiNodes = Array.isArray(entry.nodes)
           ? entry.nodes.map((node) =>
-            isRecord(node) && node.parentId === null
+            isRecord(node) && (node.parentId === null || typeof node.parentId === "undefined")
               ? {
                   ...node,
                   parentId: parentSubformNodeId,

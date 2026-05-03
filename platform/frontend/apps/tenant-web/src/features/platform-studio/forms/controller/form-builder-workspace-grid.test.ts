@@ -10,8 +10,11 @@ import type {
   FormsPlaceholderScreen,
 } from "../forms-placeholder-data";
 import { normalizeViewSettings } from "../state/form-builder-view-normalization";
+import { buildCanonicalDataSchema } from "./form-builder-workspace-data-schema";
+import { buildWorkspaceDocumentFromCanonicalSchemas } from "./form-builder-workspace-document-hydration";
 import { applyRootViewGridColumnsUpdate } from "./form-builder-workspace-document-updates";
 import { getVisibleGridScopeFields } from "./form-builder-workspace-field-scope-grid";
+import { buildCanonicalUiSchema } from "./form-builder-workspace-ui-schema";
 
 function createField(
   id: string,
@@ -139,6 +142,98 @@ describe("Form Builder grid settings", () => {
 
     expect(document.subformScopes[0]?.viewSettings.list.columns).toEqual([noteColumn]);
     expect(document.subformScopes[0]?.viewSettings.list.sorting.fieldId).toBe("note");
+  });
+
+  it("keeps subform grid columns through canonical save hydration", () => {
+    const noteColumn: FormBuilderGridColumnDefinition = {
+      fieldId: "note",
+      id: "grid-note",
+      order: 0,
+      visible: true,
+    };
+    const model = createModel([
+      createField("site_name", "Site name"),
+      createField("note", "Note", { schemaScopeKey: "pb_notes" }),
+    ]);
+    const document = normalizeFormBuilderDocument(
+      {
+        filterDefinitions: {},
+        nodes: [
+          {
+            id: "subform-notes",
+            order: 0,
+            parentId: null,
+            schemaScopeId: "pb_notes",
+            subformType: "DEFAULT",
+            tableKey: "pb_notes",
+            title: "Notes",
+            type: "subform",
+            visibility: "visible",
+          },
+          {
+            fieldId: "note",
+            id: "field-note",
+            order: 0,
+            parentId: "subform-notes",
+            type: "field",
+            visibility: "visible",
+          },
+        ],
+        subformScopes: [
+          {
+            dataSchema: { fieldIds: ["note"] },
+            parentSubformNodeId: "subform-notes",
+            scopeId: "subform-notes",
+            scopeType: "SUBFORM",
+            subformType: "DEFAULT",
+            tableKey: "pb_notes",
+            uiSchema: {
+              currentParentId: null,
+              nodes: [],
+              selectedNodeId: null,
+              unplacedFieldIds: [],
+            },
+            viewSettings: {
+              actions: {
+                canAdd: true,
+                canDelete: true,
+                canEdit: true,
+              },
+              list: {
+                columns: [noteColumn],
+                sorting: {
+                  direction: "desc",
+                  fieldId: "note",
+                },
+              },
+            },
+          },
+        ],
+        systemFields: {},
+        viewDescription: "",
+        viewKind: "form",
+        viewSettings: { list: { columns: [] } },
+        viewTitle: "Default",
+      },
+      model,
+      screen,
+    );
+
+    const hydratedDocument = buildWorkspaceDocumentFromCanonicalSchemas(
+      {
+        ...model,
+        dataSchema: buildCanonicalDataSchema(model, document),
+      },
+      {
+        ...screen,
+        uiSchema: buildCanonicalUiSchema(document, model),
+      },
+      model,
+      screen,
+    );
+
+    expect(hydratedDocument.subformScopes[0]?.viewSettings.list.columns).toEqual([noteColumn]);
+    expect(hydratedDocument.subformScopes[0]?.viewSettings.list.sorting.fieldId).toBe("note");
   });
 
   it("uses only visible grid outputs for sorting choices", () => {

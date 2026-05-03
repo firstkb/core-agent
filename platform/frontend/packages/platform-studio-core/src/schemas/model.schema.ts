@@ -91,6 +91,7 @@ export const fieldDefinitionSchema = z.object({
   status: fieldStatusSchema.optional(),
   storage: fieldStorageBindingSchema.optional(),
   storageKey: builderKeySchema.optional(),
+  uniqueValue: z.boolean().optional(),
 });
 
 export const modelDefinitionSchema = entityDefinitionSchema.extend({

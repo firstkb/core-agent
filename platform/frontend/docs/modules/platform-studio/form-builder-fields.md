@@ -283,10 +283,14 @@ Backend storage note:
 Ready-made fields are palette shortcuts over accepted base field types.
 They are not standalone backend primitives.
 
+`uniqueValue` may be authored for `Email`, `Phone`, and `short_text` fields with
+`validation = email | phone`. It means the field value is expected to be unique
+within the field's model/scope; `false` is omitted from compact payloads.
+
 | Preset | Compile Target | Locked Settings | Runtime/Authoring Notes |
 | --- | --- | --- | --- |
-| `Email` | `baseType = short_text`, `fieldPreset = email` | `placeholder`, `autocomplete = email`, `inputMode = email`, `displayFormat`, `validation = email` | Fast email input preset over text storage. |
-| `Phone` | `baseType = short_text`, `fieldPreset = phone` | `placeholder`, `autocomplete = tel`, `inputMode = tel`, `displayFormat`, `mask`, `validation` | Phone-oriented input behavior over text storage. |
+| `Email` | `baseType = short_text`, `fieldPreset = email` | `placeholder`, `autocomplete = email`, `inputMode = email`, `displayFormat`, `validation = email`, optional `uniqueValue` | Fast email input preset over text storage. `uniqueValue` enforcement is handled outside the Form Builder renderer. |
+| `Phone` | `baseType = short_text`, `fieldPreset = phone` | `placeholder`, `autocomplete = tel`, `inputMode = tel`, `displayFormat`, `mask`, `validation`, optional `uniqueValue` | Phone-oriented input behavior over text storage. `uniqueValue` enforcement is handled outside the Form Builder renderer. |
 | `URL` | `baseType = short_text`, `fieldPreset = url` | `placeholder`, `autocomplete = url`, `inputMode = url`, `displayFormat`, `validation = url` | Link-oriented validation and entry behavior over text storage. |
 | `suggest_text` | `baseType = short_text`, `fieldPreset = suggest_text` | `suggestConfig.sourceMode`, `suggestConfig.searchMode`, `suggestConfig.minQueryLength`, `suggestConfig.maxResults`, `suggestConfig.allowCustomValue` | Searchable text combobox with custom values; see `Suggest Text Contract` below. |
 | `date_today` | `baseType = date`, `fieldPreset = date_today` | `defaultValueMode = today`, `displayFormat`, optional `readonly` | Date field preconfigured with current-date default behavior. |

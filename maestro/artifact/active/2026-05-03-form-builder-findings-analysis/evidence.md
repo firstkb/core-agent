@@ -49,6 +49,14 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 after Slice 5 | Same Node engine warning observed. |
 | `git diff --check` | passed | no output | Whitespace check after Slice 5. |
 | `scripts/preflight.sh` | passed | lite preflight passed after Slice 5 | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm --filter @platform/tenant-web test -- form-builder-workspace-unique-value.test.ts` | passed | 1 file / 2 tests passed | Slice 6 regression covers support rules and compact canonical payload for `uniqueValue`. Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web typecheck` | passed | `tsc --noEmit` exited 0 after Slice 6 | Same Node engine warning observed. |
+| `pnpm --filter @platform/platform-studio-core typecheck` | passed | `tsc -p tsconfig.json --noEmit` exited 0 after Slice 6 | Same Node engine warning observed. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Covers backend package compile/test after authoring normalizer update. |
+| `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 after Slice 6 | Same Node engine warning observed. |
+| `pnpm --filter @platform/platform-studio-core lint` | passed | `eslint src` exited 0 after Slice 6 | Same Node engine warning observed. |
+| `git diff --check` | passed | no output | Whitespace check after Slice 6. |
+| `scripts/preflight.sh` | passed | lite preflight passed after Slice 6 | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -120,6 +128,28 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/apps/tenant-web/src/locales/es.ts`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
+## Slice 6 Changed Files
+
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `platform/backend/modules/tenant/platformstudioformbuilder/authoring_normalize.go`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-field-settings-section.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-tab-body.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/text-field-settings.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-data-schema.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-selected-field-settings-handlers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-unique-value.test.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-workspace-controller.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-authoring-context.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-placeholder-data.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+- `platform/frontend/apps/tenant-web/src/locales/en.ts`
+- `platform/frontend/apps/tenant-web/src/locales/es.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+- `platform/frontend/packages/platform-studio-core/src/contracts/model.ts`
+- `platform/frontend/packages/platform-studio-core/src/schemas/model.schema.ts`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -140,3 +170,4 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Lookup field authoring settings and View lookup filters are recorded as the next likely slice and remain unimplemented.
 - Slice 4 visual appearance is covered by token-backed CSS and schema/unit tests; no browser screenshot evidence has been collected yet.
 - Slice 5 has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the Subform View title input.
+- Slice 6 intentionally does not enforce uniqueness at runtime/create/edit/save and does not touch `@platform/forms`; that work remains with the owner-selected follow-up.

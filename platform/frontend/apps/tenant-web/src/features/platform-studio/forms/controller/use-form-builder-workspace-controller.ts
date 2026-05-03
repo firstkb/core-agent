@@ -25,6 +25,9 @@ import {
   type FormsPlaceholderModel,
   type FormsPlaceholderView,
 } from "../forms-placeholder-data";
+import {
+  supportsUniqueValue,
+} from "./form-builder-workspace-selected-field-settings-handlers";
 
 type UseFormBuilderWorkspaceControllerInput = {
   currentActor: FormsAuthoringActor;
@@ -105,8 +108,8 @@ export function useFormBuilderWorkspaceController({
   const selectedFieldIsLookup = selectedField?.kind === "db_lookup";
   const selectedFieldIsLookupValue = selectedField?.preset === "db_lookup_value";
   const selectedFieldSupportsTextInputSettings = selectedField?.kind === "short_text";
-  const selectedFieldSupportsTextPreset =
-    selectedField?.preset === "email" || selectedField?.preset === "phone" || selectedField?.preset === "url";
+  const selectedFieldSupportsTextPreset = selectedField?.kind === "short_text";
+  const selectedFieldSupportsUniqueValue = supportsUniqueValue(selectedField);
   const selectedFieldIsDateToday = selectedField?.preset === "date_today";
   const selectedFieldIsTags = selectedField?.preset === "tags";
   const selectedFieldAutocompleteChecked = selectedField ? selectedField.autocomplete !== "off" : true;
@@ -186,6 +189,7 @@ export function useFormBuilderWorkspaceController({
     selectedFieldIsTags,
     selectedFieldSupportsTextInputSettings,
     selectedFieldSupportsTextPreset,
+    selectedFieldSupportsUniqueValue,
     selectedNode,
     selectedNodeSupportsRules,
     shouldSyncFieldNodeTitlesWithModel,

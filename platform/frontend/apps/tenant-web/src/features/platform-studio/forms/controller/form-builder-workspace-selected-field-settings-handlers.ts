@@ -36,6 +36,17 @@ type ViewOnlyBindingOption = {
   label: string;
 };
 
+export function supportsUniqueValue(
+  field: Pick<FormsPlaceholderField, "kind" | "preset" | "validation"> | null | undefined,
+) {
+  return field?.kind === "short_text" && (
+    field.preset === "email"
+    || field.preset === "phone"
+    || field.validation === "email"
+    || field.validation === "phone"
+  );
+}
+
 type SelectedFieldSettingsHandlersOptions = {
   defaultViewOnlyFieldTitle: string;
   newChoiceOptionLabel: string;
@@ -123,6 +134,13 @@ export function createSelectedFieldSettingsHandlers({
     }));
   }
 
+  function updateSelectedFieldUniqueValue(checked: boolean) {
+    updateSelectedField((field) => ({
+      ...field,
+      uniqueValue: checked ? true : undefined,
+    }));
+  }
+
   function updateSelectedFieldMask(mask: string) {
     updateSelectedField((field) => ({
       ...field,
@@ -138,10 +156,17 @@ export function createSelectedFieldSettingsHandlers({
   }
 
   function updateSelectedFieldValidation(validation: FormsPlaceholderFieldValidation | undefined) {
-    updateSelectedField((field) => ({
-      ...field,
-      validation,
-    }));
+    updateSelectedField((field) => {
+      const nextField = {
+        ...field,
+        validation,
+      };
+
+      return {
+        ...nextField,
+        uniqueValue: supportsUniqueValue(nextField) ? field.uniqueValue : undefined,
+      };
+    });
   }
 
   function updateSelectedDateDisplayFormat(displayFormat: string) {
@@ -207,6 +232,7 @@ export function createSelectedFieldSettingsHandlers({
     updateSelectedFieldChoiceStyle,
     updateSelectedFieldMask,
     updateSelectedFieldPlaceholder,
+    updateSelectedFieldUniqueValue,
     updateSelectedFieldValidation,
     updateSelectedLookupDisplayMode,
     updateSelectedTagsMax,

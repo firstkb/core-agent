@@ -474,6 +474,11 @@ func normalizeDataSchemaFields(entries []any, scopeID string) []any {
 		if normalizeString(normalized["autocomplete"]) == "on" {
 			delete(normalized, "autocomplete")
 		}
+		if getBoolValue(normalized, "uniqueValue", false) {
+			normalized["uniqueValue"] = true
+		} else {
+			delete(normalized, "uniqueValue")
+		}
 		delete(normalized, "displayName")
 		delete(normalized, "fieldId")
 		delete(normalized, "isPersisted")

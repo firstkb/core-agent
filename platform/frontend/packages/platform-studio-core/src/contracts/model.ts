@@ -114,6 +114,7 @@ export type ModelFieldDefinition = {
   status?: FieldStatus;
   storage?: FieldStorageBinding;
   storageKey?: string;
+  uniqueValue?: boolean;
 };
 
 export type FieldDefinition = ModelFieldDefinition;

@@ -56,6 +56,7 @@ type SelectedFieldSettingsSectionProps = {
   onPlaceholderChange: (placeholder: string) => void;
   onTagModeChange: (tagMode: FormsPlaceholderTagMode) => void;
   onTagsMaxChange: (maxTags: string) => void;
+  onUniqueValueChange: (checked: boolean) => void;
   onValidationChange: (validation: FormsPlaceholderFieldValidation | undefined) => void;
   selectedField: FormsPlaceholderField;
   selectedFieldAutocompleteChecked: boolean;
@@ -68,6 +69,7 @@ type SelectedFieldSettingsSectionProps = {
   selectedFieldShowsLookupDisplayMode: boolean;
   selectedFieldSupportsTextInputSettings: boolean;
   selectedFieldSupportsTextPreset: boolean;
+  selectedFieldSupportsUniqueValue: boolean;
   selectedGenericLookupSourceModel: LookupSourceModelOption | null;
   selectedLookupSortFieldSummary: LookupSummary | null;
   selectedLookupSourceSummary: LookupSummary | null;
@@ -98,6 +100,7 @@ export function SelectedFieldSettingsSection({
   onPlaceholderChange,
   onTagModeChange,
   onTagsMaxChange,
+  onUniqueValueChange,
   onValidationChange,
   selectedField,
   selectedFieldAutocompleteChecked,
@@ -110,6 +113,7 @@ export function SelectedFieldSettingsSection({
   selectedFieldShowsLookupDisplayMode,
   selectedFieldSupportsTextInputSettings,
   selectedFieldSupportsTextPreset,
+  selectedFieldSupportsUniqueValue,
   selectedGenericLookupSourceModel,
   selectedLookupSortFieldSummary,
   selectedLookupSourceSummary,
@@ -228,6 +232,7 @@ export function SelectedFieldSettingsSection({
             autocomplete: t("tenant.platformStudio.forms.builder.fieldSettings.autocomplete"),
             mask: t("tenant.platformStudio.forms.builder.fieldSettings.mask"),
             placeholder: t("tenant.platformStudio.forms.builder.fieldSettings.placeholder"),
+            uniqueValue: t("tenant.platformStudio.forms.builder.fieldSettings.uniqueValue"),
             unbound: t("tenant.platformStudio.forms.builder.systemField.unbound"),
             validation: t("tenant.platformStudio.forms.builder.fieldSettings.validation"),
             validationEmail: t("tenant.platformStudio.forms.builder.fieldSettings.validationEmail"),
@@ -238,9 +243,12 @@ export function SelectedFieldSettingsSection({
           onAutocompleteChange={onAutocompleteChange}
           onMaskChange={onMaskChange}
           onPlaceholderChange={onPlaceholderChange}
+          onUniqueValueChange={onUniqueValueChange}
           onValidationChange={onValidationChange}
           placeholder={selectedField.placeholder ?? ""}
           showValidation={selectedFieldSupportsTextPreset}
+          showUniqueValue={selectedFieldSupportsUniqueValue}
+          uniqueValueChecked={selectedField.uniqueValue === true}
           validation={selectedField.validation}
         />
       ) : null}

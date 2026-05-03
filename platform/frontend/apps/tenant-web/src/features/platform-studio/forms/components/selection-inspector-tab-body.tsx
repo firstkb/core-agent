@@ -70,6 +70,7 @@ type SelectionInspectorTabBodyProps = {
   onRichTextChange: (value: string) => void;
   onTagModeChange: (tagMode: FormsPlaceholderTagMode) => void;
   onTagsMaxChange: (maxTags: string) => void;
+  onUniqueValueChange: (checked: boolean) => void;
   onTextChange: (value: string) => void;
   onTitleChange: (title: string) => void;
   onValidationChange: (validation: FormsPlaceholderFieldValidation | undefined) => void;
@@ -89,6 +90,7 @@ type SelectionInspectorTabBodyProps = {
   selectedFieldShowsLookupDisplayMode: boolean;
   selectedFieldSupportsTextInputSettings: boolean;
   selectedFieldSupportsTextPreset: boolean;
+  selectedFieldSupportsUniqueValue: boolean;
   selectedGenericLookupSourceModel: LookupSourceModelOption | null;
   selectedLookupSortFieldSummary: LookupSummary | null;
   selectedLookupSourceSummary: LookupSummary | null;
@@ -137,6 +139,7 @@ export function SelectionInspectorTabBody({
   onRichTextChange,
   onTagModeChange,
   onTagsMaxChange,
+  onUniqueValueChange,
   onTextChange,
   onTitleChange,
   onValidationChange,
@@ -156,6 +159,7 @@ export function SelectionInspectorTabBody({
   selectedFieldShowsLookupDisplayMode,
   selectedFieldSupportsTextInputSettings,
   selectedFieldSupportsTextPreset,
+  selectedFieldSupportsUniqueValue,
   selectedGenericLookupSourceModel,
   selectedLookupSortFieldSummary,
   selectedLookupSourceSummary,
@@ -244,6 +248,7 @@ export function SelectionInspectorTabBody({
                 onPlaceholderChange={onPlaceholderChange}
                 onTagModeChange={onTagModeChange}
                 onTagsMaxChange={onTagsMaxChange}
+                onUniqueValueChange={onUniqueValueChange}
                 onValidationChange={onValidationChange}
                 selectedField={selectedField}
                 selectedFieldAutocompleteChecked={selectedFieldAutocompleteChecked}
@@ -256,6 +261,7 @@ export function SelectionInspectorTabBody({
                 selectedFieldShowsLookupDisplayMode={selectedFieldShowsLookupDisplayMode}
                 selectedFieldSupportsTextInputSettings={selectedFieldSupportsTextInputSettings}
                 selectedFieldSupportsTextPreset={selectedFieldSupportsTextPreset}
+                selectedFieldSupportsUniqueValue={selectedFieldSupportsUniqueValue}
                 selectedGenericLookupSourceModel={selectedGenericLookupSourceModel}
                 selectedLookupSortFieldSummary={selectedLookupSortFieldSummary}
                 selectedLookupSourceSummary={selectedLookupSourceSummary}

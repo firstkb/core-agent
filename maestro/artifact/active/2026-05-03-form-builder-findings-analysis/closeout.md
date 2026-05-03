@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified. The owner paused the work on 2026-05-03 without closing or archiving it, then resumed with Slice 5 for Subform View title editing.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Slice 6 adds the Form Builder `uniqueValue` authoring flag for email/phone text fields only; runtime uniqueness enforcement remains a follow-up.
 
 ## Outcome
 
@@ -25,6 +25,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Mapped semantic option styles through `@platform/forms` runtime schema and button rendering while ignoring raw color-only legacy entries.
 - Updated the original source findings file with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice.
 - Restored Subform title editing from the Subform View tab while keeping `schemaScopeId`, `tableKey`, runtime table/view names, and route identity unchanged.
+- Added `uniqueValue?: boolean` to Form Builder field authoring schema/UI for ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`.
 
 ## Checks
 
@@ -37,4 +38,4 @@ Updated planned-work memory to move Slice 1, Slice 2, Slice 3, and Slice 4 accep
 
 ## Next Step
 
-Owner should manually test Subform View title editing. If accepted, continue with lookup field settings and lookup-aware View filters.
+Owner should manually test Unique value authoring on Email/Phone fields. Runtime uniqueness enforcement and form-package rendering remain separate follow-up work.

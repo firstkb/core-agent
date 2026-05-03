@@ -24,6 +24,9 @@ function serializeModelFieldForDataSchema(field: FormsPlaceholderField) {
   if (serializedField.autocomplete === "on") {
     delete serializedField.autocomplete;
   }
+  if (serializedField.uniqueValue !== true) {
+    delete serializedField.uniqueValue;
+  }
   if (serializedField.isLocked === false) {
     delete serializedField.isLocked;
   }

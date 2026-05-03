@@ -214,6 +214,7 @@ export function FormsViewWorkspacePage() {
     selectedFieldIsTags,
     selectedFieldSupportsTextInputSettings,
     selectedFieldSupportsTextPreset,
+    selectedFieldSupportsUniqueValue,
     selectedNode,
     selectedNodeSupportsRules,
     shouldSyncFieldNodeTitlesWithModel,
@@ -413,6 +414,7 @@ export function FormsViewWorkspacePage() {
     updateSelectedFieldChoiceStyle,
     updateSelectedFieldMask,
     updateSelectedFieldPlaceholder,
+    updateSelectedFieldUniqueValue,
     updateSelectedFieldValidation,
     updateSelectedLookupDisplayMode,
     updateSelectedNodeRequired,
@@ -846,6 +848,7 @@ export function FormsViewWorkspacePage() {
                       onRichTextChange={updateSelectedNodeText}
                       onTagModeChange={updateSelectedTagsMode}
                       onTagsMaxChange={updateSelectedTagsMax}
+                      onUniqueValueChange={updateSelectedFieldUniqueValue}
                       onTextChange={updateSelectedNodeText}
                       onTitleChange={updateSelectedNodeTitle}
                       onValidationChange={updateSelectedFieldValidation}
@@ -865,6 +868,7 @@ export function FormsViewWorkspacePage() {
                       selectedFieldShowsLookupDisplayMode={selectedFieldShowsLookupDisplayMode}
                       selectedFieldSupportsTextInputSettings={selectedFieldSupportsTextInputSettings}
                       selectedFieldSupportsTextPreset={selectedFieldSupportsTextPreset}
+                      selectedFieldSupportsUniqueValue={selectedFieldSupportsUniqueValue}
                       selectedGenericLookupSourceModel={selectedGenericLookupSourceModel}
                       selectedLookupSortFieldSummary={selectedLookupSortFieldSummary}
                       selectedLookupSourceSummary={selectedLookupSourceSummary}

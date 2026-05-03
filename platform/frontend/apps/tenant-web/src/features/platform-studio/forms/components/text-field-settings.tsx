@@ -11,6 +11,7 @@ type TextFieldSettingsLabels = {
   autocomplete: string;
   mask: string;
   placeholder: string;
+  uniqueValue: string;
   unbound: string;
   validation: string;
   validationEmail: string;
@@ -26,9 +27,12 @@ type TextFieldSettingsProps = {
   onAutocompleteChange: (checked: boolean) => void;
   onMaskChange: (value: string) => void;
   onPlaceholderChange: (value: string) => void;
+  onUniqueValueChange: (checked: boolean) => void;
   onValidationChange: (validation: FormsPlaceholderFieldValidation | undefined) => void;
   placeholder: string;
   showValidation: boolean;
+  showUniqueValue: boolean;
+  uniqueValueChecked: boolean;
   validation: FormsPlaceholderFieldValidation | undefined;
 };
 
@@ -40,9 +44,12 @@ export function TextFieldSettings({
   onAutocompleteChange,
   onMaskChange,
   onPlaceholderChange,
+  onUniqueValueChange,
   onValidationChange,
   placeholder,
   showValidation,
+  showUniqueValue,
+  uniqueValueChecked,
   validation,
 }: TextFieldSettingsProps) {
   return (
@@ -106,6 +113,19 @@ export function TextFieldSettings({
           size="sm"
         />
       </div>
+
+      {showUniqueValue ? (
+        <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__platform-studio-switch-row--element-inline">
+          <span className="tenant-web__platform-studio-form-inline-label">
+            {labels.uniqueValue}
+          </span>
+          <Switch
+            checked={uniqueValueChecked}
+            onCheckedChange={onUniqueValueChange}
+            size="sm"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

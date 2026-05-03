@@ -114,6 +114,7 @@ export type FormsPlaceholderField = {
   status?: FormsPlaceholderFieldStatus;
   storageKey?: string;
   tagMode?: FormsPlaceholderTagMode;
+  uniqueValue?: boolean;
   validation?: FormsPlaceholderFieldValidation;
 };
 
@@ -536,6 +537,7 @@ export function cloneFormsPlaceholderField(field: FormsPlaceholderField): FormsP
     sourceFilters: field.sourceFilters ? [...field.sourceFilters] : undefined,
     status: getDefaultFieldStatus(field),
     storageKey: createFormsPlaceholderStorageKey(field.storageKey ?? displayName, field.id),
+    uniqueValue: field.uniqueValue === true ? true : undefined,
   };
 }
 
@@ -1028,6 +1030,7 @@ function normalizeStoredObjects(value: unknown) {
                 status: normalizedStatus,
                 storageKey: normalizedStorageKey,
                 tagMode: isTagMode(nextField.tagMode) ? nextField.tagMode : fallbackField.tagMode,
+                uniqueValue: nextField.uniqueValue === true ? true : undefined,
                 validation: isFieldValidation(nextField.validation) ? nextField.validation : fallbackField.validation,
               };
             }))
@@ -1311,6 +1314,7 @@ export function getFormsPlaceholderFieldSearchText(field: FormsPlaceholderField)
     field.mask,
     field.defaultValueMode,
     field.tagMode,
+    field.uniqueValue ? "unique" : "",
     typeof field.maxTags === "number" ? String(field.maxTags) : "",
     field.choiceDisplay?.renderStyle,
     field.choiceDisplay?.orientation,

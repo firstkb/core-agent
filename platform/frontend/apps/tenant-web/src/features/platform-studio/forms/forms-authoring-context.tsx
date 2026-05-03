@@ -130,6 +130,7 @@ function mergeFieldSummaries(
       status: normalizeFieldStatus(summary.status, field?.status ?? fallbackStatus),
       storageKey: summary.storageKey ?? field?.storageKey ?? summary.key ?? summary.id,
       tagMode: field?.tagMode,
+      uniqueValue: field?.uniqueValue,
       validation: field?.validation,
     };
   });

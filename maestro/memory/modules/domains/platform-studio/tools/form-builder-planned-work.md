@@ -32,6 +32,7 @@ instead of them.
 - Choice field authoring templates default base `single_select` and `multi_select` Orientation to `Horizontal`.
 - View tab Grid settings includes a transient switch above the field list to show only active/list-visible fields for easier sorting of large views.
 - Choice button option styles use a strict semantic variant contract: `default`, `primary`, `secondary`, `info`, `success`, `warning`, or `danger`; raw per-option colors are not runtime contract.
+- Email/phone text fields can author `uniqueValue: true`; disabled/false values are omitted from compact payloads. Runtime uniqueness enforcement remains separate follow-up work.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 

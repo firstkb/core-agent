@@ -478,6 +478,7 @@ export const tenantSpanishMessages = {
             tagModeSelectOrCreate: "Seleccionar y crear",
             tags: "Tag settings",
             textPreset: "Preset settings",
+            uniqueValue: "Valor unico",
             validation: "Validation",
             validationEmail: "Email",
             validationPhone: "Phone",

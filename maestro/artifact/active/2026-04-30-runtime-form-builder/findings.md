@@ -200,3 +200,19 @@ Statuses:
 - Resolution: Added a Subform title input to the non-root View tab, wired it to update the active Subform parent node `title`, kept subform identity fields unchanged, and documented the title/identity boundary.
 - Fixed in: current change set.
 - Verification: `pnpm --filter @platform/tenant-web test -- form-builder-workspace-grid.test.ts` passed; `pnpm --filter @platform/tenant-web typecheck` passed; `pnpm --filter @platform/tenant-web lint` passed; `git diff --check` passed; `scripts/preflight.sh` passed.
+
+## FB-RT-013 - Email/phone text fields need a Unique value authoring flag
+
+- Area: Form Builder field schema and selected field settings.
+- URL: not captured; owner requested on 2026-05-03.
+- Model/View: affected forms with ready-made `Email`/`Phone` fields or `short_text` fields validated as email/phone.
+- Symptom: Text input fields expose `Autocomplete`, but there is no adjacent authoring parameter for marking values that must be unique, such as email or phone.
+- Expected: Form Builder should expose a `Unique value` switch for ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`. The persisted schema parameter should be compact and explicit.
+- Actual: No authoring schema flag or field settings UI existed.
+- Evidence: Owner request on 2026-05-03.
+- Priority: medium.
+- Status: resolved.
+- Owner decision: Use `uniqueValue` as the schema parameter name and `Unique value` as the user-facing label. Implement only Form Builder authoring/schema now; runtime renderer/package enforcement is deferred to a separate chat.
+- Resolution: Added `uniqueValue?: boolean` to Form Builder field authoring state and platform-studio-core field schema, rendered a `Unique value` switch directly under `Autocomplete` for email/phone text fields, preserved `true` through clone/authoring summary/canonical data schema/backend normalization, and omitted disabled/false values from compact payloads.
+- Fixed in: current change set.
+- Verification: `pnpm --filter @platform/tenant-web test -- form-builder-workspace-unique-value.test.ts` passed; `pnpm --filter @platform/tenant-web typecheck` passed; `pnpm --filter @platform/tenant-web lint` passed; `pnpm --filter @platform/platform-studio-core typecheck` passed; `pnpm --filter @platform/platform-studio-core lint` passed; `go test ./modules/tenant/platformstudioformbuilder` passed; `git diff --check` passed; `scripts/preflight.sh` passed.

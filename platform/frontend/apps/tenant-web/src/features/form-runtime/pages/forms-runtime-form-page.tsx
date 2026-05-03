@@ -75,6 +75,10 @@ type SubformDeleteDialogState = {
   subform: RuntimeFormSubformDefinition;
 };
 
+type UnsavedLeaveDialogState = {
+  scope: "root" | "subform";
+};
+
 type RuntimeFormSessionState = {
   activeTabs?: RuntimeFormActiveTabs;
   docGuid?: string;
@@ -278,6 +282,22 @@ function hasUserEnteredCreateValues(values: RuntimeFormValues, initialValues: Ru
   });
 }
 
+function runtimeFormValueToDomString(value: RuntimeFormValue | undefined) {
+  if (value === undefined) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.join(",");
+  }
+  return "";
+}
+
 function isConflictRuntimeError(requestError: unknown) {
   return requestError instanceof ApiClientError
     && (requestError.statusCode === 409 || requestError.code === "FORM_RUNTIME_CONFLICT");
@@ -362,6 +382,7 @@ export function FormsRuntimeFormPage({
   const [saveState, setSaveState] = useState<RuntimeFormSaveState>("saving");
   const [subformDeleteDialog, setSubformDeleteDialog] = useState<SubformDeleteDialogState | null>(null);
   const [subforms, setSubforms] = useState<RuntimeFormSubformDataById>({});
+  const [unsavedLeaveDialog, setUnsavedLeaveDialog] = useState<UnsavedLeaveDialogState | null>(null);
   const definition = useMemo(() => {
     if (!formResponse) {
       return null;
@@ -393,11 +414,14 @@ export function FormsRuntimeFormPage({
   const hasAppliedInitialStatusRef = useRef(false);
   const hasServerRecordRef = useRef(mode === "edit" && routeDocGuid.length > 0);
   const lastPatchSucceededRef = useRef(true);
+  const lastPatchValidationErrorsRef = useRef<ReadonlyArray<FormRuntimeRecordValidationError>>([]);
   const latestValuesRef = useRef<RuntimeFormValues>({});
   const patchInFlightRef = useRef(false);
   const patchPromiseRef = useRef<Promise<void> | null>(null);
   const pendingPatchValuesRef = useRef<Record<string, unknown>>({});
   const revisionRef = useRef(restoredSession?.revision ?? "");
+  const runtimeControlSyncTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  const runtimeFormContainerRef = useRef<HTMLDivElement | null>(null);
   const currentDocGuidRef = useRef(routeDocGuid || restoredSession?.docGuid || "");
   const activeTabsRef = useRef<RuntimeFormActiveTabs>(restoredSession?.activeTabs ?? {});
   const routeIsInvalid = !modelId
@@ -491,6 +515,7 @@ export function FormsRuntimeFormPage({
     setFieldRevealRequest(null);
     setFinishDialog(null);
     setSubformDeleteDialog(null);
+    setUnsavedLeaveDialog(null);
     setSaveState("idle");
     setSubforms({});
     latestValuesRef.current = nextValues;
@@ -502,8 +527,11 @@ export function FormsRuntimeFormPage({
       clearTimeout(autosaveTimerRef.current);
       autosaveTimerRef.current = null;
     }
+    runtimeControlSyncTimersRef.current.forEach((timer) => clearTimeout(timer));
+    runtimeControlSyncTimersRef.current = [];
     pendingPatchValuesRef.current = {};
     lastPatchSucceededRef.current = true;
+    lastPatchValidationErrorsRef.current = [];
     lastRuntimeRequestErrorKindRef.current = null;
     clientCreateTokenRef.current = createClientCreateToken();
   }, [definition, formResponse, initialValues, isSubform, parentDocGuid, restoredSession, routeDocGuid, subformId]);
@@ -517,6 +545,8 @@ export function FormsRuntimeFormPage({
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
       }
+      runtimeControlSyncTimersRef.current.forEach((timer) => clearTimeout(timer));
+      runtimeControlSyncTimersRef.current = [];
     };
   }, []);
 
@@ -691,14 +721,38 @@ export function FormsRuntimeFormPage({
     return applyRuntimeWorkflowStatus(runtimeDefinition, nextValues, "initial");
   }
 
-  async function flushPendingPatch(): Promise<boolean> {
+  function handleRuntimeServerValidation(
+    validationErrors: ReadonlyArray<FormRuntimeRecordValidationError> | undefined,
+    options?: { showValidationDialog?: boolean },
+  ) {
+    const serverErrors = runtimeValidationErrorsFromServer(validationErrors);
+    if (hasRuntimeValidationErrors(serverErrors)) {
+      setErrors(serverErrors);
+    }
+    if (!options?.showValidationDialog) {
+      return;
+    }
+
+    const firstError = findFirstValidationError(runtimeDefinition, serverErrors);
+    revealRuntimeField(firstError.fieldId);
+    setFinishDialog({
+      fieldId: firstError.fieldId,
+      message: firstRuntimeValidationMessage(validationErrors) ?? runtimeClientValidationDialogMessage(firstError),
+      tone: "danger",
+    });
+  }
+
+  async function flushPendingPatch(options?: { showValidationDialog?: boolean }): Promise<boolean> {
     if (patchInFlightRef.current) {
       await patchPromiseRef.current;
       if (!lastPatchSucceededRef.current) {
+        if (options?.showValidationDialog && lastPatchValidationErrorsRef.current.length > 0) {
+          handleRuntimeServerValidation(lastPatchValidationErrorsRef.current, options);
+        }
         return false;
       }
       if (Object.keys(pendingPatchValuesRef.current).length > 0) {
-        return flushPendingPatch();
+        return flushPendingPatch(options);
       }
       return true;
     }
@@ -717,6 +771,7 @@ export function FormsRuntimeFormPage({
     pendingPatchValuesRef.current = {};
     patchInFlightRef.current = true;
     lastPatchSucceededRef.current = true;
+    lastPatchValidationErrorsRef.current = [];
     lastRuntimeRequestErrorKindRef.current = null;
     setSaveState("saving");
     let didSave = false;
@@ -731,6 +786,18 @@ export function FormsRuntimeFormPage({
         values: patchValues,
       }))
       .then((response) => {
+        if ((response.validationErrors?.length ?? 0) > 0) {
+          pendingPatchValuesRef.current = {
+            ...patchValues,
+            ...pendingPatchValuesRef.current,
+          };
+          lastPatchValidationErrorsRef.current = response.validationErrors ?? [];
+          lastPatchSucceededRef.current = false;
+          handleRuntimeServerValidation(response.validationErrors, options);
+          setSaveState("dirty");
+          return;
+        }
+
         applyMutationResponse(response);
         setSaveState("saved");
         lastPatchSucceededRef.current = true;
@@ -757,7 +824,7 @@ export function FormsRuntimeFormPage({
     }
 
     if (Object.keys(pendingPatchValuesRef.current).length > 0) {
-      return flushPendingPatch();
+      return flushPendingPatch(options);
     }
     return true;
   }
@@ -921,26 +988,6 @@ export function FormsRuntimeFormPage({
     return createPromise;
   }
 
-  function markRuntimeValueChanged(fieldId: string, value: RuntimeFormValue, nextValues: RuntimeFormValues) {
-    const patchValues = {
-      [fieldId]: value,
-    };
-
-    if (mode === "create" && !hasServerRecordRef.current) {
-      if (createInFlightRef.current) {
-        pendingPatchValuesRef.current = {
-          ...pendingPatchValuesRef.current,
-          ...patchValues,
-        };
-        return;
-      }
-      void createRecordIfReady(nextValues);
-      return;
-    }
-
-    schedulePatch(patchValues);
-  }
-
   function handleActiveTabChange(layoutId: string, tabId: string) {
     if (activeTabsRef.current[layoutId] === tabId) {
       return;
@@ -990,24 +1037,81 @@ export function FormsRuntimeFormPage({
     }
   }
 
-  function handleFieldChange(fieldId: string, value: RuntimeFormValue) {
+  function commitRuntimeValueChanges(changedValues: Record<string, RuntimeFormValue>) {
+    if (Object.keys(changedValues).length === 0) {
+      return;
+    }
+
     let nextValues: RuntimeFormValues = {
       ...latestValuesRef.current,
-      [fieldId]: value,
+      ...changedValues,
     };
     nextValues = applyInitialStatusIfNeeded(nextValues);
     latestValuesRef.current = nextValues;
     setValues(nextValues);
     setErrors((currentErrors) => {
-      if (!currentErrors[fieldId]) {
+      if (!Object.keys(changedValues).some((fieldId) => currentErrors[fieldId])) {
         return currentErrors;
       }
 
       const nextErrors = { ...currentErrors };
-      delete nextErrors[fieldId];
+      Object.keys(changedValues).forEach((fieldId) => {
+        delete nextErrors[fieldId];
+      });
       return nextErrors;
     });
-    markRuntimeValueChanged(fieldId, value, nextValues);
+    if (mode === "create" && !hasServerRecordRef.current) {
+      if (createInFlightRef.current) {
+        pendingPatchValuesRef.current = {
+          ...pendingPatchValuesRef.current,
+          ...changedValues,
+        };
+        return;
+      }
+      void createRecordIfReady(nextValues);
+      return;
+    }
+
+    schedulePatch(changedValues);
+  }
+
+  function handleFieldChange(fieldId: string, value: RuntimeFormValue) {
+    commitRuntimeValueChanges({ [fieldId]: value });
+  }
+
+  function syncRuntimeControlValuesFromDom() {
+    const root = runtimeFormContainerRef.current;
+    if (!root) {
+      return;
+    }
+
+    const changedValues: Record<string, RuntimeFormValue> = {};
+    const controls = root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[data-runtime-field-id], textarea[data-runtime-field-id]");
+    controls.forEach((control) => {
+      const fieldId = control.dataset.runtimeFieldId?.trim();
+      if (!fieldId || control.disabled || control.readOnly) {
+        return;
+      }
+      const field = findRuntimeFormField(runtimeDefinition, fieldId);
+      if (!field || field.disabled || field.readonly) {
+        return;
+      }
+
+      const nextValue = control.value;
+      if (nextValue !== runtimeFormValueToDomString(latestValuesRef.current[fieldId])) {
+        changedValues[fieldId] = nextValue;
+      }
+    });
+
+    commitRuntimeValueChanges(changedValues);
+  }
+
+  function scheduleRuntimeControlDomSync() {
+    runtimeControlSyncTimersRef.current.forEach((timer) => clearTimeout(timer));
+    runtimeControlSyncTimersRef.current = [
+      globalThis.setTimeout(syncRuntimeControlValuesFromDom, 120),
+      globalThis.setTimeout(syncRuntimeControlValuesFromDom, 500),
+    ];
   }
 
   async function handleFinish() {
@@ -1053,9 +1157,12 @@ export function FormsRuntimeFormPage({
       return;
     }
 
-    const didFlushPatch = await flushPendingPatch();
+    const didFlushPatch = await flushPendingPatch({ showValidationDialog: true });
     if (!didFlushPatch) {
       if (lastRuntimeRequestErrorKindRef.current === "conflict" || lastRuntimeRequestErrorKindRef.current === "auth") {
+        return;
+      }
+      if (lastPatchValidationErrorsRef.current.length > 0) {
         return;
       }
       setFinishDialog({
@@ -1102,22 +1209,23 @@ export function FormsRuntimeFormPage({
     }
   }
 
-  function handleBackToList() {
+  function handleBackToList(options?: { skipUnsavedPrompt?: boolean }) {
     void (async () => {
-      if (mode === "create" && !hasServerRecordRef.current && hasUserEnteredCreateValues(values, initialValues)) {
-        const canLeave = typeof window === "undefined" || window.confirm("Entered data will be lost. Leave this form?");
-        if (!canLeave) {
-          return;
-        }
+      if (!options?.skipUnsavedPrompt && mode === "create" && !hasServerRecordRef.current && hasUserEnteredCreateValues(values, initialValues)) {
+        setUnsavedLeaveDialog({ scope: isSubform ? "subform" : "root" });
+        return;
       }
 
       if (autosaveTimerRef.current) {
         clearTimeout(autosaveTimerRef.current);
         autosaveTimerRef.current = null;
       }
-      const didFlushPatch = await flushPendingPatch();
+      const didFlushPatch = await flushPendingPatch({ showValidationDialog: true });
       if (!didFlushPatch) {
         if (lastRuntimeRequestErrorKindRef.current === "conflict" || lastRuntimeRequestErrorKindRef.current === "auth") {
+          return;
+        }
+        if (lastPatchValidationErrorsRef.current.length > 0) {
           return;
         }
         setFinishDialog({
@@ -1128,6 +1236,11 @@ export function FormsRuntimeFormPage({
       }
       navigateBackToParentForm();
     })();
+  }
+
+  function confirmUnsavedLeave() {
+    setUnsavedLeaveDialog(null);
+    handleBackToList({ skipUnsavedPrompt: true });
   }
 
   function handleFinishDialogAction() {
@@ -1174,9 +1287,12 @@ export function FormsRuntimeFormPage({
       }
     }
 
-    const didFlushPatch = await flushPendingPatch();
+    const didFlushPatch = await flushPendingPatch({ showValidationDialog: true });
     if (!didFlushPatch) {
       if (lastRuntimeRequestErrorKindRef.current === "conflict" || lastRuntimeRequestErrorKindRef.current === "auth") {
+        return null;
+      }
+      if (lastPatchValidationErrorsRef.current.length > 0) {
         return null;
       }
       setFinishDialog({
@@ -1264,7 +1380,11 @@ export function FormsRuntimeFormPage({
   }
 
   return (
-    <div className="tenant-web__form-runtime-form-page">
+    <div
+      className="tenant-web__form-runtime-form-page"
+      onBlurCapture={scheduleRuntimeControlDomSync}
+      ref={runtimeFormContainerRef}
+    >
       <RuntimeFormScaffold
         activeTabs={activeTabs}
         definition={runtimeDefinition}
@@ -1348,6 +1468,33 @@ export function FormsRuntimeFormPage({
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmSubformDelete} variant="danger">
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setUnsavedLeaveDialog(null);
+          }
+        }}
+        open={Boolean(unsavedLeaveDialog)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {unsavedLeaveDialog?.scope === "subform"
+                ? "This subform item has not been created yet. Entered data will be lost."
+                : "This form has not been created yet. Entered data will be lost."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline">
+              Stay
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmUnsavedLeave} variant="danger">
+              Leave
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -35,6 +35,7 @@ export function LongTextField({
   return (
     <Textarea
       aria-invalid={error ? "true" : undefined}
+      data-runtime-field-id={field.id}
       disabled={disabled}
       id={controlId}
       invalid={Boolean(error)}

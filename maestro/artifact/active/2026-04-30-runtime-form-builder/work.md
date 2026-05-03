@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `ready_made_field_slice_in_progress`
+- Status: `unique_value_runtime_enforcement_ready_for_review`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -53,6 +53,8 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime `single_select` fields rendered as horizontal buttons should present as a segmented button group. This is a runtime-only visual refinement for single-select horizontal buttons and must not change multi-select or vertical button behavior.
 - Runtime `short_text` controls should consume field-level Form Builder settings for `placeholder`, `mask`, `autocomplete`, `inputMode`, and text validation metadata. UI node placeholder may override the field placeholder when present, but field-level settings are the default source of truth.
 - Runtime client validation must reject incorrectly filled required text inputs before record creation for both root forms and subforms. Email, phone, URL, and masked short-text values are validated by the shared `@platform/forms` validator; create/finish/subform save actions use the same modal error treatment and field reveal/focus path as existing required-field validation.
+- Runtime `uniqueValue` is enforced server-side in `platformstudioformruntime`, not in Form Builder authoring or the frontend renderer. Root form uniqueness is scoped to the current runtime root table/model for the tenant. Subform uniqueness is scoped to the current parent record and subform table, so two different parent records may have the same child value while one parent subform table cannot contain duplicates.
+- Runtime uniqueness applies only to schema-supported `uniqueValue` fields: plain `short_text` without preset/validation, and `short_text` email/phone fields through `preset` or `validation`. URL, suggest text, long text, and other field kinds are ignored even if malformed schema includes the flag.
 - Ready-made fields remain presets over base runtime controls rather than separate primitives. Current runtime support maps `email`, `phone`, `url`, and `suggest_text` to `short_text` rendering; maps `tags`, `radio_group`, and `checkbox_group` through existing choice renderers; and treats `date_today` as a date field whose default value must come from server/default-value handling. AJAX suggestions for `suggest_text` and richer preset-specific validation remain follow-up contract work.
 - Current subform implementation uses only DEFAULT subforms. The parent form renders a child table from authored subform Grid columns, honors authored Subtable sorting, and exposes Add/Edit/Delete only from authored subform actions plus available frontend handlers.
 - Subform Add/Edit opens a child form route under the parent edit route. If the parent record is not yet created, the runtime first creates the parent after required fields are valid, then navigates directly to the child route without a visible parent-tab jump.
@@ -407,7 +409,37 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 35 tests;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode.
+- Runtime unique-value enforcement follow-up completed:
+  - `platformstudioformruntime` now reads supported `uniqueValue` schema flags into field plans for plain short text and email/phone short-text fields only;
+  - create and edit/autosave paths now run server-side uniqueness validation before root or subform writes, returning field-level `validationErrors` instead of mutating data when duplicates are found;
+  - create uniqueness checks exclude the current `clientCreateToken` GUID when present, preserving storage-backed idempotent retry behavior;
+  - root uniqueness is tenant/root-scope scoped; subform uniqueness is scoped to the current parent record plus subform scope;
+  - email checks are case-insensitive, phone checks compare digit-only values, and plain short text checks trimmed values;
+  - tenant-web autosave now handles mutation `validationErrors` from `PATCH` responses, keeps failed values pending for retry, shows inline field errors during passive autosave, and shows the existing finish-style modal/reveal path on explicit `Finish`, `Back`, or subform `Save` actions;
+  - `go test ./modules/tenant/platformstudioformruntime` passed;
+  - `go test ./cmd/api-tenant/internal/server ./modules/tenant/platformstudioformruntime` passed;
+  - `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck` passed;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint` passed;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web test` passed: 13 files, 38 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
+- Runtime autocomplete/autofill sync follow-up completed:
+  - runtime input and textarea controls now expose `data-runtime-field-id` for host-level form synchronization;
+  - tenant-web runs a short debounced DOM sync after field blur, with checks at roughly `120ms` and `500ms`, to catch browser autofill/autocomplete that updates multiple fields without firing individual React change events;
+  - sync compares DOM values to `latestValuesRef`, ignores disabled/readonly controls, batches changed fields, and reuses the existing create-after-required-complete or autosave patch controller so browser-filled Email + Phone values produce one create/patch attempt rather than per-field requests;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 14 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 13 files, 38 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
+- Runtime unsaved-create navigation dialog follow-up completed:
+  - replaced the browser `window.confirm` used when leaving a not-yet-created dirty form with a UI Kit `AlertDialog`;
+  - root forms and subform child forms now show scope-specific copy before discarding local-only unsaved data;
+  - confirming `Leave` reuses the existing back navigation path with the unsaved prompt skipped, while `Stay` closes the dialog without losing data;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 13 files, 38 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is owner review of the short-text validation / ready-made runtime field slice, followed by either a commit or the next approved runtime field group.
+Next allowed action is owner review of runtime `uniqueValue` enforcement, minimal autofill sync, and the unsaved-create navigation dialog for root forms/subforms, followed by either a commit or the next approved runtime field/action slice.

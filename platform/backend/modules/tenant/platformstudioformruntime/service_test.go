@@ -22,6 +22,31 @@ func TestReadOptionValuesSupportsStringAndObjectOptions(t *testing.T) {
 	}
 }
 
+func TestSupportsRuntimeUniqueValueMatchesAuthoringScope(t *testing.T) {
+	tests := []struct {
+		kind       string
+		preset     string
+		validation string
+		want       bool
+	}{
+		{kind: "short_text", want: true},
+		{kind: "short_text", preset: "email", want: true},
+		{kind: "short_text", validation: "email", want: true},
+		{kind: "short_text", preset: "phone", want: true},
+		{kind: "short_text", validation: "phone", want: true},
+		{kind: "short_text", preset: "url", want: false},
+		{kind: "short_text", preset: "suggest_text", want: false},
+		{kind: "long_text", want: false},
+	}
+
+	for _, tt := range tests {
+		got := supportsRuntimeUniqueValue(tt.kind, tt.preset, tt.validation)
+		if got != tt.want {
+			t.Fatalf("supportsRuntimeUniqueValue(%q, %q, %q) = %v, want %v", tt.kind, tt.preset, tt.validation, got, tt.want)
+		}
+	}
+}
+
 func TestCreateRecordWaitsForRequiredFields(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)
@@ -170,6 +195,68 @@ func TestCreateRecordIsIdempotentForDuplicateClientToken(t *testing.T) {
 	}
 }
 
+func TestCreateRecordRejectsDuplicateUniqueValue(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeUniqueField(repo, rootSchemaScopeID, "location", nil)
+	repo.rootUniqueConflicts = map[string]bool{
+		recordingUniqueKey("location", "HQ"): true,
+	}
+	svc := NewService(repo)
+	token := "11111111-1111-1111-1111-111111111111"
+
+	out, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		ClientCreateToken: token,
+		Values: map[string]any{
+			"location": "HQ",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "location" {
+		t.Fatalf("validation field = %q, want location", out.ValidationErrors[0].FieldID)
+	}
+	if repo.created {
+		t.Fatal("CreateRootRecord should not be called for duplicate unique value")
+	}
+	if repo.lastRootUniqueCheck == nil || repo.lastRootUniqueCheck.ExcludeDocGuid != token {
+		t.Fatalf("root unique exclude = %#v, want token", repo.lastRootUniqueCheck)
+	}
+}
+
+func TestUpdateRecordRejectsDuplicateUniqueValue(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeUniqueField(repo, rootSchemaScopeID, "location", nil)
+	repo.rootUniqueConflicts = map[string]bool{
+		recordingUniqueKey("location", "HQ"): true,
+	}
+	svc := NewService(repo)
+
+	out, err := svc.UpdateRecord(testRuntimeContext(), "sor", "default", "current-guid", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"location": "HQ",
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "location" {
+		t.Fatalf("validation field = %q, want location", out.ValidationErrors[0].FieldID)
+	}
+	if repo.lastUpdateValues != nil {
+		t.Fatal("UpdateRootRecord should not be called for duplicate unique value")
+	}
+	if repo.lastRootUniqueCheck == nil || repo.lastRootUniqueCheck.ExcludeDocGuid != "current-guid" {
+		t.Fatalf("root unique exclude = %#v, want current-guid", repo.lastRootUniqueCheck)
+	}
+}
+
 func TestLoadSubformReturnsRootShapedSchemaWithoutSystemFields(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)
@@ -249,6 +336,63 @@ func TestCreateSubformRecordUsesParentAndScope(t *testing.T) {
 		t.Fatalf("subform create = %#v, want parent-guid/contacts", repo.lastSubformCreate)
 	}
 	assertValue(t, repo.lastSubformCreate.Values, "email", "person@example.com")
+}
+
+func TestCreateSubformRecordRejectsDuplicateUniqueValue(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeUniqueField(repo, "contacts", "email", map[string]any{"validation": "email"})
+	repo.subformUniqueConflicts = map[string]bool{
+		recordingUniqueKey("contacts", "parent-guid", "email", "person@example.com"): true,
+	}
+	svc := NewService(repo)
+
+	out, err := svc.CreateSubformRecord(testRuntimeContext(), "sor", "default", "parent-guid", "contacts", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"email": "person@example.com",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateSubformRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "email" {
+		t.Fatalf("validation field = %q, want email", out.ValidationErrors[0].FieldID)
+	}
+	if repo.lastSubformCreate != nil {
+		t.Fatal("CreateSubformRecord should not be called for duplicate unique value")
+	}
+}
+
+func TestUpdateSubformRecordRejectsDuplicateUniqueValue(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeUniqueField(repo, "contacts", "email", map[string]any{"validation": "email"})
+	repo.subformUniqueConflicts = map[string]bool{
+		recordingUniqueKey("contacts", "parent-guid", "email", "person@example.com"): true,
+	}
+	svc := NewService(repo)
+
+	out, err := svc.UpdateSubformRecord(testRuntimeContext(), "sor", "default", "parent-guid", "contacts", "child-guid", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"email": "person@example.com",
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateSubformRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "email" {
+		t.Fatalf("validation field = %q, want email", out.ValidationErrors[0].FieldID)
+	}
+	if repo.lastSubformUpdate != nil {
+		t.Fatal("UpdateSubformRecord should not be called for duplicate unique value")
+	}
+	if repo.lastSubformUniqueCheck == nil || repo.lastSubformUniqueCheck.ExcludeDocGuid != "child-guid" {
+		t.Fatalf("subform unique exclude = %#v, want child-guid", repo.lastSubformUniqueCheck)
+	}
 }
 
 func TestFinishRecordUsesFinalStatusWhenConfigured(t *testing.T) {
@@ -391,21 +535,71 @@ func enableRuntimeActiveField(repo *recordingRuntimeRepo, visible bool, canDelet
 	repo.view.DefinitionJSON = mustJSON(viewPayload)
 }
 
+func enableRuntimeUniqueField(repo *recordingRuntimeRepo, scopeID string, fieldID string, attributes map[string]any) {
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	changed := false
+	applyField := func(rawField any) {
+		field := asMap(rawField)
+		if field["fieldId"] != fieldID {
+			return
+		}
+		field["uniqueValue"] = true
+		for key, value := range attributes {
+			field[key] = value
+		}
+		changed = true
+	}
+
+	if scopeID == rootSchemaScopeID {
+		rootScope := asMap(dataSchema["rootScope"])
+		for _, rawField := range asSlice(rootScope["fields"]) {
+			applyField(rawField)
+		}
+	} else {
+		for _, rawScope := range asSlice(dataSchema["subformScopes"]) {
+			scope := asMap(rawScope)
+			if scope["schemaScopeId"] != scopeID {
+				continue
+			}
+			for _, rawField := range asSlice(scope["fields"]) {
+				applyField(rawField)
+			}
+		}
+	}
+	if !changed {
+		panic("test runtime field not found")
+	}
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+}
+
+func recordingUniqueKey(parts ...string) string {
+	key := ""
+	for _, part := range parts {
+		key += "\x00" + part
+	}
+	return key
+}
+
 type recordingRuntimeRepo struct {
-	created           bool
-	createErr         error
-	lastActiveBulk    *recordingActiveBulk
-	lastCreateDocGuid string
-	lastCreateValues  map[string]any
-	lastDeleteBulk    []string
-	lastLoadDocGuid   string
-	lastSubformCreate *recordingSubformMutation
-	lastSubformDelete *recordingSubformDelete
-	lastSubformLoad   *recordingSubformLoad
-	lastSubformUpdate *recordingSubformMutation
-	lastUpdateValues  map[string]any
-	model             *ModelRecord
-	view              *ViewRecord
+	created                bool
+	createErr              error
+	lastActiveBulk         *recordingActiveBulk
+	lastCreateDocGuid      string
+	lastCreateValues       map[string]any
+	lastDeleteBulk         []string
+	lastLoadDocGuid        string
+	lastRootUniqueCheck    *recordingUniqueCheck
+	lastSubformCreate      *recordingSubformMutation
+	lastSubformDelete      *recordingSubformDelete
+	lastSubformLoad        *recordingSubformLoad
+	lastSubformUniqueCheck *recordingUniqueCheck
+	lastSubformUpdate      *recordingSubformMutation
+	lastUpdateValues       map[string]any
+	model                  *ModelRecord
+	rootUniqueConflicts    map[string]bool
+	subformUniqueConflicts map[string]bool
+	view                   *ViewRecord
 }
 
 type recordingSubformMutation struct {
@@ -431,6 +625,14 @@ type recordingActiveBulk struct {
 	Active       bool
 	ActiveColumn string
 	DocGuids     []string
+}
+
+type recordingUniqueCheck struct {
+	ExcludeDocGuid string
+	FieldID        string
+	ParentDocGuid  string
+	ScopeID        string
+	Value          string
 }
 
 func newRecordingRuntimeRepo() *recordingRuntimeRepo {
@@ -499,6 +701,26 @@ func (r *recordingRuntimeRepo) CreateSubformRecord(_ context.Context, _ requestc
 		Revision: "subform-rev-1",
 		Values:   cloneValues(values),
 	}, nil
+}
+
+func (r *recordingRuntimeRepo) RootUniqueValueExists(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, field runtimeFieldPlan, value string, excludeDocGuid string) (bool, error) {
+	r.lastRootUniqueCheck = &recordingUniqueCheck{
+		ExcludeDocGuid: excludeDocGuid,
+		FieldID:        field.FieldID,
+		Value:          value,
+	}
+	return r.rootUniqueConflicts[recordingUniqueKey(field.FieldID, value)], nil
+}
+
+func (r *recordingRuntimeRepo) SubformUniqueValueExists(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, field runtimeFieldPlan, value string, excludeDocGuid string) (bool, error) {
+	r.lastSubformUniqueCheck = &recordingUniqueCheck{
+		ExcludeDocGuid: excludeDocGuid,
+		FieldID:        field.FieldID,
+		ParentDocGuid:  parentDocGuid,
+		ScopeID:        subformScope.ScopeID,
+		Value:          value,
+	}
+	return r.subformUniqueConflicts[recordingUniqueKey(subformScope.ScopeID, parentDocGuid, field.FieldID, value)], nil
 }
 
 func (r *recordingRuntimeRepo) UpdateRootRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuid string, values map[string]any, _ string) (*runtimeRecordMutationRow, error) {

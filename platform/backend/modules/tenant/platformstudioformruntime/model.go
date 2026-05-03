@@ -113,10 +113,12 @@ type runtimeFieldPlan struct {
 	Kind        string
 	StorageKey  string
 	Preset      string
+	Validation  string
 	ColumnName  string
 	MultiValue  bool
 	Required    bool
 	Supported   bool
+	UniqueValue bool
 	OptionLabel map[string]string
 	OptionValue []string
 }

@@ -89,6 +89,7 @@ export function InputField({
     <Input
       aria-invalid={error ? "true" : undefined}
       autoComplete={field.autocomplete}
+      data-runtime-field-id={field.id}
       disabled={disabled}
       id={controlId}
       inputMode={field.inputMode}

@@ -176,6 +176,8 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		storageKey = fieldID
 	}
 	kind := chooseString(normalizeString(field["kind"]), chooseString(normalizeString(field["dataType"]), normalizeString(field["baseType"])))
+	preset := normalizeString(field["preset"])
+	validation := normalizeString(field["validation"])
 	fieldRuntime := asMap(field["runtime"])
 	sourceColumn := normalizeString(fieldRuntime["sourceColumnName"])
 
@@ -184,8 +186,10 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		Label:       chooseString(normalizeString(field["label"]), chooseString(normalizeString(field["displayName"]), fieldID)),
 		Kind:        kind,
 		StorageKey:  storageKey,
-		Preset:      normalizeString(field["preset"]),
+		Preset:      preset,
+		Validation:  validation,
 		Required:    getBoolValue(field, "required", false),
+		UniqueValue: getBoolValue(field, "uniqueValue", false) && supportsRuntimeUniqueValue(kind, preset, validation),
 		OptionLabel: readOptionLabels(asSlice(field["options"])),
 		OptionValue: readOptionValues(asSlice(field["options"])),
 	}
@@ -228,6 +232,19 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		plan.ColumnName = chooseString(plan.ColumnName, storageKey)
 	}
 	return plan
+}
+
+func supportsRuntimeUniqueValue(kind string, preset string, validation string) bool {
+	if kind != "short_text" {
+		return false
+	}
+	if preset == "" && validation == "" {
+		return true
+	}
+	return preset == "email" ||
+		preset == "phone" ||
+		validation == "email" ||
+		validation == "phone"
 }
 
 func readSystemFieldBindings(rootScope map[string]any) runtimeSystemFieldBindings {

@@ -26,6 +26,8 @@ type Repository interface {
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID string, viewID string) (*ViewRecord, error)
 	CreateRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, values map[string]any, docGuid string) (*runtimeRecordMutationRow, error)
 	CreateSubformRecord(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, values map[string]any, docGuid string) (*runtimeRecordMutationRow, error)
+	RootUniqueValueExists(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, field runtimeFieldPlan, value string, excludeDocGuid string) (bool, error)
+	SubformUniqueValueExists(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, field runtimeFieldPlan, value string, excludeDocGuid string) (bool, error)
 	UpdateRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuid string, values map[string]any, expectedRevision string) (*runtimeRecordMutationRow, error)
 	UpdateSubformRecord(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string, values map[string]any, expectedRevision string) (*runtimeRecordMutationRow, error)
 	SetRootRecordsActive(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuids []string, activeColumn string, active bool) error
@@ -164,6 +166,17 @@ func (s *Service) CreateRecord(
 	}
 
 	createDocGuid := normalizeClientCreateToken(req.ClientCreateToken)
+	validationErrors, err := s.validateRootUniqueValues(ctx, tenant, scope, values, createDocGuid)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
+
 	row, err := s.repo.CreateRootRecord(ctx, tenant, scope, values, createDocGuid)
 	if errors.Is(err, ErrCreateTokenConflict) && createDocGuid != "" {
 		row, err = s.repo.LoadRootRecord(ctx, tenant, scope, createDocGuid)
@@ -213,6 +226,17 @@ func (s *Service) CreateSubformRecord(
 	}
 
 	createDocGuid := normalizeClientCreateToken(req.ClientCreateToken)
+	validationErrors, err := s.validateSubformUniqueValues(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, createDocGuid)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
+
 	row, err := s.repo.CreateSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, createDocGuid)
 	if errors.Is(err, ErrCreateTokenConflict) && createDocGuid != "" {
 		row, err = s.repo.LoadSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, createDocGuid)
@@ -248,6 +272,16 @@ func (s *Service) UpdateRecord(
 		return nil, err
 	}
 	values := s.prepareMutationValues(scope, req.Values)
+	validationErrors, err := s.validateRootUniqueValues(ctx, tenant, scope, values, docGuid)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 
 	row, err := s.repo.UpdateRootRecord(ctx, tenant, scope, docGuid, values, strings.TrimSpace(req.ExpectedRevision))
 	if err != nil {
@@ -285,6 +319,16 @@ func (s *Service) UpdateSubformRecord(
 	}
 	mutationScope := rootScopeFromSubform(scopeContext.Scope, subformScope)
 	values := s.prepareMutationValues(mutationScope, req.Values)
+	validationErrors, err := s.validateSubformUniqueValues(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, docGuid)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 
 	row, err := s.repo.UpdateSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, docGuid, values, strings.TrimSpace(req.ExpectedRevision))
 	if err != nil {
@@ -361,6 +405,56 @@ func (s *Service) FinishRecord(
 		return nil, err
 	}
 	return buildMutationResponse(false, scope, row), nil
+}
+
+func (s *Service) validateRootUniqueValues(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	scope runtimeRootScopePlan,
+	values map[string]any,
+	excludeDocGuid string,
+) ([]RuntimeViewRecordValidationError, error) {
+	out := []RuntimeViewRecordValidationError{}
+	for _, field := range scope.Fields {
+		value, ok := runtimeUniqueValueCandidate(field, values)
+		if !ok {
+			continue
+		}
+		exists, err := s.repo.RootUniqueValueExists(ctx, tenant, scope, field, value, strings.TrimSpace(excludeDocGuid))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			out = append(out, uniqueValueValidationError(field))
+		}
+	}
+	return out, nil
+}
+
+func (s *Service) validateSubformUniqueValues(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	values map[string]any,
+	excludeDocGuid string,
+) ([]RuntimeViewRecordValidationError, error) {
+	out := []RuntimeViewRecordValidationError{}
+	for _, field := range subformScope.Fields {
+		value, ok := runtimeUniqueValueCandidate(field, values)
+		if !ok {
+			continue
+		}
+		exists, err := s.repo.SubformUniqueValueExists(ctx, tenant, rootScope, subformScope, parentDocGuid, field, value, strings.TrimSpace(excludeDocGuid))
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			out = append(out, uniqueValueValidationError(field))
+		}
+	}
+	return out, nil
 }
 
 func (s *Service) RunBulkAction(

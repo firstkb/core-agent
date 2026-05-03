@@ -420,6 +420,10 @@ func orderedVisibleRuntimeNodes(scope map[string]any) []map[string]any {
 }
 
 func readRuntimeViewCanView(uiSchema map[string]any, viewPayload map[string]any) bool {
+	return readRuntimeViewAction(uiSchema, viewPayload, "canView", true)
+}
+
+func readRuntimeViewAction(uiSchema map[string]any, viewPayload map[string]any, actionKey string, fallback bool) bool {
 	rootScope := uiScope(uiSchema, rootSchemaScopeID)
 	viewSettings := asMap(rootScope["viewSettings"])
 	if len(viewSettings) == 0 {
@@ -427,7 +431,7 @@ func readRuntimeViewCanView(uiSchema map[string]any, viewPayload map[string]any)
 		viewSettings = asMap(rootView["viewSettings"])
 	}
 	actions := asMap(viewSettings["actions"])
-	return getBoolValue(actions, "canView", true)
+	return getBoolValue(actions, actionKey, fallback)
 }
 
 func appendUniqueString(values []string, value string) []string {

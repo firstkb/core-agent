@@ -3076,14 +3076,23 @@ func TestLoadRuntimeViewListMetaAddsViewRowActionWhenCanViewEnabled(t *testing.T
 	if err != nil {
 		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
 	}
-	if len(out.RowActions) != 1 {
-		t.Fatalf("row action count = %d, want 1", len(out.RowActions))
+	if !out.Actions.Create.Visible {
+		t.Fatal("create action should be visible when add is allowed and source guid is available")
 	}
-	if out.RowActions[0].ID != "view" {
-		t.Fatalf("row action id = %q, want %q", out.RowActions[0].ID, "view")
+	if len(out.RowActions) != 2 {
+		t.Fatalf("row action count = %d, want 2", len(out.RowActions))
+	}
+	if out.RowActions[0].ID != "edit" {
+		t.Fatalf("row action id = %q, want %q", out.RowActions[0].ID, "edit")
 	}
 	if out.RowActions[0].Execution != "frontend" {
 		t.Fatalf("row action execution = %q, want %q", out.RowActions[0].Execution, "frontend")
+	}
+	if out.RowActions[1].ID != "view" {
+		t.Fatalf("row action id = %q, want %q", out.RowActions[1].ID, "view")
+	}
+	if out.RowActions[1].Execution != "frontend" {
+		t.Fatalf("row action execution = %q, want %q", out.RowActions[1].Execution, "frontend")
 	}
 }
 
@@ -3179,6 +3188,9 @@ func TestLoadRuntimeViewListMetaHidesViewRowActionWithoutGuidEnabledSource(t *te
 	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
 	if err != nil {
 		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if out.Actions.Create.Visible {
+		t.Fatal("create action should be hidden when source guid is unavailable")
 	}
 	if len(out.RowActions) != 0 {
 		t.Fatalf("row action count = %d, want 0 when source guid is unavailable", len(out.RowActions))

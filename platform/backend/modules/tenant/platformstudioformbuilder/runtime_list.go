@@ -18,6 +18,8 @@ const (
 var runtimeViewListPageSizeOptions = []int{10, 25, 50}
 
 type runtimeViewListContext struct {
+	CanAdd            bool
+	CanEdit           bool
 	CanView           bool
 	DefaultFilters    map[string]any
 	FieldDefinitions  []collectiontable.FieldDefinition
@@ -62,7 +64,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 
 	return &RuntimeViewListMetaResponse{
 		Actions: collectiontable.PageActions{
-			Create:    collectiontable.VisibilityAction{Visible: false},
+			Create:    collectiontable.VisibilityAction{Visible: runtimeContext.CanAdd && runtimeContext.HasRecordGUID},
 			Reload:    collectiontable.VisibilityAction{Visible: true},
 			ExportXLS: collectiontable.VisibilityAction{Visible: false},
 			Favorite:  collectiontable.FavoriteAction{Visible: true, IsFavorite: isFavorite},
@@ -75,7 +77,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 		},
 		Fields:          runtimeContext.FieldDefinitions,
 		PageSizeOptions: append([]int(nil), runtimeViewListPageSizeOptions...),
-		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView, runtimeContext.HasRecordGUID),
+		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView, runtimeContext.CanEdit, runtimeContext.HasRecordGUID),
 		RowLayout:       collectiontable.RowLayout{},
 		SavedFilterSets: savedFilterSets,
 		Search: collectiontable.SearchMeta{
@@ -413,6 +415,8 @@ func (s *Service) loadRuntimeViewListContext(
 	}
 
 	return &runtimeViewListContext{
+		CanAdd:            readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canAdd", true),
+		CanEdit:           readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canEdit", true),
 		CanView:           readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
 		DefaultFilters:    readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
 		FieldDefinitions:  fieldDefinitions,
@@ -428,18 +432,27 @@ func (s *Service) loadRuntimeViewListContext(
 	}, nil
 }
 
-func buildRuntimeViewListRowActions(canView bool, hasRecordGUID bool) []collectiontable.RowActionDefinition {
-	if !canView || !hasRecordGUID {
+func buildRuntimeViewListRowActions(canView bool, canEdit bool, hasRecordGUID bool) []collectiontable.RowActionDefinition {
+	if !hasRecordGUID {
 		return []collectiontable.RowActionDefinition{}
 	}
 
-	return []collectiontable.RowActionDefinition{
-		{
+	actions := []collectiontable.RowActionDefinition{}
+	if canEdit {
+		actions = append(actions, collectiontable.RowActionDefinition{
+			ID:        "edit",
+			Kind:      "button",
+			Execution: "frontend",
+		})
+	}
+	if canView {
+		actions = append(actions, collectiontable.RowActionDefinition{
 			ID:        "view",
 			Kind:      "button",
 			Execution: "frontend",
-		},
+		})
 	}
+	return actions
 }
 
 func (s *Service) resolveRuntimeRecordGUIDSupport(

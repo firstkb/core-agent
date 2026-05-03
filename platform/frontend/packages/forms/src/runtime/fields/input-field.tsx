@@ -1,4 +1,5 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, FocusEvent } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Input,
@@ -45,17 +46,32 @@ export function InputField({
   onFieldChange,
   value,
 }: RuntimeFieldControlProps) {
+  const externalValue = getStringValue(value);
+  const [draftValue, setDraftValue] = useState(externalValue);
+
+  useEffect(() => {
+    setDraftValue(externalValue);
+  }, [externalValue]);
+
+  function commitDraft(event: FocusEvent<HTMLInputElement>) {
+    const nextValue = event.currentTarget.value;
+    if (nextValue !== externalValue) {
+      onFieldChange(field.id, nextValue, field);
+    }
+  }
+
   return (
     <Input
       aria-invalid={error ? "true" : undefined}
       disabled={disabled}
       id={controlId}
       invalid={Boolean(error)}
-      onChange={(event: ChangeEvent<HTMLInputElement>) => onFieldChange(field.id, event.currentTarget.value, field)}
+      onBlur={commitDraft}
+      onChange={(event: ChangeEvent<HTMLInputElement>) => setDraftValue(event.currentTarget.value)}
       placeholder={field.placeholder}
       step={getInputStep(field.type)}
       type={getInputType(field.type)}
-      value={getStringValue(value)}
+      value={draftValue}
     />
   );
 }

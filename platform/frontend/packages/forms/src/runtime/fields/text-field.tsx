@@ -1,4 +1,5 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, FocusEvent } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Textarea,
@@ -17,16 +18,31 @@ export function LongTextField({
   onFieldChange,
   value,
 }: RuntimeFieldControlProps) {
+  const externalValue = getStringValue(value);
+  const [draftValue, setDraftValue] = useState(externalValue);
+
+  useEffect(() => {
+    setDraftValue(externalValue);
+  }, [externalValue]);
+
+  function commitDraft(event: FocusEvent<HTMLTextAreaElement>) {
+    const nextValue = event.currentTarget.value;
+    if (nextValue !== externalValue) {
+      onFieldChange(field.id, nextValue, field);
+    }
+  }
+
   return (
     <Textarea
       aria-invalid={error ? "true" : undefined}
       disabled={disabled}
       id={controlId}
       invalid={Boolean(error)}
-      onChange={(event: ChangeEvent<HTMLTextAreaElement>) => onFieldChange(field.id, event.currentTarget.value, field)}
+      onBlur={commitDraft}
+      onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setDraftValue(event.currentTarget.value)}
       placeholder={field.placeholder}
       rows={field.rows}
-      value={getStringValue(value)}
+      value={draftValue}
     />
   );
 }

@@ -15,6 +15,7 @@ import (
 
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
 	formbuilder "dtriton.com/platform/backend/modules/tenant/platformstudioformbuilder"
+	formruntime "dtriton.com/platform/backend/modules/tenant/platformstudioformruntime"
 	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
 )
 
@@ -67,6 +68,7 @@ type Server struct {
 	tokenValidator                authpkg.JWTIssuer
 	profileHTTP                   *profilesvc.Handler
 	platformStudioFormBuilderHTTP *formbuilder.Handler
+	platformStudioFormRuntimeHTTP *formruntime.Handler
 }
 
 func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {

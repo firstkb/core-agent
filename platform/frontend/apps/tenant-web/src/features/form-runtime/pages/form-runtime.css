@@ -18,6 +18,18 @@
   overflow-y: auto;
 }
 
+.tenant-web__form-runtime-form-state {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+}
+
+.tenant-web__form-runtime-form-state--error {
+  color: var(--color-danger);
+}
+
 .tenant-web__form-runtime-list-page > .admin-web__collection-surface {
   min-height: 24rem;
   max-width: 100%;

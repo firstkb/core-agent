@@ -7,6 +7,7 @@ import {
 } from "./runtime-form";
 import type { RuntimeFormDefinition } from "./runtime-form";
 import { createRuntimeFormFixture } from "./runtime-form-fixtures";
+import { createRuntimeFormDefinitionFromSchema } from "./runtime-form-schema";
 
 describe("runtime form helpers", () => {
   it("validates required editable fields from a fixture definition", () => {
@@ -163,5 +164,140 @@ describe("runtime form helpers", () => {
     };
 
     expect(applyRuntimeWorkflowStatus(withInvalidFinalValue, values, "final")).toBe(values);
+  });
+
+  it("compiles Form Builder runtime schema into sections, fields, rules, and workflow status", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              fieldId: "location",
+              kind: "short_text",
+              label: "Location",
+              required: true,
+            },
+            {
+              fieldId: "status",
+              kind: "single_select",
+              label: "Status",
+              options: [
+                { label: "New", value: "new" },
+                { label: "Finish", value: "finish" },
+              ],
+            },
+            {
+              fieldId: "priority",
+              kind: "single_select",
+              label: "Priority",
+              options: [
+                { label: "Normal", value: "normal" },
+                { label: "High", value: "high" },
+              ],
+            },
+            {
+              fieldId: "reported_by",
+              kind: "db_lookup",
+              label: "Reported By",
+              options: [
+                { label: "Andrew Owner", value: "77" },
+              ],
+              preset: "contact_lookup",
+              selectionMode: "single",
+              semanticRole: "reportedBy",
+            },
+          ],
+        },
+      },
+      mode: "create",
+      modelId: "sor",
+      title: "SOR",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              id: "summary",
+              order: 1,
+              parentId: null,
+              title: "Summary",
+              type: "section",
+              visibility: "visible",
+            },
+            {
+              fieldId: "location",
+              id: "node-location",
+              order: 1,
+              parentId: "summary",
+              rules: {
+                requirementRules: [
+                  {
+                    effect: "required",
+                    id: "require-location",
+                    when: {
+                      all: [
+                        {
+                          fieldId: "priority",
+                          id: "condition-1",
+                          operator: "eq",
+                          value: "high",
+                        },
+                      ],
+                    },
+                  },
+                ],
+                visibilityRules: [],
+              },
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "status",
+              id: "node-status",
+              order: 2,
+              parentId: "summary",
+              type: "field",
+              visibility: "readonly",
+            },
+            {
+              fieldId: "priority",
+              id: "node-priority",
+              order: 3,
+              parentId: "summary",
+              runtimePreset: "radio_chips",
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "reported_by",
+              id: "node-reported-by",
+              order: 4,
+              parentId: "summary",
+              type: "field",
+              visibility: "visible",
+            },
+          ],
+          systemFields: {
+            workflowStatus: {
+              fieldId: "status",
+              finalValue: "finish",
+              initialValue: "new",
+            },
+          },
+        },
+      },
+      viewId: "default",
+    });
+
+    expect(definition.sections).toHaveLength(1);
+    expect(definition.sections[0]?.title).toBe("Summary");
+    expect(definition.workflowStatus?.fieldId).toBe("status");
+    expect(findRuntimeFormField(definition, "location")?.width).toBe("full");
+    expect(findRuntimeFormField(definition, "location")?.rules?.requirementRules).toHaveLength(1);
+    expect(findRuntimeFormField(definition, "status")?.readonly).toBe(true);
+    expect(findRuntimeFormField(definition, "priority")?.type).toBe("radio");
+    expect(findRuntimeFormField(definition, "reported_by")?.type).toBe("single_select");
+    expect(findRuntimeFormField(definition, "reported_by")?.readonly).toBe(false);
+    expect(findRuntimeFormField(definition, "reported_by")?.options?.[0]?.label).toBe("Andrew Owner");
   });
 });

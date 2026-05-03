@@ -49,6 +49,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 
 	server.profileHTTP = buildTenantProfileModule(server.sqlClient)
 	server.platformStudioFormBuilderHTTP = buildPlatformStudioFormBuilderModule(server.sqlClient)
+	server.platformStudioFormRuntimeHTTP = buildPlatformStudioFormRuntimeModule(server.sqlClient)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()
@@ -75,7 +76,7 @@ func (srv *Server) buildHTTPHandler(mux http.Handler) http.Handler {
 	if srv.config.Origin != "" {
 		corsCfg := appmw.CORSConfig{
 			AllowedOrigins:   splitAllowedOrigins(srv.config.Origin),
-			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
+			AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions},
 			AllowedHeaders:   []string{"Content-Type", "Authorization", "X-Requested-With"},
 			AllowCredentials: true,
 			Debug:            false,

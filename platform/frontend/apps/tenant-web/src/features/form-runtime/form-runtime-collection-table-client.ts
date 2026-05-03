@@ -27,12 +27,22 @@ type BackendEnvelope<T> = {
 };
 
 type FormRuntimeCollectionTableSessionClient = {
+  createRecord: (
+    accessToken: string,
+    input: FormRuntimeRecordMutationRequest,
+  ) => Promise<FormRuntimeRecordMutationResponse>;
   createSavedFilterSet: (
     accessToken: string,
     input: CollectionTableSavedFilterSetCreateInput,
   ) => Promise<CollectionTableSavedFilterSet>;
   deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
+  finishRecord: (
+    accessToken: string,
+    docGuid: string,
+    input: FormRuntimeRecordFinishRequest,
+  ) => Promise<FormRuntimeRecordMutationResponse>;
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
+  loadForm: (accessToken: string, docGuid?: string) => Promise<FormRuntimeFormResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
   toggleFavorite: (accessToken: string) => Promise<CollectionTableFavoriteToggleResult>;
@@ -40,6 +50,11 @@ type FormRuntimeCollectionTableSessionClient = {
     accessToken: string,
     request: CollectionTableQueryRequest,
   ) => Promise<CollectionTableQueryResponse>;
+  updateRecord: (
+    accessToken: string,
+    docGuid: string,
+    input: FormRuntimeRecordMutationRequest,
+  ) => Promise<FormRuntimeRecordMutationResponse>;
 };
 
 export type FormRuntimeRecordField = {
@@ -63,6 +78,44 @@ export type FormRuntimeRecordResponse = {
   title: string;
 };
 
+export type FormRuntimeFormResponse = {
+  dataSchema: Record<string, unknown>;
+  description?: string;
+  docGuid?: string;
+  modelId: string;
+  revision?: string;
+  sourceType?: string;
+  surfaceId: string;
+  title: string;
+  uiSchema: Record<string, unknown>;
+  values: Record<string, unknown>;
+  viewId: string;
+};
+
+export type FormRuntimeRecordMutationRequest = {
+  clientCreateToken?: string;
+  expectedRevision?: string;
+  values: Record<string, unknown>;
+};
+
+export type FormRuntimeRecordFinishRequest = {
+  expectedRevision?: string;
+};
+
+export type FormRuntimeRecordValidationError = {
+  fieldId?: string;
+  message: string;
+};
+
+export type FormRuntimeRecordMutationResponse = {
+  created?: boolean;
+  docGuid: string;
+  revision?: string;
+  status?: string;
+  validationErrors?: ReadonlyArray<FormRuntimeRecordValidationError>;
+  values: Record<string, unknown>;
+};
+
 function normalizeRuntimeRecordResponse(
   payload: FormRuntimeRecordResponse,
 ): FormRuntimeRecordResponse {
@@ -71,6 +124,60 @@ function normalizeRuntimeRecordResponse(
     subtables: Array.isArray(payload?.subtables) ? payload.subtables : [],
     surfaceId: typeof payload?.surfaceId === "string" ? payload.surfaceId : "",
     title: typeof payload?.title === "string" ? payload.title : "",
+  };
+}
+
+function normalizeRuntimeRecordMutationResponse(
+  payload: FormRuntimeRecordMutationResponse,
+): FormRuntimeRecordMutationResponse {
+  const values = payload?.values && typeof payload.values === "object" && !Array.isArray(payload.values)
+    ? payload.values
+    : {};
+
+  return {
+    created: Boolean(payload?.created),
+    docGuid: typeof payload?.docGuid === "string" ? payload.docGuid : "",
+    revision: typeof payload?.revision === "string" ? payload.revision : undefined,
+    status: typeof payload?.status === "string" ? payload.status : undefined,
+    validationErrors: Array.isArray(payload?.validationErrors)
+      ? payload.validationErrors
+        .filter((error): error is FormRuntimeRecordValidationError =>
+          Boolean(error && typeof error.message === "string"),
+        )
+        .map((error) => ({
+          fieldId: typeof error.fieldId === "string" ? error.fieldId : undefined,
+          message: error.message,
+        }))
+      : [],
+    values,
+  };
+}
+
+function normalizeRuntimeFormResponse(
+  payload: FormRuntimeFormResponse,
+): FormRuntimeFormResponse {
+  const dataSchema = payload?.dataSchema && typeof payload.dataSchema === "object" && !Array.isArray(payload.dataSchema)
+    ? payload.dataSchema
+    : {};
+  const uiSchema = payload?.uiSchema && typeof payload.uiSchema === "object" && !Array.isArray(payload.uiSchema)
+    ? payload.uiSchema
+    : {};
+  const values = payload?.values && typeof payload.values === "object" && !Array.isArray(payload.values)
+    ? payload.values
+    : {};
+
+  return {
+    dataSchema,
+    description: typeof payload?.description === "string" ? payload.description : undefined,
+    docGuid: typeof payload?.docGuid === "string" ? payload.docGuid : undefined,
+    modelId: typeof payload?.modelId === "string" ? payload.modelId : "",
+    revision: typeof payload?.revision === "string" ? payload.revision : undefined,
+    sourceType: typeof payload?.sourceType === "string" ? payload.sourceType : undefined,
+    surfaceId: typeof payload?.surfaceId === "string" ? payload.surfaceId : "",
+    title: typeof payload?.title === "string" ? payload.title : "",
+    uiSchema,
+    values,
+    viewId: typeof payload?.viewId === "string" ? payload.viewId : "",
   };
 }
 
@@ -213,6 +320,18 @@ export function createFormRuntimeCollectionTableClient(options: {
     : `/app/forms/${encodeURIComponent(options.modelId)}/views/${encodeURIComponent(options.viewId)}`;
 
   return {
+    async createRecord(accessToken, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+      return normalizeRuntimeRecordMutationResponse(response);
+    },
     async createSavedFilterSet(accessToken, input) {
       return requestTenantCollectionTable<CollectionTableSavedFilterSet>(
         options.baseUrl,
@@ -234,6 +353,18 @@ export function createFormRuntimeCollectionTableClient(options: {
         },
       );
     },
+    async finishRecord(accessToken, docGuid, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(docGuid)}/finish`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+      return normalizeRuntimeRecordMutationResponse(response);
+    },
     async loadMeta(accessToken) {
       return requestTenantCollectionTable<CollectionTableMetaResponse>(
         options.baseUrl,
@@ -243,6 +374,20 @@ export function createFormRuntimeCollectionTableClient(options: {
           method: "GET",
         },
       );
+    },
+    async loadForm(accessToken, docGuid) {
+      const formPath = docGuid
+        ? `${pathPrefix}/records/${encodeURIComponent(docGuid)}/form`
+        : `${pathPrefix}/form`;
+      const response = await requestTenantCollectionTable<FormRuntimeFormResponse>(
+        options.baseUrl,
+        formPath,
+        {
+          accessToken,
+          method: "GET",
+        },
+      );
+      return normalizeRuntimeFormResponse(response);
     },
     async loadRecord(accessToken, docGuid) {
       const response = await requestTenantCollectionTable<FormRuntimeRecordResponse>(
@@ -287,6 +432,18 @@ export function createFormRuntimeCollectionTableClient(options: {
           method: "POST",
         },
       );
+    },
+    async updateRecord(accessToken, docGuid, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(docGuid)}`,
+        {
+          accessToken,
+          body: input,
+          method: "PATCH",
+        },
+      );
+      return normalizeRuntimeRecordMutationResponse(response);
     },
   };
 }

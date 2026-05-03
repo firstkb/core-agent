@@ -70,3 +70,9 @@ export type {
   RuntimeFormFixture,
   RuntimeFormFixtureInput,
 } from "./runtime-form-fixtures";
+export {
+  createRuntimeFormDefinitionFromSchema,
+} from "./runtime-form-schema";
+export type {
+  RuntimeFormSchemaSource,
+} from "./runtime-form-schema";

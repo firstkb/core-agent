@@ -136,7 +136,45 @@ Real runtime API namespace:
 - `POST /app/forms/{modelId}/views/{viewId}/saved-filters`
 - `DELETE /app/forms/{modelId}/views/{viewId}/saved-filters/{savedFilterId}`
 - `GET /app/forms/{modelId}/views/{viewId}/records/{docGuid}`
+- `GET /app/forms/{modelId}/views/{viewId}/form`
+- `GET /app/forms/{modelId}/views/{viewId}/records/{docGuid}/form`
+- `POST /app/forms/{modelId}/views/{viewId}/records`
+- `PATCH /app/forms/{modelId}/views/{viewId}/records/{docGuid}`
+- `POST /app/forms/{modelId}/views/{viewId}/records/{docGuid}/finish`
 - `POST /app/forms/{modelId}/views/{viewId}/favorite/toggle`
+
+Runtime record mutation contract:
+
+- form read response:
+  `{ dataSchema: Record<string, unknown>, description?: string, docGuid?: string, modelId: string, revision?: string, sourceType?: string, surfaceId: string, title: string, uiSchema: Record<string, unknown>, values: Record<string, unknown>, viewId: string }`
+- form read response must include the current option for single-value
+  `contact_lookup` fields when the record/default values contain an id, so
+  readonly and editable lookup controls can render a display label without a
+  separate initial lookup request
+- create request: `{ clientCreateToken?: string, values: Record<string, unknown> }`
+- edit/autosave request: `{ expectedRevision?: string, values: Record<string, unknown> }`
+- finish request: `{ expectedRevision?: string }`
+- create/edit/finish response:
+  `{ created?: boolean, docGuid?: string, revision?: string, status?: string, validationErrors?: Array<{ fieldId?: string, message: string }>, values: Record<string, unknown> }`
+- create validates required root fields before insert and returns `validationErrors`
+  in an otherwise successful API response when the record is not yet created
+- create applies bound System Field defaults server-side when compatible:
+  Reported By, Reported Date, and workflow initial status
+- edit/autosave patches only provided field values on an existing root record
+- finish is a command boundary; the current implementation applies the bound
+  workflow final status when valid and leaves future Action Builder side
+  effects out of this route
+- `clientCreateToken` is part of the adapter contract for a stable create
+  session key; when it is a UUID and the source exposes a GUID column, create
+  inserts it as the record GUID and duplicate-token unique violations return
+  the existing record instead of creating another one
+
+Runtime list action metadata:
+
+- toolbar create/`Start New` is visible when the view allows `canAdd` and the
+  runtime source exposes a record GUID
+- frontend row actions expose `edit` before `view` when both are allowed; both
+  require record GUID support
 
 Platform Studio preview API namespace:
 
@@ -539,15 +577,17 @@ It is not active today.
 
 ## Package Boundary
 
-Current transitional backend package:
+Current backend packages:
 
 - `platformstudioformbuilder`
+- `platformstudioformruntime`
 
-It remains the authoring/control-plane owner and currently contains early runtime list/read scaffolding.
+`platformstudioformbuilder` remains the authoring/control-plane owner and still contains early runtime list/read scaffolding.
+`platformstudioformruntime` owns the runtime record write boundary for create/edit/finish.
 
 Future package direction:
 
-- `platformstudioformruntime`: runtime list/read/create/edit/save records, runtime query/filter/sort/page/row actions, and record repositories.
+- `platformstudioformruntime`: continue moving runtime list/read/query/filter/sort/page/row actions and record repositories out of `platformstudioformbuilder`.
 - `platformstudioformactions`: after-save hooks, notifications, integrations, workflow triggers, async side effects, retries, and failure reporting.
 
 Do not expand `platformstudioformbuilder` into a catch-all package for every Platform Studio tool.

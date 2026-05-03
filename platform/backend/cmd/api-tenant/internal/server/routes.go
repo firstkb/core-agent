@@ -51,6 +51,7 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 		}, srv.logger))
 
 	srv.registerPlatformStudioFormBuilderRoutes(b)
+	srv.registerPlatformStudioFormRuntimeRoutes(b)
 
 	return b.Mux(), b.Classifier()
 }

@@ -1,27 +1,27 @@
 # Work
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `complete`
-- Owner goal: Stabilize Form Builder; Slice 4 covers choice button option style runtime contract.
+- Status: `paused`
+- Owner goal: Stabilize Form Builder; pause after Slices 1-4 without closing the work.
 
 ## Understanding
 
-The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slice 1, Slice 2, and Slice 3 are verified; the owner approved Slice 4 on 2026-05-03 with a strict semantic style-list direction.
+The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-4 are implemented and verified. On 2026-05-03 the owner paused the work without closing it.
 
 ## Agreed Scope
 
-- In: fix `FB-RT-005` by replacing raw per-option button colors with strict semantic variants, normalizing Form Builder `choiceDisplay.optionStyles`, mapping variants into `@platform/forms` runtime options, applying approved runtime button/toggle styling, updating focused tests/docs/memory/evidence, and committing scoped Slice 4 files in the current branch.
-- Out: arbitrary color pickers, renderer-side color guessing, backend/runtime grants, Navigation Builder ACL, Action Builder, destructive schema/data migration, release/deploy work, and unrelated artifact changes.
+- In: record completed work in the original source findings file, add future lookup settings/filter work, and pause the active artifact without archiving/closing it.
+- Out: backend/runtime grants, Navigation Builder ACL, Action Builder, destructive schema/data migration, release/deploy work, and unrelated artifact changes.
 
 ## Continuity Snapshot
 
 - Latest owner correction: use `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` as the input file and create a separate artifact folder.
-- Current phase: `closeout`
+- Current phase: `paused`
 - Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. No release/destructive gates are in scope.
 - Evidence status: Slice 1, Slice 2, Slice 3, and Slice 4 checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
-- Next allowed action: owner-selected follow-up after Slice 4 closeout.
+- Next allowed action: resume from `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` and this artifact; likely next slice is lookup field settings and View lookup filters.
 
 ## Decisions
 
@@ -37,6 +37,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - For Slice 4, accepted choice button option style variants are `default`, `primary`, `secondary`, `info`, `success`, `warning`, and `danger`.
 - `default` is represented by no persisted style entry; raw `backgroundColor`, `textColor`, and `borderColor` are not runtime contract and are ignored during normalization.
 - Runtime single/multi-select buttons map option variants to forms package CSS classes backed by product tokens, without expanding the shared `ui-kit` Toggle API for per-item variants.
+- Pause decision: do not archive or close this artifact yet; keep it active for resume.
 
 ## Plan
 
@@ -47,6 +48,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 5. Implement Slice 2 draft hydration/save reliability.
 6. Implement Slice 3 authoring quality-of-life follow-ups.
 7. Implement Slice 4 choice button semantic option style contract.
+8. Pause without closing and record completed work/future lookup work in the source findings file.
 
 ## Risks / Gates
 
@@ -65,4 +67,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Commit scoped Slice 4 changes on the current branch, then continue with another owner-selected stabilization item.
+Work is paused, not closed. Resume with the source findings file and planned lookup settings/filter review when the owner restarts.

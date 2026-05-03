@@ -5,7 +5,7 @@
 
 ## Summary
 
-Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1, Slice 2, Slice 3, and Slice 4 after owner approval. Slice 4 fixes `FB-RT-005` with a strict semantic choice-button option style contract and runtime rendering support.
+Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1, Slice 2, Slice 3, and Slice 4 after owner approval. Slice 4 fixes `FB-RT-005` with a strict semantic choice-button option style contract and runtime rendering support. On 2026-05-03 the owner paused, but did not close, the Form Builder stabilization work; the original source findings file was updated with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice.
 
 ## Commands / Checks
 
@@ -42,9 +42,12 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 after Slice 4 | Same Node engine warning observed. |
 | `pnpm --filter @platform/tenant-web test` | passed | 11 files / 34 tests passed | Full tenant-web Vitest suite after Slice 4. Same Node engine warning observed. |
 | `scripts/preflight.sh` | passed | lite preflight passed after Slice 4 | Includes docs memory, env policy, and runtime drift checks. |
+| `git diff --check` | passed | no output | Whitespace check after pause/source-findings docs update. |
+| `scripts/preflight.sh` | passed | lite preflight passed after pause docs update | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
 - `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/source-findings.md`
 - `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/solution-analysis.md`
@@ -110,7 +113,8 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 
 ## Residual Risks
 
-- Existing uncommitted changes remain in the source 2026-04-30 artifact and were not reverted or included intentionally.
+- Existing uncommitted changes remain in `maestro-improvements.md` and `work.md` under the source 2026-04-30 artifact and were not reverted or included intentionally.
 - Node engine mismatch warning remains in this shell (`v18.17.0` vs package `>=22.12.0`), although tenant-web typecheck/lint/tests passed.
 - Ready-made `radio_group` and `checkbox_group` defaults remain unchanged pending an explicit product decision.
+- Lookup field authoring settings and View lookup filters are recorded as the next likely slice and remain unimplemented.
 - Slice 4 visual appearance is covered by token-backed CSS and schema/unit tests; no browser screenshot evidence has been collected yet.

@@ -47,6 +47,7 @@ instead of them.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
 - Static/external multivalue storage remains deferred to a future explicit slice.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
+- Lookup field authoring settings and View filters need a per-lookup review for `db_lookup`, `Contact`, `Project`, `Company`, `Reported By`, and similar lookup-heavy presets, including lookup-aware operators, display outputs, stored values, and derived values.
 - Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.
 

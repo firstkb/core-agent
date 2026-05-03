@@ -1,11 +1,11 @@
 # Closeout
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `complete`
+- Status: `paused`
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified. The owner paused the work on 2026-05-03 without closing or archiving it.
 
 ## Outcome
 
@@ -23,6 +23,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Added a transient Grid settings switch to show only visible/list-active columns above the field list without persisting the filter or dropping hidden column metadata.
 - Replaced raw per-option color controls for choice button styles with strict semantic variants: `default`, `primary`, `secondary`, `info`, `success`, `warning`, and `danger`.
 - Mapped semantic option styles through `@platform/forms` runtime schema and button rendering while ignoring raw color-only legacy entries.
+- Updated the original source findings file with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice.
 
 ## Checks
 
@@ -31,8 +32,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work memory to move Slice 1, Slice 2, Slice 3, and Slice 4 accepted behavior from planned/open work to code-confirmed current state.
+Updated planned-work memory to move Slice 1, Slice 2, Slice 3, and Slice 4 accepted behavior from planned/open work to code-confirmed current state, and recorded the per-lookup settings/View filter review as future work.
 
 ## Next Step
 
-Continue with another owner-selected stabilization item.
+Resume from `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` and this active artifact. The likely next slice is lookup field settings and lookup-aware View filters.

@@ -32,10 +32,22 @@ type FormRuntimeCollectionTableSessionClient = {
     accessToken: string,
     input: FormRuntimeRecordMutationRequest,
   ) => Promise<FormRuntimeRecordMutationResponse>;
+  createSubformRecord: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
+    input: FormRuntimeRecordMutationRequest,
+  ) => Promise<FormRuntimeRecordMutationResponse>;
   createSavedFilterSet: (
     accessToken: string,
     input: CollectionTableSavedFilterSetCreateInput,
   ) => Promise<CollectionTableSavedFilterSet>;
+  deleteSubformRecord: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
+    docGuid: string,
+  ) => Promise<void>;
   deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
   finishRecord: (
     accessToken: string,
@@ -45,6 +57,12 @@ type FormRuntimeCollectionTableSessionClient = {
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
   loadForm: (accessToken: string, docGuid?: string) => Promise<FormRuntimeFormResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
+  loadSubform: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
+    docGuid?: string,
+  ) => Promise<FormRuntimeFormResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
   runBulkAction?: (accessToken: string, input: CollectionTableBulkActionRequest) => Promise<void>;
   toggleFavorite: (accessToken: string) => Promise<CollectionTableFavoriteToggleResult>;
@@ -54,6 +72,13 @@ type FormRuntimeCollectionTableSessionClient = {
   ) => Promise<CollectionTableQueryResponse>;
   updateRecord: (
     accessToken: string,
+    docGuid: string,
+    input: FormRuntimeRecordMutationRequest,
+  ) => Promise<FormRuntimeRecordMutationResponse>;
+  updateSubformRecord: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
     docGuid: string,
     input: FormRuntimeRecordMutationRequest,
   ) => Promise<FormRuntimeRecordMutationResponse>;
@@ -334,6 +359,18 @@ export function createFormRuntimeCollectionTableClient(options: {
       );
       return normalizeRuntimeRecordMutationResponse(response);
     },
+    async createSubformRecord(accessToken, parentDocGuid, subformId, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/records`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+      return normalizeRuntimeRecordMutationResponse(response);
+    },
     async createSavedFilterSet(accessToken, input) {
       return requestTenantCollectionTable<CollectionTableSavedFilterSet>(
         options.baseUrl,
@@ -349,6 +386,16 @@ export function createFormRuntimeCollectionTableClient(options: {
       await requestTenantCollectionTable<void>(
         options.baseUrl,
         `${pathPrefix}/saved-filters/${encodeURIComponent(savedFilterId)}`,
+        {
+          accessToken,
+          method: "DELETE",
+        },
+      );
+    },
+    async deleteSubformRecord(accessToken, parentDocGuid, subformId, docGuid) {
+      await requestTenantCollectionTable<void>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/records/${encodeURIComponent(docGuid)}`,
         {
           accessToken,
           method: "DELETE",
@@ -402,6 +449,20 @@ export function createFormRuntimeCollectionTableClient(options: {
       );
       return normalizeRuntimeRecordResponse(response);
     },
+    async loadSubform(accessToken, parentDocGuid, subformId, docGuid) {
+      const subformPath = docGuid
+        ? `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/records/${encodeURIComponent(docGuid)}/form`
+        : `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/form`;
+      const response = await requestTenantCollectionTable<FormRuntimeFormResponse>(
+        options.baseUrl,
+        subformPath,
+        {
+          accessToken,
+          method: "GET",
+        },
+      );
+      return normalizeRuntimeFormResponse(response);
+    },
     async loadSearchSuggestions(accessToken) {
       const response = await requestTenantCollectionTable<CollectionTableSearchSuggestionsResponse>(
         options.baseUrl,
@@ -453,6 +514,18 @@ export function createFormRuntimeCollectionTableClient(options: {
       const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
         options.baseUrl,
         `${pathPrefix}/records/${encodeURIComponent(docGuid)}`,
+        {
+          accessToken,
+          body: input,
+          method: "PATCH",
+        },
+      );
+      return normalizeRuntimeRecordMutationResponse(response);
+    },
+    async updateSubformRecord(accessToken, parentDocGuid, subformId, docGuid, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/records/${encodeURIComponent(docGuid)}`,
         {
           accessToken,
           body: input,

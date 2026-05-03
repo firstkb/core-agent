@@ -14,6 +14,9 @@ import {
   type RuntimeFormFieldType,
   type RuntimeFormMode,
   type RuntimeFormSaveState,
+  type RuntimeFormSubformDataById,
+  type RuntimeFormSubformDefinition,
+  type RuntimeFormSubformRow,
   type RuntimeFormValidationErrors,
   type RuntimeFormValue,
   type RuntimeFormValues,
@@ -21,7 +24,9 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -40,6 +45,7 @@ import { useTenantRuntimeConfig } from "../../../app/tenant-runtime-config-conte
 import {
   createFormRuntimeCollectionTableClient,
   type FormRuntimeFormResponse,
+  type FormRuntimeRecordResponse,
   type FormRuntimeRecordMutationResponse,
   type FormRuntimeRecordValidationError,
 } from "../form-runtime-collection-table-client";
@@ -57,14 +63,22 @@ type RuntimeFormFieldRevealRequest = {
   requestKey: number;
 };
 
+type SubformDeleteDialogState = {
+  row: RuntimeFormSubformRow;
+  subform: RuntimeFormSubformDefinition;
+};
+
+type RuntimeFormSessionState = {
+  activeTabs?: RuntimeFormActiveTabs;
+  docGuid?: string;
+  formResponse?: FormRuntimeFormResponse;
+  revision?: string;
+  values?: Record<string, unknown>;
+};
+
 type RuntimeFormNavigationState = {
-  runtimeFormSession?: {
-    activeTabs?: RuntimeFormActiveTabs;
-    docGuid?: string;
-    formResponse?: FormRuntimeFormResponse;
-    revision?: string;
-    values?: Record<string, unknown>;
-  };
+  parentRuntimeFormSession?: RuntimeFormSessionState;
+  runtimeFormSession?: RuntimeFormSessionState;
 };
 
 const AUTOSAVE_DELAY_MS = 350;
@@ -207,6 +221,25 @@ function runtimeValidationErrorsFromServer(
   return errors;
 }
 
+function runtimeSubformsFromRecord(record: FormRuntimeRecordResponse) {
+  const subforms: RuntimeFormSubformDataById = {};
+  record.subtables.forEach((subtable) => {
+    const rows: RuntimeFormSubformRow[] = subtable.rows.map((row) => ({
+      cells: Object.fromEntries(
+        Object.entries(row.cells).map(([fieldId, cell]) => [fieldId, {
+          displayValue: cell.displayValue,
+          html: cell.html,
+          label: cell.label,
+          value: cell.value,
+        }]),
+      ),
+      id: row.id,
+    }));
+    subforms[subtable.id] = { rows };
+  });
+  return subforms;
+}
+
 function firstRuntimeValidationMessage(
   validationErrors: ReadonlyArray<FormRuntimeRecordValidationError> | undefined,
 ) {
@@ -230,8 +263,10 @@ function isConflictRuntimeError(requestError: unknown) {
 
 export function FormsRuntimeFormPage({
   mode,
+  scope = "root",
 }: {
   mode: RuntimeFormMode;
+  scope?: "root" | "subform";
 }) {
   const params = useParams();
   const location = useLocation();
@@ -242,6 +277,9 @@ export function FormsRuntimeFormPage({
   const modelId = params.modelId?.trim() ?? "";
   const viewId = params.viewId?.trim() ?? "";
   const routeDocGuid = params.docGuid?.trim() ?? "";
+  const parentDocGuid = params.parentDocGuid?.trim() ?? "";
+  const subformId = params.subformId?.trim() ?? "";
+  const isSubform = scope === "subform";
   const commitMode: RuntimeFormCommitMode = searchParams.get("source") === "static" || searchParams.get("commit") === "finish"
     ? "finish"
     : "autosave";
@@ -250,6 +288,12 @@ export function FormsRuntimeFormPage({
       return null;
     }
     return location.state.runtimeFormSession ?? null;
+  }, [location.state]);
+  const restoredParentSession = useMemo(() => {
+    if (!isRuntimeNavigationState(location.state)) {
+      return null;
+    }
+    return location.state.parentRuntimeFormSession ?? null;
   }, [location.state]);
   const client = useMemo(
     () => modelId && viewId
@@ -269,6 +313,8 @@ export function FormsRuntimeFormPage({
   const [fieldRevealRequest, setFieldRevealRequest] = useState<RuntimeFormFieldRevealRequest | null>(null);
   const [finishDialog, setFinishDialog] = useState<FinishDialogState | null>(null);
   const [saveState, setSaveState] = useState<RuntimeFormSaveState>("saving");
+  const [subformDeleteDialog, setSubformDeleteDialog] = useState<SubformDeleteDialogState | null>(null);
+  const [subforms, setSubforms] = useState<RuntimeFormSubformDataById>({});
   const definition = useMemo(() => {
     if (!formResponse) {
       return null;
@@ -307,6 +353,10 @@ export function FormsRuntimeFormPage({
   const revisionRef = useRef(restoredSession?.revision ?? "");
   const currentDocGuidRef = useRef(routeDocGuid || restoredSession?.docGuid || "");
   const activeTabsRef = useRef<RuntimeFormActiveTabs>(restoredSession?.activeTabs ?? {});
+  const routeIsInvalid = !modelId
+    || !viewId
+    || (mode === "edit" && !routeDocGuid)
+    || (isSubform && (!parentDocGuid || !subformId));
 
   const getRuntimeAccessToken = useCallback(() => {
     const accessToken = getAccessToken();
@@ -321,10 +371,10 @@ export function FormsRuntimeFormPage({
     const restoredActiveTabs = restoredSession?.activeTabs ?? {};
     activeTabsRef.current = restoredActiveTabs;
     setActiveTabs(restoredActiveTabs);
-  }, [mode, modelId, restoredSession, routeDocGuid, viewId]);
+  }, [isSubform, mode, modelId, parentDocGuid, restoredSession, routeDocGuid, subformId, viewId]);
 
   useEffect(() => {
-    if (!client || !modelId || !viewId || (mode === "edit" && !routeDocGuid)) {
+    if (!client || routeIsInvalid) {
       return;
     }
 
@@ -339,7 +389,11 @@ export function FormsRuntimeFormPage({
     if (!restoredSession?.formResponse) {
       setFormResponse(null);
     }
-    void client.loadForm(accessToken, mode === "edit" ? routeDocGuid : undefined)
+    const loadFormPromise = isSubform
+      ? client.loadSubform(accessToken, parentDocGuid, subformId, mode === "edit" ? routeDocGuid : undefined)
+      : client.loadForm(accessToken, mode === "edit" ? routeDocGuid : undefined);
+
+    void loadFormPromise
       .then((response) => {
         if (isCancelled) {
           return;
@@ -363,7 +417,18 @@ export function FormsRuntimeFormPage({
     return () => {
       isCancelled = true;
     };
-  }, [client, getRuntimeAccessToken, mode, modelId, restoredSession, routeDocGuid, signOut, viewId]);
+  }, [
+    client,
+    getRuntimeAccessToken,
+    isSubform,
+    mode,
+    parentDocGuid,
+    restoredSession,
+    routeDocGuid,
+    routeIsInvalid,
+    signOut,
+    subformId,
+  ]);
 
   useEffect(() => {
     if (!definition || !formResponse) {
@@ -378,7 +443,9 @@ export function FormsRuntimeFormPage({
     setErrors({});
     setFieldRevealRequest(null);
     setFinishDialog(null);
+    setSubformDeleteDialog(null);
     setSaveState("idle");
+    setSubforms({});
     latestValuesRef.current = nextValues;
     revisionRef.current = restoredSession?.revision ?? formResponse.revision ?? "";
     currentDocGuidRef.current = routeDocGuid || restoredSession?.docGuid || formResponse.docGuid || "";
@@ -392,7 +459,7 @@ export function FormsRuntimeFormPage({
     lastPatchSucceededRef.current = true;
     lastRuntimeRequestErrorKindRef.current = null;
     clientCreateTokenRef.current = createClientCreateToken();
-  }, [definition, formResponse, initialValues, restoredSession, routeDocGuid]);
+  }, [definition, formResponse, initialValues, isSubform, parentDocGuid, restoredSession, routeDocGuid, subformId]);
 
   useEffect(() => {
     latestValuesRef.current = values;
@@ -406,7 +473,41 @@ export function FormsRuntimeFormPage({
     };
   }, []);
 
-  if (!modelId || !viewId || !client || (mode === "edit" && !routeDocGuid)) {
+  useEffect(() => {
+    if (isSubform || !client || !definition || !hasServerRecordRef.current || !currentDocGuidRef.current) {
+      setSubforms({});
+      return;
+    }
+
+    const accessToken = getRuntimeAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
+    let isCancelled = false;
+    void client.loadRecord(accessToken, currentDocGuidRef.current)
+      .then((record) => {
+        if (!isCancelled) {
+          setSubforms(runtimeSubformsFromRecord(record));
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (isCancelled) {
+          return;
+        }
+        if (isUnauthorizedApiError(requestError)) {
+          void signOut();
+          return;
+        }
+        setSubforms({});
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [client, definition, formResponse?.docGuid, getRuntimeAccessToken, isSubform, routeDocGuid, signOut]);
+
+  if (!client || routeIsInvalid) {
     return <Navigate replace to="/dashboard" />;
   }
   if (formLoadError) {
@@ -430,6 +531,53 @@ export function FormsRuntimeFormPage({
   const runtimeClient = client;
   const runtimeDefinition = definition;
   const runtimeFormResponse = formResponse;
+  const parentFormPath = isSubform
+    ? formRuntimePaths.edit(modelId, viewId, parentDocGuid)
+    : formRuntimePaths.list(modelId, viewId);
+
+  function currentRuntimeFormSession(docGuid = currentDocGuidRef.current): RuntimeFormSessionState {
+    const serializedValues = serializeRuntimeFormValues(latestValuesRef.current);
+    return {
+      activeTabs: activeTabsRef.current,
+      docGuid,
+      formResponse: runtimeFormResponse
+        ? {
+          ...runtimeFormResponse,
+          docGuid,
+          revision: revisionRef.current || runtimeFormResponse.revision,
+          values: serializedValues,
+        }
+        : undefined,
+      revision: revisionRef.current || undefined,
+      values: serializedValues,
+    };
+  }
+
+  function navigateBackToParentForm(replace = false) {
+    if (!isSubform) {
+      navigate(parentFormPath, { replace });
+      return;
+    }
+
+    navigate(parentFormPath, {
+      replace,
+      state: {
+        runtimeFormSession: restoredParentSession ?? undefined,
+      },
+    });
+  }
+
+  async function reloadSubforms(parentGuid = currentDocGuidRef.current) {
+    if (isSubform || !parentGuid) {
+      return;
+    }
+    const accessToken = getRuntimeAccessToken();
+    if (!accessToken) {
+      return;
+    }
+    const record = await runtimeClient.loadRecord(accessToken, parentGuid);
+    setSubforms(runtimeSubformsFromRecord(record));
+  }
 
   function handleRuntimeRequestError(requestError: unknown) {
     if (isUnauthorizedApiError(requestError)) {
@@ -509,10 +657,15 @@ export function FormsRuntimeFormPage({
     setSaveState("saving");
     let didSave = false;
 
-    const patchPromise = runtimeClient.updateRecord(accessToken, docGuid, {
-      expectedRevision: revisionRef.current || undefined,
-      values: patchValues,
-    })
+    const patchPromise = (isSubform
+      ? runtimeClient.updateSubformRecord(accessToken, parentDocGuid, subformId, docGuid, {
+        expectedRevision: revisionRef.current || undefined,
+        values: patchValues,
+      })
+      : runtimeClient.updateRecord(accessToken, docGuid, {
+        expectedRevision: revisionRef.current || undefined,
+        values: patchValues,
+      }))
       .then((response) => {
         applyMutationResponse(response);
         setSaveState("saved");
@@ -572,7 +725,7 @@ export function FormsRuntimeFormPage({
 
   async function createRecordIfReady(
     nextValues: RuntimeFormValues,
-    options?: { showValidationDialog?: boolean },
+    options?: { replaceRouteAfterCreate?: boolean; showValidationDialog?: boolean },
   ) {
     if (hasServerRecordRef.current) {
       return currentDocGuidRef.current;
@@ -604,10 +757,13 @@ export function FormsRuntimeFormPage({
     lastRuntimeRequestErrorKindRef.current = null;
     setSaveState("saving");
 
-    const createPromise = runtimeClient.createRecord(accessToken, {
+    const mutationInput = {
       clientCreateToken: clientCreateTokenRef.current,
       values: serializeRuntimeFormValues(createValues),
-    })
+    };
+    const createPromise = (isSubform
+      ? runtimeClient.createSubformRecord(accessToken, parentDocGuid, subformId, mutationInput)
+      : runtimeClient.createRecord(accessToken, mutationInput))
       .then(async (response) => {
         if ((response.validationErrors?.length ?? 0) > 0) {
           const serverErrors = runtimeValidationErrorsFromServer(response.validationErrors);
@@ -631,14 +787,18 @@ export function FormsRuntimeFormPage({
         applyMutationResponse(response);
         setSaveState("saved");
 
-        if (response.docGuid) {
+        if (response.docGuid && options?.replaceRouteAfterCreate !== false) {
+          const nextEditPath = isSubform
+            ? formRuntimePaths.subformEdit(modelId, viewId, parentDocGuid, subformId, response.docGuid)
+            : formRuntimePaths.edit(modelId, viewId, response.docGuid);
           const restoredValues = {
             ...serializeRuntimeFormValues(latestValuesRef.current),
             ...response.values,
           };
-          navigate(formRuntimePaths.edit(modelId, viewId, response.docGuid), {
+          navigate(nextEditPath, {
             replace: true,
             state: {
+              parentRuntimeFormSession: isSubform ? restoredParentSession ?? undefined : undefined,
               runtimeFormSession: {
                 activeTabs: activeTabsRef.current,
                 docGuid: response.docGuid,
@@ -823,6 +983,15 @@ export function FormsRuntimeFormPage({
       return;
     }
 
+    if (isSubform) {
+      setSaveState("saved");
+      setFinishDialog({
+        message: "Successfully saved to server.",
+        tone: "success",
+      });
+      return;
+    }
+
     const accessToken = getRuntimeAccessToken();
     if (!accessToken) {
       return;
@@ -875,7 +1044,7 @@ export function FormsRuntimeFormPage({
         });
         return;
       }
-      navigate(formRuntimePaths.list(modelId, viewId));
+      navigateBackToParentForm();
     })();
   }
 
@@ -888,7 +1057,7 @@ export function FormsRuntimeFormPage({
     }
 
     if (currentDialog.tone === "success") {
-      navigate(formRuntimePaths.list(modelId, viewId));
+      navigateBackToParentForm();
       return;
     }
 
@@ -900,21 +1069,144 @@ export function FormsRuntimeFormPage({
     }
   }
 
+  async function ensureRecordReadyForSubformAction() {
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+
+    let docGuid = currentDocGuidRef.current;
+    if (!hasServerRecordRef.current) {
+      docGuid = await createRecordIfReady(latestValuesRef.current, {
+        replaceRouteAfterCreate: false,
+        showValidationDialog: true,
+      }) ?? "";
+      if (!docGuid) {
+        if (!lastCreateBlockedByValidationRef.current) {
+          setFinishDialog({
+            message: "Could not save record.",
+            tone: "danger",
+          });
+        }
+        return null;
+      }
+    }
+
+    const didFlushPatch = await flushPendingPatch();
+    if (!didFlushPatch) {
+      if (lastRuntimeRequestErrorKindRef.current === "conflict" || lastRuntimeRequestErrorKindRef.current === "auth") {
+        return null;
+      }
+      setFinishDialog({
+        message: "Could not save record.",
+        tone: "danger",
+      });
+      return null;
+    }
+
+    return docGuid;
+  }
+
+  function handleSubformAdd(subform: RuntimeFormSubformDefinition) {
+    void (async () => {
+      const parentGuid = await ensureRecordReadyForSubformAction();
+      if (!parentGuid) {
+        return;
+      }
+
+      navigate(formRuntimePaths.subformCreate(modelId, viewId, parentGuid, subform.schemaScopeId), {
+        state: {
+          parentRuntimeFormSession: currentRuntimeFormSession(parentGuid),
+        },
+      });
+    })();
+  }
+
+  function handleSubformEdit(subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) {
+    void (async () => {
+      const parentGuid = await ensureRecordReadyForSubformAction();
+      if (!parentGuid || !row.id) {
+        return;
+      }
+
+      navigate(formRuntimePaths.subformEdit(modelId, viewId, parentGuid, subform.schemaScopeId, row.id), {
+        state: {
+          parentRuntimeFormSession: currentRuntimeFormSession(parentGuid),
+        },
+      });
+    })();
+  }
+
+  function handleSubformDelete(subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) {
+    setSubformDeleteDialog({ row, subform });
+  }
+
+  function confirmSubformDelete() {
+    const deleteIntent = subformDeleteDialog;
+    setSubformDeleteDialog(null);
+    if (!deleteIntent) {
+      return;
+    }
+
+    void (async () => {
+      const parentGuid = await ensureRecordReadyForSubformAction();
+      if (!parentGuid || !deleteIntent.row.id) {
+        return;
+      }
+
+      const accessToken = getRuntimeAccessToken();
+      if (!accessToken) {
+        return;
+      }
+
+      setSaveState("saving");
+      try {
+        await runtimeClient.deleteSubformRecord(
+          accessToken,
+          parentGuid,
+          deleteIntent.subform.schemaScopeId,
+          deleteIntent.row.id,
+        );
+        await reloadSubforms(parentGuid);
+        setSaveState("saved");
+      } catch (requestError) {
+        const errorKind = handleRuntimeRequestError(requestError);
+        if (errorKind !== "conflict" && errorKind !== "auth") {
+          setFinishDialog({
+            message: "Could not delete record.",
+            tone: "danger",
+          });
+        }
+      }
+    })();
+  }
+
   return (
     <div className="tenant-web__form-runtime-form-page">
       <RuntimeFormScaffold
         activeTabs={activeTabs}
         definition={runtimeDefinition}
         errors={errors}
+        labels={isSubform ? {
+          backToList: "Back",
+          createModeInfo: "Complete the required fields to create this item. Changes will save automatically after it is created.",
+          editModeInfo: "This item saves changes automatically as you work.",
+          finish: "Save",
+          onlineFormTitle: "Subform",
+        } : undefined}
         onActiveTabChange={handleActiveTabChange}
         onBack={handleBackToList}
         onFieldChange={handleFieldChange}
         onFinish={() => {
           void handleFinish();
         }}
+        onSubformAdd={isSubform ? undefined : handleSubformAdd}
+        onSubformDelete={isSubform ? undefined : handleSubformDelete}
+        onSubformEdit={isSubform ? undefined : handleSubformEdit}
         revealFieldId={fieldRevealRequest?.fieldId}
         revealRequestKey={fieldRevealRequest?.requestKey}
         saveState={saveState}
+        subforms={subforms}
         values={values}
       />
       <AlertDialog
@@ -949,6 +1241,31 @@ export function FormsRuntimeFormPage({
               variant={finishDialog?.tone === "success" ? "success" : "danger"}
             >
               OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setSubformDeleteDialog(null);
+          }
+        }}
+        open={Boolean(subformDeleteDialog)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This subform record will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSubformDelete} variant="danger">
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

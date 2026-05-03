@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `ready_for_subform_runtime_slice`
+- Status: `subform_runtime_slice_in_progress`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -20,9 +20,9 @@ View/read remains the existing `CollectionTable` modal path for now.
 ## Agreed Scope
 
 - In: architecture recommendation, codebase/reference inspection, first implementation slice proposal, package boundaries, API contract outline, risk gates.
-- Current approved backend slice: add a dedicated tenant runtime service/package for root form create, edit/autosave patch, and finish command endpoints.
-- Current approved frontend/runtime slice: align the mutation API response shape with the tenant-web adapter, wire create-after-required, patch autosave, and finish command calls on the runtime form page, and expose `Start New` plus `edit` from CollectionTable runtime metadata.
-- Out for current backend slice: migrations, Navigation Builder ACL, Action Builder side effects, PDF/report behavior, subform writes, preview write routes, and broad runtime list/read migration out of `platformstudioformbuilder`.
+- Current approved backend slice: extend the dedicated tenant `platformstudioformruntime` package for DEFAULT subform form read/create/edit/delete under an existing parent record.
+- Current approved frontend/runtime slice: render subform nodes as parent child tables, wire subform Add/Edit/Delete actions, and open child subform forms as separate routes with `Back`/`Save`.
+- Out for current backend slice: migrations, Navigation Builder ACL, Action Builder side effects, PDF/report behavior, CHECKLIST subforms, preview write routes, and broad runtime list/read migration out of `platformstudioformbuilder`.
 
 ## Decisions
 
@@ -51,6 +51,10 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
 - Runtime choice fields should render from authored `choiceDisplay` settings, not preset-name inference: `Render style = Native` uses UI Kit Combobox (`single_select` simple values, `multi_select` multi-select), while `Render style = Buttons` uses UI Kit toggle buttons with authored horizontal/vertical orientation. Per-option Button styles remain deferred until Form Builder defines a runtime-ready styling contract.
 - Runtime `single_select` fields rendered as horizontal buttons should present as a segmented button group. This is a runtime-only visual refinement for single-select horizontal buttons and must not change multi-select or vertical button behavior.
+- Current subform implementation uses only DEFAULT subforms. The parent form renders a child table from authored subform Grid columns, honors authored Subtable sorting, and exposes Add/Edit/Delete only from authored subform actions plus available frontend handlers.
+- Subform Add/Edit opens a child form route under the parent edit route. If the parent record is not yet created, the runtime first creates the parent after required fields are valid, then navigates directly to the child route without a visible parent-tab jump.
+- Subform child forms use the same create-after-required-complete and edit-autosave controller as root forms, but their chrome labels are `Back` and `Save`; child forms do not run root workflow status/`Finish` logic.
+- Subform navigation carries the parent runtime session, including active tabs, so returning with `Back`/successful `Save` restores the parent form at the tab that launched the subform.
 - Managed runtime `multi_select`/`tags` values should use the generated scope multivalue table. Runtime apply exposes aggregate label/count outputs for grids; runtime create/edit/load persists selected option values in `value_key`, labels in `value_label`, and preserves authored order with `sort_order`. Static/external multivalue writes remain deferred.
 - Runtime choice Native controls must keep the required-field left border affordance used by other controls, and selected choice buttons should make the selected state more explicit with underlined text.
 - Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
@@ -108,14 +112,14 @@ View/read remains the existing `CollectionTable` modal path for now.
   - Action Builder side effects.
 - Section/card rule: `Section` is the runtime card; if no root `Section` exists, create one default card around all root fields.
 
-## Deferred Subform Slice Notes
+## Subform Slice Notes
 
 - `Subform` renders as a child table inside the parent form.
 - Parent-form subtable rows must honor authored Subtable sorting when it is configured.
 - Child `Add` and `Edit` open a subform-scope form page by separate route, using the same create-after-required-complete and edit-autosave principles as root forms.
 - Subform page actions are `Back` and `Save`, not `Back to list` and `Finish`.
 - `Back` returns to the parent form route without changing parent status.
-- If the subform was opened from inside a parent tab, the child route should carry the parent tab context and restore that same tab when returning with `Back`.
+- If the subform was opened from inside a parent tab, the child route carries the parent tab context and restores that same tab when returning with `Back`.
 - Subform scope has no System Fields and no workflow status game.
 - Form Builder stabilization blockers for this slice are resolved in `findings.md`: subform Grid settings persist, root/subtable sorting pickers are constrained to active grid fields, draft save conflicts are guarded/atomic, and canvas tree context survives save.
 - Future post-processing/actions may exist, but they belong to the future Action Builder/runtime command layer, not the first subform renderer slice.
@@ -370,7 +374,20 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 11 tests;
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 34 tests;
   - `git diff --check` passed.
+- Subform runtime slice started:
+  - `@platform/forms` now compiles Form Builder `subform` nodes into runtime subform definitions with authored Grid columns, subtable sorting, and actions metadata;
+  - parent forms render subform child tables and expose Add/Edit/Delete actions only when allowed by the schema and host handlers;
+  - tenant-web adds subform child routes under parent edit routes, passes parent runtime session state, and returns to the parent with active tabs preserved;
+  - child subform forms load from dedicated runtime form endpoints, use the same create-after-required/autosave controller, and relabel chrome actions to `Back`/`Save`;
+  - subform `Add` uses an explicit runtime plus icon size, and subform row delete now uses the UI Kit `AlertDialog` confirmation instead of browser `window.confirm`;
+  - `platformstudioformruntime` now has dedicated DEFAULT subform form read/create/edit/delete service/repository/routes; CHECKLIST and Action Builder post-processing remain deferred;
+  - `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed with `GOCACHE=/private/tmp/core-agent-go-build`;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 12 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 34 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode with `GOCACHE=/private/tmp/core-agent-go-build`;
+  - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
 
 ## Next Action
 
-Next allowed action is owner review of the runtime form visual follow-ups, commit preparation for that small follow-up, or an owner decision to continue into the Subform runtime slice.
+Next allowed action is finishing the subform runtime slice with `git diff --check`, `scripts/preflight.sh`, and browser/manual smoke once Browser Use or owner-approved fallback is available.

@@ -5,6 +5,7 @@ import type {
   RuntimeFormLayoutDefinition,
   RuntimeFormNodeDefinition,
   RuntimeFormSectionDefinition,
+  RuntimeFormSubformDefinition,
   RuntimeFormValue,
 } from "./runtime-form-types";
 
@@ -38,6 +39,10 @@ export function isRuntimeFormContentNode(node: RuntimeFormNodeDefinition): node 
 
 export function isRuntimeFormLayoutNode(node: RuntimeFormNodeDefinition): node is RuntimeFormLayoutDefinition {
   return node.nodeType === "layout";
+}
+
+export function isRuntimeFormSubformNode(node: RuntimeFormNodeDefinition): node is RuntimeFormSubformDefinition {
+  return node.nodeType === "subform";
 }
 
 export function resolveRuntimeSectionNodes(section: RuntimeFormSectionDefinition): ReadonlyArray<RuntimeFormNodeDefinition> {

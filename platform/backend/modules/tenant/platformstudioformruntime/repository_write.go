@@ -64,6 +64,59 @@ func createRootRecordTx(
 	return row, nil
 }
 
+func createSubformRecordTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	values map[string]any,
+	createDocGuid string,
+) (*runtimeRecordMutationRow, error) {
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return nil, err
+	}
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	columnNames, args := mutationColumnsAndArgs(recordScope, values)
+	columnNames = append(columnNames, subformScope.ParentForeignKey)
+	args = append(args, parentRow.SourceID)
+	if createDocGuid != "" && recordScope.SourceGUIDColumn != "" {
+		columnNames = append(columnNames, recordScope.SourceGUIDColumn)
+		args = append(args, createDocGuid)
+	}
+	returningClause, returningFields := buildReturningClause(recordScope)
+
+	placeholders := make([]string, 0, len(columnNames))
+	for index := range columnNames {
+		placeholders = append(placeholders, fmt.Sprintf("$%d", index+1))
+	}
+	quotedColumns := make([]string, 0, len(columnNames))
+	for _, columnName := range columnNames {
+		quotedColumns = append(quotedColumns, quoteIdentifier(columnName))
+	}
+	query := fmt.Sprintf(
+		"INSERT INTO %s (%s) VALUES (%s) RETURNING %s",
+		qualifiedIdentifier(recordScope.TableName),
+		strings.Join(quotedColumns, ", "),
+		strings.Join(placeholders, ", "),
+		returningClause,
+	)
+
+	row, err := scanMutationRow(tx.QueryRowContext(ctx, query, args...), returningFields)
+	if err != nil {
+		if createDocGuid != "" && isUniqueViolation(err) {
+			return nil, ErrCreateTokenConflict
+		}
+		return nil, fmt.Errorf("form runtime: create subform record: %w", err)
+	}
+	if err := replaceMultiValueFieldsTx(ctx, tx, recordScope, row.SourceID, values); err != nil {
+		return nil, err
+	}
+	mergeChangedMultiValueValues(recordScope, row.Values, values)
+	return row, nil
+}
+
 func isUniqueViolation(err error) bool {
 	var pqErr *pq.Error
 	return errors.As(err, &pqErr) && pqErr.Code == "23505"
@@ -147,6 +200,99 @@ func updateRootRecordTx(
 	return row, nil
 }
 
+func updateSubformRecordTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+	values map[string]any,
+	expectedRevision string,
+) (*runtimeRecordMutationRow, error) {
+	if parentDocGuid == "" || docGuid == "" {
+		return nil, ErrInvalidRequest
+	}
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return nil, err
+	}
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	if len(values) == 0 {
+		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
+	}
+
+	columnNames, args := mutationColumnsAndArgs(recordScope, values)
+	hasMultiValueMutation := hasMultiValueMutation(recordScope, values)
+	if len(columnNames) == 0 && !hasMultiValueMutation {
+		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
+	}
+
+	setClauses := make([]string, 0, len(columnNames))
+	for index, columnName := range columnNames {
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", quoteIdentifier(columnName), index+1))
+	}
+	if len(setClauses) == 0 && recordScope.SourceUpdatedColumn != "" {
+		setClauses = append(setClauses, fmt.Sprintf("%s = now()", quoteIdentifier(recordScope.SourceUpdatedColumn)))
+	}
+	if len(setClauses) == 0 {
+		row, err := loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
+		if err != nil {
+			return nil, err
+		}
+		if err := replaceMultiValueFieldsTx(ctx, tx, recordScope, row.SourceID, values); err != nil {
+			return nil, err
+		}
+		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
+	}
+
+	whereArgs := append([]any{}, args...)
+	docArgIndex := len(whereArgs) + 1
+	whereArgs = append(whereArgs, docGuid)
+	parentArgIndex := len(whereArgs) + 1
+	whereArgs = append(whereArgs, parentRow.SourceID)
+	whereClause := fmt.Sprintf(
+		"%s::text = $%d AND %s = $%d",
+		quoteIdentifier(recordScope.SourceGUIDColumn),
+		docArgIndex,
+		quoteIdentifier(subformScope.ParentForeignKey),
+		parentArgIndex,
+	)
+	if recordScope.TenantScoped && recordScope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(recordScope.SourceTenantColumn))
+	}
+	if expectedRevision != "" && recordScope.SourceUpdatedColumn != "" {
+		revisionArgIndex := len(whereArgs) + 1
+		whereArgs = append(whereArgs, expectedRevision)
+		whereClause += fmt.Sprintf(" AND %s::text = $%d", quoteIdentifier(recordScope.SourceUpdatedColumn), revisionArgIndex)
+	}
+
+	returningClause, returningFields := buildReturningClause(recordScope)
+	query := fmt.Sprintf(
+		"UPDATE %s SET %s WHERE %s RETURNING %s",
+		qualifiedIdentifier(recordScope.TableName),
+		strings.Join(setClauses, ", "),
+		whereClause,
+		returningClause,
+	)
+
+	row, err := scanMutationRow(tx.QueryRowContext(ctx, query, whereArgs...), returningFields)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) && expectedRevision != "" {
+			return nil, ErrConflict
+		}
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("form runtime: update subform record: %w", err)
+	}
+	if err := replaceMultiValueFieldsTx(ctx, tx, recordScope, row.SourceID, values); err != nil {
+		return nil, err
+	}
+	mergeChangedMultiValueValues(recordScope, row.Values, values)
+	return row, nil
+}
+
 func loadRootRecordTx(
 	ctx context.Context,
 	tx *sql.Tx,
@@ -180,6 +326,87 @@ func loadRootRecordTx(
 		return nil, err
 	}
 	return row, nil
+}
+
+func loadSubformRecordTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+) (*runtimeRecordMutationRow, error) {
+	if parentDocGuid == "" || docGuid == "" {
+		return nil, ErrInvalidRequest
+	}
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return nil, err
+	}
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	returningClause, returningFields := buildReturningClause(recordScope)
+	whereClause := fmt.Sprintf(
+		"%s::text = $1 AND %s = $2",
+		quoteIdentifier(recordScope.SourceGUIDColumn),
+		quoteIdentifier(subformScope.ParentForeignKey),
+	)
+	if recordScope.TenantScoped && recordScope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(recordScope.SourceTenantColumn))
+	}
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE %s LIMIT 1",
+		returningClause,
+		qualifiedIdentifier(recordScope.TableName),
+		whereClause,
+	)
+
+	row, err := scanMutationRow(tx.QueryRowContext(ctx, query, docGuid, parentRow.SourceID), returningFields)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("form runtime: load subform record: %w", err)
+	}
+	if err := loadMultiValueValuesTx(ctx, tx, recordScope, row.SourceID, row.Values); err != nil {
+		return nil, err
+	}
+	return row, nil
+}
+
+func deleteSubformRecordTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+) error {
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return err
+	}
+	row, err := loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
+	if err != nil {
+		return err
+	}
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	if err := deleteMultiValueRowsForOwnerTx(ctx, tx, recordScope, row.SourceID); err != nil {
+		return err
+	}
+
+	query := fmt.Sprintf(
+		"DELETE FROM %s WHERE %s::text = $1 AND %s = $2",
+		qualifiedIdentifier(recordScope.TableName),
+		quoteIdentifier(recordScope.SourceGUIDColumn),
+		quoteIdentifier(subformScope.ParentForeignKey),
+	)
+	if recordScope.TenantScoped && recordScope.SourceTenantColumn != "" {
+		query += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(recordScope.SourceTenantColumn))
+	}
+	if _, err := tx.ExecContext(ctx, query, docGuid, parentRow.SourceID); err != nil {
+		return fmt.Errorf("form runtime: delete subform record: %w", err)
+	}
+	return nil
 }
 
 func setRootRecordsActiveTx(
@@ -260,6 +487,9 @@ func deleteSubformRecordsForRootDocGuidsTx(
 		if strings.TrimSpace(subformScope.TableName) == "" || strings.TrimSpace(subformScope.ParentForeignKey) == "" {
 			continue
 		}
+		if err := deleteSubformMultiValueRowsForRootDocGuidsTx(ctx, tx, scope, subformScope, docGuids, rootWhereClause); err != nil {
+			return err
+		}
 		query := fmt.Sprintf(
 			`DELETE FROM %s
  WHERE %s IN (
@@ -276,6 +506,47 @@ func deleteSubformRecordsForRootDocGuidsTx(
 		if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
 			return fmt.Errorf("form runtime: bulk delete subform records: %w", err)
 		}
+	}
+	return nil
+}
+
+func deleteSubformMultiValueRowsForRootDocGuidsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	docGuids []string,
+	rootWhereClause string,
+) error {
+	if strings.TrimSpace(subformScope.MultiValueTableName) == "" ||
+		strings.TrimSpace(subformScope.MultiValueOwnerForeignKey) == "" ||
+		strings.TrimSpace(subformScope.SourceIDColumn) == "" ||
+		strings.TrimSpace(subformScope.ParentForeignKey) == "" {
+		return nil
+	}
+
+	query := fmt.Sprintf(
+		`DELETE FROM %s mv
+		  USING %s child, %s root
+		  WHERE mv.%s = current_setting('app.tenant_id', true)::bigint
+		    AND child.%s = mv.%s
+		    AND child.%s = root.%s
+		    AND %s`,
+		qualifiedIdentifier(subformScope.MultiValueTableName),
+		qualifiedIdentifier(subformScope.TableName),
+		qualifiedIdentifier(rootScope.TableName),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier(subformScope.SourceIDColumn),
+		quoteIdentifier(subformScope.MultiValueOwnerForeignKey),
+		quoteIdentifier(subformScope.ParentForeignKey),
+		quoteIdentifier(rootScope.SourceIDColumn),
+		rootWhereClause,
+	)
+	if subformScope.TenantScoped && subformScope.SourceTenantColumn != "" {
+		query += fmt.Sprintf(" AND child.%s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(subformScope.SourceTenantColumn))
+	}
+	if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
+		return fmt.Errorf("form runtime: bulk delete subform multivalue rows: %w", err)
 	}
 	return nil
 }
@@ -553,6 +824,30 @@ func deleteRootMultiValueRowsForDocGuidsTx(
 	}
 	if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
 		return fmt.Errorf("form runtime: delete root multivalue rows: %w", err)
+	}
+	return nil
+}
+
+func deleteMultiValueRowsForOwnerTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	ownerID int64,
+) error {
+	if ownerID == 0 || strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
+		return nil
+	}
+
+	query := fmt.Sprintf(
+		`DELETE FROM %s
+		  WHERE %s = current_setting('app.tenant_id', true)::bigint
+		    AND %s = $1`,
+		qualifiedIdentifier(scope.MultiValueTableName),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier(scope.MultiValueOwnerForeignKey),
+	)
+	if _, err := tx.ExecContext(ctx, query, ownerID); err != nil {
+		return fmt.Errorf("form runtime: delete multivalue rows for owner: %w", err)
 	}
 	return nil
 }

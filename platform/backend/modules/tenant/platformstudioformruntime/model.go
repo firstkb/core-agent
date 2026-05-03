@@ -18,6 +18,7 @@ type RuntimeViewRecordFinishRequest struct {
 
 type RuntimeViewBulkActionRequest = collectiontable.BulkActionInput
 type RuntimeViewBulkActionResponse = collectiontable.MutationResult
+type RuntimeViewDeleteResponse = collectiontable.MutationResult
 
 type RuntimeViewRecordValidationError struct {
 	FieldID string `json:"fieldId,omitempty"`
@@ -90,8 +91,20 @@ type runtimeRootScopePlan struct {
 }
 
 type runtimeSubformScopePlan struct {
-	ParentForeignKey string
-	TableName        string
+	DataViewName              string
+	Fields                    []runtimeFieldPlan
+	MultiValueOwnerForeignKey string
+	MultiValueTableName       string
+	ParentForeignKey          string
+	ScopeID                   string
+	SourceGUIDColumn          string
+	SourceIDColumn            string
+	SourceTenantColumn        string
+	SourceUpdatedColumn       string
+	SubformType               string
+	TableKey                  string
+	TableName                 string
+	TenantScoped              bool
 }
 
 type runtimeFieldPlan struct {

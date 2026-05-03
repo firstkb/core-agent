@@ -124,6 +124,7 @@
 .platform-runtime-form__group,
 .platform-runtime-form__tabs,
 .platform-runtime-form__accordion,
+.platform-runtime-form__subform,
 .platform-runtime-form__divider,
 .platform-runtime-form__spacer {
   grid-column: 1 / -1;
@@ -133,13 +134,15 @@
 .platform-runtime-form__group,
 .platform-runtime-form__tabs,
 .platform-runtime-form__accordion,
+.platform-runtime-form__subform,
 .platform-runtime-form__layout-grid {
   gap: var(--space-4);
 }
 
 .platform-runtime-form__group,
 .platform-runtime-form__tabs,
-.platform-runtime-form__accordion {
+.platform-runtime-form__accordion,
+.platform-runtime-form__subform {
   display: flex;
   flex-direction: column;
 }
@@ -257,6 +260,76 @@
   min-width: 0;
   color: var(--color-text-primary);
   font-weight: var(--font-weight-semibold);
+}
+
+.platform-runtime-form__subform {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface-muted);
+}
+
+.platform-runtime-form__subform-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.platform-runtime-form__subform-title {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+}
+
+.platform-runtime-form__subform-add-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: 0 0 auto;
+}
+
+.platform-runtime-form__subform-table-scroll {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--color-border-muted);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+}
+
+.platform-runtime-form__subform-table.ui-table {
+  min-width: 38rem;
+}
+
+.platform-runtime-form__subform-cell-value {
+  display: inline-block;
+  max-width: 28rem;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.platform-runtime-form__subform-actions-header {
+  width: 1%;
+}
+
+.platform-runtime-form__subform-actions-cell {
+  white-space: nowrap;
+}
+
+.platform-runtime-form__subform-actions-cell > .ui-button + .ui-button {
+  margin-left: var(--space-2);
+}
+
+.platform-runtime-form__subform-empty {
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .platform-runtime-form__tabs-panel {

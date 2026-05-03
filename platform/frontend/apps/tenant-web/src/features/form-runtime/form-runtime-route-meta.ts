@@ -15,6 +15,8 @@ const formRuntimeRoutePatterns = {
   create: "/app/forms/:modelId/views/:viewId/new",
   edit: "/app/forms/:modelId/views/:viewId/edit/:docGuid",
   list: "/app/forms/:modelId/views/:viewId",
+  subformCreate: "/app/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/new",
+  subformEdit: "/app/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/edit/:docGuid",
   view: "/app/forms/:modelId/views/:viewId/view/:docGuid",
 } as const;
 
@@ -28,13 +30,19 @@ export const formRuntimePaths = {
   list(modelId: string, viewId: string) {
     return `/app/forms/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`;
   },
+  subformCreate(modelId: string, viewId: string, parentDocGuid: string, subformId: string) {
+    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/new`;
+  },
+  subformEdit(modelId: string, viewId: string, parentDocGuid: string, subformId: string, docGuid: string) {
+    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/edit/${encodeURIComponent(docGuid)}`;
+  },
   view(modelId: string, viewId: string, docGuid: string) {
     return `${formRuntimePaths.list(modelId, viewId)}/view/${encodeURIComponent(docGuid)}`;
   },
 } as const;
 
 type FormRuntimeRouteMeta = {
-  kind: "create" | "edit" | "list" | "view";
+  kind: "create" | "edit" | "list" | "subform-create" | "subform-edit" | "view";
   modelId: string;
   modelLabel: string;
   viewId: string;
@@ -70,6 +78,16 @@ function buildFormRuntimeRouteMeta(
 }
 
 export function getFormRuntimeRouteMeta(pathname: string): FormRuntimeRouteMeta | null {
+  const subformCreateMatch = matchPath(formRuntimeRoutePatterns.subformCreate, pathname) as PathMatch<"docGuid" | "modelId" | "parentDocGuid" | "subformId" | "viewId"> | null;
+  if (subformCreateMatch) {
+    return buildFormRuntimeRouteMeta("subform-create", subformCreateMatch);
+  }
+
+  const subformEditMatch = matchPath(formRuntimeRoutePatterns.subformEdit, pathname) as PathMatch<"docGuid" | "modelId" | "parentDocGuid" | "subformId" | "viewId"> | null;
+  if (subformEditMatch) {
+    return buildFormRuntimeRouteMeta("subform-edit", subformEditMatch);
+  }
+
   const createMatch = matchPath(formRuntimeRoutePatterns.create, pathname) as PathMatch<"modelId" | "viewId"> | null;
   if (createMatch) {
     return buildFormRuntimeRouteMeta("create", createMatch as PathMatch<"docGuid" | "modelId" | "viewId">);

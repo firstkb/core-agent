@@ -20,6 +20,8 @@ import type {
   RuntimeFormRuleOperator,
   RuntimeFormRuleValue,
   RuntimeFormSectionDefinition,
+  RuntimeFormSubformColumnType,
+  RuntimeFormSubformDefinition,
   RuntimeFormTabsLayoutDefinition,
   RuntimeFormVisibilityRule,
 } from "./runtime-form";
@@ -40,6 +42,8 @@ export type RuntimeFormSchemaSource = {
 type CompileContext = {
   fieldById: Map<string, JsonRecord>;
   nodesByParentId: Map<string | null, JsonRecord[]>;
+  subformDataScopeById: Map<string, JsonRecord>;
+  subformUiScopeById: Map<string, JsonRecord>;
   workflowStatus?: {
     fieldId: string;
     finalValue?: string;
@@ -145,11 +149,30 @@ function rootUiScope(uiSchema: JsonRecord) {
 }
 
 function createFieldMap(dataSchema: JsonRecord) {
-  const fields = asArray(rootDataScope(dataSchema).fields)
-    .filter(isRecord);
+  return createScopedFieldMap(rootDataScope(dataSchema));
+}
+
+function createScopedFieldMap(scope: JsonRecord) {
+  const fields = asArray(scope.fields).filter(isRecord);
   return new Map(fields.flatMap((field) => {
     const fieldId = stringValue(field.fieldId, stringValue(field.id, stringValue(field.key)));
     return fieldId ? [[fieldId, field] as const] : [];
+  }));
+}
+
+function createSubformDataScopeMap(dataSchema: JsonRecord) {
+  const scopes = asArray(dataSchema.subformScopes).filter(isRecord);
+  return new Map(scopes.flatMap((scope) => {
+    const scopeId = stringValue(scope.schemaScopeId, stringValue(scope.tableKey));
+    return scopeId ? [[scopeId, scope] as const] : [];
+  }));
+}
+
+function createSubformUiScopeMap(uiSchema: JsonRecord) {
+  const scopes = asArray(uiSchema.subformScopes).filter(isRecord);
+  return new Map(scopes.flatMap((scope) => {
+    const scopeId = stringValue(scope.schemaScopeId, stringValue(scope.tableKey));
+    return scopeId ? [[scopeId, scope] as const] : [];
   }));
 }
 
@@ -443,6 +466,111 @@ function createContentNode(node: JsonRecord): RuntimeFormContentDefinition | nul
   return null;
 }
 
+function runtimeSubformColumnType(field: JsonRecord): RuntimeFormSubformColumnType {
+  const kind = stringValue(field.kind, stringValue(field.dataType, stringValue(field.baseType)));
+  switch (kind) {
+    case "boolean":
+      return "boolean";
+    case "date":
+      return "date";
+    case "date_time":
+      return "date_time";
+    default:
+      return "text";
+  }
+}
+
+function readViewSettings(scope: JsonRecord) {
+  return asRecord(scope.viewSettings);
+}
+
+function readListSettings(scope: JsonRecord) {
+  return asRecord(readViewSettings(scope).list);
+}
+
+function readSubformActions(scope: JsonRecord) {
+  const actions = asRecord(readViewSettings(scope).actions);
+  return {
+    canAdd: boolValue(actions.canAdd, true),
+    canDelete: boolValue(actions.canDelete, true),
+    canEdit: boolValue(actions.canEdit, true),
+  };
+}
+
+function createSubformColumns(
+  dataScope: JsonRecord,
+  uiScope: JsonRecord,
+): RuntimeFormSubformDefinition["columns"] {
+  const fieldsById = createScopedFieldMap(dataScope);
+  const listSettings = readListSettings(uiScope);
+  const authoredColumns = asArray(listSettings.columns)
+    .filter(isRecord)
+    .filter((column) => column.visible !== false);
+  const sourceColumns = authoredColumns.length > 0
+    ? authoredColumns
+    : asArray(dataScope.fields)
+      .filter(isRecord)
+      .map((field, index) => ({
+        fieldId: stringValue(field.fieldId, stringValue(field.id, stringValue(field.key))),
+        id: stringValue(field.fieldId, stringValue(field.id, stringValue(field.key))),
+        order: index,
+      }));
+
+  return orderedNodes(sourceColumns).flatMap((column) => {
+    const fieldId = stringValue(column.fieldId);
+    if (!fieldId || fieldId.includes("::lookup_output::")) {
+      return [];
+    }
+    const field = fieldsById.get(fieldId);
+    if (!field) {
+      return [];
+    }
+    const columnId = stringValue(column.id, fieldId);
+    return [{
+      fieldId,
+      id: columnId,
+      label: stringValue(column.label, stringValue(field.label, stringValue(field.displayName, fieldId))),
+      type: runtimeSubformColumnType(field),
+    }];
+  });
+}
+
+function createSubformNode(context: CompileContext, node: JsonRecord): RuntimeFormSubformDefinition | null {
+  const id = stringValue(node.id);
+  const schemaScopeId = stringValue(node.schemaScopeId, stringValue(node.tableKey));
+  if (!id || !schemaScopeId) {
+    return null;
+  }
+
+  const dataScope = context.subformDataScopeById.get(schemaScopeId);
+  const uiScope = context.subformUiScopeById.get(schemaScopeId) ?? {};
+  if (!dataScope) {
+    return null;
+  }
+
+  const columns = createSubformColumns(dataScope, uiScope);
+  const sorting = asRecord(readListSettings(uiScope).sorting);
+  const sortFieldId = stringValue(sorting.fieldId);
+  const sortDirection = sorting.direction === "desc" ? "desc" : "asc";
+
+  return {
+    actions: readSubformActions(uiScope),
+    columns,
+    defaultSort: sortFieldId ? {
+      columnId: sortFieldId,
+      direction: sortDirection,
+    } : undefined,
+    id,
+    nodeType: "subform",
+    rules: readRuntimeRules(node.rules),
+    schemaScopeId,
+    subformType: stringValue(node.subformType, stringValue(dataScope.subformType, "DEFAULT")),
+    tableKey: stringValue(node.tableKey, schemaScopeId),
+    title: stringValue(node.title, stringValue(dataScope.displayName, "Subform")),
+    width: "full",
+  };
+}
+
 function createLayoutNode(context: CompileContext, node: JsonRecord): RuntimeFormLayoutDefinition | null {
   const id = stringValue(node.id);
   const nodeType = stringValue(node.type);
@@ -570,7 +698,8 @@ function createRuntimeNodes(
       }
 
       if (nodeType === "subform") {
-        return [];
+        const subform = createSubformNode(context, node);
+        return subform ? [subform] : [];
       }
 
       const layout = createLayoutNode(context, node);
@@ -627,6 +756,8 @@ export function createRuntimeFormDefinitionFromSchema(source: RuntimeFormSchemaS
   const context: CompileContext = {
     fieldById: createFieldMap(dataSchema),
     nodesByParentId: createNodesByParentId(uiSchema),
+    subformDataScopeById: createSubformDataScopeMap(dataSchema),
+    subformUiScopeById: createSubformUiScopeMap(uiSchema),
     workflowStatus,
   };
 

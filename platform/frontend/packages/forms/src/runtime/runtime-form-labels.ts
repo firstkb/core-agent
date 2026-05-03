@@ -18,6 +18,10 @@ const defaultRuntimeFormLabels: RuntimeFormResolvedLabels = {
     saving: "Saving",
   },
   selectPlaceholder: "Select...",
+  subformAdd: "Add",
+  subformDelete: "Delete",
+  subformEdit: "Edit",
+  subformEmpty: "No records yet.",
 };
 
 export function resolveRuntimeFormLabels(labels?: RuntimeFormLabels): RuntimeFormResolvedLabels {

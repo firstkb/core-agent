@@ -33,6 +33,24 @@ func (h *Handler) LoadForm(
 	return out, nil
 }
 
+func (h *Handler) LoadSubform(
+	ctx context.Context,
+	r *http.Request,
+) (*RuntimeViewFormResponse, error) {
+	out, err := h.service.LoadSubform(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) CreateRecord(
 	ctx context.Context,
 	r *http.Request,
@@ -42,6 +60,25 @@ func (h *Handler) CreateRecord(
 		ctx,
 		strings.TrimSpace(r.PathValue("modelId")),
 		strings.TrimSpace(r.PathValue("viewId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) CreateSubformRecord(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewRecordMutationRequest,
+) (*RuntimeViewRecordMutationResponse, error) {
+	out, err := h.service.CreateSubformRecord(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
 		req,
 	)
 	if err != nil {
@@ -61,6 +98,44 @@ func (h *Handler) UpdateRecord(
 		strings.TrimSpace(r.PathValue("viewId")),
 		strings.TrimSpace(r.PathValue("docGuid")),
 		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) UpdateSubformRecord(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewRecordMutationRequest,
+) (*RuntimeViewRecordMutationResponse, error) {
+	out, err := h.service.UpdateSubformRecord(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) DeleteSubformRecord(
+	ctx context.Context,
+	r *http.Request,
+) (*RuntimeViewDeleteResponse, error) {
+	out, err := h.service.DeleteSubformRecord(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
 	)
 	if err != nil {
 		return nil, mapError(err)

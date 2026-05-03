@@ -406,6 +406,14 @@ export function App({
               <Route element={<TenantDashboardPage />} path="dashboard" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId" />
               <Route element={<FormsRuntimeFormPage mode="create" />} path="app/forms/:modelId/views/:viewId/new" />
+              <Route
+                element={<FormsRuntimeFormPage mode="create" scope="subform" />}
+                path="app/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/new"
+              />
+              <Route
+                element={<FormsRuntimeFormPage mode="edit" scope="subform" />}
+                path="app/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/edit/:docGuid"
+              />
               <Route element={<FormsRuntimeFormPage mode="edit" />} path="app/forms/:modelId/views/:viewId/edit/:docGuid" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId/view/:docGuid" />
               <Route

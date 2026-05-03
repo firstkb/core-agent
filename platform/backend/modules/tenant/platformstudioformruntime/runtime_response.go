@@ -1,5 +1,7 @@
 package platformstudioformruntime
 
+import "encoding/json"
+
 func buildMutationResponse(created bool, scope runtimeRootScopePlan, row *runtimeRecordMutationRow) *RuntimeViewRecordMutationResponse {
 	if row == nil {
 		row = &runtimeRecordMutationRow{Values: map[string]any{}}
@@ -50,4 +52,85 @@ func buildRuntimeViewFormResponse(
 		Values:      values,
 		ViewID:      scopeContext.Scope.ViewID,
 	}
+}
+
+func buildRuntimeSubformFormResponse(
+	scopeContext runtimeRootScopeContext,
+	subformScope runtimeSubformScopePlan,
+	docGuid string,
+	revision string,
+	values map[string]any,
+) *RuntimeViewFormResponse {
+	if values == nil {
+		values = map[string]any{}
+	}
+
+	modelDataSchema := asMap(scopeContext.ModelPayload["dataSchema"])
+	viewUISchema := asMap(scopeContext.ViewPayload["uiSchema"])
+	dataScope := cloneMap(dataSchemaScope(modelDataSchema, subformScope.ScopeID))
+	uiScope := cloneMap(uiSubformScope(viewUISchema, subformScope.ScopeID))
+	dataScope["schemaScopeId"] = rootSchemaScopeID
+	uiScope["schemaScopeId"] = rootSchemaScopeID
+	delete(uiScope, "systemFields")
+
+	title := chooseString(
+		runtimeSubformNodeTitle(viewUISchema, subformScope.ScopeID),
+		chooseString(normalizeString(dataScope["displayName"]), chooseString(subformScope.TableKey, "Subform")),
+	)
+
+	return &RuntimeViewFormResponse{
+		DataSchema: map[string]any{
+			"rootScope":     dataScope,
+			"subformScopes": []any{},
+		},
+		DocGuid:    docGuid,
+		ModelID:    scopeContext.Scope.ModelID,
+		Revision:   revision,
+		SourceType: scopeContext.Scope.SourceType,
+		SurfaceID:  "form-runtime:" + scopeContext.Scope.ModelID + ":" + scopeContext.Scope.ViewID + ":subform:" + subformScope.ScopeID,
+		Title:      title,
+		UISchema: map[string]any{
+			"rootScope": uiScope,
+		},
+		Values: values,
+		ViewID: scopeContext.Scope.ViewID,
+	}
+}
+
+func cloneMap(value map[string]any) map[string]any {
+	if value == nil {
+		return map[string]any{}
+	}
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return map[string]any{}
+	}
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil || out == nil {
+		return map[string]any{}
+	}
+	return out
+}
+
+func uiSubformScope(uiSchema map[string]any, scopeID string) map[string]any {
+	for _, rawScope := range asSlice(uiSchema["subformScopes"]) {
+		scope := asMap(rawScope)
+		if normalizeString(scope["schemaScopeId"]) == scopeID || normalizeString(scope["tableKey"]) == scopeID {
+			return scope
+		}
+	}
+	return map[string]any{}
+}
+
+func runtimeSubformNodeTitle(uiSchema map[string]any, scopeID string) string {
+	for _, rawNode := range asSlice(asMap(uiSchema["rootScope"])["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "subform" {
+			continue
+		}
+		if normalizeString(node["schemaScopeId"]) == scopeID || normalizeString(node["tableKey"]) == scopeID {
+			return normalizeString(node["title"])
+		}
+	}
+	return ""
 }

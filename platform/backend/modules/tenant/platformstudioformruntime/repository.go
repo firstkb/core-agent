@@ -138,6 +138,40 @@ func (r *repository) CreateRootRecord(
 	return row, nil
 }
 
+func (r *repository) CreateSubformRecord(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	values map[string]any,
+	docGuid string,
+) (*runtimeRecordMutationRow, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: begin create subform record tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return nil, err
+	}
+
+	row, err := createSubformRecordTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid), values, strings.TrimSpace(docGuid))
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form runtime: commit create subform record tx: %w", err)
+	}
+	return row, nil
+}
+
 func (r *repository) UpdateRootRecord(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,
@@ -167,6 +201,41 @@ func (r *repository) UpdateRootRecord(
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("form runtime: commit update record tx: %w", err)
+	}
+	return row, nil
+}
+
+func (r *repository) UpdateSubformRecord(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+	values map[string]any,
+	expectedRevision string,
+) (*runtimeRecordMutationRow, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: begin update subform record tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return nil, err
+	}
+
+	row, err := updateSubformRecordTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid), strings.TrimSpace(docGuid), values, strings.TrimSpace(expectedRevision))
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form runtime: commit update subform record tx: %w", err)
 	}
 	return row, nil
 }
@@ -231,6 +300,37 @@ func (r *repository) DeleteRootRecords(
 	return nil
 }
 
+func (r *repository) DeleteSubformRecord(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+) error {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("form runtime: begin delete subform record tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return err
+	}
+	if err := deleteSubformRecordTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid), strings.TrimSpace(docGuid)); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("form runtime: commit delete subform record tx: %w", err)
+	}
+	return nil
+}
+
 func (r *repository) LoadRootRecord(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,
@@ -258,6 +358,39 @@ func (r *repository) LoadRootRecord(
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("form runtime: commit load record tx: %w", err)
+	}
+	return row, nil
+}
+
+func (r *repository) LoadSubformRecord(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	docGuid string,
+) (*runtimeRecordMutationRow, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: begin load subform record tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return nil, err
+	}
+
+	row, err := loadSubformRecordTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid), strings.TrimSpace(docGuid))
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form runtime: commit load subform record tx: %w", err)
 	}
 	return row, nil
 }

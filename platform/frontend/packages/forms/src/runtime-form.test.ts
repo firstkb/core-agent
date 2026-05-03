@@ -5,7 +5,7 @@ import {
   findRuntimeFormField,
   validateRuntimeForm,
 } from "./runtime-form";
-import type { RuntimeFormDefinition } from "./runtime-form";
+import type { RuntimeFormDefinition, RuntimeFormSubformDefinition } from "./runtime-form";
 import { createRuntimeFormFixture } from "./runtime-form-fixtures";
 import { createRuntimeFormDefinitionFromSchema } from "./runtime-form-schema";
 import { formatReadonlyValue } from "./runtime/runtime-form-utils";
@@ -480,5 +480,112 @@ describe("runtime form helpers", () => {
     ]);
     expect(type?.type).toBe("single_select");
     expect(type?.choiceRenderStyle).toBe("native");
+  });
+
+  it("compiles Form Builder subform nodes from subform grid settings", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              id: "location",
+              kind: "short_text",
+              label: "Location",
+            },
+          ],
+        },
+        subformScopes: [
+          {
+            displayName: "Contacts",
+            fields: [
+              {
+                id: "email",
+                kind: "short_text",
+                label: "Email",
+              },
+              {
+                id: "phone",
+                kind: "short_text",
+                label: "Phone",
+              },
+            ],
+            schemaScopeId: "subform-contacts",
+            subformType: "DEFAULT",
+            tableKey: "contacts",
+          },
+        ],
+      },
+      mode: "edit",
+      modelId: "test-inspection",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              fieldId: "location",
+              id: "node-location",
+              order: 1,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              id: "node-contacts",
+              order: 2,
+              schemaScopeId: "subform-contacts",
+              tableKey: "contacts",
+              title: "Contact list",
+              type: "subform",
+              visibility: "visible",
+            },
+          ],
+        },
+        subformScopes: [
+          {
+            schemaScopeId: "subform-contacts",
+            viewSettings: {
+              actions: {
+                canAdd: true,
+                canDelete: false,
+                canEdit: true,
+              },
+              list: {
+                columns: [
+                  {
+                    fieldId: "phone",
+                    id: "grid-phone",
+                    order: 0,
+                  },
+                  {
+                    fieldId: "email",
+                    id: "grid-email",
+                    order: 1,
+                  },
+                ],
+                sorting: {
+                  direction: "desc",
+                  fieldId: "phone",
+                },
+              },
+            },
+          },
+        ],
+      },
+      viewId: "default",
+    });
+
+    const subform = definition.sections[0]?.nodes?.find((node) => node.nodeType === "subform") as RuntimeFormSubformDefinition | undefined;
+
+    expect(subform?.schemaScopeId).toBe("subform-contacts");
+    expect(subform?.title).toBe("Contact list");
+    expect(subform?.actions).toEqual({
+      canAdd: true,
+      canDelete: false,
+      canEdit: true,
+    });
+    expect(subform?.columns.map((column) => column.fieldId)).toEqual(["phone", "email"]);
+    expect(subform?.defaultSort).toEqual({
+      columnId: "phone",
+      direction: "desc",
+    });
   });
 });

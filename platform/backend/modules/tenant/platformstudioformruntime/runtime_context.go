@@ -51,7 +51,7 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 		TableName:                 tableName,
 		DataViewName:              dataViewName,
 		MultiValueOwnerForeignKey: modelAlias + "_id",
-		MultiValueTableName:       runtimeScopeMultiValueTableName(sourceType, rootRuntime.MVTableName, modelAlias),
+		MultiValueTableName:       runtimeScopeMultiValueTableName(sourceType, rootRuntime.MVTableName, modelAlias, ""),
 		SourceIDColumn:            idColumn,
 		SourceTenantColumn:        tenantColumn,
 		SourceGUIDColumn:          guidColumn,
@@ -69,13 +69,44 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 	}
 	for _, rawSubformScope := range asSlice(dataSchema["subformScopes"]) {
 		subformScope := asMap(rawSubformScope)
-		subformRuntime := readRuntimeDataScopeMetadata(subformScope)
-		if strings.TrimSpace(subformRuntime.TableName) == "" {
+		scopeID := normalizeString(subformScope["schemaScopeId"])
+		if scopeID == "" {
 			continue
 		}
+		subformRuntime := readRuntimeDataScopeMetadata(subformScope)
+		scopeAlias := chooseString(
+			subformRuntime.RtAlias,
+			buildGeneratedRuntimeScopeAlias(chooseString(normalizeString(subformScope["tableKey"]), scopeID)),
+		)
+		subformTableName := chooseString(subformRuntime.TableName, buildGeneratedRuntimeTableName(modelAlias, scopeAlias))
+		if strings.TrimSpace(subformRuntime.TableName) == "" {
+			subformRuntime.TableName = subformTableName
+		}
+		subformDataViewName := chooseString(subformRuntime.DataViewName, buildGeneratedRuntimeDataViewName(modelAlias, scopeAlias))
+		subformIDColumn, subformTenantColumn, subformGUIDColumn, subformUpdatedColumn, subformTenantScoped := runtimeScopeSourceColumns(sourceType, subformRuntime)
+		fields := make([]runtimeFieldPlan, 0)
+		for _, rawField := range asSlice(subformScope["fields"]) {
+			field := buildRuntimeFieldPlan(asMap(rawField), sourceType)
+			if field.FieldID == "" {
+				continue
+			}
+			fields = append(fields, field)
+		}
 		scope.SubformScopes = append(scope.SubformScopes, runtimeSubformScopePlan{
-			ParentForeignKey: runtimeParentForeignKey,
-			TableName:        subformRuntime.TableName,
+			DataViewName:              subformDataViewName,
+			Fields:                    fields,
+			MultiValueOwnerForeignKey: scopeAlias + "_id",
+			MultiValueTableName:       runtimeScopeMultiValueTableName(sourceType, subformRuntime.MVTableName, modelAlias, scopeAlias),
+			ParentForeignKey:          runtimeParentForeignKey,
+			ScopeID:                   scopeID,
+			SourceGUIDColumn:          subformGUIDColumn,
+			SourceIDColumn:            subformIDColumn,
+			SourceTenantColumn:        subformTenantColumn,
+			SourceUpdatedColumn:       subformUpdatedColumn,
+			SubformType:               chooseString(normalizeString(subformScope["subformType"]), "DEFAULT"),
+			TableKey:                  chooseString(normalizeString(subformScope["tableKey"]), scopeID),
+			TableName:                 subformRuntime.TableName,
+			TenantScoped:              subformTenantScoped,
 		})
 	}
 
@@ -291,12 +322,24 @@ func buildGeneratedRuntimeModelAlias(seed string) string {
 	return runtimeReadableAlias(base, runtimeModelAliasMaxLength, runtimeViewAliasHashLength)
 }
 
-func buildGeneratedRuntimeTableName(modelRtAlias string) string {
-	return runtimeIdentifier("ps_" + modelRtAlias)
+func buildGeneratedRuntimeScopeAlias(seed string) string {
+	base := runtimeAliasBase(seed)
+	if base == "" {
+		base = "scope"
+	}
+	return "sf_" + runtimeShortHash(base, 6)
 }
 
-func buildGeneratedRuntimeMVTableName(modelRtAlias string) string {
-	return runtimeIdentifier(buildGeneratedRuntimeTableName(modelRtAlias) + "__mv")
+func buildGeneratedRuntimeTableName(modelRtAlias string, scopeRtAlias ...string) string {
+	raw := "ps_" + modelRtAlias
+	if len(scopeRtAlias) > 0 && strings.TrimSpace(scopeRtAlias[0]) != "" {
+		raw += "__" + scopeRtAlias[0]
+	}
+	return runtimeIdentifier(raw)
+}
+
+func buildGeneratedRuntimeMVTableName(modelRtAlias string, scopeRtAlias string) string {
+	return runtimeIdentifier(buildGeneratedRuntimeTableName(modelRtAlias, scopeRtAlias) + "__mv")
 }
 
 func buildGeneratedRuntimeDataViewName(modelRtAlias string, scopeRtAlias string) string {
@@ -307,14 +350,14 @@ func buildGeneratedRuntimeDataViewName(modelRtAlias string, scopeRtAlias string)
 	return runtimeIdentifier(raw)
 }
 
-func runtimeScopeMultiValueTableName(sourceType string, configured string, modelRuntimeAlias string) string {
+func runtimeScopeMultiValueTableName(sourceType string, configured string, modelRuntimeAlias string, scopeRuntimeAlias string) string {
 	if configured = normalizeString(configured); configured != "" {
 		return configured
 	}
 	if !isManagedRuntimeSourceType(sourceType) {
 		return ""
 	}
-	return buildGeneratedRuntimeMVTableName(modelRuntimeAlias)
+	return buildGeneratedRuntimeMVTableName(modelRuntimeAlias, scopeRuntimeAlias)
 }
 
 func runtimeFieldColumnIdentifier(raw string) string {

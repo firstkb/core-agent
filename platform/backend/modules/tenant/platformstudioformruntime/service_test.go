@@ -170,6 +170,87 @@ func TestCreateRecordIsIdempotentForDuplicateClientToken(t *testing.T) {
 	}
 }
 
+func TestLoadSubformReturnsRootShapedSchemaWithoutSystemFields(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	svc := NewService(repo)
+
+	out, err := svc.LoadSubform(testRuntimeContext(), "sor", "default", "parent-guid", "contacts", "child-guid")
+	if err != nil {
+		t.Fatalf("LoadSubform returned error: %v", err)
+	}
+	if out.DocGuid != "child-guid" {
+		t.Fatalf("DocGuid = %q, want child-guid", out.DocGuid)
+	}
+	if out.Title != "Contacts" {
+		t.Fatalf("Title = %q, want Contacts", out.Title)
+	}
+	rootDataScope := out.DataSchema["rootScope"].(map[string]any)
+	if got := rootDataScope["schemaScopeId"]; got != rootSchemaScopeID {
+		t.Fatalf("root data schemaScopeId = %#v, want root", got)
+	}
+	rootUIScope := out.UISchema["rootScope"].(map[string]any)
+	if _, ok := rootUIScope["systemFields"]; ok {
+		t.Fatal("subform ui schema should not include systemFields")
+	}
+	assertValue(t, out.Values, "email", "person@example.com")
+	if repo.lastSubformLoad == nil {
+		t.Fatal("LoadSubformRecord was not called")
+	}
+	if repo.lastSubformLoad.ParentDocGuid != "parent-guid" || repo.lastSubformLoad.ScopeID != "contacts" {
+		t.Fatalf("subform load = %#v, want parent-guid/contacts", repo.lastSubformLoad)
+	}
+}
+
+func TestCreateSubformRecordWaitsForRequiredFields(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	svc := NewService(repo)
+
+	out, err := svc.CreateSubformRecord(testRuntimeContext(), "sor", "default", "parent-guid", "contacts", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{},
+	})
+	if err != nil {
+		t.Fatalf("CreateSubformRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "email" {
+		t.Fatalf("validation field = %q, want email", out.ValidationErrors[0].FieldID)
+	}
+	if repo.lastSubformCreate != nil {
+		t.Fatal("CreateSubformRecord should wait until required fields are complete")
+	}
+}
+
+func TestCreateSubformRecordUsesParentAndScope(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	svc := NewService(repo)
+
+	out, err := svc.CreateSubformRecord(testRuntimeContext(), "sor", "default", "parent-guid", "contacts", RuntimeViewRecordMutationRequest{
+		ClientCreateToken: "11111111-1111-4111-8111-111111111111",
+		Values: map[string]any{
+			"email": "person@example.com",
+			"phone": "(555) 555-5555",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateSubformRecord returned error: %v", err)
+	}
+	if !out.Created {
+		t.Fatal("response Created = false, want true")
+	}
+	if out.DocGuid != "11111111-1111-4111-8111-111111111111" {
+		t.Fatalf("DocGuid = %q, want client create token", out.DocGuid)
+	}
+	if repo.lastSubformCreate == nil {
+		t.Fatal("CreateSubformRecord was not called")
+	}
+	if repo.lastSubformCreate.ParentDocGuid != "parent-guid" || repo.lastSubformCreate.ScopeID != "contacts" {
+		t.Fatalf("subform create = %#v, want parent-guid/contacts", repo.lastSubformCreate)
+	}
+	assertValue(t, repo.lastSubformCreate.Values, "email", "person@example.com")
+}
+
 func TestFinishRecordUsesFinalStatusWhenConfigured(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)
@@ -318,9 +399,32 @@ type recordingRuntimeRepo struct {
 	lastCreateValues  map[string]any
 	lastDeleteBulk    []string
 	lastLoadDocGuid   string
+	lastSubformCreate *recordingSubformMutation
+	lastSubformDelete *recordingSubformDelete
+	lastSubformLoad   *recordingSubformLoad
+	lastSubformUpdate *recordingSubformMutation
 	lastUpdateValues  map[string]any
 	model             *ModelRecord
 	view              *ViewRecord
+}
+
+type recordingSubformMutation struct {
+	DocGuid       string
+	ParentDocGuid string
+	ScopeID       string
+	Values        map[string]any
+}
+
+type recordingSubformDelete struct {
+	DocGuid       string
+	ParentDocGuid string
+	ScopeID       string
+}
+
+type recordingSubformLoad struct {
+	DocGuid       string
+	ParentDocGuid string
+	ScopeID       string
 }
 
 type recordingActiveBulk struct {
@@ -380,6 +484,23 @@ func (r *recordingRuntimeRepo) CreateRootRecord(_ context.Context, _ requestctx.
 	}, nil
 }
 
+func (r *recordingRuntimeRepo) CreateSubformRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, values map[string]any, docGuid string) (*runtimeRecordMutationRow, error) {
+	r.lastSubformCreate = &recordingSubformMutation{
+		DocGuid:       docGuid,
+		ParentDocGuid: parentDocGuid,
+		ScopeID:       subformScope.ScopeID,
+		Values:        cloneValues(values),
+	}
+	if docGuid == "" {
+		docGuid = "subform-created-guid"
+	}
+	return &runtimeRecordMutationRow{
+		DocGuid:  docGuid,
+		Revision: "subform-rev-1",
+		Values:   cloneValues(values),
+	}, nil
+}
+
 func (r *recordingRuntimeRepo) UpdateRootRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuid string, values map[string]any, _ string) (*runtimeRecordMutationRow, error) {
 	r.lastUpdateValues = cloneValues(values)
 	rowValues := map[string]any{
@@ -392,6 +513,20 @@ func (r *recordingRuntimeRepo) UpdateRootRecord(_ context.Context, _ requestctx.
 		DocGuid:  docGuid,
 		Revision: "rev-2",
 		Values:   rowValues,
+	}, nil
+}
+
+func (r *recordingRuntimeRepo) UpdateSubformRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string, values map[string]any, _ string) (*runtimeRecordMutationRow, error) {
+	r.lastSubformUpdate = &recordingSubformMutation{
+		DocGuid:       docGuid,
+		ParentDocGuid: parentDocGuid,
+		ScopeID:       subformScope.ScopeID,
+		Values:        cloneValues(values),
+	}
+	return &runtimeRecordMutationRow{
+		DocGuid:  docGuid,
+		Revision: "subform-rev-2",
+		Values:   cloneValues(values),
 	}, nil
 }
 
@@ -409,6 +544,15 @@ func (r *recordingRuntimeRepo) DeleteRootRecords(_ context.Context, _ requestctx
 	return nil
 }
 
+func (r *recordingRuntimeRepo) DeleteSubformRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string) error {
+	r.lastSubformDelete = &recordingSubformDelete{
+		DocGuid:       docGuid,
+		ParentDocGuid: parentDocGuid,
+		ScopeID:       subformScope.ScopeID,
+	}
+	return nil
+}
+
 func (r *recordingRuntimeRepo) LoadRootRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuid string) (*runtimeRecordMutationRow, error) {
 	r.lastLoadDocGuid = docGuid
 	return &runtimeRecordMutationRow{
@@ -418,6 +562,22 @@ func (r *recordingRuntimeRepo) LoadRootRecord(_ context.Context, _ requestctx.Te
 			"location":    "HQ",
 			"reported_by": "77",
 			"status":      "new",
+		},
+	}, nil
+}
+
+func (r *recordingRuntimeRepo) LoadSubformRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string) (*runtimeRecordMutationRow, error) {
+	r.lastSubformLoad = &recordingSubformLoad{
+		DocGuid:       docGuid,
+		ParentDocGuid: parentDocGuid,
+		ScopeID:       subformScope.ScopeID,
+	}
+	return &runtimeRecordMutationRow{
+		DocGuid:  docGuid,
+		Revision: "subform-rev-1",
+		Values: map[string]any{
+			"email": "person@example.com",
+			"phone": "(555) 555-5555",
 		},
 	}, nil
 }
@@ -508,6 +668,34 @@ func testModelPayload() map[string]any {
 					},
 				},
 			},
+			"subformScopes": []any{
+				map[string]any{
+					"displayName":   "Contacts",
+					"schemaScopeId": "contacts",
+					"subformType":   "DEFAULT",
+					"tableKey":      "contacts",
+					"runtime": map[string]any{
+						"rtAlias":      "contacts",
+						"tableName":    "ps_sor__contacts",
+						"dataViewName": "vw_sor__contacts",
+					},
+					"fields": []any{
+						map[string]any{
+							"fieldId":    "email",
+							"kind":       "short_text",
+							"label":      "Email",
+							"required":   true,
+							"storageKey": "email",
+						},
+						map[string]any{
+							"fieldId":    "phone",
+							"kind":       "short_text",
+							"label":      "Phone",
+							"storageKey": "phone",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -519,6 +707,22 @@ func testViewPayload() map[string]any {
 		"uiSchema": map[string]any{
 			"rootScope": map[string]any{
 				"schemaScopeId": "root",
+				"nodes": []any{
+					map[string]any{
+						"id":      "field-location",
+						"fieldId": "location",
+						"order":   0,
+						"type":    "field",
+					},
+					map[string]any{
+						"id":            "subform-contacts",
+						"schemaScopeId": "contacts",
+						"subformType":   "DEFAULT",
+						"tableKey":      "contacts",
+						"title":         "Contacts",
+						"type":          "subform",
+					},
+				},
 				"systemFields": map[string]any{
 					"reportedBy":   map[string]any{"fieldId": "reported_by"},
 					"reportedDate": map[string]any{"fieldId": "reported_date"},
@@ -526,6 +730,45 @@ func testViewPayload() map[string]any {
 						"fieldId":      "status",
 						"initialValue": "new",
 						"finalValue":   "finish",
+					},
+				},
+			},
+			"subformScopes": []any{
+				map[string]any{
+					"schemaScopeId": "contacts",
+					"nodes": []any{
+						map[string]any{
+							"id":      "field-email",
+							"fieldId": "email",
+							"order":   0,
+							"type":    "field",
+						},
+						map[string]any{
+							"id":      "field-phone",
+							"fieldId": "phone",
+							"order":   1,
+							"type":    "field",
+						},
+					},
+					"viewSettings": map[string]any{
+						"actions": map[string]any{
+							"canAdd":    true,
+							"canDelete": true,
+							"canEdit":   true,
+						},
+						"list": map[string]any{
+							"columns": []any{
+								map[string]any{
+									"fieldId": "email",
+									"id":      "grid-email",
+									"order":   0,
+								},
+							},
+							"sorting": map[string]any{
+								"fieldId":   "email",
+								"direction": "asc",
+							},
+						},
 					},
 				},
 			},

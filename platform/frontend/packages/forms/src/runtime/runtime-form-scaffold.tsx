@@ -18,6 +18,7 @@ import { RuntimeLayoutNode } from "./runtime-form-layout";
 import {
   isRuntimeNodeVisible,
 } from "./runtime-form-rules";
+import { RuntimeSubformNode } from "./runtime-form-subform";
 import type {
   RuntimeFormDefinition,
   RuntimeFormNodeDefinition,
@@ -31,6 +32,7 @@ import {
   isRuntimeFormContentNode,
   isRuntimeFormFieldNode,
   isRuntimeFormLayoutNode,
+  isRuntimeFormSubformNode,
   resolveRuntimeSectionNodes,
 } from "./runtime-form-utils";
 
@@ -103,8 +105,12 @@ function RuntimeNode({
   node,
   onActiveTabChange,
   onFieldChange,
+  onSubformAdd,
+  onSubformDelete,
+  onSubformEdit,
   revealFieldId,
   revealRequestKey,
+  subforms,
   values,
 }: {
   activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
@@ -114,8 +120,12 @@ function RuntimeNode({
   node: RuntimeFormNodeDefinition;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
+  onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
+  onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
   revealFieldId?: string;
   revealRequestKey?: number;
+  subforms?: RuntimeFormScaffoldProps["subforms"];
   values: RuntimeFormScaffoldProps["values"];
 }) {
   if (!isRuntimeNodeVisible(node, values)) {
@@ -140,6 +150,19 @@ function RuntimeNode({
     return <RuntimeContentNode content={node} />;
   }
 
+  if (isRuntimeFormSubformNode(node)) {
+    return (
+      <RuntimeSubformNode
+        labels={labels}
+        onAdd={onSubformAdd}
+        onDelete={onSubformDelete}
+        onEdit={onSubformEdit}
+        rows={subforms?.[node.schemaScopeId]?.rows}
+        subform={node}
+      />
+    );
+  }
+
   if (isRuntimeFormLayoutNode(node)) {
     return (
       <RuntimeLayoutNode
@@ -158,8 +181,12 @@ function RuntimeNode({
             nodes={nodes}
             onActiveTabChange={onActiveTabChange}
             onFieldChange={onFieldChange}
+            onSubformAdd={onSubformAdd}
+            onSubformDelete={onSubformDelete}
+            onSubformEdit={onSubformEdit}
             revealFieldId={revealFieldId}
             revealRequestKey={revealRequestKey}
+            subforms={subforms}
             values={values}
           />
         )}
@@ -179,8 +206,12 @@ function RuntimeNodeList({
   nodes,
   onActiveTabChange,
   onFieldChange,
+  onSubformAdd,
+  onSubformDelete,
+  onSubformEdit,
   revealFieldId,
   revealRequestKey,
+  subforms,
   values,
 }: {
   activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
@@ -191,8 +222,12 @@ function RuntimeNodeList({
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
+  onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
+  onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
   revealFieldId?: string;
   revealRequestKey?: number;
+  subforms?: RuntimeFormScaffoldProps["subforms"];
   values: RuntimeFormScaffoldProps["values"];
 }) {
   return (
@@ -207,8 +242,12 @@ function RuntimeNodeList({
           node={node}
           onActiveTabChange={onActiveTabChange}
           onFieldChange={onFieldChange}
+          onSubformAdd={onSubformAdd}
+          onSubformDelete={onSubformDelete}
+          onSubformEdit={onSubformEdit}
           revealFieldId={revealFieldId}
           revealRequestKey={revealRequestKey}
+          subforms={subforms}
           values={values}
         />
       ))}
@@ -226,9 +265,13 @@ export function RuntimeFormScaffold({
   onBack,
   onFieldChange,
   onFinish,
+  onSubformAdd,
+  onSubformDelete,
+  onSubformEdit,
   revealFieldId,
   revealRequestKey,
   saveState = "idle",
+  subforms,
   values,
 }: RuntimeFormScaffoldProps) {
   const resolvedLabels = resolveRuntimeFormLabels(labels);
@@ -288,8 +331,12 @@ export function RuntimeFormScaffold({
                   node={node}
                   onActiveTabChange={onActiveTabChange}
                   onFieldChange={onFieldChange}
+                  onSubformAdd={onSubformAdd}
+                  onSubformDelete={onSubformDelete}
+                  onSubformEdit={onSubformEdit}
                   revealFieldId={revealFieldId}
                   revealRequestKey={revealRequestKey}
+                  subforms={subforms}
                   values={values}
                 />
               ))}

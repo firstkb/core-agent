@@ -39,6 +39,8 @@ export type RuntimeFormValue = string | boolean | ReadonlyArray<string>;
 export type RuntimeFormValues = Record<string, RuntimeFormValue | undefined>;
 export type RuntimeFormValidationErrors = Record<string, string | undefined>;
 export type RuntimeFormActiveTabs = Record<string, string>;
+export type RuntimeFormSubformColumnType = "badge" | "boolean" | "date" | "date_time" | "html" | "text";
+export type RuntimeFormSubformSortDirection = "asc" | "desc";
 
 export type RuntimeFormFieldOption = {
   label: string;
@@ -126,6 +128,54 @@ export type RuntimeFormContentDefinition = {
   width?: RuntimeFormFieldWidth;
 };
 
+export type RuntimeFormSubformColumnDefinition = {
+  fieldId: string;
+  id: string;
+  label: string;
+  type: RuntimeFormSubformColumnType;
+};
+
+export type RuntimeFormSubformActions = {
+  canAdd: boolean;
+  canDelete: boolean;
+  canEdit: boolean;
+};
+
+export type RuntimeFormSubformDefinition = {
+  actions: RuntimeFormSubformActions;
+  columns: ReadonlyArray<RuntimeFormSubformColumnDefinition>;
+  defaultSort?: {
+    columnId: string;
+    direction: RuntimeFormSubformSortDirection;
+  };
+  id: string;
+  nodeType: "subform";
+  rules?: RuntimeFormNodeRules;
+  schemaScopeId: string;
+  subformType: string;
+  tableKey: string;
+  title: ReactNode;
+  width?: RuntimeFormFieldWidth;
+};
+
+export type RuntimeFormSubformCell = {
+  displayValue?: string;
+  html?: string;
+  label?: string;
+  value: boolean | number | string;
+};
+
+export type RuntimeFormSubformRow = {
+  cells: Record<string, RuntimeFormSubformCell>;
+  id: string;
+};
+
+export type RuntimeFormSubformData = {
+  rows: ReadonlyArray<RuntimeFormSubformRow>;
+};
+
+export type RuntimeFormSubformDataById = Record<string, RuntimeFormSubformData | undefined>;
+
 export type RuntimeFormLayoutBase = {
   description?: ReactNode;
   id: string;
@@ -189,7 +239,8 @@ export type RuntimeFormLayoutDefinition =
 export type RuntimeFormNodeDefinition =
   | RuntimeFormFieldDefinition
   | RuntimeFormContentDefinition
-  | RuntimeFormLayoutDefinition;
+  | RuntimeFormLayoutDefinition
+  | RuntimeFormSubformDefinition;
 
 export type RuntimeFormSectionDefinition = {
   description?: ReactNode;
@@ -225,6 +276,10 @@ export type RuntimeFormResolvedLabels = {
   requiredError: string;
   saveStates: Record<RuntimeFormSaveState, ReactNode>;
   selectPlaceholder: string;
+  subformAdd: ReactNode;
+  subformDelete: ReactNode;
+  subformEdit: ReactNode;
+  subformEmpty: ReactNode;
 };
 
 export type RuntimeFormLabels = Partial<Omit<RuntimeFormResolvedLabels, "saveStates">> & {
@@ -241,8 +296,12 @@ export type RuntimeFormScaffoldProps = {
   onBack: () => void;
   onFieldChange: (fieldId: string, value: RuntimeFormValue, field: RuntimeFormFieldDefinition) => void;
   onFinish: () => void;
+  onSubformAdd?: (subform: RuntimeFormSubformDefinition) => void;
+  onSubformDelete?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
+  onSubformEdit?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
   revealFieldId?: string;
   revealRequestKey?: number;
   saveState?: RuntimeFormSaveState;
+  subforms?: RuntimeFormSubformDataById;
   values: RuntimeFormValues;
 };

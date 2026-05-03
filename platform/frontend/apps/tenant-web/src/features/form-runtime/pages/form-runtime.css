@@ -168,6 +168,165 @@
   line-height: 1.3;
 }
 
+.tenant-web__form-runtime-finish-dialog.ui-alert-dialog__content {
+  align-items: center;
+  justify-content: center;
+  max-width: min(92vw, 30rem);
+  min-height: min(78vh, 22.5rem);
+  gap: 2rem;
+  padding: 2.875rem 2.5rem 2.375rem;
+  border-color: var(--color-border-default);
+  background: var(--color-bg-overlay);
+  text-align: center;
+  animation: tenant-web-finish-dialog-enter 180ms var(--easing-standard);
+}
+
+.tenant-web__form-runtime-finish-dialog-header.ui-alert-dialog__header {
+  width: 100%;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.9rem;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.75rem;
+  height: 5.75rem;
+  flex: 0 0 auto;
+  color: var(--color-danger);
+}
+
+.tenant-web__form-runtime-finish-dialog-icon > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--danger {
+  border: 0.21875rem solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--danger > svg {
+  width: 5rem;
+  height: 5rem;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--success {
+  border: 0.21875rem solid color-mix(in srgb, var(--color-success) 24%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-success-hover);
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--success > svg {
+  display: none;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--success::before {
+  content: "";
+  width: 2.55rem;
+  height: 1.275rem;
+  border-bottom: 0.36rem solid currentColor;
+  border-left: 0.36rem solid currentColor;
+  border-radius: 0.125rem;
+  transform: translateY(-0.25rem) rotate(-45deg);
+}
+
+.tenant-web__form-runtime-finish-dialog-title.ui-alert-dialog__title {
+  max-width: 25rem;
+  color: var(--color-text-primary);
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.35;
+}
+
+.tenant-web__form-runtime-finish-dialog-footer.ui-alert-dialog__footer {
+  width: 100%;
+  justify-content: center;
+}
+
+.tenant-web__form-runtime-finish-dialog-footer .ui-button {
+  min-width: 6.5rem;
+  min-height: 2.75rem;
+  padding-inline: 1.375rem;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--danger,
+.tenant-web__form-runtime-finish-dialog-icon--success {
+  animation: tenant-web-finish-dialog-ring 520ms var(--easing-standard);
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--danger path {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: tenant-web-finish-dialog-mark 420ms 170ms var(--easing-standard) forwards;
+}
+
+.tenant-web__form-runtime-finish-dialog-icon--success::before {
+  animation: tenant-web-finish-dialog-check 320ms 120ms var(--easing-standard) both;
+}
+
+@keyframes tenant-web-finish-dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tenant-web-finish-dialog-ring {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tenant-web-finish-dialog-mark {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tenant-web-finish-dialog-check {
+  from {
+    transform: translateY(-0.25rem) rotate(-45deg) scale(0.82);
+  }
+
+  to {
+    transform: translateY(-0.25rem) rotate(-45deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tenant-web__form-runtime-finish-dialog.ui-alert-dialog__content,
+  .tenant-web__form-runtime-finish-dialog-icon--danger,
+  .tenant-web__form-runtime-finish-dialog-icon--success,
+  .tenant-web__form-runtime-finish-dialog-icon--danger path,
+  .tenant-web__form-runtime-finish-dialog-icon--success::before {
+    animation: none;
+  }
+
+  .tenant-web__form-runtime-finish-dialog-icon--danger path {
+    stroke-dashoffset: 0;
+  }
+}
+
 @media (max-width: 48rem) {
   .tenant-web__form-runtime-record-surface {
     max-width: min(96vw, 42rem);
@@ -179,6 +338,25 @@
 
   .tenant-web__form-runtime-record-label {
     border-bottom: 1px solid var(--color-border-subtle);
+  }
+
+  .tenant-web__form-runtime-finish-dialog.ui-alert-dialog__content {
+    min-height: min(78vh, 21rem);
+    padding: 2.25rem 1.375rem 1.875rem;
+  }
+
+  .tenant-web__form-runtime-finish-dialog-title.ui-alert-dialog__title {
+    font-size: 1.0625rem;
+  }
+
+  .tenant-web__form-runtime-finish-dialog-icon {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .tenant-web__form-runtime-finish-dialog-icon--danger > svg {
+    width: 4.25rem;
+    height: 4.25rem;
   }
 }
 

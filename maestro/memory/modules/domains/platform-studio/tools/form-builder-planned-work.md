@@ -27,6 +27,10 @@ instead of them.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
 - Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
 - Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.
+- Authoring save uses a frontend single-flight guard and atomic model+view draft update so stale view conflicts cannot partially update the model from one save request.
+- Canvas tree authoring preserves active scope, current parent, and selected node context after successful save.
+- Choice field authoring templates default base `single_select` and `multi_select` Orientation to `Horizontal`.
+- View tab Grid settings includes a transient switch above the field list to show only active/list-visible fields for easier sorting of large views.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 
@@ -41,8 +45,6 @@ instead of them.
 - Import data is planned for managed models, but no active import route/service exists yet.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
 - Static/external multivalue storage remains deferred to a future explicit slice.
-- Choice field authoring should default `single_select` and `multi_select` Orientation to `Horizontal`.
-- View tab Grid settings should add a bool switch above the field list to show only active/list-visible fields for easier sorting of large views.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
 - Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.

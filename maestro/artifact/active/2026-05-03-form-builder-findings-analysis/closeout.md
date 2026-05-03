@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1 and Slice 2 are implemented and verified.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, and Slice 3 are implemented and verified.
 
 ## Outcome
 
@@ -19,16 +19,18 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Preserved canvas scope/selection in the working document after successful save while keeping saved baselines normalized.
 - Added a frontend single-flight save guard to prevent duplicate save requests from the same workspace instance.
 - Made backend draft persistence atomic for model+view updates, preventing stale view conflicts from leaving a partially updated model.
+- Changed base `single_select` and `multi_select` authoring templates so new fields default to horizontal orientation.
+- Added a transient Grid settings switch to show only visible/list-active columns above the field list without persisting the filter or dropping hidden column metadata.
 
 ## Checks
 
 - Targeted frontend/backend checks are recorded in `evidence.md`.
-- Product lite preflight passed.
+- Product lite preflight passed after Slice 3.
 
 ## Memory
 
-Updated planned-work memory during Slice 1 to move Subform Grid persistence and visible-grid sorting constraints from planned work to code-confirmed current state. Slice 2 did not stage the pre-existing planned-work memory edits that were already dirty before this work.
+Updated planned-work memory to move Slice 1, Slice 2, and Slice 3 accepted behavior from planned/open work to code-confirmed current state.
 
 ## Next Step
 
-Continue with Slice 3 authoring UX follow-ups or another owner-selected stabilization item.
+Continue with Slice 4 (`FB-RT-005` choice button option styles runtime contract) or another owner-selected stabilization item.

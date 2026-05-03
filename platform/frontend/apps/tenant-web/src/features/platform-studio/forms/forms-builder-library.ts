@@ -357,7 +357,7 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     template: createFieldTemplate("choice", "single_select", "Single select", {
       choiceDisplay: {
         allowEmpty: false,
-        orientation: "vertical",
+        orientation: "horizontal",
         renderStyle: "native",
       },
       options: ["Option 1", "Option 2"],
@@ -372,7 +372,7 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
       choiceDisplay: {
         maxSelections: undefined,
         minSelections: 0,
-        orientation: "vertical",
+        orientation: "horizontal",
         renderStyle: "native",
       },
       options: ["Option 1", "Option 2"],

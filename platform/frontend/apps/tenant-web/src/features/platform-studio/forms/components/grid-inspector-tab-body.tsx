@@ -52,12 +52,14 @@ export function GridInspectorTabBody({
       hiddenInGridText={t("tenant.platformStudio.forms.builder.grid.hiddenInGrid")}
       isChecklistGridScope={isChecklistGridScope}
       meta={meta}
+      noVisibleFieldsText={t("tenant.platformStudio.forms.builder.grid.noVisibleFields")}
       noFieldsText={t("tenant.platformStudio.forms.builder.grid.noFields")}
       onDragEnd={onDragEnd}
       onDragOverField={onDragOverField}
       onDragStartField={onDragStartField}
       onDropField={onDropField}
       onToggleVisible={onToggleVisible}
+      showVisibleOnlyText={t("tenant.platformStudio.forms.builder.grid.showVisibleOnly")}
       title={title}
       visibleInGridText={t("tenant.platformStudio.forms.builder.grid.visibleInGrid")}
     />

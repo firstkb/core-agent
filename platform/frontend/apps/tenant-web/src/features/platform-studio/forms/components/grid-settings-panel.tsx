@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Switch } from "@platform/ui-kit";
 
 import { FormBuilderElementIcon } from "../forms-builder-icons";
@@ -19,6 +21,7 @@ type GridSettingsPanelProps = {
   fieldItems: ReadonlyArray<GridSettingsFieldItem>;
   isChecklistGridScope: boolean;
   meta: string;
+  noVisibleFieldsText: string;
   noFieldsText: string;
   onDragEnd: () => void;
   onDragOverField: (fieldId: string) => void;
@@ -26,6 +29,7 @@ type GridSettingsPanelProps = {
   onDropField: (fieldId: string) => void;
   onToggleVisible: (fieldId: string, checked: boolean) => void;
   title: string;
+  showVisibleOnlyText: string;
   visibleInGridText: string;
   hiddenInGridText: string;
 };
@@ -40,6 +44,7 @@ export function GridSettingsPanel({
   fieldItems,
   isChecklistGridScope,
   meta,
+  noVisibleFieldsText,
   noFieldsText,
   onDragEnd,
   onDragOverField,
@@ -47,9 +52,13 @@ export function GridSettingsPanel({
   onDropField,
   onToggleVisible,
   title,
+  showVisibleOnlyText,
   visibleInGridText,
   hiddenInGridText,
 }: GridSettingsPanelProps) {
+  const [showVisibleOnly, setShowVisibleOnly] = useState(false);
+  const visibleFieldItems = getFilteredGridSettingsFieldItems(fieldItems, showVisibleOnly);
+
   return (
     <div className="tenant-web__platform-studio-builder-stack">
       <div className="tenant-web__platform-studio-inspector-section">
@@ -75,7 +84,23 @@ export function GridSettingsPanel({
             </p>
           ) : (
             <div className="tenant-web__platform-studio-builder-stack">
-              {fieldItems.map((field) => (
+              <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__platform-studio-switch-row--element-inline">
+                <span className="tenant-web__platform-studio-form-inline-label">
+                  {showVisibleOnlyText}
+                </span>
+                <Switch
+                  aria-label={showVisibleOnlyText}
+                  checked={showVisibleOnly}
+                  onCheckedChange={setShowVisibleOnly}
+                  size="sm"
+                />
+              </div>
+
+              {visibleFieldItems.length === 0 ? (
+                <p className="tenant-web__platform-studio-inline-help">
+                  {noVisibleFieldsText}
+                </p>
+              ) : visibleFieldItems.map((field) => (
                 <GridColumnRow
                   canEdit={canEdit}
                   canMoveItems={canMoveItems}
@@ -99,6 +124,13 @@ export function GridSettingsPanel({
       </div>
     </div>
   );
+}
+
+export function getFilteredGridSettingsFieldItems(
+  fieldItems: ReadonlyArray<GridSettingsFieldItem>,
+  showVisibleOnly: boolean,
+) {
+  return showVisibleOnly ? fieldItems.filter((field) => field.visible) : fieldItems;
 }
 
 function GridColumnRow({

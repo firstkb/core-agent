@@ -203,15 +203,32 @@ func readSystemFieldBindings(rootScope map[string]any) runtimeSystemFieldBinding
 
 func readOptionValues(options []any) []string {
 	values := make([]string, 0, len(options))
+	seen := make(map[string]struct{}, len(options))
 	for _, rawOption := range options {
-		option := asMap(rawOption)
-		value := normalizeString(option["value"])
+		value := normalizeOptionValue(rawOption)
 		if value == "" {
 			continue
 		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
 		values = append(values, value)
 	}
 	return values
+}
+
+func normalizeOptionValue(rawOption any) string {
+	if value := normalizeString(rawOption); value != "" {
+		return value
+	}
+	option := asMap(rawOption)
+	for _, key := range []string{"value", "id", "key", "option", "label"} {
+		if value := normalizeString(option[key]); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func dataSchemaScope(dataSchema map[string]any, scopeID string) map[string]any {

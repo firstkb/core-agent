@@ -300,4 +300,61 @@ describe("runtime form helpers", () => {
     expect(findRuntimeFormField(definition, "reported_by")?.readonly).toBe(false);
     expect(findRuntimeFormField(definition, "reported_by")?.options?.[0]?.label).toBe("Andrew Owner");
   });
+
+  it("normalizes authored string options for select and multi-select fields", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              id: "inspection_type",
+              kind: "single_select",
+              label: "Inspection type",
+              options: ["Satisfactory", "Unsatisfactory"],
+            },
+            {
+              id: "failed_categories",
+              kind: "multi_select",
+              label: "Failed categories",
+              options: ["Aerial lifts", "PPE"],
+            },
+          ],
+        },
+      },
+      mode: "edit",
+      modelId: "test-inspection",
+      title: "Test Inspection",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              fieldId: "inspection_type",
+              id: "node-inspection-type",
+              order: 1,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "failed_categories",
+              id: "node-failed-categories",
+              order: 2,
+              type: "field",
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    expect(findRuntimeFormField(definition, "inspection_type")?.options).toEqual([
+      { label: "Satisfactory", value: "Satisfactory" },
+      { label: "Unsatisfactory", value: "Unsatisfactory" },
+    ]);
+    expect(findRuntimeFormField(definition, "failed_categories")?.options).toEqual([
+      { label: "Aerial lifts", value: "Aerial lifts" },
+      { label: "PPE", value: "PPE" },
+    ]);
+  });
 });

@@ -9,6 +9,19 @@ import (
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 )
 
+func TestReadOptionValuesSupportsStringAndObjectOptions(t *testing.T) {
+	values := readOptionValues([]any{
+		"New",
+		map[string]any{"label": "Open label", "value": "Open"},
+		map[string]any{"label": "Closed"},
+		"New",
+	})
+
+	if len(values) != 3 || values[0] != "New" || values[1] != "Open" || values[2] != "Closed" {
+		t.Fatalf("option values = %#v, want New/Open/Closed", values)
+	}
+}
+
 func TestCreateRecordWaitsForRequiredFields(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)

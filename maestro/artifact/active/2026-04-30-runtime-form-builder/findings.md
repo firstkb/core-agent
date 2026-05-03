@@ -55,5 +55,20 @@ Statuses:
 - Priority: high.
 - Status: resolved.
 - Owner decision: Preview should keep the previously working selection/bulk-action behavior.
-- Fixed in: working tree after `2552b2d`; pending commit.
+- Fixed in: `e1883fc`.
 - Verification: `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime` passed; `go test ./cmd/api-tenant/internal/server` passed; `pnpm -C platform/frontend --filter @platform/tenant-web typecheck` passed; `pnpm -C platform/frontend --filter @platform/tenant-web lint` passed; `pnpm -C platform/frontend --filter @platform/tenant-web test` passed; `scripts/preflight.sh` passed. Browser verification on the live preview route still needs api-tenant restarted on this code.
+
+## FB-RT-004 - Select and multi-select form options missing
+
+- Area: Runtime form renderer and runtime form option normalization.
+- URL: not captured; owner reported from runtime form testing on 2026-05-03.
+- Model/View: affected forms with authored `single_select` or `multi_select` fields.
+- Symptom: Select and multi-select controls render without the options defined in the Form Builder schema.
+- Expected: Runtime select and multi-select controls should render authored schema options.
+- Actual: `@platform/forms` runtime schema mapper only read options shaped as objects with `{ value, label }`, while Form Builder authored choice fields can store options as `string[]`. Backend runtime option validation had the same object-only assumption.
+- Evidence: Owner manual testing; code inspection of `runtime-form-schema.ts` and `platformstudioformruntime/runtime_context.go`.
+- Priority: high.
+- Status: resolved.
+- Owner decision: Runtime forms must support options authored in the current Form Builder schema shape.
+- Fixed in: working tree; pending commit.
+- Verification: `pnpm -C platform/frontend --filter @platform/forms typecheck` passed; `pnpm -C platform/frontend --filter @platform/forms test` passed; `pnpm -C platform/frontend --filter @platform/forms lint` passed; `pnpm -C platform/frontend --filter @platform/tenant-web typecheck` passed; `pnpm -C platform/frontend --filter @platform/tenant-web lint` passed; `pnpm -C platform/frontend --filter @platform/tenant-web test` passed; `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime` passed; `scripts/preflight.sh` passed. Browser Use could not attach to the in-app browser pane during this pass.

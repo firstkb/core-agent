@@ -91,6 +91,16 @@ function boolValue(value: unknown, fallback = false) {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function optionStringValue(value: unknown, fallback = "") {
+  if (typeof value === "string") {
+    return value.trim().length > 0 ? value.trim() : fallback;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  return fallback;
+}
+
 function numericValue(value: unknown): number | undefined {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return undefined;
@@ -157,15 +167,39 @@ function readWorkflowStatus(uiSchema: JsonRecord) {
 }
 
 function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
+  const seen = new Set<string>();
   return asArray(field.options)
-    .filter(isRecord)
     .flatMap((option) => {
-      const value = stringValue(option.value);
-      if (!value) {
+      if (typeof option === "string" || typeof option === "number") {
+        const value = optionStringValue(option);
+        if (!value || seen.has(value)) {
+          return [];
+        }
+        seen.add(value);
+        return [{ label: value, value }];
+      }
+
+      if (!isRecord(option)) {
         return [];
       }
+
+      const labelCandidate = stringValue(
+        option.label,
+        stringValue(option.displayName, stringValue(option.title, stringValue(option.name))),
+      );
+      const value = optionStringValue(
+        option.value,
+        optionStringValue(
+          option.id,
+          optionStringValue(option.key, optionStringValue(option.option, labelCandidate)),
+        ),
+      );
+      if (!value || seen.has(value)) {
+        return [];
+      }
+      seen.add(value);
       return [{
-        label: stringValue(option.label, value),
+        label: labelCandidate || value,
         value,
       }];
     });

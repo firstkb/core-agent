@@ -73,10 +73,18 @@ type SelectionMeta struct {
 }
 
 type BulkActionDefinition struct {
-	ID    string `json:"id"`
-	Kind  string `json:"kind"`
-	Label string `json:"label,omitempty"`
-	Tone  string `json:"tone,omitempty"`
+	Confirmation *BulkActionConfirmation `json:"confirmation,omitempty"`
+	ID           string                  `json:"id"`
+	Kind         string                  `json:"kind"`
+	Label        string                  `json:"label,omitempty"`
+	Tone         string                  `json:"tone,omitempty"`
+}
+
+type BulkActionConfirmation struct {
+	CancelLabel  string `json:"cancelLabel,omitempty"`
+	ConfirmLabel string `json:"confirmLabel,omitempty"`
+	Description  string `json:"description,omitempty"`
+	Title        string `json:"title"`
 }
 
 type SavedFilterSet struct {

@@ -19,6 +19,7 @@ var runtimeViewListPageSizeOptions = []int{10, 25, 50}
 
 type runtimeViewListContext struct {
 	CanAdd            bool
+	CanDelete         bool
 	CanEdit           bool
 	CanView           bool
 	DefaultFilters    map[string]any
@@ -61,6 +62,8 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 	if err != nil {
 		return nil, err
 	}
+	bulkActions := buildRuntimeViewListBulkActions(runtimeContext)
+	selectionEnabled := runtimeContext.HasRecordGUID && len(bulkActions) > 0
 
 	return &RuntimeViewListMetaResponse{
 		Actions: collectiontable.PageActions{
@@ -69,7 +72,7 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 			ExportXLS: collectiontable.VisibilityAction{Visible: false},
 			Favorite:  collectiontable.FavoriteAction{Visible: true, IsFavorite: isFavorite},
 		},
-		BulkActions: []collectiontable.BulkActionDefinition{},
+		BulkActions: bulkActions,
 		Columns:     runtimeContext.ColumnDefinitions,
 		DefaultSort: collectiontable.SortRequest{
 			ColumnID:  runtimeContext.DefaultSortColumn,
@@ -85,7 +88,9 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 			Placeholder:    "Search rows",
 		},
 		Selection: collectiontable.SelectionMeta{
-			Enabled: false,
+			ColumnPosition: "leading",
+			Enabled:        selectionEnabled,
+			Mode:           "multi",
 		},
 		SurfaceID: runtimeContext.SurfaceID,
 		Title:     runtimeContext.Title,
@@ -227,6 +232,7 @@ func (s *Service) QueryRuntimeViewList(
 	}
 
 	tableRows := make([]collectiontable.TableRow, 0, len(rows))
+	selectableRows := runtimeContext.HasRecordGUID && len(buildRuntimeViewListBulkActions(runtimeContext)) > 0
 	for _, row := range rows {
 		cells := make(map[string]collectiontable.RowCell, len(runtimeContext.Fields))
 		for _, field := range runtimeContext.Fields {
@@ -238,7 +244,7 @@ func (s *Service) QueryRuntimeViewList(
 		}
 		tableRows = append(tableRows, collectiontable.TableRow{
 			ID:         row.ID,
-			Selectable: false,
+			Selectable: selectableRows && strings.TrimSpace(row.ID) != "",
 			Cells:      cells,
 		})
 	}
@@ -416,6 +422,7 @@ func (s *Service) loadRuntimeViewListContext(
 
 	return &runtimeViewListContext{
 		CanAdd:            readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canAdd", true),
+		CanDelete:         readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canDelete", true),
 		CanEdit:           readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canEdit", true),
 		CanView:           readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
 		DefaultFilters:    readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
@@ -453,6 +460,57 @@ func buildRuntimeViewListRowActions(canView bool, canEdit bool, hasRecordGUID bo
 		})
 	}
 	return actions
+}
+
+func buildRuntimeViewListBulkActions(runtimeContext *runtimeViewListContext) []collectiontable.BulkActionDefinition {
+	if runtimeContext == nil || !runtimeContext.HasRecordGUID {
+		return []collectiontable.BulkActionDefinition{}
+	}
+
+	actions := []collectiontable.BulkActionDefinition{}
+	if runtimeContext.CanEdit && runtimeViewListHasVisibleActiveField(runtimeContext.Fields) {
+		actions = append(actions,
+			collectiontable.BulkActionDefinition{
+				ID:    "active",
+				Kind:  "state-change",
+				Label: "Active",
+				Tone:  "success",
+			},
+			collectiontable.BulkActionDefinition{
+				ID:    "inactive",
+				Kind:  "state-change",
+				Label: "No active",
+				Tone:  "neutral",
+			},
+		)
+	}
+	if runtimeContext.CanDelete {
+		actions = append(actions, collectiontable.BulkActionDefinition{
+			Confirmation: &collectiontable.BulkActionConfirmation{
+				CancelLabel:  "Cancel",
+				ConfirmLabel: "Delete",
+				Description:  "Selected records will be permanently deleted.",
+				Title:        "Delete selected records?",
+			},
+			ID:    "delete",
+			Kind:  "custom",
+			Label: "Delete",
+			Tone:  "danger",
+		})
+	}
+	return actions
+}
+
+func runtimeViewListHasVisibleActiveField(fields []runtimeViewListFieldMeta) bool {
+	for _, field := range fields {
+		if field.Type != "boolean" {
+			continue
+		}
+		if field.ColumnName == "active" || field.FieldID == "active" || field.AuthoringFieldID == "active" {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Service) resolveRuntimeRecordGUIDSupport(

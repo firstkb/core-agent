@@ -87,10 +87,18 @@ export type CollectionTableRowActionDefinition = {
 };
 
 export type CollectionTableBulkActionDefinition = {
+  confirmation?: CollectionTableBulkActionConfirmation;
   id: string;
   kind: "state-change" | "custom";
   label: string;
   tone?: CollectionTableBadgeTone;
+};
+
+export type CollectionTableBulkActionConfirmation = {
+  cancelLabel?: string;
+  confirmLabel?: string;
+  description?: string;
+  title: string;
 };
 
 export type CollectionTableSelectionMeta = {

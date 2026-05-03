@@ -86,6 +86,24 @@ func (h *Handler) FinishRecord(
 	return out, nil
 }
 
+func (h *Handler) RunBulkAction(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewBulkActionRequest,
+) (*RuntimeViewBulkActionResponse, error) {
+	out, err := h.service.RunBulkAction(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("actionId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func mapError(err error) *apperr.AppError {
 	switch {
 	case errors.Is(err, ErrUnauthorized):

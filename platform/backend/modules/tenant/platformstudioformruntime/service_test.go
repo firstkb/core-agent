@@ -149,6 +149,85 @@ func TestFinishRecordUsesFinalStatusWhenConfigured(t *testing.T) {
 	}
 }
 
+func TestRunBulkActionSetsVisibleActiveField(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeActiveField(repo, true, true)
+	svc := NewService(repo)
+
+	out, err := svc.RunBulkAction(testRuntimeContext(), "sor", "default", "inactive", RuntimeViewBulkActionRequest{
+		RowIDs: []string{"doc-a", "doc-b", "doc-a", ""},
+	})
+	if err != nil {
+		t.Fatalf("RunBulkAction returned error: %v", err)
+	}
+	if out == nil || !out.OK {
+		t.Fatalf("bulk response = %#v, want ok", out)
+	}
+	if repo.lastActiveBulk == nil {
+		t.Fatal("SetRootRecordsActive was not called")
+	}
+	if repo.lastActiveBulk.Active {
+		t.Fatal("active bulk flag = true, want false")
+	}
+	if repo.lastActiveBulk.ActiveColumn != "active" {
+		t.Fatalf("active column = %q, want active", repo.lastActiveBulk.ActiveColumn)
+	}
+	if got := repo.lastActiveBulk.DocGuids; len(got) != 2 || got[0] != "doc-a" || got[1] != "doc-b" {
+		t.Fatalf("doc guids = %#v, want doc-a/doc-b", got)
+	}
+}
+
+func TestRunBulkActionRejectsActiveWhenFieldNotVisible(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeActiveField(repo, false, true)
+	svc := NewService(repo)
+
+	_, err := svc.RunBulkAction(testRuntimeContext(), "sor", "default", "active", RuntimeViewBulkActionRequest{
+		RowIDs: []string{"doc-a"},
+	})
+	if err != ErrRuntimeUnsupported {
+		t.Fatalf("RunBulkAction error = %v, want ErrRuntimeUnsupported", err)
+	}
+	if repo.lastActiveBulk != nil {
+		t.Fatal("SetRootRecordsActive should not be called")
+	}
+}
+
+func TestRunBulkActionDeletesWhenViewAllowsDelete(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeActiveField(repo, false, true)
+	svc := NewService(repo)
+
+	out, err := svc.RunBulkAction(testRuntimeContext(), "sor", "default", "delete", RuntimeViewBulkActionRequest{
+		RowIDs: []string{"doc-a", "doc-b"},
+	})
+	if err != nil {
+		t.Fatalf("RunBulkAction returned error: %v", err)
+	}
+	if out == nil || !out.OK {
+		t.Fatalf("bulk response = %#v, want ok", out)
+	}
+	if got := repo.lastDeleteBulk; len(got) != 2 || got[0] != "doc-a" || got[1] != "doc-b" {
+		t.Fatalf("delete doc guids = %#v, want doc-a/doc-b", got)
+	}
+}
+
+func TestRunBulkActionRejectsDeleteWhenViewDisallowsDelete(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	enableRuntimeActiveField(repo, true, false)
+	svc := NewService(repo)
+
+	_, err := svc.RunBulkAction(testRuntimeContext(), "sor", "default", "delete", RuntimeViewBulkActionRequest{
+		RowIDs: []string{"doc-a"},
+	})
+	if err != ErrRuntimeUnsupported {
+		t.Fatalf("RunBulkAction error = %v, want ErrRuntimeUnsupported", err)
+	}
+	if repo.lastDeleteBulk != nil {
+		t.Fatal("DeleteRootRecords should not be called")
+	}
+}
+
 func assertValue(t *testing.T, values map[string]any, key string, want any) {
 	t.Helper()
 	if got := values[key]; got != want {
@@ -156,15 +235,63 @@ func assertValue(t *testing.T, values map[string]any, key string, want any) {
 	}
 }
 
+func enableRuntimeActiveField(repo *recordingRuntimeRepo, visible bool, canDelete bool) {
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), map[string]any{
+		"fieldId":    "active",
+		"kind":       "boolean",
+		"label":      "Active",
+		"storageKey": "active",
+	})
+	dataSchema["rootScope"] = rootScope
+	modelPayload["dataSchema"] = dataSchema
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+
+	viewPayload := cloneJSONToMap(repo.view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["viewSettings"] = map[string]any{
+		"actions": map[string]any{
+			"canAdd":    true,
+			"canDelete": canDelete,
+			"canEdit":   true,
+			"canView":   true,
+		},
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{
+					"fieldId": "active",
+					"id":      "grid-column-active",
+					"order":   0,
+					"visible": visible,
+				},
+			},
+		},
+	}
+	uiSchema["rootScope"] = rootUIScope
+	viewPayload["uiSchema"] = uiSchema
+	repo.view.DefinitionJSON = mustJSON(viewPayload)
+}
+
 type recordingRuntimeRepo struct {
 	created           bool
 	createErr         error
+	lastActiveBulk    *recordingActiveBulk
 	lastCreateDocGuid string
 	lastCreateValues  map[string]any
+	lastDeleteBulk    []string
 	lastLoadDocGuid   string
 	lastUpdateValues  map[string]any
 	model             *ModelRecord
 	view              *ViewRecord
+}
+
+type recordingActiveBulk struct {
+	Active       bool
+	ActiveColumn string
+	DocGuids     []string
 }
 
 func newRecordingRuntimeRepo() *recordingRuntimeRepo {
@@ -231,6 +358,20 @@ func (r *recordingRuntimeRepo) UpdateRootRecord(_ context.Context, _ requestctx.
 		Revision: "rev-2",
 		Values:   rowValues,
 	}, nil
+}
+
+func (r *recordingRuntimeRepo) SetRootRecordsActive(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuids []string, activeColumn string, active bool) error {
+	r.lastActiveBulk = &recordingActiveBulk{
+		Active:       active,
+		ActiveColumn: activeColumn,
+		DocGuids:     append([]string(nil), docGuids...),
+	}
+	return nil
+}
+
+func (r *recordingRuntimeRepo) DeleteRootRecords(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuids []string) error {
+	r.lastDeleteBulk = append([]string(nil), docGuids...)
+	return nil
 }
 
 func (r *recordingRuntimeRepo) LoadRootRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuid string) (*runtimeRecordMutationRow, error) {

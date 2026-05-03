@@ -8,6 +8,7 @@ type CollectionTableBulkBarProps = {
   getActionLabel: (action: CollectionTableBulkActionDefinition) => string;
   getActionToneClass: (action: CollectionTableBulkActionDefinition) => string;
   onApplyAction: (actionId: string) => Promise<void> | void;
+  pendingActionId?: string | null;
   selectedRowCount: number;
 };
 
@@ -16,6 +17,7 @@ export function CollectionTableBulkBar({
   getActionLabel,
   getActionToneClass,
   onApplyAction,
+  pendingActionId = null,
   selectedRowCount,
 }: CollectionTableBulkBarProps) {
   const { t } = useTranslation();
@@ -34,10 +36,12 @@ export function CollectionTableBulkBar({
         {actions.map((action) => (
           <Button
             className={`admin-web__collection-bulk-button${getActionToneClass(action)}`}
+            disabled={Boolean(pendingActionId) && pendingActionId !== action.id}
             key={action.id}
             onClick={() => {
               void onApplyAction(action.id);
             }}
+            pending={pendingActionId === action.id}
             size="sm"
             variant="outline"
           >

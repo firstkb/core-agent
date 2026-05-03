@@ -146,6 +146,8 @@ Current admin persistence uses:
 - Backend must execute only action ids supported by that surface.
 - A frontend should execute only actions declared by metadata and supported by its adapter.
 - Bulk action input includes current query and selected row ids.
+- Bulk action metadata may include optional confirmation copy for destructive or
+  risky actions; concrete surfaces decide when confirmation is required.
 - Row action input includes row id.
 - Mutation results can expose `ok`, `downloadUrl`, `launchUrl`, and `openIn`.
 - XLS export and PDF row actions are optional capabilities, not generic requirements.

@@ -26,6 +26,8 @@ type Repository interface {
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID string, viewID string) (*ViewRecord, error)
 	CreateRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, values map[string]any, docGuid string) (*runtimeRecordMutationRow, error)
 	UpdateRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuid string, values map[string]any, expectedRevision string) (*runtimeRecordMutationRow, error)
+	SetRootRecordsActive(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuids []string, activeColumn string, active bool) error
+	DeleteRootRecords(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuids []string) error
 	LoadRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuid string) (*runtimeRecordMutationRow, error)
 	ResolveContactLookupLabels(ctx context.Context, tenant requestctx.TenantInfo, ids []int64) (map[int64]string, error)
 	ResolveCurrentUserBusinessID(ctx context.Context, tenant requestctx.TenantInfo, userGUID string) (int64, error)
@@ -192,6 +194,57 @@ func (s *Service) FinishRecord(
 	return buildMutationResponse(false, scope, row), nil
 }
 
+func (s *Service) RunBulkAction(
+	ctx context.Context,
+	modelID string,
+	viewID string,
+	actionID string,
+	req RuntimeViewBulkActionRequest,
+) (*RuntimeViewBulkActionResponse, error) {
+	tenant, _, err := requireRuntimeContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	actionID = strings.TrimSpace(actionID)
+	rowIDs := normalizeBulkRowIDs(req.RowIDs)
+	if actionID == "" || len(rowIDs) == 0 {
+		return nil, ErrInvalidRequest
+	}
+
+	scopeContext, err := s.loadRootScopeContext(ctx, tenant, modelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+	if scopeContext.Scope.SourceGUIDColumn == "" {
+		return nil, ErrRuntimeUnsupported
+	}
+
+	switch actionID {
+	case "active", "inactive":
+		if !readRuntimeViewAction(scopeContext.ViewPayload, "canEdit", true) {
+			return nil, ErrRuntimeUnsupported
+		}
+		activeField := findVisibleActiveField(scopeContext.Scope, scopeContext.ViewPayload)
+		if activeField == nil {
+			return nil, ErrRuntimeUnsupported
+		}
+		if err := s.repo.SetRootRecordsActive(ctx, tenant, scopeContext.Scope, rowIDs, activeField.ColumnName, actionID == "active"); err != nil {
+			return nil, err
+		}
+		return &RuntimeViewBulkActionResponse{OK: true}, nil
+	case "delete":
+		if !readRuntimeViewAction(scopeContext.ViewPayload, "canDelete", true) {
+			return nil, ErrRuntimeUnsupported
+		}
+		if err := s.repo.DeleteRootRecords(ctx, tenant, scopeContext.Scope, rowIDs); err != nil {
+			return nil, err
+		}
+		return &RuntimeViewBulkActionResponse{OK: true}, nil
+	default:
+		return nil, ErrInvalidRequest
+	}
+}
+
 func (s *Service) loadRootScopePlan(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,
@@ -203,6 +256,77 @@ func (s *Service) loadRootScopePlan(
 		return runtimeRootScopePlan{}, err
 	}
 	return scopeContext.Scope, nil
+}
+
+func normalizeBulkRowIDs(rowIDs []string) []string {
+	out := make([]string, 0, len(rowIDs))
+	seen := make(map[string]struct{}, len(rowIDs))
+	for _, rowID := range rowIDs {
+		rowID = strings.TrimSpace(rowID)
+		if rowID == "" {
+			continue
+		}
+		if _, ok := seen[rowID]; ok {
+			continue
+		}
+		seen[rowID] = struct{}{}
+		out = append(out, rowID)
+	}
+	return out
+}
+
+func readRuntimeViewAction(viewPayload map[string]any, actionKey string, fallback bool) bool {
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	viewSettings := asMap(rootScope["viewSettings"])
+	if len(viewSettings) == 0 {
+		rootView := asMap(viewPayload["rootView"])
+		viewSettings = asMap(rootView["viewSettings"])
+	}
+	actions := asMap(viewSettings["actions"])
+	return getBoolValue(actions, actionKey, fallback)
+}
+
+func findVisibleActiveField(scope runtimeRootScopePlan, viewPayload map[string]any) *runtimeFieldPlan {
+	visibleFieldIDs := visibleRuntimeListFieldIDs(viewPayload)
+	if len(visibleFieldIDs) == 0 {
+		return nil
+	}
+	for index := range scope.Fields {
+		field := &scope.Fields[index]
+		if !field.Supported || field.Kind != "boolean" || field.ColumnName != "active" {
+			continue
+		}
+		if _, ok := visibleFieldIDs[field.FieldID]; ok {
+			return field
+		}
+	}
+	return nil
+}
+
+func visibleRuntimeListFieldIDs(viewPayload map[string]any) map[string]struct{} {
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	viewSettings := asMap(rootScope["viewSettings"])
+	if len(viewSettings) == 0 {
+		rootView := asMap(viewPayload["rootView"])
+		viewSettings = asMap(rootView["viewSettings"])
+	}
+	listSettings := asMap(viewSettings["list"])
+	rawColumns := asSlice(listSettings["columns"])
+	out := make(map[string]struct{}, len(rawColumns))
+	for _, rawColumn := range rawColumns {
+		column := asMap(rawColumn)
+		if !getBoolValue(column, "visible", true) {
+			continue
+		}
+		fieldID := normalizeString(column["fieldId"])
+		if fieldID == "" || strings.Contains(fieldID, "::lookup_output::") {
+			continue
+		}
+		out[fieldID] = struct{}{}
+	}
+	return out
 }
 
 type runtimeRootScopeContext struct {

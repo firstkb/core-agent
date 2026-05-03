@@ -135,6 +135,7 @@ Real runtime API namespace:
 - `GET /app/forms/{modelId}/views/{viewId}/search-suggestions`
 - `POST /app/forms/{modelId}/views/{viewId}/saved-filters`
 - `DELETE /app/forms/{modelId}/views/{viewId}/saved-filters/{savedFilterId}`
+- `POST /app/forms/{modelId}/views/{viewId}/bulk-actions/{actionId}`
 - `GET /app/forms/{modelId}/views/{viewId}/records/{docGuid}`
 - `GET /app/forms/{modelId}/views/{viewId}/form`
 - `GET /app/forms/{modelId}/views/{viewId}/records/{docGuid}/form`
@@ -168,6 +169,16 @@ Runtime record mutation contract:
   session key; when it is a UUID and the source exposes a GUID column, create
   inserts it as the record GUID and duplicate-token unique violations return
   the existing record instead of creating another one
+- bulk action request follows the Collection Table shape:
+  `{ query, rowIds: string[] }`; current supported runtime actions are
+  `active`, `inactive`, and `delete`
+- `active` / `inactive` require `canEdit`, a compatible boolean source/schema
+  field whose runtime source column is `active`, and that field must be present
+  and visible in the current view list output
+- `delete` requires `canDelete` and physically deletes the selected records by
+  record GUID; it is independent of whether an `active` field exists. Managed
+  subform rows are removed before root rows when their runtime child table is
+  known, so existing child foreign keys do not block the root delete.
 
 Runtime list action metadata:
 
@@ -175,6 +186,12 @@ Runtime list action metadata:
   runtime source exposes a record GUID
 - frontend row actions expose `edit` before `view` when both are allowed; both
   require record GUID support
+- checkbox selection and bulk actions are emitted only when the runtime source
+  exposes record GUIDs and at least one current-view bulk action is available
+- `Active` / `No active` bulk buttons are emitted only when the current list
+  output includes a supported `active` field and the view allows edit
+- `Delete` is emitted when the view allows delete and includes confirmation
+  metadata for the generic Collection Table confirmation dialog
 
 Platform Studio preview API namespace:
 
@@ -185,6 +202,9 @@ Platform Studio preview API namespace:
 - `DELETE /app/platform-studio/forms/{modelId}/views/{viewId}/runtime/saved-filters/{savedFilterId}`
 - `GET /app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}`
 - `POST /app/platform-studio/forms/{modelId}/views/{viewId}/runtime/favorite/toggle`
+
+Preview runtime metadata suppresses bulk actions because preview routes must not
+mutate real runtime data.
 
 Access rules:
 
@@ -583,7 +603,7 @@ Current backend packages:
 - `platformstudioformruntime`
 
 `platformstudioformbuilder` remains the authoring/control-plane owner and still contains early runtime list/read scaffolding.
-`platformstudioformruntime` owns the runtime record write boundary for create/edit/finish.
+`platformstudioformruntime` owns the runtime record write boundary for create/edit/finish and runtime bulk actions.
 
 Future package direction:
 

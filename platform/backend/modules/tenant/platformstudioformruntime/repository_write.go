@@ -156,6 +156,101 @@ func loadRootRecordTx(
 	return row, nil
 }
 
+func setRootRecordsActiveTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+	activeColumn string,
+	active bool,
+) error {
+	if scope.SourceGUIDColumn == "" || strings.TrimSpace(activeColumn) == "" || len(docGuids) == 0 {
+		return ErrInvalidRequest
+	}
+
+	whereClause := fmt.Sprintf("%s::text = ANY($2)", quoteIdentifier(scope.SourceGUIDColumn))
+	if scope.TenantScoped && scope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(scope.SourceTenantColumn))
+	}
+	query := fmt.Sprintf(
+		"UPDATE %s SET %s = $1 WHERE %s",
+		qualifiedIdentifier(scope.TableName),
+		quoteIdentifier(activeColumn),
+		whereClause,
+	)
+	if _, err := tx.ExecContext(ctx, query, active, pq.Array(docGuids)); err != nil {
+		return fmt.Errorf("form runtime: bulk active update: %w", err)
+	}
+	return nil
+}
+
+func deleteRootRecordsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+) error {
+	if scope.SourceGUIDColumn == "" || scope.SourceIDColumn == "" || len(docGuids) == 0 {
+		return ErrInvalidRequest
+	}
+
+	if err := deleteSubformRecordsForRootDocGuidsTx(ctx, tx, scope, docGuids); err != nil {
+		return err
+	}
+
+	whereClause := fmt.Sprintf("%s::text = ANY($1)", quoteIdentifier(scope.SourceGUIDColumn))
+	if scope.TenantScoped && scope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(scope.SourceTenantColumn))
+	}
+	query := fmt.Sprintf(
+		"DELETE FROM %s WHERE %s",
+		qualifiedIdentifier(scope.TableName),
+		whereClause,
+	)
+	if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
+		return fmt.Errorf("form runtime: bulk delete records: %w", err)
+	}
+	return nil
+}
+
+func deleteSubformRecordsForRootDocGuidsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+) error {
+	if len(scope.SubformScopes) == 0 {
+		return nil
+	}
+
+	rootWhereClause := fmt.Sprintf("root.%s::text = ANY($1)", quoteIdentifier(scope.SourceGUIDColumn))
+	if scope.TenantScoped && scope.SourceTenantColumn != "" {
+		rootWhereClause += fmt.Sprintf(" AND root.%s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(scope.SourceTenantColumn))
+	}
+	for _, subformScope := range scope.SubformScopes {
+		if strings.TrimSpace(subformScope.TableName) == "" || strings.TrimSpace(subformScope.ParentForeignKey) == "" {
+			continue
+		}
+		query := fmt.Sprintf(
+			`DELETE FROM %s
+ WHERE %s IN (
+       SELECT root.%s
+         FROM %s root
+        WHERE %s
+       )`,
+			qualifiedIdentifier(subformScope.TableName),
+			quoteIdentifier(subformScope.ParentForeignKey),
+			quoteIdentifier(scope.SourceIDColumn),
+			qualifiedIdentifier(scope.TableName),
+			rootWhereClause,
+		)
+		if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
+			return fmt.Errorf("form runtime: bulk delete subform records: %w", err)
+		}
+	}
+	return nil
+}
+
 func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) ([]string, []any) {
 	columnNames := []string{}
 	args := []any{}

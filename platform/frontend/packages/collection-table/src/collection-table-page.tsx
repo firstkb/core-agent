@@ -7,6 +7,7 @@ import { useTranslation } from "@platform/i18n";
 import { getCollectionFiltersForPreset } from "./collection-page";
 import {
   type CollectionTableAdapter,
+  type CollectionTableBulkActionDefinition,
   type CollectionTableMetaResponse,
   type CollectionTableQueryRequest,
   type CollectionTableRowActionDefinition,
@@ -38,6 +39,7 @@ import {
   type CollectionTableRenderRow,
 } from "./collection-table-runtime";
 import { CollectionPageSurface } from "./collection-page-surface";
+import { CollectionTableBulkActionConfirmDialog } from "./components/collection-table-bulk-action-confirm-dialog";
 import { CollectionTableBulkBar } from "./components/collection-table-bulk-bar";
 import { CollectionTableSaveFilterDialog } from "./components/collection-table-save-filter-dialog";
 import { CollectionTableSavedFilterMenuItems } from "./components/collection-table-saved-filter-menu-items";
@@ -112,6 +114,8 @@ export function CollectionTablePage({
     initialMeta.savedFilterSets ?? [],
   );
   const [deletingSavedFilterId, setDeletingSavedFilterId] = useState<string | null>(null);
+  const [pendingBulkActionId, setPendingBulkActionId] = useState<string | null>(null);
+  const [bulkActionConfirmation, setBulkActionConfirmation] = useState<CollectionTableBulkActionDefinition | null>(null);
   const [isSaveFilterDialogOpen, setIsSaveFilterDialogOpen] = useState(false);
   const [draftSavedFilterLabel, setDraftSavedFilterLabel] = useState("");
   const [loading, setLoading] = useState(true);
@@ -495,24 +499,54 @@ export function CollectionTablePage({
     });
   }
 
-  async function handleApplyBulkAction(actionId: string) {
+  async function executeBulkAction(action: CollectionTableBulkActionDefinition) {
     if (selectedRowIdSet.size === 0) {
       return;
     }
+    if (!tableAdapter.runBulkAction) {
+      setError(remoteMetadataErrorMessage);
+      return;
+    }
+    if (pendingBulkActionId) {
+      return;
+    }
 
+    setPendingBulkActionId(action.id);
     try {
-      await tableAdapter.runBulkAction?.({
-        actionId,
+      await tableAdapter.runBulkAction({
+        actionId: action.id,
         query: request,
         rowIds: selectedRowIds,
       });
     } catch (requestError) {
       reportCollectionError(requestError);
       return;
+    } finally {
+      setPendingBulkActionId((currentValue) => (currentValue === action.id ? null : currentValue));
     }
 
     clearSelection();
     await reloadCurrentQuery();
+  }
+
+  async function handleApplyBulkAction(actionId: string) {
+    const action = tableMeta.bulkActions?.find((candidate) => candidate.id === actionId);
+
+    if (!action) {
+      return;
+    }
+
+    if (action.confirmation) {
+      setBulkActionConfirmation(action);
+      return;
+    }
+
+    await executeBulkAction(action);
+  }
+
+  async function handleConfirmBulkAction(action: CollectionTableBulkActionDefinition) {
+    setBulkActionConfirmation(null);
+    await executeBulkAction(action);
   }
 
   function handleResetFilters() {
@@ -829,9 +863,21 @@ export function CollectionTablePage({
           getActionLabel={getCollectionTableBulkActionLabel}
           getActionToneClass={getCollectionTableBulkActionToneClass}
           onApplyAction={handleApplyBulkAction}
+          pendingActionId={pendingBulkActionId}
           selectedRowCount={selectedRowCount}
         />
       ) : null}
+
+      <CollectionTableBulkActionConfirmDialog
+        action={bulkActionConfirmation}
+        onConfirm={handleConfirmBulkAction}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBulkActionConfirmation(null);
+          }
+        }}
+        open={Boolean(bulkActionConfirmation)}
+      />
 
       <CollectionTableSaveFilterDialog
         labelError={saveFilterLabelError}

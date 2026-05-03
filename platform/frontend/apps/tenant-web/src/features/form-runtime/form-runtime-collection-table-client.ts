@@ -6,6 +6,7 @@ import {
 
 import type {
   CollectionTableAdapter,
+  CollectionTableBulkActionRequest,
   CollectionTableColumnDefinition,
   CollectionTableMetaResponse,
   CollectionTableQueryRequest,
@@ -45,6 +46,7 @@ type FormRuntimeCollectionTableSessionClient = {
   loadForm: (accessToken: string, docGuid?: string) => Promise<FormRuntimeFormResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
   loadSearchSuggestions: (accessToken: string) => Promise<CollectionTableSearchSuggestionsResponse>;
+  runBulkAction?: (accessToken: string, input: CollectionTableBulkActionRequest) => Promise<void>;
   toggleFavorite: (accessToken: string) => Promise<CollectionTableFavoriteToggleResult>;
   query: (
     accessToken: string,
@@ -412,6 +414,22 @@ export function createFormRuntimeCollectionTableClient(options: {
 
       return normalizeSearchSuggestionsResponse(response);
     },
+    runBulkAction: options.routeContext === "preview"
+      ? undefined
+      : async (accessToken, input) => {
+        await requestTenantCollectionTable<void>(
+          options.baseUrl,
+          `${pathPrefix}/bulk-actions/${encodeURIComponent(input.actionId)}`,
+          {
+            accessToken,
+            body: {
+              query: input.query,
+              rowIds: input.rowIds,
+            },
+            method: "POST",
+          },
+        );
+      },
     async toggleFavorite(accessToken) {
       return requestTenantCollectionTable<CollectionTableFavoriteToggleResult>(
         options.baseUrl,
@@ -483,6 +501,10 @@ export function createFormRuntimeCollectionTableAdapter(options: {
     loadMeta: async () => runWithTenantSession((accessToken) => options.client.loadMeta(accessToken)),
     loadSearchSuggestions: async () =>
       runWithTenantSession((accessToken) => options.client.loadSearchSuggestions(accessToken)),
+    runBulkAction: options.client.runBulkAction
+      ? async (input) =>
+        runWithTenantSession((accessToken) => options.client.runBulkAction!(accessToken, input))
+      : undefined,
     toggleFavorite: async () =>
       runWithTenantSession((accessToken) => options.client.toggleFavorite(accessToken)),
     query: async (request) =>

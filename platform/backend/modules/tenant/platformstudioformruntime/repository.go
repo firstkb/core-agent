@@ -171,6 +171,66 @@ func (r *repository) UpdateRootRecord(
 	return row, nil
 }
 
+func (r *repository) SetRootRecordsActive(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+	activeColumn string,
+	active bool,
+) error {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("form runtime: begin bulk active tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return err
+	}
+	if err := setRootRecordsActiveTx(ctx, tx, scope, docGuids, activeColumn, active); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("form runtime: commit bulk active tx: %w", err)
+	}
+	return nil
+}
+
+func (r *repository) DeleteRootRecords(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+) error {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("form runtime: begin bulk delete tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return err
+	}
+	if err := deleteRootRecordsTx(ctx, tx, scope, docGuids); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("form runtime: commit bulk delete tx: %w", err)
+	}
+	return nil
+}
+
 func (r *repository) LoadRootRecord(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,

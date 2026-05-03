@@ -1,6 +1,10 @@
 package platformstudioformruntime
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
+)
 
 type RuntimeViewRecordMutationRequest struct {
 	ClientCreateToken string         `json:"clientCreateToken,omitempty"`
@@ -11,6 +15,9 @@ type RuntimeViewRecordMutationRequest struct {
 type RuntimeViewRecordFinishRequest struct {
 	ExpectedRevision string `json:"expectedRevision,omitempty"`
 }
+
+type RuntimeViewBulkActionRequest = collectiontable.BulkActionInput
+type RuntimeViewBulkActionResponse = collectiontable.MutationResult
 
 type RuntimeViewRecordValidationError struct {
 	FieldID string `json:"fieldId,omitempty"`
@@ -75,7 +82,13 @@ type runtimeRootScopePlan struct {
 	SourceUpdatedColumn string
 	TenantScoped        bool
 	Fields              []runtimeFieldPlan
+	SubformScopes       []runtimeSubformScopePlan
 	SystemFields        runtimeSystemFieldBindings
+}
+
+type runtimeSubformScopePlan struct {
+	ParentForeignKey string
+	TableName        string
 }
 
 type runtimeFieldPlan struct {

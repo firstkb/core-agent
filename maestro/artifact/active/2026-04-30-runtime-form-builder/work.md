@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `runtime_write_fe_adapter_slice_complete`
+- Status: `runtime_bulk_actions_slice_complete`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -47,6 +47,8 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime form reads must hydrate the current option for single-value `contact_lookup` fields when a record/default value contains an id, allowing readonly and editable lookup controls to display the label without an initial per-field AJAX request.
 - System Field bindings and `semanticRole` metadata do not automatically make a field readonly. They control runtime semantics such as create defaults and workflow/status commands. A runtime field is readonly only when the authored schema/view explicitly marks the field/node readonly. This allows owners to expose fields such as Reported By, Reported Date, or Status for user edits when the view is configured that way.
 - Runtime list row actions should present `edit` before `view` when both actions are available.
+- Runtime list checkbox/bulk action behavior must stay metadata-driven by the runtime surface, not inferred inside the generic `CollectionTable`. Show bulk `Active` / `No active` only when a supported `active` field exists in the source/schema, that field is present in the current view/table output, and the view permits edit.
+- Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
 - Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
 - Do not include these groups in the next field-scope slice: `Relationships`, `System Fields` as visual palette/rendered controls, `Ready-made fields`, and reserved `Advanced fields`. System Field metadata still remains part of runtime create/status behavior when present on a view.
 - For selected first-scope fields, include render-affecting settings only: label/display name, key/id, description/helper, placeholder/content, required/nullable, readonly/disabled/lock state, default value shape, width/layout/label layout, rows, numeric/date input behavior, choice options, choice orientation/control type where supported, and content alignment/style variants where needed.
@@ -270,7 +272,22 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `go test ./modules/tenant/platformstudioformruntime ./modules/tenant/platformstudioformbuilder ./cmd/api-tenant/internal/server` passed;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode.
+- Runtime list checkbox/bulk action slice completed:
+  - generic `CollectionTable` bulk actions now support optional confirmation metadata and pending action state without hardcoding runtime action semantics;
+  - runtime list metadata enables checkbox selection when record GUID support exists and at least one current-view bulk action is available;
+  - `Active` / `No active` bulk actions are emitted only when the current view list output includes a supported boolean `active` field and the view allows edit;
+  - `Delete` is emitted when the view allows delete, independent of `active`, and carries confirmation metadata before execution;
+  - tenant-web adapter posts runtime bulk actions to `POST /app/forms/{modelId}/views/{viewId}/bulk-actions/{actionId}`;
+  - `platformstudioformruntime` executes `active`, `inactive`, and physical `delete` bulk actions by selected record GUIDs; delete removes known child subform rows before root records, and preview runtime metadata suppresses bulk actions;
+  - contract docs now record the confirmation shape, runtime bulk endpoint, and active/delete metadata rules;
+  - `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed;
+  - `pnpm -C platform/frontend --filter @platform/collection-table typecheck` and `lint` passed;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 6 files, 23 tests;
+  - `pnpm -C platform/frontend --filter @platform/platform-admin-web typecheck`, `lint`, and `test` passed: 6 files, 27 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use smoke was not run because the Browser Use tool was not exposed in this turn and Computer Use is not allowed to drive the Codex app; Chrome was intentionally avoided.
 
 ## Next Action
 
-Next allowed action is commit preparation for the current code/memory slice, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.
+Next allowed action is owner review of the runtime list bulk action behavior, commit preparation for this slice, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.

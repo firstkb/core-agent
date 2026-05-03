@@ -10,6 +10,7 @@ import (
 
 const (
 	rootSchemaScopeID             = "root"
+	runtimeParentForeignKey       = "_parent_id"
 	runtimeIdentifierMaxLength    = 63
 	runtimeModelAliasMaxLength    = 29
 	runtimeViewAliasHashLength    = 4
@@ -63,6 +64,17 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 			continue
 		}
 		scope.Fields = append(scope.Fields, field)
+	}
+	for _, rawSubformScope := range asSlice(dataSchema["subformScopes"]) {
+		subformScope := asMap(rawSubformScope)
+		subformRuntime := readRuntimeDataScopeMetadata(subformScope)
+		if strings.TrimSpace(subformRuntime.TableName) == "" {
+			continue
+		}
+		scope.SubformScopes = append(scope.SubformScopes, runtimeSubformScopePlan{
+			ParentForeignKey: runtimeParentForeignKey,
+			TableName:        subformRuntime.TableName,
+		})
 	}
 
 	if scope.TableName == "" {

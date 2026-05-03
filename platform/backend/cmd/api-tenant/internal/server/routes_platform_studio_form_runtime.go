@@ -107,4 +107,25 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 			return info, nil
 		}, srv.logger),
 	)
+
+	register(
+		"FORM_RUNTIME_BULK_ACTION",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/bulk-actions/{actionId}",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewBulkActionRequest) (*formruntime.RuntimeViewBulkActionResponse, error) {
+			info, err := srv.platformStudioFormRuntimeHTTP.RunBulkAction(ctx, r, req)
+			if err != nil {
+				return nil, apperr.WrapAndLog(
+					srv.logger,
+					ctx,
+					"FORM_RUNTIME_BULK_ACTION",
+					http.StatusInternalServerError,
+					"cannot run form runtime bulk action",
+					err,
+					srv.FieldsForLog(ctx, r, req)...,
+				)
+			}
+			return info, nil
+		}, srv.logger),
+	)
 }

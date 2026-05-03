@@ -180,6 +180,10 @@ Cells are keyed by field id and can expose raw `value`, optional `displayValue`,
 - Frontend row actions use host-owned route resolution.
 - Backend row actions go through the host adapter.
 - Bulk actions go through the host adapter and are opt-in per surface.
+- Destructive or otherwise risky bulk actions may include metadata
+  `confirmation: { title, description?, confirmLabel?, cancelLabel? }`.
+  The generic runtime renders the confirmation and then calls the host adapter;
+  it still does not own the action semantics.
 - XLS export is opt-in per surface and must not be assumed just because the generic runtime supports an adapter seam.
 - A surface should advertise only actions it can currently execute safely.
 
@@ -190,6 +194,7 @@ Cells are keyed by field id and can expose raw `value`, optional `displayValue`,
 | `module-registry.list` | Module Registry | supported | `edit` | route exists, no generic `pdf` capability yet | route exists, XLS generation not complete |
 | `employees.list` | Employees | supported | `edit` | not current | not current |
 | `tenant.list` | Tenants | not current | not current | `open_as_root` | not current |
+| `form_builder_view:*` | Tenant runtime forms | supported by metadata when the view/source allows it | `edit`, `view` | not current | not current |
 
 ## Visual Review
 

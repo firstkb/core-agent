@@ -80,6 +80,8 @@ export const tenantEnglishMessages = {
       },
       selection: {
         bulkActions: "Bulk actions",
+        confirm: "Confirm",
+        confirmTitle: "Confirm bulk action",
         selectAllVisible: "Select all visible rows",
         selectedCount: "{{count}} selected",
         selectRow: "Select {{label}}",

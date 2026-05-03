@@ -124,6 +124,40 @@ func (r *repository) UpdateView(
 	return persisted, nil
 }
 
+func (r *repository) UpdateDraft(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	model ModelRecord,
+	view ViewRecord,
+	expectedVersions ExpectedVersions,
+) (*ModelRecord, *ViewRecord, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, nil, fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("form builder: begin update draft tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	persistedModel, err := upsertModelTx(ctx, tx, model, expectedVersions.Model)
+	if err != nil {
+		return nil, nil, err
+	}
+	persistedView, err := upsertViewTx(ctx, tx, view, expectedVersions.View)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, nil, fmt.Errorf("form builder: commit update draft tx: %w", err)
+	}
+
+	return persistedModel, persistedView, nil
+}
+
 func (r *repository) DeleteView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) error {
 	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
 	if err != nil {

@@ -211,14 +211,7 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 		nextView.Version = currentView.Version + 1
 	}
 
-	expectedModelVersion := req.ExpectedVersions.Model
-	expectedViewVersion := req.ExpectedVersions.View
-
-	persistedModel, err := s.repo.UpdateModel(ctx, tenant, nextModel, expectedModelVersion)
-	if err != nil {
-		return nil, err
-	}
-	persistedView, err := s.repo.UpdateView(ctx, tenant, nextView, expectedViewVersion)
+	persistedModel, persistedView, err := s.repo.UpdateDraft(ctx, tenant, nextModel, nextView, req.ExpectedVersions)
 	if err != nil {
 		return nil, err
 	}

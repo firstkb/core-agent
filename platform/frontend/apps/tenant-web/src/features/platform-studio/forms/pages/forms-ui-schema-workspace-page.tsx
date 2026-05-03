@@ -33,6 +33,9 @@ import { createFormBuilderWorkspaceRenderModel } from "../controller/form-builde
 import {
   createEmptyLayoutBlueprint,
 } from "../controller/form-builder-workspace-schema-utils";
+import {
+  preserveFormBuilderWorkspaceNavigation,
+} from "../controller/form-builder-workspace-navigation";
 import { createFormBuilderViewGridHandlers } from "../controller/form-builder-workspace-view-grid-handlers";
 import { useFormBuilderDebugDialog } from "../controller/use-form-builder-debug-dialog";
 import { useFormBuilderDraftHydration } from "../controller/use-form-builder-draft-hydration";
@@ -159,15 +162,14 @@ export function FormsViewWorkspacePage() {
       baselineDocument,
       baselineModel,
       layoutBlueprint,
+      savedDocument,
     }) => {
       replaceModel(baselineModel);
       setModelDraft(baselineModel);
       setSavedModelDraft(baselineModel);
       setLayoutBlueprintDraft(layoutBlueprint);
       setSavedLayoutBlueprintDraft(layoutBlueprint);
-      // Treat the frontend-normalized workspace state as the clean baseline after load.
-      // Otherwise Save becomes active immediately when reconciliation adds canonical nodes.
-      hydrateDocument(baselineDocument);
+      hydrateDocument(baselineDocument, { savedDocument });
     },
     resolvedModel,
     resolvedView,
@@ -583,7 +585,7 @@ export function FormsViewWorkspacePage() {
       savedLayoutBlueprint,
       savedModel,
     }) => {
-      hydrateDocument(savedDocument);
+      hydrateDocument(preserveFormBuilderWorkspaceNavigation(savedDocument, document));
       setModelDraft(savedModel);
       setSavedModelDraft(savedModel);
       setLayoutBlueprintDraft(savedLayoutBlueprint);

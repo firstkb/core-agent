@@ -28,6 +28,10 @@ export type FormBuilderDocumentStorageInternals = {
   withFlatCompatibilityCache: (document: FormBuilderDocument) => FormBuilderDocument;
 };
 
+type HydrateFormBuilderDocumentOptions = {
+  savedDocument?: FormBuilderDocument;
+};
+
 function getStorageKeys(
   object: Pick<FormsPlaceholderObject, "key">,
   screen: Pick<FormsPlaceholderScreen, "key">,
@@ -167,10 +171,11 @@ export function useFormBuilderDocument(
     setSavedDocument(getPersistedFormBuilderDocument(document, internals));
   }, [document, internals, object, screen]);
 
-  const hydrateDocument = useCallback((nextDocument: FormBuilderDocument) => {
+  const hydrateDocument = useCallback((nextDocument: FormBuilderDocument, options?: HydrateFormBuilderDocumentOptions) => {
+    const nextSavedDocument = options?.savedDocument ?? nextDocument;
     saveFormBuilderDocument(object, screen, nextDocument, internals);
     setDocument(nextDocument);
-    setSavedDocument(getPersistedFormBuilderDocument(nextDocument, internals));
+    setSavedDocument(getPersistedFormBuilderDocument(nextSavedDocument, internals));
   }, [internals, object, screen]);
 
   return {

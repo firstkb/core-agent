@@ -38,7 +38,21 @@ export type HydratedFormBuilderDraft = {
   baselineDocument: FormBuilderDocument;
   baselineModel: FormsPlaceholderModel;
   layoutBlueprint: Record<string, unknown>;
+  savedDocument: FormBuilderDocument;
 };
+
+export function resolveHydratedDraftDocuments(
+  serverDocument: FormBuilderDocument,
+  reconciledDocument: FormBuilderDocument,
+) {
+  const hasReconciledChanges = JSON.stringify(reconciledDocument) !== JSON.stringify(serverDocument);
+
+  return {
+    baselineDocument: hasReconciledChanges ? reconciledDocument : serverDocument,
+    hasReconciledChanges,
+    savedDocument: serverDocument,
+  };
+}
 
 type UseFormBuilderDraftHydrationInput = {
   checkAuth: () => Promise<boolean>;
@@ -158,9 +172,10 @@ export function useFormBuilderDraftHydration({
             enforceCanonicalFieldPlacements: shouldEnforceCanonicalFieldPlacements,
           },
         );
-        const baselineDocument = JSON.stringify(reconciledDocument) !== JSON.stringify(nextCanonicalDocument)
-          ? reconciledDocument
-          : nextCanonicalDocument;
+        const {
+          baselineDocument,
+          savedDocument,
+        } = resolveHydratedDraftDocuments(nextCanonicalDocument, reconciledDocument);
         const baselineModel = cloneFormsPlaceholderModel({
           ...nextModelWithScopes,
           schemaScopes: deriveModelSchemaScopes(nextModelWithScopes, baselineDocument),
@@ -171,6 +186,7 @@ export function useFormBuilderDraftHydration({
           baselineDocument,
           baselineModel,
           layoutBlueprint: nextLayoutBlueprint,
+          savedDocument,
         });
       })
       .catch((error: unknown) => {

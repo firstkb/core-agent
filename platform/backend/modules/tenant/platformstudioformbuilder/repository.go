@@ -95,6 +95,7 @@ type Repository interface {
 	CreateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord) (*ViewRecord, error)
 	UpdateModel(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, expectedVersion *int64) (*ModelRecord, error)
 	UpdateView(ctx context.Context, tenant requestctx.TenantInfo, view ViewRecord, expectedVersion *int64) (*ViewRecord, error)
+	UpdateDraft(ctx context.Context, tenant requestctx.TenantInfo, model ModelRecord, view ViewRecord, expectedVersions ExpectedVersions) (*ModelRecord, *ViewRecord, error)
 	DeleteModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) error
 	DeleteView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) error
 	ApplyRuntime(ctx context.Context, tenant requestctx.TenantInfo, plan runtimeApplyPlan) (*RuntimeApplySummary, error)

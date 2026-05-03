@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useRef,
 } from "react";
 
 import {
@@ -66,45 +67,61 @@ export function useFormBuilderDraftSaveAction({
   shouldSyncFieldNodeTitlesWithModel,
   signOut,
 }: UseFormBuilderDraftSaveActionInput) {
+  const inFlightSaveRef = useRef<Promise<void> | null>(null);
   const handleSave = useCallback(async () => {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      setDraftSyncError(saveErrorMessage);
-      return;
+    if (inFlightSaveRef.current) {
+      return inFlightSaveRef.current;
     }
 
-    setIsSavingDraft(true);
-    setDraftSyncError(null);
-
-    try {
-      const savedDraft = await saveFormBuilderDraft({
-        accessToken,
-        checkAuth,
-        currentDataSchema,
-        currentLayoutBlueprint,
-        currentModel,
-        currentModelSchemaScopes,
-        currentView,
-        document,
-        draftClient,
-        getAccessToken,
-        hasUnsavedModelChanges,
-        isDefaultView,
-        savedDataSchema,
-        savedLayoutBlueprintDraft,
-        savedModelDraft,
-        shouldSyncFieldNodeTitlesWithModel,
-      });
-      onSavedDraft(savedDraft);
-    } catch (error) {
-      if (isUnauthorizedApiError(error)) {
-        void signOut();
+    const saveTask = (async () => {
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        setDraftSyncError(saveErrorMessage);
         return;
       }
 
-      setDraftSyncError(error instanceof Error ? error.message : saveErrorMessage);
+      setIsSavingDraft(true);
+      setDraftSyncError(null);
+
+      try {
+        const savedDraft = await saveFormBuilderDraft({
+          accessToken,
+          checkAuth,
+          currentDataSchema,
+          currentLayoutBlueprint,
+          currentModel,
+          currentModelSchemaScopes,
+          currentView,
+          document,
+          draftClient,
+          getAccessToken,
+          hasUnsavedModelChanges,
+          isDefaultView,
+          savedDataSchema,
+          savedLayoutBlueprintDraft,
+          savedModelDraft,
+          shouldSyncFieldNodeTitlesWithModel,
+        });
+        onSavedDraft(savedDraft);
+      } catch (error) {
+        if (isUnauthorizedApiError(error)) {
+          void signOut();
+          return;
+        }
+
+        setDraftSyncError(error instanceof Error ? error.message : saveErrorMessage);
+      } finally {
+        setIsSavingDraft(false);
+      }
+    })();
+
+    inFlightSaveRef.current = saveTask;
+    try {
+      await saveTask;
     } finally {
-      setIsSavingDraft(false);
+      if (inFlightSaveRef.current === saveTask) {
+        inFlightSaveRef.current = null;
+      }
     }
   }, [
     checkAuth,

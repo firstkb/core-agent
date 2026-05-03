@@ -5,7 +5,7 @@
 
 ## Summary
 
-Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1 after owner approval. Slice 1 fixes Subform Grid settings persistence, including canonical save hydration, and constrains View Sorting to active visible Grid outputs.
+Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1 and Slice 2 after owner approval. Slice 2 fixes draft hydration dirty state, canvas context preservation after save, duplicate save guarding, and atomic model+view draft persistence.
 
 ## Commands / Checks
 
@@ -22,6 +22,12 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Artifact-only docs/memory hygiene check. |
 | `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Environment-file policy check. |
 | `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm --filter @platform/tenant-web test -- form-builder-workspace-save.test.ts form-builder-workspace-grid.test.ts` | passed | 2 files / 7 tests passed | Shows Slice 2 save hydration/navigation behavior plus Slice 1 grid regression coverage. Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web test` | passed | 8 files / 30 tests passed | Full tenant-web Vitest suite after Slice 2. Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web typecheck` | passed | `tsc --noEmit` exited 0 | Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 on rerun | First parallel lint attempt failed with transient missing Vite timestamp module; standalone rerun passed. Same Node engine warning observed. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Includes atomic draft conflict regression test. |
+| `scripts/preflight.sh` | passed | lite preflight passed after Slice 2 | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -37,15 +43,24 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-document-hydration.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-field-scope-grid.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-grid.test.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-navigation.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-save.test.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-workspace-derived-state.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-draft-hydration.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-draft-save-action.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-document-normalization.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-document-storage.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-flat-workspace.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-scoped-document.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/state/form-builder-view-normalization.ts`
+- `platform/backend/modules/tenant/platformstudioformbuilder/repository.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/repository_mutation.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service_draft.go`
 
 ## Browser / Visual Evidence
 
-- Skipped. Slice 1 changes Form Builder state/controller/runtime guards and is covered by unit/backend checks; no browser-visible layout changed.
+- Skipped. Slice 2 changes state/save semantics and backend draft persistence; behavior is covered by targeted unit/module checks. No layout rendering changed.
 
 ## Review Evidence
 
@@ -53,7 +68,7 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 
 ## Skipped Checks
 
-- Browser smoke skipped because the targeted defect is persisted state/runtime sorting behavior and no layout interaction changed.
+- Browser smoke skipped because the targeted Slice 2 defects are save/hydration state transitions and backend conflict atomicity, not visual layout.
 
 ## Residual Risks
 

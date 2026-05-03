@@ -399,6 +399,47 @@ func (r *memoryRepository) UpdateView(_ context.Context, _ requestctx.TenantInfo
 	return &clone, nil
 }
 
+func (r *memoryRepository) UpdateDraft(_ context.Context, _ requestctx.TenantInfo, model ModelRecord, view ViewRecord, expectedVersions ExpectedVersions) (*ModelRecord, *ViewRecord, error) {
+	existingModel, ok := r.models[model.ModelID]
+	modelKeyToDelete := ""
+	if !ok {
+		for key, record := range r.models {
+			if record.ModelKey == model.ModelID {
+				existingModel = record
+				ok = true
+				modelKeyToDelete = key
+				break
+			}
+		}
+	}
+	if !ok {
+		return nil, nil, ErrModelNotFound
+	}
+	entries := r.views[view.ModelID]
+	if entries == nil {
+		return nil, nil, ErrViewNotFound
+	}
+	existingView := entries[view.ViewID]
+	if existingView == nil {
+		return nil, nil, ErrViewNotFound
+	}
+	if expectedVersions.Model != nil && existingModel.Version != *expectedVersions.Model {
+		return nil, nil, ErrDraftConflict
+	}
+	if expectedVersions.View != nil && existingView.Version != *expectedVersions.View {
+		return nil, nil, ErrDraftConflict
+	}
+
+	modelClone := cloneModelRecord(&model)
+	viewClone := cloneViewRecord(&view)
+	if modelKeyToDelete != "" {
+		delete(r.models, modelKeyToDelete)
+	}
+	r.models[modelClone.ModelID] = &modelClone
+	entries[viewClone.ViewID] = &viewClone
+	return &modelClone, &viewClone, nil
+}
+
 func (r *memoryRepository) DeleteView(_ context.Context, _ requestctx.TenantInfo, modelID, viewID string) error {
 	entries := r.views[modelID]
 	if entries == nil {
@@ -1517,6 +1558,50 @@ func TestSaveDraftRejectsInvalidBlueprintHierarchy(t *testing.T) {
 	})
 	if !errors.Is(err, ErrInvalidDraft) {
 		t.Fatalf("expected ErrInvalidDraft, got %v", err)
+	}
+}
+
+func TestSaveDraftDoesNotUpdateModelWhenViewVersionConflicts(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+	originalModelVersion := model.Version
+	originalViewVersion := view.Version
+	originalModelDisplayName := model.DisplayName
+	originalModelDefinitionJSON := append([]byte(nil), model.DefinitionJSON...)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	modelPayload["title"] = "Changed Inspection"
+	modelPayload["displayName"] = "Changed Inspection"
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	repo.views[model.ModelID][view.ViewID].Version = originalViewVersion + 1
+
+	_, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(originalModelVersion),
+			View:  int64Ptr(originalViewVersion),
+		},
+	})
+	if !errors.Is(err, ErrDraftConflict) {
+		t.Fatalf("expected ErrDraftConflict, got %v", err)
+	}
+
+	persistedModel := repo.models[model.ModelID]
+	if persistedModel == nil {
+		t.Fatalf("expected original model to remain")
+	}
+	if persistedModel.DisplayName != originalModelDisplayName {
+		t.Fatalf("model display name = %q, want %q", persistedModel.DisplayName, originalModelDisplayName)
+	}
+	if persistedModel.Version != originalModelVersion {
+		t.Fatalf("model version = %d, want %d", persistedModel.Version, originalModelVersion)
+	}
+	if string(persistedModel.DefinitionJSON) != string(originalModelDefinitionJSON) {
+		t.Fatalf("model definition changed despite view conflict")
 	}
 }
 

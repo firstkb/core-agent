@@ -39,6 +39,8 @@ instead of them.
 - Import data is planned for managed models, but no active import route/service exists yet.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
 - Static/external multivalue storage remains deferred to a future explicit slice.
+- Choice field authoring should default `single_select` and `multi_select` Orientation to `Horizontal`.
+- View tab Grid settings should add a bool switch above the field list to show only active/list-visible fields for easier sorting of large views.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
 - Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.

@@ -100,5 +100,20 @@ Statuses:
 - Priority: high.
 - Status: resolved.
 - Owner decision: Use the existing generated multivalue table for ordinary managed `multi_select` storage.
-- Fixed in: working tree; pending commit.
+- Fixed in: `1602473`.
 - Verification: `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed; `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed; `git diff --check` passed; `scripts/preflight.sh` passed in lite mode.
+
+## FB-RT-007 - Form Builder choice/grid authoring quality-of-life follow-ups
+
+- Area: Form Builder choice field settings and View tab Grid settings.
+- URL: not captured; owner raised while reviewing runtime choice controls on 2026-05-03.
+- Model/View: affected authoring views with `single_select`, `multi_select`, and large Grid field lists.
+- Symptom: Choice field Orientation needs a better default, and large Grid field lists are hard to sort when inactive/unselected fields are mixed into the same list.
+- Expected: `single_select` and `multi_select` Orientation should default to `Horizontal`; Grid settings should have a bool switch above the field list to show only active/list-visible fields, so sorting active columns does not require dragging through dozens of inactive fields.
+- Actual: Follow-up not implemented in the current runtime renderer slice.
+- Evidence: Owner decision on 2026-05-03.
+- Priority: medium.
+- Status: next-slice.
+- Owner decision: Record for a future Form Builder authoring UX slice; do not mix into the current runtime persistence/renderer fix.
+- Fixed in: pending.
+- Verification: pending.

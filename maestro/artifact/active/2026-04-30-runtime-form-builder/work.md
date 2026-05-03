@@ -51,6 +51,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
 - Runtime choice fields should render from authored `choiceDisplay` settings, not preset-name inference: `Render style = Native` uses UI Kit Combobox (`single_select` simple values, `multi_select` multi-select), while `Render style = Buttons` uses UI Kit toggle buttons with authored horizontal/vertical orientation. Per-option Button styles remain deferred until Form Builder defines a runtime-ready styling contract.
 - Managed runtime `multi_select`/`tags` values should use the generated scope multivalue table. Runtime apply exposes aggregate label/count outputs for grids; runtime create/edit/load persists selected option values in `value_key`, labels in `value_label`, and preserves authored order with `sort_order`. Static/external multivalue writes remain deferred.
+- Runtime choice Native controls must keep the required-field left border affordance used by other controls, and selected choice buttons should make the selected state more explicit with underlined text.
 - Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
 - Do not include these groups in the next field-scope slice: `Relationships`, `System Fields` as visual palette/rendered controls, `Ready-made fields`, and reserved `Advanced fields`. System Field metadata still remains part of runtime create/status behavior when present on a view.
 - For selected first-scope fields, include render-affecting settings only: label/display name, key/id, description/helper, placeholder/content, required/nullable, readonly/disabled/lock state, default value shape, width/layout/label layout, rows, numeric/date input behavior, choice options, choice orientation/control type where supported, and content alignment/style variants where needed.
@@ -135,6 +136,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Maestro/process improvement candidates discovered during this work are tracked in `maestro/artifact/active/2026-04-30-runtime-form-builder/maestro-improvements.md` before selected items are promoted to skills, standards, or contracts.
 - Choice Button styles follow-up is tracked as `FB-RT-005` in `findings.md`; current runtime implementation intentionally ignores per-option styling and implements only render style plus orientation.
 - Managed multiselect persistence issue is tracked as `FB-RT-006` in `findings.md`.
+- Form Builder choice/grid authoring follow-ups are tracked as `FB-RT-007` in `findings.md`.
 
 ## Evidence
 
@@ -315,7 +317,15 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 6 files, 23 tests;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode.
+- Runtime choice visual follow-up completed after commit `1602473`:
+  - Native single/multi Combobox controls now inherit the required-field left border marker inside runtime forms;
+  - selected choice buttons now underline their text to make the pressed state more explicit;
+  - Form Builder authoring follow-ups for choice Orientation default and Grid active-only sorting are recorded as `FB-RT-007`;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use tools were not exposed by tool discovery in this turn; Computer Use was intentionally not used for the Codex app.
 
 ## Next Action
 
-Next allowed action is owner review or commit preparation for the choice renderer plus managed multi-select storage slices, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.
+Next allowed action is owner review of the runtime choice visual follow-up, commit preparation for that small follow-up, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.

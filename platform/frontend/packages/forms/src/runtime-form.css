@@ -230,6 +230,17 @@
   max-width: 100%;
 }
 
+.platform-runtime-form__field.ui-field--required > .ui-combobox .ui-combobox__trigger {
+  border-left-width: 2px;
+  border-left-color: var(--color-warning);
+}
+
+.platform-runtime-form__choice-button-group .ui-toggle--pressed {
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
 .platform-runtime-form__choice-button-group.ui-toggle-group--horizontal {
   display: flex;
   width: 100%;

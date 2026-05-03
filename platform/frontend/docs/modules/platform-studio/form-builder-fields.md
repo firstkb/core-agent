@@ -734,11 +734,15 @@ Root view settings own:
 
 Subform view settings may own child-table concerns for `DEFAULT` subforms:
 
+- parent `Subform` node display title, exposed from the Subform `View` tab
 - child `canAdd`
 - child `canEdit`
 - child `canDelete`
 - child list sorting
 - child list columns
+
+Editing the Subform title must not rename `schemaScopeId`, `tableKey`, runtime
+table/view names, or other storage identity.
 
 Root-only concerns:
 

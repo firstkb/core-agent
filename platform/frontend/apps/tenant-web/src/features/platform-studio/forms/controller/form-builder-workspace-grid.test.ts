@@ -12,8 +12,12 @@ import type {
 import { normalizeViewSettings } from "../state/form-builder-view-normalization";
 import { buildCanonicalDataSchema } from "./form-builder-workspace-data-schema";
 import { buildWorkspaceDocumentFromCanonicalSchemas } from "./form-builder-workspace-document-hydration";
-import { applyRootViewGridColumnsUpdate } from "./form-builder-workspace-document-updates";
+import {
+  applyCurrentScopeSubformTitleUpdate,
+  applyRootViewGridColumnsUpdate,
+} from "./form-builder-workspace-document-updates";
 import { getVisibleGridScopeFields } from "./form-builder-workspace-field-scope-grid";
+import { deriveModelSchemaScopes } from "./form-builder-workspace-schema-utils";
 import { buildCanonicalUiSchema } from "./form-builder-workspace-ui-schema";
 
 function createField(
@@ -234,6 +238,88 @@ describe("Form Builder grid settings", () => {
 
     expect(hydratedDocument.subformScopes[0]?.viewSettings.list.columns).toEqual([noteColumn]);
     expect(hydratedDocument.subformScopes[0]?.viewSettings.list.sorting.fieldId).toBe("note");
+  });
+
+  it("updates the active subform title without changing subform identity", () => {
+    const model = createModel([
+      createField("site_name", "Site name"),
+      createField("note", "Note", { schemaScopeKey: "pb_notes" }),
+    ]);
+    const document = normalizeFormBuilderDocument(
+      {
+        filterDefinitions: {},
+        nodes: [
+          {
+            id: "subform-notes",
+            order: 0,
+            parentId: null,
+            schemaScopeId: "pb_notes",
+            subformType: "DEFAULT",
+            tableKey: "pb_notes",
+            title: "Notes",
+            type: "subform",
+            visibility: "visible",
+          },
+          {
+            fieldId: "note",
+            id: "field-note",
+            order: 0,
+            parentId: "subform-notes",
+            type: "field",
+            visibility: "visible",
+          },
+        ],
+        subformScopes: [
+          {
+            dataSchema: { fieldIds: ["note"] },
+            parentSubformNodeId: "subform-notes",
+            scopeId: "subform-notes",
+            scopeType: "SUBFORM",
+            subformType: "DEFAULT",
+            tableKey: "pb_notes",
+            uiSchema: {
+              currentParentId: null,
+              nodes: [],
+              selectedNodeId: null,
+              unplacedFieldIds: [],
+            },
+            viewSettings: {
+              actions: {
+                canAdd: true,
+                canDelete: true,
+                canEdit: true,
+              },
+              list: {
+                columns: [],
+                sorting: {
+                  direction: "asc",
+                },
+              },
+            },
+          },
+        ],
+        systemFields: {},
+        viewDescription: "",
+        viewKind: "form",
+        viewSettings: { list: { columns: [] } },
+        viewTitle: "Default",
+      },
+      model,
+      screen,
+    );
+
+    const nextDocument = applyCurrentScopeSubformTitleUpdate(
+      { ...document, activeScopeId: "subform-notes" },
+      { scopeId: "subform-notes", scopeType: "SUBFORM" },
+      "Findings",
+    );
+    const subformNode = nextDocument.rootScope.uiSchema.nodes.find((node) => node.id === "subform-notes");
+    const schemaScope = deriveModelSchemaScopes(model, nextDocument).find((scope) => scope.key === "pb_notes");
+
+    expect(subformNode?.title).toBe("Findings");
+    expect(subformNode?.schemaScopeId).toBe("pb_notes");
+    expect(subformNode?.tableKey).toBe("pb_notes");
+    expect(schemaScope?.displayName).toBe("Findings");
   });
 
   it("uses only visible grid outputs for sorting choices", () => {

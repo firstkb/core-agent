@@ -35,6 +35,7 @@ type ViewInspectorTabBodyProps = {
   onPendingDefaultFilterFieldChange: (fieldId: string) => void;
   onSortDirectionChange: (direction: "asc" | "desc") => void;
   onSortFieldChange: (fieldId: string) => void;
+  onSubformTitleChange: (title: string) => void;
   onSystemFieldChange: (role: string, fieldId: string) => void;
   onViewActiveChange: (checked: boolean) => void;
   onViewDescriptionChange: (description: string) => void;
@@ -45,6 +46,7 @@ type ViewInspectorTabBodyProps = {
   sortDirection: "asc" | "desc";
   sortFieldId: string;
   sortingFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
+  subformTitle: string;
   systemFields: ReadonlyArray<ViewSettingsSystemFieldItem>;
   t: Translate;
   viewActive: boolean;
@@ -75,6 +77,7 @@ export function ViewInspectorTabBody({
   onPendingDefaultFilterFieldChange,
   onSortDirectionChange,
   onSortFieldChange,
+  onSubformTitleChange,
   onSystemFieldChange,
   onViewActiveChange,
   onViewDescriptionChange,
@@ -85,6 +88,7 @@ export function ViewInspectorTabBody({
   sortDirection,
   sortFieldId,
   sortingFieldItems,
+  subformTitle,
   systemFields,
   t,
   viewActive,
@@ -136,6 +140,7 @@ export function ViewInspectorTabBody({
             ? "tenant.platformStudio.forms.builder.viewSettings.sorting"
             : "tenant.platformStudio.forms.builder.viewSettings.sortingSubtable",
         ),
+        subformTitle: t("tenant.platformStudio.forms.builder.viewSettings.subformTitle"),
         subtableTitle: t("tenant.platformStudio.forms.builder.grid.subtable"),
         systemFieldsSection: t("tenant.platformStudio.forms.builder.viewSection.systemFields"),
         unbound: t("tenant.platformStudio.forms.builder.systemField.unbound"),
@@ -156,6 +161,7 @@ export function ViewInspectorTabBody({
       onPendingDefaultFilterFieldChange={onPendingDefaultFilterFieldChange}
       onSortDirectionChange={onSortDirectionChange}
       onSortFieldChange={onSortFieldChange}
+      onSubformTitleChange={onSubformTitleChange}
       onSystemFieldChange={onSystemFieldChange}
       onViewActiveChange={onViewActiveChange}
       onViewDescriptionChange={onViewDescriptionChange}
@@ -166,6 +172,7 @@ export function ViewInspectorTabBody({
       sortDirection={sortDirection}
       sortFieldId={sortFieldId}
       sortingFieldItems={sortingFieldItems}
+      subformTitle={subformTitle}
       systemFields={systemFields}
       viewActive={viewActive}
       viewDescription={viewDescription}

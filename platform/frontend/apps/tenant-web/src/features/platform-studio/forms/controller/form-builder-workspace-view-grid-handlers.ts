@@ -12,6 +12,7 @@ import {
 } from "../forms-placeholder-data";
 import {
   applyCurrentScopeSubformViewSettingsUpdate,
+  applyCurrentScopeSubformTitleUpdate,
   applyRootCorrectiveActionEnabledUpdate,
   applyRootViewGridColumnsUpdate,
   applyRootViewSettingsUpdate,
@@ -168,12 +169,19 @@ export function createFormBuilderViewGridHandlers({
     updateDocument((currentDocument) => applyDocumentViewTitleUpdate(currentDocument, title));
   }
 
+  function updateCurrentScopeSubformTitle(title: string) {
+    updateDocument((currentDocument) =>
+      applyCurrentScopeSubformTitleUpdate(currentDocument, activeScope, title)
+    );
+  }
+
   return {
     addDefaultFilterCondition,
     addQuickFilter,
     reorderGridColumns,
     updateCorrectiveActionEnabled,
     updateCurrentGridColumns,
+    updateCurrentScopeSubformTitle,
     updateCurrentScopeSubformViewSettings,
     updateCurrentViewSortDirection,
     updateCurrentViewSortField,

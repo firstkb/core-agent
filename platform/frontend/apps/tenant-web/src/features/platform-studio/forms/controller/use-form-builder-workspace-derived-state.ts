@@ -178,7 +178,7 @@ export function useFormBuilderWorkspaceDerivedState({
   const currentViewFilterTargets = isRootViewScope ? rootViewFilterTargets : currentGridScopeTargets;
   const currentScopeViewLabel = isRootViewScope
     ? currentDraftViewTitle
-    : (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"));
+    : (currentScopeSubformNode?.title?.trim() || t("tenant.platformStudio.forms.builder.nodeType.subform"));
   const currentScopeSortingFields = useMemo(
     () => getVisibleGridScopeFields(currentGridScopeTargets, currentGridColumns),
     [currentGridColumns, currentGridScopeTargets],

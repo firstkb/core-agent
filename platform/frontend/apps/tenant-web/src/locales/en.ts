@@ -790,6 +790,7 @@ export const tenantEnglishMessages = {
             sorting: "Sorting",
             sortFieldSubtable: "Subtable field",
             sortingSubtable: "Subtable sorting",
+            subformTitle: "Subform title",
           },
           viewDescriptionLabel: "View description",
           viewTab: "View",

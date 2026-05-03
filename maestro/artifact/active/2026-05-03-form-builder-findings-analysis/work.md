@@ -1,27 +1,27 @@
 # Work
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `paused`
-- Owner goal: Stabilize Form Builder; pause after Slices 1-4 without closing the work.
+- Status: `active`
+- Owner goal: Stabilize Form Builder; resume with Slice 5 to restore Subform View title editing.
 
 ## Understanding
 
-The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-4 are implemented and verified. On 2026-05-03 the owner paused the work without closing it.
+The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-4 are implemented and verified. On 2026-05-03 the owner paused the work without closing it, then resumed with a Subform View title-editing regression.
 
 ## Agreed Scope
 
-- In: record completed work in the original source findings file, add future lookup settings/filter work, and pause the active artifact without archiving/closing it.
+- In: restore Subform title editing from the Subform View tab, keep title separate from storage identity, update focused regression coverage, and record evidence.
 - Out: backend/runtime grants, Navigation Builder ACL, Action Builder, destructive schema/data migration, release/deploy work, and unrelated artifact changes.
 
 ## Continuity Snapshot
 
 - Latest owner correction: use `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` as the input file and create a separate artifact folder.
-- Current phase: `paused`
+- Current phase: `implementation verified`
 - Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. No release/destructive gates are in scope.
-- Evidence status: Slice 1, Slice 2, Slice 3, and Slice 4 checks are recorded in `evidence.md`.
+- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, and Slice 5 checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
-- Next allowed action: resume from `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` and this artifact; likely next slice is lookup field settings and View lookup filters.
+- Next allowed action: owner manual test of Subform title editing, then either fix feedback or continue to lookup field settings and View lookup filters.
 
 ## Decisions
 
@@ -38,6 +38,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - `default` is represented by no persisted style entry; raw `backgroundColor`, `textColor`, and `borderColor` are not runtime contract and are ignored during normalization.
 - Runtime single/multi-select buttons map option variants to forms package CSS classes backed by product tokens, without expanding the shared `ui-kit` Toggle API for per-item variants.
 - Pause decision: do not archive or close this artifact yet; keep it active for resume.
+- For Slice 5, Subform View edits the user-facing parent `Subform` node `title`; `schemaScopeId`, `tableKey`, runtime table/view names, and route identity are not renamed from this UI field.
 
 ## Plan
 
@@ -49,6 +50,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 6. Implement Slice 3 authoring quality-of-life follow-ups.
 7. Implement Slice 4 choice button semantic option style contract.
 8. Pause without closing and record completed work/future lookup work in the source findings file.
+9. Implement Slice 5 Subform View title editing.
 
 ## Risks / Gates
 
@@ -67,4 +69,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Work is paused, not closed. Resume with the source findings file and planned lookup settings/filter review when the owner restarts.
+Owner should manually test Subform View title editing. If accepted, continue with lookup field settings and View lookup filters.

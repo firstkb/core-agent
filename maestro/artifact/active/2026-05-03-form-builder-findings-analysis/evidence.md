@@ -44,6 +44,11 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `scripts/preflight.sh` | passed | lite preflight passed after Slice 4 | Includes docs memory, env policy, and runtime drift checks. |
 | `git diff --check` | passed | no output | Whitespace check after pause/source-findings docs update. |
 | `scripts/preflight.sh` | passed | lite preflight passed after pause docs update | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm --filter @platform/tenant-web test -- form-builder-workspace-grid.test.ts` | passed | 1 file / 6 tests passed | Slice 5 regression covers active Subform title update without changing `schemaScopeId` or `tableKey`. Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web typecheck` | passed | `tsc --noEmit` exited 0 after Slice 5 | Same Node engine warning observed. |
+| `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 after Slice 5 | Same Node engine warning observed. |
+| `git diff --check` | passed | no output | Whitespace check after Slice 5. |
+| `scripts/preflight.sh` | passed | lite preflight passed after Slice 5 | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -99,6 +104,22 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/packages/forms/src/runtime/fields/select-field.tsx`
 - `platform/frontend/packages/forms/src/runtime/runtime-form-types.ts`
 
+## Slice 5 Changed Files
+
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-inspector-tab-body.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-panel.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-document-updates.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-grid.test.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-grid-handlers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/use-form-builder-workspace-derived-state.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+- `platform/frontend/apps/tenant-web/src/locales/en.ts`
+- `platform/frontend/apps/tenant-web/src/locales/es.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -118,3 +139,4 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Ready-made `radio_group` and `checkbox_group` defaults remain unchanged pending an explicit product decision.
 - Lookup field authoring settings and View lookup filters are recorded as the next likely slice and remain unimplemented.
 - Slice 4 visual appearance is covered by token-backed CSS and schema/unit tests; no browser screenshot evidence has been collected yet.
+- Slice 5 has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the Subform View title input.

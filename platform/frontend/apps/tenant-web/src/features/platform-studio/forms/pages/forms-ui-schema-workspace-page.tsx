@@ -478,6 +478,7 @@ export function FormsViewWorkspacePage() {
     addDefaultFilterCondition,
     reorderGridColumns,
     updateCorrectiveActionEnabled,
+    updateCurrentScopeSubformTitle,
     updateCurrentScopeSubformViewSettings,
     updateCurrentViewSortDirection,
     updateCurrentViewSortField,
@@ -789,7 +790,7 @@ export function FormsViewWorkspacePage() {
                       isChecklistGridScope={isChecklistGridScope}
                       meta={
                         isSubformGridScope
-                          ? (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"))
+                          ? currentScopeViewLabel
                           : currentDraftViewTitle
                       }
                       onDragEnd={resetGridFieldDragState}
@@ -904,6 +905,7 @@ export function FormsViewWorkspacePage() {
                       onPendingDefaultFilterFieldChange={setPendingDefaultFilterFieldId}
                       onSortDirectionChange={updateCurrentViewSortDirection}
                       onSortFieldChange={updateCurrentViewSortField}
+                      onSubformTitleChange={updateCurrentScopeSubformTitle}
                       onSystemFieldChange={(role, fieldId) => updateSystemFieldBinding(role as SystemFieldRole, fieldId)}
                       onViewActiveChange={updateViewActive}
                       onViewDescriptionChange={updateViewDescription}
@@ -918,6 +920,7 @@ export function FormsViewWorkspacePage() {
                         ? (document.viewSettings.list.sorting.fieldId ?? "")
                         : (currentScopeViewSettings?.list.sorting.fieldId ?? "")}
                       sortingFieldItems={viewSettingsSortingFields}
+                      subformTitle={currentScopeSubformNode?.title ?? ""}
                       systemFields={viewSettingsSystemFields}
                       t={t}
                       viewActive={currentView.isActive}

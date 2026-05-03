@@ -1,11 +1,11 @@
 # Closeout
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `paused`
+- Status: `active`
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified. The owner paused the work on 2026-05-03 without closing or archiving it.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slice 1, Slice 2, Slice 3, and Slice 4 are implemented and verified. The owner paused the work on 2026-05-03 without closing or archiving it, then resumed with Slice 5 for Subform View title editing.
 
 ## Outcome
 
@@ -24,6 +24,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Replaced raw per-option color controls for choice button styles with strict semantic variants: `default`, `primary`, `secondary`, `info`, `success`, `warning`, and `danger`.
 - Mapped semantic option styles through `@platform/forms` runtime schema and button rendering while ignoring raw color-only legacy entries.
 - Updated the original source findings file with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice.
+- Restored Subform title editing from the Subform View tab while keeping `schemaScopeId`, `tableKey`, runtime table/view names, and route identity unchanged.
 
 ## Checks
 
@@ -36,4 +37,4 @@ Updated planned-work memory to move Slice 1, Slice 2, Slice 3, and Slice 4 accep
 
 ## Next Step
 
-Resume from `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` and this active artifact. The likely next slice is lookup field settings and lookup-aware View filters.
+Owner should manually test Subform View title editing. If accepted, continue with lookup field settings and lookup-aware View filters.

@@ -790,6 +790,7 @@ export const tenantSpanishMessages = {
             sorting: "Sorting",
             sortFieldSubtable: "Campo de subtabla",
             sortingSubtable: "Orden de subtabla",
+            subformTitle: "Titulo del subform",
           },
           viewDescriptionLabel: "Descripcion de la vista",
           viewTab: "Vista",

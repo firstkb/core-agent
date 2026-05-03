@@ -184,3 +184,19 @@ Statuses:
 - Owner decision: Record as future Form Builder work; do not close the current Form Builder stabilization thread.
 - Fixed in: pending.
 - Verification: pending.
+
+## FB-RT-012 - Subform View tab lost title editing
+
+- Area: Form Builder Subform scope, View tab, Subtable details.
+- URL: not captured; owner requested restore on 2026-05-03.
+- Model/View: affected views with `Subform` scopes.
+- Symptom: When working inside a Subform scope, the View tab only shows Subtable metadata/actions/sorting and no longer gives the user a way to change the Subform title/name.
+- Expected: The Subform View tab should allow editing the user-facing Subform title. The editable value is the parent `Subform` node `title`; storage identity such as `schemaScopeId`, `tableKey`, runtime table names, and route identity must not be renamed from this field.
+- Actual: The Subform View tab did not render a title input.
+- Evidence: Owner request on 2026-05-03.
+- Priority: medium.
+- Status: resolved.
+- Owner decision: Restore title editing for Subform View; treat it as display title, not storage/identity name.
+- Resolution: Added a Subform title input to the non-root View tab, wired it to update the active Subform parent node `title`, kept subform identity fields unchanged, and documented the title/identity boundary.
+- Fixed in: current change set.
+- Verification: `pnpm --filter @platform/tenant-web test -- form-builder-workspace-grid.test.ts` passed; `pnpm --filter @platform/tenant-web typecheck` passed; `pnpm --filter @platform/tenant-web lint` passed; `git diff --check` passed; `scripts/preflight.sh` passed.

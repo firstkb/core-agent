@@ -1,4 +1,9 @@
 import {
+  Input,
+  Label,
+} from "@platform/ui-kit";
+
+import {
   SortingSection,
   ViewActionsSection,
   type ViewSettingsActionItem,
@@ -30,6 +35,7 @@ type ViewSettingsPanelLabels = ViewSettingsRootLabels & {
   sortDirectionDesc: string;
   sortField: string;
   sortingSection: string;
+  subformTitle: string;
   subtableTitle: string;
   systemFieldsSection: string;
 };
@@ -63,6 +69,7 @@ type ViewSettingsPanelProps = {
   onPendingDefaultFilterFieldChange: (fieldId: string) => void;
   onSortDirectionChange: (direction: "asc" | "desc") => void;
   onSortFieldChange: (fieldId: string) => void;
+  onSubformTitleChange: (title: string) => void;
   onSystemFieldChange: (role: string, fieldId: string) => void;
   onViewActiveChange: (checked: boolean) => void;
   onViewDescriptionChange: (description: string) => void;
@@ -73,6 +80,7 @@ type ViewSettingsPanelProps = {
   sortDirection: "asc" | "desc";
   sortFieldId: string;
   sortingFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
+  subformTitle: string;
   systemFields: ReadonlyArray<ViewSettingsSystemFieldItem>;
   viewActive: boolean;
   viewDescription: string;
@@ -109,6 +117,7 @@ export function ViewSettingsPanel({
   onPendingDefaultFilterFieldChange,
   onSortDirectionChange,
   onSortFieldChange,
+  onSubformTitleChange,
   onSystemFieldChange,
   onViewActiveChange,
   onViewDescriptionChange,
@@ -119,6 +128,7 @@ export function ViewSettingsPanel({
   sortDirection,
   sortFieldId,
   sortingFieldItems,
+  subformTitle,
   systemFields,
   viewActive,
   viewDescription,
@@ -171,14 +181,28 @@ export function ViewSettingsPanel({
         </>
       ) : (
         <div className="tenant-web__platform-studio-inspector-section">
-          <div className="tenant-web__platform-studio-inspector-header tenant-web__platform-studio-inspector-header--grid">
-            <div>
-              <p className="tenant-web__platform-studio-inspector-title">
-                {labels.subtableTitle}
-              </p>
-              <p className="tenant-web__platform-studio-inspector-meta">
-                {currentScopeViewLabel}
-              </p>
+          <div className="tenant-web__platform-studio-builder-stack">
+            <div className="tenant-web__platform-studio-inspector-header tenant-web__platform-studio-inspector-header--grid">
+              <div>
+                <p className="tenant-web__platform-studio-inspector-title">
+                  {labels.subtableTitle}
+                </p>
+                <p className="tenant-web__platform-studio-inspector-meta">
+                  {currentScopeViewLabel}
+                </p>
+              </div>
+            </div>
+
+            <div className="tenant-web__platform-studio-form-group">
+              <Label htmlFor="tenant-platform-studio-subform-title">
+                {labels.subformTitle}
+              </Label>
+              <Input
+                disabled={!canEditSettings}
+                id="tenant-platform-studio-subform-title"
+                onChange={(event) => onSubformTitleChange(event.target.value)}
+                value={subformTitle}
+              />
             </div>
           </div>
         </div>

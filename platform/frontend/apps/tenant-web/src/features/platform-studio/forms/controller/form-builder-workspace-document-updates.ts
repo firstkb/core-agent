@@ -251,6 +251,23 @@ export function applyCurrentScopeSubformViewSettingsUpdate(
   };
 }
 
+export function applyCurrentScopeSubformTitleUpdate(
+  document: FormBuilderDocument,
+  activeScope: Pick<FormBuilderScope, "scopeId" | "scopeType">,
+  title: string,
+) {
+  if (activeScope.scopeType !== "SUBFORM") {
+    return document;
+  }
+
+  const subformScope = document.subformScopes.find((scope) => scope.scopeId === activeScope.scopeId);
+  if (!subformScope) {
+    return document;
+  }
+
+  return updateFormBuilderNode(document, subformScope.parentSubformNodeId, { title });
+}
+
 export function applySelectedNodeRulesUpdate(
   document: FormBuilderDocument,
   nodeId: string | null | undefined,

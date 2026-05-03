@@ -13,9 +13,28 @@ Status values:
   or lane `AGENTS.md`.
 - `rejected`: intentionally not adopted.
 
+## Promotion Record
+
+- Promotion commit: `2994022 docs(maestro): promote runtime form improvement guardrails`.
+- Date: 2026-05-03.
+- Scope: process/runtime guidance only; no product code changes.
+- Changed canonical/supporting surfaces:
+  - `.agents/skills/maestro/SKILL.md`
+  - `.codex/standards/runtime/artifact-governance.md`
+  - `platform/backend/AGENTS.md`
+  - `platform/frontend/AGENTS.md`
+  - `maestro/memory/modules/domains/platform-studio/tools/form-builder.md`
+  - this backlog file, to mark promoted items.
+- Checks run:
+  - `python3 scripts/checks/docs_memory_check.py --check`
+  - `python3 scripts/checks/check_env_policy.py --check`
+  - `git diff --check` for the promoted files
+
 ## MI-001 - Enforce Service Ownership Before Backend Writes
 
 - Status: promoted.
+- Promotion result: done in `2994022`; generalized as a backend/shared-runtime
+  ownership boundary rule, not hardcoded only to Form Builder.
 - Problem observed: Work started in `platformstudioformbuilder` after the owner
   had already decided that runtime write behavior belongs in a separate
   `platformstudioformruntime` service/module.
@@ -32,6 +51,8 @@ Status values:
 ## MI-002 - Add Monolith-Growth Guard For Existing Services
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added as a concise backend
+  responsibility-split guard.
 - Problem observed: A broad service file can keep growing unless Maestro pauses
   and splits responsibilities by handler, service commands, repository reads,
   repository writes, validation, response assembly, and action/policy seams.
@@ -47,6 +68,8 @@ Status values:
 ## MI-003 - Preserve Existing Working Behavior By Default
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added to Maestro implementation safety
+  and frontend working rules.
 - Problem observed: Preview runtime bulk actions were suppressed to avoid a
   missing endpoint, which removed working checkbox and bulk-action behavior.
 - Improvement: If a new dependency is missing, Maestro should prefer completing
@@ -62,6 +85,8 @@ Status values:
 ## MI-004 - Do Not Fix Contract Gaps By Dropping Metadata
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added to Maestro implementation safety,
+  frontend working rules, and Form Builder runtime/preview guardrails.
 - Problem observed: The preview route cleared `selection` and `bulkActions`
   metadata because execution was not wired for the preview namespace.
 - Improvement: When metadata and execution are out of sync, fix the contract or
@@ -75,6 +100,8 @@ Status values:
 ## MI-005 - Add Regression Test Before Or With Behavior Guards
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added as targeted regression evidence
+  expectation for visibility/capability guards.
 - Problem observed: A guard disabled preview bulk metadata without a test that
   would catch the expected preview behavior.
 - Improvement: Any guard that changes feature visibility, route capability,
@@ -88,6 +115,8 @@ Status values:
 ## MI-006 - Compare Runtime And Preview Namespaces Explicitly
 
 - Status: promoted.
+- Promotion result: done in `2994022`; kept domain-specific in Form Builder
+  memory instead of making it a global Maestro rule.
 - Problem observed: `/app/forms/...` and `/app/platform-studio/forms/...`
   drifted: runtime had bulk execution while preview did not, and metadata was
   then suppressed only in preview.
@@ -101,6 +130,8 @@ Status values:
 ## MI-007 - Normalize Schema Shape At Boundaries, Not In Leaf Widgets
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added to frontend working rules and Form
+  Builder runtime memory guardrails.
 - Problem observed: Select/multi-select options were missing because renderer
   logic expected `{ value, label }` objects while Form Builder authored options
   can be `string[]`.
@@ -115,6 +146,8 @@ Status values:
 ## MI-008 - Use Owner Findings As Regression Backlog
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added optional `findings.md` guidance to
+  artifact governance.
 - Problem observed: Manual testing surfaced multiple related issues while the
   active slice was moving quickly.
 - Improvement: Keep owner-discovered issues in a dedicated findings file with
@@ -127,6 +160,8 @@ Status values:
 ## MI-009 - Separate Code Fix Commits From Process/Memory Commits
 
 - Status: promoted.
+- Promotion result: already covered by existing atomic commit guidance; backlog
+  marked promoted in `2994022` without adding a duplicate rule.
 - Problem observed: The work contains both product code changes and process
   corrections. Mixing them makes review and rollback harder.
 - Improvement: When practical, commit product behavior fixes separately from
@@ -139,6 +174,9 @@ Status values:
 ## MI-010 - Do Not Treat Thread Summary As Approval Or Boundary Reset
 
 - Status: promoted.
+- Promotion result: already covered by existing Maestro compaction/resume and
+  approval rules; backlog marked promoted in `2994022` without adding a
+  duplicate rule.
 - Problem observed: Long-running work can resume from compacted context where
   earlier owner decisions are easy to weaken or reinterpret.
 - Improvement: On resumed T1+ work, reread `work.md` and name the relevant
@@ -152,6 +190,8 @@ Status values:
 ## MI-011 - Make "Fix The Symptom" Secondary To Root Cause
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added to Maestro implementation safety as
+  recent diff/blame first-pass regression diagnosis.
 - Problem observed: The preview bulk action issue was initially explained as
   "backend intentionally clears metadata" instead of immediately naming it as a
   regression introduced by the recent commit.
@@ -166,6 +206,8 @@ Status values:
 ## MI-012 - Record Browser Evidence Limits Clearly
 
 - Status: promoted.
+- Promotion result: done in `2994022`; added to Maestro evidence guidance so
+  skipped Browser/Computer Use does not become claimed visual verification.
 - Problem observed: Browser Use was sometimes unavailable or current-pane state
   was inconsistent, but visual checks are still important for this workstream.
 - Improvement: If Browser Use cannot attach, record that limitation explicitly

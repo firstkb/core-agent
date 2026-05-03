@@ -25,7 +25,7 @@ instead of them.
 - Runtime and preview APIs are separate route namespaces.
 - Runtime ACL is still on the current tenant-auth baseline until Navigation Builder ACL exists.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
-- Multiple lookup fields have code-backed multivalue bridge-table support.
+- Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 
 ## Planned / Open Work
@@ -38,7 +38,7 @@ instead of them.
 - Import model is planned from the managed export bundle, but no active import route/service exists yet.
 - Import data is planned for managed models, but no active import route/service exists yet.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
-- Non-lookup multivalue storage for `multi_select` and `tags` is deferred to a future explicit slice.
+- Static/external multivalue storage remains deferred to a future explicit slice.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
 - Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.

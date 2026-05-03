@@ -85,6 +85,28 @@ func TestCreateRecordAppliesSystemDefaults(t *testing.T) {
 	}
 }
 
+func TestCreateRecordPassesManagedMultiSelectValues(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	svc := NewService(repo)
+
+	out, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"location":   "HQ",
+			"categories": []any{"aerial_lifts", "ppe", "ppe", ""},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateRecord returned error: %v", err)
+	}
+	expected := []string{"aerial_lifts", "ppe"}
+	if got, ok := repo.lastCreateValues["categories"].([]string); !ok || !stringSlicesEqual(got, expected) {
+		t.Fatalf("stored categories = %#v, want %#v", repo.lastCreateValues["categories"], expected)
+	}
+	if got, ok := out.Values["categories"].([]string); !ok || !stringSlicesEqual(got, expected) {
+		t.Fatalf("response categories = %#v, want %#v", out.Values["categories"], expected)
+	}
+}
+
 func TestLoadFormReturnsSchemasAndCreateDefaults(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)
@@ -474,6 +496,16 @@ func testModelPayload() map[string]any {
 							map[string]any{"label": "Finish", "value": "finish"},
 						},
 					},
+					map[string]any{
+						"fieldId":    "categories",
+						"kind":       "multi_select",
+						"label":      "Categories",
+						"storageKey": "categories",
+						"options": []any{
+							map[string]any{"label": "Aerial lifts", "value": "aerial_lifts"},
+							map[string]any{"label": "PPE", "value": "ppe"},
+						},
+					},
 				},
 			},
 		},
@@ -515,6 +547,18 @@ func cloneValues(values map[string]any) map[string]any {
 		out[key] = value
 	}
 	return out
+}
+
+func stringSlicesEqual(left []string, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func findDataSchemaField(dataSchema map[string]any, fieldID string) map[string]any {

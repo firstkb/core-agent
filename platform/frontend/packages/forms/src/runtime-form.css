@@ -225,6 +225,20 @@
   gap: var(--space-2);
 }
 
+.platform-runtime-form__choice-button-group {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.platform-runtime-form__choice-button-group.ui-toggle-group--horizontal {
+  display: flex;
+  width: 100%;
+}
+
+.platform-runtime-form__choice-button-group.ui-toggle-group--vertical {
+  width: 100%;
+}
+
 .platform-runtime-form__choice,
 .platform-runtime-form__boolean-control {
   display: inline-flex;

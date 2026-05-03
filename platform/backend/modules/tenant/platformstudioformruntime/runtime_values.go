@@ -12,7 +12,7 @@ func (s *Service) prepareMutationValues(scope runtimeRootScopePlan, incoming map
 	}
 
 	for _, field := range scope.Fields {
-		if !field.Supported || field.ColumnName == "" {
+		if !field.Supported || (!field.MultiValue && field.ColumnName == "") {
 			continue
 		}
 		raw, ok := incoming[field.FieldID]
@@ -97,9 +97,49 @@ func normalizeMutationValue(field runtimeFieldPlan, value any) any {
 			}
 			return strings.TrimSpace(typed)
 		}
+	case "multi_select", "tags":
+		return normalizeRuntimeStringArray(value)
 	}
 
 	return value
+}
+
+func normalizeRuntimeStringArray(value any) []string {
+	seen := map[string]struct{}{}
+	out := []string{}
+	appendValue := func(candidate string) {
+		candidate = strings.TrimSpace(candidate)
+		if candidate == "" {
+			return
+		}
+		if _, ok := seen[candidate]; ok {
+			return
+		}
+		seen[candidate] = struct{}{}
+		out = append(out, candidate)
+	}
+
+	switch typed := value.(type) {
+	case []string:
+		for _, entry := range typed {
+			appendValue(entry)
+		}
+	case []any:
+		for _, entry := range typed {
+			switch item := entry.(type) {
+			case string:
+				appendValue(item)
+			case jsonNumber:
+				appendValue(item.String())
+			}
+		}
+	case string:
+		appendValue(typed)
+	case jsonNumber:
+		appendValue(typed.String())
+	}
+
+	return out
 }
 
 func normalizeRuntimeInt64(value any) (int64, bool) {

@@ -2,6 +2,8 @@ import type {
   RuntimeFormAccordionLayoutDefinition,
   RuntimeFormCommitMode,
   RuntimeFormContentDefinition,
+  RuntimeFormChoiceOrientation,
+  RuntimeFormChoiceRenderStyle,
   RuntimeFormDefinition,
   RuntimeFormFieldDefinition,
   RuntimeFormFieldOption,
@@ -205,6 +207,29 @@ function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
     });
 }
 
+function isChoiceFieldType(type: RuntimeFormFieldType) {
+  return type === "single_select" || type === "multi_select" || type === "radio";
+}
+
+function readChoiceDisplay(field: JsonRecord) {
+  return asRecord(field.choiceDisplay);
+}
+
+function readChoiceRenderStyle(field: JsonRecord): RuntimeFormChoiceRenderStyle | undefined {
+  const renderStyle = stringValue(readChoiceDisplay(field).renderStyle);
+  return renderStyle === "buttons" || renderStyle === "native" ? renderStyle : undefined;
+}
+
+function readChoiceOrientation(field: JsonRecord): RuntimeFormChoiceOrientation | undefined {
+  const orientation = stringValue(readChoiceDisplay(field).orientation);
+  return orientation === "horizontal" || orientation === "vertical" ? orientation : undefined;
+}
+
+function readChoiceAllowEmpty(field: JsonRecord) {
+  const choiceDisplay = readChoiceDisplay(field);
+  return typeof choiceDisplay.allowEmpty === "boolean" ? choiceDisplay.allowEmpty : undefined;
+}
+
 function readRuleValue(value: unknown): RuntimeFormRuleValue | undefined {
   if (typeof value === "string" || typeof value === "boolean") {
     return value;
@@ -279,10 +304,8 @@ function readRuntimeRules(rawRules: unknown): RuntimeFormNodeRules | undefined {
   };
 }
 
-function runtimeFieldType(field: JsonRecord, node: JsonRecord): RuntimeFormFieldType | null {
+function runtimeFieldType(field: JsonRecord): RuntimeFormFieldType | null {
   const kind = stringValue(field.kind, stringValue(field.dataType, stringValue(field.baseType)));
-  const preset = stringValue(field.preset);
-  const runtimePreset = stringValue(node.runtimePreset);
   const selectionMode = stringValue(field.selectionMode);
 
   if (kind === "db_lookup") {
@@ -290,9 +313,6 @@ function runtimeFieldType(field: JsonRecord, node: JsonRecord): RuntimeFormField
       return null;
     }
     return "single_select";
-  }
-  if (kind === "single_select" && (runtimePreset === "radio_chips" || preset === "radio_group")) {
-    return "radio";
   }
   if (runtimeFieldTypes.has(kind as RuntimeFormFieldType)) {
     return kind as RuntimeFormFieldType;
@@ -311,7 +331,7 @@ function createFieldNode(
     return null;
   }
 
-  const type = runtimeFieldType(field, node);
+  const type = runtimeFieldType(field);
   if (!type) {
     return null;
   }
@@ -319,8 +339,12 @@ function createFieldNode(
   const optionsList = readOptions(field);
   const readonly = node.visibility === "readonly" || boolValue(node.readonly, boolValue(field.readonly));
   const width = options.insideGrid ? undefined : "full";
+  const isChoiceField = isChoiceFieldType(type);
   return {
+    choiceAllowEmpty: type === "single_select" ? readChoiceAllowEmpty(field) : undefined,
     choiceLayout: type === "radio" ? "inline" : undefined,
+    choiceOrientation: isChoiceField ? readChoiceOrientation(field) : undefined,
+    choiceRenderStyle: isChoiceField ? readChoiceRenderStyle(field) ?? (type === "radio" ? "buttons" : "native") : undefined,
     helperText: stringValue(node.helperText) || undefined,
     id: fieldId,
     label: stringValue(field.label, stringValue(field.displayName, fieldId)),

@@ -43,7 +43,7 @@ Last compacted: 2026-04-25
 - Extract post-submit side effects to future `platformstudioformactions`.
 - Keep Navigation/access, PDF, and report backend concerns behind explicit future contracts before implementation.
 - Keep import model/data as planned work until an explicit route/service exists.
-- Keep non-lookup `multi_select`/`tags` storage deferred to an explicit future slice; multiple lookup bridge-table support already exists.
+- Managed non-lookup `multi_select`/`tags` and multiple lookup fields use runtime multivalue bridge tables. Static/external multivalue bridge-table writes remain deferred.
 - Finish lookup-heavy filter compiler path.
 - Decide final managed `Export data` behavior.
 - Enforce dedicated runtime-vs-preview guards after ACL model is ready.

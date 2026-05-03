@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `runtime_bulk_actions_slice_complete`
+- Status: `managed_multiselect_storage_slice_complete`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -49,6 +49,8 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime list row actions should present `edit` before `view` when both actions are available.
 - Runtime list checkbox/bulk action behavior must stay metadata-driven by the runtime surface, not inferred inside the generic `CollectionTable`. Show bulk `Active` / `No active` only when a supported `active` field exists in the source/schema, that field is present in the current view/table output, and the view permits edit.
 - Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
+- Runtime choice fields should render from authored `choiceDisplay` settings, not preset-name inference: `Render style = Native` uses UI Kit Combobox (`single_select` simple values, `multi_select` multi-select), while `Render style = Buttons` uses UI Kit toggle buttons with authored horizontal/vertical orientation. Per-option Button styles remain deferred until Form Builder defines a runtime-ready styling contract.
+- Managed runtime `multi_select`/`tags` values should use the generated scope multivalue table. Runtime apply exposes aggregate label/count outputs for grids; runtime create/edit/load persists selected option values in `value_key`, labels in `value_label`, and preserves authored order with `sort_order`. Static/external multivalue writes remain deferred.
 - Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
 - Do not include these groups in the next field-scope slice: `Relationships`, `System Fields` as visual palette/rendered controls, `Ready-made fields`, and reserved `Advanced fields`. System Field metadata still remains part of runtime create/status behavior when present on a view.
 - For selected first-scope fields, include render-affecting settings only: label/display name, key/id, description/helper, placeholder/content, required/nullable, readonly/disabled/lock state, default value shape, width/layout/label layout, rows, numeric/date input behavior, choice options, choice orientation/control type where supported, and content alignment/style variants where needed.
@@ -131,6 +133,8 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Added `maestro/memory/modules/frontend/build-web-apps-review.md` as the repo-local bridge for using official Build Web Apps capabilities in future frontend work. Maestro skill now points to that bridge instead of relying on local plugin cache paths.
 - Owner manual-testing findings are tracked separately in `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`; only items moved to `current-slice` are part of active implementation scope.
 - Maestro/process improvement candidates discovered during this work are tracked in `maestro/artifact/active/2026-04-30-runtime-form-builder/maestro-improvements.md` before selected items are promoted to skills, standards, or contracts.
+- Choice Button styles follow-up is tracked as `FB-RT-005` in `findings.md`; current runtime implementation intentionally ignores per-option styling and implements only render style plus orientation.
+- Managed multiselect persistence issue is tracked as `FB-RT-006` in `findings.md`.
 
 ## Evidence
 
@@ -289,7 +293,29 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode;
   - Browser Use smoke was not run because the Browser Use tool was not exposed in this turn and Computer Use is not allowed to drive the Codex app; Chrome was intentionally avoided.
+- Runtime choice renderer slice completed:
+  - schema compiler now keeps Form Builder choice fields as `single_select` / `multi_select` and reads `choiceDisplay.renderStyle`, `choiceDisplay.orientation`, and `allowEmpty` instead of inferring radio/button behavior from preset names;
+  - `Render style = Native` now renders UI Kit Combobox controls: single select uses simple value selection, and multi select uses the multi-select combobox;
+  - `Render style = Buttons` now renders UI Kit `ToggleGroup` buttons for both single and multi choice fields, with horizontal/vertical orientation from the schema;
+  - fixture coverage now includes native single/multi comboboxes plus horizontal and vertical button examples;
+  - per-option Button styles are intentionally deferred and tracked as `FB-RT-005` in `findings.md`;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 6 files, 23 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use smoke was not available through exposed tools in this turn; no visual smoke was run.
+- Managed multi-select storage slice completed:
+  - Form Builder runtime apply now treats managed `multi_select` and `tags` fields as supported multivalue fields instead of deferred scalar fields;
+  - runtime data views aggregate ordinary choice multivalue labels/counts from the generated `__mv` table, matching the bridge-table storage model already used for multiple lookup fields;
+  - runtime form create/edit/load now normalizes selected values, writes them to the generated multivalue table with `value_kind = 'option'`, stores authored labels in `value_label`, preserves order through `sort_order`, and reads arrays back into form values;
+  - multi-select-only autosave touches the root row update timestamp when available so revision/conflict behavior still advances;
+  - static/external multivalue writes remain deferred and documented as out of scope;
+  - `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 10 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 6 files, 23 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is owner review of the runtime list bulk action behavior, commit preparation for this slice, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.
+Next allowed action is owner review or commit preparation for the choice renderer plus managed multi-select storage slices, or an owner decision to continue into required-field authoring, broader lookup source behavior, access policy, or Action Builder command design.

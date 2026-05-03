@@ -502,16 +502,17 @@ func buildRuntimeScopeDataViewSQL(scope runtimeApplyScopePlan) (string, []Runtim
 			selectList = append(selectList, runtimeScopeFieldSelectExpression(field))
 		}
 
-		if field.Kind != "db_lookup" || field.Preset == "db_lookup_value" {
-			continue
-		}
-
-		if field.SelectionMode == "multiple" {
-			fieldSelects, fieldOutputs := buildRuntimeMultiValueLookupSelects(scope, field)
+		if field.MultiValue {
+			fieldSelects, fieldOutputs := buildRuntimeMultiValueSelects(scope, field)
 			selectList = append(selectList, fieldSelects...)
 			lookupOutputs = append(lookupOutputs, fieldOutputs...)
 			continue
 		}
+
+		if field.Kind != "db_lookup" || field.Preset == "db_lookup_value" {
+			continue
+		}
+
 		fieldJoins, fieldSelects, fieldOutputs := buildRuntimeSingleLookupSelects(scope, field)
 		joins = append(joins, fieldJoins...)
 		selectList = append(selectList, fieldSelects...)
@@ -694,7 +695,7 @@ func buildRuntimeSingleLookupSelects(scope runtimeApplyScopePlan, field runtimeA
 	return joins, selects, outputs
 }
 
-func buildRuntimeMultiValueLookupSelects(scope runtimeApplyScopePlan, field runtimeApplyFieldPlan) ([]string, []RuntimeApplyLookupOutputResult) {
+func buildRuntimeMultiValueSelects(scope runtimeApplyScopePlan, field runtimeApplyFieldPlan) ([]string, []RuntimeApplyLookupOutputResult) {
 	if scope.MultiValueTableName == "" || scope.MultiValueOwnerForeignKey == "" || len(field.LookupDerivedOutputs) == 0 {
 		return nil, nil
 	}

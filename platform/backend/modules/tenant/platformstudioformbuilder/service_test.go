@@ -4424,6 +4424,54 @@ func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColu
 	}
 }
 
+func TestBuildRuntimeScopeDataViewSQLForMultiSelectAggregatesValueLabels(t *testing.T) {
+	field := runtimeApplyFieldPlan{
+		FieldID:    "categories",
+		StorageKey: "categories",
+		Kind:       "multi_select",
+		MultiValue: true,
+		Supported:  true,
+		LookupDerivedOutputs: []runtimeApplyLookupOutputPlan{
+			{ColumnName: "categories", OutputKey: "labels", DataType: "text"},
+			{ColumnName: "categories__count", OutputKey: "count", DataType: "bigint"},
+		},
+	}
+	scope := runtimeApplyScopePlan{
+		ScopeID:                   "root",
+		SourceType:                "managed",
+		TableName:                 "ps_sor",
+		DataViewName:              "vw_sor",
+		SourceIDColumn:            "_id",
+		SourceTenantIDColumn:      "tenant_id",
+		SourceGUIDColumn:          "_guid",
+		SourceCreatedAtColumn:     "_created_at",
+		SourceUpdatedAtColumn:     "_updated_at",
+		MultiValueTableName:       "ps_sor__mv",
+		MultiValueOwnerForeignKey: "sor_id",
+		Fields:                    []runtimeApplyFieldPlan{field},
+	}
+
+	statement, lookupOutputs := buildRuntimeScopeDataViewSQL(scope)
+
+	for _, fragment := range []string{
+		`"public"."ps_sor__mv"`,
+		`mv."value_label"`,
+		`mv."field_key" = 'categories'`,
+		`AS "categories"`,
+		`AS "categories__count"`,
+	} {
+		if !strings.Contains(statement, fragment) {
+			t.Fatalf("runtime data view SQL missing fragment %q:\n%s", fragment, statement)
+		}
+	}
+	if runtimeGridDefaultColumnForField(field) != "categories" {
+		t.Fatalf("grid default column = %q, want categories", runtimeGridDefaultColumnForField(field))
+	}
+	if !containsRuntimeLookupOutputResult(lookupOutputs, "categories") || !containsRuntimeLookupOutputResult(lookupOutputs, "categories__count") {
+		t.Fatalf("expected multivalue outputs, got %#v", lookupOutputs)
+	}
+}
+
 func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesConfiguredGuidColumn(t *testing.T) {
 	scope := runtimeApplyScopePlan{
 		ScopeID:          "root",

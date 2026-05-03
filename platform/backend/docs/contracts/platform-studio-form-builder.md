@@ -498,6 +498,7 @@ Static/external behavior:
 - runtime apply may reuse compatible existing source table
 - source system columns must be explicit or resolved
 - multivalue bridge tables are not supported for non-managed sources unless a later contract adds that path
+- managed `multi_select`/`tags` values are stored in the generated scope multivalue table with `value_kind = 'option'`, `value_key` as the authored option value, and `value_label` as the authored option label fallbacking to the value
 
 ## Generated Object Rules
 
@@ -618,6 +619,6 @@ Do not expand `platformstudioformbuilder` into a catch-all package for every Pla
 - Implement dedicated Platform Studio preview access guard for `/app/platform-studio/forms/.../runtime/*`.
 - Implement managed model/data import routes and services; export bundle support exists, but import is not active.
 - Decide final managed `Export data` semantics.
-- Implement non-lookup `multi_select`/`tags` storage in an explicit slice; multiple lookup bridge-table support already exists.
+- Static/external multivalue storage remains deferred; managed non-lookup `multi_select`/`tags` and multiple lookup fields use generated bridge tables.
 - Finish extraction path for larger runtime record/list behavior.
 - Keep backend API/storage/migration detail here, not in frontend Platform Studio docs.

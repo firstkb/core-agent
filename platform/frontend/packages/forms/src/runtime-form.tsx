@@ -8,6 +8,8 @@ export {
 export type {
   RuntimeFormAccordionLayoutDefinition,
   RuntimeFormChoiceLayout,
+  RuntimeFormChoiceOrientation,
+  RuntimeFormChoiceRenderStyle,
   RuntimeFormCommitMode,
   RuntimeFormContentAlignment,
   RuntimeFormContentDefinition,

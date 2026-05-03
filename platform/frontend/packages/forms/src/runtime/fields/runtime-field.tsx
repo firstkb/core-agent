@@ -30,7 +30,7 @@ import type { RuntimeFieldControlProps } from "./field-types";
 
 function isLabelableField(field: RuntimeFormFieldDefinition) {
   return field.type !== "radio"
-    && field.type !== "multi_select"
+    && field.choiceRenderStyle !== "buttons"
     && !field.readonly
     && field.type !== "readonly"
     && field.type !== "system";

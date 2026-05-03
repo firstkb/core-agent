@@ -6,6 +6,9 @@ import {
 import {
   getStringValue,
 } from "../runtime-form-utils";
+import {
+  getChoiceOrientation,
+} from "./choice-field-utils";
 import type { RuntimeFieldControlProps } from "./field-types";
 
 export function RadioField({
@@ -23,7 +26,7 @@ export function RadioField({
     <RadioGroup
       aria-labelledby={`${controlId}-label`}
       className="platform-runtime-form__choice-group"
-      orientation={field.choiceLayout === "inline" ? "horizontal" : "vertical"}
+      orientation={getChoiceOrientation(field)}
     >
       {(field.options ?? []).map((option) => {
         const optionId = `${controlId}-${option.value}`;

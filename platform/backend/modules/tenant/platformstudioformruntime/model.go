@@ -67,23 +67,26 @@ type ViewRecord struct {
 type runtimeRecordMutationRow struct {
 	DocGuid  string
 	Revision string
+	SourceID int64
 	Values   map[string]any
 }
 
 type runtimeRootScopePlan struct {
-	ModelID             string
-	ViewID              string
-	SourceType          string
-	TableName           string
-	DataViewName        string
-	SourceIDColumn      string
-	SourceTenantColumn  string
-	SourceGUIDColumn    string
-	SourceUpdatedColumn string
-	TenantScoped        bool
-	Fields              []runtimeFieldPlan
-	SubformScopes       []runtimeSubformScopePlan
-	SystemFields        runtimeSystemFieldBindings
+	ModelID                   string
+	ViewID                    string
+	SourceType                string
+	TableName                 string
+	DataViewName              string
+	MultiValueOwnerForeignKey string
+	MultiValueTableName       string
+	SourceIDColumn            string
+	SourceTenantColumn        string
+	SourceGUIDColumn          string
+	SourceUpdatedColumn       string
+	TenantScoped              bool
+	Fields                    []runtimeFieldPlan
+	SubformScopes             []runtimeSubformScopePlan
+	SystemFields              runtimeSystemFieldBindings
 }
 
 type runtimeSubformScopePlan struct {
@@ -95,10 +98,13 @@ type runtimeFieldPlan struct {
 	FieldID     string
 	Label       string
 	Kind        string
+	StorageKey  string
 	Preset      string
 	ColumnName  string
+	MultiValue  bool
 	Required    bool
 	Supported   bool
+	OptionLabel map[string]string
 	OptionValue []string
 }
 

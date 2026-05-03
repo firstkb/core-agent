@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/lib/pq"
@@ -56,6 +57,10 @@ func createRootRecordTx(
 		}
 		return nil, fmt.Errorf("form runtime: create root record: %w", err)
 	}
+	if err := replaceMultiValueFieldsTx(ctx, tx, scope, row.SourceID, values); err != nil {
+		return nil, err
+	}
+	mergeChangedMultiValueValues(scope, row.Values, values)
 	return row, nil
 }
 
@@ -80,13 +85,27 @@ func updateRootRecordTx(
 	}
 
 	columnNames, args := mutationColumnsAndArgs(scope, values)
-	if len(columnNames) == 0 {
+	hasMultiValueMutation := hasMultiValueMutation(scope, values)
+	if len(columnNames) == 0 && !hasMultiValueMutation {
 		return loadRootRecordTx(ctx, tx, scope, docGuid)
 	}
 
 	setClauses := make([]string, 0, len(columnNames))
 	for index, columnName := range columnNames {
 		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", quoteIdentifier(columnName), index+1))
+	}
+	if len(setClauses) == 0 && scope.SourceUpdatedColumn != "" {
+		setClauses = append(setClauses, fmt.Sprintf("%s = now()", quoteIdentifier(scope.SourceUpdatedColumn)))
+	}
+	if len(setClauses) == 0 {
+		row, err := loadRootRecordTx(ctx, tx, scope, docGuid)
+		if err != nil {
+			return nil, err
+		}
+		if err := replaceMultiValueFieldsTx(ctx, tx, scope, row.SourceID, values); err != nil {
+			return nil, err
+		}
+		return loadRootRecordTx(ctx, tx, scope, docGuid)
 	}
 
 	whereArgs := append([]any{}, args...)
@@ -121,6 +140,10 @@ func updateRootRecordTx(
 		}
 		return nil, fmt.Errorf("form runtime: update root record: %w", err)
 	}
+	if err := replaceMultiValueFieldsTx(ctx, tx, scope, row.SourceID, values); err != nil {
+		return nil, err
+	}
+	mergeChangedMultiValueValues(scope, row.Values, values)
 	return row, nil
 }
 
@@ -152,6 +175,9 @@ func loadRootRecordTx(
 			return nil, ErrRecordNotFound
 		}
 		return nil, fmt.Errorf("form runtime: load root record: %w", err)
+	}
+	if err := loadMultiValueValuesTx(ctx, tx, scope, row.SourceID, row.Values); err != nil {
+		return nil, err
 	}
 	return row, nil
 }
@@ -195,6 +221,9 @@ func deleteRootRecordsTx(
 	}
 
 	if err := deleteSubformRecordsForRootDocGuidsTx(ctx, tx, scope, docGuids); err != nil {
+		return err
+	}
+	if err := deleteRootMultiValueRowsForDocGuidsTx(ctx, tx, scope, docGuids); err != nil {
 		return err
 	}
 
@@ -256,7 +285,7 @@ func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) (
 	args := []any{}
 	fieldsByID := make(map[string]runtimeFieldPlan, len(scope.Fields))
 	for _, field := range scope.Fields {
-		if !field.Supported || field.ColumnName == "" {
+		if !field.Supported || field.MultiValue || field.ColumnName == "" {
 			continue
 		}
 		fieldsByID[field.FieldID] = field
@@ -278,6 +307,7 @@ func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) (
 
 func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPlan) {
 	selectList := []string{
+		fmt.Sprintf("COALESCE(%s::text, '') AS __record_id", quoteIdentifier(scope.SourceIDColumn)),
 		fmt.Sprintf("COALESCE(%s::text, '') AS __doc_guid", quoteIdentifier(scope.SourceGUIDColumn)),
 	}
 	if scope.SourceUpdatedColumn != "" {
@@ -288,7 +318,7 @@ func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPla
 
 	fields := make([]runtimeFieldPlan, 0, len(scope.Fields))
 	for _, field := range scope.Fields {
-		if !field.Supported || field.ColumnName == "" {
+		if !field.Supported || field.MultiValue || field.ColumnName == "" {
 			continue
 		}
 		fields = append(fields, field)
@@ -302,7 +332,7 @@ func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPla
 }
 
 func scanMutationRow(row *sql.Row, fields []runtimeFieldPlan) (*runtimeRecordMutationRow, error) {
-	values := make([]sql.NullString, len(fields)+2)
+	values := make([]sql.NullString, len(fields)+3)
 	scanTargets := make([]any, len(values))
 	for index := range values {
 		scanTargets[index] = &values[index]
@@ -315,19 +345,216 @@ func scanMutationRow(row *sql.Row, fields []runtimeFieldPlan) (*runtimeRecordMut
 		Values: map[string]any{},
 	}
 	if values[0].Valid {
-		out.DocGuid = values[0].String
+		if sourceID, err := strconv.ParseInt(strings.TrimSpace(values[0].String), 10, 64); err == nil {
+			out.SourceID = sourceID
+		}
 	}
 	if values[1].Valid {
-		out.Revision = values[1].String
+		out.DocGuid = values[1].String
+	}
+	if values[2].Valid {
+		out.Revision = values[2].String
 	}
 	for index, field := range fields {
-		if values[index+2].Valid {
-			out.Values[field.FieldID] = values[index+2].String
+		if values[index+3].Valid {
+			out.Values[field.FieldID] = values[index+3].String
 		} else {
 			out.Values[field.FieldID] = nil
 		}
 	}
 	return out, nil
+}
+
+func hasMultiValueMutation(scope runtimeRootScopePlan, values map[string]any) bool {
+	for _, field := range scope.Fields {
+		if !field.Supported || !field.MultiValue {
+			continue
+		}
+		if _, ok := values[field.FieldID]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+func replaceMultiValueFieldsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	ownerID int64,
+	values map[string]any,
+) error {
+	if ownerID == 0 || strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
+		return nil
+	}
+
+	for _, field := range scope.Fields {
+		if !field.Supported || !field.MultiValue || strings.TrimSpace(field.StorageKey) == "" {
+			continue
+		}
+		rawValue, ok := values[field.FieldID]
+		if !ok {
+			continue
+		}
+		selectedValues := normalizeRuntimeStringArray(rawValue)
+		if err := replaceMultiValueFieldTx(ctx, tx, scope, field, ownerID, selectedValues); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func replaceMultiValueFieldTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	field runtimeFieldPlan,
+	ownerID int64,
+	selectedValues []string,
+) error {
+	deleteQuery := fmt.Sprintf(
+		`DELETE FROM %s
+		  WHERE %s = current_setting('app.tenant_id', true)::bigint
+		    AND %s = $1
+		    AND %s = $2`,
+		qualifiedIdentifier(scope.MultiValueTableName),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier(scope.MultiValueOwnerForeignKey),
+		quoteIdentifier("field_key"),
+	)
+	if _, err := tx.ExecContext(ctx, deleteQuery, ownerID, field.StorageKey); err != nil {
+		return fmt.Errorf("form runtime: delete multivalue field %s: %w", field.FieldID, err)
+	}
+
+	if len(selectedValues) == 0 {
+		return nil
+	}
+
+	insertQuery := fmt.Sprintf(
+		`INSERT INTO %s (%s, %s, %s, %s, %s, %s)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		qualifiedIdentifier(scope.MultiValueTableName),
+		quoteIdentifier(scope.MultiValueOwnerForeignKey),
+		quoteIdentifier("field_key"),
+		quoteIdentifier("value_kind"),
+		quoteIdentifier("value_key"),
+		quoteIdentifier("value_label"),
+		quoteIdentifier("sort_order"),
+	)
+	for index, value := range selectedValues {
+		label := field.OptionLabel[value]
+		if strings.TrimSpace(label) == "" {
+			label = value
+		}
+		if _, err := tx.ExecContext(ctx, insertQuery, ownerID, field.StorageKey, "option", value, label, int64(index)); err != nil {
+			return fmt.Errorf("form runtime: insert multivalue field %s: %w", field.FieldID, err)
+		}
+	}
+	return nil
+}
+
+func loadMultiValueValuesTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	ownerID int64,
+	values map[string]any,
+) error {
+	fieldsByStorageKey := map[string]runtimeFieldPlan{}
+	for _, field := range scope.Fields {
+		if !field.Supported || !field.MultiValue || strings.TrimSpace(field.StorageKey) == "" {
+			continue
+		}
+		fieldsByStorageKey[field.StorageKey] = field
+		values[field.FieldID] = []string{}
+	}
+	if ownerID == 0 || len(fieldsByStorageKey) == 0 || strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
+		return nil
+	}
+
+	query := fmt.Sprintf(
+		`SELECT %s, COALESCE(%s, '')
+		   FROM %s
+		  WHERE %s = current_setting('app.tenant_id', true)::bigint
+		    AND %s = $1
+		  ORDER BY %s, %s, %s`,
+		quoteIdentifier("field_key"),
+		quoteIdentifier("value_key"),
+		qualifiedIdentifier(scope.MultiValueTableName),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier(scope.MultiValueOwnerForeignKey),
+		quoteIdentifier("field_key"),
+		quoteIdentifier("sort_order"),
+		quoteIdentifier("_id"),
+	)
+	rows, err := tx.QueryContext(ctx, query, ownerID)
+	if err != nil {
+		return fmt.Errorf("form runtime: load multivalue fields: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var fieldKey string
+		var value string
+		if err := rows.Scan(&fieldKey, &value); err != nil {
+			return fmt.Errorf("form runtime: scan multivalue field: %w", err)
+		}
+		field, ok := fieldsByStorageKey[strings.TrimSpace(fieldKey)]
+		if !ok || strings.TrimSpace(value) == "" {
+			continue
+		}
+		current, _ := values[field.FieldID].([]string)
+		values[field.FieldID] = append(current, strings.TrimSpace(value))
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("form runtime: read multivalue fields: %w", err)
+	}
+	return nil
+}
+
+func mergeChangedMultiValueValues(scope runtimeRootScopePlan, values map[string]any, changedValues map[string]any) {
+	for _, field := range scope.Fields {
+		if !field.Supported || !field.MultiValue {
+			continue
+		}
+		rawValue, ok := changedValues[field.FieldID]
+		if !ok {
+			continue
+		}
+		values[field.FieldID] = normalizeRuntimeStringArray(rawValue)
+	}
+}
+
+func deleteRootMultiValueRowsForDocGuidsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	docGuids []string,
+) error {
+	if strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
+		return nil
+	}
+
+	query := fmt.Sprintf(
+		`DELETE FROM %s mv
+		  USING %s root
+		  WHERE mv.%s = current_setting('app.tenant_id', true)::bigint
+		    AND root.%s = mv.%s
+		    AND root.%s::text = ANY($1)`,
+		qualifiedIdentifier(scope.MultiValueTableName),
+		qualifiedIdentifier(scope.TableName),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier(scope.SourceIDColumn),
+		quoteIdentifier(scope.MultiValueOwnerForeignKey),
+		quoteIdentifier(scope.SourceGUIDColumn),
+	)
+	if scope.TenantScoped && scope.SourceTenantColumn != "" {
+		query += fmt.Sprintf(" AND root.%s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(scope.SourceTenantColumn))
+	}
+	if _, err := tx.ExecContext(ctx, query, pq.Array(docGuids)); err != nil {
+		return fmt.Errorf("form runtime: delete root multivalue rows: %w", err)
+	}
+	return nil
 }
 
 func quoteIdentifier(value string) string {

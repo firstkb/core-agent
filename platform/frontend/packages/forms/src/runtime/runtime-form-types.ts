@@ -23,6 +23,8 @@ export type RuntimeFormFieldType =
 export type RuntimeFormFieldWidth = "full" | "half";
 export type RuntimeFormFieldLabelLayout = "stacked" | "responsive-inline";
 export type RuntimeFormChoiceLayout = "inline" | "stacked";
+export type RuntimeFormChoiceOrientation = "horizontal" | "vertical";
+export type RuntimeFormChoiceRenderStyle = "buttons" | "native";
 export type RuntimeFormTabsSize = "sm" | "md" | "lg";
 export type RuntimeFormTabsVariant = "surface" | "line";
 export type RuntimeFormValue = string | boolean | ReadonlyArray<string>;
@@ -77,7 +79,10 @@ export type RuntimeFormNodeRules = {
 };
 
 export type RuntimeFormFieldDefinition = {
+  choiceAllowEmpty?: boolean;
   choiceLayout?: RuntimeFormChoiceLayout;
+  choiceOrientation?: RuntimeFormChoiceOrientation;
+  choiceRenderStyle?: RuntimeFormChoiceRenderStyle;
   disabled?: boolean;
   helperText?: ReactNode;
   id: string;

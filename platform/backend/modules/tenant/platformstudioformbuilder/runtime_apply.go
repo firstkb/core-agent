@@ -541,7 +541,11 @@ func buildRuntimeApplyFieldPlan(field map[string]any, lookupModels map[string]ru
 		applyRuntimeLookupSourceMetadata(&plan, lookupModels)
 	case plan.Kind == "multi_select", plan.Kind == "tags":
 		plan.MultiValue = true
-		plan.WarningMessage = "multivalue storage is deferred to the multivalue bridge table slice"
+		plan.Supported = true
+		plan.LookupDerivedOutputs = []runtimeApplyLookupOutputPlan{
+			{ColumnName: runtimeFieldColumnIdentifier(plan.StorageKey), OutputKey: "labels", DataType: "text"},
+			{ColumnName: runtimeFieldColumnIdentifier(plan.StorageKey + "__count"), OutputKey: "count", DataType: "bigint"},
+		}
 	default:
 		plan.WarningMessage = "field kind is not yet supported by runtime apply"
 	}

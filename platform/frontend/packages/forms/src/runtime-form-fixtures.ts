@@ -124,7 +124,8 @@ export function createRuntimeFormFixtureDefinition({
             type: "single_select",
           },
           {
-            choiceLayout: "inline",
+            choiceOrientation: "horizontal",
+            choiceRenderStyle: "buttons",
             id: "priority",
             label: "Priority",
             options: [
@@ -132,7 +133,7 @@ export function createRuntimeFormFixtureDefinition({
               { label: "Normal", value: "normal" },
               { label: "High", value: "high" },
             ],
-            type: "radio",
+            type: "single_select",
           },
         ],
         id: "workflow",
@@ -201,7 +202,8 @@ export function createRuntimeFormFixtureDefinition({
                 type: "readonly",
               },
               {
-                choiceLayout: "stacked",
+                choiceOrientation: "vertical",
+                choiceRenderStyle: "buttons",
                 id: "follow_up_route",
                 label: "Follow-up route",
                 options: [
@@ -209,7 +211,7 @@ export function createRuntimeFormFixtureDefinition({
                   { label: "Supervisor review", value: "supervisor" },
                   { label: "Safety meeting", value: "meeting" },
                 ],
-                type: "radio",
+                type: "single_select",
               },
             ],
             title: "Field state examples",
@@ -349,6 +351,8 @@ export function createRuntimeFormFixtureDefinition({
                 id: "distribution-output",
                 nodes: [
                   {
+                    choiceOrientation: "horizontal",
+                    choiceRenderStyle: "buttons",
                     id: "notify_groups",
                     label: "Notify groups",
                     options: [

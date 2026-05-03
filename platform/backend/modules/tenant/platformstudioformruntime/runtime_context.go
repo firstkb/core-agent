@@ -45,17 +45,19 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 	idColumn, tenantColumn, guidColumn, updatedColumn, tenantScoped := runtimeScopeSourceColumns(sourceType, rootRuntime)
 
 	scope := runtimeRootScopePlan{
-		ModelID:             model.ModelID,
-		ViewID:              view.ViewID,
-		SourceType:          sourceType,
-		TableName:           tableName,
-		DataViewName:        dataViewName,
-		SourceIDColumn:      idColumn,
-		SourceTenantColumn:  tenantColumn,
-		SourceGUIDColumn:    guidColumn,
-		SourceUpdatedColumn: updatedColumn,
-		TenantScoped:        tenantScoped,
-		SystemFields:        readSystemFieldBindings(asMap(asMap(viewPayload["uiSchema"])["rootScope"])),
+		ModelID:                   model.ModelID,
+		ViewID:                    view.ViewID,
+		SourceType:                sourceType,
+		TableName:                 tableName,
+		DataViewName:              dataViewName,
+		MultiValueOwnerForeignKey: modelAlias + "_id",
+		MultiValueTableName:       runtimeScopeMultiValueTableName(sourceType, rootRuntime.MVTableName, modelAlias),
+		SourceIDColumn:            idColumn,
+		SourceTenantColumn:        tenantColumn,
+		SourceGUIDColumn:          guidColumn,
+		SourceUpdatedColumn:       updatedColumn,
+		TenantScoped:              tenantScoped,
+		SystemFields:              readSystemFieldBindings(asMap(asMap(viewPayload["uiSchema"])["rootScope"])),
 	}
 
 	for _, rawField := range asSlice(rootScope["fields"]) {
@@ -87,6 +89,7 @@ type runtimeDataScopeMetadata struct {
 	RtAlias               string
 	TableName             string
 	DataViewName          string
+	MVTableName           string
 	SourceIDColumn        string
 	SourceTenantIDColumn  string
 	SourceGUIDColumn      string
@@ -104,6 +107,7 @@ func readRuntimeDataScopeMetadata(scope map[string]any) runtimeDataScopeMetadata
 		RtAlias:               normalizeString(runtime["rtAlias"]),
 		TableName:             normalizeString(runtime["tableName"]),
 		DataViewName:          normalizeString(runtime["dataViewName"]),
+		MVTableName:           normalizeString(runtime["mvTableName"]),
 		SourceIDColumn:        normalizeString(runtime["sourceIdColumn"]),
 		SourceTenantIDColumn:  normalizeString(runtime["sourceTenantIdColumn"]),
 		SourceGUIDColumn:      normalizeString(runtime["sourceGuidColumn"]),
@@ -148,8 +152,10 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		FieldID:     fieldID,
 		Label:       chooseString(normalizeString(field["label"]), chooseString(normalizeString(field["displayName"]), fieldID)),
 		Kind:        kind,
+		StorageKey:  storageKey,
 		Preset:      normalizeString(field["preset"]),
 		Required:    getBoolValue(field, "required", false),
+		OptionLabel: readOptionLabels(asSlice(field["options"])),
 		OptionValue: readOptionValues(asSlice(field["options"])),
 	}
 
@@ -168,6 +174,9 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		plan.Supported = true
 	case kind == "db_lookup" && normalizeString(field["selectionMode"]) == "multiple":
 		plan.Supported = false
+	case (kind == "multi_select" || kind == "tags") && isManagedRuntimeSourceType(sourceType):
+		plan.MultiValue = true
+		plan.Supported = true
 	case kind == "db_lookup" && plan.Preset == "db_lookup_value":
 		plan.ColumnName = runtimeFieldColumnIdentifier(storageKey)
 		plan.Supported = true
@@ -177,6 +186,9 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 	}
 
 	if !plan.Supported {
+		return plan
+	}
+	if plan.MultiValue {
 		return plan
 	}
 	if sourceColumn != "" {
@@ -218,6 +230,23 @@ func readOptionValues(options []any) []string {
 	return values
 }
 
+func readOptionLabels(options []any) map[string]string {
+	labels := make(map[string]string, len(options))
+	for _, rawOption := range options {
+		value := normalizeOptionValue(rawOption)
+		if value == "" {
+			continue
+		}
+		label := value
+		option := asMap(rawOption)
+		if candidate := normalizeString(option["label"]); candidate != "" {
+			label = candidate
+		}
+		labels[value] = label
+	}
+	return labels
+}
+
 func normalizeOptionValue(rawOption any) string {
 	if value := normalizeString(rawOption); value != "" {
 		return value
@@ -249,6 +278,11 @@ func isExternalRuntimeSourceType(sourceType string) bool {
 	return sourceType == runtimeSourceTypeExternal || sourceType == runtimeSourceTypeStatic
 }
 
+func isManagedRuntimeSourceType(sourceType string) bool {
+	sourceType = normalizeString(sourceType)
+	return sourceType == "" || sourceType == runtimeSourceTypeManaged
+}
+
 func buildGeneratedRuntimeModelAlias(seed string) string {
 	base := runtimeAliasBase(seed)
 	if base == "" {
@@ -261,12 +295,26 @@ func buildGeneratedRuntimeTableName(modelRtAlias string) string {
 	return runtimeIdentifier("ps_" + modelRtAlias)
 }
 
+func buildGeneratedRuntimeMVTableName(modelRtAlias string) string {
+	return runtimeIdentifier(buildGeneratedRuntimeTableName(modelRtAlias) + "__mv")
+}
+
 func buildGeneratedRuntimeDataViewName(modelRtAlias string, scopeRtAlias string) string {
 	raw := "vw_" + modelRtAlias
 	if strings.TrimSpace(scopeRtAlias) != "" {
 		raw += "__" + scopeRtAlias
 	}
 	return runtimeIdentifier(raw)
+}
+
+func runtimeScopeMultiValueTableName(sourceType string, configured string, modelRuntimeAlias string) string {
+	if configured = normalizeString(configured); configured != "" {
+		return configured
+	}
+	if !isManagedRuntimeSourceType(sourceType) {
+		return ""
+	}
+	return buildGeneratedRuntimeMVTableName(modelRuntimeAlias)
 }
 
 func runtimeFieldColumnIdentifier(raw string) string {

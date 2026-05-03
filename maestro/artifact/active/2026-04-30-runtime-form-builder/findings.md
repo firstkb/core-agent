@@ -70,5 +70,35 @@ Statuses:
 - Priority: high.
 - Status: resolved.
 - Owner decision: Runtime forms must support options authored in the current Form Builder schema shape.
-- Fixed in: working tree; pending commit.
+- Fixed in: `0ca2e4b`.
 - Verification: `pnpm -C platform/frontend --filter @platform/forms typecheck` passed; `pnpm -C platform/frontend --filter @platform/forms test` passed; `pnpm -C platform/frontend --filter @platform/forms lint` passed; `pnpm -C platform/frontend --filter @platform/tenant-web typecheck` passed; `pnpm -C platform/frontend --filter @platform/tenant-web lint` passed; `pnpm -C platform/frontend --filter @platform/tenant-web test` passed; `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime` passed; `scripts/preflight.sh` passed. Browser Use could not attach to the in-app browser pane during this pass.
+
+## FB-RT-005 - Choice button option styles need a runtime contract
+
+- Area: Form Builder choice fields and runtime form renderer.
+- URL: not captured; owner raised while scoping runtime `single_select` and `multi_select` rendering on 2026-05-03.
+- Model/View: affected forms with `Render style = Buttons`.
+- Symptom: Form Builder already exposes per-option Button styles for choice fields, but the current runtime slice intentionally only uses `choiceDisplay.renderStyle` and `choiceDisplay.orientation`.
+- Expected: A future slice should define the accepted Button styles contract in Form Builder, normalize it in the runtime schema/data contract, and map it to approved UI Kit button/toggle variants or tokens without renderer-side guessing.
+- Actual: Runtime button rendering ignores per-option Button styles for now.
+- Evidence: Owner decision on 2026-05-03: implement Native/Button render style and orientation now; do not implement Button styles yet, but record the follow-up.
+- Priority: medium.
+- Status: next-slice.
+- Owner decision: Defer Button styles until Form Builder styling semantics are defined clearly enough for runtime implementation.
+- Fixed in: pending.
+- Verification: pending.
+
+## FB-RT-006 - Managed multi-select values are dropped on save
+
+- Area: Runtime form create/edit save path and Form Builder runtime apply storage metadata.
+- URL: not captured; owner reported from runtime form testing on 2026-05-03.
+- Model/View: affected managed forms with authored `multi_select` or `tags` fields.
+- Symptom: Runtime form `multi_select` selections render and send from the frontend, but are not persisted.
+- Expected: Managed `multi_select` and `tags` fields should use the generated per-scope multivalue table, preserving selected option order and values across create/edit/load.
+- Actual: Runtime apply created the `__mv` table because fields were marked multivalue, but non-lookup `multi_select`/`tags` were still marked unsupported/deferred. `platformstudioformruntime` then omitted those fields from mutation normalization and scalar writes, so autosave dropped the arrays.
+- Evidence: Code inspection of `runtime_apply.go`, `runtime_apply_repository.go`, `runtime_context.go`, `runtime_values.go`, and `repository_write.go`.
+- Priority: high.
+- Status: resolved.
+- Owner decision: Use the existing generated multivalue table for ordinary managed `multi_select` storage.
+- Fixed in: working tree; pending commit.
+- Verification: `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed; `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed; `git diff --check` passed; `scripts/preflight.sh` passed in lite mode.

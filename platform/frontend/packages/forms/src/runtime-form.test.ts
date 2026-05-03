@@ -188,6 +188,10 @@ describe("runtime form helpers", () => {
               ],
             },
             {
+              choiceDisplay: {
+                orientation: "horizontal",
+                renderStyle: "buttons",
+              },
               fieldId: "priority",
               kind: "single_select",
               label: "Priority",
@@ -295,7 +299,9 @@ describe("runtime form helpers", () => {
     expect(findRuntimeFormField(definition, "location")?.width).toBe("full");
     expect(findRuntimeFormField(definition, "location")?.rules?.requirementRules).toHaveLength(1);
     expect(findRuntimeFormField(definition, "status")?.readonly).toBe(true);
-    expect(findRuntimeFormField(definition, "priority")?.type).toBe("radio");
+    expect(findRuntimeFormField(definition, "priority")?.type).toBe("single_select");
+    expect(findRuntimeFormField(definition, "priority")?.choiceRenderStyle).toBe("buttons");
+    expect(findRuntimeFormField(definition, "priority")?.choiceOrientation).toBe("horizontal");
     expect(findRuntimeFormField(definition, "reported_by")?.type).toBe("single_select");
     expect(findRuntimeFormField(definition, "reported_by")?.readonly).toBe(false);
     expect(findRuntimeFormField(definition, "reported_by")?.options?.[0]?.label).toBe("Andrew Owner");
@@ -356,5 +362,91 @@ describe("runtime form helpers", () => {
       { label: "Aerial lifts", value: "Aerial lifts" },
       { label: "PPE", value: "PPE" },
     ]);
+  });
+
+  it("compiles Form Builder choice render style and orientation settings", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              choiceDisplay: {
+                orientation: "vertical",
+                renderStyle: "buttons",
+              },
+              id: "status",
+              kind: "single_select",
+              label: "Status",
+              options: ["New", "In progress", "Complete"],
+            },
+            {
+              choiceDisplay: {
+                orientation: "horizontal",
+                renderStyle: "buttons",
+              },
+              id: "categories",
+              kind: "multi_select",
+              label: "Categories",
+              options: ["Aerial lifts", "PPE"],
+            },
+            {
+              choiceDisplay: {
+                orientation: "vertical",
+                renderStyle: "native",
+              },
+              id: "type",
+              kind: "single_select",
+              label: "Type",
+              options: ["Satisfactory", "Unsatisfactory"],
+              preset: "radio_group",
+            },
+          ],
+        },
+      },
+      mode: "edit",
+      modelId: "test-inspection",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              fieldId: "status",
+              id: "node-status",
+              order: 1,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "categories",
+              id: "node-categories",
+              order: 2,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "type",
+              id: "node-type",
+              order: 3,
+              type: "field",
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    const status = findRuntimeFormField(definition, "status");
+    const categories = findRuntimeFormField(definition, "categories");
+    const type = findRuntimeFormField(definition, "type");
+
+    expect(status?.type).toBe("single_select");
+    expect(status?.choiceRenderStyle).toBe("buttons");
+    expect(status?.choiceOrientation).toBe("vertical");
+    expect(categories?.type).toBe("multi_select");
+    expect(categories?.choiceRenderStyle).toBe("buttons");
+    expect(categories?.choiceOrientation).toBe("horizontal");
+    expect(type?.type).toBe("single_select");
+    expect(type?.choiceRenderStyle).toBe("native");
   });
 });

@@ -118,9 +118,13 @@ export function createFormBuilderDocumentNormalizationHelpers({
           return;
         }
 
+        const legacyChildGridColumns = node.type === "subform" && Array.isArray(node.childGridColumns)
+          ? normalizeGridColumns(node.childGridColumns, fieldIds)
+          : undefined;
+
         nodes.push({
-          childGridColumns: node.type === "subform"
-            ? normalizeGridColumns(node.childGridColumns, fieldIds)
+          childGridColumns: legacyChildGridColumns && legacyChildGridColumns.length > 0
+            ? legacyChildGridColumns
             : undefined,
           containerKey: typeof node.containerKey === "string" ? node.containerKey : undefined,
           fieldId: typeof node.fieldId === "string" ? node.fieldId : undefined,

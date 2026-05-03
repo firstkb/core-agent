@@ -58,6 +58,13 @@ function isSupportedGridColumnFieldId(
     && fieldIds.has(parts[0]);
 }
 
+function isVisibleGridColumnFieldId(
+  columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
+  fieldId: string,
+) {
+  return columns.some((column) => column.visible && column.fieldId === fieldId);
+}
+
 function normalizeGridColumn(
   value: unknown,
   fieldIds: ReadonlySet<string>,
@@ -146,6 +153,12 @@ export function normalizeViewSettings(
   const correctiveAction = candidate.correctiveAction && typeof candidate.correctiveAction === "object" ? candidate.correctiveAction : undefined;
   const list = candidate.list && typeof candidate.list === "object" ? candidate.list : undefined;
   const sorting = list?.sorting && typeof list.sorting === "object" ? list.sorting : undefined;
+  const columns = normalizeGridColumns(list?.columns, fieldIds);
+  const sortingFieldId = typeof sorting?.fieldId === "string"
+    && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
+    && isVisibleGridColumnFieldId(columns, sorting.fieldId)
+    ? sorting.fieldId
+    : undefined;
 
   return {
     actions: {
@@ -163,12 +176,10 @@ export function normalizeViewSettings(
       ? candidate.iconDataUrl
       : undefined,
     list: {
-      columns: normalizeGridColumns(list?.columns, fieldIds),
+      columns,
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
-        fieldId: typeof sorting?.fieldId === "string" && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
-          ? sorting.fieldId
-          : undefined,
+        fieldId: sortingFieldId,
       },
     },
   };
@@ -187,6 +198,12 @@ export function normalizeSubformViewSettings(
   const actions = candidate.actions && typeof candidate.actions === "object" ? candidate.actions : undefined;
   const list = candidate.list && typeof candidate.list === "object" ? candidate.list : undefined;
   const sorting = list?.sorting && typeof list.sorting === "object" ? list.sorting : undefined;
+  const columns = normalizeGridColumns(list?.columns, fieldIds);
+  const sortingFieldId = typeof sorting?.fieldId === "string"
+    && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
+    && isVisibleGridColumnFieldId(columns, sorting.fieldId)
+    ? sorting.fieldId
+    : undefined;
 
   return {
     actions: {
@@ -195,12 +212,10 @@ export function normalizeSubformViewSettings(
       canEdit: typeof actions?.canEdit === "boolean" ? actions.canEdit : defaults.actions.canEdit,
     },
     list: {
-      columns: normalizeGridColumns(list?.columns, fieldIds),
+      columns,
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
-        fieldId: typeof sorting?.fieldId === "string" && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
-          ? sorting.fieldId
-          : undefined,
+        fieldId: sortingFieldId,
       },
     },
   };

@@ -10,7 +10,10 @@ import {
   type FormBuilderSubformViewSettings,
   type FormBuilderViewSettings,
 } from "../forms-builder-state";
-import { sortGridColumns } from "./form-builder-workspace-field-scope-grid";
+import {
+  isVisibleGridColumnFieldId,
+  sortGridColumns,
+} from "./form-builder-workspace-field-scope-grid";
 
 export type FormBuilderRootViewActionKey = keyof FormBuilderViewSettings["actions"];
 export type FormBuilderSubformViewActionKey = keyof FormBuilderSubformViewSettings["actions"];
@@ -186,11 +189,19 @@ export function applyRootViewGridColumnsUpdate(
     columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
   ) => ReadonlyArray<FormBuilderGridColumnDefinition>,
 ) {
+  const columns = sortGridColumns(updater(viewSettings.list.columns));
+
   return {
     ...viewSettings,
     list: {
       ...viewSettings.list,
-      columns: sortGridColumns(updater(viewSettings.list.columns)),
+      columns,
+      sorting: isVisibleGridColumnFieldId(columns, viewSettings.list.sorting.fieldId)
+        ? viewSettings.list.sorting
+        : {
+            ...viewSettings.list.sorting,
+            fieldId: undefined,
+          },
     },
   };
 }
@@ -201,11 +212,19 @@ export function applySubformViewGridColumnsUpdate(
     columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
   ) => ReadonlyArray<FormBuilderGridColumnDefinition>,
 ) {
+  const columns = sortGridColumns(updater(viewSettings.list.columns));
+
   return {
     ...viewSettings,
     list: {
       ...viewSettings.list,
-      columns: sortGridColumns(updater(viewSettings.list.columns)),
+      columns,
+      sorting: isVisibleGridColumnFieldId(columns, viewSettings.list.sorting.fieldId)
+        ? viewSettings.list.sorting
+        : {
+            ...viewSettings.list.sorting,
+            fieldId: undefined,
+          },
     },
   };
 }

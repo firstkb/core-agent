@@ -104,6 +104,13 @@ export function getGridColumnByFieldId(
   return columns.find((column) => column.fieldId === fieldId) ?? null;
 }
 
+export function isVisibleGridColumnFieldId(
+  columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
+  fieldId: string | null | undefined,
+) {
+  return Boolean(fieldId) && columns.some((column) => column.visible && column.fieldId === fieldId);
+}
+
 export function getNextGridColumnOrder(columns: ReadonlyArray<FormBuilderGridColumnDefinition>) {
   return columns.length === 0
     ? 0
@@ -171,6 +178,14 @@ export function sortGridScopeFields(
 
     return (fallbackIndexByFieldId.get(left.id) ?? 0) - (fallbackIndexByFieldId.get(right.id) ?? 0);
   });
+}
+
+export function getVisibleGridScopeFields(
+  fields: ReadonlyArray<FormsPlaceholderField>,
+  columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
+) {
+  return sortGridScopeFields(fields, columns)
+    .filter((field) => isVisibleGridColumnFieldId(columns, field.id));
 }
 
 export function reorderGridColumnsByFieldId(

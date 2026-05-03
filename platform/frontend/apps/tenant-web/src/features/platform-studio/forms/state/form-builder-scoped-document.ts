@@ -69,7 +69,9 @@ export function createFormBuilderScopedDocumentHelpers({
     existingScope?: FormBuilderSubformScope,
   ): FormBuilderSubformScope {
     const fieldIds = new Set(existingScope?.dataSchema.fieldIds ?? []);
-    const nextColumns = subformNode.childGridColumns ?? existingScope?.viewSettings.list.columns ?? [];
+    const nextColumns = subformNode.childGridColumns && subformNode.childGridColumns.length > 0
+      ? subformNode.childGridColumns
+      : existingScope?.viewSettings.list.columns ?? [];
     const scopeTableKey = subformNode.tableKey?.trim()
       || subformNode.schemaScopeId?.trim()
       || existingScope?.tableKey

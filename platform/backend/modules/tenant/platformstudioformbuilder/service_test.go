@@ -3315,13 +3315,51 @@ func TestBuildRuntimeViewListDefaultSortUsesViewSorting(t *testing.T) {
 			Supported:  true,
 		},
 	}
+	gridPlan := &runtimeApplyGridViewPlan{
+		Projections: []runtimeApplyGridColumnProjection{
+			{AliasColumnName: "occurred_at"},
+		},
+	}
 
-	column, direction := buildRuntimeViewListDefaultSort(uiSchema, fields)
+	column, direction := buildRuntimeViewListDefaultSort(uiSchema, fields, gridPlan)
 	if column != "occurred_at" {
 		t.Fatalf("column = %q, want %q", column, "occurred_at")
 	}
 	if direction != "desc" {
 		t.Fatalf("direction = %q, want %q", direction, "desc")
+	}
+}
+
+func TestBuildRuntimeViewListDefaultSortIgnoresFieldOutsideGridOutput(t *testing.T) {
+	uiSchema := map[string]any{
+		"rootScope": map[string]any{
+			"schemaScopeId": "root",
+			"viewSettings": map[string]any{
+				"list": map[string]any{
+					"sorting": map[string]any{
+						"fieldId":   "hidden_field",
+						"direction": "desc",
+					},
+				},
+			},
+		},
+	}
+	fields := []runtimeApplyFieldPlan{
+		{FieldID: "visible_field", ColumnName: "visible_field", StorageKey: "visible_field", Kind: "short_text", Supported: true},
+		{FieldID: "hidden_field", ColumnName: "hidden_field", StorageKey: "hidden_field", Kind: "short_text", Supported: true},
+	}
+	gridPlan := &runtimeApplyGridViewPlan{
+		Projections: []runtimeApplyGridColumnProjection{
+			{AliasColumnName: "visible_field"},
+		},
+	}
+
+	column, direction := buildRuntimeViewListDefaultSort(uiSchema, fields, gridPlan)
+	if column != "" {
+		t.Fatalf("column = %q, want empty", column)
+	}
+	if direction != "" {
+		t.Fatalf("direction = %q, want empty", direction)
 	}
 }
 

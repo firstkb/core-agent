@@ -26,6 +26,7 @@ import {
   getFieldLabelAndBoundField,
   getRuleScopeFields,
   getScopeFields,
+  getVisibleGridScopeFields,
   sortGridScopeFields,
 } from "./form-builder-workspace-field-scope-grid";
 import {
@@ -178,7 +179,10 @@ export function useFormBuilderWorkspaceDerivedState({
   const currentScopeViewLabel = isRootViewScope
     ? currentDraftViewTitle
     : (currentScopeSubformNode?.title ?? t("tenant.platformStudio.forms.builder.nodeType.subform"));
-  const currentScopeSortingFields = isRootViewScope ? rootViewScopeFields : currentGridScopeFields;
+  const currentScopeSortingFields = useMemo(
+    () => getVisibleGridScopeFields(currentGridScopeTargets, currentGridColumns),
+    [currentGridColumns, currentGridScopeTargets],
+  );
   const selectedFieldIsPresetLookup = selectedField ? isPresetLookupField(selectedField) : false;
   const selectedFieldShowsLookupDisplayMode = selectedFieldIsLookup
     && !selectedFieldIsPresetLookup

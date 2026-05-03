@@ -248,7 +248,9 @@ export function createFormBuilderFlatWorkspaceHelpers({
             ...existingScope?.viewSettings,
             list: {
               ...existingScope?.viewSettings.list,
-              columns: subformNode.childGridColumns ?? existingScope?.viewSettings.list.columns ?? [],
+              columns: subformNode.childGridColumns && subformNode.childGridColumns.length > 0
+                ? subformNode.childGridColumns
+                : existingScope?.viewSettings.list.columns ?? [],
             },
           },
           new Set(fieldIds),

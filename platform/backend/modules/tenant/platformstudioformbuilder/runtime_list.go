@@ -388,7 +388,7 @@ func (s *Service) loadRuntimeViewListContext(
 
 	dataSchema := asMap(modelPayload["dataSchema"])
 	fields := buildRuntimeViewListFields(dataSchema, asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
-	defaultSortColumn, defaultSortDir := buildRuntimeViewListDefaultSort(asMap(viewPayload["uiSchema"]), rootScope.Fields)
+	defaultSortColumn, defaultSortDir := buildRuntimeViewListDefaultSort(asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
 	fieldDefinitions := make([]collectiontable.FieldDefinition, 0, len(fields))
 	columnDefinitions := make([]collectiontable.ColumnDefinition, 0, len(fields))
 	defaultFieldID := ""
@@ -651,6 +651,7 @@ func readRuntimeViewListDefaultFilters(uiSchema map[string]any) map[string]any {
 func buildRuntimeViewListDefaultSort(
 	uiSchema map[string]any,
 	fields []runtimeApplyFieldPlan,
+	gridPlan *runtimeApplyGridViewPlan,
 ) (string, string) {
 	rootScope := uiScope(uiSchema, rootSchemaScopeID)
 	viewSettings := asMap(rootScope["viewSettings"])
@@ -677,8 +678,26 @@ func buildRuntimeViewListDefaultSort(
 	if aliasColumnName == "" {
 		return "", ""
 	}
+	if !runtimeGridViewPlanHasProjection(gridPlan, aliasColumnName) {
+		return "", ""
+	}
 
 	return aliasColumnName, collectiontable.NormalizeSortDirection(normalizeString(sorting["direction"]))
+}
+
+func runtimeGridViewPlanHasProjection(gridPlan *runtimeApplyGridViewPlan, aliasColumnName string) bool {
+	aliasColumnName = strings.TrimSpace(aliasColumnName)
+	if gridPlan == nil || aliasColumnName == "" {
+		return false
+	}
+
+	for _, projection := range gridPlan.Projections {
+		if strings.TrimSpace(projection.AliasColumnName) == aliasColumnName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func runtimeViewListFieldType(kind string) string {

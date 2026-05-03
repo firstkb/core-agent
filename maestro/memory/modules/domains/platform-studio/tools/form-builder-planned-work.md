@@ -1,7 +1,7 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-04-25
+Last verified: 2026-05-03
 Verification mode: read-only scan of tracked docs and current FE/BE code surfaces
 
 This file preserves Form Builder planned work without turning it into active
@@ -25,6 +25,8 @@ instead of them.
 - Runtime and preview APIs are separate route namespaces.
 - Runtime ACL is still on the current tenant-auth baseline until Navigation Builder ACL exists.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
+- Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
+- Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 

@@ -6,6 +6,10 @@ import {
 } from "@platform/ui-kit";
 
 import {
+  applyRuntimeTextMask,
+  hasRuntimeTextMask,
+} from "../runtime-form-input-mask";
+import {
   getStringValue,
 } from "../runtime-form-utils";
 import type { RuntimeFieldControlProps } from "./field-types";
@@ -26,6 +30,14 @@ function getInputType(fieldType: RuntimeFieldControlProps["field"]["type"]) {
   return "text";
 }
 
+function getTextInputType(field: RuntimeFieldControlProps["field"]) {
+  if (field.type === "short_text" && field.inputType) {
+    return field.inputType;
+  }
+
+  return getInputType(field.type);
+}
+
 function getInputStep(fieldType: RuntimeFieldControlProps["field"]["type"]) {
   if (fieldType === "integer") {
     return "1";
@@ -38,6 +50,14 @@ function getInputStep(fieldType: RuntimeFieldControlProps["field"]["type"]) {
   return undefined;
 }
 
+function formatInputValue(value: string, field: RuntimeFieldControlProps["field"]) {
+  if (field.type !== "short_text") {
+    return value;
+  }
+
+  return applyRuntimeTextMask(value, field.mask);
+}
+
 export function InputField({
   controlId,
   disabled,
@@ -47,30 +67,38 @@ export function InputField({
   value,
 }: RuntimeFieldControlProps) {
   const externalValue = getStringValue(value);
-  const [draftValue, setDraftValue] = useState(externalValue);
+  const displayedExternalValue = formatInputValue(externalValue, field);
+  const [draftValue, setDraftValue] = useState(displayedExternalValue);
 
   useEffect(() => {
-    setDraftValue(externalValue);
-  }, [externalValue]);
+    setDraftValue(displayedExternalValue);
+  }, [displayedExternalValue]);
 
   function commitDraft(event: FocusEvent<HTMLInputElement>) {
-    const nextValue = event.currentTarget.value;
-    if (nextValue !== externalValue) {
+    const nextValue = formatInputValue(event.currentTarget.value, field);
+    if (nextValue !== displayedExternalValue) {
       onFieldChange(field.id, nextValue, field);
     }
+  }
+
+  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+    setDraftValue(formatInputValue(event.currentTarget.value, field));
   }
 
   return (
     <Input
       aria-invalid={error ? "true" : undefined}
+      autoComplete={field.autocomplete}
       disabled={disabled}
       id={controlId}
+      inputMode={field.inputMode}
       invalid={Boolean(error)}
+      maxLength={hasRuntimeTextMask(field.mask) ? field.mask?.trim().length : undefined}
       onBlur={commitDraft}
-      onChange={(event: ChangeEvent<HTMLInputElement>) => setDraftValue(event.currentTarget.value)}
+      onChange={handleChange}
       placeholder={field.placeholder}
       step={getInputStep(field.type)}
-      type={getInputType(field.type)}
+      type={getTextInputType(field)}
       value={draftValue}
     />
   );

@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `subform_runtime_slice_in_progress`
+- Status: `ready_made_field_slice_in_progress`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -51,14 +51,17 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime list `Delete` is its own bulk action and is available when the current view permits delete, independent of whether an `active` field exists. Because it is destructive, it needs explicit confirmation UX before execution.
 - Runtime choice fields should render from authored `choiceDisplay` settings, not preset-name inference: `Render style = Native` uses UI Kit Combobox (`single_select` simple values, `multi_select` multi-select), while `Render style = Buttons` uses UI Kit toggle buttons with authored horizontal/vertical orientation. Per-option Button styles remain deferred until Form Builder defines a runtime-ready styling contract.
 - Runtime `single_select` fields rendered as horizontal buttons should present as a segmented button group. This is a runtime-only visual refinement for single-select horizontal buttons and must not change multi-select or vertical button behavior.
+- Runtime `short_text` controls should consume field-level Form Builder settings for `placeholder`, `mask`, `autocomplete`, `inputMode`, and text validation metadata. UI node placeholder may override the field placeholder when present, but field-level settings are the default source of truth.
+- Runtime client validation must reject incorrectly filled required text inputs before record creation for both root forms and subforms. Email, phone, URL, and masked short-text values are validated by the shared `@platform/forms` validator; create/finish/subform save actions use the same modal error treatment and field reveal/focus path as existing required-field validation.
+- Ready-made fields remain presets over base runtime controls rather than separate primitives. Current runtime support maps `email`, `phone`, `url`, and `suggest_text` to `short_text` rendering; maps `tags`, `radio_group`, and `checkbox_group` through existing choice renderers; and treats `date_today` as a date field whose default value must come from server/default-value handling. AJAX suggestions for `suggest_text` and richer preset-specific validation remain follow-up contract work.
 - Current subform implementation uses only DEFAULT subforms. The parent form renders a child table from authored subform Grid columns, honors authored Subtable sorting, and exposes Add/Edit/Delete only from authored subform actions plus available frontend handlers.
 - Subform Add/Edit opens a child form route under the parent edit route. If the parent record is not yet created, the runtime first creates the parent after required fields are valid, then navigates directly to the child route without a visible parent-tab jump.
 - Subform child forms use the same create-after-required-complete and edit-autosave controller as root forms, but their chrome labels are `Back` and `Save`; child forms do not run root workflow status/`Finish` logic.
 - Subform navigation carries the parent runtime session, including active tabs, so returning with `Back`/successful `Save` restores the parent form at the tab that launched the subform.
 - Managed runtime `multi_select`/`tags` values should use the generated scope multivalue table. Runtime apply exposes aggregate label/count outputs for grids; runtime create/edit/load persists selected option values in `value_key`, labels in `value_label`, and preserves authored order with `sort_order`. Static/external multivalue writes remain deferred.
 - Runtime choice Native controls must keep the required-field left border affordance used by other controls, and selected choice buttons should make the selected state more explicit with underlined text.
-- Next frontend field-scope slice should cover these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
-- Do not include these groups in the next field-scope slice: `Relationships`, `System Fields` as visual palette/rendered controls, `Ready-made fields`, and reserved `Advanced fields`. System Field metadata still remains part of runtime create/status behavior when present on a view.
+- The completed first frontend field-scope slice covered these Form Builder palette groups: `Basic fields`, `Choice fields`, core `Layout`, and `Content`.
+- The owner has now opened the follow-up Ready-made fields slice. Still deferred: `Relationships`, `System Fields` as visual palette/rendered controls, reserved `Advanced fields`, dynamic data sources, full option styling, and Action Builder side effects. System Field metadata still remains part of runtime create/status behavior when present on a view.
 - For selected first-scope fields, include render-affecting settings only: label/display name, key/id, description/helper, placeholder/content, required/nullable, readonly/disabled/lock state, default value shape, width/layout/label layout, rows, numeric/date input behavior, choice options, choice orientation/control type where supported, and content alignment/style variants where needed.
 - Include the accepted first-contract UI rules that affect runtime rendering and validation: same-scope `visibilityRules` and `requirementRules`. Defer full rule-engine breadth, dynamic option/data sources, field-to-field comparison, nested `or`, cross-scope dependencies, option style systems, and all Action Builder side effects.
 - `Section` is the runtime form card. If a root form scope has no authored `Section`, the renderer should create one default card around all root fields.
@@ -102,10 +105,9 @@ View/read remains the existing `CollectionTable` modal path for now.
   - core Layout without `Subform`;
   - Content;
   - same-scope visibility and requirement rules.
-- Deferred renderer scope:
+- Deferred renderer scope after the first renderer slice:
   - Relationships;
   - System Fields as visual palette controls;
-  - Ready-made fields;
   - Advanced fields;
   - dynamic data sources;
   - full option styling;
@@ -394,7 +396,18 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 35 tests;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode with `GOCACHE=/private/tmp/core-agent-go-build`.
+- Runtime short-text / ready-made field follow-up completed:
+  - schema compiler now carries field-level `placeholder`, `mask`, `autocomplete`, `inputMode`, and text validation metadata into runtime field definitions;
+  - `short_text` inputs now apply browser autocomplete/inputMode/type for email, phone, and URL presets and support lightweight text masks with `9`, `A/a`, and `*` tokens;
+  - shared runtime validation now checks email, phone, URL, and mask completion before create/finish for root and subform pages;
+  - tenant runtime create/finish validation now shows the existing finish-style modal for invalid client-side input on explicit actions, reveals closed tabs when needed, and focuses the field after acknowledgement;
+  - passive background create attempts surface format errors inline without showing avoidable modal noise while required fields are still being completed;
+  - fixture coverage now includes ready-made email, phone, URL, suggest text, tags, date today, radio group, and checkbox group examples using base runtime controls;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 14 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 11 files, 35 tests;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is finishing the subform runtime slice with `git diff --check`, `scripts/preflight.sh`, and browser/manual smoke once Browser Use or owner-approved fallback is available.
+Next allowed action is owner review of the short-text validation / ready-made runtime field slice, followed by either a commit or the next approved runtime field group.

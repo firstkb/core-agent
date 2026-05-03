@@ -204,6 +204,12 @@ function hasRuntimeValidationErrors(errors: RuntimeFormValidationErrors) {
   return Object.values(errors).some(Boolean);
 }
 
+function inputValidationErrorsOnly(errors: RuntimeFormValidationErrors) {
+  return Object.fromEntries(
+    Object.entries(errors).filter(([, message]) => message && message !== "This field is required."),
+  );
+}
+
 function findFirstValidationError(
   definition: RuntimeFormDefinition,
   errors: RuntimeFormValidationErrors,
@@ -213,7 +219,16 @@ function findFirstValidationError(
   return {
     fieldId,
     label: field?.label ?? "this field",
+    message: fieldId ? errors[fieldId] : undefined,
   };
+}
+
+function runtimeClientValidationDialogMessage(error: ReturnType<typeof findFirstValidationError>) {
+  if (error.message === "This field is required.") {
+    return `Please fill field: "${error.label}"`;
+  }
+
+  return `Please fill field correctly: "${error.label}"`;
 }
 
 function runtimeValidationErrorsFromServer(
@@ -793,6 +808,24 @@ export function FormsRuntimeFormPage({
     const nextErrors = validateRuntimeForm(runtimeDefinition, createValues);
     if (hasRuntimeValidationErrors(nextErrors)) {
       lastCreateBlockedByValidationRef.current = true;
+      if (options?.showValidationDialog) {
+        const firstError = findFirstValidationError(runtimeDefinition, nextErrors);
+        setErrors(nextErrors);
+        revealRuntimeField(firstError.fieldId);
+        setFinishDialog({
+          fieldId: firstError.fieldId,
+          message: runtimeClientValidationDialogMessage(firstError),
+          tone: "danger",
+        });
+      } else {
+        const inputErrors = inputValidationErrorsOnly(nextErrors);
+        if (hasRuntimeValidationErrors(inputErrors)) {
+          setErrors((currentErrors) => ({
+            ...currentErrors,
+            ...inputErrors,
+          }));
+        }
+      }
       setSaveState("dirty");
       return null;
     }
@@ -998,7 +1031,7 @@ export function FormsRuntimeFormPage({
       setSaveState("error");
       setFinishDialog({
         fieldId: firstError.fieldId,
-        message: `Please fill field: "${firstError.label}"`,
+        message: runtimeClientValidationDialogMessage(firstError),
         tone: "danger",
       });
       return;

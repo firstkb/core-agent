@@ -1,10 +1,15 @@
 import type {
   RuntimeFormDefinition,
+  RuntimeFormFieldDefinition,
   RuntimeFormLabels,
   RuntimeFormNodeDefinition,
+  RuntimeFormResolvedLabels,
   RuntimeFormValidationErrors,
   RuntimeFormValues,
 } from "./runtime-form-types";
+import {
+  isRuntimeTextMaskComplete,
+} from "./runtime-form-input-mask";
 import { resolveRuntimeFormLabels } from "./runtime-form-labels";
 import {
   isRuntimeFieldRequired,
@@ -19,11 +24,73 @@ import {
   resolveRuntimeSectionNodes,
 } from "./runtime-form-utils";
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\d{7,15}$/;
+
+function getRuntimeTextValidation(field: RuntimeFormFieldDefinition) {
+  if (field.validation) {
+    return field.validation;
+  }
+
+  if (field.inputType === "email" || field.inputType === "url") {
+    return field.inputType;
+  }
+
+  if (field.inputType === "tel") {
+    return "phone";
+  }
+
+  return undefined;
+}
+
+function validateRuntimeTextField(
+  field: RuntimeFormFieldDefinition,
+  values: RuntimeFormValues,
+  labels: RuntimeFormResolvedLabels,
+) {
+  if (field.type !== "short_text") {
+    return undefined;
+  }
+
+  const value = values[field.id];
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const textValue = value.trim();
+  if (!textValue) {
+    return undefined;
+  }
+
+  if (!isRuntimeTextMaskComplete(textValue, field.mask)) {
+    return labels.invalidMaskError;
+  }
+
+  switch (getRuntimeTextValidation(field)) {
+    case "email":
+      return emailPattern.test(textValue) ? undefined : labels.invalidEmailError;
+    case "phone": {
+      const digits = textValue.replace(/\D/g, "");
+      return phonePattern.test(digits) ? undefined : labels.invalidPhoneError;
+    }
+    case "url": {
+      try {
+        const url = new URL(textValue);
+        return url.protocol === "http:" || url.protocol === "https:" ? undefined : labels.invalidUrlError;
+      } catch {
+        return labels.invalidUrlError;
+      }
+    }
+    default:
+      return undefined;
+  }
+}
+
 function validateRuntimeFormNodes(
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>,
   values: RuntimeFormValues,
   errors: RuntimeFormValidationErrors,
-  requiredError: string,
+  labels: RuntimeFormResolvedLabels,
 ) {
   for (const node of nodes) {
     if (!isRuntimeNodeVisible(node, values)) {
@@ -32,18 +99,24 @@ function validateRuntimeFormNodes(
 
     if (isRuntimeFormFieldNode(node)) {
       const required = isRuntimeFieldRequired(node, values, node.required);
-      if (!required || node.readonly || node.disabled) {
+      if (node.readonly || node.disabled) {
         continue;
       }
 
-      if (isRuntimeFormValueEmpty(values[node.id])) {
-        errors[node.id] = requiredError;
+      if (required && isRuntimeFormValueEmpty(values[node.id])) {
+        errors[node.id] = labels.requiredError;
+        continue;
+      }
+
+      const inputError = validateRuntimeTextField(node, values, labels);
+      if (inputError) {
+        errors[node.id] = inputError;
       }
       continue;
     }
 
     if (isRuntimeFormLayoutNode(node)) {
-      validateRuntimeFormNodes(getRuntimeLayoutChildNodes(node), values, errors, requiredError);
+      validateRuntimeFormNodes(getRuntimeLayoutChildNodes(node), values, errors, labels);
     }
   }
 }
@@ -57,7 +130,7 @@ export function validateRuntimeForm(
   const errors: RuntimeFormValidationErrors = {};
 
   for (const section of definition.sections) {
-    validateRuntimeFormNodes(resolveRuntimeSectionNodes(section), values, errors, resolvedLabels.requiredError);
+    validateRuntimeFormNodes(resolveRuntimeSectionNodes(section), values, errors, resolvedLabels);
   }
 
   return errors;

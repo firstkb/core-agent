@@ -71,6 +71,73 @@ describe("runtime form helpers", () => {
     expect(errors.comment).toBe("This field is required.");
   });
 
+  it("validates short text email, phone, URL, and mask settings", () => {
+    const definition: RuntimeFormDefinition = {
+      commitMode: "autosave",
+      id: "runtime-text-validation",
+      mode: "create",
+      sections: [
+        {
+          id: "default",
+          nodes: [
+            {
+              id: "email",
+              inputType: "email",
+              label: "Email",
+              required: true,
+              type: "short_text",
+              validation: "email",
+            },
+            {
+              id: "phone",
+              inputType: "tel",
+              label: "Phone",
+              mask: "(999) 999-9999",
+              required: true,
+              type: "short_text",
+              validation: "phone",
+            },
+            {
+              id: "website",
+              inputType: "url",
+              label: "Website",
+              required: true,
+              type: "short_text",
+              validation: "url",
+            },
+            {
+              id: "ticket",
+              label: "Ticket",
+              mask: "AAA-999",
+              required: true,
+              type: "short_text",
+            },
+          ],
+        },
+      ],
+      title: "Text validation",
+    };
+
+    const invalidErrors = validateRuntimeForm(definition, {
+      email: "wrong",
+      phone: "(555) 123",
+      ticket: "AB-12",
+      website: "example.com",
+    });
+    const validErrors = validateRuntimeForm(definition, {
+      email: "demo@example.com",
+      phone: "(555) 123-4567",
+      ticket: "ABC-123",
+      website: "https://example.com",
+    });
+
+    expect(invalidErrors.email).toBe("Please enter a valid email address.");
+    expect(invalidErrors.phone).toBe("Please enter a value that matches the required format.");
+    expect(invalidErrors.ticket).toBe("Please enter a value that matches the required format.");
+    expect(invalidErrors.website).toBe("Please enter a valid URL.");
+    expect(validErrors).toEqual({});
+  });
+
   it("treats show visibility rules as hidden until their condition matches", () => {
     const { definition, values } = createRuntimeFormFixture({
       mode: "create",
@@ -376,6 +443,147 @@ describe("runtime form helpers", () => {
       { label: "Aerial lifts", value: "Aerial lifts" },
       { label: "PPE", value: "PPE" },
     ]);
+  });
+
+  it("compiles short text input settings and ready-made text presets", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              autocomplete: "on",
+              id: "reference",
+              kind: "short_text",
+              label: "Reference",
+              mask: "AAA-999",
+              placeholder: "Ticket or reference",
+            },
+            {
+              autocomplete: "email",
+              id: "email",
+              inputMode: "email",
+              kind: "short_text",
+              label: "Email",
+              placeholder: "name@example.com",
+              preset: "email",
+              validation: "email",
+            },
+            {
+              autocomplete: "tel",
+              id: "phone",
+              inputMode: "tel",
+              kind: "short_text",
+              label: "Phone",
+              mask: "(999) 999-9999",
+              placeholder: "(555) 555-5555",
+              preset: "phone",
+              validation: "phone",
+            },
+            {
+              autocomplete: "url",
+              id: "website",
+              inputMode: "url",
+              kind: "short_text",
+              label: "Website",
+              placeholder: "https://example.com",
+              preset: "url",
+              validation: "url",
+            },
+            {
+              id: "city",
+              kind: "short_text",
+              label: "City",
+              placeholder: "Start typing",
+              preset: "suggest_text",
+              suggestConfig: {
+                allowCustomValue: true,
+                maxResults: 20,
+                minQueryLength: 1,
+                searchMode: "contains",
+                sourceMode: "same_field_distinct_values",
+              },
+            },
+          ],
+        },
+      },
+      mode: "edit",
+      modelId: "test-inspection",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              fieldId: "reference",
+              id: "node-reference",
+              order: 1,
+              placeholder: "UI node placeholder",
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "email",
+              id: "node-email",
+              order: 2,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "phone",
+              id: "node-phone",
+              order: 3,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "website",
+              id: "node-website",
+              order: 4,
+              type: "field",
+              visibility: "visible",
+            },
+            {
+              fieldId: "city",
+              id: "node-city",
+              order: 5,
+              type: "field",
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    expect(findRuntimeFormField(definition, "reference")).toMatchObject({
+      autocomplete: "on",
+      mask: "AAA-999",
+      placeholder: "UI node placeholder",
+      type: "short_text",
+    });
+    expect(findRuntimeFormField(definition, "email")).toMatchObject({
+      autocomplete: "email",
+      inputMode: "email",
+      inputType: "email",
+      placeholder: "name@example.com",
+      validation: "email",
+    });
+    expect(findRuntimeFormField(definition, "phone")).toMatchObject({
+      autocomplete: "tel",
+      inputMode: "tel",
+      inputType: "tel",
+      mask: "(999) 999-9999",
+      validation: "phone",
+    });
+    expect(findRuntimeFormField(definition, "website")).toMatchObject({
+      autocomplete: "url",
+      inputMode: "url",
+      inputType: "url",
+      validation: "url",
+    });
+    expect(findRuntimeFormField(definition, "city")).toMatchObject({
+      placeholder: "Start typing",
+      type: "short_text",
+    });
   });
 
   it("compiles Form Builder choice render style and orientation settings", () => {

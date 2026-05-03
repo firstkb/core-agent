@@ -25,6 +25,17 @@ export type RuntimeFormFieldLabelLayout = "stacked" | "responsive-inline";
 export type RuntimeFormChoiceLayout = "inline" | "stacked";
 export type RuntimeFormChoiceOrientation = "horizontal" | "vertical";
 export type RuntimeFormChoiceRenderStyle = "buttons" | "native";
+export type RuntimeFormInputMode =
+  | "decimal"
+  | "email"
+  | "none"
+  | "numeric"
+  | "search"
+  | "tel"
+  | "text"
+  | "url";
+export type RuntimeFormTextInputType = "email" | "tel" | "text" | "url";
+export type RuntimeFormTextValidation = "email" | "phone" | "url";
 export type RuntimeFormChoiceOptionStyleVariant =
   | "danger"
   | "default"
@@ -91,6 +102,7 @@ export type RuntimeFormNodeRules = {
 };
 
 export type RuntimeFormFieldDefinition = {
+  autocomplete?: string;
   choiceAllowEmpty?: boolean;
   choiceLayout?: RuntimeFormChoiceLayout;
   choiceOrientation?: RuntimeFormChoiceOrientation;
@@ -98,8 +110,11 @@ export type RuntimeFormFieldDefinition = {
   disabled?: boolean;
   helperText?: ReactNode;
   id: string;
+  inputMode?: RuntimeFormInputMode;
+  inputType?: RuntimeFormTextInputType;
   label: string;
   labelLayout?: RuntimeFormFieldLabelLayout;
+  mask?: string;
   nodeType?: "field";
   options?: ReadonlyArray<RuntimeFormFieldOption>;
   placeholder?: string;
@@ -108,6 +123,7 @@ export type RuntimeFormFieldDefinition = {
   rows?: number;
   rules?: RuntimeFormNodeRules;
   type: RuntimeFormFieldType;
+  validation?: RuntimeFormTextValidation;
   width?: RuntimeFormFieldWidth;
 };
 
@@ -272,6 +288,10 @@ export type RuntimeFormResolvedLabels = {
   editModeInfo: ReactNode;
   finish: ReactNode;
   finishBackInfo?: ReactNode;
+  invalidEmailError: string;
+  invalidMaskError: string;
+  invalidPhoneError: string;
+  invalidUrlError: string;
   onlineFormTitle: ReactNode;
   requiredError: string;
   saveStates: Record<RuntimeFormSaveState, ReactNode>;

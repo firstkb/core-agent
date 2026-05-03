@@ -11,6 +11,7 @@ import type {
   RuntimeFormFieldType,
   RuntimeFormGridLayoutDefinition,
   RuntimeFormGroupLayoutDefinition,
+  RuntimeFormInputMode,
   RuntimeFormLayoutDefinition,
   RuntimeFormMode,
   RuntimeFormNodeDefinition,
@@ -23,6 +24,8 @@ import type {
   RuntimeFormSubformColumnType,
   RuntimeFormSubformDefinition,
   RuntimeFormTabsLayoutDefinition,
+  RuntimeFormTextInputType,
+  RuntimeFormTextValidation,
   RuntimeFormVisibilityRule,
 } from "./runtime-form";
 
@@ -88,6 +91,19 @@ const runtimeChoiceOptionStyleVariants = new Set<RuntimeFormChoiceOptionStyleVar
   "warning",
 ]);
 
+const runtimeInputModes = new Set<RuntimeFormInputMode>([
+  "decimal",
+  "email",
+  "none",
+  "numeric",
+  "search",
+  "tel",
+  "text",
+  "url",
+]);
+
+const runtimeTextValidations = new Set<RuntimeFormTextValidation>(["email", "phone", "url"]);
+
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
@@ -102,6 +118,16 @@ function asArray(value: unknown): unknown[] {
 
 function stringValue(value: unknown, fallback = "") {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function firstStringValue(...values: unknown[]) {
+  for (const value of values) {
+    const normalized = stringValue(value);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return "";
 }
 
 function boolValue(value: unknown, fallback = false) {
@@ -291,6 +317,42 @@ function readChoiceAllowEmpty(field: JsonRecord) {
   return typeof choiceDisplay.allowEmpty === "boolean" ? choiceDisplay.allowEmpty : undefined;
 }
 
+function readInputMode(field: JsonRecord): RuntimeFormInputMode | undefined {
+  const inputMode = firstStringValue(field.inputMode);
+  return runtimeInputModes.has(inputMode as RuntimeFormInputMode)
+    ? inputMode as RuntimeFormInputMode
+    : undefined;
+}
+
+function readTextValidation(field: JsonRecord): RuntimeFormTextValidation | undefined {
+  const validation = firstStringValue(field.validation);
+  return runtimeTextValidations.has(validation as RuntimeFormTextValidation)
+    ? validation as RuntimeFormTextValidation
+    : undefined;
+}
+
+function readTextInputType(
+  field: JsonRecord,
+  inputMode: RuntimeFormInputMode | undefined,
+  validation: RuntimeFormTextValidation | undefined,
+): RuntimeFormTextInputType | undefined {
+  const preset = firstStringValue(field.preset);
+
+  if (validation === "email" || preset === "email" || inputMode === "email") {
+    return "email";
+  }
+
+  if (validation === "url" || preset === "url" || inputMode === "url") {
+    return "url";
+  }
+
+  if (validation === "phone" || preset === "phone" || inputMode === "tel") {
+    return "tel";
+  }
+
+  return undefined;
+}
+
 function readRuleValue(value: unknown): RuntimeFormRuleValue | undefined {
   if (typeof value === "string" || typeof value === "boolean") {
     return value;
@@ -401,21 +463,28 @@ function createFieldNode(
   const readonly = node.visibility === "readonly" || boolValue(node.readonly, boolValue(field.readonly));
   const width = options.insideGrid ? undefined : "full";
   const isChoiceField = isChoiceFieldType(type);
+  const inputMode = type === "short_text" ? readInputMode(field) : undefined;
+  const validation = type === "short_text" ? readTextValidation(field) : undefined;
   return {
+    autocomplete: type === "short_text" ? firstStringValue(field.autocomplete, field.autoComplete) || undefined : undefined,
     choiceAllowEmpty: type === "single_select" ? readChoiceAllowEmpty(field) : undefined,
     choiceLayout: type === "radio" ? "inline" : undefined,
     choiceOrientation: isChoiceField ? readChoiceOrientation(field) : undefined,
     choiceRenderStyle: isChoiceField ? readChoiceRenderStyle(field) ?? (type === "radio" ? "buttons" : "native") : undefined,
     helperText: stringValue(node.helperText) || undefined,
     id: fieldId,
+    inputMode,
+    inputType: type === "short_text" ? readTextInputType(field, inputMode, validation) : undefined,
     label: stringValue(field.label, stringValue(field.displayName, fieldId)),
+    mask: type === "short_text" ? firstStringValue(field.mask) || undefined : undefined,
     nodeType: "field",
     options: optionsList.length > 0 ? optionsList : undefined,
-    placeholder: stringValue(node.placeholder) || undefined,
+    placeholder: firstStringValue(node.placeholder, field.placeholder) || undefined,
     readonly,
     required: boolValue(node.required, boolValue(field.required)),
     rules: readRuntimeRules(node.rules),
     type,
+    validation,
     width,
   };
 }

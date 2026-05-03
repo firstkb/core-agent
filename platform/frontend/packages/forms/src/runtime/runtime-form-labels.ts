@@ -8,6 +8,10 @@ const defaultRuntimeFormLabels: RuntimeFormResolvedLabels = {
   createModeInfo: "Complete the required fields to create this record. Changes will save automatically after it is created.",
   editModeInfo: "This form saves changes automatically as you work. You can continue working with it later.",
   finish: "Finish",
+  invalidEmailError: "Please enter a valid email address.",
+  invalidMaskError: "Please enter a value that matches the required format.",
+  invalidPhoneError: "Please enter a valid phone number.",
+  invalidUrlError: "Please enter a valid URL.",
   onlineFormTitle: "Online Form",
   requiredError: "This field is required.",
   saveStates: {

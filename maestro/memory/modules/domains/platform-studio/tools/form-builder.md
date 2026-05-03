@@ -43,3 +43,15 @@ follow-up as implemented or as approved near-term scope.
 
 Old Form Builder detail/workstream docs are not default truth.
 Use `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before opening them.
+
+## Runtime / Preview Guardrails
+
+- Runtime and preview namespaces must be compared explicitly when changing
+  shared Form Builder metadata, row actions, bulk actions, saved filters,
+  favorites, record detail, or create/edit route behavior.
+- Do not suppress metadata such as selection or bulk actions only because one
+  namespace lacks execution wiring. Add endpoint/adapter parity or record an
+  explicit read-only preview/product decision.
+- Normalize authored schema variants at the runtime adapter/schema boundary.
+  Renderer leaf widgets should receive stable internal props for options,
+  values, labels, and readonly/required state.

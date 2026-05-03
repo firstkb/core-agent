@@ -60,6 +60,8 @@ Primary active runtime surfaces:
 - do not reintroduce a master identity mirror for tenant login identities
 - `auth` resolves `tenant_host -> tenant_id -> tenant_db` in master and reads auth-facing user identity from tenant-local `users`
 - platform and infrastructure code belongs in `internal/platform/*`; business logic does not stay in root `internal/*`
+- before adding backend write behavior or shared runtime behavior, name the owning service/module and any explicitly forbidden service/module; accepted ownership boundaries are hard constraints unless the owner approves a change
+- if an existing service already mixes handler, command, validation, authorization, repository, and response-assembly concerns, identify the smallest responsibility split or attachment point before adding non-trivial behavior
 - non-root admin access must stay bound to explicit route-to-section policy in code
 - do not expose non-root admin sections in navigation unless secure route coverage exists
 - do not add privileged bypasses without explicit approval

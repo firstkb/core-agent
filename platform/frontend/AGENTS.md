@@ -130,6 +130,9 @@ affect:
 3. Keep container/page logic separate from presentational pieces.
 4. Cover loading, error, empty, ready, and disabled/pending states when relevant.
 5. Do not treat a proving surface contract as an automatic shared-package contract.
+6. Preserve existing visible behavior by default; do not hide metadata-driven actions, selection, or route capability to work around a missing endpoint without an explicit product decision and regression note.
+7. Normalize schema/payload variants at app adapter, package boundary, or schema-runtime boundary; leaf widgets should receive stable internal props.
+8. Any guard that changes user-visible capability, feature visibility, route behavior, or mutation availability needs targeted regression evidence for the preserved behavior or the approved new behavior.
 
 ## Commands
 

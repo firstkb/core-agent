@@ -31,6 +31,9 @@ New Maestro-routed work uses the flat vNext artifact model:
   checks, and residual risk.
 - Use `closeout.md` when the result, evidence, and follow-ups need a durable
   summary.
+- Use optional `findings.md` when owner manual testing or review surfaces
+  several related defects/observations that need stable IDs, status, fixed
+  commit, and verification without bloating `work.md`.
 - Use machine-readable packets or handoffs only when delegation, auditability,
   resume, release evidence, or accountability genuinely needs them.
 - Do not create artifacts that will not help a new chat continue the work,

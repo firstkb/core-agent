@@ -154,6 +154,26 @@ Then read the smallest relevant set:
 Name what must not be touched and what evidence will prove correctness before
 editing or assigning implementation.
 
+## Implementation Safety
+
+Before backend writes or shared runtime behavior changes, name the owning
+service/package/module, allowed surface, and forbidden surface when an accepted
+boundary decision exists.
+
+Preserve existing working behavior by default. If a needed endpoint, adapter,
+or contract is missing, complete the dependency or return to the owner; do not
+hide existing UI/API capability as a workaround without an explicit product
+decision and regression note.
+
+Do not fix contract gaps by dropping metadata. Align metadata with execution
+parity, or mark the capability intentionally non-executable with clear UX.
+
+When the owner reports a regression after recent work, first inspect recent
+diff/blame evidence and state whether the current work caused it, did not cause
+it, or remains unknown. Guards that change feature visibility, route
+capability, or mutation availability need targeted regression evidence for the
+preserved or approved behavior.
+
 ## Artifacts And Continuity
 
 Use `maestro/artifact/active/YYYY-MM-DD-<work-slug>/` for active work and
@@ -224,6 +244,10 @@ evidence. Record skipped checks and why.
 For UI-visible work, Maestro personally judges usability, visual coherence,
 desktop/mobile behavior, and product feel. Browser Use and Computer Use provide
 evidence; they do not own product taste.
+
+If Browser Use or Computer Use cannot attach to the needed surface, record the
+limitation and do not claim visual verification from code inspection or tests
+alone.
 
 ## Runtime Change Governance
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
@@ -267,39 +268,8 @@ func payloadChanged(existing json.RawMessage, incoming map[string]any, transient
 }
 
 func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, error) {
-	existingMap := cloneJSONToMap(existing)
-	existingSignature := pruneTransientKeys(existingMap, []string{
-		"version",
-		"modelStructureVersion",
-		"guid",
-		"status",
-		"screens",
-		"canEditViewsOnly",
-		"modelLocked",
-		"isStructureLocked",
-		"description",
-		"displayName",
-		"label",
-		"modelTitle",
-		"name",
-		"title",
-	})
-	incomingSignature := pruneTransientKeys(cloneJSONToMap(mustCanonicalJSON(incoming)), []string{
-		"version",
-		"modelStructureVersion",
-		"guid",
-		"status",
-		"screens",
-		"canEditViewsOnly",
-		"modelLocked",
-		"isStructureLocked",
-		"description",
-		"displayName",
-		"label",
-		"modelTitle",
-		"name",
-		"title",
-	})
+	existingSignature := dataSchemaStructureSignature(cloneJSONToMap(existing))
+	incomingSignature := dataSchemaStructureSignature(cloneJSONToMap(mustCanonicalJSON(incoming)))
 
 	left, err := json.Marshal(existingSignature)
 	if err != nil {
@@ -311,6 +281,119 @@ func structureChanged(existing json.RawMessage, incoming map[string]any) (bool, 
 	}
 
 	return string(left) != string(right), nil
+}
+
+type modelDataSchemaStructureSignature struct {
+	RootScope     modelDataSchemaScopeStructureSignature   `json:"rootScope"`
+	SubformScopes []modelDataSchemaScopeStructureSignature `json:"subformScopes"`
+}
+
+type modelDataSchemaScopeStructureSignature struct {
+	FieldIDs      []string `json:"fieldIds"`
+	SchemaScopeID string   `json:"schemaScopeId"`
+	SubformType   string   `json:"subformType,omitempty"`
+	TableKey      string   `json:"tableKey,omitempty"`
+}
+
+func dataSchemaStructureSignature(payload map[string]any) modelDataSchemaStructureSignature {
+	dataSchema := asMap(payload["dataSchema"])
+	if len(dataSchema) == 0 {
+		return legacyFieldsStructureSignature(payload)
+	}
+
+	rootScope := asMap(dataSchema["rootScope"])
+	signature := modelDataSchemaStructureSignature{
+		RootScope: modelDataSchemaScopeStructureSignature{
+			FieldIDs:      dataSchemaStructureFieldIDs(asSlice(rootScope["fields"])),
+			SchemaScopeID: rootSchemaScopeID,
+		},
+		SubformScopes: []modelDataSchemaScopeStructureSignature{},
+	}
+
+	for index, rawScope := range asSlice(dataSchema["subformScopes"]) {
+		scope := asMap(rawScope)
+		schemaScopeID := chooseString(
+			normalizeString(scope["schemaScopeId"]),
+			chooseString(normalizeString(scope["tableKey"]), fmt.Sprintf("subform-%d", index)),
+		)
+		tableKey := chooseString(normalizeString(scope["tableKey"]), schemaScopeID)
+		subformType := chooseString(normalizeString(scope["subformType"]), "DEFAULT")
+		signature.SubformScopes = append(signature.SubformScopes, modelDataSchemaScopeStructureSignature{
+			FieldIDs:      dataSchemaStructureFieldIDs(asSlice(scope["fields"])),
+			SchemaScopeID: schemaScopeID,
+			SubformType:   subformType,
+			TableKey:      tableKey,
+		})
+	}
+
+	sort.Slice(signature.SubformScopes, func(left, right int) bool {
+		return signature.SubformScopes[left].SchemaScopeID < signature.SubformScopes[right].SchemaScopeID
+	})
+
+	return signature
+}
+
+func legacyFieldsStructureSignature(payload map[string]any) modelDataSchemaStructureSignature {
+	fieldIDsByScope := map[string]map[string]struct{}{
+		rootSchemaScopeID: {},
+	}
+	for _, rawField := range asSlice(payload["fields"]) {
+		field := asMap(rawField)
+		fieldID := dataSchemaStructureFieldID(field)
+		if fieldID == "" {
+			continue
+		}
+		scopeID := chooseString(
+			normalizeString(field["schemaScopeId"]),
+			chooseString(normalizeString(field["schemaScopeKey"]), rootSchemaScopeID),
+		)
+		if fieldIDsByScope[scopeID] == nil {
+			fieldIDsByScope[scopeID] = map[string]struct{}{}
+		}
+		fieldIDsByScope[scopeID][fieldID] = struct{}{}
+	}
+
+	signature := modelDataSchemaStructureSignature{
+		RootScope: modelDataSchemaScopeStructureSignature{
+			FieldIDs:      sortedFieldIDs(fieldIDsByScope[rootSchemaScopeID]),
+			SchemaScopeID: rootSchemaScopeID,
+		},
+		SubformScopes: []modelDataSchemaScopeStructureSignature{},
+	}
+	for scopeID, fieldIDs := range fieldIDsByScope {
+		if scopeID == rootSchemaScopeID {
+			continue
+		}
+		signature.SubformScopes = append(signature.SubformScopes, modelDataSchemaScopeStructureSignature{
+			FieldIDs:      sortedFieldIDs(fieldIDs),
+			SchemaScopeID: scopeID,
+			SubformType:   "DEFAULT",
+			TableKey:      scopeID,
+		})
+	}
+	sort.Slice(signature.SubformScopes, func(left, right int) bool {
+		return signature.SubformScopes[left].SchemaScopeID < signature.SubformScopes[right].SchemaScopeID
+	})
+	return signature
+}
+
+func dataSchemaStructureFieldIDs(fields []any) []string {
+	fieldIDs := make(map[string]struct{})
+	for _, rawField := range fields {
+		fieldID := dataSchemaStructureFieldID(asMap(rawField))
+		if fieldID == "" {
+			continue
+		}
+		fieldIDs[fieldID] = struct{}{}
+	}
+	return sortedFieldIDs(fieldIDs)
+}
+
+func dataSchemaStructureFieldID(field map[string]any) string {
+	return chooseString(
+		normalizeString(field["id"]),
+		chooseString(normalizeString(field["fieldId"]), normalizeString(field["key"])),
+	)
 }
 
 func pruneTransientKeys(value map[string]any, transientKeys []string) map[string]any {

@@ -4,27 +4,68 @@ import {
 } from "../forms-builder-state";
 import { type FormsPlaceholderModel } from "../forms-placeholder-data";
 
-function pruneStructureMetadata(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => pruneStructureMetadata(entry));
-  }
-  if (!value || typeof value !== "object") {
-    return value;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function getStringValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function getSchemaFieldId(field: unknown) {
+  if (!isRecord(field)) {
+    return "";
   }
 
-  const record = value as Record<string, unknown>;
-  const out: Record<string, unknown> = {};
-  Object.entries(record).forEach(([key, entry]) => {
-    if (key === "displayName" || key === "label" || key === "modelTitle") {
-      return;
-    }
-    out[key] = pruneStructureMetadata(entry);
-  });
-  return out;
+  return getStringValue(field.id)
+    || getStringValue(field.fieldId)
+    || getStringValue(field.key);
+}
+
+function getSchemaFieldIds(fields: unknown) {
+  if (!Array.isArray(fields)) {
+    return [];
+  }
+
+  return [...new Set(fields.map(getSchemaFieldId).filter(Boolean))].sort();
+}
+
+function getSchemaScopeId(scope: Record<string, unknown>, fallback: string) {
+  return getStringValue(scope.schemaScopeId)
+    || getStringValue(scope.tableKey)
+    || fallback;
+}
+
+function buildDataSchemaStructureSnapshot(dataSchema: Record<string, unknown>) {
+  const rootScope = isRecord(dataSchema.rootScope) ? dataSchema.rootScope : {};
+  const subformScopes = Array.isArray(dataSchema.subformScopes)
+    ? dataSchema.subformScopes
+    : [];
+
+  return {
+    rootScope: {
+      fieldIds: getSchemaFieldIds(rootScope.fields),
+      schemaScopeId: "root",
+    },
+    subformScopes: subformScopes
+      .flatMap((entry, index) => {
+        if (!isRecord(entry)) {
+          return [];
+        }
+
+        return [{
+          fieldIds: getSchemaFieldIds(entry.fields),
+          schemaScopeId: getSchemaScopeId(entry, `subform-${index}`),
+          subformType: getStringValue(entry.subformType) || "DEFAULT",
+          tableKey: getStringValue(entry.tableKey) || getSchemaScopeId(entry, `subform-${index}`),
+        }];
+      })
+      .sort((left, right) => left.schemaScopeId.localeCompare(right.schemaScopeId)),
+  };
 }
 
 export function buildDataSchemaStructureSignature(dataSchema: Record<string, unknown>) {
-  return JSON.stringify(pruneStructureMetadata(dataSchema));
+  return JSON.stringify(buildDataSchemaStructureSnapshot(dataSchema));
 }
 
 function getAllFormBuilderDocumentNodes(document: FormBuilderDocument) {

@@ -2173,6 +2173,49 @@ func TestSaveDraftLockingModelDoesNotAdvanceStructureVersion(t *testing.T) {
 	}
 }
 
+func TestSaveDraftFieldSettingsDoNotAdvanceStructureVersion(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootFields := asSlice(rootScope["fields"])
+	siteName := asMap(rootFields[0])
+	siteName["autocomplete"] = "name"
+	siteName["placeholder"] = "Updated placeholder"
+	siteName["uniqueValue"] = true
+	siteName["validation"] = "email"
+	rootFields[0] = siteName
+	rootScope["fields"] = rootFields
+	dataSchema["rootScope"] = rootScope
+	modelPayload["dataSchema"] = dataSchema
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if repo.models[model.ModelID].StructureVersion != model.StructureVersion {
+		t.Fatalf("structure version = %d, want %d", repo.models[model.ModelID].StructureVersion, model.StructureVersion)
+	}
+	savedModelPayload := mustDecodeJSONMap(t, out.Draft.Model)
+	if getInt64Value(savedModelPayload, "modelStructureVersion", 0) != model.StructureVersion {
+		t.Fatalf("draft model structure version = %d, want %d", getInt64Value(savedModelPayload, "modelStructureVersion", 0), model.StructureVersion)
+	}
+}
+
 func TestDeleteViewPromotesRemainingView(t *testing.T) {
 	repo := newMemoryRepository()
 	model := &ModelRecord{

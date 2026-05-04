@@ -8,6 +8,7 @@ import type {
   FormsPlaceholderModel,
 } from "../forms-placeholder-data";
 import {
+  buildDataSchemaStructureSignature,
   getCanvasAttentionNodeIds,
 } from "./form-builder-workspace-diff-helpers";
 
@@ -161,6 +162,125 @@ function createDocument(): FormBuilderDocument {
 }
 
 describe("Form Builder changed-node attention", () => {
+  it("ignores field settings when comparing model structure", () => {
+    const baseline = {
+      rootScope: {
+        fields: [
+          {
+            autocomplete: "on",
+            id: "site-name",
+            kind: "short_text",
+            label: "Site name",
+            placeholder: "Site name",
+          },
+        ],
+        schemaScopeId: "root",
+      },
+      subformScopes: [
+        {
+          fields: [
+            {
+              displayFormat: "MM/dd/yyyy",
+              id: "note-date",
+              kind: "date",
+              label: "Note date",
+            },
+          ],
+          schemaScopeId: "pb_notes",
+          subformType: "DEFAULT",
+          tableKey: "pb_notes",
+        },
+      ],
+    };
+    const settingsChanged = {
+      rootScope: {
+        fields: [
+          {
+            autocomplete: "name",
+            id: "site-name",
+            kind: "short_text",
+            label: "Site",
+            placeholder: "Updated placeholder",
+            uniqueValue: true,
+            validation: "email",
+          },
+        ],
+        schemaScopeId: "root",
+      },
+      subformScopes: [
+        {
+          displayName: "Notes",
+          fields: [
+            {
+              displayFormat: "yyyy-MM-dd",
+              id: "note-date",
+              kind: "date_time",
+              label: "Date",
+              readonly: true,
+            },
+          ],
+          schemaScopeId: "pb_notes",
+          subformType: "DEFAULT",
+          tableKey: "pb_notes",
+        },
+      ],
+    };
+
+    expect(buildDataSchemaStructureSignature(settingsChanged)).toBe(buildDataSchemaStructureSignature(baseline));
+  });
+
+  it("detects field and scope membership changes as model structure", () => {
+    const baseline = {
+      rootScope: {
+        fields: [
+          { id: "site-name" },
+          { id: "status" },
+        ],
+      },
+      subformScopes: [
+        {
+          fields: [
+            { id: "note" },
+          ],
+          schemaScopeId: "pb_notes",
+          subformType: "DEFAULT",
+          tableKey: "pb_notes",
+        },
+      ],
+    };
+    const addedField = {
+      ...baseline,
+      rootScope: {
+        fields: [
+          { id: "site-name" },
+          { id: "status" },
+          { id: "priority" },
+        ],
+      },
+    };
+    const movedField = {
+      rootScope: {
+        fields: [
+          { id: "site-name" },
+        ],
+      },
+      subformScopes: [
+        {
+          fields: [
+            { id: "note" },
+            { id: "status" },
+          ],
+          schemaScopeId: "pb_notes",
+          subformType: "DEFAULT",
+          tableKey: "pb_notes",
+        },
+      ],
+    };
+
+    expect(buildDataSchemaStructureSignature(addedField)).not.toBe(buildDataSchemaStructureSignature(baseline));
+    expect(buildDataSchemaStructureSignature(movedField)).not.toBe(buildDataSchemaStructureSignature(baseline));
+  });
+
   it("propagates subform field changes to the parent subform and root ancestors", () => {
     const savedDocument = createDocument();
     const currentDocument = createDocument();

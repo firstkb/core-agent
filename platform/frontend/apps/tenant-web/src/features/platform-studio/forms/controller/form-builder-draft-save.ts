@@ -81,7 +81,6 @@ export async function saveFormBuilderDraft({
 }: SaveFormBuilderDraftInput): Promise<SavedFormBuilderDraft> {
   const structureChanged = isDefaultView && (
     buildDataSchemaStructureSignature(currentDataSchema) !== buildDataSchemaStructureSignature(savedDataSchema)
-    || JSON.stringify(currentLayoutBlueprint) !== JSON.stringify(savedLayoutBlueprintDraft)
   );
   const previousModelStructureVersion = savedModelDraft.modelStructureVersion ?? 1;
   const nextModelStructureVersion = structureChanged

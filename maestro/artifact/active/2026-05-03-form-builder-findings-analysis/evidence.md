@@ -65,6 +65,13 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web`; first lint attempt hit a transient deleted `vite.config.ts.timestamp-*` file, retry passed. |
 | `git diff --check` | passed | no output | Whitespace check after Slice 6 follow-up. |
 | `scripts/preflight.sh` | passed | lite preflight passed after Slice 6 follow-up | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm test -- form-builder-workspace-diff-helpers.test.ts` | passed | 1 file / 3 tests passed | Covers topology-only structure signature: field settings ignored, field add/move detected, Subform attention propagation preserved. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Covers backend structure version not advancing for field setting changes. |
+| `pnpm test` | passed | 13 files / 40 tests passed | Full `@platform/tenant-web` Vitest suite from package directory after View drift warning fix. |
+| `pnpm typecheck` | passed | `tsc --noEmit` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View drift warning fix. |
+| `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View drift warning fix. |
+| `git diff --check` | passed | no output | Whitespace check after View drift warning fix. |
+| `scripts/preflight.sh` | passed | lite preflight passed after View drift warning fix | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -173,6 +180,20 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-unique-value.test.ts`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 
+## View Drift Warning Changed Files
+
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
+- `platform/backend/modules/tenant/platformstudioformbuilder/service_test.go`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-draft-save.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.test.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -195,3 +216,4 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Slice 5 has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the Subform View title input.
 - Slice 6 intentionally does not enforce uniqueness at runtime/create/edit/save and does not touch `@platform/forms`; that work remains with the owner-selected follow-up.
 - Slice 6 follow-up has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the selected-field settings panel or canvas attention marker.
+- View drift warning fix has focused unit/backend coverage and typecheck/lint/preflight; no browser visual smoke was run for the View list triangle.

@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. The Slice 6 follow-up refines `uniqueValue` to plain `short_text` plus email/phone text fields, and restores Subform dirty-marker propagation to the parent tree. Runtime uniqueness enforcement remains a follow-up.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also refines the View-list warning triangle so it shows only true model-topology drift, not field setting changes.
 
 ## Outcome
 
@@ -27,6 +27,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Restored Subform title editing from the Subform View tab while keeping `schemaScopeId`, `tableKey`, runtime table/view names, and route identity unchanged.
 - Added `uniqueValue?: boolean` to Form Builder field authoring schema/UI for plain `short_text`, ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`; URL and suggest text presets stay excluded and are stripped from canonical payloads if stale data contains the flag.
 - Restored canvas attention-marker propagation from changed Subform-scope child nodes to the parent Subform and root-scope ancestors.
+- Changed frontend/backend model structure comparison to topology-only signatures so field settings and layout-only blueprint edits do not advance `modelStructureVersion` or mark other views with the yellow warning triangle.
 
 ## Checks
 
@@ -35,8 +36,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope and Subform attention propagation, and recorded the per-lookup settings/View filter review as future work.
+Updated planned-work memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, and View drift warning topology semantics. Per-lookup settings/View filter review remains future work.
 
 ## Next Step
 
-Owner should manually test Unique value authoring on plain Short text plus Email/Phone fields, and verify that Subform child edits mark the parent Subform in the tree. Runtime uniqueness enforcement and form-package rendering remain separate follow-up work.
+Owner should manually test that changing field settings does not mark other views with the warning triangle, while adding/removing fields still does.

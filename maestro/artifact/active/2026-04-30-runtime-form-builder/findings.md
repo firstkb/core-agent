@@ -233,3 +233,19 @@ Statuses:
 - Resolution: Indexed document nodes by scope and extended attention propagation to cross from Subform-scope nodes through `parentSubformNodeId`, then continue walking root-scope ancestors.
 - Fixed in: current change set.
 - Verification: `pnpm test -- form-builder-workspace-diff-helpers.test.ts` passed from `platform/frontend/apps/tenant-web`; broader checks are recorded in the active work artifact.
+
+## FB-RT-015 - Other View warning triangle appears after field setting changes
+
+- Area: Form Builder View list drift indicator and model structure versioning.
+- URL: not captured; owner reported on 2026-05-04.
+- Model/View: affected models with multiple views when editing field settings in the Default View.
+- Symptom: Changing a field parameter can show the yellow warning triangle on other views.
+- Expected: The warning triangle should show only real cross-view structure divergence. Adding/removing fields, moving fields between root/subform scopes, and adding/removing/retargeting subform scopes should affect other views. Field parameter changes such as `placeholder`, `autocomplete`, `validation`, `uniqueValue`, option styles, lookup settings, and layout-only blueprint edits should not.
+- Actual: `modelStructureVersion` advanced from a broad `dataSchema`/`layoutBlueprint` diff. Most field settings remained in the structural signature, so unrelated parameter changes looked like model drift.
+- Evidence: Owner report on 2026-05-04 and code analysis of `forms-index-views-panel.tsx`, `form-builder-draft-save.ts`, frontend structure signatures, and backend `structureChanged`.
+- Priority: medium.
+- Status: resolved.
+- Owner decision: Treat the View-list triangle as a true model-topology drift indicator, not a generic field-settings dirty marker.
+- Resolution: Replaced broad structure comparison with a topology-only signature on frontend and backend. The signature includes field IDs by root/subform scope, subform scope ids/table keys, and subform type. It ignores field settings and default-view `layoutBlueprint`-only changes.
+- Fixed in: current change set.
+- Verification: `pnpm test -- form-builder-workspace-diff-helpers.test.ts` passed; full tenant-web Vitest/typecheck/lint passed; `go test ./modules/tenant/platformstudioformbuilder` passed; `git diff --check` passed; `scripts/preflight.sh` passed.

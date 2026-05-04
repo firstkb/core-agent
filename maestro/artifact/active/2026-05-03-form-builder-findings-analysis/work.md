@@ -2,15 +2,15 @@
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
 - Status: `active`
-- Owner goal: Stabilize Form Builder; refine Slice 6 `uniqueValue` authoring and restore Subform dirty-marker propagation.
+- Owner goal: Stabilize Form Builder; refine view drift warning so other View triangles show only real topology divergence.
 
 ## Understanding
 
-The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 are implemented and verified. On 2026-05-03 the owner retested and found two follow-ups: plain `short_text` also needs the `Unique value` switch, and changes inside a Subform must mark the parent Subform in the canvas tree.
+The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 are implemented and verified. On 2026-05-04 the owner clarified that field parameter changes must not show the yellow warning triangle on other views; only real topology divergence should.
 
 ## Agreed Scope
 
-- In: refine `uniqueValue` support to plain `short_text` plus email/phone text fields only; restore attention-marker propagation from Subform-scope child changes to the parent Subform/root ancestors; preserve compact payload behavior and record evidence.
+- In: refine `modelStructureVersion` / View-list warning triangle behavior so field setting changes and layout-only blueprint edits do not mark other views as drifted; preserve warning behavior for add/remove/move field topology changes and subform-scope topology changes.
 - Out: backend/runtime grants, Navigation Builder ACL, Action Builder, destructive schema/data migration, release/deploy work, and unrelated artifact changes.
 
 ## Continuity Snapshot
@@ -19,9 +19,9 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Current phase: `implementation verified`
 - Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. No release/destructive gates are in scope.
-- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, and Slice 6 follow-up checks are recorded in `evidence.md`.
+- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, and View drift warning checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
-- Next allowed action: owner manual test of plain Short text `Unique value` and Subform tree attention markers; runtime enforcement/render-package work remains explicitly out of this slice.
+- Next allowed action: owner manual test that field parameter changes no longer show warning triangles on other views, while adding/removing fields still does.
 
 ## Decisions
 
@@ -42,6 +42,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - For Slice 6, the accepted schema flag is `uniqueValue?: boolean`; Form Builder persists only `true`, omits disabled/false values, and does not implement runtime uniqueness enforcement in this slice.
 - Slice 6 follow-up scope: `Unique value` is allowed for plain `short_text`, ready-made `Email`/`Phone`, and `short_text` fields validated as email/phone; specialized text presets such as URL and suggest text remain excluded.
 - Subform attention markers must propagate across scope boundaries through `subformScopes[].parentSubformNodeId`.
+- View-list yellow triangle is a model-topology drift signal only. Field settings and layout-only `layoutBlueprint` edits must not advance `modelStructureVersion`.
 
 ## Plan
 
@@ -56,6 +57,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 9. Implement Slice 5 Subform View title editing.
 10. Implement Slice 6 `uniqueValue` authoring flag for email/phone text fields.
 11. Implement Slice 6 follow-up for plain `short_text` unique support and Subform attention propagation.
+12. Implement View drift warning topology-only structure comparison.
 
 ## Risks / Gates
 
@@ -74,4 +76,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Owner should manually test Unique value authoring on plain Short text plus Email/Phone fields, and verify that Subform child edits mark the parent Subform in the tree. Runtime uniqueness enforcement and form-package rendering remain separate follow-up work.
+Owner should manually test that changing a field parameter in the Default View does not show a warning triangle on other views, while adding/removing a field still does.

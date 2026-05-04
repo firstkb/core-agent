@@ -305,7 +305,14 @@ Version mismatch is an edit conflict, not a silent overwrite.
 
 Version rules:
 
-- `modelStructureVersion` increments when `dataSchema` or `layoutBlueprint` changes structurally
+- `modelStructureVersion` increments only when model topology changes: field IDs
+  are added/removed, fields move between root/subform scopes, or subform scopes
+  are added/removed/retargeted
+- field settings such as placeholders, autocomplete, validation, `uniqueValue`,
+  choice display settings, lookup settings, and option styles must not advance
+  `modelStructureVersion`
+- layout-only `layoutBlueprint` edits in the default view must not advance
+  `modelStructureVersion`
 - `viewVersion` increments when only one view `uiSchema` changes
 - `lastAlignedModelStructureVersion` records the model structure version a view has reconciled/saved against
 - a view is drifted when `modelStructureVersion > lastAlignedModelStructureVersion`

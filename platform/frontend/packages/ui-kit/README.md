@@ -23,3 +23,5 @@ Canonical governance lives in `platform/frontend/docs/contracts/ui-kit.md`.
 5. `patterns/empty-state`
 6. `patterns/loading-state`
 7. `layouts/app-shell`
+
+Current canonical component inventory is maintained in `platform/frontend/docs/contracts/ui-kit.md`.

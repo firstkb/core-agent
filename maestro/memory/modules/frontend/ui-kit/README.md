@@ -24,6 +24,10 @@ Last compacted: 2026-04-25
 - The foundation rollout is closed; do not reopen it unless tokens or core primitive contracts materially change.
 - Stable/provisional/app-layer boundaries are tracked in `platform/frontend/docs/contracts/ui-kit.md`.
 - UI Lab route, sections, coverage, and editing rules are tracked in `platform/frontend/docs/guides/ui-lab.md`.
+- `tree-view` is a stable navigation primitive for generic expandable
+  hierarchies; its `readOnly` mode keeps branch expansion available while
+  removing leaf activation and selected styling. `sidebar-nav` remains the
+  nested navigation tree.
 - Route-specific compositions stay in app code.
 - Workflow-shaped surfaces such as remote table workspaces, file uploads, AI assistant, messenger, and kanban stay future/app-layer-first unless explicitly activated.
 - Layout should preserve stable width behavior and avoid accidental overflow.

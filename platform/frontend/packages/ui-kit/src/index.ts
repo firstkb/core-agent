@@ -209,6 +209,9 @@ export type { ScrollAreaOrientation, ScrollAreaProps } from "./components/scroll
 export { SidebarNav } from "./components/sidebar";
 export type { SidebarNavItem, SidebarNavProps } from "./components/sidebar";
 
+export { TreeView } from "./components/tree-view";
+export type { TreeViewDensity, TreeViewNode, TreeViewProps } from "./components/tree-view";
+
 export { Popover, PopoverContent, PopoverTrigger } from "./components/popover";
 export type { PopoverContentProps, PopoverProps } from "./components/popover";
 

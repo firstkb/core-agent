@@ -156,6 +156,7 @@ Navigation:
 - `sidebar-nav`
 - `stepper`
 - `tabs`
+- `tree-view`
 - `pagination`
 
 Overlays:

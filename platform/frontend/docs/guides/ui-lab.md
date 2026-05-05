@@ -82,7 +82,7 @@ Current sidebar sections are:
 - `foundations`: tokens, typography, spacing, radius, shadows, surface rules, icon rhythm, layout grid, `kbd`, and `code`.
 - `form-controls`: form primitives, field layout, form shell, validation/helper states, and review-stage input helpers.
 - `overlay-contracts`: menu, context menu, popover, tooltip, dialog, drawer, sheet, hover card, and alert dialog.
-- `navigation-primitives`: breadcrumb, link, tabs, secondary tabs, pagination, collapsible, accordion, stepper, page toolbar, and sidebar tree review.
+- `navigation-primitives`: breadcrumb, link, tabs, secondary tabs, pagination, collapsible, accordion, tree view, stepper, page toolbar, and sidebar tree review.
 - `data-display`: cards, badges, avatar/identity, rating, scroll/separator helpers, table primitives, table states, column helpers, and compact filter chips.
 - `states`: alert, progress, skeleton, empty/search/guided/collection/table loading, and generic error states.
 - `inventory`: donor extraction status, stable/provisional/app-layer classification, and next candidate review notes.
@@ -142,7 +142,10 @@ Overlay Contracts:
 
 Navigation Primitives:
 
-- `sidebar-nav` may be reviewed as the shared nested tree.
+- `tree-view` may be reviewed as the generic expandable hierarchy primitive.
+- `tree-view` read-only examples may allow branch expansion, but must not add
+  leaf activation, selection styling, or app navigation behavior.
+- `sidebar-nav` may be reviewed as the shared nested navigation tree.
 - Sidebar search, theme toggle, tenant switching, and shell chrome remain app-owned.
 - Mobile shell behavior may wrap the tree in a `sheet`, but that does not create a separate navigation-only overlay contract.
 

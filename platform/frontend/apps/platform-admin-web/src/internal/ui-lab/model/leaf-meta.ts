@@ -96,6 +96,7 @@ export type UiLabLeafId =
   | "table-column-visibility-doc"
   | "table-pagination-bar-doc"
   | "textarea-doc"
+  | "tree-view-doc"
   | "toggle-doc"
   | "toggle-group-doc"
   | "tooltip-doc"
@@ -630,6 +631,17 @@ export const sectionLeafMeta: Partial<Record<UiLabLeafId, UiLabLeafMeta>> = {
     label: "Collapsible",
     panelId: "navigation-primitives",
     title: "Collapsible",
+  },
+  "tree-view-doc": {
+    breadcrumb: ["Navigation Primitives", "Tree View"],
+    description: "Tree View page documents generic nested hierarchy display with expandable branches and keyboard navigation.",
+    heroDescription:
+      "Tree View is reviewed here as a reusable hierarchy primitive for folders, projects, org structures, and builder trees without adopting app-shell routing chrome.",
+    heroTitle: "Tree View",
+    id: "tree-view-doc",
+    label: "Tree View",
+    panelId: "navigation-primitives",
+    title: "Tree View",
   },
   "field-doc": {
     breadcrumb: ["Form Controls", "Field"],
@@ -1436,6 +1448,7 @@ export const navigationLeaves = [
   "breadcrumb-doc",
   "link-doc",
   "collapsible-doc",
+  "tree-view-doc",
   "stepper-doc",
   "tabs-doc",
   "secondary-tabs-doc",
@@ -1512,7 +1525,7 @@ export const uiLabSections = [
   {
     icon: "navigation-primitives",
     id: "navigation-primitives",
-    keywords: ["breadcrumb", "tabs", "pagination", "collapsible", "stepper", "navigation", "sidebar"],
+    keywords: ["breadcrumb", "tabs", "pagination", "collapsible", "tree", "stepper", "navigation", "sidebar"],
     label: "Navigation Primitives",
     leaves: navigationLeaves,
   },

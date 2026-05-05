@@ -114,6 +114,7 @@ import {
   renderSecondaryTabsDocs,
   renderStepperDocs,
   renderTabsDocs,
+  renderTreeViewDocs,
 } from "./navigation-primitives";
 import {
   renderAlertDialogDocs,
@@ -476,6 +477,10 @@ export function renderPanel(
 
       if (activeItem.id === "collapsible-doc") {
         return renderCollapsibleDocs();
+      }
+
+      if (activeItem.id === "tree-view-doc") {
+        return renderTreeViewDocs();
       }
 
       if (activeItem.id === "stepper-doc") {

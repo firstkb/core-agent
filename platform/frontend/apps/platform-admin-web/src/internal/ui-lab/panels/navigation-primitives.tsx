@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from "react";
 
 import {
@@ -45,6 +44,8 @@ import {
   TabsList,
   TabsPanel,
   TabsTrigger,
+  TreeView,
+  type TreeViewNode,
 } from "@platform/ui-kit";
 
 import { ChevronIcon } from "../components/icons";
@@ -101,6 +102,125 @@ function PaginationSizeExamples() {
   );
 }
 
+const projectOrganizationTreeItems: TreeViewNode[] = [
+  {
+    children: [
+      {
+        children: [
+          {
+            children: [
+              { id: "ea-1", label: "EA-1 (Hudson River Ground Stabilization)" },
+              { id: "p4", label: "P4 (Tonnelle Ave Portal)" },
+              {
+                children: [
+                  { id: "gdc", label: "_GDC_" },
+                  { id: "cm-panynj", label: "CM @ PANYNJ" },
+                  {
+                    children: [
+                      { id: "role-environmental-manager", label: "Environmental Manager @ Anton Gallas" },
+                      { id: "role-field-safety-chelsea", label: "Field Safety Manager @ Chelsea Rinehart" },
+                      { id: "role-field-safety-gary", label: "Field Safety Manager @ Gary Baker" },
+                      { id: "role-general-superintendent", label: "General Superintendent @ Bob Hamill" },
+                      { id: "role-safety-director", label: "Safety Director @ Rachel Enis" },
+                    ],
+                    defaultExpanded: true,
+                    id: "gc-sld",
+                    label: "GC @ SLD",
+                  },
+                  { id: "sub-linde-griffith", label: "Sub @ Linde-Griffith" },
+                ],
+                defaultExpanded: true,
+                id: "p1a",
+                label: "P1A (Palisades Tunnel)",
+              },
+              { id: "p1b", label: "P1B (Manhattan Tunnel)" },
+              { id: "p1c", label: "P1C" },
+              { id: "p3", label: "P3" },
+            ],
+            defaultExpanded: true,
+            id: "projects",
+            label: "_PROJECTS_",
+          },
+        ],
+        defaultExpanded: true,
+        id: "general-company",
+        label: "General Company @ GDC",
+      },
+    ],
+    defaultExpanded: true,
+    id: "root",
+    label: "Root",
+  },
+];
+
+const compactStructureTreeItems: TreeViewNode[] = [
+  {
+    children: [
+      { id: "forms-active", label: "Active forms", meta: "18" },
+      { id: "forms-drafts", label: "Drafts", meta: "7" },
+      { id: "forms-archive", label: "Archive" },
+    ],
+    defaultExpanded: true,
+    id: "forms",
+    label: "Forms",
+    meta: "25",
+  },
+  {
+    children: [
+      { id: "nav-main", label: "Main navigation" },
+      { id: "nav-footer", label: "Footer links" },
+    ],
+    defaultExpanded: true,
+    id: "navigation",
+    label: "Navigation",
+  },
+  {
+    children: [
+      { id: "reports-daily", label: "Daily report" },
+      { id: "reports-monthly", label: "Monthly report", disabled: true, secondaryLabel: "Waiting for template" },
+    ],
+    id: "reports",
+    label: "Reports",
+  },
+];
+
+function TreeViewControlledExample() {
+  const [expandedItemIds, setExpandedItemIds] = useState(["forms", "navigation"]);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>("forms-active");
+
+  return (
+    <div className="ui-lab-page__tree-controlled-preview">
+      <TreeView
+        ariaLabel="Controlled Platform Studio structure"
+        density="compact"
+        expandedItemIds={expandedItemIds}
+        items={compactStructureTreeItems}
+        onExpandedItemIdsChange={setExpandedItemIds}
+        onSelectedItemChange={setSelectedItemId}
+        selectedItemId={selectedItemId}
+      />
+      <div className="ui-lab-page__note-card">
+        <span className="ui-lab-page__note-label">Controlled state</span>
+        <p className="ui-lab-page__muted">
+          Selected: {selectedItemId ?? "none"}. Expanded: {expandedItemIds.length ? expandedItemIds.join(", ") : "none"}.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TreeViewReadOnlyExample() {
+  return (
+    <div className="ui-lab-page__tree-preview">
+      <TreeView
+        ariaLabel="Read-only project organization tree"
+        items={projectOrganizationTreeItems}
+        readOnly
+      />
+    </div>
+  );
+}
+
 function TabsControlledExample() {
   const [activeTab, setActiveTab] = useState("alerts");
 
@@ -115,6 +235,98 @@ function TabsControlledExample() {
       <TabsPanel value="alerts">This example opens on Alerts first, which matches route- or state-driven page entry.</TabsPanel>
       <TabsPanel value="history">History stays controlled by the parent state instead of relying only on local uncontrolled behavior.</TabsPanel>
     </Tabs>
+  );
+}
+
+export function renderTreeViewDocs() {
+  return (
+    <div className="ui-lab-page__panel-grid">
+      <Card>
+        <CardHeader>
+          <CardTitle>Tree View</CardTitle>
+          <CardDescription>
+            Generic hierarchy display for product-owned structures that need nested branch expansion without shell routing policy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="ui-lab-page__showcase-list">
+          <ShowcaseRow label="Folder hierarchy" stacked>
+            <div className="ui-lab-page__tree-preview">
+              <TreeView
+                ariaLabel="Project organization tree"
+                defaultSelectedItemId="role-safety-director"
+                items={projectOrganizationTreeItems}
+              />
+            </div>
+          </ShowcaseRow>
+          <ShowcaseRow label="Controlled compact state" stacked>
+            <TreeViewControlledExample />
+          </ShowcaseRow>
+          <ShowcaseRow label="Read-only snapshot" stacked>
+            <TreeViewReadOnlyExample />
+          </ShowcaseRow>
+        </CardContent>
+      </Card>
+
+      {renderPropsApiCard("Compact reference for the shared hierarchy primitive used for expandable structure views.", [
+        { name: "items", type: "TreeViewNode[]", notes: "Nested item data with `id`, `label`, optional `children`, `icon`, `meta`, disabled state, and default expansion." },
+        { name: "expandedItemIds / defaultExpandedItemIds", type: "string[]", notes: "Controls or seeds branch expansion. Items can also set `defaultExpanded` for local demos." },
+        { name: "selectedItemId / defaultSelectedItemId", type: "string | null", notes: "Controls or seeds the selected row without requiring product routing." },
+        { name: "onExpandedItemIdsChange", type: "(ids) => void", notes: "Lets a host persist expansion state when the surrounding surface owns it." },
+        { name: "onSelectedItemChange", type: "(id, item) => void", notes: "Reports selected item identity and node data for host-owned follow-up behavior." },
+        { name: "readOnly", type: "boolean", notes: "Allows branch expansion while suppressing leaf activation, selection callbacks, and selected-row active effect." },
+        { name: "density", type: "\"comfortable\" | \"compact\"", notes: "Adjusts row height while preserving the same interaction contract." },
+        { name: "showGuides / showIcons", type: "boolean", notes: "Keeps connector lines and branch/leaf affordances configurable for dense structures." },
+      ])}
+
+      {renderReferenceNotesCard(
+        "Tree View is intentionally lower-level than SidebarNav: it renders generic structures, not app navigation chrome.",
+        [
+          "Root `role=tree` with visible tree items flattened from nested data.",
+          "Branch rows expose plus/minus controls, folder affordance, and `aria-expanded`.",
+          "Leaf rows use document affordance by default and may carry secondary copy or compact metadata.",
+        ],
+        [
+          "`TreeViewNode` keeps the public data contract small and serializable around stable ids.",
+          "Controlled expansion and selection are available without requiring app route state.",
+          "`readOnly` keeps branch expansion available while removing leaf activation and selected styling.",
+          "Custom icons remain node-local, so the shared component does not learn product domains.",
+        ],
+        [
+          "Arrow Up/Down moves between visible rows.",
+          "Arrow Right expands a closed branch or moves into its first visible child.",
+          "Arrow Left collapses an open branch or moves focus to its parent.",
+          "Enter and Space select the row and toggle branch expansion.",
+        ],
+      )}
+
+      {renderUsageReviewCard(
+        "Use Tree View for hierarchy browsing where the structure itself is the content.",
+        [
+          "Organization, project, folder, builder, report, or permission structures where nested relationships matter.",
+          "Dense admin or tenant tools that need inline expansion without becoming a full sidebar shell.",
+          "Review surfaces where branch/leaf affordances are clearer than accordion sections.",
+        ],
+        [
+          "Keep item ids stable so selection and expansion can be restored by the host.",
+          "Use concise labels and secondary labels for detail; keep product actions outside the row until a dedicated pattern exists.",
+          "Prefer default folder/document affordances unless the source structure has a more meaningful icon.",
+        ],
+        [
+          "Do not use Tree View as app shell navigation with search, tenant switching, route guards, or sidebar chrome.",
+          "Do not encode backend endpoints, permissions policy, or workflow mutations inside the item contract.",
+          "Do not copy donor tree libraries or Metronic item APIs into the shared package.",
+        ],
+      )}
+
+      {renderDoNotUseForCard(
+        "The primitive is reusable hierarchy display, not a product shell or workflow engine.",
+        [
+          "Route-specific sidebar navigation belongs in app shell or `SidebarNav` until a separate contract changes.",
+          "Drag-and-drop, remote lazy loading, bulk actions, and mutation flows need separate approval before entering `ui-kit`.",
+          "Tenant-aware visibility, auth checks, and backend persistence must stay outside the shared component.",
+        ],
+      )}
+    </div>
   );
 }
 

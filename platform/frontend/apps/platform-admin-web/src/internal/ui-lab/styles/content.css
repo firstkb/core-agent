@@ -1056,6 +1056,32 @@
   max-width: 17.5rem;
 }
 
+.ui-lab-page__tree-preview,
+.ui-lab-page__tree-controlled-preview {
+  width: min(100%, 35rem);
+  min-width: 0;
+}
+
+.ui-lab-page__tree-preview {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: calc(var(--radius-lg) + 0.125rem);
+  background: color-mix(in srgb, var(--color-bg-surface-muted) 70%, transparent);
+}
+
+.ui-lab-page__tree-controlled-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
 .ui-lab-page__panel-grid > .ui-card {
   height: 100%;
+}
+
+@media (min-width: 62rem) {
+  .ui-lab-page__tree-controlled-preview {
+    grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+  }
 }

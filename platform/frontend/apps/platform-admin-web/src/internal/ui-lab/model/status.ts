@@ -92,6 +92,7 @@ export const uiKitLeafIds = new Set<UiLabLeafId>([
   "table-states-doc",
   "tabs-doc",
   "textarea-doc",
+  "tree-view-doc",
   "toggle-doc",
   "toggle-group-doc",
   "tooltip-doc",

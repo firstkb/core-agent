@@ -119,6 +119,14 @@
   opacity: 0.56;
 }
 
+.ui-tree-view__item--error {
+  color: var(--color-danger);
+}
+
+.ui-tree-view__item--loading .ui-tree-view__toggle--branch {
+  color: var(--color-accent-primary);
+}
+
 .ui-tree-view__item--selected {
   border-color: color-mix(in srgb, var(--color-border-default) 72%, transparent);
   background: var(--color-bg-surface);
@@ -212,6 +220,10 @@
   color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-regular);
+}
+
+.ui-tree-view__secondary--error {
+  color: var(--color-danger);
 }
 
 .ui-tree-view__meta {

@@ -27,6 +27,7 @@ import { useTranslation } from "@platform/i18n";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { renderPlatformStudioRoutes } from "../features/platform-studio";
+import { BusinessTreePage } from "../features/static-modules";
 import {
   PublishedAppRoutePage,
 } from "../features/published-app";
@@ -421,6 +422,7 @@ export function App({
                 path="app/platform-studio/forms/:modelId/views/:viewId"
               />
               {renderPlatformStudioRoutes()}
+              <Route element={<BusinessTreePage />} path="app/modules/business-tree" />
               <Route element={<PublishedAppRoutePage />} path="app/:routeKey/*" />
               <Route element={<Navigate replace to="/dashboard" />} path="*" />
             </Route>

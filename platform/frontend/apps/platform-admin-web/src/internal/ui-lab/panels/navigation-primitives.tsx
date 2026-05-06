@@ -268,10 +268,12 @@ export function renderTreeViewDocs() {
       </Card>
 
       {renderPropsApiCard("Compact reference for the shared hierarchy primitive used for expandable structure views.", [
-        { name: "items", type: "TreeViewNode[]", notes: "Nested item data with `id`, `label`, optional `children`, `icon`, `meta`, disabled state, and default expansion." },
+        { name: "items", type: "TreeViewNode[]", notes: "Nested item data with `id`, `label`, optional `children`, `expandable`, loading/error state, `icon`, `meta`, disabled state, and default expansion." },
         { name: "expandedItemIds / defaultExpandedItemIds", type: "string[]", notes: "Controls or seeds branch expansion. Items can also set `defaultExpanded` for local demos." },
         { name: "selectedItemId / defaultSelectedItemId", type: "string | null", notes: "Controls or seeds the selected row without requiring product routing." },
+        { name: "loadingLabel", type: "ReactNode", notes: "Overrides the branch loading status copy for host-local terminology or localization." },
         { name: "onExpandedItemIdsChange", type: "(ids) => void", notes: "Lets a host persist expansion state when the surrounding surface owns it." },
+        { name: "onItemExpand", type: "(id, item) => void", notes: "Notifies the host when a branch opens so lazy trees can load children without placeholder rows." },
         { name: "onSelectedItemChange", type: "(id, item) => void", notes: "Reports selected item identity and node data for host-owned follow-up behavior." },
         { name: "readOnly", type: "boolean", notes: "Allows branch expansion while suppressing leaf activation, selection callbacks, and selected-row active effect." },
         { name: "density", type: "\"comfortable\" | \"compact\"", notes: "Adjusts row height while preserving the same interaction contract." },

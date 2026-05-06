@@ -50,6 +50,7 @@ func (srv *Server) buildRoutes() (*http.ServeMux, *router.Classifier) {
 			return info, nil
 		}, srv.logger))
 
+	srv.registerBusinessTreeRoutes(b)
 	srv.registerPlatformStudioFormBuilderRoutes(b)
 	srv.registerPlatformStudioFormRuntimeRoutes(b)
 

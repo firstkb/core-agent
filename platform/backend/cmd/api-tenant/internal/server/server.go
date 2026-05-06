@@ -14,6 +14,7 @@ import (
 	"dtriton.com/platform/backend/internal/platform/postgres"
 
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
+	businesstree "dtriton.com/platform/backend/modules/tenant/businesstree"
 	formbuilder "dtriton.com/platform/backend/modules/tenant/platformstudioformbuilder"
 	formruntime "dtriton.com/platform/backend/modules/tenant/platformstudioformruntime"
 	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
@@ -66,6 +67,7 @@ type Server struct {
 	tenants    *tenantsvc.ServiceTenantProvider
 
 	tokenValidator                authpkg.JWTIssuer
+	businessTreeHTTP              *businesstree.Handler
 	profileHTTP                   *profilesvc.Handler
 	platformStudioFormBuilderHTTP *formbuilder.Handler
 	platformStudioFormRuntimeHTTP *formruntime.Handler

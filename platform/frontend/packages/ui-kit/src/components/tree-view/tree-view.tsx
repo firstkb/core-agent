@@ -20,9 +20,12 @@ export type TreeViewNode = {
   children?: TreeViewNode[];
   defaultExpanded?: boolean;
   disabled?: boolean;
+  error?: ReactNode;
+  expandable?: boolean;
   icon?: ReactNode;
   id: string;
   label: ReactNode;
+  loading?: boolean;
   meta?: ReactNode;
   secondaryLabel?: ReactNode;
 };
@@ -34,7 +37,9 @@ export type TreeViewProps = Omit<HTMLAttributes<HTMLDivElement>, "onSelect"> & {
   density?: TreeViewDensity;
   expandedItemIds?: string[];
   items: TreeViewNode[];
+  loadingLabel?: ReactNode;
   onExpandedItemIdsChange?: (itemIds: string[]) => void;
+  onItemExpand?: (itemId: string, item: TreeViewNode) => void;
   onSelectedItemChange?: (itemId: string, item: TreeViewNode) => void;
   readOnly?: boolean;
   selectedItemId?: string | null;
@@ -55,8 +60,12 @@ type TreeViewItemStyle = CSSProperties & {
   "--ui-tree-offset"?: string;
 };
 
-function hasChildren(item: TreeViewNode) {
+function hasLoadedChildren(item: TreeViewNode) {
   return Boolean(item.children?.length);
+}
+
+function isBranch(item: TreeViewNode) {
+  return Boolean(item.expandable || hasLoadedChildren(item));
 }
 
 function normalizeItemIds(itemIds: string[]) {
@@ -67,7 +76,7 @@ function collectDefaultExpandedItemIds(items: TreeViewNode[]) {
   const itemIds: string[] = [];
 
   for (const item of items) {
-    if (hasChildren(item) && item.defaultExpanded) {
+    if (isBranch(item) && item.defaultExpanded) {
       itemIds.push(item.id);
     }
 
@@ -112,7 +121,7 @@ function flattenTreeViewItems(
       setSize: items.length,
     };
 
-    if (!hasChildren(item) || !expandedItemIds.has(item.id)) {
+    if (!isBranch(item) || !expandedItemIds.has(item.id)) {
       return [flatItem];
     }
 
@@ -141,7 +150,7 @@ function findNextFocusableItemId(
 }
 
 function isTreeItemFocusable(item: TreeViewNode, readOnly: boolean) {
-  return !item.disabled && (!readOnly || hasChildren(item));
+  return !item.disabled && (!readOnly || isBranch(item));
 }
 
 function TreeViewGuides({ indentRem, level }: { indentRem: number; level: number }) {
@@ -170,7 +179,9 @@ export function TreeView({
   density = "comfortable",
   expandedItemIds,
   items,
+  loadingLabel = "Loading...",
   onExpandedItemIdsChange,
+  onItemExpand,
   onSelectedItemChange,
   readOnly = false,
   selectedItemId,
@@ -244,10 +255,22 @@ export function TreeView({
   }, []);
 
   const toggleExpandedItem = useCallback(
-    (itemId: string, forceOpen?: boolean) => {
+    (item: TreeViewNode, forceOpen?: boolean) => {
+      const isCurrentlyExpanded = expandedItemIdSet.has(item.id);
+      const shouldOpen = forceOpen === true
+        ? !isCurrentlyExpanded
+        : forceOpen !== false && !isCurrentlyExpanded;
+      const shouldClose = forceOpen === false
+        ? isCurrentlyExpanded
+        : forceOpen !== true && isCurrentlyExpanded;
+
+      if (!shouldOpen && !shouldClose) {
+        return;
+      }
+
       setCurrentExpandedItemIds((previousItemIds) => {
         const normalizedItemIds = previousItemIds ?? [];
-        const isExpanded = normalizedItemIds.includes(itemId);
+        const isExpanded = normalizedItemIds.includes(item.id);
 
         if (forceOpen === true && isExpanded) {
           return normalizedItemIds;
@@ -258,13 +281,17 @@ export function TreeView({
         }
 
         if (forceOpen === true || !isExpanded) {
-          return [...normalizedItemIds, itemId];
+          return [...normalizedItemIds, item.id];
         }
 
-        return normalizedItemIds.filter((expandedItemId) => expandedItemId !== itemId);
+        return normalizedItemIds.filter((expandedItemId) => expandedItemId !== item.id);
       });
+
+      if (shouldOpen) {
+        onItemExpand?.(item.id, item);
+      }
     },
-    [setCurrentExpandedItemIds],
+    [expandedItemIdSet, onItemExpand, setCurrentExpandedItemIds],
   );
 
   const selectItem = useCallback(
@@ -283,7 +310,7 @@ export function TreeView({
       }
 
       const { item } = flatItem;
-      const branch = hasChildren(item);
+      const branch = isBranch(item);
       const isExpanded = expandedItemIdSet.has(item.id);
 
       switch (event.key) {
@@ -303,7 +330,7 @@ export function TreeView({
           event.preventDefault();
 
           if (!isExpanded) {
-            toggleExpandedItem(item.id, true);
+            toggleExpandedItem(item, true);
             return;
           }
 
@@ -315,7 +342,7 @@ export function TreeView({
           event.preventDefault();
 
           if (branch && isExpanded) {
-            toggleExpandedItem(item.id, false);
+            toggleExpandedItem(item, false);
             return;
           }
 
@@ -338,7 +365,7 @@ export function TreeView({
           }
 
           if (branch) {
-            toggleExpandedItem(item.id);
+            toggleExpandedItem(item);
           }
 
           break;
@@ -370,10 +397,13 @@ export function TreeView({
     >
       {flatItems.map((flatItem) => {
         const { item, level, posInSet, setSize } = flatItem;
-        const branch = hasChildren(item);
+        const branch = isBranch(item);
         const activatesOnClick = !readOnly || branch;
         const isExpanded = branch && expandedItemIdSet.has(item.id);
         const isSelected = !readOnly && currentSelectedItemId === item.id;
+        const hasError = Boolean(item.error);
+        const statusLabel = item.loading ? loadingLabel : item.error;
+        const secondaryLabel = item.secondaryLabel ?? statusLabel;
         const itemStyle: TreeViewItemStyle = {
           "--ui-tree-level": level - 1,
           "--ui-tree-offset": `${(level - 1) * indentRem}rem`,
@@ -397,8 +427,8 @@ export function TreeView({
             ) : null}
             <span className="ui-tree-view__content">
               <span className="ui-tree-view__label">{item.label}</span>
-              {item.secondaryLabel ? (
-                <span className="ui-tree-view__secondary">{item.secondaryLabel}</span>
+              {secondaryLabel ? (
+                <span className={cx("ui-tree-view__secondary", hasError && "ui-tree-view__secondary--error")}>{secondaryLabel}</span>
               ) : null}
             </span>
             {item.meta ? <span className="ui-tree-view__meta">{item.meta}</span> : null}
@@ -408,6 +438,7 @@ export function TreeView({
           "aria-disabled": item.disabled ? true : undefined,
           "aria-expanded": branch ? isExpanded : undefined,
           "aria-label": item.ariaLabel,
+          "aria-busy": item.loading ? true : undefined,
           "aria-level": level,
           "aria-posinset": posInSet,
           "aria-selected": readOnly ? undefined : isSelected,
@@ -415,7 +446,9 @@ export function TreeView({
           className: cx(
             "ui-tree-view__item",
             branch && "ui-tree-view__item--branch",
+            hasError && "ui-tree-view__item--error",
             isExpanded && "ui-tree-view__item--expanded",
+            item.loading && "ui-tree-view__item--loading",
             isSelected && "ui-tree-view__item--selected",
           ),
           role: "treeitem",
@@ -442,7 +475,7 @@ export function TreeView({
                   }
 
                   if (branch) {
-                    toggleExpandedItem(item.id);
+                    toggleExpandedItem(item);
                   }
                 }}
                 onFocus={() => setFocusedItemId(item.id)}

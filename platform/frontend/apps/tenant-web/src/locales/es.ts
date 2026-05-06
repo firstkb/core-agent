@@ -151,6 +151,17 @@ export const tenantSpanishMessages = {
         },
       },
     },
+    staticModules: {
+      businessTree: {
+        empty: "No hay registros del arbol de negocio.",
+        loadFailed: "No se pudo cargar Business Tree.",
+        loading: "Cargando Business Tree...",
+        loadingBranch: "Cargando...",
+        retry: "Reintentar",
+        title: "Business Tree",
+        treeAria: "Business Tree",
+      },
+    },
     platformStudio: {
       forms: {
         addModel: "Agregar modelo",

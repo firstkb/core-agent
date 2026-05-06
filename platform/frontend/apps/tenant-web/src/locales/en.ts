@@ -151,6 +151,17 @@ export const tenantEnglishMessages = {
         },
       },
     },
+    staticModules: {
+      businessTree: {
+        empty: "No business tree records.",
+        loadFailed: "Unable to load Business Tree.",
+        loading: "Loading Business Tree...",
+        loadingBranch: "Loading...",
+        retry: "Retry",
+        title: "Business Tree",
+        treeAria: "Business Tree",
+      },
+    },
     platformStudio: {
       forms: {
         addModel: "Add model",

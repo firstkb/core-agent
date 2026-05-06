@@ -93,6 +93,12 @@ Read for frontend workspace, apps, packages, package-boundary work, and tracked 
 
 Read for frontend auth shell, `auth-core`, bootstrap recovery, and app-private session behavior.
 
+### `modules/frontend/tenant-web/`
+
+Read for tenant app shell, private/public tenant routes, tenant sidebar/runtime
+composition, app-local static modules such as Business Tree, and tenant
+Platform Studio ownership.
+
 ### `modules/frontend/platform-admin-web/`
 
 Read for admin web shell, profile/navigation bootstrap, sidebar/favorites, admin collection-table consumers, and root/non-root frontend visibility.

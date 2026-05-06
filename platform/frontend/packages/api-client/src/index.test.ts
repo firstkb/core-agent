@@ -4,6 +4,7 @@ import {
   ApiClientError,
   createAdminEmployeesClient,
   createAuthClient,
+  createTenantBusinessTreeClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
   getApiClientRequestActivitySnapshot,
@@ -185,6 +186,54 @@ describe("api-client unauthorized recovery", () => {
 
     expect(recoverUnauthorized).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("api-client tenant business tree", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads lazy tree children from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          nodes: [
+            {
+              childCount: 2,
+              expandable: true,
+              id: "company:7",
+              kind: "company",
+              label: "General Company @ GDC",
+            },
+          ],
+          parentId: "root",
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantBusinessTreeClient("/tenant-api").getNodes("token", "root");
+
+    expect(out.parentId).toBe("root");
+    expect(out.nodes[0]).toMatchObject({
+      childCount: 2,
+      expandable: true,
+      id: "company:7",
+      kind: "company",
+      label: "General Company @ GDC",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/modules/business-tree/nodes?parent=root",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
   });
 });
 

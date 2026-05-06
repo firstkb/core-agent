@@ -57,6 +57,25 @@ type TenantFavoriteShortcut = {
   view_id: string;
 };
 
+type TenantBusinessTreeNodeKind = "company" | "contactsGroup" | "projectsGroup" | "contact" | "project";
+
+type TenantBusinessTreeNode = {
+  childCount: number;
+  expandable: boolean;
+  id: string;
+  kind: TenantBusinessTreeNodeKind;
+  label: string;
+};
+
+type TenantBusinessTreeNodesResponse = {
+  nodes: TenantBusinessTreeNode[];
+  parentId: string;
+};
+
+type TenantBusinessTreeClient = {
+  getNodes: (accessToken: string, parentId?: string) => Promise<TenantBusinessTreeNodesResponse>;
+};
+
 type TenantFavoritesClient = {
   getFavorites: (accessToken: string) => Promise<TenantFavoriteShortcut[]>;
 };
@@ -988,6 +1007,50 @@ function normalizeTenantFavorites(payload: unknown): TenantFavoriteShortcut[] {
   return payload.items.map((item) => normalizeTenantFavoriteShortcut(item));
 }
 
+function normalizeTenantBusinessTreeNodeKind(value: unknown, fieldName: string): TenantBusinessTreeNodeKind {
+  const kind = assertString(value, fieldName);
+  if (
+    kind !== "company" &&
+    kind !== "contactsGroup" &&
+    kind !== "projectsGroup" &&
+    kind !== "contact" &&
+    kind !== "project"
+  ) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+  return kind;
+}
+
+function normalizeTenantBusinessTreeNode(payload: unknown, fieldName: string): TenantBusinessTreeNode {
+  const record = normalizeJsonRecord(payload, fieldName);
+
+  return {
+    childCount: normalizeOptionalNonNegativeInteger(record.childCount, `${fieldName}.childCount`) ?? 0,
+    expandable: assertBoolean(record.expandable, `${fieldName}.expandable`),
+    id: assertString(record.id, `${fieldName}.id`),
+    kind: normalizeTenantBusinessTreeNodeKind(record.kind, `${fieldName}.kind`),
+    label: assertString(record.label, `${fieldName}.label`),
+  };
+}
+
+function normalizeTenantBusinessTreeNodesResponse(payload: unknown): TenantBusinessTreeNodesResponse {
+  const record = normalizeJsonRecord(payload, "businessTree");
+  if (!Array.isArray(record.nodes)) {
+    throw new ApiClientError("Invalid businessTree.nodes received from API.", {
+      code: "invalid_payload",
+      payload,
+    });
+  }
+
+  return {
+    nodes: record.nodes.map((node, index) => normalizeTenantBusinessTreeNode(node, `businessTree.nodes[${index}]`)),
+    parentId: assertString(record.parentId, "businessTree.parentId"),
+  };
+}
+
 function normalizeAdminProfile(payload: unknown): AdminProfile {
   if (!isRecord(payload) || !isRecord(payload.user)) {
     throw new ApiClientError("Invalid admin profile payload received from API.", {
@@ -1258,6 +1321,25 @@ function createTenantFavoritesClient(baseUrl: string): TenantFavoritesClient {
   };
 }
 
+function createTenantBusinessTreeClient(baseUrl: string): TenantBusinessTreeClient {
+  return {
+    async getNodes(accessToken: string, parentId = "root") {
+      const normalizedParentId = parentId.trim() || "root";
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        `/app/modules/business-tree/nodes?parent=${encodeURIComponent(normalizedParentId)}`,
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeTenantBusinessTreeNodesResponse(envelope.data);
+    },
+  };
+}
+
 function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuilderAuthoringClient {
   return {
     async copyView(accessToken: string, modelId: string, viewId: string, input?: FormBuilderCopyViewInput) {
@@ -1507,6 +1589,7 @@ export {
   createAdminProfileClient,
   createApiClient,
   createAuthClient,
+  createTenantBusinessTreeClient,
   createTenantFavoritesClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
@@ -1538,6 +1621,10 @@ export type {
   AuthOtpRequestData,
   AuthTokenData,
   BackendEnvelope,
+  TenantBusinessTreeClient,
+  TenantBusinessTreeNode,
+  TenantBusinessTreeNodeKind,
+  TenantBusinessTreeNodesResponse,
   FormBuilderDraftPayload,
   FormBuilderDraftPublishState,
   FormBuilderDraftResponse,

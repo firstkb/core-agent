@@ -1,0 +1,42 @@
+.tenant-business-tree {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--ui-shell-header-height, 4.5rem) - var(--space-6));
+  min-height: 36rem;
+  min-width: 0;
+  padding-top: var(--space-2);
+}
+
+.tenant-business-tree__surface {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  overflow: auto;
+}
+
+.tenant-business-tree__state {
+  display: flex;
+  min-height: 9rem;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 720px) {
+  .tenant-business-tree {
+    height: auto;
+    min-height: 0;
+  }
+
+  .tenant-business-tree__surface {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: visible;
+    padding: var(--space-2);
+  }
+}

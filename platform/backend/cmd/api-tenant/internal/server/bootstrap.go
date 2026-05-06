@@ -47,6 +47,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 		server.tokenValidator = tokenValidator
 	}
 
+	server.businessTreeHTTP = buildBusinessTreeModule(server.sqlClient)
 	server.profileHTTP = buildTenantProfileModule(server.sqlClient)
 	server.platformStudioFormBuilderHTTP = buildPlatformStudioFormBuilderModule(server.sqlClient)
 	server.platformStudioFormRuntimeHTTP = buildPlatformStudioFormRuntimeModule(server.sqlClient)

@@ -267,6 +267,11 @@ routes:
       - tenant-core
       - published runtime
       - tenant route
+      - static module
+      - static modules
+      - app modules
+      - Business Tree
+      - business-tree
     read:
       - maestro/memory/modules/frontend/tenant-web/README.md
       - maestro/memory/modules/frontend/workspace/README.md
@@ -310,6 +315,7 @@ routes:
       - Platform Studio
       - builder suite
       - Navigation Builder
+      - Navigation Builder static module
       - sidebar
       - sidebar builder
       - Platform Studio access

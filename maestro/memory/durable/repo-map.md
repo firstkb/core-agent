@@ -91,12 +91,16 @@ platform/
 - `platform/backend/cmd/migrate`: master and tenant migration runtime.
 - `platform/backend/modules/admin`: admin control-plane modules.
 - `platform/backend/modules/tenant`: tenant-facing modules.
+- `platform/backend/modules/tenant/businesstree`: tenant Business Tree static
+  module API and lazy tree node service.
 - `platform/backend/modules/shared`: shared backend infrastructure modules.
 
 ## Frontend Runtime
 
 - `platform/frontend/apps/platform-admin-web`: platform/backoffice app.
 - `platform/frontend/apps/tenant-web`: tenant app.
+- `platform/frontend/apps/tenant-web/src/features/static-modules`: tenant
+  app-local static modules; first module is Business Tree.
 - `platform/frontend/packages/collection-table`: reusable collection table runtime/package.
 - `platform/frontend/packages/platform-studio-core`: UI-free Platform Studio contracts/helpers.
 - `platform/frontend/packages/auth-core`: auth state and recovery model.

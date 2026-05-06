@@ -2,15 +2,15 @@
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
 - Status: `active`
-- Owner goal: Stabilize Form Builder; remove Form Builder control over View Active/Inactive.
+- Owner goal: Stabilize Form Builder; remove Form Builder control over View Active/Inactive and retire `isActive` from Form Builder view config.
 
 ## Understanding
 
-The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 and follow-ups are implemented and verified. On 2026-05-06 the owner requested removing View Active/Inactive UI from Form Builder because Navigation Builder owns sidebar/runtime exposure.
+The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 and follow-ups are implemented and verified. On 2026-05-06 the owner requested removing View Active/Inactive UI from Form Builder and retiring `isActive` from Form Builder view config because Navigation Builder owns sidebar/runtime exposure.
 
 ## Agreed Scope
 
-- In: remove Form Builder View Active/Inactive status/control UI while preserving persisted `isActive` compatibility metadata.
+- In: remove Form Builder View Active/Inactive status/control UI and retire `isActive` from Form Builder view config/new `ps_view.definition_json` payloads while preserving backend DB/API compatibility metadata.
 - Out: backend/runtime grants, Navigation Builder ACL, Action Builder, destructive schema/data migration, release/deploy work, and unrelated artifact changes.
 
 ## Continuity Snapshot
@@ -21,7 +21,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. No release/destructive gates are in scope.
 - Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, and View Active/Inactive UI checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
-- Next allowed action: owner manual test that the Views panel no longer shows the Active/Inactive eye and the View tab no longer exposes the Active toggle.
+- Next allowed action: owner manual test that Form Builder still loads/saves views normally and no longer exposes or writes View Active/Inactive as authoring config.
 
 ## Decisions
 
@@ -43,7 +43,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Slice 6 follow-up scope: `Unique value` is allowed for plain `short_text`, ready-made `Email`/`Phone`, and `short_text` fields validated as email/phone; specialized text presets such as URL and suggest text remain excluded.
 - Subform attention markers must propagate across scope boundaries through `subformScopes[].parentSubformNodeId`.
 - View-list yellow triangle is a model-topology drift signal only. Field settings and layout-only `layoutBlueprint` edits must not advance `modelStructureVersion`.
-- Form Builder does not own View Active/Inactive publication controls. Keep `isActive` in the view payload for compatibility, but do not expose controls/status icons in Form Builder.
+- Form Builder does not own View Active/Inactive publication controls. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads. Keep backend `ps_view.is_active` / API summary values only as deprecated compatibility metadata until a later cleanup.
 
 ## Plan
 
@@ -60,11 +60,13 @@ The owner found multiple Form Builder defects while working on runtime display o
 11. Implement Slice 6 follow-up for plain `short_text` unique support and Subform attention propagation.
 12. Implement View drift warning topology-only structure comparison.
 13. Remove Form Builder View Active/Inactive status/control UI.
+14. Retire `isActive` from Form Builder view config/new `ps_view.definition_json` payloads while leaving DB/API compatibility metadata in place.
 
 ## Risks / Gates
 
 - Runtime grants and Navigation Builder ACL are out of scope.
 - Destructive schema/data migration is out of scope.
+- Dropping `ps_view.is_active` or removing API summary/request fields requires a separate cleanup/migration slice after Navigation Builder exposure lands.
 - Browser/visual smoke is useful for final visual acceptance of semantic button variants if the local dev stack is running.
 
 ## Agent / Tool Notes
@@ -78,4 +80,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Owner should manually test that Form Builder no longer shows Active/Inactive eye status on View cards and no longer exposes a View Active toggle in the View tab.
+Owner should manually test that Form Builder no longer shows Active/Inactive eye status on View cards, no longer exposes a View Active toggle in the View tab, and saves/loads authored views without `isActive` as view config.

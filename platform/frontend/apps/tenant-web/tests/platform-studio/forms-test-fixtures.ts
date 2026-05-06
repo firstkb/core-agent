@@ -33,7 +33,6 @@ export const editableFormBuilderModel: FormsPlaceholderObject = {
     {
       description: "Editable checklist fixture.",
       id: "field-checklist",
-      isActive: true,
       isDefault: true,
       key: "field-checklist",
       kind: "form",
@@ -75,7 +74,6 @@ export const lockedDelegatedFormBuilderModel: FormsPlaceholderObject = {
     {
       description: "Intake form fixture.",
       id: "intake-form",
-      isActive: true,
       isDefault: true,
       key: "intake-form",
       kind: "form",

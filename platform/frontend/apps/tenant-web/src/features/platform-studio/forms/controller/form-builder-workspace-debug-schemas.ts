@@ -96,7 +96,6 @@ export function compileDebugSchemas(
     compiledRuntime: buildCompiledRuntimeMapping(document, model, t),
     uiSchema: {
       isDefault: view.isDefault,
-      isActive: view.isActive,
       viewId: view.id,
       viewKey: view.key,
       ...buildCanonicalUiSchema(document, model),

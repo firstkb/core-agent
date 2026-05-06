@@ -261,7 +261,7 @@ Statuses:
 - Evidence: Owner request on 2026-05-06.
 - Priority: medium.
 - Status: resolved.
-- Owner decision: Remove Form Builder UI for View Active/Inactive. Keep persisted `isActive` as compatibility/runtime metadata for now; do not expose it as an authoring control.
-- Resolution: Removed the Active/Inactive eye icon from the Views panel, removed the View Active switch from the View tab, removed the active-view update handler from Form Builder controls, and documented that Navigation Builder owns sidebar/runtime exposure.
+- Owner decision: Remove Form Builder UI for View Active/Inactive and retire `isActive` from Form Builder view config. Keep backend `ps_view.is_active` / API summary values only as deprecated compatibility metadata for now.
+- Resolution: Removed the Active/Inactive eye icon from the Views panel, removed the View Active switch from the View tab, removed the active-view update handler from Form Builder controls, removed `isActive` from frontend view config/schema/fallback routing, stopped writing `isActive` to new `ps_view.definition_json` payloads, and documented that Navigation Builder owns sidebar/runtime exposure.
 - Fixed in: current change set.
 - Verification: `pnpm test`, `pnpm typecheck`, `pnpm lint`, `git diff --check`, and `scripts/preflight.sh` passed.

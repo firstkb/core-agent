@@ -123,7 +123,6 @@ export type FormsPlaceholderScreen = {
   displayName?: string;
   guid?: string;
   id: string;
-  isActive: boolean;
   isDefault: boolean;
   isViewLocked?: boolean;
   key: string;
@@ -633,7 +632,6 @@ function createFallbackScreen(candidate: Partial<FormsPlaceholderScreen>, index:
       : title,
     guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined),
     id,
-    isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : index === 0,
     isDefault: typeof candidate.isDefault === "boolean" ? candidate.isDefault : false,
     isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : false,
     key: normalizeStableKey(typeof candidate.key === "string" ? candidate.key : undefined, id),
@@ -893,7 +891,6 @@ function normalizeStoredScreens(value: unknown, fallbackScreens: ReadonlyArray<F
             ? candidate.displayName
             : (fallback.displayName?.trim() || fallback.title),
         guid: normalizeOptionalGuid(typeof candidate.guid === "string" ? candidate.guid : undefined, fallback.guid),
-        isActive: typeof candidate.isActive === "boolean" ? candidate.isActive : fallback.isActive,
         isDefault: typeof candidate.isDefault === "boolean" ? candidate.isDefault : (fallback.isDefault ?? false),
         isViewLocked: typeof candidate.isViewLocked === "boolean" ? candidate.isViewLocked : (fallback.isViewLocked ?? false),
         key: normalizeStableKey(

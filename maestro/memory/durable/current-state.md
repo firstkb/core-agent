@@ -128,6 +128,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Form Builder uses a three-schema split: model-owned `dataSchema + layoutBlueprint` and view-owned `uiSchema`.
 - `landed` `doc-confirmed`: Form Builder authoring transport uses canonical `/authoring`; `/draft` remains a temporary compatibility alias only.
 - `landed` `doc-confirmed`: Form Builder `Save` is authoring persistence plus additive runtime apply, not site publication.
+- `landed` `owner-confirmed`: Form Builder does not own View Active/Inactive or runtime/sidebar exposure. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup.
 - `planned` `doc-confirmed`: Runtime ACL through Navigation Builder is not fully implemented; current runtime route split is preparatory and should not invent temporary grants.
 
 ## Current Risks

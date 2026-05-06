@@ -127,7 +127,6 @@ func (s *Service) CreateModel(ctx context.Context, req CreateModelRequest) (*Mod
 		"description":                      strings.TrimSpace(req.Description),
 		"displayName":                      modelDisplayName,
 		"id":                               firstViewID,
-		"isActive":                         true,
 		"isDefault":                        true,
 		"isViewLocked":                     false,
 		"key":                              firstViewKey,

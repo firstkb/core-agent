@@ -77,6 +77,14 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View Active/Inactive UI removal. |
 | `git diff --check` | passed | no output | Whitespace check after View Active/Inactive UI removal. |
 | `scripts/preflight.sh` | passed | lite preflight passed after View Active/Inactive UI removal | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm typecheck` | passed | `tsc --noEmit` exited 0 | Ran from `platform/frontend/apps/tenant-web` after retiring `isActive` from Form Builder view config. |
+| `pnpm typecheck` | passed | `tsc -p tsconfig.json --noEmit` exited 0 | Ran from `platform/frontend/packages/platform-studio-core` after removing `ViewDefinition.isActive`. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Covers backend stripping `isActive` from new view config payloads while preserving DB/API compatibility metadata. |
+| `pnpm test` | passed | 13 files / 40 tests passed | Full `@platform/tenant-web` Vitest suite from package directory after `isActive` config retirement. |
+| `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web` after `isActive` config retirement. |
+| `pnpm lint` | passed | `eslint src` exited 0 | Ran from `platform/frontend/packages/platform-studio-core` after `isActive` config retirement. |
+| `git diff --check` | passed | no output | Whitespace check after `isActive` config retirement. |
+| `scripts/preflight.sh` | passed | lite preflight passed after `isActive` config retirement | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 

@@ -146,7 +146,6 @@ function mapViewSummaryToPlaceholder(
       displayName: summary.displayName,
       guid: summary.guid,
       id: summary.id,
-      isActive: summary.isActive,
       isDefault: summary.isDefault,
       isViewLocked: summary.isViewLocked,
       key: summary.key,

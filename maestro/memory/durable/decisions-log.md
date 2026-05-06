@@ -2,7 +2,7 @@
 
 Status: compact durable decisions index
 Last compacted: 2026-05-01
-Next decision ID: `DEC-099`
+Next decision ID: `DEC-100`
 
 Use this file for durable decision discovery and new decision append routing.
 Do not turn it into a task journal. Full decision bodies live in topic files under `maestro/memory/durable/decisions/`.
@@ -125,3 +125,4 @@ Do not turn it into a task journal. Full decision bodies live in topic files und
 | `DEC-096` | Repo Checks Use Preflight And Checks Layout | active | owner-confirmed | `decisions/agent-runtime-workflow.md` | Repository checks use `scripts/preflight.sh` as the stable entrypoint and `scripts/checks/**` for check implementations. The old `scripts/ai/**` folder is retired and must not be recreated for active checks. |
 | `DEC-097` | Maestro Artifacts Promote On Continuity Or Accountability | active | owner-confirmed | `decisions/agent-runtime-workflow.md` | Maestro does not create artifacts for every chat turn. Maestro creates or promotes to a work artifact as soon as continuity, evidence, future resume, multi-step execution, owner decision, or file-change accountability matters. |
 | `DEC-098` | Business Tree Is A Tenant App Page | active | owner-confirmed | `decisions/product-platform.md` | Business Tree is a tenant app page under `/app/pages/business-tree`, not a product module. Product modules are broader areas such as future Training or Task Manager. Navigation Builder must distinguish app page targets from product module targets. |
+| `DEC-099` | Form Builder View Activity Is Navigation-Owned | active | owner-confirmed | `decisions/product-platform.md` | Form Builder does not own View Active/Inactive or runtime/sidebar exposure. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup. |

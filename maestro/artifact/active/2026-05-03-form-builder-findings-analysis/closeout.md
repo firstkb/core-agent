@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls so Navigation Builder remains the owner of sidebar/runtime exposure.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls and retires `isActive` from Form Builder view config so Navigation Builder remains the owner of sidebar/runtime exposure.
 
 ## Outcome
 
@@ -28,7 +28,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Added `uniqueValue?: boolean` to Form Builder field authoring schema/UI for plain `short_text`, ready-made `Email`, ready-made `Phone`, and `short_text` fields with `validation = email | phone`; URL and suggest text presets stay excluded and are stripped from canonical payloads if stale data contains the flag.
 - Restored canvas attention-marker propagation from changed Subform-scope child nodes to the parent Subform and root-scope ancestors.
 - Changed frontend/backend model structure comparison to topology-only signatures so field settings and layout-only blueprint edits do not advance `modelStructureVersion` or mark other views with the yellow warning triangle.
-- Removed Active/Inactive eye status from View cards and removed the View Active toggle from the View tab. `isActive` remains payload compatibility metadata, not a Form Builder authoring control.
+- Removed Active/Inactive eye status from View cards and removed the View Active toggle from the View tab. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup.
 
 ## Checks
 
@@ -37,8 +37,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, and the Navigation Builder boundary for View Active/Inactive. Per-lookup settings/View filter review remains future work.
+Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, and the Navigation Builder boundary for View Active/Inactive. Per-lookup settings/View filter review and final `isActive` DB/API cleanup remain future work.
 
 ## Next Step
 
-Owner should manually test that Form Builder no longer shows Active/Inactive status on View cards and no longer exposes a View Active toggle in the View tab.
+Owner should manually test that Form Builder no longer shows Active/Inactive status on View cards, no longer exposes a View Active toggle in the View tab, and continues saving/loading views without `isActive` as Form Builder view config.

@@ -202,10 +202,10 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 	nextView.Description = normalizedNextView.Description
 	nextView.ViewType = normalizedNextView.ViewType
 	nextView.IsDefault = normalizedNextView.IsDefault
-	nextView.IsActive = normalizedNextView.IsActive
+	nextView.IsActive = currentView.IsActive
 	nextView.Status = normalizedNextView.Status
 	nextView.IsViewLocked = viewLocked
-	nextView.DefinitionJSON = mustCanonicalJSON(viewPayload)
+	nextView.DefinitionJSON = normalizedNextView.DefinitionJSON
 	nextView.LastAlignedModelStructureVersion = nextModel.StructureVersion
 	if viewChanged {
 		nextView.Version = currentView.Version + 1
@@ -433,7 +433,6 @@ func buildViewDraftForResponse(view *ViewRecord, canonicalPayload map[string]any
 	payload["description"] = view.Description
 	payload["displayName"] = view.DisplayName
 	payload["id"] = view.ViewID
-	payload["isActive"] = view.IsActive
 	payload["isDefault"] = view.IsDefault
 	payload["isViewLocked"] = view.IsViewLocked
 	payload["key"] = view.ViewKey
@@ -459,7 +458,6 @@ func buildScreenPayload(view *ViewRecord) map[string]any {
 		"displayName":                      view.DisplayName,
 		"guid":                             view.GUID,
 		"id":                               view.ViewID,
-		"isActive":                         view.IsActive,
 		"isDefault":                        view.IsDefault,
 		"isViewLocked":                     view.IsViewLocked,
 		"key":                              view.ViewKey,

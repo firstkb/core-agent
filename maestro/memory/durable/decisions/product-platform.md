@@ -253,3 +253,24 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - Owner clarification in current Business Tree implementation session
   - `platform/frontend/apps/tenant-web/src/features/app-pages/business-tree`
   - `platform/backend/modules/tenant/apppages/businesstree`
+
+### DEC-099 Form Builder View Activity Is Navigation-Owned
+
+- Date: 2026-05-06
+- Status: active
+- State: owner-confirmed
+- Decision: Form Builder does not own View Active/Inactive or runtime/sidebar
+  exposure. `isActive` is retired from Form Builder view config and new
+  `ps_view.definition_json` payloads. Older payloads may be tolerated and
+  dropped on load/save. The backend `ps_view.is_active` column and API summary
+  values remain deprecated compatibility metadata until a later cleanup.
+  Navigation Builder owns sidebar/runtime exposure for
+  `{ targetType: form_builder_view, modelId, viewId }`.
+- Follow-up: after Navigation Builder exposure is implemented and verified,
+  remove or fully deprecate Form Builder API request/summary `isActive` usage
+  and evaluate dropping `ps_view.is_active` in a dedicated migration slice.
+- Sources:
+  - Owner decision on 2026-05-06
+  - `platform/frontend/docs/modules/platform-studio/form-builder.md`
+  - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+  - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`

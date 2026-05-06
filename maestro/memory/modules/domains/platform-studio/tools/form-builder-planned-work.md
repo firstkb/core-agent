@@ -1,7 +1,7 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-03
+Last verified: 2026-05-06
 Verification mode: read-only scan of tracked docs and current FE/BE code surfaces
 
 This file preserves Form Builder planned work without turning it into active
@@ -35,13 +35,14 @@ instead of them.
 - Plain `short_text` and email/phone text fields can author `uniqueValue: true`; disabled/false values are omitted from compact payloads. URL/suggest text presets are excluded. Runtime uniqueness enforcement remains separate follow-up work.
 - Canvas attention markers propagate changed Subform-scope child nodes to the parent Subform node and root-scope ancestors.
 - View-list warning triangles are topology drift indicators only. Field setting changes and layout-only blueprint edits do not advance `modelStructureVersion`; field add/remove, scope moves, and subform-scope topology changes do.
-- Form Builder does not expose View Active/Inactive status or controls. Persisted `isActive` remains compatibility metadata for now; Navigation Builder owns sidebar/runtime exposure and placement.
+- Form Builder does not expose View Active/Inactive status or controls. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; old payloads may be tolerated and dropped. Backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata for now. Navigation Builder owns sidebar/runtime exposure and placement.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 
 ## Planned / Open Work
 
 - Navigation Builder must own runtime exposure, sidebar placement, and runtime grant assignment for `{ targetType: form_builder_view, modelId, viewId }`.
+- Future cleanup should remove or fully deprecate Form Builder API request/summary usage of `isActive`, then evaluate dropping `ps_view.is_active` with a dedicated migration once Navigation Builder exposure is implemented and verified.
 - Platform Studio preview runtime endpoints still need a dedicated preview access guard.
 - Larger runtime record/list/create/edit/save behavior should move to future `platformstudioformruntime`; do not keep expanding `platformstudioformbuilder` by default.
 - Post-submit side effects, notifications, integrations, workflow triggers, async retries, and side-effect failure reporting should move to future `platformstudioformactions`.

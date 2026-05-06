@@ -36,7 +36,6 @@ function createField(
 const screen: FormsPlaceholderScreen = {
   description: "",
   id: "view-default",
-  isActive: true,
   isDefault: true,
   key: "default",
   kind: "form",

@@ -75,7 +75,6 @@ func normalizeViewPayloadForStorage(
 	out["title"] = chooseString(normalizeString(out["title"]), out["displayName"].(string))
 	out["description"] = normalizeString(out["description"])
 	out["kind"] = chooseString(normalizeString(out["kind"]), existing.ViewType)
-	out["isActive"] = getBoolValue(out, "isActive", existing.IsActive)
 	out["isDefault"] = getBoolValue(out, "isDefault", existing.IsDefault)
 	out["isViewLocked"] = getBoolFallback(out, "isViewLocked", "viewLocked", existing.IsViewLocked)
 	out["viewLocked"] = out["isViewLocked"]
@@ -92,6 +91,7 @@ func normalizeViewPayloadForStorage(
 
 	delete(out, "currentParentId")
 	delete(out, "guid")
+	delete(out, "isActive")
 	delete(out, "lastAlignedModelStructureVersion")
 	delete(out, "nodes")
 	delete(out, "filterDefinitions")

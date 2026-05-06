@@ -26,7 +26,6 @@ export function getPreferredFormsPlaceholderViewRouteId(
       ? model.screens.find((screen) => screen.id === normalizedSelectedViewId)
       : null)
     ?? model.screens.find((screen) => screen.isDefault)
-    ?? model.screens.find((screen) => screen.isActive)
     ?? model.screens[0]
     ?? null;
 
@@ -40,7 +39,6 @@ export function createRouteBootstrapFallbackView(viewId?: string): FormsPlacehol
     description: "",
     displayName: normalizedViewId,
     id: normalizedViewId,
-    isActive: false,
     isDefault: false,
     isViewLocked: false,
     key: "__route-bootstrap-view-key__",

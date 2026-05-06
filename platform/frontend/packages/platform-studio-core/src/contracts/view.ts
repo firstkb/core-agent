@@ -48,7 +48,6 @@ export type ViewDefinition = {
   entityId: BuilderEntityId;
   guid?: string;
   id: BuilderViewId;
-  isActive?: boolean;
   isDefault?: boolean;
   key: string;
   lastAlignedModelStructureVersion?: number;

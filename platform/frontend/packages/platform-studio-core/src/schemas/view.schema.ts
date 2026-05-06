@@ -104,7 +104,6 @@ export const viewDefinitionSchema = z.object({
   entityId: builderIdSchema,
   guid: builderIdSchema.optional(),
   id: builderIdSchema,
-  isActive: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   key: builderKeySchema,
   lastAlignedModelStructureVersion: z.number().int().nonnegative().optional(),

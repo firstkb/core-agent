@@ -258,7 +258,8 @@ Current tenant baseline columns:
 - `description`
 - `view_type`
 - `is_default`
-- `is_active`
+- `is_active` (deprecated compatibility metadata; Form Builder view config no
+  longer owns runtime/sidebar exposure)
 - `status`
 - `version`
 - `published_version`
@@ -298,6 +299,11 @@ Current indexes/triggers:
 - view lock state
 - `lastAlignedModelStructureVersion`
 - runtime metadata for view/grid scopes
+
+`ps_view.definition_json` does not own runtime/sidebar exposure. Deprecated
+`isActive` values from older drafts may be tolerated on load, but new Form
+Builder authoring saves must not persist `isActive` in view config. Navigation
+Builder owns exposure for `{ targetType: form_builder_view, modelId, viewId }`.
 
 Backend must not treat `ps_model` or `ps_view` as business-data tables.
 Generated business/runtime data lives in separate runtime objects.

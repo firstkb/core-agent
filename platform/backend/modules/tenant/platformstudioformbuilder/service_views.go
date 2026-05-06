@@ -255,7 +255,6 @@ func (s *Service) createViewRecord(
 	viewPayload["description"] = strings.TrimSpace(req.Description)
 	viewPayload["displayName"] = title
 	viewPayload["id"] = viewID
-	viewPayload["isActive"] = chooseBool(req.IsActive, true)
 	viewPayload["isDefault"] = isDefault
 	viewPayload["isViewLocked"] = false
 	viewPayload["key"] = key
@@ -280,6 +279,7 @@ func (s *Service) createViewRecord(
 	}
 	viewRecord.DefinitionJSON = mustCanonicalJSON(viewPayload)
 	viewRecord.IsDefault = isDefault
+	viewRecord.IsActive = chooseBool(req.IsActive, true)
 
 	persistedView, err := s.repo.CreateView(ctx, tenant, viewRecord)
 	if err != nil {
@@ -328,7 +328,6 @@ func (s *Service) createViewRecordFromCopy(
 	viewPayload["description"] = strings.TrimSpace(req.Description)
 	viewPayload["displayName"] = title
 	viewPayload["id"] = viewID
-	viewPayload["isActive"] = chooseBool(req.IsActive, true)
 	viewPayload["isDefault"] = false
 	viewPayload["isViewLocked"] = false
 	viewPayload["key"] = key

@@ -74,12 +74,16 @@ Form Builder does not own:
 
 Those concerns belong to other Platform Studio tools unless a later accepted contract says otherwise.
 
-View payload compatibility note:
+Deprecated view activity compatibility note:
 
-- `isActive` may remain in persisted view payloads for compatibility with older
-  drafts and backend defaults
-- Form Builder must not expose Active/Inactive controls or status icons for
-  authored views
+- `isActive` is not a Form Builder view config field.
+- Form Builder must not write `isActive` into new `ps_view.definition_json`
+  payloads, expose Active/Inactive controls, or show Active/Inactive status
+  icons for authored views.
+- Older payloads may contain `isActive`; loaders may tolerate and drop it for
+  compatibility.
+- The backend `ps_view.is_active` column and API summary field may remain as
+  deprecated compatibility metadata until a separate DB/API cleanup slice.
 - Navigation Builder owns whether a form view appears in sidebar/navigation and
   how it is exposed to runtime users
 

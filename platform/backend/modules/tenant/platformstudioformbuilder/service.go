@@ -63,6 +63,9 @@ func buildModelRecordFromPayload(payload map[string]any) ModelRecord {
 
 func buildViewRecordFromPayload(modelID, viewID string, payload map[string]any) ViewRecord {
 	displayName := chooseString(normalizeString(payload["displayName"]), chooseString(normalizeString(payload["title"]), normalizeString(payload["name"])))
+	definitionPayload := cloneJSONToMap(mustCanonicalJSON(payload))
+	delete(definitionPayload, "isActive")
+
 	return ViewRecord{
 		ModelID:                          modelID,
 		ViewID:                           viewID,
@@ -77,7 +80,7 @@ func buildViewRecordFromPayload(modelID, viewID string, payload map[string]any) 
 		Version:                          getInt64Value(payload, "viewVersion", 1),
 		PublishedVersion:                 getInt64Value(payload, "publishedVersion", 0),
 		LastAlignedModelStructureVersion: getInt64Value(payload, "lastAlignedModelStructureVersion", 1),
-		DefinitionJSON:                   mustCanonicalJSON(payload),
+		DefinitionJSON:                   mustCanonicalJSON(definitionPayload),
 		PublishedArtifactsJSON:           json.RawMessage(`{}`),
 	}
 }

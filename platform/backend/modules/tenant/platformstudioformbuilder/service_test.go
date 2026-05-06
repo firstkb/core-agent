@@ -716,6 +716,9 @@ func TestCreateViewSeedsFreshUISchemaFromBlueprint(t *testing.T) {
 	}
 
 	viewPayload := mustDecodeJSONMap(t, createdView.DefinitionJSON)
+	if _, ok := viewPayload["isActive"]; ok {
+		t.Fatalf("created view config should not persist deprecated isActive: %#v", viewPayload)
+	}
 	uiSchema := asMap(viewPayload["uiSchema"])
 	rootScope := asMap(uiSchema["rootScope"])
 	rootNodes := asSlice(rootScope["nodes"])
@@ -1219,6 +1222,9 @@ func TestSaveDraftStoresSparseSchemasButReturnsCompatibilityFields(t *testing.T)
 	}
 
 	storedView := mustDecodeJSONMap(t, repo.views[model.ModelID][view.ViewID].DefinitionJSON)
+	if _, ok := storedView["isActive"]; ok {
+		t.Fatalf("stored view config should strip deprecated isActive: %#v", storedView)
+	}
 	storedRootScope := asMap(asMap(storedView["uiSchema"])["rootScope"])
 	for _, key := range []string{"filterDefinitions", "systemFields", "viewSettings", "unplacedFieldIds"} {
 		if _, ok := storedRootScope[key]; ok {
@@ -1237,6 +1243,10 @@ func TestSaveDraftStoresSparseSchemasButReturnsCompatibilityFields(t *testing.T)
 	}
 
 	draftModel := mustDecodeJSONMap(t, out.Draft.Model)
+	draftView := mustDecodeJSONMap(t, out.Draft.View)
+	if _, ok := draftView["isActive"]; ok {
+		t.Fatalf("draft view config should not expose deprecated isActive: %#v", draftView)
+	}
 	compatFields := asSlice(draftModel["fields"])
 	if len(compatFields) == 0 {
 		t.Fatalf("expected compatibility fields in draft model, got %#v", draftModel)

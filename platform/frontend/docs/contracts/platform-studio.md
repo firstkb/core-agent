@@ -20,7 +20,9 @@ Read with:
 - Platform Studio is the tenant-web builder/configuration tool suite.
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
-- Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned tools.
+- Navigation Builder has an active UI-first V1 surface; backend persistence,
+  real publication, and ACL enforcement remain planned.
+- Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.
 - Shared code for Platform Studio is non-UI contracts/helpers under `@platform/platform-studio-core`.
@@ -63,13 +65,58 @@ Form Builder:
 
 Navigation Builder:
 
-- status: planned
+- status: active UI-first V1
 - owns sidebar/navigation composition
 - owns app page targets
 - owns broader product module targets
 - owns authored runtime route targets
 - owns runtime exposure of configured application entries
+- owns rail utility visibility/access UX for static shell utilities such as
+  Platform Studio, Task Manager, Favorites, and Help Center
 - is expected to own access/permission assignment unless a later accepted decision creates a separate Access Builder
+- V1 access controls are preview/mock only and must not be described as
+  enforced route/API security
+- V1 uses editable draft behavior plus explicit `Save`; realtime live
+  navigation mutation is not the accepted interaction model
+- V1 sorting is per parent level. Moving an item affects only siblings under
+  the same root/group/module parent.
+- V1 uses `Menu title` as the user-facing root-only text divider with no icon,
+  target, or children.
+- V1 add choices are fixed at creation: `Menu title`, `Menu group`, `Form view`,
+  `App page`, and `App module`. Target-bearing choices use a centered, minimal
+  fixed-type add dialog to choose the target before creation and do not expose a
+  mutable target type switch in the inspector after creation.
+- V1 blocks duplicate target selection during add when the same Form View, App
+  Page, External Link, or App Module target already exists in the app menu.
+- V1 inspector tabs are `Element` and `Access`; `Advanced` is not exposed.
+  Technical route keys stay out of the V1 inspector, and `Channel` belongs in
+  `Element`.
+- V1 `Element` is type-aware: label/type/status live at the top, `Opens`
+  appears only for target-bearing items, `Channel` appears only where runtime
+  exposure applies, and `Warnings` appears only when warnings exist.
+- V1 `Element` includes a `Show in app menu` toggle for app menu containers and
+  target entries. Inactive app menu items remain editable in the builder tree,
+  show an eye-off status badge, and are excluded from runtime app menu output
+  once Navigation Builder persistence/publication lands. Menu titles do not
+  expose active, target, channel, or access controls.
+- V1 deletion follows Form Builder field deletion UX: danger-zone `Delete item`
+  action in the inspector with a centered confirmation dialog. Deleting a
+  container removes its child items from the draft navigation.
+- V1 Form View entry labels are derived from the selected View title
+  continuously, not manually copied once.
+- V1 add controls are limited to container rows and the bottom root add row;
+  titles and final entries do not show `+` actions.
+- V1 navigation icons are shown only for container/module nodes; titles and
+  final entry targets do not show navigation icons. Menu groups and modules
+  choose icons from a small Navigation Builder icon dictionary. Status badges
+  may still show hidden, restricted/access, or broken state.
+- Future App Module targets are represented as containers with possible nested
+  subitems, but they stay inactive/preview-only until real app module runtime
+  routes ship.
+- Runtime shell integration must preserve Navigation Builder context: when a
+  configured sidebar entry opens an App Page or Form View, the tenant top bar
+  title and breadcrumb should be resolved from the Navigation Builder path and
+  target metadata, not from raw route ids or static fallback route labels.
 
 Action Builder:
 
@@ -153,6 +200,10 @@ Form Builder authoring routes:
 - `/builder/forms/:modelId`
 - `/builder/forms/:modelId/views/:viewId`
 
+Navigation Builder authoring route:
+
+- `/builder/navigation`
+
 Legacy compatibility redirects:
 
 - `/builder/forms/:modelId/screens/:viewId`
@@ -175,6 +226,14 @@ Route rules:
 - Site exposure, sidebar placement, and runtime permission assignment are Navigation Builder concerns.
 - A single app page such as Business Tree is not a product module. Product
   modules are broader product areas such as future Training or Task Manager.
+- Navigation Builder entries may target Form Views, App Pages, External Links,
+  and future App Module pages. App Modules can own nested subitems.
+- Dashboard remains a static locked shell item shown in Navigation Builder
+  preview but not removable or movable by the builder. Dashboard must not show
+  the lock badge; the lock badge is reserved for access/restricted state.
+- Rail utility access is separate from the sidebar tree. Navigation Builder V1
+  exposes utility rail items as a dedicated left-panel tab, but access remains
+  preview/mock only until backend enforcement lands.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

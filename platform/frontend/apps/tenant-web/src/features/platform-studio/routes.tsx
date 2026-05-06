@@ -9,6 +9,7 @@ import { FormBuilderAuthoringProvider } from "./forms/forms-authoring-context";
 import { platformStudioPaths } from "./platform-studio-route-meta";
 import { FormsPage } from "./forms/pages/forms-index-page";
 import { FormsViewWorkspacePage } from "./forms/pages/forms-ui-schema-workspace-page";
+import { NavigationBuilderPage } from "./navigation/pages/navigation-builder-page";
 import "./platform-studio.css";
 
 function FormBuilderAuthoringRoute() {
@@ -53,6 +54,10 @@ export function renderPlatformStudioRoutes() {
       <Route element={<FormBuilderAuthoringRoute />}>
         <Route element={<FormsPage />} path="builder/forms" />
         <Route element={<FormsPage />} path="builder/forms/:modelId" />
+        <Route
+          element={<NavigationBuilderPage />}
+          path="builder/navigation"
+        />
         <Route
           element={<FormsViewWorkspacePage />}
           path="builder/forms/:modelId/views/:viewId"

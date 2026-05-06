@@ -30,10 +30,16 @@ Last compacted: 2026-04-25
 
 ## Accepted / Planned
 
-- Navigation Builder is planned but not active; it owns sidebar/navigation
-  composition, app page targets, product module targets, authored runtime route
-  targets, and likely access/permission assignment unless a later decision
-  splits access into a dedicated tool.
+- Navigation Builder has an active UI-first V1 surface at `/builder/navigation`;
+  it owns app menu/sidebar navigation composition, Form View/App Page/External Link
+  targets, root-only `Menu title` dividers, future App Module shape with nested
+  subitems, separate `App menu`/`Utility rail` editor tabs, `Element`/`Access` inspector
+  tabs, fixed add choices with target type locked after creation, `Show in app menu`
+  toggle with eye-off inactive badges, Dashboard locked without lock badge, Form
+  View labels derived from selected View titles, draft/Save UX, and access mock
+  UI. Backend persistence, runtime publication, real rail utility
+  visibility/access enforcement, and real access/permission enforcement remain
+  planned unless a later decision splits access into a dedicated tool.
 - Action Builder is planned but not active; it owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder is planned but not active; it owns generated PDF/template configuration over authored/runtime data.
 - Report Builder is planned but not active; it owns report definitions and analytical/read-only reporting outputs.

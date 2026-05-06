@@ -134,6 +134,8 @@ export const tenantSpanishMessages = {
         headerTitle: "Platform Studio",
         label: "Platform Studio",
         navigation: {
+          headerMeta: "Platform Studio / Navigation Builder",
+          headerTitle: "Navigation Builder",
           label: "Navigation Builder",
         },
       },

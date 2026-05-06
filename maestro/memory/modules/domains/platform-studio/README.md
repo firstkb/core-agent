@@ -32,7 +32,7 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 
 - Platform Studio is the tenant-web tool suite for configuring application behavior.
 - Form Builder is active.
-- Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned, not implementation-active.
+- Navigation Builder has an active UI-first V1 surface; Action Builder, PDF Builder, and Report Builder are planned, not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - Shared layer is `@platform/platform-studio-core`, not a shared UI package.
 - Form Builder route params are `modelId` and `viewId`.
@@ -45,10 +45,15 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 ## Tool Map
 
 - `Form Builder`: active. Owns models, views, field/layout authoring, authoring save, additive runtime apply, static/external model views, runtime view entry preparation, and managed import/export planning.
-- `Navigation Builder`: planned. Owns sidebar/navigation structure, app page
-  targets such as Business Tree, broader product module targets such as future
-  Training or Task Manager, authored runtime routes, and the access-facing
-  layer for runtime navigation. It may include permission/grant assignment
+- `Navigation Builder`: active UI-first V1. Owns app menu/sidebar navigation structure,
+  Form View/App Page/External Link targets, future App Module shape with nested
+  subitems, root-only `Menu title` dividers, separate `App menu`/`Utility rail` editor tabs,
+  `Element`/`Access` inspector tabs, fixed add choices with target type locked
+  after creation, `Show in app menu` toggle with eye-off inactive badges, Dashboard
+  locked without lock badge, Form View labels derived from selected View
+  titles, draft/Save UX, and the access-facing layer for runtime navigation and
+  rail utilities. V1 access is mock only; backend persistence, runtime
+  publication, real rail utility enforcement, and real grants remain planned
   unless a later decision splits access into its own tool.
 - `Action Builder`: planned. Owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects. Do not collapse this into the current Form Builder save flow.
 - `PDF Builder`: planned. Owns configured PDF templates and generated document output over authored/runtime data.

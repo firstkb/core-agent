@@ -23,7 +23,7 @@ Do not read the whole `platform/frontend/docs/platform-studio/**` tree by defaul
 | Tool | Status | Ownership |
 | --- | --- | --- |
 | Form Builder | active | Model/View authoring, field/layout authoring, authoring save, additive runtime apply, runtime view preparation. |
-| Navigation Builder | planned | Sidebar/navigation composition, app page targets, product module targets, authored runtime route targets, runtime exposure, likely access assignment unless split later. |
+| Navigation Builder | active UI-first V1 | App menu/navigation composition UI, root-only `Menu title` dividers, separate `App menu`/`Utility rail` editor tabs, `Element`/`Access` inspector with no V1 `Advanced` tab, type-aware Element sections, centered fixed-type add dialog with duplicate target guard for Form view/App page/App module target selection, Form Builder-style delete confirmation, `Show in app menu` toggle for containers and target entries, eye-off inactive badges, Dashboard locked without lock badge, fixed add choices for `Menu title`, `Menu group`, `Form view`, `App page`, and `App module`, Form View labels derived from selected View titles, Form View/App Page/External Link targets, future inactive App Module containers with possible subitems, per-level drag ordering, container/root add controls, container icon dictionary, draft/Save UX, access mock only. Backend persistence, runtime publication, real utility rail access enforcement, and ACL enforcement remain planned. |
 | Action Builder | planned | Authored events, view-triggered behavior, notifications, conditional changes, post-submit side effects. |
 | PDF Builder | planned | PDF template configuration and generated document output. |
 | Report Builder | planned | Report definitions and analytical/read-only reporting outputs. |
@@ -74,7 +74,7 @@ were deleted after compaction.
 
 ## Planned Tool Docs
 
-Until dedicated tracked docs exist, planned tools are defined only by the suite contract:
+Until dedicated tracked docs exist, planned or UI-first tools are defined by the suite contract:
 
 - Navigation Builder
 - Action Builder
@@ -89,4 +89,5 @@ Do not infer their implementation model from Form Builder internals.
 - backend Form Builder storage/API details
 - donor/reference code
 - prompt artifacts
-- Navigation Builder, Action Builder, PDF Builder, or Report Builder implementation details before owner approval
+- deep Navigation Builder implementation details outside the tracked suite contract
+- Action Builder, PDF Builder, or Report Builder implementation details before owner approval

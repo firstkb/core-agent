@@ -52,6 +52,11 @@ describe("platform studio route meta", () => {
     );
   });
 
+  it("uses Navigation Builder copy for the navigation route", () => {
+    expect(getPlatformStudioHeaderTitle(translate, "/builder/navigation")).toBe("Navigation Builder");
+    expect(getPlatformStudioHeaderMeta(translate, "/builder/navigation")).toBe("Platform Studio / Navigation Builder");
+  });
+
   it("keeps the view title while using Form Builder breadcrumb copy", () => {
     expect(getPlatformStudioHeaderTitle(translate, "/builder/forms/customer-profile/views/intake-form")).toBe("Intake Form");
     expect(getPlatformStudioHeaderMeta(translate, "/builder/forms/customer-profile/views/intake-form")).toBe(

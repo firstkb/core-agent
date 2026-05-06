@@ -14,8 +14,10 @@ Status: active compact contract
 
 - Platform Studio is the umbrella product surface.
 - Platform Studio is a suite of builder/configuration tools, not a synonym for Form Builder.
-- Form Builder is the active builder tool.
-- Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned but not implementation-active.
+- Form Builder is the active backend-backed builder tool.
+- Navigation Builder has an active UI-first V1 surface; backend persistence,
+  real runtime publication, and ACL enforcement remain planned.
+- Action Builder, PDF Builder, and Report Builder are planned but not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - `@platform/platform-studio-core` owns shared non-UI contracts/helpers.
 - Builder UI authors business-level model and layout intent, not raw database implementation.
@@ -24,10 +26,13 @@ Status: active compact contract
 
 - Form Builder owns model/view authoring, field/layout structure, authoring save, additive runtime apply, static/external model view management, and runtime view preparation.
 - Form Builder field/catalog support owns palette sections, base field types, presets, System Fields, simple rules, grid columns, root view settings, filters, and scope boundaries.
-- Navigation Builder owns sidebar/navigation composition, app page targets,
-  broader product module targets, authored runtime route targets, and runtime
-  exposure. Access/permission assignment is expected to live here unless a
-  later accepted decision creates a separate Access Builder.
+- Navigation Builder owns sidebar/navigation composition, Form View/App Page/
+  External Link targets, future App Module targets with nested subitems,
+  authored runtime route targets, draft/Save UX, active/inactive runtime sidebar
+  exposure, and future rail utility visibility/access enforcement. V1 already
+  exposes a separate RailBar utility tab, but access is mock only;
+  access/permission assignment is expected to live here unless a later accepted
+  decision creates a separate Access Builder.
 - A single tenant app page such as Business Tree is not a product module.
   Modules are broader product areas such as future Training or Task Manager.
 - Action Builder owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.

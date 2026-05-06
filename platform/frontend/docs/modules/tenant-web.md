@@ -159,6 +159,7 @@ Current top-level private routes:
 - `/builder/forms`
 - `/builder/forms/:modelId`
 - `/builder/forms/:modelId/views/:viewId`
+- `/builder/navigation`
 - `/app/forms/:modelId/views/:viewId`
 - `/app/forms/:modelId/views/:viewId/view/:docGuid`
 - `/app/platform-studio/forms/:modelId/views/:viewId`
@@ -192,8 +193,16 @@ Current published runtime behavior:
 - `/app/:routeKey/*` renders published runtime route pages.
 
 This is current runtime consumption, not a complete Navigation Builder implementation contract.
-Navigation Builder remains planned Platform Studio tool scope and should
-distinguish app page targets from broader product module targets.
+Navigation Builder now has a UI-first authoring route at `/builder/navigation`,
+while backend persistence, runtime publication, and ACL enforcement remain
+planned Platform Studio scope. Rail utilities such as Platform Studio, Task
+Manager, Favorites, and Help Center are shown in a separate Navigation Builder
+RailBar editor tab, but access is preview/mock only until real backend
+enforcement exists. Navigation Builder should distinguish app page targets from
+broader product module targets. Once Navigation Builder owns real sidebar
+output, opening a configured App Page or Form View must also set the tenant top
+bar title and breadcrumb from the configured navigation path and target
+metadata, so runtime screens read like the sidebar entry the user clicked.
 
 ## Platform Studio Ownership
 
@@ -204,8 +213,9 @@ Current ownership:
 - `tenant-web` owns Platform Studio route composition and React UI.
 - `platform/frontend/apps/tenant-web/src/features/platform-studio` is the app-local UI surface.
 - `@platform/platform-studio-core` owns UI-free contracts, schemas, manifest helpers, and validation helpers.
-- Form Builder is the only active Platform Studio tool.
-- Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned.
+- Form Builder is the active backend-backed Platform Studio tool.
+- Navigation Builder has an active UI-first V1 surface.
+- Action Builder, PDF Builder, and Report Builder are planned.
 
 Rules:
 

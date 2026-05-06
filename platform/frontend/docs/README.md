@@ -64,7 +64,7 @@ Tracked Platform Studio entrypoint:
 - `platform/backend/docs/modules/platform-studio/form-builder.md`
 
 Platform Studio is the tenant-web builder/configuration tool suite.
-Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned tools.
+Form Builder is active; Navigation Builder has an active UI-first V1 surface; Action Builder, PDF Builder, and Report Builder are planned tools.
 
 ## Reference And Donor Material
 

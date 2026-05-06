@@ -90,9 +90,12 @@ first-read file.
 ## Platform Studio Boundary
 
 - Platform Studio is not only Form Builder.
-- Form Builder is active.
-- Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned tools.
-- Do not implement planned tool concerns inside Form Builder without an accepted boundary update.
+- Form Builder is active backend-backed authoring.
+- Navigation Builder has an active UI-first V1 surface at `/builder/navigation`;
+  backend persistence, runtime publication, and real ACL enforcement remain
+  planned.
+- Action Builder, PDF Builder, and Report Builder are planned tools.
+- Do not implement another tool's concerns inside Form Builder without an accepted boundary update.
 - Form Builder planned/open work lives in `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`.
 
 ## Maestro Artifacts

@@ -68,8 +68,8 @@ The initial memory slice covers:
 - admin control plane
 - admin module registry
 - collection table
-- Platform Studio suite and Form Builder
-- planned Navigation Builder, Action Builder, PDF Builder, and Report Builder boundaries
+- Platform Studio suite, Form Builder, and Navigation Builder UI-first V1
+- planned Action Builder, PDF Builder, and Report Builder boundaries
 - first FE/BE split for Platform Studio implementation concerns
 - frontend and backend docs classification maps
 - target structure for future physical FE/BE docs rewrite

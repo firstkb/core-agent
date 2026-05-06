@@ -17,6 +17,7 @@ const platformStudioRoutePatterns = {
   legacyObjectScreen: "/builder/forms/:objectId/screens/:screenId",
   legacyView: "/builder/forms/:modelId/screens/:viewId",
   model: "/builder/forms/:modelId",
+  navigation: "/builder/navigation",
   previewRuntimeView: "/app/platform-studio/forms/:modelId/views/:viewId",
   root: "/builder",
   view: "/builder/forms/:modelId/views/:viewId",
@@ -24,6 +25,7 @@ const platformStudioRoutePatterns = {
 
 export const platformStudioPaths = {
   forms: platformStudioRoutePatterns.forms,
+  navigation: platformStudioRoutePatterns.navigation,
   model(modelId: string) {
     return `${platformStudioPaths.forms}/${encodeURIComponent(modelId)}`;
   },
@@ -44,7 +46,7 @@ export const platformStudioPaths = {
 
 type PlatformStudioRouteMeta =
   | {
-      kind: "root" | "forms";
+      kind: "root" | "forms" | "navigation";
     }
   | {
       kind: "model";
@@ -66,6 +68,10 @@ export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRout
 
   if (pathname === platformStudioRoutePatterns.forms) {
     return { kind: "forms" };
+  }
+
+  if (pathname === platformStudioRoutePatterns.navigation) {
+    return { kind: "navigation" };
   }
 
   const canonicalViewMatch = matchPath(platformStudioRoutePatterns.view, pathname) as PathMatch<"modelId" | "viewId"> | null;
@@ -128,6 +134,8 @@ export function getPlatformStudioHeaderTitle(translate: TranslateFunction, pathn
     case "forms":
     case "model":
       return translate("tenant.navigation.platformStudio.forms.headerTitle");
+    case "navigation":
+      return translate("tenant.navigation.platformStudio.navigation.headerTitle");
     case "view":
       return routeMeta.viewLabel || translate("tenant.navigation.platformStudio.forms.headerTitle");
   }
@@ -144,6 +152,8 @@ export function getPlatformStudioHeaderMeta(translate: TranslateFunction, pathna
       return translate("tenant.navigation.platformStudio.headerMeta");
     case "forms":
       return translate("tenant.navigation.platformStudio.forms.headerMeta");
+    case "navigation":
+      return translate("tenant.navigation.platformStudio.navigation.headerMeta");
     case "model":
       if (!routeMeta.modelLabel) {
         return translate("tenant.navigation.platformStudio.forms.headerMeta");

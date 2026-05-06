@@ -41,9 +41,21 @@ Last compacted: 2026-04-25
 - Refresh token remains backend-managed in an `HttpOnly` cookie; JS stores only access token and expiry.
 - Install prompting is mounted on public `/sign-in` only.
 - Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
-- Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned.
+- Form Builder is active backend-backed authoring; Navigation Builder has an
+  active UI-first V1 surface; Action Builder, PDF Builder, and Report Builder
+  are planned.
 - Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
 - Published runtime consumption is not the full Navigation Builder contract.
+- Navigation Builder V1 lives at `/builder/navigation` with draft/Save UI,
+  Form View/App Page/External Link targets, future App Module shape with nested
+  subitems, root-only `Title` dividers, separate Sidebar/RailBar editor tabs,
+  fixed add choices, `Element`/`Access` inspector tabs, Form Builder-style
+  Element sections, `Active` toggle with eye-off inactive badges, Dashboard
+  locked without a lock badge, Form View labels derived from selected View
+  titles, and mock-only access controls.
+- When Navigation Builder becomes the source for real sidebar output, App Page
+  and Form View runtime screens must resolve the tenant top bar title and
+  breadcrumb from the configured navigation path and target metadata.
 - Business Tree is the first tenant app page. Its canonical direct route is
   `/app/pages/business-tree` until Navigation Builder can register app page
   targets.
@@ -67,9 +79,10 @@ Last compacted: 2026-04-25
   `CONFIG_COMPANYID`.
 - `code-confirmed` Current access is authenticated tenant users. Route/service
   boundaries contain TODOs for future Navigation Builder page permissions.
-- `planned` Follow-ups: Navigation Builder app-page target metadata and sidebar
-  registration; Navigation Builder-backed page access control; a separate
-  Navigation Builder contract for real product-module targets; parent company
+- `planned` Follow-ups: Navigation Builder backend persistence, app-page target
+  metadata and sidebar registration, runtime publication, real rail utility
+  visibility/access enforcement, Navigation Builder-backed page access control,
+  real product-module target contracts, parent company
   existence validation for `contacts:*` and `projects:*` lazy parents; large
   tenant performance and possible tree virtualization; optional explicit root
   company setting only if legacy imports require it; authenticated browser smoke

@@ -8,7 +8,7 @@ Last compacted: 2026-04-26
 
 - editing tenant-web Platform Studio UI
 - changing Form Builder workspace behavior
-- changing planned Navigation Builder, Action Builder, PDF Builder, or Report Builder UI entrypoints
+- changing Navigation Builder, Action Builder, PDF Builder, or Report Builder UI entrypoints
 - changing model/view UI, locks, debug modal, static model presentation, or runtime preview entry
 - changing route names or route params
 
@@ -29,7 +29,8 @@ Last compacted: 2026-04-26
 ## Frontend Contract
 
 - Platform Studio UI stays app-local in `tenant-web`.
-- Platform Studio UI is a suite shell; Form Builder is the only active builder today.
+- Platform Studio UI is a suite shell; Form Builder is active backend-backed
+  authoring and Navigation Builder has an active UI-first V1 surface.
 - `platform-studio-core` owns non-UI contracts/helpers.
 - Form Builder language is `Model` and `View`.
 - Route params are `modelId` and `viewId`.
@@ -45,7 +46,17 @@ Last compacted: 2026-04-26
 
 ## Planned / Watch
 
-- Planned Platform Studio tools need distinct UI boundaries before implementation: Navigation Builder, Action Builder, PDF Builder, Report Builder.
+- Navigation Builder V1 is UI-first: tree editor, `Element`/`Access` inspector
+  tabs with no V1 `Advanced` tab, Form Builder-style Element sections, access
+  mock sheet, root-only `Menu title` dividers, separate `App menu`/`Utility rail` left tabs,
+  per-parent-level drag ordering, fixed add choices, `Show in app menu` toggle with
+  eye-off inactive badges, Dashboard locked without a lock badge, Form View
+  labels derived from selected View titles, container/root add controls,
+  container-level navigation icons only, editable draft state, and explicit
+  `Save`. Utility rail access is also mock only. Backend persistence, runtime
+  publication, real rail utility access enforcement, and real ACL enforcement
+  remain planned.
+- Planned Platform Studio tools need distinct UI boundaries before implementation: Action Builder, PDF Builder, Report Builder.
 - Surface contextual `runtimeApply` partial failures visibly in workspace UI.
 - Preserve preview/runtime route split.
 - Do not add temporary runtime grants in UI before Navigation Builder ACL exists.

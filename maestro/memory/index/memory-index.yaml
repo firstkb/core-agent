@@ -342,7 +342,7 @@
   domain: platform-studio
   state: accepted
   confidence: owner-confirmed
-  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active, with Navigation Builder, Action Builder, PDF Builder, and Report Builder planned."
+  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active backend-backed authoring, Navigation Builder active UI-first V1, and Action/PDF/Report Builder planned."
   read_when:
     - "task touches Platform Studio as a product suite"
     - "task mentions Navigation Builder, sidebar, Platform Studio access/grants, Action Builder, authored events, PDF Builder, Report Builder, generated documents, or future builder tools"

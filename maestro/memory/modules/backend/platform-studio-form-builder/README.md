@@ -8,7 +8,7 @@ Last compacted: 2026-04-25
 
 - changing `platformstudioformbuilder`
 - changing Form Builder authoring endpoints, repository/service logic, migrations, runtime apply, static model seeds, runtime views, or import/export backend behavior
-- changing backend seams where Form Builder hands off to planned Platform Studio tools such as Navigation Builder, Action Builder, PDF Builder, or Report Builder
+- changing backend seams where Form Builder hands off to separate Platform Studio tools such as Navigation Builder, Action Builder, PDF Builder, or Report Builder
 
 ## Owner Sources
 

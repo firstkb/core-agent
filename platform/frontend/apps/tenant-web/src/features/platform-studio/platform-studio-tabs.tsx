@@ -9,8 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { platformStudioPaths } from "./platform-studio-route-meta";
 
 export function PlatformStudioTabs({
+  activeTool = "forms",
   onFormsNavigate,
 }: {
+  activeTool?: "forms" | "navigation";
   onFormsNavigate?: () => void;
 }) {
   const { t } = useTranslation();
@@ -27,10 +29,13 @@ export function PlatformStudioTabs({
 
           navigate(platformStudioPaths.forms);
         }
-      }} size="sm" value="forms" variant="surface">
+        if (value === "navigation") {
+          navigate(platformStudioPaths.navigation);
+        }
+      }} size="sm" value={activeTool} variant="surface">
         <TabsList>
           <TabsTrigger value="forms">{t("tenant.navigation.platformStudio.forms.label")}</TabsTrigger>
-          <TabsTrigger disabled value="navigation">{t("tenant.navigation.platformStudio.navigation.label")}</TabsTrigger>
+          <TabsTrigger value="navigation">{t("tenant.navigation.platformStudio.navigation.label")}</TabsTrigger>
         </TabsList>
       </Tabs>
     </div>

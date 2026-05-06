@@ -9,14 +9,16 @@ Status: active compact contract
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+- `platform/backend/docs/contracts/platform-studio-navigation-builder.md`
 
 ## Product Invariants
 
 - Platform Studio is the umbrella product surface.
 - Platform Studio is a suite of builder/configuration tools, not a synonym for Form Builder.
 - Form Builder is the active backend-backed builder tool.
-- Navigation Builder has an active UI-first V1 surface; backend persistence,
-  real runtime publication, and ACL enforcement remain planned.
+- Navigation Builder has an active UI-first V1 surface plus first backend
+  persistence slice; real runtime sidebar output and ACL enforcement remain
+  planned.
 - Action Builder, PDF Builder, and Report Builder are planned but not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - `@platform/platform-studio-core` owns shared non-UI contracts/helpers.
@@ -29,8 +31,11 @@ Status: active compact contract
 - Navigation Builder owns sidebar/navigation composition, Form View/App Page/
   External Link targets, future App Module targets with nested subitems,
   authored runtime route targets, draft/Save UX, active/inactive runtime sidebar
-  exposure, and future rail utility visibility/access enforcement. V1 already
-  exposes a separate RailBar utility tab, but access is mock only;
+  exposure, and future rail utility visibility/access enforcement. It uses a
+  dedicated backend package `platformstudionavigationbuilder` for saved
+  definition persistence and validation; do not add this to
+  `platformstudioformbuilder`. V1 already exposes a separate RailBar utility
+  tab, but access is mock only;
   access/permission assignment is expected to live here unless a later accepted
   decision creates a separate Access Builder.
 - A single tenant app page such as Business Tree is not a product module.

@@ -136,3 +136,9 @@ Read for admin modules, access policy, module registry, employees, and tenant ma
 ### `modules/backend/platform-studio-form-builder/`
 
 Read for Form Builder backend authoring, repository/service logic, runtime apply, tenant migrations, and future backend seams to runtime/actions/navigation/PDF/report tooling.
+
+### `modules/backend/platform-studio-navigation-builder/`
+
+Read for Navigation Builder backend authoring API, saved navigation definition
+persistence, validation, tenant migration, runtime sidebar handoff, and target
+contract boundaries.

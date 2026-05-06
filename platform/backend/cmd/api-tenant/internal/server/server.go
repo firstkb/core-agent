@@ -17,6 +17,7 @@ import (
 	businesstree "dtriton.com/platform/backend/modules/tenant/apppages/businesstree"
 	formbuilder "dtriton.com/platform/backend/modules/tenant/platformstudioformbuilder"
 	formruntime "dtriton.com/platform/backend/modules/tenant/platformstudioformruntime"
+	navigationbuilder "dtriton.com/platform/backend/modules/tenant/platformstudionavigationbuilder"
 	profilesvc "dtriton.com/platform/backend/modules/tenant/profile"
 )
 
@@ -66,11 +67,12 @@ type Server struct {
 	classifier *router.Classifier
 	tenants    *tenantsvc.ServiceTenantProvider
 
-	tokenValidator                authpkg.JWTIssuer
-	businessTreePageHTTP          *businesstree.Handler
-	profileHTTP                   *profilesvc.Handler
-	platformStudioFormBuilderHTTP *formbuilder.Handler
-	platformStudioFormRuntimeHTTP *formruntime.Handler
+	tokenValidator                      authpkg.JWTIssuer
+	businessTreePageHTTP                *businesstree.Handler
+	profileHTTP                         *profilesvc.Handler
+	platformStudioFormBuilderHTTP       *formbuilder.Handler
+	platformStudioFormRuntimeHTTP       *formruntime.Handler
+	platformStudioNavigationBuilderHTTP *navigationbuilder.Handler
 }
 
 func NewServer(cfg *config.Config, logger *slog.Logger) (*Server, error) {

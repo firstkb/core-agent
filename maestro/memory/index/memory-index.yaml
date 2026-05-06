@@ -342,7 +342,7 @@
   domain: platform-studio
   state: accepted
   confidence: owner-confirmed
-  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active backend-backed authoring, Navigation Builder active UI-first V1, and Action/PDF/Report Builder planned."
+  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active backend-backed authoring, Navigation Builder active UI-first V1 with first backend persistence slice, and Action/PDF/Report Builder planned."
   read_when:
     - "task touches Platform Studio as a product suite"
     - "task mentions Navigation Builder, sidebar, Platform Studio access/grants, Action Builder, authored events, PDF Builder, Report Builder, generated documents, or future builder tools"
@@ -353,15 +353,42 @@
     - platform/frontend/docs/modules/platform-studio/form-builder-fields.md
     - platform/backend/docs/contracts/platform-studio-form-builder.md
     - platform/backend/docs/modules/platform-studio/form-builder.md
+    - platform/backend/docs/contracts/platform-studio-navigation-builder.md
+    - platform/backend/docs/modules/platform-studio/navigation-builder.md
   memory_docs:
     - maestro/memory/modules/domains/platform-studio/README.md
     - maestro/memory/modules/domains/platform-studio/contract.md
     - maestro/memory/modules/domains/platform-studio/state.md
     - maestro/memory/modules/domains/platform-studio/tools/README.md
+    - maestro/memory/modules/domains/platform-studio/tools/navigation-builder.md
+    - maestro/memory/modules/backend/platform-studio-navigation-builder/README.md
     - maestro/memory/docs/frontend/platform-studio/README.md
     - maestro/memory/docs/frontend/platform-studio/doc-map.md
     - maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md
   last_compacted: 2026-04-25
+
+- id: platform.platform-studio.navigation-builder
+  memory_type: semantic
+  domain: platform-studio
+  state: active
+  confidence: doc-confirmed
+  summary: "Navigation Builder has tenant-web UI V1 and a dedicated api-tenant backend package for saved definition persistence, validation, duplicate target prevention, and future runtime sidebar handoff."
+  read_when:
+    - "task touches Navigation Builder, app menu, utility rail, sidebar composition, saved navigation definition, ps_navigation_config, runtime sidebar output, Form View/App Page navigation targets, or Navigation Builder backend API"
+  canonical_docs:
+    - platform/frontend/docs/contracts/platform-studio.md
+    - platform/frontend/docs/modules/platform-studio/README.md
+    - platform/backend/docs/contracts/platform-studio-navigation-builder.md
+    - platform/backend/docs/modules/platform-studio/navigation-builder.md
+    - platform/frontend/docs/modules/tenant-web.md
+  memory_docs:
+    - maestro/memory/modules/domains/platform-studio/README.md
+    - maestro/memory/modules/domains/platform-studio/contract.md
+    - maestro/memory/modules/domains/platform-studio/state.md
+    - maestro/memory/modules/domains/platform-studio/tools/navigation-builder.md
+    - maestro/memory/modules/backend/platform-studio-navigation-builder/README.md
+    - maestro/memory/modules/frontend/tenant-web/README.md
+  last_compacted: 2026-05-06
 
 - id: platform.app-delivery
   memory_type: semantic

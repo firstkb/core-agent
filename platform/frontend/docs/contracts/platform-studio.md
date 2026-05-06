@@ -20,8 +20,9 @@ Read with:
 - Platform Studio is the tenant-web builder/configuration tool suite.
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
-- Navigation Builder has an active UI-first V1 surface; backend persistence,
-  real publication, and ACL enforcement remain planned.
+- Navigation Builder has an active UI-first V1 surface plus first backend
+  persistence slice; real runtime sidebar output and ACL enforcement remain
+  planned.
 - Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.

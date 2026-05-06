@@ -89,6 +89,7 @@ Current active tenant sequence includes:
 - `004_platform_studio_static_model_guid_backfill.sql`
 - `005_platform_studio_static_model_users.sql`
 - `006_platform_studio_static_model_company.sql`
+- `007_platform_studio_navigation_builder.sql`
 
 The tenant baseline is no longer the only active tenant migration.
 Forward migrations exist and must be treated as active schema history.

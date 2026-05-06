@@ -24,8 +24,10 @@ Current contract-first docs:
 | `platform/backend/docs/contracts/collection-table.md` | active contract | Shared Collection Table DTOs, validators, preferences, and current admin collection endpoint families | Primary backend collection-table source. |
 | `platform/backend/docs/contracts/events-identity.md` | active contract | Event actor identity fields for master and tenant events | Primary event actor identity source. |
 | `platform/backend/docs/contracts/platform-studio-form-builder.md` | active contract | Form Builder backend authoring API, metadata storage, runtime apply, generated objects, validation, migration boundary | Primary backend Form Builder source. |
+| `platform/backend/docs/contracts/platform-studio-navigation-builder.md` | active contract | Navigation Builder backend authoring API, saved definition storage, validation, and runtime-sidebar handoff boundary | Primary backend Navigation Builder source. |
 | `platform/backend/docs/modules/runtime.md` | active module doc | Current runtime shape, active entrypoints, module roots, foundation boundaries | Primary backend runtime shape source. |
 | `platform/backend/docs/modules/platform-studio/form-builder.md` | active module doc | Backend Form Builder implementation map, read order, code surfaces, and package guardrails | Primary backend Form Builder implementation orientation. |
+| `platform/backend/docs/modules/platform-studio/navigation-builder.md` | active module doc | Backend Navigation Builder implementation map, read order, code surfaces, and package guardrails | Primary backend Navigation Builder implementation orientation. |
 
 Compatibility pointers:
 
@@ -91,6 +93,13 @@ files were deleted after compaction.
 Old frontend-owned backend-facing Form Builder pointer files were deleted after
 backend facts were compacted into the backend contract.
 
+## Platform Studio Navigation Builder
+
+| Source | Status | Read for | Retrieval note |
+| --- | --- | --- | --- |
+| `platform/backend/docs/contracts/platform-studio-navigation-builder.md` | active contract | Backend Navigation Builder API, `ps_navigation_config`, validation, duplicate target prevention, and runtime sidebar handoff | Read with frontend `platform/frontend/docs/contracts/platform-studio.md` for cross-stack Navigation Builder work. |
+| `platform/backend/docs/modules/platform-studio/navigation-builder.md` | active module doc | Backend implementation read order, route/wiring/module/schema surfaces, code map, and package guardrails | Read before code changes in `platformstudionavigationbuilder`. |
+
 ## Schema And Tenancy
 
 | Source | Status | Read for | Retrieval note |
@@ -138,3 +147,4 @@ Tracked reference-code alias registry:
 - Backend migrations: `maestro/memory/modules/backend/migrations/`
 - Backend admin modules: `maestro/memory/modules/backend/admin-modules/`
 - Platform Studio backend/Form Builder: `maestro/memory/modules/backend/platform-studio-form-builder/`
+- Platform Studio backend/Navigation Builder: `maestro/memory/modules/backend/platform-studio-navigation-builder/`

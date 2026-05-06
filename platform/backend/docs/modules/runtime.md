@@ -47,6 +47,7 @@ Current responsibility includes:
 
 - tenant profile/runtime endpoints
 - tenant-scoped Platform Studio Form Builder backend
+- tenant-scoped Platform Studio Navigation Builder backend
 - future tenant modules through explicit module packages and route families
 
 ### `cmd/auth`

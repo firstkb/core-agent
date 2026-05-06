@@ -334,10 +334,27 @@ routes:
       - maestro/memory/modules/domains/platform-studio/contract.md
       - maestro/memory/modules/domains/platform-studio/state.md
       - maestro/memory/modules/domains/platform-studio/tools/README.md
+      - maestro/memory/modules/domains/platform-studio/tools/navigation-builder.md
       - maestro/memory/modules/frontend/tenant-web/README.md
       - maestro/memory/docs/frontend/platform-studio/README.md
       - maestro/memory/docs/frontend/platform-studio/doc-map.md
       - maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md
+
+  backend_navigation_builder:
+    triggers:
+      - platformstudionavigationbuilder
+      - Navigation Builder backend
+      - Navigation Builder API
+      - Navigation Builder storage
+      - ps_navigation_config
+      - runtime sidebar output
+      - saved navigation definition
+    read:
+      - maestro/memory/modules/backend/platform-studio-navigation-builder/README.md
+      - maestro/memory/modules/domains/platform-studio/README.md
+      - maestro/memory/modules/domains/platform-studio/contract.md
+      - maestro/memory/modules/domains/platform-studio/tools/navigation-builder.md
+      - maestro/memory/docs/backend/doc-map.md
 
   form_builder:
     triggers:

@@ -26,7 +26,7 @@ Last compacted: 2026-04-25
 - Migrations are explicit and run through `cmd/migrate`.
 - Master and tenant migrations are distinct.
 - Tenant bundle and forward migrations must remain coherent.
-- Active tenant migrations include `000_tenant_baseline.sql` through `006_platform_studio_static_model_company.sql`.
+- Active tenant migrations include `000_tenant_baseline.sql` through `007_platform_studio_navigation_builder.sql`.
 - Archive old migrations only when the active migration/bundle policy permits it.
 - Legacy import mapping is reference material under `platform/backend/docs/reference/`, not runtime schema truth.
 - Legacy PostgreSQL SQL under `platform/backend/docs/archive/postgres-archive/**` is documentation archive only, not active migration input.

@@ -14,7 +14,8 @@ Last compacted: 2026-04-25
 - changing `dataSchema`, `layoutBlueprint`, or `uiSchema`
 - changing Form Builder authoring load/save
 - changing runtime apply, runtime routes, static models, import/export, or filter behavior
-- changing `tenant-web` builder UI or `platformstudioformbuilder` backend
+- changing `tenant-web` builder UI, `platformstudioformbuilder` backend, or
+  `platformstudionavigationbuilder` backend
 
 ## Owner Sources
 
@@ -23,6 +24,7 @@ Last compacted: 2026-04-25
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+- `platform/backend/docs/contracts/platform-studio-navigation-builder.md`
 - `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 
@@ -32,12 +34,16 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 
 - Platform Studio is the tenant-web tool suite for configuring application behavior.
 - Form Builder is active.
-- Navigation Builder has an active UI-first V1 surface; Action Builder, PDF Builder, and Report Builder are planned, not implementation-active.
+- Navigation Builder has an active UI-first V1 surface plus first backend
+  persistence slice; Action Builder, PDF Builder, and Report Builder are planned,
+  not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - Shared layer is `@platform/platform-studio-core`, not a shared UI package.
 - Form Builder route params are `modelId` and `viewId`.
 - Titles, SQL names, and view-local node ids are not identity.
 - Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply truth lives in `platform/backend/docs/contracts/platform-studio-form-builder.md`.
+- Backend-owned Navigation Builder API/storage/validation truth lives in
+  `platform/backend/docs/contracts/platform-studio-navigation-builder.md`.
 - Form Builder field/catalog/rules/view-settings truth lives in `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`.
 - Planned/open Form Builder work lives in `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`.
 - Old Form Builder detail/workstream docs are classified in `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md`.
@@ -52,8 +58,9 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
   after creation, `Show in app menu` toggle with eye-off inactive badges, Dashboard
   locked without lock badge, Form View labels derived from selected View
   titles, draft/Save UX, and the access-facing layer for runtime navigation and
-  rail utilities. V1 access is mock only; backend persistence, runtime
-  publication, real rail utility enforcement, and real grants remain planned
+  rail utilities. Backend persistence now starts in the dedicated
+  `platformstudionavigationbuilder` package with `ps_navigation_config`; runtime
+  sidebar output, real rail utility enforcement, and real grants remain planned
   unless a later decision splits access into its own tool.
 - `Action Builder`: planned. Owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects. Do not collapse this into the current Form Builder save flow.
 - `PDF Builder`: planned. Owns configured PDF templates and generated document output over authored/runtime data.

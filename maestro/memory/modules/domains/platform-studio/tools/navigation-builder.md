@@ -19,6 +19,12 @@ Last compacted: 2026-05-06
 - Tenant-web route: `/builder/navigation`.
 - V1 is UI-first: tree editor, inspector, access mock sheet, draft state, and
   explicit `Save`.
+- First backend persistence slice is active in
+  `platform/backend/modules/tenant/platformstudionavigationbuilder`; it exposes
+  `GET /app/platform-studio/navigation` and
+  `PUT /app/platform-studio/navigation`, stores definitions in
+  `ps_navigation_config`, enforces duplicate target validation, and uses
+  optimistic `expectedVersion` checks.
 - V1 targets: Form View, App Page, External Link, and future App Module pages.
 - App Modules can have nested subitems. Single app pages such as Business Tree
   are App Page targets, not product modules.
@@ -71,6 +77,8 @@ Last compacted: 2026-05-06
 
 - Do not invent temporary runtime grants before the real Navigation Builder ACL model exists.
 - Do not expose non-root runtime entries from frontend-only fabrication.
+- Do not put Navigation Builder persistence or validation in
+  `platformstudioformbuilder`.
 - Keep `/app/platform-studio/forms/...` as preview/authoring context, not a navigation target.
 - V1 Access UI is preview/mock only and must not be claimed as backend route/API
   enforcement.

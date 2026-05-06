@@ -194,8 +194,9 @@ Current published runtime behavior:
 
 This is current runtime consumption, not a complete Navigation Builder implementation contract.
 Navigation Builder now has a UI-first authoring route at `/builder/navigation`,
-while backend persistence, runtime publication, and ACL enforcement remain
-planned Platform Studio scope. Rail utilities such as Platform Studio, Task
+and a first backend persistence slice at `GET/PUT /app/platform-studio/navigation`;
+runtime sidebar output and ACL enforcement remain planned Platform Studio scope.
+Rail utilities such as Platform Studio, Task
 Manager, Favorites, and Help Center are shown in a separate Navigation Builder
 RailBar editor tab, but access is preview/mock only until real backend
 enforcement exists. Navigation Builder should distinguish app page targets from

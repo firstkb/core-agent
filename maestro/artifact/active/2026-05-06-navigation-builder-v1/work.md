@@ -54,10 +54,12 @@ Studio.
 - Runtime sidebar follow-up: once configured App Page/Form View entries are
   rendered from Navigation Builder, the tenant top bar title and breadcrumb must
   resolve from the Navigation Builder path and target metadata.
+- Backend persistence first slice is a dedicated tenant service:
+  `platformstudionavigationbuilder`, not an extension of
+  `platformstudioformbuilder`.
 
 ## Non-Scope
 
-- Backend Navigation Builder persistence.
 - Runtime ACL/grant enforcement.
 - Replacing current tenant runtime manifest source.
 - Action/PDF/Report Builder behavior.
@@ -66,6 +68,9 @@ Studio.
 ## Implementation Surface
 
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/**`
+- `platform/backend/modules/tenant/platformstudionavigationbuilder/**`
+- `platform/backend/cmd/api-tenant/internal/server/*navigation_builder*.go`
+- `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
 - focused tenant-web tests under `platform/frontend/apps/tenant-web/tests/**`
 - localized tenant-web copy when needed
 - optional Platform Studio docs/memory updates if scope becomes durable
@@ -161,6 +166,13 @@ Studio.
   after the final reload baseline.
 - Fixed unsaved-change counting to compare navigation nodes by stable `id`
   instead of sorted array index, so adding one node reports one draft change.
+- Backend first slice: added dedicated
+  `platformstudionavigationbuilder` service/repository/handler package,
+  tenant schema table `ps_navigation_config`, `GET/PUT
+  /app/platform-studio/navigation`, optimistic `expectedVersion` saves,
+  duplicate target validation, docs/memory, and regenerated tenant bundle.
+- Passed: `go test ./modules/tenant/platformstudionavigationbuilder`.
+- Passed: `go test ./cmd/api-tenant/...`.
 
 ## Follow-Up Prompt To Capture
 

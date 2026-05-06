@@ -42,8 +42,8 @@ Last compacted: 2026-04-25
 - Install prompting is mounted on public `/sign-in` only.
 - Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
 - Form Builder is active backend-backed authoring; Navigation Builder has an
-  active UI-first V1 surface; Action Builder, PDF Builder, and Report Builder
-  are planned.
+  active UI-first V1 surface plus first backend persistence slice; Action
+  Builder, PDF Builder, and Report Builder are planned.
 - Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
 - Published runtime consumption is not the full Navigation Builder contract.
 - Navigation Builder V1 lives at `/builder/navigation` with draft/Save UI,
@@ -53,6 +53,9 @@ Last compacted: 2026-04-25
   Element sections, `Active` toggle with eye-off inactive badges, Dashboard
   locked without a lock badge, Form View labels derived from selected View
   titles, and mock-only access controls.
+- Navigation Builder persistence currently lives at
+  `GET/PUT /app/platform-studio/navigation` backed by `ps_navigation_config`;
+  runtime sidebar output is still planned.
 - When Navigation Builder becomes the source for real sidebar output, App Page
   and Form View runtime screens must resolve the tenant top bar title and
   breadcrumb from the configured navigation path and target metadata.
@@ -79,8 +82,8 @@ Last compacted: 2026-04-25
   `CONFIG_COMPANYID`.
 - `code-confirmed` Current access is authenticated tenant users. Route/service
   boundaries contain TODOs for future Navigation Builder page permissions.
-- `planned` Follow-ups: Navigation Builder backend persistence, app-page target
-  metadata and sidebar registration, runtime publication, real rail utility
+- `planned` Follow-ups: app-page target metadata and sidebar registration,
+  runtime publication, real rail utility
   visibility/access enforcement, Navigation Builder-backed page access control,
   real product-module target contracts, parent company
   existence validation for `contacts:*` and `projects:*` lazy parents; large

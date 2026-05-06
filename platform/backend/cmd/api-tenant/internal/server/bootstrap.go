@@ -51,6 +51,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	server.profileHTTP = buildTenantProfileModule(server.sqlClient)
 	server.platformStudioFormBuilderHTTP = buildPlatformStudioFormBuilderModule(server.sqlClient)
 	server.platformStudioFormRuntimeHTTP = buildPlatformStudioFormRuntimeModule(server.sqlClient)
+	server.platformStudioNavigationBuilderHTTP = buildPlatformStudioNavigationBuilderModule(server.sqlClient)
 	server.logStartupState(cfg)
 
 	mux, class := server.buildRoutes()

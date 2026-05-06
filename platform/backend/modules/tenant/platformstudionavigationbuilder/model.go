@@ -1,0 +1,96 @@
+package platformstudionavigationbuilder
+
+import (
+	"encoding/json"
+	"time"
+)
+
+const (
+	ConfigKeyDefault = "default"
+	SchemaVersionV1  = 1
+
+	NodeTypeMenuTitle   = "menu_title"
+	NodeTypeMenuGroup   = "menu_group"
+	NodeTypeFormView    = "form_view"
+	NodeTypeAppPage     = "app_page"
+	NodeTypeExternalURL = "external_link"
+	NodeTypeAppModule   = "app_module"
+
+	TargetTypeFormView    = "form_view"
+	TargetTypeAppPage     = "app_page"
+	TargetTypeExternalURL = "external_link"
+	TargetTypeAppModule   = "app_module"
+)
+
+type NavigationDefinition struct {
+	SchemaVersion int                  `json:"schemaVersion"`
+	AppMenu       []NavigationNode     `json:"appMenu"`
+	UtilityRail   []NavigationRailItem `json:"utilityRail,omitempty"`
+}
+
+type NavigationNode struct {
+	ID       string            `json:"id"`
+	Type     string            `json:"type"`
+	Label    string            `json:"label"`
+	Active   *bool             `json:"active,omitempty"`
+	Icon     string            `json:"icon,omitempty"`
+	Channel  string            `json:"channel,omitempty"`
+	Target   *NavigationTarget `json:"target,omitempty"`
+	Children []NavigationNode  `json:"children,omitempty"`
+	Meta     json.RawMessage   `json:"meta,omitempty"`
+	Access   json.RawMessage   `json:"access,omitempty"`
+}
+
+type NavigationTarget struct {
+	Type     string `json:"type"`
+	ModelID  string `json:"modelId,omitempty"`
+	ViewID   string `json:"viewId,omitempty"`
+	PageID   string `json:"pageId,omitempty"`
+	ModuleID string `json:"moduleId,omitempty"`
+	URL      string `json:"url,omitempty"`
+	Route    string `json:"route,omitempty"`
+}
+
+type NavigationRailItem struct {
+	ID     string          `json:"id"`
+	Key    string          `json:"key"`
+	Label  string          `json:"label"`
+	Active *bool           `json:"active,omitempty"`
+	Access json.RawMessage `json:"access,omitempty"`
+}
+
+type ValidationMessage struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Target  string `json:"target,omitempty"`
+}
+
+type ValidationSummary struct {
+	CanSave  bool                `json:"canSave"`
+	Errors   []ValidationMessage `json:"errors"`
+	Warnings []ValidationMessage `json:"warnings"`
+}
+
+type ConfigRecord struct {
+	ConfigKey      string
+	Version        int64
+	DefinitionJSON json.RawMessage
+	UpdatedAt      time.Time
+	UpdatedBy      string
+}
+
+type LoadConfigResponse struct {
+	ConfigKey         string               `json:"configKey"`
+	Definition        NavigationDefinition `json:"definition"`
+	Version           int64                `json:"version"`
+	UpdatedAt         string               `json:"updatedAt,omitempty"`
+	UpdatedBy         string               `json:"updatedBy,omitempty"`
+	ValidationSummary ValidationSummary    `json:"validationSummary"`
+}
+
+type SaveConfigRequest struct {
+	Definition      NavigationDefinition `json:"definition"`
+	ExpectedVersion *int64               `json:"expectedVersion,omitempty"`
+}
+
+type SaveConfigResponse = LoadConfigResponse

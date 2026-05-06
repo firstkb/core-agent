@@ -91,6 +91,7 @@ Current tenant runtime support tables include:
 - `notification_template`
 - `ps_model`
 - `ps_view`
+- `ps_navigation_config`
 
 Current Platform Studio runtime/static-model support is extended by tenant forward migrations after the baseline.
 

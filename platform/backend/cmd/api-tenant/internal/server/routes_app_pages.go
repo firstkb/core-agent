@@ -7,18 +7,18 @@ import (
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
 	"dtriton.com/platform/backend/internal/platform/httpx/handler"
 	"dtriton.com/platform/backend/internal/platform/httpx/router"
-	businesstree "dtriton.com/platform/backend/modules/tenant/businesstree"
+	businesstree "dtriton.com/platform/backend/modules/tenant/apppages/businesstree"
 )
 
-func (srv *Server) registerBusinessTreeRoutes(b *router.Builder) {
-	// TODO: Replace authenticated-only access with Navigation Builder module permissions.
+func (srv *Server) registerAppPageRoutes(b *router.Builder) {
+	// TODO: Replace authenticated-only access with Navigation Builder page permissions.
 	b.Handle(
 		"BUSINESS_TREE_NODES",
 		http.MethodGet,
-		"/app/modules/business-tree/nodes",
+		"/app/pages/business-tree/nodes",
 		router.TierSecure,
 		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*businesstree.NodesResponse, error) {
-			info, err := srv.businessTreeHTTP.ListNodes(ctx, r, struct{}{})
+			info, err := srv.businessTreePageHTTP.ListNodes(ctx, r, struct{}{})
 			if err != nil {
 				return nil, apperr.WrapAndLog(
 					srv.logger,

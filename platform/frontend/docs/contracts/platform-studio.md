@@ -65,7 +65,9 @@ Navigation Builder:
 
 - status: planned
 - owns sidebar/navigation composition
-- owns module assembly from authored views
+- owns app page targets
+- owns broader product module targets
+- owns authored runtime route targets
 - owns runtime exposure of configured application entries
 - is expected to own access/permission assignment unless a later accepted decision creates a separate Access Builder
 
@@ -171,6 +173,8 @@ Route rules:
 
 - Form Builder `Save` is authoring persistence plus additive runtime apply, not site publication.
 - Site exposure, sidebar placement, and runtime permission assignment are Navigation Builder concerns.
+- A single app page such as Business Tree is not a product module. Product
+  modules are broader product areas such as future Training or Task Manager.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

@@ -34,17 +34,21 @@ Confidence labels:
 - `planned` `doc-confirmed`: `cmd/worker` is still future/deferred and should not be treated as present.
 - `landed` `code-confirmed`: Backend modules exist under `platform/backend/modules/admin`, `platform/backend/modules/tenant`, and `platform/backend/modules/shared`.
 - `landed` `code-confirmed`: Frontend apps are `platform-admin-web` and `tenant-web`.
-- `landed` `code-confirmed`: Tenant Business Tree is the first tenant static
-  module. Frontend direct route is `/app/modules/business-tree`, frontend code
-  lives under `tenant-web/src/features/static-modules/business-tree`, backend
-  code lives under `platform/backend/modules/tenant/businesstree`, and the
-  tenant API is `GET /app/modules/business-tree/nodes`.
+- `landed` `owner-confirmed`: Business Tree is a tenant app page, not a
+  product module. Product modules are broader product areas such as future
+  Training or Task Manager.
+- `landed` `code-confirmed`: Tenant Business Tree is the first tenant app page.
+  Frontend direct route is `/app/pages/business-tree`, frontend code lives
+  under `tenant-web/src/features/app-pages/business-tree`, backend code lives
+  under `platform/backend/modules/tenant/apppages/businesstree`, and the tenant
+  API is `GET /app/pages/business-tree/nodes`.
 - `planned` `owner-confirmed`: Business Tree follow-ups are Navigation Builder
-  static-module metadata/sidebar registration, Navigation Builder-backed
-  access control, parent-company existence validation for `contacts:*` and
-  `projects:*` lazy parents, large-tree performance/virtualization, optional
-  explicit root company only if legacy imports require it, and authenticated
-  browser smoke with a seeded tenant session.
+  app-page metadata/sidebar registration, Navigation Builder-backed page access
+  control, a separate Navigation Builder target model for real product modules,
+  parent-company existence validation for `contacts:*` and `projects:*` lazy
+  parents, large-tree performance/virtualization, optional explicit root
+  company only if legacy imports require it, and authenticated browser smoke
+  with a seeded tenant session.
 - `landed` `code-confirmed`: `platform-admin-web` loads `/app/profile` before `/app/me/navigation` and builds admin sidebar/favorites from backend navigation.
 - `landed` `doc-confirmed`: `tenant-web` shell/auth/bootstrap, Platform Studio ownership, tenant-core boundary, install-helper placement, and future PWA/mobile exclusions now live at `platform/frontend/docs/modules/tenant-web.md`.
 - `landed` `owner-confirmed`: Current applications are online web applications.

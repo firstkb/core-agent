@@ -24,7 +24,12 @@ Status: active compact contract
 
 - Form Builder owns model/view authoring, field/layout structure, authoring save, additive runtime apply, static/external model view management, and runtime view preparation.
 - Form Builder field/catalog support owns palette sections, base field types, presets, System Fields, simple rules, grid columns, root view settings, filters, and scope boundaries.
-- Navigation Builder owns sidebar/navigation composition, module assembly from authored views, and runtime exposure. Access/permission assignment is expected to live here unless a later accepted decision creates a separate Access Builder.
+- Navigation Builder owns sidebar/navigation composition, app page targets,
+  broader product module targets, authored runtime route targets, and runtime
+  exposure. Access/permission assignment is expected to live here unless a
+  later accepted decision creates a separate Access Builder.
+- A single tenant app page such as Business Tree is not a product module.
+  Modules are broader product areas such as future Training or Task Manager.
 - Action Builder owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder owns configured PDF templates and generated document output from authored/runtime data.
 - Report Builder owns report definitions and analytical/read-only reporting outputs.

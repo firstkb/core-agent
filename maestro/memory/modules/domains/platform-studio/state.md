@@ -30,7 +30,10 @@ Last compacted: 2026-04-25
 
 ## Accepted / Planned
 
-- Navigation Builder is planned but not active; it owns sidebar/navigation composition, module assembly from views, and likely access/permission assignment unless a later decision splits access into a dedicated tool.
+- Navigation Builder is planned but not active; it owns sidebar/navigation
+  composition, app page targets, product module targets, authored runtime route
+  targets, and likely access/permission assignment unless a later decision
+  splits access into a dedicated tool.
 - Action Builder is planned but not active; it owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder is planned but not active; it owns generated PDF/template configuration over authored/runtime data.
 - Report Builder is planned but not active; it owns report definitions and analytical/read-only reporting outputs.

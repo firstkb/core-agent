@@ -2,7 +2,7 @@
 
 Status: compact durable decisions index
 Last compacted: 2026-05-01
-Next decision ID: `DEC-096`
+Next decision ID: `DEC-099`
 
 Use this file for durable decision discovery and new decision append routing.
 Do not turn it into a task journal. Full decision bodies live in topic files under `maestro/memory/durable/decisions/`.
@@ -124,3 +124,4 @@ Do not turn it into a task journal. Full decision bodies live in topic files und
 | `DEC-095` | AGENTS Files Have Narrow Ownership Boundaries | active | owner-confirmed | `decisions/agent-runtime-workflow.md` | `AGENTS.md` files must avoid duplicated Maestro policy. Root `AGENTS.md` owns repository-wide runtime boundaries, role map, artifact model, read policy, and completion checks. `platform/AGENTS.md` owns shared platform product-development invariants, cross-stack gates, memory update rules, and workflow. Lane files such as `platform/frontend/AGENTS.md` and `platform/backend/AGENTS.md` own local implementation rules, commands, tests, and docs update expectations. Maestro runtime and memory own owner-facing workflow, UI/UX judgment, browser/desktop evidence policy, agent/tool selection, delegation, artifacts, gates, and closeout behavior. |
 | `DEC-096` | Repo Checks Use Preflight And Checks Layout | active | owner-confirmed | `decisions/agent-runtime-workflow.md` | Repository checks use `scripts/preflight.sh` as the stable entrypoint and `scripts/checks/**` for check implementations. The old `scripts/ai/**` folder is retired and must not be recreated for active checks. |
 | `DEC-097` | Maestro Artifacts Promote On Continuity Or Accountability | active | owner-confirmed | `decisions/agent-runtime-workflow.md` | Maestro does not create artifacts for every chat turn. Maestro creates or promotes to a work artifact as soon as continuity, evidence, future resume, multi-step execution, owner decision, or file-change accountability matters. |
+| `DEC-098` | Business Tree Is A Tenant App Page | active | owner-confirmed | `decisions/product-platform.md` | Business Tree is a tenant app page under `/app/pages/business-tree`, not a product module. Product modules are broader areas such as future Training or Task Manager. Navigation Builder must distinguish app page targets from product module targets. |

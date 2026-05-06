@@ -44,18 +44,20 @@ Last compacted: 2026-04-25
 - Form Builder is active; Navigation Builder, Action Builder, PDF Builder, and Report Builder are planned.
 - Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
 - Published runtime consumption is not the full Navigation Builder contract.
-- Business Tree is the first tenant static module. Its canonical direct route is
-  `/app/modules/business-tree` until Navigation Builder can register static
-  module navigation targets.
+- Business Tree is the first tenant app page. Its canonical direct route is
+  `/app/pages/business-tree` until Navigation Builder can register app page
+  targets.
+- Product modules are broader product areas such as future Training or Task
+  Manager. Do not call Business Tree a module.
 - `tenant-pwa`, service-worker sync, offline-first persistence, Flutter, and hybrid mobile are future/deferred.
 
-## Static Modules
+## App Pages
 
 - `code-confirmed` Business Tree lives in
-  `platform/frontend/apps/tenant-web/src/features/static-modules/business-tree`.
+  `platform/frontend/apps/tenant-web/src/features/app-pages/business-tree`.
 - `code-confirmed` Backend Business Tree lives in
-  `platform/backend/modules/tenant/businesstree` and exposes
-  `GET /app/modules/business-tree/nodes`.
+  `platform/backend/modules/tenant/apppages/businesstree` and exposes
+  `GET /app/pages/business-tree/nodes`.
 - `code-confirmed` Business Tree uses `@platform/ui-kit` `TreeView` in
   read-only lazy-loading mode. Read-only disables item activation and active
   selection effects, but branch expansion remains allowed.
@@ -64,9 +66,10 @@ Last compacted: 2026-04-25
   `Root` node and does not introduce a replacement for legacy
   `CONFIG_COMPANYID`.
 - `code-confirmed` Current access is authenticated tenant users. Route/service
-  boundaries contain TODOs for future Navigation Builder/module permissions.
-- `planned` Follow-ups: Navigation Builder static-module metadata and sidebar
-  registration; Navigation Builder-backed access control; parent company
+  boundaries contain TODOs for future Navigation Builder page permissions.
+- `planned` Follow-ups: Navigation Builder app-page target metadata and sidebar
+  registration; Navigation Builder-backed page access control; a separate
+  Navigation Builder contract for real product-module targets; parent company
   existence validation for `contacts:*` and `projects:*` lazy parents; large
   tenant performance and possible tree virtualization; optional explicit root
   company setting only if legacy imports require it; authenticated browser smoke

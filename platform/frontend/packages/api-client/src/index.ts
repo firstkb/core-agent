@@ -1327,7 +1327,7 @@ function createTenantBusinessTreeClient(baseUrl: string): TenantBusinessTreeClie
       const normalizedParentId = parentId.trim() || "root";
       const envelope = await requestEnvelope<unknown>(
         baseUrl,
-        `/app/modules/business-tree/nodes?parent=${encodeURIComponent(normalizedParentId)}`,
+        `/app/pages/business-tree/nodes?parent=${encodeURIComponent(normalizedParentId)}`,
         {
           accessToken,
           method: "GET",

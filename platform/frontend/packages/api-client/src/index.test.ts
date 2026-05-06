@@ -228,7 +228,7 @@ describe("api-client tenant business tree", () => {
       label: "General Company @ GDC",
     });
     expect(fetchMock).toHaveBeenCalledWith(
-      "/tenant-api/app/modules/business-tree/nodes?parent=root",
+      "/tenant-api/app/pages/business-tree/nodes?parent=root",
       expect.objectContaining({
         headers: expect.any(Headers),
         method: "GET",

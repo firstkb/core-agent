@@ -110,7 +110,7 @@ export function BusinessTreePage() {
           return;
         }
 
-        const message = formatLoadError(error, t("tenant.staticModules.businessTree.loadFailed"));
+        const message = formatLoadError(error, t("tenant.appPages.businessTree.loadFailed"));
         setErrorByParent((previous) => {
           const next = new Map(previous);
           next.set(normalizedParentId, message);
@@ -156,32 +156,32 @@ export function BusinessTreePage() {
         {rootError && !rootLoaded ? (
           <Alert tone="danger" appearance="soft">
             <AlertBody>
-              <AlertTitle>{t("tenant.staticModules.businessTree.loadFailed")}</AlertTitle>
+              <AlertTitle>{t("tenant.appPages.businessTree.loadFailed")}</AlertTitle>
               <AlertDescription>{rootError}</AlertDescription>
             </AlertBody>
             <AlertActions>
               <Button onClick={reloadRoot} size="sm" variant="outline">
-                {t("tenant.staticModules.businessTree.retry")}
+                {t("tenant.appPages.businessTree.retry")}
               </Button>
             </AlertActions>
           </Alert>
         ) : null}
 
         {rootLoading && !rootLoaded ? (
-          <div className="tenant-business-tree__state">{t("tenant.staticModules.businessTree.loading")}</div>
+          <div className="tenant-business-tree__state">{t("tenant.appPages.businessTree.loading")}</div>
         ) : null}
 
         {rootLoaded && treeItems.length === 0 ? (
-          <div className="tenant-business-tree__state">{t("tenant.staticModules.businessTree.empty")}</div>
+          <div className="tenant-business-tree__state">{t("tenant.appPages.businessTree.empty")}</div>
         ) : null}
 
         {treeItems.length > 0 ? (
           <TreeView
-            ariaLabel={t("tenant.staticModules.businessTree.treeAria")}
+            ariaLabel={t("tenant.appPages.businessTree.treeAria")}
             density="compact"
             expandedItemIds={expandedItemIds}
             items={treeItems}
-            loadingLabel={t("tenant.staticModules.businessTree.loadingBranch")}
+            loadingLabel={t("tenant.appPages.businessTree.loadingBranch")}
             onExpandedItemIdsChange={setExpandedItemIds}
             onItemExpand={(itemId) => {
               void loadParent(itemId);

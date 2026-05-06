@@ -37,7 +37,9 @@ Last compacted: 2026-04-25
 
 - Platform Studio is a tenant-web suite of builder/configuration tools, not a synonym for Form Builder.
 - Form Builder is active and owns model/view authoring plus additive runtime apply.
-- Navigation Builder is planned and owns sidebar/navigation composition, module assembly from views, runtime exposure, and likely access/permission assignment.
+- Navigation Builder is planned and owns sidebar/navigation composition, app
+  page targets, product module targets, authored runtime route targets, runtime
+  exposure, and likely access/permission assignment.
 - Action Builder is planned and owns authored events, notifications, conditional behavior, and post-submit side effects.
 - PDF Builder is planned and owns PDF template/configuration output over authored/runtime data.
 - Report Builder is planned and owns report definitions and analytical/read-only outputs.

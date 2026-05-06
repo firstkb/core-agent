@@ -96,7 +96,7 @@ Read for frontend auth shell, `auth-core`, bootstrap recovery, and app-private s
 ### `modules/frontend/tenant-web/`
 
 Read for tenant app shell, private/public tenant routes, tenant sidebar/runtime
-composition, app-local static modules such as Business Tree, and tenant
+composition, app-local app pages such as Business Tree, and tenant
 Platform Studio ownership.
 
 ### `modules/frontend/platform-admin-web/`

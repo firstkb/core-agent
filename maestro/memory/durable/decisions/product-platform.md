@@ -238,3 +238,18 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - `maestro/docs/runtime-contract.md`
   - `maestro/docs/agent-selection-thresholds.md`
   - `.gitignore`
+
+### DEC-098 Business Tree Is A Tenant App Page
+
+- Date: 2026-05-06
+- Status: active
+- State: owner-confirmed
+- Decision: Business Tree is a tenant app page, not a product module. Product
+  modules are broader product areas such as future Training or Task Manager.
+  Navigation Builder must distinguish app page targets from product module
+  targets, and should be able to register `/app/pages/business-tree` as an app
+  page target without treating it as a whole module.
+- Sources:
+  - Owner clarification in current Business Tree implementation session
+  - `platform/frontend/apps/tenant-web/src/features/app-pages/business-tree`
+  - `platform/backend/modules/tenant/apppages/businesstree`

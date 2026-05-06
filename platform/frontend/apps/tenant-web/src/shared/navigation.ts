@@ -11,8 +11,8 @@ import {
 import {
   getBusinessTreeHeaderMeta,
   getBusinessTreeHeaderTitle,
-  isBusinessTreeModulePath,
-} from "../features/static-modules/business-tree/business-tree-route-meta";
+  isBusinessTreePagePath,
+} from "../features/app-pages/business-tree/business-tree-route-meta";
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -66,7 +66,7 @@ export function getTenantSidebarActiveItemId(pathname: string) {
     return "";
   }
 
-  if (isBusinessTreeModulePath(pathname)) {
+  if (isBusinessTreePagePath(pathname)) {
     return "";
   }
 
@@ -111,7 +111,7 @@ export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname
     return formRuntimeHeaderTitle;
   }
 
-  if (isBusinessTreeModulePath(pathname)) {
+  if (isBusinessTreePagePath(pathname)) {
     return getBusinessTreeHeaderTitle();
   }
 
@@ -133,7 +133,7 @@ export function getTenantShellHeaderMeta(translate: TranslateFunction, pathname:
     return formRuntimeHeaderMeta;
   }
 
-  if (isBusinessTreeModulePath(pathname)) {
+  if (isBusinessTreePagePath(pathname)) {
     return getBusinessTreeHeaderMeta();
   }
 

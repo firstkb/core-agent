@@ -267,9 +267,9 @@ routes:
       - tenant-core
       - published runtime
       - tenant route
-      - static module
-      - static modules
-      - app modules
+      - app page
+      - app pages
+      - tenant page
       - Business Tree
       - business-tree
     read:
@@ -315,7 +315,8 @@ routes:
       - Platform Studio
       - builder suite
       - Navigation Builder
-      - Navigation Builder static module
+      - Navigation Builder app page
+      - Navigation Builder module
       - sidebar
       - sidebar builder
       - Platform Studio access

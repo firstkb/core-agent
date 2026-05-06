@@ -1,7 +1,7 @@
 export { BusinessTreePage } from "./business-tree/business-tree-page";
 export {
-  businessTreeModulePath,
+  businessTreePagePath,
   getBusinessTreeHeaderMeta,
   getBusinessTreeHeaderTitle,
-  isBusinessTreeModulePath,
+  isBusinessTreePagePath,
 } from "./business-tree/business-tree-route-meta";

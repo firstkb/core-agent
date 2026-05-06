@@ -77,6 +77,7 @@ Tenant navigation/runtime surfaces:
 
 - `platform/frontend/apps/tenant-web/src/shared/navigation.ts`
 - `platform/frontend/apps/tenant-web/src/shared/tenant-sidebar-navigation.tsx`
+- `platform/frontend/apps/tenant-web/src/features/app-pages`
 - `platform/frontend/apps/tenant-web/src/features/published-app`
 - `platform/frontend/apps/tenant-web/src/features/form-runtime`
 
@@ -161,6 +162,7 @@ Current top-level private routes:
 - `/app/forms/:modelId/views/:viewId`
 - `/app/forms/:modelId/views/:viewId/view/:docGuid`
 - `/app/platform-studio/forms/:modelId/views/:viewId`
+- `/app/pages/business-tree`
 - `/app/:routeKey/*`
 
 Legacy Platform Studio routes redirect to canonical model/view routes.
@@ -169,8 +171,17 @@ Legacy Platform Studio routes redirect to canonical model/view routes.
 
 Current tenant shell navigation has two separate concerns:
 
-- static tenant shell entries such as dashboard and utility panels
+- tenant shell entries such as dashboard and utility panels
+- tenant app pages such as Business Tree
 - published runtime entries derived from published metadata
+
+Current tenant app page behavior:
+
+- `features/app-pages` owns direct tenant pages that are concrete screens, not
+  product modules.
+- Business Tree is the first app page and lives at `/app/pages/business-tree`.
+- Product modules are broader product areas such as future Training or Task
+  Manager.
 
 Current published runtime behavior:
 
@@ -181,7 +192,8 @@ Current published runtime behavior:
 - `/app/:routeKey/*` renders published runtime route pages.
 
 This is current runtime consumption, not a complete Navigation Builder implementation contract.
-Navigation Builder remains planned Platform Studio tool scope.
+Navigation Builder remains planned Platform Studio tool scope and should
+distinguish app page targets from broader product module targets.
 
 ## Platform Studio Ownership
 

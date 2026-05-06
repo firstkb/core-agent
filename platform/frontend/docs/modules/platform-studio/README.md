@@ -23,7 +23,7 @@ Do not read the whole `platform/frontend/docs/platform-studio/**` tree by defaul
 | Tool | Status | Ownership |
 | --- | --- | --- |
 | Form Builder | active | Model/View authoring, field/layout authoring, authoring save, additive runtime apply, runtime view preparation. |
-| Navigation Builder | planned | Sidebar/navigation composition, module assembly from views, runtime exposure, likely access assignment unless split later. |
+| Navigation Builder | planned | Sidebar/navigation composition, app page targets, product module targets, authored runtime route targets, runtime exposure, likely access assignment unless split later. |
 | Action Builder | planned | Authored events, view-triggered behavior, notifications, conditional changes, post-submit side effects. |
 | PDF Builder | planned | PDF template configuration and generated document output. |
 | Report Builder | planned | Report definitions and analytical/read-only reporting outputs. |

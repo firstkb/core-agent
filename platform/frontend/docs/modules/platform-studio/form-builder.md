@@ -393,7 +393,7 @@ Canonical runtime target:
 There is one runtime engine with multiple entry contexts:
 
 - Form Builder preview
-- future Navigation Builder module entry
+- future Navigation Builder navigation entry
 - future direct deep link
 
 Rejected:

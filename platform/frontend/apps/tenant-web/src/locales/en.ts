@@ -151,7 +151,7 @@ export const tenantEnglishMessages = {
         },
       },
     },
-    staticModules: {
+    appPages: {
       businessTree: {
         empty: "No business tree records.",
         loadFailed: "Unable to load Business Tree.",

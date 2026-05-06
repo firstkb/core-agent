@@ -47,7 +47,7 @@ func (s *Service) ListNodes(ctx context.Context, parentID string) (*NodesRespons
 	if !ok || strings.TrimSpace(claims.UserID) == "" {
 		return nil, ErrUnauthorized
 	}
-	// TODO: Replace authenticated-only access with Navigation Builder module permissions.
+	// TODO: Replace authenticated-only access with Navigation Builder page permissions.
 
 	tenant, ok := requestctx.Tenant(ctx)
 	if !ok || strings.TrimSpace(tenant.ID) == "" || strings.TrimSpace(tenant.DBName) == "" {

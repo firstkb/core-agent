@@ -19,22 +19,32 @@ Last compacted: 2026-05-06
 - Tenant-web route: `/builder/navigation`.
 - V1 is UI-first: tree editor, inspector, access mock sheet, draft state, and
   explicit `Save`.
+- Empty or missing tenant configs start with only locked Dashboard plus the root
+  add affordance. Do not seed mock app menu entries into production builder
+  state; example trees belong only in tests/fixtures.
 - First backend persistence slice is active in
   `platform/backend/modules/tenant/platformstudionavigationbuilder`; it exposes
   `GET /app/platform-studio/navigation` and
   `PUT /app/platform-studio/navigation`, stores definitions in
   `ps_navigation_config`, enforces duplicate target validation, and uses
   optimistic `expectedVersion` checks.
+- Runtime sidebar projection is active through `GET /app/navigation`. It reads
+  the saved Navigation Builder definition, excludes inactive app menu entries,
+  and projects Form View/App Page targets to tenant runtime routes. Tenant-web
+  renders root `Menu title` items as UI Lab-style app-layer section headings
+  and suppresses empty, consecutive, or trailing title sections at display time.
 - V1 targets: Form View, App Page, External Link, and future App Module pages.
 - App Modules can have nested subitems. Single app pages such as Business Tree
   are App Page targets, not product modules.
 - `Menu title` is the user-facing root-only text divider. It does not have icons, targets, or
   nested children.
 - V1 add choices are `Menu title`, `Menu group`, `Form view`, `App page`, and
-  `App module`. Target-bearing choices open a centered, minimal fixed-type add
-  dialog to pick the target before the element is created. The inspector can
-  edit the selected value within that fixed type but does not expose a target
-  type switch after creation.
+  `Link`.
+  `App module` remains visible as a disabled future add choice until concrete
+  app module runtime routes ship. Target-bearing choices open a centered,
+  minimal fixed-type add dialog to pick the target before the element is
+  created. The inspector can edit the selected value within that fixed type but
+  does not expose a target type switch after creation.
 - V1 blocks duplicate target selection during add when the same Form View, App
   Page, External Link, or App Module target already exists in the app menu.
 - V1 inspector tabs are `Element` and `Access`. `Advanced` is not exposed.
@@ -45,8 +55,8 @@ Last compacted: 2026-05-06
   applies, and `Warnings` appears only when warnings exist.
 - `Element` includes a `Show in app menu` toggle for app menu containers and
   target entries. Inactive app menu items stay visible in the builder tree, show
-  an eye-off badge, and are excluded from runtime app menu output once
-  Navigation Builder persistence/publication lands. Menu titles do not expose
+  an eye-off badge, and are excluded from saved runtime sidebar projection.
+  Menu titles do not expose
   active, target, channel, or access controls.
 - Delete uses the same UX family as Form Builder field deletion: a danger-zone
   `Delete item` action in the inspector and a centered confirmation dialog.
@@ -60,16 +70,19 @@ Last compacted: 2026-05-06
 - V1 has a separate left-panel `Utility rail` tab for static shell utilities such as
   Platform Studio, Task Manager, Favorites, and Help Center. Rail access is
   preview/mock only until backend enforcement exists.
-- V1 navigation icons are container-level only. Titles and final entry targets
-  do not display navigation icons, but status badges can show hidden/restricted/
-  broken state. Menu groups and modules choose icons from a small Navigation
-  Builder icon dictionary.
+- V1 navigation icons are configurable for every editable app menu item except
+  `Menu title`. The icon picker starts with `None` so any item can render
+  without an icon, and the dictionary includes inspection-oriented choices such
+  as checklist, hazard, camera, safety, work, maintenance, PPE, fire, fleet,
+  equipment, location, people, documents, forms, reports, routes, activity,
+  completed, and settings. Status badges can still show hidden/restricted/broken
+  state.
 - Future App Module targets are represented as containers with possible nested
   subitems, but they remain inactive/preview-only until real app module runtime
   routes ship.
-- Runtime shell follow-up: when Navigation Builder entries drive the real
-  sidebar, opening a configured App Page or Form View must update the tenant top
-  bar title and breadcrumb from the Navigation Builder path and target metadata.
+- Runtime shell integration: when Navigation Builder entries drive the real
+  sidebar, opening a configured App Page or Form View updates the tenant top bar
+  title and breadcrumb from the Navigation Builder path and target metadata.
   Example: a `Safety > Inspections` Form View should render an app title and
   breadcrumb that match that navigation path, not a technical route label.
 
@@ -83,7 +96,7 @@ Last compacted: 2026-05-06
 - V1 Access UI is preview/mock only and must not be claimed as backend route/API
   enforcement.
 - Dashboard is a locked static preview item; do not let users remove or move it,
-  and do not show the lock badge for Dashboard. Reserve lock badges for
-  access/restricted items.
+  do not let users select it for editing, and do not show the lock badge for
+  Dashboard. Reserve lock badges for access/restricted items.
 - Use editable draft plus explicit Save. Do not make every edit realtime-live in
   tenant navigation.

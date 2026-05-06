@@ -3,7 +3,7 @@
 Status: active first backend slice
 Owner: backend
 Last audited: 2026-05-06
-Canonical scope: tenant Navigation Builder persistence API, storage, validation, and runtime-sidebar handoff boundary
+Canonical scope: tenant Navigation Builder persistence API, storage, validation, and runtime-sidebar projection boundary
 
 Navigation Builder is a separate Platform Studio backend service. It must not be
 implemented inside `platformstudioformbuilder`.
@@ -31,7 +31,11 @@ Authoring routes:
 - `GET /app/platform-studio/navigation`
 - `PUT /app/platform-studio/navigation`
 
-Both routes use the tenant secure route baseline. Tenant and user identity come
+Runtime route:
+
+- `GET /app/navigation`
+
+All routes use the tenant secure route baseline. Tenant and user identity come
 from trusted request context, not request payload fields.
 
 ## Storage
@@ -94,12 +98,7 @@ Validation owns:
 Access is not enforced by this first slice. Any access payload remains inert
 configuration data until a later accepted ACL contract lands.
 
-## Runtime Handoff
-
-This slice stores authoring configuration only. Runtime sidebar output is the
-next slice.
-
-When runtime sidebar output lands:
+## Runtime Projection
 
 - Dashboard remains static/locked outside `ps_navigation_config`;
 - inactive app menu entries are excluded from runtime sidebar output;
@@ -107,6 +106,10 @@ When runtime sidebar output lands:
 - App Page targets resolve to their configured route;
 - tenant top bar title and breadcrumb must resolve from the configured
   Navigation Builder path and target metadata.
+
+`GET /app/navigation` returns the active saved app menu projection for tenant
+runtime shell/sidebar consumption. It does not expose or enforce utility rail
+access yet.
 
 ## Boundary Guardrails
 

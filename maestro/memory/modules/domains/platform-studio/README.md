@@ -34,8 +34,8 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 
 - Platform Studio is the tenant-web tool suite for configuring application behavior.
 - Form Builder is active.
-- Navigation Builder has an active UI-first V1 surface plus first backend
-  persistence slice; Action Builder, PDF Builder, and Report Builder are planned,
+- Navigation Builder has an active V1 surface plus backend persistence and
+  runtime sidebar projection; Action Builder, PDF Builder, and Report Builder are planned,
   not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - Shared layer is `@platform/platform-studio-core`, not a shared UI package.
@@ -51,17 +51,21 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 ## Tool Map
 
 - `Form Builder`: active. Owns models, views, field/layout authoring, authoring save, additive runtime apply, static/external model views, runtime view entry preparation, and managed import/export planning.
-- `Navigation Builder`: active UI-first V1. Owns app menu/sidebar navigation structure,
+- `Navigation Builder`: active V1. Owns app menu/sidebar navigation structure,
   Form View/App Page/External Link targets, future App Module shape with nested
   subitems, root-only `Menu title` dividers, separate `App menu`/`Utility rail` editor tabs,
   `Element`/`Access` inspector tabs, fixed add choices with target type locked
   after creation, `Show in app menu` toggle with eye-off inactive badges, Dashboard
   locked without lock badge, Form View labels derived from selected View
-  titles, draft/Save UX, and the access-facing layer for runtime navigation and
-  rail utilities. Backend persistence now starts in the dedicated
-  `platformstudionavigationbuilder` package with `ps_navigation_config`; runtime
-  sidebar output, real rail utility enforcement, and real grants remain planned
-  unless a later decision splits access into its own tool.
+  titles, optional icon picker for every editable non-title app menu item with
+  `None`, draft/Save UX, and the access-facing layer for runtime navigation and
+  rail utilities. Backend persistence and runtime sidebar projection live in
+  the dedicated `platformstudionavigationbuilder` package with
+  `ps_navigation_config` and `GET /app/navigation`; runtime `Menu title` items
+  render as UI Lab-style section headings with empty/consecutive/trailing title
+  suppression in tenant-web; real rail utility
+  enforcement and real grants remain planned unless a later decision splits
+  access into its own tool.
 - `Action Builder`: planned. Owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects. Do not collapse this into the current Form Builder save flow.
 - `PDF Builder`: planned. Owns configured PDF templates and generated document output over authored/runtime data.
 - `Report Builder`: planned. Owns reporting surfaces, report definitions, and analytical/read-only outputs over authored/runtime data.

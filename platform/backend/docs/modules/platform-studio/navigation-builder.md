@@ -45,7 +45,7 @@ Tenant schema surfaces:
 - optimistic version checks
 - definition validation
 - duplicate target prevention
-- future runtime sidebar handoff contract
+- runtime sidebar projection via `GET /app/navigation`
 
 It does not own:
 
@@ -80,6 +80,7 @@ Use:
 
 ```bash
 go test ./modules/tenant/platformstudionavigationbuilder
+go test ./cmd/api-tenant/internal/server
 ```
 
 Run from `platform/backend`.

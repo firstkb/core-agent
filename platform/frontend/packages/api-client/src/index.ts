@@ -72,8 +72,107 @@ type TenantBusinessTreeNodesResponse = {
   parentId: string;
 };
 
+type TenantNavigationNodeType =
+  | "menu_title"
+  | "menu_group"
+  | "form_view"
+  | "app_page"
+  | "external_link"
+  | "app_module";
+
+type TenantNavigationTargetType =
+  | "form_view"
+  | "app_page"
+  | "external_link"
+  | "app_module";
+
+type TenantNavigationTarget = {
+  modelId?: string;
+  moduleId?: string;
+  pageId?: string;
+  route?: string;
+  type: TenantNavigationTargetType;
+  url?: string;
+  viewId?: string;
+};
+
+type TenantNavigationNode = {
+  access?: unknown;
+  active?: boolean;
+  channel?: string;
+  children: TenantNavigationNode[];
+  icon?: string;
+  id: string;
+  label: string;
+  meta?: unknown;
+  target?: TenantNavigationTarget;
+  type: TenantNavigationNodeType;
+};
+
+type TenantNavigationRailItem = {
+  access?: unknown;
+  active?: boolean;
+  id: string;
+  key: string;
+  label: string;
+};
+
+type TenantNavigationDefinition = {
+  appMenu: TenantNavigationNode[];
+  schemaVersion: number;
+  utilityRail: TenantNavigationRailItem[];
+};
+
+type TenantNavigationValidationMessage = {
+  code?: string;
+  message: string;
+  target?: string;
+};
+
+type TenantNavigationValidationSummary = {
+  canSave: boolean;
+  errors: TenantNavigationValidationMessage[];
+  warnings: TenantNavigationValidationMessage[];
+};
+
+type TenantNavigationConfigResponse = {
+  configKey: string;
+  definition: TenantNavigationDefinition;
+  updatedAt?: string;
+  updatedBy?: string;
+  validationSummary: TenantNavigationValidationSummary;
+  version: number;
+};
+
+type TenantNavigationSaveInput = {
+  definition: TenantNavigationDefinition;
+  expectedVersion?: number;
+};
+
+type TenantRuntimeNavigationItem = {
+  breadcrumb: string[];
+  children: TenantRuntimeNavigationItem[];
+  externalUrl?: string;
+  icon?: string;
+  id: string;
+  label: string;
+  path?: string;
+  targetType?: string;
+  type: string;
+};
+
+type TenantRuntimeNavigationResponse = {
+  items: TenantRuntimeNavigationItem[];
+};
+
 type TenantBusinessTreeClient = {
   getNodes: (accessToken: string, parentId?: string) => Promise<TenantBusinessTreeNodesResponse>;
+};
+
+type TenantNavigationClient = {
+  getRuntimeNavigation: (accessToken: string) => Promise<TenantRuntimeNavigationResponse>;
+  loadConfig: (accessToken: string) => Promise<TenantNavigationConfigResponse>;
+  saveConfig: (accessToken: string, input: TenantNavigationSaveInput) => Promise<TenantNavigationConfigResponse>;
 };
 
 type TenantFavoritesClient = {
@@ -753,6 +852,10 @@ function normalizeJsonRecord(payload: unknown, fieldName: string) {
 }
 
 function normalizeValidationMessages(payload: unknown, fieldName: string) {
+  if (payload === undefined || payload === null) {
+    return [];
+  }
+
   if (!Array.isArray(payload)) {
     throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
       code: "invalid_payload",
@@ -1051,6 +1154,155 @@ function normalizeTenantBusinessTreeNodesResponse(payload: unknown): TenantBusin
   };
 }
 
+function normalizeTenantNavigationNodeType(value: unknown, fieldName: string): TenantNavigationNodeType {
+  const nodeType = assertString(value, fieldName);
+  if (
+    nodeType !== "menu_title" &&
+    nodeType !== "menu_group" &&
+    nodeType !== "form_view" &&
+    nodeType !== "app_page" &&
+    nodeType !== "external_link" &&
+    nodeType !== "app_module"
+  ) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+  return nodeType;
+}
+
+function normalizeTenantNavigationTargetType(value: unknown, fieldName: string): TenantNavigationTargetType {
+  const targetType = assertString(value, fieldName);
+  if (
+    targetType !== "form_view" &&
+    targetType !== "app_page" &&
+    targetType !== "external_link" &&
+    targetType !== "app_module"
+  ) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+  return targetType;
+}
+
+function normalizeTenantNavigationTarget(payload: unknown, fieldName: string): TenantNavigationTarget {
+  const record = normalizeJsonRecord(payload, fieldName);
+
+  return {
+    modelId: normalizeOptionalString(record.modelId),
+    moduleId: normalizeOptionalString(record.moduleId),
+    pageId: normalizeOptionalString(record.pageId),
+    route: normalizeOptionalString(record.route),
+    type: normalizeTenantNavigationTargetType(record.type, `${fieldName}.type`),
+    url: normalizeOptionalString(record.url),
+    viewId: normalizeOptionalString(record.viewId),
+  };
+}
+
+function normalizeTenantNavigationNode(payload: unknown, fieldName: string): TenantNavigationNode {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const children = Array.isArray(record.children) ? record.children : [];
+
+  return {
+    access: record.access,
+    active: typeof record.active === "boolean" ? record.active : undefined,
+    channel: normalizeOptionalString(record.channel),
+    children: children.map((entry, index) => normalizeTenantNavigationNode(entry, `${fieldName}.children[${index}]`)),
+    icon: normalizeOptionalString(record.icon),
+    id: assertString(record.id, `${fieldName}.id`),
+    label: assertString(record.label, `${fieldName}.label`),
+    meta: record.meta,
+    target: record.target === undefined || record.target === null
+      ? undefined
+      : normalizeTenantNavigationTarget(record.target, `${fieldName}.target`),
+    type: normalizeTenantNavigationNodeType(record.type, `${fieldName}.type`),
+  };
+}
+
+function normalizeTenantNavigationRailItem(payload: unknown, fieldName: string): TenantNavigationRailItem {
+  const record = normalizeJsonRecord(payload, fieldName);
+
+  return {
+    access: record.access,
+    active: typeof record.active === "boolean" ? record.active : undefined,
+    id: assertString(record.id, `${fieldName}.id`),
+    key: assertString(record.key, `${fieldName}.key`),
+    label: assertString(record.label, `${fieldName}.label`),
+  };
+}
+
+function normalizeTenantNavigationDefinition(payload: unknown): TenantNavigationDefinition {
+  const record = normalizeJsonRecord(payload, "navigationDefinition");
+  const appMenu = Array.isArray(record.appMenu) ? record.appMenu : [];
+  const utilityRail = Array.isArray(record.utilityRail) ? record.utilityRail : [];
+
+  return {
+    appMenu: appMenu.map((entry, index) => normalizeTenantNavigationNode(entry, `navigationDefinition.appMenu[${index}]`)),
+    schemaVersion: assertPositiveInteger(record.schemaVersion, "navigationDefinition.schemaVersion"),
+    utilityRail: utilityRail.map((entry, index) => normalizeTenantNavigationRailItem(entry, `navigationDefinition.utilityRail[${index}]`)),
+  };
+}
+
+function normalizeTenantNavigationValidationSummary(payload: unknown): TenantNavigationValidationSummary {
+  const record = normalizeJsonRecord(payload, "navigationValidationSummary");
+
+  return {
+    canSave: assertBoolean(record.canSave, "navigationValidationSummary.canSave"),
+    errors: normalizeValidationMessages(record.errors, "navigationValidationSummary.errors"),
+    warnings: normalizeValidationMessages(record.warnings, "navigationValidationSummary.warnings"),
+  };
+}
+
+function normalizeTenantNavigationConfigResponse(payload: unknown): TenantNavigationConfigResponse {
+  const record = normalizeJsonRecord(payload, "navigationConfig");
+
+  return {
+    configKey: assertString(record.configKey, "navigationConfig.configKey"),
+    definition: normalizeTenantNavigationDefinition(record.definition),
+    updatedAt: normalizeOptionalString(record.updatedAt),
+    updatedBy: normalizeOptionalString(record.updatedBy),
+    validationSummary: normalizeTenantNavigationValidationSummary(record.validationSummary),
+    version: assertNonNegativeInteger(record.version, "navigationConfig.version"),
+  };
+}
+
+function normalizeStringArray(payload: unknown, fieldName: string) {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload.map((entry, index) => assertString(entry, `${fieldName}[${index}]`));
+}
+
+function normalizeTenantRuntimeNavigationItem(payload: unknown, fieldName: string): TenantRuntimeNavigationItem {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const children = Array.isArray(record.children) ? record.children : [];
+
+  return {
+    breadcrumb: normalizeStringArray(record.breadcrumb, `${fieldName}.breadcrumb`),
+    children: children.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `${fieldName}.children[${index}]`)),
+    externalUrl: normalizeOptionalString(record.externalUrl),
+    icon: normalizeOptionalString(record.icon),
+    id: assertString(record.id, `${fieldName}.id`),
+    label: assertString(record.label, `${fieldName}.label`),
+    path: normalizeOptionalString(record.path),
+    targetType: normalizeOptionalString(record.targetType),
+    type: assertString(record.type, `${fieldName}.type`),
+  };
+}
+
+function normalizeTenantRuntimeNavigationResponse(payload: unknown): TenantRuntimeNavigationResponse {
+  const record = normalizeJsonRecord(payload, "runtimeNavigation");
+  const items = Array.isArray(record.items) ? record.items : [];
+
+  return {
+    items: items.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `runtimeNavigation.items[${index}]`)),
+  };
+}
+
 function normalizeAdminProfile(payload: unknown): AdminProfile {
   if (!isRecord(payload) || !isRecord(payload.user)) {
     throw new ApiClientError("Invalid admin profile payload received from API.", {
@@ -1340,6 +1592,42 @@ function createTenantBusinessTreeClient(baseUrl: string): TenantBusinessTreeClie
   };
 }
 
+function createTenantNavigationClient(baseUrl: string): TenantNavigationClient {
+  return {
+    async getRuntimeNavigation(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/navigation", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeTenantRuntimeNavigationResponse(envelope.data);
+    },
+    async loadConfig(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/navigation", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeTenantNavigationConfigResponse(envelope.data);
+    },
+    async saveConfig(accessToken: string, input: TenantNavigationSaveInput) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/navigation", {
+        accessToken,
+        body: {
+          definition: input.definition,
+          expectedVersion: input.expectedVersion,
+        },
+        method: "PUT",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeTenantNavigationConfigResponse(envelope.data);
+    },
+  };
+}
+
 function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuilderAuthoringClient {
   return {
     async copyView(accessToken: string, modelId: string, viewId: string, input?: FormBuilderCopyViewInput) {
@@ -1593,6 +1881,7 @@ export {
   createTenantFavoritesClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
+  createTenantNavigationClient,
   getApiClientRequestActivitySnapshot,
   createTenantProfileClient,
   isUnauthorizedApiError,
@@ -1625,6 +1914,19 @@ export type {
   TenantBusinessTreeNode,
   TenantBusinessTreeNodeKind,
   TenantBusinessTreeNodesResponse,
+  TenantNavigationClient,
+  TenantNavigationConfigResponse,
+  TenantNavigationDefinition,
+  TenantNavigationNode,
+  TenantNavigationNodeType,
+  TenantNavigationRailItem,
+  TenantNavigationSaveInput,
+  TenantNavigationTarget,
+  TenantNavigationTargetType,
+  TenantNavigationValidationMessage,
+  TenantNavigationValidationSummary,
+  TenantRuntimeNavigationItem,
+  TenantRuntimeNavigationResponse,
   FormBuilderDraftPayload,
   FormBuilderDraftPublishState,
   FormBuilderDraftResponse,

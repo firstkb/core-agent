@@ -81,6 +81,11 @@ Tenant navigation/runtime surfaces:
 - `platform/frontend/apps/tenant-web/src/features/published-app`
 - `platform/frontend/apps/tenant-web/src/features/form-runtime`
 
+Navigation Builder runtime entries from `GET /app/navigation` are rendered by
+the tenant sidebar. Root `Menu title` entries are app-layer section headings in
+the UI Lab `GENERAL` style; empty, consecutive, or trailing title sections are
+suppressed so the runtime sidebar never shows an orphan heading.
+
 Platform Studio UI:
 
 - `platform/frontend/apps/tenant-web/src/features/platform-studio`
@@ -147,6 +152,8 @@ Current shell behavior:
 - uses `@platform/ui-kit` primitives for menus, icons, top loader, keyboard shortcut, and sidebar navigation
 - stores theme mode under `tenant-workspace-theme`
 - stores collapsed sidebar state under `tenant-workspace-sidebar-collapsed`
+- closes mobile sidebar panels and collapsed desktop hover-preview panels after
+  any actionable sidebar/rail navigation selection
 - opens workspace search with `Ctrl+K` or `Meta+K`
 - uses tenant logo assets from `/tenant/*` with fallback app assets under `/assets/*`
 - shows build metadata from `getAppBuildMetadata()`
@@ -175,6 +182,7 @@ Current tenant shell navigation has two separate concerns:
 - tenant shell entries such as dashboard and utility panels
 - tenant app pages such as Business Tree
 - published runtime entries derived from published metadata
+- Navigation Builder runtime sidebar entries loaded from `GET /app/navigation`
 
 Current tenant app page behavior:
 
@@ -184,7 +192,22 @@ Current tenant app page behavior:
 - Product modules are broader product areas such as future Training or Task
   Manager.
 
-Current published runtime behavior:
+Current Navigation Builder runtime behavior:
+
+- `PrivateApp` loads saved app menu projection through
+  `createTenantNavigationClient(runtimeConfig.tenantApiUrl).getRuntimeNavigation`.
+- `TenantSidebarNavigation` prefers Navigation Builder runtime items when a
+  saved configuration exists.
+- configured Form View and App Page targets navigate to their runtime routes,
+  not Platform Studio preview routes.
+- configured External Link targets open externally.
+- configured runtime item icons render in the tenant sidebar when an icon is
+  selected; `None`/missing icon renders the item without an icon.
+- tenant top bar title and breadcrumb resolve from the configured Navigation
+  Builder path for matching runtime targets.
+- inactive saved app menu entries are excluded by backend runtime projection.
+
+Current published runtime fallback behavior:
 
 - `features/published-app` loads and validates published manifest metadata through `@platform/platform-studio-core`.
 - `TenantSidebarNavigation` renders a published runtime sidebar section from the manifest.
@@ -192,18 +215,20 @@ Current published runtime behavior:
 - published runtime item visibility uses policy evaluation before adding the sidebar item.
 - `/app/:routeKey/*` renders published runtime route pages.
 
-This is current runtime consumption, not a complete Navigation Builder implementation contract.
 Navigation Builder now has a UI-first authoring route at `/builder/navigation`,
-and a first backend persistence slice at `GET/PUT /app/platform-studio/navigation`;
-runtime sidebar output and ACL enforcement remain planned Platform Studio scope.
+backend persistence at `GET/PUT /app/platform-studio/navigation`, and runtime
+sidebar projection at `GET /app/navigation`; ACL enforcement remains planned
+Platform Studio scope.
+Empty or missing Navigation Builder configs render only the locked Dashboard
+builder node and root add affordance; production builder state must not seed
+mock app menu entries.
+Dashboard is not selectable for editing in the app menu tree. App Module remains
+a disabled future add choice until concrete app module runtime routes exist.
 Rail utilities such as Platform Studio, Task
 Manager, Favorites, and Help Center are shown in a separate Navigation Builder
 RailBar editor tab, but access is preview/mock only until real backend
 enforcement exists. Navigation Builder should distinguish app page targets from
-broader product module targets. Once Navigation Builder owns real sidebar
-output, opening a configured App Page or Form View must also set the tenant top
-bar title and breadcrumb from the configured navigation path and target
-metadata, so runtime screens read like the sidebar entry the user clicked.
+broader product module targets.
 
 ## Platform Studio Ownership
 

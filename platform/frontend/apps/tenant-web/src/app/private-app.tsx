@@ -7,10 +7,12 @@ import {
 } from "@platform/app-shell";
 import {
   createTenantFavoritesClient,
+  createTenantNavigationClient,
   getApiClientRequestActivitySnapshot,
   isUnauthorizedApiError,
   subscribeApiClientRequestActivity,
   type TenantFavoriteShortcut,
+  type TenantRuntimeNavigationItem,
 } from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 import { useTranslation } from "@platform/i18n";
@@ -52,6 +54,7 @@ import {
 } from "../shared/navigation";
 import { TenantFavoritesRefreshProvider } from "../shared/tenant-favorites-refresh";
 import { TenantSidebarNavigation } from "../shared/tenant-sidebar-navigation";
+import { tenantRuntimeNavigationRefreshEvent } from "../shared/tenant-runtime-navigation";
 import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
@@ -117,12 +120,17 @@ export function PrivateApp({
     () => createTenantFavoritesClient(runtimeConfig.tenantApiUrl),
     [runtimeConfig.tenantApiUrl],
   );
+  const navigationClient = useMemo(
+    () => createTenantNavigationClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
   const { getAccessToken, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const shellBrand = tenantName?.trim() ? tenantName : t("tenant.shell.brand");
   const [, setPlatformStudioHeaderVersion] = useState(0);
   const [favoriteShortcuts, setFavoriteShortcuts] = useState<TenantFavoriteShortcut[]>([]);
+  const [runtimeNavigationItems, setRuntimeNavigationItems] = useState<TenantRuntimeNavigationItem[]>([]);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -205,6 +213,22 @@ export function PrivateApp({
   }, [favoritesClient, getAccessToken, signOut]);
 
   useEffect(() => {
+    void refreshRuntimeNavigation();
+  }, [navigationClient, getAccessToken, signOut]);
+
+  useEffect(() => {
+    function handleRuntimeNavigationRefresh() {
+      void refreshRuntimeNavigation();
+    }
+
+    window.addEventListener(tenantRuntimeNavigationRefreshEvent, handleRuntimeNavigationRefresh);
+
+    return () => {
+      window.removeEventListener(tenantRuntimeNavigationRefreshEvent, handleRuntimeNavigationRefresh);
+    };
+  }, [navigationClient, getAccessToken, signOut]);
+
+  useEffect(() => {
     function syncTransportActivity() {
       const snapshot = getApiClientRequestActivitySnapshot();
 
@@ -255,6 +279,22 @@ export function PrivateApp({
       setFavoriteShortcuts(nextFavorites);
     } catch (favoritesError) {
       if (isUnauthorizedApiError(favoritesError)) {
+        void signOut();
+      }
+    }
+  }
+
+  async function refreshRuntimeNavigation() {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      return;
+    }
+
+    try {
+      const nextNavigation = await navigationClient.getRuntimeNavigation(accessToken);
+      setRuntimeNavigationItems(nextNavigation.items);
+    } catch (navigationError) {
+      if (isUnauthorizedApiError(navigationError)) {
         void signOut();
       }
     }
@@ -373,8 +413,8 @@ export function PrivateApp({
             </Kbd>
           </button>
         }
-        headerMeta={getTenantShellHeaderMeta(t, location.pathname)}
-        headerTitle={getTenantShellHeaderTitle(t, location.pathname)}
+        headerMeta={getTenantShellHeaderMeta(t, location.pathname, runtimeNavigationItems)}
+        headerTitle={getTenantShellHeaderTitle(t, location.pathname, runtimeNavigationItems)}
         layout="rail"
         mobileHeaderBrand={(
           <div className="workspace-shell__mobile-logo-lockup">
@@ -454,12 +494,14 @@ export function PrivateApp({
         showRailCollapse
         showSidebarSurfaceMarker={false}
         sidebarCollapsedStorageKey={tenantSidebarCollapsedStorageKey}
-        sidebarNavigationLabel={(
+        sidebarNavigationLabel={({ closeSidebarSurfaces }) => (
           <TenantSidebarNavigation
             navigate={(path) => {
               void guardedNavigate(path);
             }}
+            onAction={closeSidebarSurfaces}
             pathname={location.pathname}
+            runtimeNavigationItems={runtimeNavigationItems}
           />
         )}
         sidebarFooter={(

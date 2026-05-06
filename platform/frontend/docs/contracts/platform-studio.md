@@ -20,9 +20,9 @@ Read with:
 - Platform Studio is the tenant-web builder/configuration tool suite.
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
-- Navigation Builder has an active UI-first V1 surface plus first backend
-  persistence slice; real runtime sidebar output and ACL enforcement remain
-  planned.
+- Navigation Builder has an active V1 surface plus backend persistence and
+  runtime sidebar projection. Real ACL enforcement and utility rail access
+  enforcement remain planned.
 - Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.
@@ -83,8 +83,12 @@ Navigation Builder:
   the same root/group/module parent.
 - V1 uses `Menu title` as the user-facing root-only text divider with no icon,
   target, or children.
+- Runtime sidebar rendering treats `Menu title` as an app-layer section heading
+  in the UI Lab `GENERAL` style and suppresses empty, consecutive, or trailing
+  title sections so orphan headings do not appear in the tenant app.
 - V1 add choices are fixed at creation: `Menu title`, `Menu group`, `Form view`,
-  `App page`, and `App module`. Target-bearing choices use a centered, minimal
+  `App page`, and `Link`; `App module` remains visible as a disabled future choice until
+  real app module routes ship. Target-bearing choices use a centered, minimal
   fixed-type add dialog to choose the target before creation and do not expose a
   mutable target type switch in the inspector after creation.
 - V1 blocks duplicate target selection during add when the same Form View, App
@@ -98,7 +102,7 @@ Navigation Builder:
 - V1 `Element` includes a `Show in app menu` toggle for app menu containers and
   target entries. Inactive app menu items remain editable in the builder tree,
   show an eye-off status badge, and are excluded from runtime app menu output
-  once Navigation Builder persistence/publication lands. Menu titles do not
+  in saved runtime sidebar projection. Menu titles do not
   expose active, target, channel, or access controls.
 - V1 deletion follows Form Builder field deletion UX: danger-zone `Delete item`
   action in the inspector with a centered confirmation dialog. Deleting a
@@ -107,10 +111,13 @@ Navigation Builder:
   continuously, not manually copied once.
 - V1 add controls are limited to container rows and the bottom root add row;
   titles and final entries do not show `+` actions.
-- V1 navigation icons are shown only for container/module nodes; titles and
-  final entry targets do not show navigation icons. Menu groups and modules
-  choose icons from a small Navigation Builder icon dictionary. Status badges
-  may still show hidden, restricted/access, or broken state.
+- V1 navigation icons are configurable for every editable app menu item except
+  `Menu title`. The icon picker starts with `None` so any item can render
+  without an icon, and the dictionary includes inspection-oriented choices such
+  as checklist, hazard, camera, safety, work, maintenance, PPE, fire, fleet,
+  equipment, location, people, documents, forms, reports, routes, activity,
+  completed, and settings. Status badges may still show hidden,
+  restricted/access, or broken state.
 - Future App Module targets are represented as containers with possible nested
   subitems, but they stay inactive/preview-only until real app module runtime
   routes ship.
@@ -232,6 +239,11 @@ Route rules:
 - Dashboard remains a static locked shell item shown in Navigation Builder
   preview but not removable or movable by the builder. Dashboard must not show
   the lock badge; the lock badge is reserved for access/restricted state.
+- Dashboard is not selectable for editing in the Navigation Builder app menu
+  tree.
+- Empty or missing Navigation Builder configs start with only locked Dashboard;
+  do not seed mock Safety/Training/Form View entries into production builder
+  state.
 - Rail utility access is separate from the sidebar tree. Navigation Builder V1
   exposes utility rail items as a dedicated left-panel tab, but access remains
   preview/mock only until backend enforcement lands.

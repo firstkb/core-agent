@@ -94,3 +94,19 @@ type SaveConfigRequest struct {
 }
 
 type SaveConfigResponse = LoadConfigResponse
+
+type RuntimeNavigationResponse struct {
+	Items []RuntimeNavigationItem `json:"items"`
+}
+
+type RuntimeNavigationItem struct {
+	ID          string                  `json:"id"`
+	Label       string                  `json:"label"`
+	Type        string                  `json:"type"`
+	Icon        string                  `json:"icon,omitempty"`
+	Path        string                  `json:"path,omitempty"`
+	ExternalURL string                  `json:"externalUrl,omitempty"`
+	TargetType  string                  `json:"targetType,omitempty"`
+	Breadcrumb  []string                `json:"breadcrumb,omitempty"`
+	Children    []RuntimeNavigationItem `json:"children,omitempty"`
+}

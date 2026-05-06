@@ -52,6 +52,7 @@ export type NavigationBuilderTreePanelValue = "railbar" | "sidebar";
 const addNodeLabels: Record<NavigationBuilderAddNodeKind, string> = {
   "app-module": "App module",
   "app-page": "App page",
+  "external-link": "Link",
   "form-view": "Form view",
   "menu-group": "Menu group",
   section: "Menu title",
@@ -62,14 +63,20 @@ const rootAddNodeKinds: ReadonlyArray<NavigationBuilderAddNodeKind> = [
   "menu-group",
   "form-view",
   "app-page",
+  "external-link",
   "app-module",
 ];
 const nestedAddNodeKinds: ReadonlyArray<NavigationBuilderAddNodeKind> = [
   "menu-group",
   "form-view",
   "app-page",
+  "external-link",
   "app-module",
 ];
+
+function isAddNodeKindDisabled(kind: NavigationBuilderAddNodeKind) {
+  return kind === "app-module";
+}
 
 function getAddNodeKindsForParent(parentId?: string) {
   return parentId ? nestedAddNodeKinds : rootAddNodeKinds;
@@ -124,10 +131,14 @@ function AddNodeMenu({
         <MenuLabel>{label}</MenuLabel>
         {addKinds.map((kind) => (
           <MenuItem
+            disabled={isAddNodeKindDisabled(kind)}
             key={kind}
             onClick={() => onAddNode(kind, parentId)}
+            title={isAddNodeKindDisabled(kind) ? "App modules are planned for a later Navigation Builder slice." : undefined}
           >
-            {addNodeLabels[kind]}
+            {isAddNodeKindDisabled(kind)
+              ? `${addNodeLabels[kind]} (later)`
+              : addNodeLabels[kind]}
           </MenuItem>
         ))}
       </MenuContent>
@@ -197,10 +208,11 @@ function TreeNodeRows({
         const isDragging = draggedNodeId === node.id;
         const isDropTarget = dragOverNodeId === node.id && draggedNodeId !== node.id;
         const canReorderNode = !node.isLocked;
+        const canSelectNode = !node.isLocked;
         const isContainerNode = isNavigationBuilderContainerNode(node);
         const isActive = isNavigationBuilderNodeActive(node);
         const addModeLabel = `Add item to ${node.label}`;
-        const showsNodeIcon = node.kind !== "entry" && node.kind !== "section";
+        const showsNodeIcon = node.kind !== "section" && (node.kind === "locked-dashboard" || Boolean(node.iconKey));
 
         function canAcceptCurrentDrag(activeNodeId: string | null) {
           if (!activeNodeId) {
@@ -270,9 +282,14 @@ function TreeNodeRows({
               } as CSSProperties}
             >
               <button
+                aria-disabled={canSelectNode ? undefined : true}
                 className="tenant-web__navigation-builder-tree-row-main"
                 draggable={canReorderNode}
-                onClick={() => onSelectNode(node.id)}
+                onClick={() => {
+                  if (canSelectNode) {
+                    onSelectNode(node.id);
+                  }
+                }}
                 type="button"
               >
                 {canReorderNode ? (

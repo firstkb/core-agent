@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -61,6 +62,30 @@ func (s *Service) LoadConfig(ctx context.Context) (*LoadConfigResponse, error) {
 	}
 
 	return buildResponse(record, definition), nil
+}
+
+func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigationResponse, error) {
+	tenant, _, err := requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	record, err := s.repo.GetConfig(ctx, tenant, ConfigKeyDefault)
+	if err != nil {
+		return nil, err
+	}
+	if record == nil {
+		return &RuntimeNavigationResponse{Items: []RuntimeNavigationItem{}}, nil
+	}
+
+	definition, err := decodeDefinition(record.DefinitionJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RuntimeNavigationResponse{
+		Items: projectRuntimeNavigationItems(definition.AppMenu, nil),
+	}, nil
 }
 
 func (s *Service) SaveConfig(ctx context.Context, req SaveConfigRequest) (*SaveConfigResponse, error) {
@@ -124,6 +149,87 @@ func buildResponse(record *ConfigRecord, definition NavigationDefinition) *LoadC
 		UpdatedBy:         strings.TrimSpace(record.UpdatedBy),
 		ValidationSummary: ValidateDefinition(definition),
 	}
+}
+
+func projectRuntimeNavigationItems(nodes []NavigationNode, parentBreadcrumb []string) []RuntimeNavigationItem {
+	items := make([]RuntimeNavigationItem, 0, len(nodes))
+	for _, node := range nodes {
+		if !navigationNodeIsActive(node) {
+			continue
+		}
+
+		breadcrumb := append(append([]string{}, parentBreadcrumb...), node.Label)
+		children := projectRuntimeNavigationItems(node.Children, breadcrumb)
+		item := RuntimeNavigationItem{
+			ID:         node.ID,
+			Label:      node.Label,
+			Type:       node.Type,
+			Icon:       node.Icon,
+			TargetType: runtimeTargetType(node.Target),
+			Breadcrumb: breadcrumb,
+			Children:   children,
+		}
+
+		if node.Target != nil {
+			item.Path = runtimeTargetPath(*node.Target)
+			item.ExternalURL = runtimeTargetExternalURL(*node.Target)
+		}
+
+		if shouldExposeRuntimeNavigationItem(item, node.Type) {
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+func navigationNodeIsActive(node NavigationNode) bool {
+	return node.Active == nil || *node.Active
+}
+
+func runtimeTargetType(target *NavigationTarget) string {
+	if target == nil {
+		return ""
+	}
+	return target.Type
+}
+
+func runtimeTargetPath(target NavigationTarget) string {
+	switch target.Type {
+	case TargetTypeFormView:
+		if target.ModelID == "" || target.ViewID == "" {
+			return ""
+		}
+		return "/app/forms/" + url.PathEscape(target.ModelID) + "/views/" + url.PathEscape(target.ViewID)
+	case TargetTypeAppPage:
+		if target.Route != "" {
+			return target.Route
+		}
+		if target.PageID == "" {
+			return ""
+		}
+		return "/app/pages/" + url.PathEscape(target.PageID)
+	case TargetTypeAppModule:
+		return target.Route
+	default:
+		return ""
+	}
+}
+
+func runtimeTargetExternalURL(target NavigationTarget) string {
+	if target.Type != TargetTypeExternalURL {
+		return ""
+	}
+	return target.URL
+}
+
+func shouldExposeRuntimeNavigationItem(item RuntimeNavigationItem, nodeType string) bool {
+	if nodeType == NodeTypeMenuTitle {
+		return true
+	}
+	if item.Path != "" || item.ExternalURL != "" {
+		return true
+	}
+	return len(item.Children) > 0
 }
 
 func decodeDefinition(raw json.RawMessage) (NavigationDefinition, error) {

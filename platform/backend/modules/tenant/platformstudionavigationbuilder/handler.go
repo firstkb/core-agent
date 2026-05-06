@@ -32,6 +32,14 @@ func (h *Handler) SaveConfig(ctx context.Context, _ *http.Request, req SaveConfi
 	return out, nil
 }
 
+func (h *Handler) LoadRuntimeNavigation(ctx context.Context, _ *http.Request, _ struct{}) (*RuntimeNavigationResponse, error) {
+	out, err := h.service.LoadRuntimeNavigation(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func mapError(err error) *apperr.AppError {
 	switch {
 	case errors.Is(err, ErrUnauthorized):

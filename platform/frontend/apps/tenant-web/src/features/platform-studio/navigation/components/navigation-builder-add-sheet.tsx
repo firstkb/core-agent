@@ -28,7 +28,7 @@ import {
 
 type NavigationBuilderAddTargetKind = Extract<
   NavigationBuilderAddNodeKind,
-  "app-module" | "app-page" | "form-view"
+  "app-module" | "app-page" | "external-link" | "form-view"
 >;
 
 export type NavigationBuilderPendingAdd = {
@@ -53,6 +53,12 @@ export type NavigationBuilderAddTargetResult =
       kind: "app-module";
       label: string;
       parentId?: string;
+    }
+  | {
+      kind: "external-link";
+      label: string;
+      parentId?: string;
+      url: string;
     };
 
 type NavigationBuilderAddDialogProps = {
@@ -86,7 +92,32 @@ const addSheetCopy: Record<
     placeholder: "Select form view",
     title: "Add form view",
   },
+  "external-link": {
+    pickerLabel: "URL",
+    placeholder: "https://example.com",
+    title: "Add link",
+  },
 };
+
+function getExternalLinkLabel(value: string) {
+  try {
+    const parsedUrl = new URL(value.trim());
+
+    return parsedUrl.hostname.replace(/^www\./, "") || "New link";
+  } catch {
+    return "New link";
+  }
+}
+
+function isValidExternalLinkUrl(value: string) {
+  try {
+    const parsedUrl = new URL(value.trim());
+
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export function NavigationBuilderAddDialog({
   formViewTargets,
@@ -96,6 +127,7 @@ export function NavigationBuilderAddDialog({
   request,
 }: NavigationBuilderAddDialogProps) {
   const [customLabel, setCustomLabel] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
   const [selectedTargetId, setSelectedTargetId] = useState("");
   const copy = request ? addSheetCopy[request.kind] : addSheetCopy["form-view"];
 
@@ -114,15 +146,21 @@ export function NavigationBuilderAddDialog({
 
   useEffect(() => {
     setCustomLabel("");
+    setExternalUrl("");
     setSelectedTargetId("");
   }, [request]);
 
-  const selectedLabel =
+  const selectedPickerLabel =
     selectedFormViewTarget?.viewLabel
     ?? selectedAppPage?.label
     ?? selectedAppModule?.label
     ?? "";
+  const selectedLabel =
+    request?.kind === "external-link" ? getExternalLinkLabel(externalUrl) : selectedPickerLabel;
   const resolvedLabel = customLabel.trim() || selectedLabel;
+  const trimmedExternalUrl = externalUrl.trim();
+  const hasExternalUrl = Boolean(trimmedExternalUrl);
+  const isExternalUrlValid = isValidExternalLinkUrl(trimmedExternalUrl);
   const selectedTargetIdentity = useMemo(() => {
     if (!request) {
       return "";
@@ -154,8 +192,22 @@ export function NavigationBuilderAddDialog({
       });
     }
 
+    if (request.kind === "external-link" && isExternalUrlValid) {
+      return getNavigationBuilderTargetIdentity({
+        kind: "external-link",
+        url: trimmedExternalUrl,
+      });
+    }
+
     return "";
-  }, [request, selectedAppModule, selectedAppPage, selectedFormViewTarget]);
+  }, [
+    isExternalUrlValid,
+    request,
+    selectedAppModule,
+    selectedAppPage,
+    selectedFormViewTarget,
+    trimmedExternalUrl,
+  ]);
   const duplicateNode = useMemo(() => {
     if (!selectedTargetIdentity) {
       return null;
@@ -170,7 +222,13 @@ export function NavigationBuilderAddDialog({
       .map((node) => getNavigationBuilderNodeLabel(node, formViewTargets))
       .join(" > ")
     : "";
-  const canAdd = Boolean(request && selectedTargetId && !duplicateNode);
+  const canAdd = Boolean(
+    request &&
+    !duplicateNode &&
+    (request.kind === "external-link"
+      ? isExternalUrlValid && resolvedLabel
+      : selectedTargetId),
+  );
 
   function handleTargetChange(value: string) {
     setSelectedTargetId(value);
@@ -218,6 +276,16 @@ export function NavigationBuilderAddDialog({
         label: resolvedLabel,
         parentId: request.parentId,
       });
+      return;
+    }
+
+    if (request.kind === "external-link" && isExternalUrlValid && resolvedLabel) {
+      onConfirm({
+        kind: "external-link",
+        label: resolvedLabel,
+        parentId: request.parentId,
+        url: trimmedExternalUrl,
+      });
     }
   }
 
@@ -233,51 +301,71 @@ export function NavigationBuilderAddDialog({
         </DialogHeader>
         <DialogBody>
           <div className="tenant-web__navigation-builder-dialog-stack">
-            <label className="tenant-web__navigation-builder-field">
-              <span>{copy.pickerLabel}</span>
-              <Select
-                disabled={request?.kind === "form-view" && formViewTargets.length === 0}
-                onChange={(event) => handleTargetChange(event.target.value)}
-                value={selectedTargetId}
-              >
-                <option value="">
-                  {request?.kind === "form-view" && formViewTargets.length === 0
-                    ? "No Form Builder views loaded"
-                    : copy.placeholder}
-                </option>
-                {request?.kind === "form-view" ? (
-                  formViewTargets.map((target) => (
-                    <option key={target.id} value={target.id}>
-                      {target.label}
-                    </option>
-                  ))
-                ) : null}
-                {request?.kind === "app-page" ? (
-                  navigationBuilderAppPages.map((page) => (
-                    <option key={page.key} value={page.key}>
-                      {page.label}
-                    </option>
-                  ))
-                ) : null}
-                {request?.kind === "app-module" ? (
-                  navigationBuilderAppModules.map((appModule) => (
-                    <option key={appModule.key} value={appModule.key}>
-                      {appModule.label}
-                    </option>
-                  ))
-                ) : null}
-              </Select>
-            </label>
+            {request?.kind === "external-link" ? (
+              <label className="tenant-web__navigation-builder-field">
+                <span>{copy.pickerLabel}</span>
+                <Input
+                  onChange={(event) => setExternalUrl(event.target.value)}
+                  placeholder={copy.placeholder}
+                  type="url"
+                  value={externalUrl}
+                />
+              </label>
+            ) : (
+              <label className="tenant-web__navigation-builder-field">
+                <span>{copy.pickerLabel}</span>
+                <Select
+                  disabled={request?.kind === "form-view" && formViewTargets.length === 0}
+                  onChange={(event) => handleTargetChange(event.target.value)}
+                  value={selectedTargetId}
+                >
+                  <option value="">
+                    {request?.kind === "form-view" && formViewTargets.length === 0
+                      ? "No Form Builder views loaded"
+                      : copy.placeholder}
+                  </option>
+                  {request?.kind === "form-view" ? (
+                    formViewTargets.map((target) => (
+                      <option key={target.id} value={target.id}>
+                        {target.label}
+                      </option>
+                    ))
+                  ) : null}
+                  {request?.kind === "app-page" ? (
+                    navigationBuilderAppPages.map((page) => (
+                      <option key={page.key} value={page.key}>
+                        {page.label}
+                      </option>
+                    ))
+                  ) : null}
+                  {request?.kind === "app-module" ? (
+                    navigationBuilderAppModules.map((appModule) => (
+                      <option key={appModule.key} value={appModule.key}>
+                        {appModule.label}
+                      </option>
+                    ))
+                  ) : null}
+                </Select>
+              </label>
+            )}
 
             <label className="tenant-web__navigation-builder-field">
               <span>Menu label</span>
               <Input
-                disabled={!selectedTargetId || request?.kind === "form-view"}
+                disabled={request?.kind === "form-view" || (
+                  request?.kind === "external-link" ? !hasExternalUrl : !selectedTargetId
+                )}
                 onChange={(event) => setCustomLabel(event.target.value)}
                 placeholder={request?.kind === "form-view" ? "Uses selected View title" : "Menu label"}
                 value={request?.kind === "form-view" ? selectedLabel : customLabel}
               />
             </label>
+
+            {request?.kind === "external-link" && hasExternalUrl && !isExternalUrlValid ? (
+              <p className="tenant-web__platform-studio-inline-help tenant-web__navigation-builder-dialog-warning">
+                Use a full http or https URL.
+              </p>
+            ) : null}
 
             {duplicateNode ? (
               <p className="tenant-web__platform-studio-inline-help tenant-web__navigation-builder-dialog-warning">

@@ -16,6 +16,27 @@ func (srv *Server) registerPlatformStudioNavigationBuilderRoutes(b *router.Build
 	}
 
 	register(
+		"TENANT_RUNTIME_NAVIGATION_GET",
+		http.MethodGet,
+		"/app/navigation",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*navigationbuilder.RuntimeNavigationResponse, error) {
+			info, err := srv.platformStudioNavigationBuilderHTTP.LoadRuntimeNavigation(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(
+					srv.logger,
+					ctx,
+					"TENANT_RUNTIME_NAVIGATION_GET",
+					http.StatusInternalServerError,
+					"cannot load tenant runtime navigation",
+					err,
+					srv.FieldsForLog(ctx, r, nil)...,
+				)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
 		"NAVIGATION_BUILDER_CONFIG_GET",
 		http.MethodGet,
 		"/app/platform-studio/navigation",

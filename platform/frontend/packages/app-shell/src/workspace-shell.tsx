@@ -58,6 +58,10 @@ type WorkspaceRailItem = {
 type WorkspaceShellTheme = "light" | "dark";
 type WorkspaceSurfaceTone = "admin" | "workspace" | "neutral";
 
+type WorkspaceShellSidebarControls = {
+  closeSidebarSurfaces: () => void;
+};
+
 type WorkspaceShellProps = {
   brand: string;
   surfaceLabel?: string;
@@ -65,7 +69,7 @@ type WorkspaceShellProps = {
   surfaceTone?: WorkspaceSurfaceTone;
   showHeaderSurfaceMarker?: boolean;
   showSidebarSurfaceMarker?: boolean;
-  sidebarNavigationLabel?: ReactNode;
+  sidebarNavigationLabel?: ReactNode | ((controls: WorkspaceShellSidebarControls) => ReactNode);
   navigation: WorkspaceNavItem[];
   headerTitle?: string;
   headerMeta?: ReactNode;
@@ -411,6 +415,7 @@ export function WorkspaceShell({
               }
 
               item.onSelect?.();
+              closeSidebarSurfaces();
             }}
             type="button"
           >
@@ -541,7 +546,10 @@ export function WorkspaceShell({
                 <button
                   aria-label={railBrandTitle}
                   className="workspace-shell__rail-brand workspace-shell__rail-brand--interactive"
-                  onClick={railBrandOnSelect}
+                  onClick={() => {
+                    railBrandOnSelect();
+                    closeSidebarSurfaces();
+                  }}
                   type="button"
                 >
                   {railBrandContent}
@@ -625,6 +633,10 @@ export function WorkspaceShell({
   }
 
   function renderSidebarPanel() {
+    const resolvedSidebarNavigationLabel = typeof sidebarNavigationLabel === "function"
+      ? sidebarNavigationLabel({ closeSidebarSurfaces })
+      : sidebarNavigationLabel;
+
     return (
       <div className="workspace-shell__panel">
         <div className="workspace-shell__sidebar-mobile-bar">
@@ -653,9 +665,9 @@ export function WorkspaceShell({
 
         {renderSidebarMobileUtilities()}
 
-        {sidebarNavigationLabel ? (
+        {resolvedSidebarNavigationLabel ? (
           <div className="workspace-shell__sidebar-navigation-group">
-            <div className="workspace-shell__sidebar-navigation-label">{sidebarNavigationLabel}</div>
+            <div className="workspace-shell__sidebar-navigation-label">{resolvedSidebarNavigationLabel}</div>
             {renderSidebarNavigation()}
           </div>
         ) : (
@@ -739,6 +751,7 @@ export function WorkspaceShell({
 export type {
   WorkspaceNavItem,
   WorkspaceRailItem,
+  WorkspaceShellSidebarControls,
   WorkspaceShellLayout,
   WorkspaceShellProps,
   WorkspaceSurfaceTone,

@@ -334,10 +334,19 @@ function IconPicker({
   node: NavigationBuilderNode;
   onNodeChange: (node: NavigationBuilderNode) => void;
 }) {
-  const selectedIconKey = node.iconKey ?? (node.kind === "menu-group" ? "folder" : "briefcase");
+  const selectedIconKey = node.iconKey ?? "none";
 
   return (
     <div className="tenant-web__navigation-builder-icon-grid">
+      <button
+        aria-pressed={selectedIconKey === "none"}
+        className={`tenant-web__navigation-builder-icon-option${selectedIconKey === "none" ? " tenant-web__navigation-builder-icon-option--active" : ""}`}
+        onClick={() => onNodeChange({ ...node, iconKey: undefined })}
+        type="button"
+      >
+        <span className="tenant-web__navigation-builder-icon-option-glyph tenant-web__navigation-builder-icon-option-glyph--none" />
+        <span>None</span>
+      </button>
       {navigationBuilderIconOptions.map((option) => {
         const isSelected = option.key === selectedIconKey;
 
@@ -365,7 +374,7 @@ function shouldShowActiveControl(node: NavigationBuilderNode) {
 }
 
 function shouldShowIconPicker(node: NavigationBuilderNode) {
-  return node.kind === "menu-group" || node.kind === "app-module";
+  return !node.isLocked && node.kind !== "section";
 }
 
 function shouldShowTargetSection(node: NavigationBuilderNode) {

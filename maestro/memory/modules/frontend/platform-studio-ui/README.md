@@ -52,10 +52,12 @@ Last compacted: 2026-04-26
   per-parent-level drag ordering, fixed add choices, `Show in app menu` toggle with
   eye-off inactive badges, Dashboard locked without a lock badge, Form View
   labels derived from selected View titles, container/root add controls,
-  container-level navigation icons only, editable draft state, and explicit
-  `Save`. Utility rail access is also mock only. Backend persistence, runtime
-  publication, real rail utility access enforcement, and real ACL enforcement
-  remain planned.
+  optional icon picker for every editable non-title app menu item with `None`
+  and inspection-oriented icons, editable draft state, and explicit
+  `Save`. Runtime `Menu title` headings use the UI Lab section-heading style
+  and suppress empty/consecutive/trailing title sections. Utility rail access is
+  also mock only. Backend persistence and runtime sidebar projection are active;
+  real rail utility access enforcement and real ACL enforcement remain planned.
 - Planned Platform Studio tools need distinct UI boundaries before implementation: Action Builder, PDF Builder, Report Builder.
 - Surface contextual `runtimeApply` partial failures visibly in workspace UI.
 - Preserve preview/runtime route split.

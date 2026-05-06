@@ -7,6 +7,7 @@ import {
   createTenantBusinessTreeClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
+  createTenantNavigationClient,
   getApiClientRequestActivitySnapshot,
   requestWithUnauthorizedRetry,
   subscribeApiClientRequestActivity,
@@ -229,6 +230,154 @@ describe("api-client tenant business tree", () => {
     });
     expect(fetchMock).toHaveBeenCalledWith(
       "/tenant-api/app/pages/business-tree/nodes?parent=root",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+});
+
+describe("api-client tenant navigation", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("loads Navigation Builder config from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          configKey: "default",
+          definition: {
+            appMenu: [
+              {
+                active: true,
+                children: [],
+                id: "nav.title.operations",
+                label: "Operations",
+                type: "menu_title",
+              },
+            ],
+            schemaVersion: 1,
+            utilityRail: [],
+          },
+          validationSummary: {
+            canSave: true,
+            errors: [],
+            warnings: [],
+          },
+          version: 1,
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantNavigationClient("/tenant-api").loadConfig("token");
+
+    expect(out.definition.appMenu[0]).toMatchObject({
+      id: "nav.title.operations",
+      label: "Operations",
+      type: "menu_title",
+    });
+    expect(out.version).toBe(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/navigation",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("saves Navigation Builder config with optimistic version", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          configKey: "default",
+          definition: {
+            appMenu: [],
+            schemaVersion: 1,
+            utilityRail: [],
+          },
+          validationSummary: {
+            canSave: true,
+            errors: [],
+            warnings: [],
+          },
+          version: 2,
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantNavigationClient("/tenant-api").saveConfig("token", {
+      definition: {
+        appMenu: [],
+        schemaVersion: 1,
+        utilityRail: [],
+      },
+      expectedVersion: 1,
+    });
+
+    expect(out.version).toBe(2);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/navigation",
+      expect.objectContaining({
+        body: JSON.stringify({
+          definition: {
+            appMenu: [],
+            schemaVersion: 1,
+            utilityRail: [],
+          },
+          expectedVersion: 1,
+        }),
+        headers: expect.any(Headers),
+        method: "PUT",
+      }),
+    );
+  });
+
+  it("loads runtime sidebar navigation from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          items: [
+            {
+              breadcrumb: ["Safety", "Inspections"],
+              children: [],
+              id: "nav.entry.safety.inspections",
+              label: "Inspections",
+              path: "/app/forms/sor/views/view-default",
+              targetType: "form_view",
+              type: "form_view",
+            },
+          ],
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantNavigationClient("/tenant-api").getRuntimeNavigation("token");
+
+    expect(out.items[0]).toMatchObject({
+      breadcrumb: ["Safety", "Inspections"],
+      id: "nav.entry.safety.inspections",
+      path: "/app/forms/sor/views/view-default",
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/navigation",
       expect.objectContaining({
         headers: expect.any(Headers),
         method: "GET",

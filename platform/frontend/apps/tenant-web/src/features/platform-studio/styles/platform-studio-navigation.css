@@ -12,6 +12,15 @@
 
 .tenant-web__navigation-builder-topline {
   flex: 0 0 auto;
+  min-height: 2.4rem;
+}
+
+.tenant-web__navigation-builder-save-cluster,
+.tenant-web__navigation-builder-save-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
 }
 
 .tenant-web__navigation-builder-save-status {
@@ -24,6 +33,26 @@
 .tenant-web__navigation-builder-save-button {
   min-width: 4.2rem;
   padding-inline: 0.72rem;
+}
+
+.tenant-web__navigation-builder-save-error {
+  justify-content: flex-end;
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.tenant-web__navigation-builder-save-error svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--color-status-warning);
+}
+
+.tenant-web__navigation-builder-save-error span {
+  overflow-wrap: anywhere;
 }
 
 .tenant-web__navigation-builder-loading-note {
@@ -504,6 +533,19 @@
 .tenant-web__navigation-builder-icon-option-glyph svg {
   width: 1.04rem;
   height: 1.04rem;
+}
+
+.tenant-web__navigation-builder-icon-option-glyph--none {
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border-radius: 999px;
+}
+
+.tenant-web__navigation-builder-icon-option-glyph--none::before {
+  width: 0.7rem;
+  height: 1px;
+  background: currentColor;
+  content: "";
+  transform: rotate(-35deg);
 }
 
 .tenant-web__navigation-builder-access-option {

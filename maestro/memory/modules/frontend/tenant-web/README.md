@@ -42,26 +42,36 @@ Last compacted: 2026-04-25
 - Install prompting is mounted on public `/sign-in` only.
 - Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
 - Form Builder is active backend-backed authoring; Navigation Builder has an
-  active UI-first V1 surface plus first backend persistence slice; Action
+  active V1 surface plus backend persistence and runtime sidebar projection; Action
   Builder, PDF Builder, and Report Builder are planned.
 - Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
 - Published runtime consumption is not the full Navigation Builder contract.
 - Navigation Builder V1 lives at `/builder/navigation` with draft/Save UI,
   Form View/App Page/External Link targets, future App Module shape with nested
-  subitems, root-only `Title` dividers, separate Sidebar/RailBar editor tabs,
+  subitems, root-only `Menu title` dividers, separate Sidebar/RailBar editor tabs,
   fixed add choices, `Element`/`Access` inspector tabs, Form Builder-style
   Element sections, `Active` toggle with eye-off inactive badges, Dashboard
-  locked without a lock badge, Form View labels derived from selected View
-  titles, and mock-only access controls.
-- Navigation Builder persistence currently lives at
+  locked without a lock badge and not selectable for editing, empty configs
+  starting with only Dashboard and the root add affordance, disabled future App
+  Module add choice, Form View labels derived from selected View titles,
+  optional icon picker for every editable non-title app menu item with `None`,
+  and mock-only access controls.
+- Navigation Builder persistence lives at
   `GET/PUT /app/platform-studio/navigation` backed by `ps_navigation_config`;
-  runtime sidebar output is still planned.
-- When Navigation Builder becomes the source for real sidebar output, App Page
-  and Form View runtime screens must resolve the tenant top bar title and
-  breadcrumb from the configured navigation path and target metadata.
+  runtime sidebar projection lives at `GET /app/navigation`.
+- Tenant sidebar prefers saved Navigation Builder runtime items when present
+  and falls back to published runtime metadata when no saved app menu exists.
+- Tenant sidebar renders root `Menu title` runtime items as UI Lab-style
+  section headings and suppresses empty, consecutive, or trailing title sections
+  so orphan headings do not appear in the app sidebar.
+- Tenant sidebar runtime item icons render when configured; `None`/missing icon
+  renders no icon. Mobile sidebar panels and collapsed desktop hover-preview
+  panels close after actionable sidebar/rail navigation selections.
+- App Page and Form View runtime screens resolve the tenant top bar title and
+  breadcrumb from the configured Navigation Builder path and target metadata.
 - Business Tree is the first tenant app page. Its canonical direct route is
-  `/app/pages/business-tree` until Navigation Builder can register app page
-  targets.
+  `/app/pages/business-tree`, and Navigation Builder can expose it through an
+  App Page target.
 - Product modules are broader product areas such as future Training or Task
   Manager. Do not call Business Tree a module.
 - `tenant-pwa`, service-worker sync, offline-first persistence, Flutter, and hybrid mobile are future/deferred.
@@ -82,9 +92,8 @@ Last compacted: 2026-04-25
   `CONFIG_COMPANYID`.
 - `code-confirmed` Current access is authenticated tenant users. Route/service
   boundaries contain TODOs for future Navigation Builder page permissions.
-- `planned` Follow-ups: app-page target metadata and sidebar registration,
-  runtime publication, real rail utility
-  visibility/access enforcement, Navigation Builder-backed page access control,
+- `planned` Follow-ups: real rail utility visibility/access enforcement,
+  Navigation Builder-backed page access control,
   real product-module target contracts, parent company
   existence validation for `contacts:*` and `projects:*` lazy parents; large
   tenant performance and possible tree virtualization; optional explicit root
@@ -123,5 +132,6 @@ It does not own:
 
 - Manifest/install prompt support can be mistaken for active offline PWA scope.
 - `src/offline/sync-status.ts` can be mistaken for a real sync contract; it is not current offline architecture.
-- Published runtime sidebar entries can be mistaken for completed Navigation Builder behavior.
+- Published runtime sidebar fallback can be mistaken for the primary Navigation
+  Builder runtime projection.
 - Platform Studio planned tool concerns can leak into Form Builder if the suite contract is not read first.

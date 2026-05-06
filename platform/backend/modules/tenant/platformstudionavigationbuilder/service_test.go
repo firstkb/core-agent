@@ -210,6 +210,75 @@ func TestSaveConfigRejectsDuplicateTargets(t *testing.T) {
 	}
 }
 
+func TestLoadRuntimeNavigationProjectsActiveItems(t *testing.T) {
+	raw, err := json.Marshal(sampleDefinition())
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	repo := &memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	}
+	service := NewService(repo)
+
+	out, err := service.LoadRuntimeNavigation(navigationBuilderTestContext())
+	if err != nil {
+		t.Fatalf("LoadRuntimeNavigation returned error: %v", err)
+	}
+
+	if len(out.Items) != 2 {
+		t.Fatalf("runtime item count = %d, want 2", len(out.Items))
+	}
+	safety := out.Items[1]
+	if safety.ID != "nav.group.safety" {
+		t.Fatalf("second item id = %q, want nav.group.safety", safety.ID)
+	}
+	if len(safety.Children) != 2 {
+		t.Fatalf("safety child count = %d, want 2", len(safety.Children))
+	}
+	if safety.Children[0].Path != "/app/forms/sor/views/view-default" {
+		t.Fatalf("form view path = %q", safety.Children[0].Path)
+	}
+	if got, want := safety.Children[0].Breadcrumb, []string{"Safety", "Inspections"}; len(got) != len(want) || got[0] != want[0] || got[1] != want[1] {
+		t.Fatalf("form view breadcrumb = %#v, want %#v", got, want)
+	}
+	if safety.Children[1].Path != "/app/pages/business-tree" {
+		t.Fatalf("app page path = %q", safety.Children[1].Path)
+	}
+}
+
+func TestLoadRuntimeNavigationExcludesInactiveItems(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Children[0].Active = boolPtr(false)
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	out, err := service.LoadRuntimeNavigation(navigationBuilderTestContext())
+	if err != nil {
+		t.Fatalf("LoadRuntimeNavigation returned error: %v", err)
+	}
+
+	safety := out.Items[1]
+	if len(safety.Children) != 1 {
+		t.Fatalf("safety child count = %d, want 1", len(safety.Children))
+	}
+	if safety.Children[0].ID != "nav.entry.business-tree" {
+		t.Fatalf("remaining child id = %q", safety.Children[0].ID)
+	}
+}
+
 func TestSaveConfigRequiresTenantAndClaims(t *testing.T) {
 	service := NewService(&memoryRepository{})
 

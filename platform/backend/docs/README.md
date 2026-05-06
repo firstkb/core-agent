@@ -14,7 +14,7 @@ Read contract docs first, then module docs, then runbooks/proposals/reference/hi
 - `contracts/collection-table.md`: backend shared Collection Table DTOs, query helpers, preferences, and current admin endpoint families.
 - `contracts/events-identity.md`: event actor identity fields for master and tenant events.
 - `contracts/platform-studio-form-builder.md`: backend Form Builder authoring API, metadata storage, runtime apply, generated objects, validation, and migration boundary.
-- `contracts/platform-studio-navigation-builder.md`: backend Navigation Builder persistence API, storage, validation, and runtime-sidebar handoff boundary.
+- `contracts/platform-studio-navigation-builder.md`: backend Navigation Builder persistence API, storage, validation, and runtime-sidebar projection boundary.
 - `modules/runtime.md`: current backend runtime shape, active entrypoints, module roots, and foundation boundaries.
 - `modules/platform-studio/form-builder.md`: backend Form Builder implementation map and read order.
 - `modules/platform-studio/navigation-builder.md`: backend Navigation Builder implementation map and read order.

@@ -182,6 +182,18 @@ function mapModelSummaryToPlaceholder(
   });
 }
 
+function withModelViews(
+  model: FormsPlaceholderModel,
+  views: ReadonlyArray<FormBuilderViewSummary>,
+): FormsPlaceholderModel {
+  return cloneFormsPlaceholderModel({
+    ...model,
+    screens: sortFormsPlaceholderViews(
+      views.map((view) => mapViewSummaryToPlaceholder(view, model)),
+    ),
+  });
+}
+
 function mapModelDetailToPlaceholder(
   detail: FormBuilderModelDetail,
   existing?: FormsPlaceholderModel | null,
@@ -302,9 +314,19 @@ export function FormBuilderAuthoringProvider({
     setModelsError(null);
 
     try {
-      const nextModels = await requestWithSession((accessToken) => authoringClient.listModels(accessToken));
+      const modelSummaries = await requestWithSession((accessToken) => authoringClient.listModels(accessToken));
+      const summaryModels = modelSummaries.map((summary) =>
+        mapModelSummaryToPlaceholder(summary, getFormsPlaceholderModel(summary.id, modelsRef.current)));
+      const nextModels = await Promise.all(
+        summaryModels.map(async (model) => {
+          const views = await requestWithSession((accessToken) => authoringClient.listViews(accessToken, model.id));
+
+          return withModelViews(model, views);
+        }),
+      );
+
       commitModels(
-        nextModels.map((summary) => mapModelSummaryToPlaceholder(summary, getFormsPlaceholderModel(summary.id, modelsRef.current))),
+        nextModels,
       );
     } catch (error) {
       setModelsError(error instanceof Error ? error.message : "Unable to load models.");

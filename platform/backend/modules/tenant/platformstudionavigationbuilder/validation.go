@@ -48,6 +48,13 @@ func ValidateDefinition(definition NavigationDefinition) ValidationSummary {
 		}
 	}
 
+	if errors == nil {
+		errors = []ValidationMessage{}
+	}
+	if warnings == nil {
+		warnings = []ValidationMessage{}
+	}
+
 	return ValidationSummary{
 		CanSave:  len(errors) == 0,
 		Errors:   errors,

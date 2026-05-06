@@ -1,24 +1,31 @@
 import {
   BriefcaseIcon,
   BuildingOfficeIcon,
+  CameraIcon,
   CarFrontIcon,
   ChartBarIcon,
+  CheckCircleIcon,
+  ClipboardCheckIcon,
   DashboardGridIcon,
   DocumentListIcon,
   EyeOffIcon,
+  FlameIcon,
   FolderIcon,
   FormIcon,
+  HardHatIcon,
   HelpCircleIcon,
   LayersIcon,
   LockIcon,
   MapPinIcon,
   PulseLineIcon,
   RoutePathIcon,
-  SettingsIcon,
+  SlidersIcon,
   ShieldKeyIcon,
   StarIcon,
+  ToolboxIcon,
   UsersIcon,
   WarningTriangleIcon,
+  WrenchIcon,
   type IconProps,
 } from "@platform/ui-kit";
 
@@ -34,12 +41,15 @@ export function NavigationBuilderNodeIcon({
   iconKey?: string;
   kind: NavigationBuilderNodeKind;
 }) {
-  if (kind === "entry" || kind === "section") {
+  if (kind === "section") {
     return null;
   }
 
-  const resolvedIconKey = iconKey ?? kind;
-  return <NavigationBuilderIconGlyph iconKey={resolvedIconKey} />;
+  if (kind === "locked-dashboard") {
+    return <DashboardGridIcon />;
+  }
+
+  return iconKey ? <NavigationBuilderIconGlyph iconKey={iconKey} /> : null;
 }
 
 export function NavigationBuilderIconGlyph({
@@ -63,6 +73,20 @@ export function NavigationBuilderIconGlyph({
       return <BuildingOfficeIcon />;
     case "users":
       return <UsersIcon />;
+    case "clipboard-check":
+      return <ClipboardCheckIcon />;
+    case "warning":
+      return <WarningTriangleIcon />;
+    case "camera":
+      return <CameraIcon />;
+    case "toolbox":
+      return <ToolboxIcon />;
+    case "hard-hat":
+      return <HardHatIcon />;
+    case "fire":
+      return <FlameIcon />;
+    case "wrench":
+      return <WrenchIcon />;
     case "chart":
       return <ChartBarIcon />;
     case "pulse":
@@ -70,7 +94,9 @@ export function NavigationBuilderIconGlyph({
     case "car":
       return <CarFrontIcon />;
     case "settings":
-      return <SettingsIcon />;
+      return <SlidersIcon />;
+    case "check-circle":
+      return <CheckCircleIcon />;
     case "star":
       return <StarIcon />;
     case "help":
@@ -81,6 +107,7 @@ export function NavigationBuilderIconGlyph({
     case "tree":
       return <RoutePathIcon />;
     case "link":
+    case "map-pin":
       return <MapPinIcon />;
     case "document":
       return <DocumentListIcon />;

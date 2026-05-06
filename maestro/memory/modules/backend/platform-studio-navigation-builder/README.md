@@ -29,6 +29,8 @@ Last compacted: 2026-05-06
 - Authoring API routes are:
   - `GET /app/platform-studio/navigation`
   - `PUT /app/platform-studio/navigation`
+- Runtime API route is:
+  - `GET /app/navigation`
 - Storage table is `ps_navigation_config`.
 - The first slice stores one saved definition under config key `default`.
 - Save uses optimistic `expectedVersion` conflict checks.
@@ -38,13 +40,11 @@ Last compacted: 2026-05-06
 - Duplicate target prevention is enforced by backend validation before save.
 - Access payloads remain inert/mock configuration until a later ACL contract
   lands.
-- Runtime sidebar output is follow-up; when it lands, top bar title and
-  breadcrumb must resolve from Navigation Builder path/target metadata.
+- Runtime sidebar projection excludes inactive app menu entries and resolves
+  Form View/App Page targets to tenant runtime routes. Tenant top bar title and
+  breadcrumb resolve from Navigation Builder path/target metadata.
 
 ## Planned / Watch
 
-- Connect tenant-web Navigation Builder UI to these endpoints.
-- Add runtime sidebar projection/read model from saved Navigation Builder
-  definitions.
 - Add real ACL/grant enforcement only after the accepted access contract exists.
 - Keep Form Builder as model/view authoring owner only.

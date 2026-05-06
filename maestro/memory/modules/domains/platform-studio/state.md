@@ -27,11 +27,12 @@ Last compacted: 2026-04-25
 - Runtime view route and preview route split is partially implemented.
 - Runtime list applies authored default filters to grid query and search suggestions.
 - Runtime list supports saved filters and favorites using Collection Table pattern.
-- Navigation Builder first backend persistence slice is active in dedicated
-  package `platformstudionavigationbuilder`. It exposes
-  `GET/PUT /app/platform-studio/navigation`, stores saved definitions in
-  `ps_navigation_config`, validates duplicate targets, and uses optimistic
-  version checks.
+- Navigation Builder backend is active in dedicated package
+  `platformstudionavigationbuilder`. It exposes
+  `GET/PUT /app/platform-studio/navigation` for authoring and
+  `GET /app/navigation` for runtime sidebar projection, stores saved
+  definitions in `ps_navigation_config`, validates duplicate targets, excludes
+  inactive runtime items, and uses optimistic version checks.
 
 ## Accepted / Planned
 
@@ -41,10 +42,13 @@ Last compacted: 2026-04-25
   subitems, separate `App menu`/`Utility rail` editor tabs, `Element`/`Access` inspector
   tabs, fixed add choices with target type locked after creation, `Show in app menu`
   toggle with eye-off inactive badges, Dashboard locked without lock badge, Form
-  View labels derived from selected View titles, draft/Save UX, and access mock
-  UI. Runtime sidebar output, real rail utility visibility/access enforcement,
-  and real access/permission enforcement remain planned unless a later decision
-  splits access into a dedicated tool.
+  View labels derived from selected View titles, draft/Save UX, access mock UI,
+  optional icon picker for every editable non-title app menu item with `None`,
+  runtime sidebar projection for active saved app menu entries, and UI Lab-style
+  runtime `Menu title` headings with empty/consecutive/trailing title suppression.
+  Real rail
+  utility visibility/access enforcement and real access/permission enforcement
+  remain planned unless a later decision splits access into a dedicated tool.
 - Action Builder is planned but not active; it owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder is planned but not active; it owns generated PDF/template configuration over authored/runtime data.
 - Report Builder is planned but not active; it owns report definitions and analytical/read-only reporting outputs.
@@ -66,7 +70,6 @@ Last compacted: 2026-04-25
 - Temporary `/draft` terminology can leak back into product lifecycle language.
 - Navigation Builder ACL absence can tempt temporary runtime grants.
 - Planned tool concerns can accidentally be implemented inside Form Builder, creating scope creep and future extraction debt.
-- Navigation Builder persistence can drift from runtime sidebar output unless
-  the next slice explicitly projects saved definitions into tenant shell
-  navigation and top bar breadcrumbs.
+- Navigation Builder ACL absence can tempt conflating runtime visibility with
+  backend route/API authorization; V1 runtime projection is visibility only.
 - Platform Studio docs are large and can create context overload without this compact pack.

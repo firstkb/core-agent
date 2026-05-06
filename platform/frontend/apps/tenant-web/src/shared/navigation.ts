@@ -13,6 +13,13 @@ import {
   getBusinessTreeHeaderTitle,
   isBusinessTreePagePath,
 } from "../features/app-pages/business-tree/business-tree-route-meta";
+import {
+  getTenantRuntimeNavigationActiveItemId,
+  getTenantRuntimeNavigationHeader,
+  getTenantRuntimeNavigationTarget,
+  type TenantRuntimeNavigationTarget,
+} from "./tenant-runtime-navigation";
+import type { TenantRuntimeNavigationItem } from "@platform/api-client";
 
 type TranslateFunction = (key: string, options?: Record<string, unknown>) => string;
 
@@ -57,9 +64,18 @@ function getPublishedRuntimeRouteKeyFromPathname(pathname: string) {
   }
 }
 
-export function getTenantSidebarActiveItemId(pathname: string) {
+export function getTenantSidebarActiveItemId(
+  pathname: string,
+  runtimeNavigationItems: ReadonlyArray<TenantRuntimeNavigationItem> = [],
+) {
   if (isPlatformStudioPath(pathname)) {
     return "";
+  }
+
+  const runtimeNavigationActiveItemId =
+    getTenantRuntimeNavigationActiveItemId(pathname, runtimeNavigationItems);
+  if (runtimeNavigationActiveItemId) {
+    return runtimeNavigationActiveItemId;
   }
 
   if (isFormRuntimePath(pathname)) {
@@ -100,10 +116,37 @@ export function getTenantNavigationPath(itemId: string) {
   }
 }
 
-export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname: string) {
+export function getTenantNavigationTarget(
+  itemId: string,
+  runtimeNavigationItems: ReadonlyArray<TenantRuntimeNavigationItem> = [],
+): TenantRuntimeNavigationTarget | null {
+  const runtimeNavigationTarget = getTenantRuntimeNavigationTarget(runtimeNavigationItems, itemId);
+  if (runtimeNavigationTarget) {
+    return runtimeNavigationTarget;
+  }
+
+  const path = getTenantNavigationPath(itemId);
+  return path
+    ? {
+        kind: "internal",
+        path,
+      }
+    : null;
+}
+
+export function getTenantShellHeaderTitle(
+  translate: TranslateFunction,
+  pathname: string,
+  runtimeNavigationItems: ReadonlyArray<TenantRuntimeNavigationItem> = [],
+) {
   const platformStudioHeaderTitle = getPlatformStudioHeaderTitle(translate, pathname);
   if (platformStudioHeaderTitle) {
     return platformStudioHeaderTitle;
+  }
+
+  const runtimeNavigationHeader = getTenantRuntimeNavigationHeader(pathname, runtimeNavigationItems);
+  if (runtimeNavigationHeader) {
+    return runtimeNavigationHeader.title;
   }
 
   const formRuntimeHeaderTitle = getFormRuntimeHeaderTitle(translate, pathname);
@@ -122,10 +165,19 @@ export function getTenantShellHeaderTitle(translate: TranslateFunction, pathname
   return translate("tenant.navigation.dashboard.headerTitle");
 }
 
-export function getTenantShellHeaderMeta(translate: TranslateFunction, pathname: string) {
+export function getTenantShellHeaderMeta(
+  translate: TranslateFunction,
+  pathname: string,
+  runtimeNavigationItems: ReadonlyArray<TenantRuntimeNavigationItem> = [],
+) {
   const platformStudioHeaderMeta = getPlatformStudioHeaderMeta(translate, pathname);
   if (platformStudioHeaderMeta) {
     return platformStudioHeaderMeta;
+  }
+
+  const runtimeNavigationHeader = getTenantRuntimeNavigationHeader(pathname, runtimeNavigationItems);
+  if (runtimeNavigationHeader) {
+    return runtimeNavigationHeader.breadcrumb;
   }
 
   const formRuntimeHeaderMeta = getFormRuntimeHeaderMeta(translate, pathname);

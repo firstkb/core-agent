@@ -451,6 +451,44 @@ export function CarFrontIcon(props: IconProps) {
   );
 }
 
+export function CameraIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M7.25 8.25 8.7 6.1h6.6l1.45 2.15h1.5A2.75 2.75 0 0 1 21 11v5.25A2.75 2.75 0 0 1 18.25 19H5.75A2.75 2.75 0 0 1 3 16.25V11a2.75 2.75 0 0 1 2.75-2.75Z" />
+      <circle cx="12" cy="13.6" r="3.1" />
+      <path d="M17.5 11.2h.01" />
+    </svg>
+  );
+}
+
+export function ClipboardCheckIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M8.75 5.75h6.5v2.5h-6.5z" />
+      <path d="M8 7H6.75A2.75 2.75 0 0 0 4 9.75v7.5A2.75 2.75 0 0 0 6.75 20h10.5A2.75 2.75 0 0 0 20 17.25v-7.5A2.75 2.75 0 0 0 17.25 7H16" />
+      <path d="m8.25 14.1 2.15 2.15 4.85-5" />
+    </svg>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return (
     <svg
@@ -484,6 +522,108 @@ export function LogOutIcon(props: IconProps) {
       <path d="M10 5.25H7.75A2.75 2.75 0 0 0 5 8v8a2.75 2.75 0 0 0 2.75 2.75H10" />
       <path d="M13 8.25 17.5 12 13 15.75" />
       <path d="M9.5 12h8" />
+    </svg>
+  );
+}
+
+export function WrenchIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M14.6 5.1a4.35 4.35 0 0 0 4.3 5.45l-7.7 7.7a2.45 2.45 0 1 1-3.46-3.46l7.7-7.7a4.4 4.4 0 0 0-.84-1.99Z" />
+      <path d="m8.45 16.95.02.02" />
+    </svg>
+  );
+}
+
+export function ToolboxIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M8.75 8V6.75A1.75 1.75 0 0 1 10.5 5h3A1.75 1.75 0 0 1 15.25 6.75V8" />
+      <rect height="11" rx="2" width="16" x="4" y="8" />
+      <path d="M4 12h16" />
+      <path d="M10.75 11.8v1.9h2.5v-1.9" />
+    </svg>
+  );
+}
+
+export function HardHatIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M5.25 15.25v-1.5a6.75 6.75 0 0 1 13.5 0v1.5" />
+      <path d="M8.25 14.75v-3.2" />
+      <path d="M15.75 14.75v-3.2" />
+      <path d="M4.5 16h15" />
+      <path d="M6.75 18.25h10.5" />
+    </svg>
+  );
+}
+
+export function FlameIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M12 20.25a5.95 5.95 0 0 0 5.95-5.95c0-2.75-1.55-5.15-4.65-7.2.1 1.85-.42 3.15-1.55 3.9.05-2.35-.85-4.35-2.7-6-1.72 2.45-2.58 4.58-2.58 6.4 0 1.08.28 2.02.83 2.82" />
+      <path d="M12 20.25a2.85 2.85 0 0 0 2.85-2.85c0-1.28-.72-2.4-2.15-3.35.05.86-.2 1.47-.72 1.82.02-1.1-.4-2.03-1.25-2.8-.8 1.15-1.2 2.14-1.2 2.98A4.2 4.2 0 0 0 12 20.25Z" />
+    </svg>
+  );
+}
+
+export function SlidersIcon(props: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.65"
+      viewBox="0 0 24 24"
+      {...props}
+    >
+      <path d="M6 5v14" />
+      <path d="M12 5v14" />
+      <path d="M18 5v14" />
+      <path d="M4.7 9h2.6" />
+      <path d="M10.7 15h2.6" />
+      <path d="M16.7 11.5h2.6" />
+      <circle cx="6" cy="9" r="1.35" />
+      <circle cx="12" cy="15" r="1.35" />
+      <circle cx="18" cy="11.5" r="1.35" />
     </svg>
   );
 }

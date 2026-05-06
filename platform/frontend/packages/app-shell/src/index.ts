@@ -37,4 +37,8 @@ export { PublicAuthQrPanel } from "./public-auth-qr-panel";
 export type { PublicAuthQrPanelProps } from "./public-auth-qr-panel";
 
 export { WorkspaceShell } from "./workspace-shell";
-export type { WorkspaceNavItem, WorkspaceShellProps } from "./workspace-shell";
+export type {
+  WorkspaceNavItem,
+  WorkspaceShellProps,
+  WorkspaceShellSidebarControls,
+} from "./workspace-shell";

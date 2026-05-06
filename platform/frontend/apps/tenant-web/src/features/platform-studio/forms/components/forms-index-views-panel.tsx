@@ -6,8 +6,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  EyeIcon,
-  EyeOffIcon,
   LockIcon,
   Menu,
   MenuContent,
@@ -32,7 +30,6 @@ import {
   ScreenActionsIcon,
   ViewWarningIcon,
 } from "./forms-index-icons";
-import { getViewStatusKey } from "./forms-index-page-helpers";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -239,13 +236,6 @@ export function FormsIndexViewsPanel({
                             <LockIcon />
                           </span>
                         ) : null}
-                        <span
-                          aria-label={t(getViewStatusKey(view.isActive))}
-                          className={`tenant-web__platform-studio-view-status${view.isActive ? " tenant-web__platform-studio-view-status--active" : " tenant-web__platform-studio-view-status--inactive"}`}
-                          title={t(getViewStatusKey(view.isActive))}
-                        >
-                          {view.isActive ? <EyeIcon /> : <EyeOffIcon />}
-                        </span>
                         <Button
                           disabled={!viewAccess.canOpenWorkspace}
                           onClick={() => {

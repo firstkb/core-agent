@@ -486,7 +486,6 @@ export function FormsViewWorkspacePage() {
     updateCurrentViewSortField,
     updateGridColumnVisibility,
     updateModelStructureLocked,
-    updateViewActive,
     updateViewDescription,
     updateViewLocked,
     updateViewSettings,
@@ -911,7 +910,6 @@ export function FormsViewWorkspacePage() {
                       onSortFieldChange={updateCurrentViewSortField}
                       onSubformTitleChange={updateCurrentScopeSubformTitle}
                       onSystemFieldChange={(role, fieldId) => updateSystemFieldBinding(role as SystemFieldRole, fieldId)}
-                      onViewActiveChange={updateViewActive}
                       onViewDescriptionChange={updateViewDescription}
                       onViewLockedChange={updateViewLocked}
                       onViewTitleChange={updateViewTitle}
@@ -927,7 +925,6 @@ export function FormsViewWorkspacePage() {
                       subformTitle={currentScopeSubformNode?.title ?? ""}
                       systemFields={viewSettingsSystemFields}
                       t={t}
-                      viewActive={currentView.isActive}
                       viewDescription={document.viewDescription}
                       viewLocked={currentView.isViewLocked ?? false}
                       viewTitle={document.viewTitle}

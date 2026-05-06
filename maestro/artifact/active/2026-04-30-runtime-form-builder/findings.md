@@ -249,3 +249,19 @@ Statuses:
 - Resolution: Replaced broad structure comparison with a topology-only signature on frontend and backend. The signature includes field IDs by root/subform scope, subform scope ids/table keys, and subform type. It ignores field settings and default-view `layoutBlueprint`-only changes.
 - Fixed in: current change set.
 - Verification: `pnpm test -- form-builder-workspace-diff-helpers.test.ts` passed; full tenant-web Vitest/typecheck/lint passed; `go test ./modules/tenant/platformstudioformbuilder` passed; `git diff --check` passed; `scripts/preflight.sh` passed.
+
+## FB-RT-016 - Form Builder exposes View Active/Inactive controls
+
+- Area: Form Builder Views panel and View inspector tab.
+- URL: not captured; owner requested on 2026-05-06.
+- Model/View: affected Form Builder models with authored views.
+- Symptom: The Views panel shows an Active/Inactive eye status, and the View tab exposes a `Mark as active view` toggle.
+- Expected: Form Builder should not present or control runtime/sidebar visibility. Navigation Builder owns sidebar placement and runtime exposure for `form_builder_view` targets.
+- Actual: Form Builder UI exposed view active state, creating confusion between form authoring and navigation/sidebar publication.
+- Evidence: Owner request on 2026-05-06.
+- Priority: medium.
+- Status: resolved.
+- Owner decision: Remove Form Builder UI for View Active/Inactive. Keep persisted `isActive` as compatibility/runtime metadata for now; do not expose it as an authoring control.
+- Resolution: Removed the Active/Inactive eye icon from the Views panel, removed the View Active switch from the View tab, removed the active-view update handler from Form Builder controls, and documented that Navigation Builder owns sidebar/runtime exposure.
+- Fixed in: current change set.
+- Verification: `pnpm test`, `pnpm typecheck`, `pnpm lint`, `git diff --check`, and `scripts/preflight.sh` passed.

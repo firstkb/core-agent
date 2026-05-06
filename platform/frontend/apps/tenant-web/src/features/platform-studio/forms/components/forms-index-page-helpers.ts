@@ -48,12 +48,6 @@ export function createCopiedViewTitle(title: string, existingTitles: ReadonlyArr
   return `${baseTitle} ${index}`;
 }
 
-export function getViewStatusKey(isActive: boolean) {
-  return isActive
-    ? "tenant.platformStudio.forms.viewActive"
-    : "tenant.platformStudio.forms.viewInactive";
-}
-
 export function isStaticFormsModel(model: Pick<FormsPlaceholderModel, "sourceType"> | null | undefined) {
   return Boolean(model?.sourceType && model.sourceType !== "managed");
 }

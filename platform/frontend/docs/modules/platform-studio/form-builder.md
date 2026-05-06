@@ -67,11 +67,21 @@ Form Builder does not own:
 - site publication as a product lifecycle
 - sidebar/navigation composition
 - runtime exposure and access assignment
+- view sidebar visibility or active/inactive navigation placement
 - post-submit events, notifications, integrations, or workflows
 - PDF template authoring
 - report authoring
 
 Those concerns belong to other Platform Studio tools unless a later accepted contract says otherwise.
+
+View payload compatibility note:
+
+- `isActive` may remain in persisted view payloads for compatibility with older
+  drafts and backend defaults
+- Form Builder must not expose Active/Inactive controls or status icons for
+  authored views
+- Navigation Builder owns whether a form view appears in sidebar/navigation and
+  how it is exposed to runtime users
 
 ## Identity And Naming
 

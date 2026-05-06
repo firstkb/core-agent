@@ -245,14 +245,11 @@ export const tenantEnglishMessages = {
         viewActions: "View actions",
         viewsTitle: "Views",
         structureLocked: "Structure locked",
-        viewActive: "Active view",
-        viewInactive: "Inactive view",
         viewLocked: "View locked",
         viewModelFieldCountChanged: "Model field count changed.",
         viewModelStructureChanged: "Model structure changed",
         workspaceBootstrapError: "Unable to load the requested workspace.",
         builder: {
-          activeViewLabel: "Mark as active view",
           boolean: {
             false: "False",
             true: "True",

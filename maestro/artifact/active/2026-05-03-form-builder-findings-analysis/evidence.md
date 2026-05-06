@@ -72,6 +72,11 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View drift warning fix. |
 | `git diff --check` | passed | no output | Whitespace check after View drift warning fix. |
 | `scripts/preflight.sh` | passed | lite preflight passed after View drift warning fix | Includes docs memory, env policy, and runtime drift checks. |
+| `pnpm test` | passed | full tenant-web Vitest suite | Ran from `platform/frontend/apps/tenant-web` after View Active/Inactive UI removal. |
+| `pnpm typecheck` | passed | `tsc --noEmit` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View Active/Inactive UI removal. |
+| `pnpm lint` | passed | `eslint .` exited 0 | Ran from `platform/frontend/apps/tenant-web` after View Active/Inactive UI removal. |
+| `git diff --check` | passed | no output | Whitespace check after View Active/Inactive UI removal. |
+| `scripts/preflight.sh` | passed | lite preflight passed after View Active/Inactive UI removal | Includes docs memory, env policy, and runtime drift checks. |
 
 ## Changed Files
 
@@ -194,6 +199,25 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.test.ts`
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 
+## View Active/Inactive UI Changed Files
+
+- `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/forms-index-page-helpers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/forms-index-views-panel.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-inspector-tab-body.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-panel.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-root-sections.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-grid-handlers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-view-metadata.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+- `platform/frontend/apps/tenant-web/src/locales/en.ts`
+- `platform/frontend/apps/tenant-web/src/locales/es.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder.md`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -217,3 +241,4 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Slice 6 intentionally does not enforce uniqueness at runtime/create/edit/save and does not touch `@platform/forms`; that work remains with the owner-selected follow-up.
 - Slice 6 follow-up has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the selected-field settings panel or canvas attention marker.
 - View drift warning fix has focused unit/backend coverage and typecheck/lint/preflight; no browser visual smoke was run for the View list triangle.
+- View Active/Inactive UI removal has typecheck/lint/full tenant-web test coverage; no browser visual smoke was run for the Views panel or View tab.

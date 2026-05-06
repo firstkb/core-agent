@@ -27,6 +27,7 @@ import {
 
 type ViewSettingsPanelLabels = ViewSettingsRootLabels & {
   actionsSection: string;
+  authoringLocksSection: string;
   filtersSection: string;
   finalValue: string;
   initialValue: string;
@@ -71,7 +72,6 @@ type ViewSettingsPanelProps = {
   onSortFieldChange: (fieldId: string) => void;
   onSubformTitleChange: (title: string) => void;
   onSystemFieldChange: (role: string, fieldId: string) => void;
-  onViewActiveChange: (checked: boolean) => void;
   onViewDescriptionChange: (description: string) => void;
   onViewLockedChange: (checked: boolean) => void;
   onViewTitleChange: (title: string) => void;
@@ -82,7 +82,6 @@ type ViewSettingsPanelProps = {
   sortingFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
   subformTitle: string;
   systemFields: ReadonlyArray<ViewSettingsSystemFieldItem>;
-  viewActive: boolean;
   viewDescription: string;
   viewLocked: boolean;
   viewTitle: string;
@@ -119,7 +118,6 @@ export function ViewSettingsPanel({
   onSortFieldChange,
   onSubformTitleChange,
   onSystemFieldChange,
-  onViewActiveChange,
   onViewDescriptionChange,
   onViewLockedChange,
   onViewTitleChange,
@@ -130,7 +128,6 @@ export function ViewSettingsPanel({
   sortingFieldItems,
   subformTitle,
   systemFields,
-  viewActive,
   viewDescription,
   viewLocked,
   viewTitle,
@@ -148,7 +145,6 @@ export function ViewSettingsPanel({
             viewTitle={viewTitle}
           />
           <AuthoringLocksSection
-            canEditSettings={canEditSettings}
             canToggleModelLocks={canToggleModelLocks}
             canToggleViewLocks={canToggleViewLocks}
             isRootActor={isRootActor}
@@ -156,9 +152,7 @@ export function ViewSettingsPanel({
             labels={labels}
             modelStructureLocked={modelStructureLocked}
             onModelStructureLockedChange={onModelStructureLockedChange}
-            onViewActiveChange={onViewActiveChange}
             onViewLockedChange={onViewLockedChange}
-            viewActive={viewActive}
             viewLocked={viewLocked}
           />
           <WorkflowSection

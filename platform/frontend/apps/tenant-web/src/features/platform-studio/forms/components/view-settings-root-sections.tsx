@@ -6,7 +6,7 @@ import {
 } from "@platform/ui-kit";
 
 export type ViewSettingsRootLabels = {
-  activeView: string;
+  authoringLocksSection: string;
   correctiveAction: string;
   correctiveActionSource: string;
   defaultViewStructureOnlyNotice: string;
@@ -14,9 +14,7 @@ export type ViewSettingsRootLabels = {
   modelLock: string;
   unbound: string;
   unlocked: string;
-  viewActive: string;
   viewDescription: string;
-  viewInactive: string;
   viewLock: string;
   viewTitle: string;
   workflowSection: string;
@@ -70,7 +68,6 @@ export function RootViewDetailsSection({
 }
 
 export function AuthoringLocksSection({
-  canEditSettings,
   canToggleModelLocks,
   canToggleViewLocks,
   isRootActor,
@@ -78,64 +75,51 @@ export function AuthoringLocksSection({
   labels,
   modelStructureLocked,
   onModelStructureLockedChange,
-  onViewActiveChange,
   onViewLockedChange,
-  viewActive,
   viewLocked,
 }: {
-  canEditSettings: boolean;
   canToggleModelLocks: boolean;
   canToggleViewLocks: boolean;
   isRootActor: boolean;
   isStaticModel: boolean;
-  labels: Pick<ViewSettingsRootLabels, "activeView" | "defaultViewStructureOnlyNotice" | "locked" | "modelLock" | "unlocked" | "viewActive" | "viewInactive" | "viewLock">;
+  labels: Pick<ViewSettingsRootLabels, "authoringLocksSection" | "defaultViewStructureOnlyNotice" | "locked" | "modelLock" | "unlocked" | "viewLock">;
   modelStructureLocked: boolean;
   onModelStructureLockedChange: (checked: boolean) => void;
-  onViewActiveChange: (checked: boolean) => void;
   onViewLockedChange: (checked: boolean) => void;
-  viewActive: boolean;
   viewLocked: boolean;
 }) {
+  if (!isRootActor) {
+    return null;
+  }
+
   return (
     <div className="tenant-web__platform-studio-inspector-section">
       <div className="tenant-web__platform-studio-labeled-divider">
-        <span>{labels.activeView}</span>
+        <span>{labels.authoringLocksSection}</span>
       </div>
       <div className="tenant-web__platform-studio-builder-stack">
+        {!isStaticModel ? (
+          <SwitchRow
+            checked={modelStructureLocked}
+            disabled={!canToggleModelLocks}
+            label={labels.modelLock}
+            offSummary={labels.unlocked}
+            onChange={onModelStructureLockedChange}
+            onSummary={labels.locked}
+          />
+        ) : null}
         <SwitchRow
-          checked={viewActive}
-          disabled={!canEditSettings}
-          label={labels.activeView}
-          offSummary={labels.viewInactive}
-          onChange={onViewActiveChange}
-          onSummary={labels.viewActive}
+          checked={viewLocked}
+          disabled={!canToggleViewLocks}
+          label={labels.viewLock}
+          offSummary={labels.unlocked}
+          onChange={onViewLockedChange}
+          onSummary={labels.locked}
         />
-        {isRootActor ? (
-          <>
-            {!isStaticModel ? (
-              <SwitchRow
-                checked={modelStructureLocked}
-                disabled={!canToggleModelLocks}
-                label={labels.modelLock}
-                offSummary={labels.unlocked}
-                onChange={onModelStructureLockedChange}
-                onSummary={labels.locked}
-              />
-            ) : null}
-            <SwitchRow
-              checked={viewLocked}
-              disabled={!canToggleViewLocks}
-              label={labels.viewLock}
-              offSummary={labels.unlocked}
-              onChange={onViewLockedChange}
-              onSummary={labels.locked}
-            />
-            {!canToggleModelLocks ? (
-              <p className="tenant-web__platform-studio-inline-help">
-                {labels.defaultViewStructureOnlyNotice}
-              </p>
-            ) : null}
-          </>
+        {!canToggleModelLocks ? (
+          <p className="tenant-web__platform-studio-inline-help">
+            {labels.defaultViewStructureOnlyNotice}
+          </p>
         ) : null}
       </div>
     </div>

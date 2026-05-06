@@ -37,7 +37,6 @@ type ViewInspectorTabBodyProps = {
   onSortFieldChange: (fieldId: string) => void;
   onSubformTitleChange: (title: string) => void;
   onSystemFieldChange: (role: string, fieldId: string) => void;
-  onViewActiveChange: (checked: boolean) => void;
   onViewDescriptionChange: (description: string) => void;
   onViewLockedChange: (checked: boolean) => void;
   onViewTitleChange: (title: string) => void;
@@ -49,7 +48,6 @@ type ViewInspectorTabBodyProps = {
   subformTitle: string;
   systemFields: ReadonlyArray<ViewSettingsSystemFieldItem>;
   t: Translate;
-  viewActive: boolean;
   viewDescription: string;
   viewLocked: boolean;
   viewTitle: string;
@@ -79,7 +77,6 @@ export function ViewInspectorTabBody({
   onSortFieldChange,
   onSubformTitleChange,
   onSystemFieldChange,
-  onViewActiveChange,
   onViewDescriptionChange,
   onViewLockedChange,
   onViewTitleChange,
@@ -91,7 +88,6 @@ export function ViewInspectorTabBody({
   subformTitle,
   systemFields,
   t,
-  viewActive,
   viewDescription,
   viewLocked,
   viewTitle,
@@ -118,7 +114,7 @@ export function ViewInspectorTabBody({
       isStaticModel={isStaticModel}
       labels={{
         actionsSection: t("tenant.platformStudio.forms.builder.viewSection.actions"),
-        activeView: t("tenant.platformStudio.forms.builder.activeViewLabel"),
+        authoringLocksSection: t("tenant.platformStudio.forms.builder.viewSection.authoringLocks"),
         correctiveAction: t("tenant.platformStudio.forms.builder.viewSettings.correctiveAction"),
         correctiveActionSource: t("tenant.platformStudio.forms.builder.viewSettings.correctiveActionSource"),
         defaultViewStructureOnlyNotice: t("tenant.platformStudio.forms.builder.defaultViewStructureOnlyNotice"),
@@ -145,9 +141,7 @@ export function ViewInspectorTabBody({
         systemFieldsSection: t("tenant.platformStudio.forms.builder.viewSection.systemFields"),
         unbound: t("tenant.platformStudio.forms.builder.systemField.unbound"),
         unlocked: t("tenant.platformStudio.forms.builder.locking.unlocked"),
-        viewActive: t("tenant.platformStudio.forms.viewActive"),
         viewDescription: t("tenant.platformStudio.forms.builder.viewDescriptionLabel"),
-        viewInactive: t("tenant.platformStudio.forms.viewInactive"),
         viewLock: t("tenant.platformStudio.forms.builder.locking.view"),
         viewTitle: t("tenant.platformStudio.forms.builder.viewTitleLabel"),
         workflowSection: t("tenant.platformStudio.forms.builder.viewSection.workflow"),
@@ -163,7 +157,6 @@ export function ViewInspectorTabBody({
       onSortFieldChange={onSortFieldChange}
       onSubformTitleChange={onSubformTitleChange}
       onSystemFieldChange={onSystemFieldChange}
-      onViewActiveChange={onViewActiveChange}
       onViewDescriptionChange={onViewDescriptionChange}
       onViewLockedChange={onViewLockedChange}
       onViewTitleChange={onViewTitleChange}
@@ -174,7 +167,6 @@ export function ViewInspectorTabBody({
       sortingFieldItems={sortingFieldItems}
       subformTitle={subformTitle}
       systemFields={systemFields}
-      viewActive={viewActive}
       viewDescription={viewDescription}
       viewLocked={viewLocked}
       viewTitle={viewTitle}

@@ -14,16 +14,6 @@ export function applyModelStructureLockedUpdate(
   };
 }
 
-export function applyViewActiveUpdate(
-  view: FormsPlaceholderView,
-  isActive: boolean,
-) {
-  return {
-    ...view,
-    isActive,
-  };
-}
-
 export function applyViewLockedUpdate(
   view: FormsPlaceholderView,
   isViewLocked: boolean,

@@ -245,14 +245,11 @@ export const tenantSpanishMessages = {
         viewActions: "Acciones de vista",
         viewsTitle: "Vistas",
         structureLocked: "Estructura bloqueada",
-        viewActive: "Vista activa",
-        viewInactive: "Vista inactiva",
         viewLocked: "Vista bloqueada",
         viewModelFieldCountChanged: "Cambio la cantidad de campos del modelo.",
         viewModelStructureChanged: "Cambio la estructura del modelo",
         workspaceBootstrapError: "No se pudo cargar el workspace solicitado.",
         builder: {
-          activeViewLabel: "Marcar como vista activa",
           boolean: {
             false: "False",
             true: "True",

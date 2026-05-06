@@ -30,7 +30,6 @@ import {
   applyDocumentViewDescriptionUpdate,
   applyDocumentViewTitleUpdate,
   applyModelStructureLockedUpdate,
-  applyViewActiveUpdate,
   applyViewLockedUpdate,
 } from "./form-builder-workspace-view-metadata";
 
@@ -153,10 +152,6 @@ export function createFormBuilderViewGridHandlers({
     updateCurrentModel((currentModelDraft) => applyModelStructureLockedUpdate(currentModelDraft, checked));
   }
 
-  function updateViewActive(checked: boolean) {
-    updateCurrentViewMetadata((viewEntry) => applyViewActiveUpdate(viewEntry, checked));
-  }
-
   function updateViewDescription(description: string) {
     updateDocument((currentDocument) => applyDocumentViewDescriptionUpdate(currentDocument, description));
   }
@@ -187,7 +182,6 @@ export function createFormBuilderViewGridHandlers({
     updateCurrentViewSortField,
     updateGridColumnVisibility: updateGridColumnVisibilityState,
     updateModelStructureLocked,
-    updateViewActive,
     updateViewDescription,
     updateViewLocked,
     updateViewSettings,

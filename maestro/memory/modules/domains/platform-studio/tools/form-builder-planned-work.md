@@ -35,6 +35,7 @@ instead of them.
 - Plain `short_text` and email/phone text fields can author `uniqueValue: true`; disabled/false values are omitted from compact payloads. URL/suggest text presets are excluded. Runtime uniqueness enforcement remains separate follow-up work.
 - Canvas attention markers propagate changed Subform-scope child nodes to the parent Subform node and root-scope ancestors.
 - View-list warning triangles are topology drift indicators only. Field setting changes and layout-only blueprint edits do not advance `modelStructureVersion`; field add/remove, scope moves, and subform-scope topology changes do.
+- Form Builder does not expose View Active/Inactive status or controls. Persisted `isActive` remains compatibility metadata for now; Navigation Builder owns sidebar/runtime exposure and placement.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
 

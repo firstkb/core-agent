@@ -62,7 +62,10 @@ There is no legacy MSSQL `timezone` table. Canonical `timezone` is a new seeded 
 Canonical columns:
 
 - `id`
+- `guid`
 - `name`
+- `created_at`
+- `updated_at`
 
 ## `industry_size`
 
@@ -79,7 +82,10 @@ Canonical seed values:
 Canonical columns:
 
 - `id`
+- `guid`
 - `name`
+- `created_at`
+- `updated_at`
 
 ## `industry_type`
 

@@ -31,6 +31,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Removed Active/Inactive eye status from View cards and removed the View Active toggle from the View tab. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup.
 - Added tenant migration `008_platform_studio_static_model_projects.sql` for `industry_size`, `industry_type`, canonical project industry lookup columns, static Form Builder metadata, and `vw_projects` / `vg_projects__default`.
 - Applied the migration to local `108-demo` and `108-sandbox` after the owner reported that the new tables/models were not visible in the working DB.
+- Corrected `industry_size` and `industry_type` audit surfaces with `guid`, `created_at`, `updated_at`, indexes, and `set_updated_at()` triggers after owner review.
 
 ## Checks
 

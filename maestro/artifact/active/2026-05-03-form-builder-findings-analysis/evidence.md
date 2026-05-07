@@ -96,6 +96,16 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after docs/artifact/memory updates. |
 | `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after docs/artifact/memory updates. |
 | `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after Project static model migration/docs. |
+| Owner schema review | failed then fixed | `industry_size` / `industry_type` initially lacked `guid`, `created_at`, `updated_at`, and `set_updated_at()` trigger | Corrected with migration `009_industry_reference_audit_columns.sql`; schema docs and memory lesson updated. |
+| `go run ./tools/generate_bundle.go` | passed | tenant bundle generated with 10 migrations | Run from `platform/backend` after adding corrective migration `009_industry_reference_audit_columns.sql`. |
+| `go run ./cmd/migrate --env ./env/migrate.local.env.example` | passed | local tenant migration applied | Applied `009_industry_reference_audit_columns` to `108-demo` and `108-sandbox`. Command exited 0 with no stdout. |
+| Local industry audit introspection | passed | `108-demo` and `108-sandbox` both have `guid`, `created_at`, `updated_at` and update triggers on `industry_size` / `industry_type` | `108-demo` also confirms GUID/created/updated runtime metadata in `ps_model.definition_json`. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Run from `platform/backend` after corrective migration. |
+| `go test ./cmd/migrate/... ./internal/platform/postgres/...` | passed | migrate and postgres package tests passed | Run from `platform/backend` after corrective migration. |
+| `git diff --check` | passed | no output | Whitespace check after corrective migration. |
+| `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after memory lesson/doc updates. |
+| `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after corrective migration docs. |
+| `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after corrective migration. |
 
 ## Changed Files
 
@@ -249,6 +259,16 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/backend/docs/reference/import-field-mapping.md`
 - `platform/backend/docs/reference/tenant-import-boundary.md`
 - `platform/backend/migrations/postgres/tenant/008_platform_studio_static_model_projects.sql`
+
+## Industry Audit Correction Changed Files
+
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/memory/modules/domains/schema-and-tenancy/lessons.md`
+- `platform/backend/bundle/tenant_schema_full.sql`
+- `platform/backend/docs/contracts/schema-tenancy.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/migrations/postgres/tenant/009_industry_reference_audit_columns.sql`
 
 ## Browser / Visual Evidence
 

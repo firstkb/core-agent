@@ -154,14 +154,14 @@ GUID is required in the current canonical tenant bundle for:
 - `projects`
 - `events`
 - `mails`
+- `industry_size`
+- `industry_type`
 
 GUID is not required in the current canonical tenant bundle for:
 
 - `projectsaccess`
 - `state`
 - `timezone`
-- `industry_size`
-- `industry_type`
 - `public_code`
 - `notification_template`
 

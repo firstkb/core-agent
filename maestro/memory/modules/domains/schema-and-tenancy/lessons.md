@@ -9,4 +9,6 @@ Status: active lessons
 - Do not trust request-provided tenant identifiers.
 - Do not update tenant bundle or forward migrations silently; keep them coherent.
 - When a migration seed runs outside tenant request context, record tenant ownership assumptions explicitly.
-
+- New tenant tables must include the canonical audit surface unless an explicit
+  exception is recorded: `guid`, `created_at`, `updated_at`, an `updated_at`
+  index where useful, and the shared `set_updated_at()` trigger.

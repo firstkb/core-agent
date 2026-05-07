@@ -47,6 +47,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Projects static model decision: use model id/storage `projects`, view title `Projects`, default grid sort `project_number asc`, Main/Details tabs, `contract_value` as Project Value currency, status options `Active`, `Completed`, `100%`, `Cancelled`, and Active as boolean.
 - Project lookup decision: `company_id` is Business Unit, `contractor_company_id` is CM, `subcontractor_company_id` is GC, `contact_id` points to `users` with label `first_name + last_name`, `state_id` points to `state`, and industry fields point to new global lookup tables `industry_size` / `industry_type`.
 - Project schema decision: replace old text columns `projects.size` / `projects.type` with canonical lookup columns `industry_size_id` / `industry_type_id`; backfill known legacy text values before dropping the old columns.
+- Correction after owner review: `industry_size` and `industry_type` are new tenant tables and must include `guid`, `created_at`, `updated_at`, and the shared `set_updated_at()` trigger.
 
 ## Plan
 
@@ -65,6 +66,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 13. Remove Form Builder View Active/Inactive status/control UI.
 14. Retire `isActive` from Form Builder view config/new `ps_view.definition_json` payloads while leaving DB/API compatibility metadata in place.
 15. Add static Projects Form Builder model/view plus `industry_size` and `industry_type` lookup tables, metadata, runtime views, docs, bundle, and migration evidence.
+16. Correct `industry_size` and `industry_type` audit columns/triggers after owner review.
 
 ## Risks / Gates
 

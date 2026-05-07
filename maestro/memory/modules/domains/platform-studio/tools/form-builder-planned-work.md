@@ -1,7 +1,7 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-06
+Last verified: 2026-05-07
 Verification mode: read-only scan of tracked docs and current FE/BE code surfaces
 
 This file preserves Form Builder planned work without turning it into active
@@ -37,7 +37,8 @@ instead of them.
 - View-list warning triangles are topology drift indicators only. Field setting changes and layout-only blueprint edits do not advance `modelStructureVersion`; field add/remove, scope moves, and subform-scope topology changes do.
 - Form Builder does not expose View Active/Inactive status or controls. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; old payloads may be tolerated and dropped. Backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata for now. Navigation Builder owns sidebar/runtime exposure and placement.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
-- Static/external model work is partially code-backed, but exact table-by-table/static lookup details still require retained exact-detail docs.
+- Static/external model work includes code-backed seed migrations for `state`, `timezone`, `companytype`, `jobtype`, `events`, `mails`, `users`, `company`, `projects`, `industry_size`, and `industry_type`; exact table-by-table/static lookup details beyond these seeds still require retained exact-detail docs.
+- `Projects` is available as a locked external Form Builder model/view with `Project #` default sorting, Main/Details tabs, Company/Contact/State/Industry lookups, suggest-text project metadata fields, status options, and canonical `industry_size_id` / `industry_type_id` lookup columns replacing old `projects.size` / `projects.type`.
 
 ## Planned / Open Work
 

@@ -5,7 +5,7 @@
 
 ## Summary
 
-Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1, Slice 2, Slice 3, and Slice 4 after owner approval. Slice 4 fixes `FB-RT-005` with a strict semantic choice-button option style contract and runtime rendering support. On 2026-05-03 the owner paused, but did not close, the Form Builder stabilization work; the original source findings file was updated with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice.
+Created a separate Maestro artifact, copied the source findings file, analyzed the findings, then implemented Slice 1, Slice 2, Slice 3, and Slice 4 after owner approval. Slice 4 fixes `FB-RT-005` with a strict semantic choice-button option style contract and runtime rendering support. On 2026-05-03 the owner paused, but did not close, the Form Builder stabilization work; the original source findings file was updated with resolved statuses, resolution notes, commit references, verification, and the next lookup settings/filter slice. On 2026-05-07 the Project static model slice added canonical `Projects`, `industry_size`, and `industry_type` Form Builder metadata and tenant schema migration.
 
 ## Commands / Checks
 
@@ -85,6 +85,17 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `pnpm lint` | passed | `eslint src` exited 0 | Ran from `platform/frontend/packages/platform-studio-core` after `isActive` config retirement. |
 | `git diff --check` | passed | no output | Whitespace check after `isActive` config retirement. |
 | `scripts/preflight.sh` | passed | lite preflight passed after `isActive` config retirement | Includes docs memory, env policy, and runtime drift checks. |
+| `go run ./tools/generate_bundle.go` | passed | tenant bundle generated with 9 migrations | Run from `platform/backend` after adding migration `008_platform_studio_static_model_projects.sql`. |
+| `psql -U postgres -d codex_project_smoke_20260507_01 -v ON_ERROR_STOP=1 -f platform/backend/bundle/tenant_schema_full.sql` | passed | full tenant bundle applied to disposable DB | First run exposed a CTE scope bug in migration 008; migration was fixed and the rerun passed. |
+| Project smoke introspection | passed | `ps_model` rows: `projects`, `industry_size`, `industry_type`; `projects` columns: `industry_size_id`, `industry_type_id`; `ps_view.definition_json ? 'isActive' = false` | Also confirmed `vw_projects` includes lookup label outputs for Company, CM, GC, Contact, Industry Size, and Industry Type. |
+| `go run ./cmd/migrate --env ./env/migrate.local.env.example` | passed | local tenant migration applied | Applied `008_platform_studio_static_model_projects` to local `108-demo` and `108-sandbox`. Command exited 0 with no stdout. |
+| Local tenant DB introspection | passed | `108-demo` and `108-sandbox` both report migration `008`; `ps_model` includes `projects`, `industry_size`, `industry_type`; `projects` exposes `industry_size_id` / `industry_type_id` only | Run after owner reported not seeing the new tables/models in the working DB. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Run from `platform/backend` after Project static model migration/docs. |
+| `go test ./cmd/migrate/... ./internal/platform/postgres/...` | passed | migrate and postgres package tests passed | Run from `platform/backend` after migration/bundle update. |
+| `git diff --check` | passed | no output | Whitespace check after Project static model migration/docs. |
+| `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after docs/artifact/memory updates. |
+| `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after docs/artifact/memory updates. |
+| `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after Project static model migration/docs. |
 
 ## Changed Files
 
@@ -226,6 +237,19 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/frontend/apps/tenant-web/src/locales/es.ts`
 - `platform/frontend/docs/modules/platform-studio/form-builder.md`
 
+## Project Static Model Changed Files
+
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+- `platform/backend/bundle/tenant_schema_full.sql`
+- `platform/backend/docs/contracts/platform-studio-form-builder.md`
+- `platform/backend/docs/contracts/schema-tenancy.md`
+- `platform/backend/docs/reference/import-field-mapping.md`
+- `platform/backend/docs/reference/tenant-import-boundary.md`
+- `platform/backend/migrations/postgres/tenant/008_platform_studio_static_model_projects.sql`
+
 ## Browser / Visual Evidence
 
 - Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
@@ -250,3 +274,5 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - Slice 6 follow-up has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the selected-field settings panel or canvas attention marker.
 - View drift warning fix has focused unit/backend coverage and typecheck/lint/preflight; no browser visual smoke was run for the View list triangle.
 - View Active/Inactive UI removal has typecheck/lint/full tenant-web test coverage; no browser visual smoke was run for the Views panel or View tab.
+- Project Access List / `projectsaccess` management remains future scope and was intentionally not added to the Projects form.
+- Project migration uses `NOT VALID` FK constraints for existing `contractor_company_id`, `subcontractor_company_id`, and `contact_id` so legacy orphan rows cannot block tenant migration; new writes are still checked by PostgreSQL.

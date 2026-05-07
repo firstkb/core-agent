@@ -3,7 +3,7 @@
 Status: import reference
 Historical status: accepted
 Date: 2026-04-15
-Last audited: 2026-04-25
+Last audited: 2026-05-07
 Canonical scope: future legacy-to-canonical tenant import module boundary
 
 This is reference/import material.
@@ -66,14 +66,15 @@ The only runtime target is the canonical tenant schema defined by:
 
 - `platform/backend/docs/contracts/schema-tenancy.md`
 - `platform/backend/docs/reference/import-field-mapping.md`
-- `platform/backend/migrations/postgres/tenant/000_tenant_baseline.sql`
+- `platform/backend/migrations/postgres/tenant/*.sql`
+- `platform/backend/bundle/tenant_schema_full.sql`
 
 ## Import Responsibilities
 
 The import module must handle:
 
 1. reference-table preparation
-   - ensure canonical `state` and `timezone` are present
+   - ensure canonical `state`, `timezone`, `industry_size`, and `industry_type` are present
 2. id-preserving import where required
    - preserve canonical `state.id`
    - preserve business ids where the canonical contract expects continuity
@@ -83,6 +84,8 @@ The import module must handle:
    - `users_TimeZone -> users.timezone_id`
    - `company_type -> company.company_type_id`
    - `company_TimeZone -> company.timezone_id`
+   - `projects_size -> projects.industry_size_id`
+   - `projects_type -> projects.industry_type_id`
 4. field transforms
    - `events_date + events_time -> events.occurred_at`
    - JSON/text payload conversion for `events.files`, `events.urls`, `mails.files`, `mails.urls`
@@ -100,14 +103,16 @@ Recommended default order:
 
 1. `state`
 2. `timezone`
-3. `companytype`
-4. `jobtype`
-5. `company`
-6. `users`
-7. `projects`
-8. `projectsaccess`
-9. `events`
-10. `mails`
+3. `industry_size`
+4. `industry_type`
+5. `companytype`
+6. `jobtype`
+7. `company`
+8. `users`
+9. `projects`
+10. `projectsaccess`
+11. `events`
+12. `mails`
 
 ## Required Outputs
 

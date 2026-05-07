@@ -3,7 +3,7 @@
 Status: import reference
 Historical status: accepted
 Date: 2026-04-15
-Last audited: 2026-04-25
+Last audited: 2026-05-07
 Canonical scope: legacy MSSQL to canonical tenant PostgreSQL field mapping
 
 This is reference/import material.
@@ -31,6 +31,8 @@ Scope:
 - `mails`
 - `state`
 - `timezone`
+- `industry_size`
+- `industry_type`
 
 This mapping is the contract for the future import module. It is not the import implementation itself.
 
@@ -56,6 +58,40 @@ Canonical-only columns:
 ## `timezone`
 
 There is no legacy MSSQL `timezone` table. Canonical `timezone` is a new seeded reference table.
+
+Canonical columns:
+
+- `id`
+- `name`
+
+## `industry_size`
+
+There is no legacy MSSQL `industry_size` table. Canonical `industry_size` is a new seeded reference table for project industry-size lookups.
+
+Canonical seed values:
+
+| id | name |
+| --- | --- |
+| `1` | `has < 20 employees` |
+| `2` | `has 20-249 employees` |
+| `3` | `has 250+ employees` |
+
+Canonical columns:
+
+- `id`
+- `name`
+
+## `industry_type`
+
+There is no legacy MSSQL `industry_type` table. Canonical `industry_type` is a new seeded reference table for project industry-type lookups.
+
+Canonical seed values:
+
+| id | name |
+| --- | --- |
+| `1` | `is not a government entity` |
+| `2` | `is a State Government entity` |
+| `3` | `is a Local Government entity` |
 
 Canonical columns:
 
@@ -259,7 +295,7 @@ Canonical-only columns:
 | `projects_year` | `year` | Direct rename. |
 | `projects_pc` | `pc` | Preserve literal domain code. |
 | `projects_rate` | `rate` | Direct rename. |
-| `projects_type` | `type` | Direct rename. |
+| `projects_type` | `industry_type_id` | Import resolves legacy text into `industry_type.id`; accept legacy typo `goverment` but store corrected canonical lookup names. |
 | `projects_detailer` | `detailer_user_id` | Canonical FK naming. |
 | `projects_estimator` | `estimator_user_id` | Canonical FK naming. |
 | `projects_salesp` | `salesperson_user_id` | Canonical FK naming. |
@@ -298,7 +334,7 @@ Canonical-only columns:
 | `projects_demo` | `demo` | Direct rename. |
 | `projects_NAICSCode` | `naics_code` | Canonical snake_case rename. |
 | `projects_inddesc` | `industry_description` | Expand legacy abbreviation. |
-| `projects_size` | `size` | Direct rename. |
+| `projects_size` | `industry_size_id` | Import resolves legacy text into `industry_size.id`. |
 | `projects_avg` | `avg` | Preserve literal field until semantics are clarified. |
 | `projects_geocode` | `geo_code` | Canonical snake_case rename. |
 

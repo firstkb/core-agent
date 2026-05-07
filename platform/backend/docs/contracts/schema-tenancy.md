@@ -2,7 +2,7 @@
 
 Status: active
 Owner: backend
-Last audited: 2026-04-25
+Last audited: 2026-05-07
 Canonical scope: master schema, tenant schema, table placement, tenant isolation, and canonical naming
 
 This contract defines the active schema and tenancy boundary.
@@ -76,6 +76,8 @@ Current canonical tenant business and reference tables:
 
 - `state`
 - `timezone`
+- `industry_size`
+- `industry_type`
 - `companytype`
 - `jobtype`
 - `company`
@@ -136,6 +138,8 @@ Global tenant reference tables in the current baseline:
 
 - `state`
 - `timezone`
+- `industry_size`
+- `industry_type`
 
 `tenant_id` remains present even when a tenant has a dedicated DB, because it improves portability, operations, and future extraction options.
 
@@ -156,6 +160,8 @@ GUID is not required in the current canonical tenant bundle for:
 - `projectsaccess`
 - `state`
 - `timezone`
+- `industry_size`
+- `industry_type`
 - `public_code`
 - `notification_template`
 

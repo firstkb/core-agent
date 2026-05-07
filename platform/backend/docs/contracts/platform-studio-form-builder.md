@@ -2,7 +2,7 @@
 
 Status: active
 Owner: backend
-Last audited: 2026-04-25
+Last audited: 2026-05-07
 Canonical scope: backend-owned Form Builder authoring API, metadata storage, runtime apply, generated runtime objects, validation, and migration boundaries
 
 This contract is the backend source of truth for the active Form Builder backend boundary.
@@ -505,6 +505,11 @@ Static/external behavior:
 - source system columns must be explicit or resolved
 - multivalue bridge tables are not supported for non-managed sources unless a later contract adds that path
 - managed `multi_select`/`tags` values are stored in the generated scope multivalue table with `value_kind = 'option'`, `value_key` as the authored option value, and `value_label` as the authored option label fallbacking to the value
+
+Current tenant static/external Form Builder seed coverage includes canonical
+reference and business models for `state`, `timezone`, `companytype`,
+`jobtype`, `events`, `mails`, `users`, `company`, `projects`,
+`industry_size`, and `industry_type`.
 
 ## Generated Object Rules
 

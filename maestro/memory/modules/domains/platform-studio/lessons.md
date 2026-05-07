@@ -14,3 +14,4 @@ Status: active lessons
 - Do not preserve old runtime naming as supported compatibility after v1.1 metadata exists.
 - Do not invent runtime grants before Navigation Builder ACL exists.
 - Do not hide post-save runtime apply failures; preserve authoring success and surface execution context.
+- Do not seed static Form Builder container UI nodes without explicit `containerKey` values matching the model-owned `layoutBlueprint`; otherwise reconciliation can create duplicate empty containers.

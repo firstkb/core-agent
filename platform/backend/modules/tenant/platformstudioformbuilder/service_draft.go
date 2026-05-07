@@ -71,10 +71,10 @@ func (s *Service) SaveDraft(ctx context.Context, modelID string, viewID string, 
 		return nil, err
 	}
 
-	if got := normalizeStableKeyFromPayload(incomingModel, "id", "key"); got != "" && got != modelID {
+	if got := normalizeStableKeyFromPayload(incomingModel, "id", "key"); got != "" && got != normalizeStableKey(modelID) {
 		return nil, ErrInvalidDraft
 	}
-	if got := normalizeStableKeyFromPayload(incomingView, "id", "key"); got != "" && got != viewID {
+	if got := normalizeStableKeyFromPayload(incomingView, "id", "key"); got != "" && got != normalizeStableKey(viewID) {
 		return nil, ErrInvalidDraft
 	}
 

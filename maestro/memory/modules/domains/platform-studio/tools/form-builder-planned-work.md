@@ -39,6 +39,7 @@ instead of them.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
 - Static/external model work includes code-backed seed migrations for `state`, `timezone`, `companytype`, `jobtype`, `events`, `mails`, `users`, `company`, `projects`, `industry_size`, and `industry_type`; exact table-by-table/static lookup details beyond these seeds still require retained exact-detail docs.
 - `Projects` is available as a locked external Form Builder model/view with `Project #` default sorting, Main/Details tabs, Company/Contact/State/Industry lookups, suggest-text project metadata fields, status options, and canonical `industry_size_id` / `industry_type_id` lookup columns replacing old `projects.size` / `projects.type`.
+- Static seeded form layouts require model-owned `layoutBlueprint.containers[].containerKey` and view-owned container UI nodes to use the same canonical keys. Missing UI node `containerKey` values can create duplicate empty tabs/sections during authoring reconciliation.
 
 ## Planned / Open Work
 
@@ -61,6 +62,7 @@ instead of them.
 
 - `Save` is not site publication.
 - Runtime routes existing today does not mean runtime grants are solved.
+- Static model ids may use underscore storage ids; authoring save validation compares normalized ids, not raw path strings.
 - Export bundle support does not mean import implementation exists.
 - `platform-studio-core` existing today does not mean Form Builder field registry/schema replacement is complete.
 - Retained exact-detail docs are opt-in payload references, not active ownership docs.

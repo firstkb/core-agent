@@ -106,6 +106,16 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after memory lesson/doc updates. |
 | `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after corrective migration docs. |
 | `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after corrective migration. |
+| Owner runtime Form Builder report | failed then fixed | `industry_size` / `industry_type` authoring save returned `invalid payload`; `Projects` view opened with duplicate tabs and empty active tab content | Root causes: raw-vs-normalized static model id comparison and missing seeded UI node `containerKey` values. |
+| `go run ./tools/generate_bundle.go` | passed | tenant bundle generated with 11 migrations | Run from `platform/backend` after adding migration `010_projects_static_layout_blueprint_fix.sql`. |
+| `go run ./cmd/migrate --env ./env/migrate.local.env.example` | passed | local tenant migration applied | Applied `010_projects_static_layout_blueprint_fix` to `108-demo` and `108-sandbox`. Command exited 0 with no stdout. |
+| Local Projects layout introspection | passed | `108-demo`: 3 model layout containers, 31 view UI nodes, 0 old `root.tabs.root_tabs_projects*` entries; `108-sandbox`: 3 containers, 31 nodes | Confirms Projects Main/Details has one canonical tab tree with fields under the expected tab nodes. |
+| `go test ./modules/tenant/platformstudioformbuilder` | passed | module tests passed | Includes regression coverage for saving a static model with underscore id `industry_type`. |
+| `go test ./cmd/migrate/... ./internal/platform/postgres/...` | passed | migrate and postgres package tests passed | Run from `platform/backend` after Projects layout correction migration. |
+| `git diff --check` | passed | no output | Whitespace check after Projects layout correction and memory/artifact updates. |
+| `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after memory/artifact updates. |
+| `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after memory/artifact updates. |
+| `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after Projects layout correction. |
 
 ## Changed Files
 

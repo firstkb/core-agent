@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls, retires `isActive` from Form Builder view config so Navigation Builder remains the owner of sidebar/runtime exposure, and adds the static Projects model/view with canonical industry lookup tables.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls, retires `isActive` from Form Builder view config so Navigation Builder remains the owner of sidebar/runtime exposure, and adds the static Projects model/view with canonical industry lookup tables. Project static model runtime corrections are also recorded here.
 
 ## Outcome
 
@@ -32,6 +32,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Added tenant migration `008_platform_studio_static_model_projects.sql` for `industry_size`, `industry_type`, canonical project industry lookup columns, static Form Builder metadata, and `vw_projects` / `vg_projects__default`.
 - Applied the migration to local `108-demo` and `108-sandbox` after the owner reported that the new tables/models were not visible in the working DB.
 - Corrected `industry_size` and `industry_type` audit surfaces with `guid`, `created_at`, `updated_at`, indexes, and `set_updated_at()` triggers after owner review.
+- Fixed authoring save validation for underscore static model ids (`industry_size`, `industry_type`) by comparing normalized payload ids to normalized path ids.
+- Added migration `010_projects_static_layout_blueprint_fix.sql` to rewrite Projects metadata to one canonical Main/Details tab tree with matching `containerKey` values in `layoutBlueprint` and `uiSchema`.
 
 ## Checks
 
@@ -40,8 +42,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, and the static Projects model/view. Per-lookup settings/View filter review, Project Access List management, and final `isActive` DB/API cleanup remain future work.
+Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, the static Projects model/view, and the static metadata `containerKey` requirement. Per-lookup settings/View filter review, Project Access List management, and final `isActive` DB/API cleanup remain future work.
 
 ## Next Step
 
-Owner should manually test that Form Builder no longer shows Active/Inactive status on View cards, no longer exposes a View Active toggle in the View tab, and continues saving/loading views without `isActive` as Form Builder view config.
+Owner should manually test that `industry_size` / `industry_type` save normally in Form Builder and that the Projects view opens with populated Main/Details tabs.

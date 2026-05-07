@@ -2895,6 +2895,30 @@ func TestSaveDraftAllowsStaticModelViewChangesForRoot(t *testing.T) {
 	}
 }
 
+func TestSaveDraftAcceptsStaticModelIDWithUnderscores(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "industry_type")
+	repo.runtimeRelations[model.StorageKey] = "table"
+	svc := NewService(repo)
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+
+	_, err := svc.SaveDraft(rootTestContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+}
+
 func TestLoadRuntimeViewListMetaPreservesDateTimeFieldType(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")

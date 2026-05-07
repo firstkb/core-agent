@@ -6,7 +6,7 @@
 
 ## Understanding
 
-The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 and follow-ups are implemented and verified. On 2026-05-06 the owner requested removing View Active/Inactive UI from Form Builder and retiring `isActive` from Form Builder view config because Navigation Builder owns sidebar/runtime exposure. On 2026-05-07 the owner approved implementation of a static Projects Form Builder model/view backed by the existing `projects` table plus new `industry_size` and `industry_type` lookup tables.
+The owner found multiple Form Builder defects while working on runtime display of forms created in Form Builder. The analysis artifact classified the problems and proposed implementation slices. Slices 1-6 and follow-ups are implemented and verified. On 2026-05-06 the owner requested removing View Active/Inactive UI from Form Builder and retiring `isActive` from Form Builder view config because Navigation Builder owns sidebar/runtime exposure. On 2026-05-07 the owner approved implementation of a static Projects Form Builder model/view backed by the existing `projects` table plus new `industry_size` and `industry_type` lookup tables. Follow-up runtime testing exposed an authoring save rejection for underscore static model ids and duplicate empty Projects tab containers; both are now treated as Project static model correction scope.
 
 ## Agreed Scope
 
@@ -19,7 +19,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Current phase: `Project static model implementation`
 - Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. Owner approved dropping old `projects.size` / `projects.type` in favor of `industry_size_id` / `industry_type_id` on 2026-05-07. No release/deploy gate is in scope.
-- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, View Active/Inactive UI, and Project static model checks are recorded in `evidence.md`.
+- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, View Active/Inactive UI, Project static model, and Project correction checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
 - Next allowed action: owner manual test that Form Builder still loads/saves views normally and no longer exposes or writes View Active/Inactive as authoring config.
 
@@ -48,6 +48,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Project lookup decision: `company_id` is Business Unit, `contractor_company_id` is CM, `subcontractor_company_id` is GC, `contact_id` points to `users` with label `first_name + last_name`, `state_id` points to `state`, and industry fields point to new global lookup tables `industry_size` / `industry_type`.
 - Project schema decision: replace old text columns `projects.size` / `projects.type` with canonical lookup columns `industry_size_id` / `industry_type_id`; backfill known legacy text values before dropping the old columns.
 - Correction after owner review: `industry_size` and `industry_type` are new tenant tables and must include `guid`, `created_at`, `updated_at`, and the shared `set_updated_at()` trigger.
+- Correction after owner runtime test: static model authoring save compares normalized payload ids to normalized path ids so `industry_type` and `industry_size` do not fail as `invalid payload`; static seeded UI container nodes must carry explicit `containerKey` values that match `layoutBlueprint`.
 
 ## Plan
 
@@ -67,6 +68,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 14. Retire `isActive` from Form Builder view config/new `ps_view.definition_json` payloads while leaving DB/API compatibility metadata in place.
 15. Add static Projects Form Builder model/view plus `industry_size` and `industry_type` lookup tables, metadata, runtime views, docs, bundle, and migration evidence.
 16. Correct `industry_size` and `industry_type` audit columns/triggers after owner review.
+17. Correct static Projects authoring metadata and static underscore model save validation after owner runtime test.
 
 ## Risks / Gates
 
@@ -86,4 +88,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Run local checks for the Project static model migration/docs, then commit the slice. Owner manual testing should confirm the Projects model appears in Form Builder with Main/Details tabs and expected lookup fields.
+Run final local checks for the Project correction, then commit the slice. Owner manual testing should confirm `industry_size` / `industry_type` save normally and the Projects model opens with populated Main/Details tabs.

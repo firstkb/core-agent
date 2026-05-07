@@ -40,7 +40,6 @@ import {
   createInitialNavigationBuilderNodes,
   createNavigationBuilderNode,
   findNavigationBuilderNode,
-  navigationBuilderDashboardNodeId,
   navigationBuilderRailItems,
   reorderNavigationBuilderNode,
   removeNavigationBuilderNode,

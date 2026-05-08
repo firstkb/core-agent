@@ -44,6 +44,8 @@ Last compacted: 2026-05-06
 - Runtime sidebar projection excludes inactive app menu entries and resolves
   Form View/App Page targets to tenant runtime routes. Tenant top bar title and
   breadcrumb resolve from Navigation Builder path/target metadata.
+- Runtime navigation projection also returns quick-create `createActions`
+  derived from accessible Form View targets for the tenant top-bar `+` menu.
 
 ## Planned / Watch
 

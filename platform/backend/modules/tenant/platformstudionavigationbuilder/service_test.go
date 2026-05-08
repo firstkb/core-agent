@@ -388,6 +388,16 @@ func TestLoadRuntimeNavigationProjectsActiveItems(t *testing.T) {
 	if safety.Children[1].Path != "/app/pages/business-tree" {
 		t.Fatalf("app page path = %q", safety.Children[1].Path)
 	}
+	if got, want := len(out.CreateActions), 1; got != want {
+		t.Fatalf("create action count = %d, want %d: %#v", got, want, out.CreateActions)
+	}
+	createAction := out.CreateActions[0]
+	if createAction.ID != "nav.entry.inspections" || createAction.Path != "/app/forms/sor/views/view-default/new" {
+		t.Fatalf("create action = %#v", createAction)
+	}
+	if createAction.ModelID != "sor" || createAction.ViewID != "view-default" {
+		t.Fatalf("create action target = %q/%q", createAction.ModelID, createAction.ViewID)
+	}
 }
 
 func TestLoadRuntimeNavigationExcludesInactiveItems(t *testing.T) {
@@ -416,6 +426,9 @@ func TestLoadRuntimeNavigationExcludesInactiveItems(t *testing.T) {
 	}
 	if safety.Children[0].ID != "nav.entry.business-tree" {
 		t.Fatalf("remaining child id = %q", safety.Children[0].ID)
+	}
+	if len(out.CreateActions) != 0 {
+		t.Fatalf("inactive form view should not produce create actions: %#v", out.CreateActions)
 	}
 }
 

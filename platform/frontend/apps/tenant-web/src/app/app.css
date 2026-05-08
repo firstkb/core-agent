@@ -127,6 +127,41 @@ a {
   text-align: center;
 }
 
+.tenant-web__quick-create-menu-item {
+  min-width: 14rem;
+}
+
+.tenant-web__quick-create-menu {
+  max-height: min(32rem, calc(100vh - 7rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tenant-web__quick-create-menu-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.tenant-web__quick-create-menu-label,
+.tenant-web__quick-create-menu-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tenant-web__quick-create-menu-label {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tenant-web__quick-create-menu-meta {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
 .workspace-shell__header-profile-trigger {
   border-color: rgba(15, 140, 168, 0.16);
   background: rgba(15, 140, 168, 0.1);

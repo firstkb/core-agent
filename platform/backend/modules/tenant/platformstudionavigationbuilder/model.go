@@ -132,6 +132,7 @@ type RuntimeNavigationResponse struct {
 	Items                 []RuntimeNavigationItem `json:"items"`
 	UtilityRail           []RuntimeNavigationItem `json:"utilityRail"`
 	UtilityRailConfigured bool                    `json:"utilityRailConfigured"`
+	CreateActions         []RuntimeCreateAction   `json:"createActions"`
 }
 
 type RuntimeTargetAccessRequest struct {
@@ -159,4 +160,14 @@ type RuntimeNavigationItem struct {
 	TargetType  string                  `json:"targetType,omitempty"`
 	Breadcrumb  []string                `json:"breadcrumb,omitempty"`
 	Children    []RuntimeNavigationItem `json:"children,omitempty"`
+}
+
+type RuntimeCreateAction struct {
+	ID         string   `json:"id"`
+	Label      string   `json:"label"`
+	Path       string   `json:"path"`
+	TargetType string   `json:"targetType"`
+	ModelID    string   `json:"modelId,omitempty"`
+	ViewID     string   `json:"viewId,omitempty"`
+	Breadcrumb []string `json:"breadcrumb,omitempty"`
 }

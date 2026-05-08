@@ -69,6 +69,9 @@ Last compacted: 2026-04-25
 - Tenant sidebar runtime item icons render when configured; `None`/missing icon
   renders no icon. Mobile sidebar panels and collapsed desktop hover-preview
   panels close after actionable sidebar/rail navigation selections.
+- Tenant top-bar `+` menu renders `createActions` from `GET /app/navigation`
+  as Start New links for accessible Form View targets, avoiding startup
+  discovery requests across every available model/view.
 - App Page and Form View runtime screens resolve the tenant top bar title and
   breadcrumb from the configured Navigation Builder path and target metadata;
   their backing APIs are denied when the current user cannot access the matching

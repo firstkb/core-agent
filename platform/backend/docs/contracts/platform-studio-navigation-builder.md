@@ -168,6 +168,11 @@ runtime shell/sidebar consumption. The response includes:
 - `utilityRailConfigured`: `true` when saved utility rail rows exist. Tenant web
   keeps the legacy static rail visible while this flag is `false` so first-time
   tenants do not lose access before saving Navigation Builder config.
+- `createActions`: filtered quick-create entries derived from accessible
+  `form_view` navigation targets. Each action points to
+  `/app/forms/:modelId/views/:viewId/new` and is intended for the tenant top-bar
+  `+` menu. It is built from the same runtime projection as `items`, so inactive
+  items, parent access, root-only rules, and child narrowing are already applied.
 
 Runtime visibility rules:
 

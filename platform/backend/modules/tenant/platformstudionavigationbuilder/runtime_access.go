@@ -1,6 +1,7 @@
 package platformstudionavigationbuilder
 
 import (
+	"net/url"
 	"sort"
 	"strings"
 )
@@ -42,13 +43,15 @@ type runtimeNavigationAccessIndex struct {
 func buildRuntimeNavigationResponse(state runtimeNavigationState) RuntimeNavigationResponse {
 	index := buildRuntimeNavigationAccessIndex(state.Policies, state.Subjects)
 	appChildren := buildRuntimeNavigationChildren(state.Items, navigationOwnerTypeAppMenuItem)
+	appMenu := filterRuntimeAppMenuItems("", appChildren, index, state.User, true)
 
 	utilityRail, utilityRailConfigured := filterRuntimeUtilityRailItems(state, index)
 
 	return RuntimeNavigationResponse{
-		Items:                 filterRuntimeAppMenuItems("", appChildren, index, state.User, true),
+		Items:                 appMenu,
 		UtilityRail:           utilityRail,
 		UtilityRailConfigured: utilityRailConfigured,
+		CreateActions:         buildRuntimeCreateActions(appMenu),
 	}
 }
 
@@ -383,6 +386,50 @@ func runtimeNavigationItemFromDerived(record derivedNavigationItem, children []R
 		item.Children = []RuntimeNavigationItem{}
 	}
 	return item
+}
+
+func buildRuntimeCreateActions(items []RuntimeNavigationItem) []RuntimeCreateAction {
+	actions := make([]RuntimeCreateAction, 0)
+	for _, item := range items {
+		if item.TargetType == TargetTypeFormView && item.Path != "" {
+			modelID, viewID := runtimeFormViewIDsFromPath(item.Path)
+			action := RuntimeCreateAction{
+				ID:         item.ID,
+				Label:      item.Label,
+				Path:       strings.TrimRight(item.Path, "/") + "/new",
+				TargetType: TargetTypeFormView,
+				ModelID:    modelID,
+				ViewID:     viewID,
+				Breadcrumb: normalizeRuntimeBreadcrumb(item.Breadcrumb),
+			}
+			actions = append(actions, action)
+		}
+		if len(item.Children) > 0 {
+			actions = append(actions, buildRuntimeCreateActions(item.Children)...)
+		}
+	}
+	return actions
+}
+
+func runtimeFormViewIDsFromPath(path string) (string, string) {
+	parts := strings.Split(strings.TrimSpace(path), "/")
+	if len(parts) < 6 {
+		return "", ""
+	}
+	for i := 0; i+4 < len(parts); i++ {
+		if parts[i] == "app" && parts[i+1] == "forms" && parts[i+3] == "views" {
+			modelID, modelErr := url.PathUnescape(parts[i+2])
+			viewID, viewErr := url.PathUnescape(parts[i+4])
+			if modelErr != nil {
+				modelID = parts[i+2]
+			}
+			if viewErr != nil {
+				viewID = parts[i+4]
+			}
+			return modelID, viewID
+		}
+	}
+	return "", ""
 }
 
 func normalizeRuntimeBreadcrumb(values []string) []string {

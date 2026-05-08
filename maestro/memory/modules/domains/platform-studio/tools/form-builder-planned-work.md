@@ -45,6 +45,11 @@ instead of them.
 ## Planned / Open Work
 
 - Navigation Builder must own runtime exposure, sidebar placement, and runtime grant assignment for `{ targetType: form_builder_view, modelId, viewId }`.
+- Future Navigation Builder bridge in Form Builder should surface runtime exposure
+  without moving ownership into Form Builder: model/view list row action `Add to
+  navigation` or `Configure navigation`, workspace View tab status `Shown in
+  <navigation path>` or `Not in navigation`, and deep link to Navigation Builder
+  for placement/access edits.
 - Future cleanup should remove or fully deprecate Form Builder API request/summary usage of `isActive`, then evaluate dropping `ps_view.is_active` with a dedicated migration once Navigation Builder exposure is implemented and verified.
 - Platform Studio preview runtime endpoints still need a dedicated preview access guard.
 - Larger runtime record/list/create/edit/save behavior should move to future `platformstudioformruntime`; do not keep expanding `platformstudioformbuilder` by default.

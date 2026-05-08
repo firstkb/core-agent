@@ -441,6 +441,17 @@ describe("api-client tenant navigation", () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({
         data: {
+          createActions: [
+            {
+              breadcrumb: ["Safety", "Inspections"],
+              id: "nav.entry.safety.inspections",
+              label: "Inspections",
+              modelId: "sor",
+              path: "/app/forms/sor/views/view-default/new",
+              targetType: "form_view",
+              viewId: "view-default",
+            },
+          ],
           items: [
             {
               breadcrumb: ["Safety", "Inspections"],
@@ -479,6 +490,13 @@ describe("api-client tenant navigation", () => {
       breadcrumb: ["Safety", "Inspections"],
       id: "nav.entry.safety.inspections",
       path: "/app/forms/sor/views/view-default",
+    });
+    expect(out.createActions[0]).toMatchObject({
+      breadcrumb: ["Safety", "Inspections"],
+      id: "nav.entry.safety.inspections",
+      modelId: "sor",
+      path: "/app/forms/sor/views/view-default/new",
+      viewId: "view-default",
     });
     expect(out.utilityRailConfigured).toBe(true);
     expect(out.utilityRail[0]).toMatchObject({

@@ -35,6 +35,9 @@ func TestRuntimeNavigationAccessFiltersByParentAndChildNarrowing(t *testing.T) {
 	if safety.Children[0].ID != "nav.entry.business-tree" {
 		t.Fatalf("visible child id = %q, want nav.entry.business-tree", safety.Children[0].ID)
 	}
+	if len(response.CreateActions) != 0 {
+		t.Fatalf("denied form view should not produce create actions: %#v", response.CreateActions)
+	}
 
 	response = buildRuntimeNavigationResponse(runtimeStateForDefinition(definition, runtimeNavigationUserContext{
 		Authenticated: true,

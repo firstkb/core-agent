@@ -83,8 +83,9 @@ func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigation
 	}
 	if state == nil {
 		return &RuntimeNavigationResponse{
-			Items:       []RuntimeNavigationItem{},
-			UtilityRail: []RuntimeNavigationItem{},
+			Items:         []RuntimeNavigationItem{},
+			UtilityRail:   []RuntimeNavigationItem{},
+			CreateActions: []RuntimeCreateAction{},
 		}, nil
 	}
 
@@ -94,6 +95,9 @@ func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigation
 	}
 	if response.UtilityRail == nil {
 		response.UtilityRail = []RuntimeNavigationItem{}
+	}
+	if response.CreateActions == nil {
+		response.CreateActions = []RuntimeCreateAction{}
 	}
 	return &response, nil
 }

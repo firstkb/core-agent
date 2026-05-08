@@ -113,6 +113,11 @@ Last compacted: 2026-05-06
   title and breadcrumb from the Navigation Builder path and target metadata.
   Example: a `Safety > Inspections` Form View should render an app title and
   breadcrumb that match that navigation path, not a technical route label.
+- Runtime quick-create integration: `GET /app/navigation` also returns
+  `createActions` for accessible Form View targets that can open the runtime
+  create route `/app/forms/:modelId/views/:viewId/new`. Tenant web renders
+  those actions in the top-bar `+` menu and must not rediscover every model/view
+  at shell startup for this list.
 - Tenant-web also gates direct `/app/forms/:modelId/views/:viewId` route
   rendering against the already-filtered runtime navigation tree. If a Form
   View target is hidden because its parent group is denied, the direct URL shows

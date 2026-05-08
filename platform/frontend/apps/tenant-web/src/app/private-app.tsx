@@ -12,6 +12,7 @@ import {
   isUnauthorizedApiError,
   subscribeApiClientRequestActivity,
   type TenantFavoriteShortcut,
+  type TenantRuntimeCreateAction,
   type TenantRuntimeNavigationItem,
 } from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
@@ -206,6 +207,7 @@ export function PrivateApp({
   const shellBrand = tenantName?.trim() ? tenantName : t("tenant.shell.brand");
   const [, setPlatformStudioHeaderVersion] = useState(0);
   const [favoriteShortcuts, setFavoriteShortcuts] = useState<TenantFavoriteShortcut[]>([]);
+  const [runtimeCreateActions, setRuntimeCreateActions] = useState<TenantRuntimeCreateAction[]>([]);
   const [runtimeNavigationItems, setRuntimeNavigationItems] = useState<TenantRuntimeNavigationItem[]>([]);
   const [runtimeNavigationReady, setRuntimeNavigationReady] = useState(false);
   const [runtimeUtilityRailItems, setRuntimeUtilityRailItems] =
@@ -385,6 +387,7 @@ export function PrivateApp({
 
     try {
       const nextNavigation = await navigationClient.getRuntimeNavigation(accessToken);
+      setRuntimeCreateActions(nextNavigation.createActions);
       setRuntimeNavigationItems(nextNavigation.items);
       setRuntimeUtilityRailItems(nextNavigation.utilityRailConfigured ? nextNavigation.utilityRail : null);
       setRuntimeNavigationReady(true);
@@ -480,6 +483,37 @@ export function PrivateApp({
     );
   }
 
+  function renderCreateActionMenuItems() {
+    if (runtimeCreateActions.length === 0) {
+      return (
+        <MenuItem disabled>
+          {t("tenant.shell.menu.noCreateActions")}
+        </MenuItem>
+      );
+    }
+
+    return runtimeCreateActions.map((action) => {
+      const breadcrumb = action.breadcrumb.length > 0
+        ? action.breadcrumb.join(" / ")
+        : t("tenant.shell.menu.formViewCreateFallback");
+
+      return (
+        <MenuItem
+          className="tenant-web__quick-create-menu-item"
+          key={action.id}
+          onClick={() => {
+            void guardedNavigate(action.path);
+          }}
+        >
+          <span className="tenant-web__quick-create-menu-copy">
+            <span className="tenant-web__quick-create-menu-label">{action.label}</span>
+            <span className="tenant-web__quick-create-menu-meta">{breadcrumb}</span>
+          </span>
+        </MenuItem>
+      );
+    });
+  }
+
   const railUtilities = [
     {
       item: {
@@ -544,11 +578,9 @@ export function PrivateApp({
                   <PlusIcon />
                 </button>
               </MenuTrigger>
-              <MenuContent className="workspace-shell__header-menu">
-                <MenuLabel>{t("tenant.shell.actionsLabel")}</MenuLabel>
-                <MenuItem onClick={() => openDashboard()}>{t("tenant.shell.menu.openDashboard")}</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>{t("tenant.shell.menu.tasksCenter")}</MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("favorites")}>{t("tenant.shell.menu.reviewFavorites")}</MenuItem>
+              <MenuContent className="workspace-shell__header-menu tenant-web__quick-create-menu">
+                <MenuLabel>{t("tenant.shell.startNewLabel")}</MenuLabel>
+                {renderCreateActionMenuItems()}
               </MenuContent>
             </Menu>
 

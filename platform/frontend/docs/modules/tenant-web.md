@@ -200,6 +200,10 @@ Current Navigation Builder runtime behavior:
   `utilityRailConfigured` is true, `PrivateApp` filters Platform Studio, Task
   Manager, Favorites, and Help Center rail buttons to the allowed runtime rail
   entries.
+- The same runtime payload may include `createActions` derived from accessible
+  Navigation Builder Form View targets. `PrivateApp` renders these in the top
+  bar `+` menu as Start New links to `/app/forms/:modelId/views/:viewId/new`,
+  without issuing per-model/per-view discovery requests at shell startup.
 - `TenantSidebarNavigation` prefers Navigation Builder runtime items when a
   saved configuration exists.
 - configured Form View and App Page targets navigate to their runtime routes,

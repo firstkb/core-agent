@@ -195,7 +195,18 @@ type TenantRuntimeNavigationItem = {
   type: string;
 };
 
+type TenantRuntimeCreateAction = {
+  breadcrumb: string[];
+  id: string;
+  label: string;
+  modelId?: string;
+  path: string;
+  targetType: string;
+  viewId?: string;
+};
+
 type TenantRuntimeNavigationResponse = {
+  createActions: TenantRuntimeCreateAction[];
   items: TenantRuntimeNavigationItem[];
   utilityRail: TenantRuntimeNavigationItem[];
   utilityRailConfigured: boolean;
@@ -1429,12 +1440,29 @@ function normalizeTenantRuntimeNavigationItem(payload: unknown, fieldName: strin
   };
 }
 
+function normalizeTenantRuntimeCreateAction(payload: unknown, fieldName: string): TenantRuntimeCreateAction {
+  const record = normalizeJsonRecord(payload, fieldName);
+
+  return {
+    breadcrumb: normalizeStringArray(record.breadcrumb, `${fieldName}.breadcrumb`),
+    id: assertString(record.id, `${fieldName}.id`),
+    label: assertString(record.label, `${fieldName}.label`),
+    modelId: normalizeOptionalString(record.modelId),
+    path: assertString(record.path, `${fieldName}.path`),
+    targetType: assertString(record.targetType, `${fieldName}.targetType`),
+    viewId: normalizeOptionalString(record.viewId),
+  };
+}
+
 function normalizeTenantRuntimeNavigationResponse(payload: unknown): TenantRuntimeNavigationResponse {
   const record = normalizeJsonRecord(payload, "runtimeNavigation");
+  const createActions = Array.isArray(record.createActions) ? record.createActions : [];
   const items = Array.isArray(record.items) ? record.items : [];
   const utilityRail = Array.isArray(record.utilityRail) ? record.utilityRail : [];
 
   return {
+    createActions: createActions.map((entry, index) =>
+      normalizeTenantRuntimeCreateAction(entry, `runtimeNavigation.createActions[${index}]`)),
     items: items.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `runtimeNavigation.items[${index}]`)),
     utilityRail: utilityRail.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `runtimeNavigation.utilityRail[${index}]`)),
     utilityRailConfigured: record.utilityRailConfigured === true,
@@ -2121,6 +2149,7 @@ export type {
   TenantNavigationTargetType,
   TenantNavigationValidationMessage,
   TenantNavigationValidationSummary,
+  TenantRuntimeCreateAction,
   TenantRuntimeNavigationItem,
   TenantRuntimeNavigationResponse,
   FormBuilderDraftPayload,

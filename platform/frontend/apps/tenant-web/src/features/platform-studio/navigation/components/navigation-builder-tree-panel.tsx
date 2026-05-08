@@ -50,6 +50,8 @@ type NavigationBuilderTreePanelProps = {
 
 export type NavigationBuilderTreePanelValue = "railbar" | "sidebar";
 
+type CollapsedNavigationBuilderNodeIds = ReadonlySet<string>;
+
 const addNodeLabels: Record<NavigationBuilderAddNodeKind, string> = {
   "app-module": "App module",
   "app-page": "App page",
@@ -176,13 +178,16 @@ function TreeNodeRows({
   onDragOverNode,
   onDragStartNode,
   onDropNode,
+  onToggleNodeCollapsed,
   onPointerEndNode,
   onPointerEnterNode,
   onPointerStartNode,
   onSelectNode,
   parentId,
+  collapsedNodeIds,
   selectedNodeId,
 }: {
+  collapsedNodeIds: CollapsedNavigationBuilderNodeIds;
   depth: number;
   dragOverNodeId: string | null;
   draggedNodeId: string | null;
@@ -192,6 +197,7 @@ function TreeNodeRows({
   onDragOverNode: (nodeId: string) => void;
   onDragStartNode: (nodeId: string) => void;
   onDropNode: (activeNodeId: string, overNodeId: string) => void;
+  onToggleNodeCollapsed: (nodeId: string) => void;
   onPointerEndNode: (nodeId: string, clientX: number, clientY: number) => void;
   onPointerEnterNode: (nodeId: string) => void;
   onPointerStartNode: (nodeId: string, clientX: number, clientY: number) => void;
@@ -211,9 +217,14 @@ function TreeNodeRows({
         const canReorderNode = !node.isLocked;
         const canSelectNode = !node.isLocked;
         const isContainerNode = isNavigationBuilderContainerNode(node);
+        const canCollapseNode = isContainerNode && children.length > 0;
+        const isCollapsed = canCollapseNode && collapsedNodeIds.has(node.id);
         const isActive = isNavigationBuilderNodeActive(node);
         const addModeLabel = `Add item to ${node.label}`;
         const showsNodeIcon = node.kind !== "section" && (node.kind === "locked-dashboard" || Boolean(node.iconKey));
+        const nodeTypeLabel = isCollapsed
+          ? `${getNodeTypeLabel(node)} · ${children.length} ${children.length === 1 ? "item" : "items"}`
+          : getNodeTypeLabel(node);
 
         function canAcceptCurrentDrag(activeNodeId: string | null) {
           if (!activeNodeId) {
@@ -236,7 +247,7 @@ function TreeNodeRows({
         return (
           <div className="tenant-web__navigation-builder-tree-branch" key={node.id}>
             <div
-              className={`tenant-web__navigation-builder-tree-row${isContainerNode ? " tenant-web__navigation-builder-tree-row--can-add" : ""}${node.kind === "section" ? " tenant-web__navigation-builder-tree-row--section" : ""}${showsNodeIcon ? "" : " tenant-web__navigation-builder-tree-row--no-icon"}${isSelected ? " tenant-web__navigation-builder-tree-row--active" : ""}${isDragging ? " tenant-web__navigation-builder-tree-row--dragging" : ""}${isDropTarget ? " tenant-web__navigation-builder-tree-row--drop-target" : ""}`}
+              className={`tenant-web__navigation-builder-tree-row${isContainerNode ? " tenant-web__navigation-builder-tree-row--can-add" : ""}${canCollapseNode ? " tenant-web__navigation-builder-tree-row--has-collapse" : ""}${isCollapsed ? " tenant-web__navigation-builder-tree-row--collapsed" : ""}${node.kind === "section" ? " tenant-web__navigation-builder-tree-row--section" : ""}${showsNodeIcon ? "" : " tenant-web__navigation-builder-tree-row--no-icon"}${isSelected ? " tenant-web__navigation-builder-tree-row--active" : ""}${isDragging ? " tenant-web__navigation-builder-tree-row--dragging" : ""}${isDropTarget ? " tenant-web__navigation-builder-tree-row--drop-target" : ""}`}
               draggable={canReorderNode}
               onDragEnd={onDragEnd}
               onDragOver={handleDragOver}
@@ -311,7 +322,7 @@ function TreeNodeRows({
                   </span>
                   {node.kind === "section" ? null : (
                     <span className="tenant-web__navigation-builder-tree-meta">
-                      {getNodeTypeLabel(node)}
+                      {nodeTypeLabel}
                     </span>
                   )}
                 </span>
@@ -338,6 +349,22 @@ function TreeNodeRows({
                   ) : null}
                 </span>
               </button>
+              {canCollapseNode ? (
+                <button
+                  aria-expanded={!isCollapsed}
+                  aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${node.label}`}
+                  className="tenant-web__navigation-builder-row-collapse"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleNodeCollapsed(node.id);
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  title={isCollapsed ? "Expand group" : "Collapse group"}
+                  type="button"
+                >
+                  <NavigationBuilderCollapseIcon />
+                </button>
+              ) : null}
               {isContainerNode ? (
                 <AddNodeMenu
                   label={addModeLabel}
@@ -355,8 +382,9 @@ function TreeNodeRows({
                 </AddNodeMenu>
               ) : null}
             </div>
-            {children.length > 0 ? (
+            {children.length > 0 && !isCollapsed ? (
               <TreeNodeRows
+                collapsedNodeIds={collapsedNodeIds}
                 depth={depth + 1}
                 dragOverNodeId={dragOverNodeId}
                 draggedNodeId={draggedNodeId}
@@ -366,6 +394,7 @@ function TreeNodeRows({
                 onDragOverNode={onDragOverNode}
                 onDragStartNode={onDragStartNode}
                 onDropNode={onDropNode}
+                onToggleNodeCollapsed={onToggleNodeCollapsed}
                 onPointerEndNode={onPointerEndNode}
                 onPointerEnterNode={onPointerEnterNode}
                 onPointerStartNode={onPointerStartNode}
@@ -468,6 +497,7 @@ export function NavigationBuilderTreePanel({
   selectedRailItemId,
   selectedNodeId,
 }: NavigationBuilderTreePanelProps) {
+  const [collapsedNodeIds, setCollapsedNodeIds] = useState<Set<string>>(() => new Set());
   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
   const pointerDragRef = useRef<{
@@ -480,6 +510,36 @@ export function NavigationBuilderTreePanel({
     setDraggedNodeId(null);
     setDragOverNodeId(null);
     pointerDragRef.current = null;
+  }
+
+  function handleAddNode(kind: NavigationBuilderAddNodeKind, parentId?: string) {
+    if (parentId) {
+      setCollapsedNodeIds((currentNodeIds) => {
+        if (!currentNodeIds.has(parentId)) {
+          return currentNodeIds;
+        }
+
+        const nextNodeIds = new Set(currentNodeIds);
+        nextNodeIds.delete(parentId);
+        return nextNodeIds;
+      });
+    }
+
+    onAddNode(kind, parentId);
+  }
+
+  function handleToggleNodeCollapsed(nodeId: string) {
+    setCollapsedNodeIds((currentNodeIds) => {
+      const nextNodeIds = new Set(currentNodeIds);
+
+      if (nextNodeIds.has(nodeId)) {
+        nextNodeIds.delete(nodeId);
+      } else {
+        nextNodeIds.add(nodeId);
+      }
+
+      return nextNodeIds;
+    });
   }
 
   return (
@@ -504,11 +564,12 @@ export function NavigationBuilderTreePanel({
             <TabsPanel value="sidebar">
               <div className="tenant-web__navigation-builder-tree">
                 <TreeNodeRows
+                  collapsedNodeIds={collapsedNodeIds}
                   depth={0}
                   dragOverNodeId={dragOverNodeId}
                   draggedNodeId={draggedNodeId}
                   nodes={nodes}
-                  onAddNode={onAddNode}
+                  onAddNode={handleAddNode}
                   onDragEnd={resetDragState}
                   onDragOverNode={setDragOverNodeId}
                   onDragStartNode={(nodeId) => {
@@ -553,10 +614,11 @@ export function NavigationBuilderTreePanel({
                     setDraggedNodeId(nodeId);
                     setDragOverNodeId(nodeId);
                   }}
+                  onToggleNodeCollapsed={handleToggleNodeCollapsed}
                   onSelectNode={onSelectNode}
                   selectedNodeId={selectedNodeId}
                 />
-                <NavigationBuilderRootAddRow onAddNode={onAddNode} />
+                <NavigationBuilderRootAddRow onAddNode={handleAddNode} />
               </div>
             </TabsPanel>
             <TabsPanel value="railbar">
@@ -586,6 +648,24 @@ function DragHandleIcon() {
       <circle cx="13" cy="10" fill="currentColor" r="1.1" />
       <circle cx="7" cy="14" fill="currentColor" r="1.1" />
       <circle cx="13" cy="14" fill="currentColor" r="1.1" />
+    </svg>
+  );
+}
+
+function NavigationBuilderCollapseIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      viewBox="0 0 20 20"
+    >
+      <path
+        d="M7.5 5.75L12.25 10l-4.75 4.25"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
     </svg>
   );
 }

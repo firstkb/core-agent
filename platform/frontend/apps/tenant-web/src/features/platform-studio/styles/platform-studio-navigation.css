@@ -101,6 +101,14 @@
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.tenant-web__navigation-builder-tree-row--has-collapse {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.tenant-web__navigation-builder-tree-row--can-add.tenant-web__navigation-builder-tree-row--has-collapse {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
 .tenant-web__navigation-builder-tree-row[draggable="true"] {
   cursor: grab;
 }
@@ -259,6 +267,46 @@
   border-color: color-mix(in srgb, var(--color-accent-primary) 38%, var(--color-border-default));
   background: color-mix(in srgb, var(--color-accent-primary-soft) 58%, var(--color-bg-surface-elevated));
   color: var(--color-text-primary);
+}
+
+.tenant-web__navigation-builder-row-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.95rem;
+  height: 1.95rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.tenant-web__navigation-builder-row-collapse svg {
+  width: 1rem;
+  height: 1rem;
+  transform: rotate(90deg);
+  transition: transform 150ms ease;
+}
+
+.tenant-web__navigation-builder-tree-row--collapsed .tenant-web__navigation-builder-row-collapse svg {
+  transform: rotate(0deg);
+}
+
+.tenant-web__navigation-builder-row-collapse:hover,
+.tenant-web__navigation-builder-row-collapse:focus-visible {
+  border-color: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface-elevated) 92%, transparent);
+  color: var(--color-text-primary);
+}
+
+.tenant-web__navigation-builder-row-collapse:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .tenant-web__navigation-builder-root-add-row {

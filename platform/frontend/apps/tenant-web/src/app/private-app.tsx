@@ -131,6 +131,8 @@ export function PrivateApp({
   const [, setPlatformStudioHeaderVersion] = useState(0);
   const [favoriteShortcuts, setFavoriteShortcuts] = useState<TenantFavoriteShortcut[]>([]);
   const [runtimeNavigationItems, setRuntimeNavigationItems] = useState<TenantRuntimeNavigationItem[]>([]);
+  const [runtimeUtilityRailItems, setRuntimeUtilityRailItems] =
+    useState<TenantRuntimeNavigationItem[] | null>(null);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -147,6 +149,20 @@ export function PrivateApp({
     return "light";
   });
   const activeThemeLabel = themeMode === "dark" ? t("common.themes.dark") : t("common.themes.light");
+  const runtimeUtilityRailItemKeys = useMemo(() => {
+    if (runtimeUtilityRailItems === null) {
+      return null;
+    }
+
+    const keys = new Set<string>();
+    for (const item of runtimeUtilityRailItems) {
+      keys.add(item.id);
+      if (item.key) {
+        keys.add(item.key);
+      }
+    }
+    return keys;
+  }, [runtimeUtilityRailItems]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -293,6 +309,7 @@ export function PrivateApp({
     try {
       const nextNavigation = await navigationClient.getRuntimeNavigation(accessToken);
       setRuntimeNavigationItems(nextNavigation.items);
+      setRuntimeUtilityRailItems(nextNavigation.utilityRailConfigured ? nextNavigation.utilityRail : null);
     } catch (navigationError) {
       if (isUnauthorizedApiError(navigationError)) {
         void signOut();
@@ -312,6 +329,12 @@ export function PrivateApp({
       hash: nextHash,
       pathname: "/dashboard",
     });
+  }
+
+  function railUtilityIsVisible(id: string, key: string) {
+    return runtimeUtilityRailItemKeys === null ||
+      runtimeUtilityRailItemKeys.has(id) ||
+      runtimeUtilityRailItemKeys.has(key);
   }
 
   function renderProfileMenuItems() {
@@ -339,6 +362,50 @@ export function PrivateApp({
       </>
     );
   }
+
+  const railUtilities = [
+    {
+      item: {
+        active: isPlatformStudioPath(location.pathname),
+        icon: <LayersIcon />,
+        label: t("tenant.navigation.platformStudio.label"),
+        onSelect: () => navigate(platformStudioPaths.forms),
+      },
+      runtimeRailId: "rail.platform-studio",
+      runtimeRailKey: "platform-studio",
+    },
+    {
+      item: {
+        badge: String(offlineSyncStatus.queuedActions),
+        icon: <DocumentListIcon />,
+        label: t("tenant.shell.menu.tasksCenter"),
+        onSelect: () => setUtilityPanel("tasks"),
+      },
+      runtimeRailId: "rail.task-manager",
+      runtimeRailKey: "task-manager",
+    },
+    {
+      item: {
+        badge: favoriteShortcuts.length > 0 ? String(favoriteShortcuts.length) : undefined,
+        icon: <StarIcon />,
+        label: t("tenant.shell.menu.favorites"),
+        onSelect: () => setUtilityPanel("favorites"),
+      },
+      runtimeRailId: "rail.favorites",
+      runtimeRailKey: "favorites",
+    },
+    {
+      item: {
+        icon: <HelpCircleIcon />,
+        label: t("tenant.shell.menu.helpCenter"),
+        onSelect: () => setUtilityPanel("help"),
+      },
+      runtimeRailId: "rail.help-center",
+      runtimeRailKey: "help-center",
+    },
+  ].filter(({ runtimeRailId, runtimeRailKey }) =>
+    railUtilityIsVisible(runtimeRailId, runtimeRailKey),
+  ).map(({ item }) => item);
 
   return (
     <TenantWorkspaceUserProvider value={userSession}>
@@ -462,34 +529,7 @@ export function PrivateApp({
         railBrandLabel={t("tenant.navigation.dashboard.label")}
         railBrandOnSelect={() => openDashboard()}
         railMark={<DashboardGridIcon />}
-        railUtilities={[
-          {
-            active: isPlatformStudioPath(location.pathname),
-            icon: <LayersIcon />,
-            label: t("tenant.navigation.platformStudio.label"),
-            onSelect: () => navigate(platformStudioPaths.forms),
-          },
-          {
-            badge: String(offlineSyncStatus.queuedActions),
-            icon: <DocumentListIcon />,
-            label: t("tenant.shell.menu.tasksCenter"),
-            onSelect: () => setUtilityPanel("tasks"),
-          },
-          {
-            badge:
-              favoriteShortcuts.length > 0
-                ? String(favoriteShortcuts.length)
-                : undefined,
-            icon: <StarIcon />,
-            label: t("tenant.shell.menu.favorites"),
-            onSelect: () => setUtilityPanel("favorites"),
-          },
-          {
-            icon: <HelpCircleIcon />,
-            label: t("tenant.shell.menu.helpCenter"),
-            onSelect: () => setUtilityPanel("help"),
-          },
-        ]}
+        railUtilities={railUtilities}
         showHeaderSurfaceMarker={false}
         showRailCollapse
         showSidebarSurfaceMarker={false}

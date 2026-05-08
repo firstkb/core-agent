@@ -130,15 +130,16 @@ func appendDerivedNavigationNode(
 
 func appendDerivedNavigationRailItem(rows *derivedNavigationRows, item NavigationRailItem, sortOrder int) {
 	row := derivedNavigationItem{
-		OwnerType:  navigationOwnerTypeUtilityRailItem,
-		ItemID:     strings.TrimSpace(item.ID),
-		NodeType:   navigationOwnerTypeUtilityRailItem,
-		TargetType: navigationOwnerTypeUtilityRailItem,
-		Label:      strings.TrimSpace(item.Label),
-		Active:     item.Active == nil || *item.Active,
-		SortOrder:  sortOrder,
-		Depth:      0,
-		Breadcrumb: []string{strings.TrimSpace(item.Label)},
+		OwnerType:   navigationOwnerTypeUtilityRailItem,
+		ItemID:      strings.TrimSpace(item.ID),
+		NodeType:    navigationOwnerTypeUtilityRailItem,
+		TargetType:  navigationOwnerTypeUtilityRailItem,
+		TargetRoute: strings.TrimSpace(item.Key),
+		Label:       strings.TrimSpace(item.Label),
+		Active:      item.Active == nil || *item.Active,
+		SortOrder:   sortOrder,
+		Depth:       0,
+		Breadcrumb:  []string{strings.TrimSpace(item.Label)},
 	}
 
 	rows.Items = append(rows.Items, row)

@@ -23,10 +23,12 @@ import {
   getNavigationBuilderAccessSummary,
   getNavigationBuilderTargetLabel,
   isNavigationBuilderNodeActive,
+  isNavigationBuilderRailItemActive,
   navigationBuilderIconOptions,
   navigationBuilderAppModules,
   navigationBuilderAppPages,
   setNavigationBuilderNodeActive,
+  setNavigationBuilderRailItemActive,
   type NavigationBuilderAccessPolicy,
   type NavigationBuilderAccessRecipientKind,
   type NavigationBuilderAccessMode,
@@ -48,6 +50,7 @@ type NavigationBuilderInspectorProps = {
   onChooseAccessRecipients: (category: NavigationBuilderAccessRecipientKind) => void;
   onDeleteNode: (node: NavigationBuilderNode) => void;
   onNodeChange: (node: NavigationBuilderNode) => void;
+  onRailItemChange: (railItem: NavigationBuilderRailItem) => void;
   railItem?: NavigationBuilderRailItem | null;
 };
 
@@ -711,9 +714,12 @@ export function NavigationBuilderInspector({
   onChooseAccessRecipients,
   onDeleteNode,
   onNodeChange,
+  onRailItemChange,
   railItem,
 }: NavigationBuilderInspectorProps) {
   if (railItem) {
+    const isRailItemActive = isNavigationBuilderRailItemActive(railItem);
+
     return (
       <Card className="tenant-web__platform-studio-panel tenant-web__navigation-builder-panel">
         <CardContent className="tenant-web__platform-studio-panel-content tenant-web__platform-studio-panel-content--split tenant-web__navigation-builder-inspector-content">
@@ -752,6 +758,18 @@ export function NavigationBuilderInspector({
                       <p className="tenant-web__navigation-builder-muted-copy">
                         {railItem.description}
                       </p>
+                      <div className="tenant-web__platform-studio-switch-row tenant-web__platform-studio-switch-row--plain tenant-web__navigation-builder-active-row">
+                        <span className="tenant-web__navigation-builder-active-copy">
+                          <span>Show in utility rail</span>
+                          <small>{isRailItemActive ? "Visible in utility rail" : "Hidden from utility rail"}</small>
+                        </span>
+                        <Switch
+                          checked={isRailItemActive}
+                          onCheckedChange={(checked) =>
+                            onRailItemChange(setNavigationBuilderRailItemActive(railItem, checked))}
+                          size="sm"
+                        />
+                      </div>
                     </ElementSection>
 
                     <ElementSection title="Channel">

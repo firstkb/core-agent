@@ -15,6 +15,7 @@ import {
   getNavigationBuilderChildren,
   getNavigationBuilderTargetRoute,
   isNavigationBuilderNodeActive,
+  isNavigationBuilderRailItemActive,
   navigationBuilderDashboardNodeId,
   navigationBuilderRailItems,
   type NavigationBuilderAccessPolicy,
@@ -369,6 +370,7 @@ export function decodeNavigationBuilderRailItems(
       channel: fallback?.channel ?? "web",
       description: fallback?.description ?? "",
       id: source.id,
+      isActive: source.active === false ? false : true,
       label: source.label,
       routeKey: source.key,
       status: source.active === false
@@ -501,7 +503,7 @@ export function encodeNavigationBuilderDefinition(
 
 function encodeNavigationRailItem(item: NavigationBuilderRailItem): TenantNavigationRailItem {
   return {
-    active: item.status !== "hidden",
+    active: isNavigationBuilderRailItemActive(item),
     access: encodeNavigationAccessPayload(item.access),
     id: item.id,
     key: item.routeKey,

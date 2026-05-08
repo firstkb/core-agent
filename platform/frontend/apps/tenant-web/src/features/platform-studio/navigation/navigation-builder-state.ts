@@ -112,6 +112,7 @@ export type NavigationBuilderRailItem = {
   channel: NavigationBuilderChannel;
   description: string;
   id: string;
+  isActive?: boolean;
   label: string;
   routeKey: string;
   status: Exclude<NavigationBuilderNodeStatus, "broken">;
@@ -186,6 +187,7 @@ export const navigationBuilderRailItems = [
     channel: "web",
     description: "Opens Platform Studio from the utility rail.",
     id: "rail.platform-studio",
+    isActive: true,
     label: "Platform Studio",
     routeKey: "platform-studio",
     status: "restricted",
@@ -197,6 +199,7 @@ export const navigationBuilderRailItems = [
     channel: "web",
     description: "Future task and assignment workspace.",
     id: "rail.task-manager",
+    isActive: false,
     label: "Task Manager",
     routeKey: "task-manager",
     status: "hidden",
@@ -208,6 +211,7 @@ export const navigationBuilderRailItems = [
     channel: "web",
     description: "Opens saved app menu entries.",
     id: "rail.favorites",
+    isActive: true,
     label: "Favorites",
     routeKey: "favorites",
     status: "visible",
@@ -219,6 +223,7 @@ export const navigationBuilderRailItems = [
     channel: "web",
     description: "Opens help and support.",
     id: "rail.help-center",
+    isActive: true,
     label: "Help Center",
     routeKey: "help-center",
     status: "visible",
@@ -365,6 +370,33 @@ export function setNavigationBuilderNodeActive(
     ...node,
     isActive: true,
     status: node.status === "hidden" ? "visible" : node.status,
+  };
+}
+
+export function isNavigationBuilderRailItemActive(
+  item: Pick<NavigationBuilderRailItem, "isActive" | "status">,
+) {
+  return item.isActive !== false && item.status !== "hidden";
+}
+
+export function setNavigationBuilderRailItemActive(
+  item: NavigationBuilderRailItem,
+  isActive: boolean,
+): NavigationBuilderRailItem {
+  if (!isActive) {
+    return {
+      ...item,
+      isActive: false,
+      status: "hidden",
+    };
+  }
+
+  return {
+    ...item,
+    isActive: true,
+    status: item.access.mode === "inherit" || item.access.mode === "all-authenticated"
+      ? "visible"
+      : "restricted",
   };
 }
 

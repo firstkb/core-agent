@@ -372,6 +372,10 @@ export function NavigationBuilderPage() {
     );
   }
 
+  function handleSelectedRailItemChange(nextRailItem: NavigationBuilderRailItem) {
+    updateRailItem(nextRailItem.id, () => nextRailItem);
+  }
+
   function updateRailItem(
     railItemId: string,
     update: (railItem: NavigationBuilderRailItem) => NavigationBuilderRailItem,
@@ -553,6 +557,7 @@ export function NavigationBuilderPage() {
           onChooseAccessRecipients={setAccessPickerCategory}
           onDeleteNode={(node) => setDeleteNodeId(node.id)}
           onNodeChange={handleSelectedNodeChange}
+          onRailItemChange={handleSelectedRailItemChange}
           railItem={activeTreePanel === "railbar" ? selectedRailItem : null}
         />
       </section>

@@ -21,8 +21,8 @@ Read with:
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
 - Navigation Builder has an active V1 surface plus backend persistence,
-  access authoring, and runtime sidebar projection. Runtime ACL enforcement and
-  utility rail access enforcement remain planned.
+  access authoring, and runtime sidebar/utility rail visibility projection.
+  Direct Form View/App Page route/API ACL enforcement remains planned.
 - Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.
@@ -256,7 +256,8 @@ Route rules:
   state.
 - Rail utility access is separate from the sidebar tree. Navigation Builder V1
   exposes utility rail items as a dedicated left-panel tab and uses the same
-  saved access policy model, but runtime rail enforcement remains planned.
+  saved access policy model, active/inactive toggle, and runtime visibility
+  projection as app menu items.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

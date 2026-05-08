@@ -24,6 +24,7 @@ type Repository interface {
 	GetConfig(ctx context.Context, tenant requestctx.TenantInfo, configKey string) (*ConfigRecord, error)
 	ListAccessOptionPage(ctx context.Context, tenant requestctx.TenantInfo, req AccessOptionsPageRequest) (*AccessOptionsPageResponse, error)
 	ListAccessOptions(ctx context.Context, tenant requestctx.TenantInfo) (*AccessOptionsResponse, error)
+	LoadRuntimeNavigationState(ctx context.Context, tenant requestctx.TenantInfo, configKey string, userID string, rootAccess bool) (*runtimeNavigationState, error)
 	SaveConfig(ctx context.Context, tenant requestctx.TenantInfo, record ConfigRecord, definition NavigationDefinition, expectedVersion *int64) (*ConfigRecord, error)
 }
 
@@ -68,27 +69,34 @@ func (s *Service) LoadConfig(ctx context.Context) (*LoadConfigResponse, error) {
 }
 
 func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigationResponse, error) {
-	tenant, _, err := requireAuthoringContext(ctx)
+	tenant, claims, err := requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	record, err := s.repo.GetConfig(ctx, tenant, ConfigKeyDefault)
+	state, err := s.repo.LoadRuntimeNavigationState(ctx, tenant, ConfigKeyDefault, claims.UserID, claimsHaveRootAccess(claims))
 	if err != nil {
 		return nil, err
 	}
-	if record == nil {
-		return &RuntimeNavigationResponse{Items: []RuntimeNavigationItem{}}, nil
+	if state == nil {
+		return &RuntimeNavigationResponse{
+			Items:       []RuntimeNavigationItem{},
+			UtilityRail: []RuntimeNavigationItem{},
+		}, nil
 	}
 
-	definition, err := decodeDefinition(record.DefinitionJSON)
-	if err != nil {
-		return nil, err
+	response := buildRuntimeNavigationResponse(*state)
+	if response.Items == nil {
+		response.Items = []RuntimeNavigationItem{}
 	}
+	if response.UtilityRail == nil {
+		response.UtilityRail = []RuntimeNavigationItem{}
+	}
+	return &response, nil
+}
 
-	return &RuntimeNavigationResponse{
-		Items: projectRuntimeNavigationItems(definition.AppMenu, nil),
-	}, nil
+func claimsHaveRootAccess(claims requestctx.ClaimsInfo) bool {
+	return claims.Level >= 100 || strings.EqualFold(strings.TrimSpace(claims.Role), "root")
 }
 
 func (s *Service) LoadAccessOptions(ctx context.Context) (*AccessOptionsResponse, error) {

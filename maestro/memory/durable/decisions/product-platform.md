@@ -284,16 +284,19 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   `ps_navigation_config.definition_json`, but access enforcement must not rely
   on frontend-only checks or repeated ad hoc JSON parsing. On Navigation Builder
   `Save`, backend should validate the saved definition and synchronize derived
-  runtime/access tables in the same transaction. Runtime `/app/navigation`,
-  utility rail visibility, and future direct Form View/App Page route/API guards
-  should use one backend evaluator over those derived rows.
+  runtime/access tables in the same transaction. Runtime `/app/navigation` and
+  utility rail visibility use one backend evaluator over those derived rows;
+  future direct Form View/App Page route/API guards should reuse the same
+  evaluator semantics.
 - Access model: supported modes are `inherit`, `all authenticated users`,
   `selected recipients only`, and `everyone except selected recipients`.
-  Recipient matching follows legacy semantics with current `users`, `company`,
-  and `jobtype` sources: explicit users match by OR; companies and job types
-  combine as AND when both are present; company-only or jobtype-only selections
-  match by that single dimension. Parent access always limits children; children
-  may only narrow effective access, not expand it beyond the parent.
+  Recipient matching uses current `users`, `company`, `companytype`, and
+  `jobtype` sources: `users OR ((companies OR company types) AND job types)`,
+  where an empty audience dimension means any value inside that branch. Parent
+  access always limits children; children may only narrow effective access, not
+  expand it beyond the parent. Root/admin claims bypass access policy checks in
+  runtime navigation evaluation, but inactive app menu and utility rail items
+  remain hidden.
 - Storage rule: `definition_json` is the authoring source of truth; derived
   access/runtime rows are not edited directly and should be fully rebuilt from
   the saved definition.

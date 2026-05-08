@@ -17,7 +17,8 @@ Status: active compact contract
 - Platform Studio is a suite of builder/configuration tools, not a synonym for Form Builder.
 - Form Builder is the active backend-backed builder tool.
 - Navigation Builder has an active V1 surface plus backend persistence and
-  runtime sidebar projection; real ACL enforcement remains planned.
+  runtime sidebar/utility rail visibility projection; direct Form View/App Page
+  route/API ACL enforcement remains planned.
 - Action Builder, PDF Builder, and Report Builder are planned but not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - `@platform/platform-studio-core` owns shared non-UI contracts/helpers.
@@ -30,11 +31,11 @@ Status: active compact contract
 - Navigation Builder owns sidebar/navigation composition, Form View/App Page/
   External Link targets, future App Module targets with nested subitems,
   authored runtime route targets, draft/Save UX, active/inactive runtime sidebar
-  exposure, and future rail utility visibility/access enforcement. It uses a
+  exposure, and utility rail visibility/access filtering. It uses a
   dedicated backend package `platformstudionavigationbuilder` for saved
-  definition persistence, validation, and runtime sidebar projection; do not add this to
+  definition persistence, validation, and runtime navigation projection; do not add this to
   `platformstudioformbuilder`. V1 already exposes a separate RailBar utility
-  tab, but access is mock only;
+  tab;
   access/permission assignment is expected to live here unless a later accepted
   decision creates a separate Access Builder.
 - A single tenant app page such as Business Tree is not a product module.

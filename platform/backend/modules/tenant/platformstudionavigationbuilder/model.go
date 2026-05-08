@@ -127,11 +127,14 @@ type SaveConfigRequest struct {
 type SaveConfigResponse = LoadConfigResponse
 
 type RuntimeNavigationResponse struct {
-	Items []RuntimeNavigationItem `json:"items"`
+	Items                 []RuntimeNavigationItem `json:"items"`
+	UtilityRail           []RuntimeNavigationItem `json:"utilityRail"`
+	UtilityRailConfigured bool                    `json:"utilityRailConfigured"`
 }
 
 type RuntimeNavigationItem struct {
 	ID          string                  `json:"id"`
+	Key         string                  `json:"key,omitempty"`
 	Label       string                  `json:"label"`
 	Type        string                  `json:"type"`
 	Icon        string                  `json:"icon,omitempty"`

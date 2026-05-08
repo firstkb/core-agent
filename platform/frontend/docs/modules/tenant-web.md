@@ -196,6 +196,10 @@ Current Navigation Builder runtime behavior:
 
 - `PrivateApp` loads saved app menu projection through
   `createTenantNavigationClient(runtimeConfig.tenantApiUrl).getRuntimeNavigation`.
+- The same runtime payload may include `utilityRail`; when
+  `utilityRailConfigured` is true, `PrivateApp` filters Platform Studio, Task
+  Manager, Favorites, and Help Center rail buttons to the allowed runtime rail
+  entries.
 - `TenantSidebarNavigation` prefers Navigation Builder runtime items when a
   saved configuration exists.
 - configured Form View and App Page targets navigate to their runtime routes,
@@ -205,7 +209,8 @@ Current Navigation Builder runtime behavior:
   selected; `None`/missing icon renders the item without an icon.
 - tenant top bar title and breadcrumb resolve from the configured Navigation
   Builder path for matching runtime targets.
-- inactive saved app menu entries are excluded by backend runtime projection.
+- inactive saved app menu and utility rail entries are excluded by backend
+  runtime projection.
 
 Current published runtime fallback behavior:
 
@@ -217,8 +222,8 @@ Current published runtime fallback behavior:
 
 Navigation Builder now has a UI-first authoring route at `/builder/navigation`,
 backend persistence at `GET/PUT /app/platform-studio/navigation`, and runtime
-sidebar projection at `GET /app/navigation`; ACL enforcement remains planned
-Platform Studio scope.
+sidebar/utility rail visibility projection at `GET /app/navigation`; direct
+Form View/App Page route/API guards remain planned Platform Studio scope.
 Empty or missing Navigation Builder configs render only the locked Dashboard
 builder node and root add affordance; production builder state must not seed
 mock app menu entries.
@@ -227,8 +232,9 @@ a disabled future add choice until concrete app module runtime routes exist.
 Rail utilities such as Platform Studio, Task Manager, Favorites, and Help Center
 are shown in a separate Navigation Builder RailBar editor tab. Rail access is
 authored and saved through the same inline Access strategy/rule composer as app
-menu items, but runtime rail enforcement remains planned. Navigation Builder
-should distinguish app page targets from broader product module targets.
+menu items, and rail active/access filtering is applied by the backend runtime
+navigation projection. Navigation Builder should distinguish app page targets
+from broader product module targets.
 
 ## Platform Studio Ownership
 

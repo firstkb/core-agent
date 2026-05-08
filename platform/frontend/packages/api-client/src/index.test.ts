@@ -452,6 +452,18 @@ describe("api-client tenant navigation", () => {
               type: "form_view",
             },
           ],
+          utilityRail: [
+            {
+              breadcrumb: ["Platform Studio"],
+              children: [],
+              id: "rail.platform-studio",
+              key: "platform-studio",
+              label: "Platform Studio",
+              targetType: "utility_rail_item",
+              type: "utility_rail_item",
+            },
+          ],
+          utilityRailConfigured: true,
         },
         status: "ok",
       }), {
@@ -467,6 +479,11 @@ describe("api-client tenant navigation", () => {
       breadcrumb: ["Safety", "Inspections"],
       id: "nav.entry.safety.inspections",
       path: "/app/forms/sor/views/view-default",
+    });
+    expect(out.utilityRailConfigured).toBe(true);
+    expect(out.utilityRail[0]).toMatchObject({
+      id: "rail.platform-studio",
+      key: "platform-studio",
     });
     expect(fetchMock).toHaveBeenCalledWith(
       "/tenant-api/app/navigation",

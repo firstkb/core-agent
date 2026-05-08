@@ -31,14 +31,19 @@ Last compacted: 2026-05-06
 - Access authoring is active for app menu and utility rail items. Navigation
   Builder writes canonical policy into `ps_navigation_config.definition_json`,
   and backend `Save` synchronizes derived runtime/access tables in the same
-  transaction. Runtime sidebar filtering, utility rail visibility, and future
-  direct route/API guards still need the derived backend evaluator; they must
-  not rely on frontend-only checks or repeated ad hoc JSON parsing.
-- Runtime sidebar projection is active through `GET /app/navigation`. It reads
-  the saved Navigation Builder definition, excludes inactive app menu entries,
-  and projects Form View/App Page targets to tenant runtime routes. Tenant-web
-  renders root `Menu title` items as UI Lab-style app-layer section headings
-  and suppresses empty, consecutive, or trailing title sections at display time.
+  transaction.
+- Runtime sidebar and utility rail visibility projection is active through
+  `GET /app/navigation`. It reads derived runtime/access rows, resolves the
+  current tenant user against `users`, `company`, `companytype`, and `jobtype`,
+  applies `users OR ((companies OR company types) AND job types)`, enforces
+  parent-bounds-child narrowing, excludes inactive or inaccessible app menu and
+  utility rail entries, suppresses empty/consecutive/trailing menu titles after
+  filtering, and projects Form View/App Page targets to tenant runtime routes.
+  Root/admin claims bypass Navigation Builder access policies but still respect
+  inactive item filtering.
+  Direct Form View/App Page route/API guards remain planned and must reuse this
+  derived evaluator semantics rather than frontend-only checks or ad hoc JSON
+  parsing.
 - V1 targets: Form View, App Page, External Link, and future App Module pages.
 - App Modules can have nested subitems. Single app pages such as Business Tree
   are App Page targets, not product modules.
@@ -75,7 +80,9 @@ Last compacted: 2026-05-06
   `+` actions.
 - V1 has a separate left-panel `Utility rail` tab for static shell utilities such as
   Platform Studio, Task Manager, Favorites, and Help Center. Rail access uses
-  the same authoring model as app menu access but remains one-level.
+  the same authoring model as app menu access but remains one-level. Rail
+  items expose a `Show in utility rail` active toggle and inactive rail items
+  are excluded from runtime utility rail output.
 - V1 editable Access strategy exposes `Inherit from parent`, `Selected
   recipients only`, and `Everyone except selected recipients`. `All
   authenticated users` remains a persisted default/compatibility mode but is
@@ -105,13 +112,14 @@ Last compacted: 2026-05-06
 
 ## Guardrails
 
-- Do not invent temporary runtime grants before the real Navigation Builder ACL model exists.
+- Do not invent temporary runtime grants outside the derived Navigation Builder
+  access evaluator.
 - Do not expose non-root runtime entries from frontend-only fabrication.
 - Do not put Navigation Builder persistence or validation in
   `platformstudioformbuilder`.
 - Keep `/app/platform-studio/forms/...` as preview/authoring context, not a navigation target.
-- V1 Access UI is preview/mock only and must not be claimed as backend route/API
-  enforcement.
+- V1 Access UI now drives runtime navigation visibility, but must not be claimed
+  as direct backend route/API enforcement until Form View/App Page guards land.
 - Dashboard is a locked static preview item; do not let users remove or move it,
   do not let users select it for editing, and do not show the lock badge for
   Dashboard. Reserve lock badges for access/restricted items.

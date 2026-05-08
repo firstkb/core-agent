@@ -118,14 +118,15 @@ Validation owns:
 - duplicate target prevention across the app menu;
 - utility rail id/key/label presence and duplicate key prevention.
 
-Access is not enforced by the current runtime slice. Authoring is active:
+Access authoring and runtime navigation visibility are active:
 `ps_navigation_config.definition_json` remains the source of truth for access
 policy, `GET /app/platform-studio/navigation/access-options` remains a
 compatibility bulk lookup, the paged `/access-options/page` lookup is the
 preferred UI picker API for large recipient sets, and backend `Save`
-synchronizes derived runtime/access tables for the future evaluator. Runtime
-`/app/navigation`, utility rail visibility, and future direct Form View/App Page
-route/API guards should use one backend evaluator over those derived rows.
+synchronizes derived runtime/access tables used by the runtime evaluator.
+`/app/navigation` filters app menu and utility rail visibility through those
+derived rows. Future direct Form View/App Page route/API guards should reuse the
+same evaluator semantics rather than parse authoring JSON independently.
 
 Supported persisted access modes:
 
@@ -152,13 +153,33 @@ visibility, not the external destination.
   Navigation Builder path and target metadata.
 
 `GET /app/navigation` returns the active saved app menu projection for tenant
-runtime shell/sidebar consumption. It does not expose or enforce utility rail
-access yet.
+runtime shell/sidebar consumption. The response includes:
+
+- `items`: filtered app menu/sidebar items;
+- `utilityRail`: filtered one-level utility rail items;
+- `utilityRailConfigured`: `true` when saved utility rail rows exist. Tenant web
+  keeps the legacy static rail visible while this flag is `false` so first-time
+  tenants do not lose access before saving Navigation Builder config.
+
+Runtime visibility rules:
+
+- inactive items are removed before access evaluation;
+- root/admin claims (`level >= 100` or `role = root`) bypass Navigation
+  Builder access policy checks but still respect inactive item filtering;
+- `inherit` means "same as parent"; at root it behaves as authenticated access;
+- `selected_only` requires a direct user match or the audience rule
+  `(companies OR company types) AND job types`;
+- `everyone_except` hides matching recipients and shows other authenticated
+  users;
+- parent access always bounds child access, so children can only narrow;
+- empty, consecutive, and trailing `menu_title` items are suppressed after
+  filtering.
 
 ## Boundary Guardrails
 
 - Do not expand `platformstudioformbuilder` for Navigation Builder behavior.
-- Do not claim Navigation Builder access configuration is backend route/API
-  enforcement until the ACL model exists.
+- Do not claim Navigation Builder access configuration protects direct Form
+  View/App Page route/API access until those guards are wired to the runtime
+  evaluator.
 - Do not treat `Save` as a separate publish lifecycle.
 - Do not trust tenant ids from request payloads.

@@ -11,9 +11,12 @@ import (
 )
 
 type memoryRepository struct {
-	optionPage *AccessOptionsPageResponse
-	record     *ConfigRecord
-	options    *AccessOptionsResponse
+	optionPage        *AccessOptionsPageResponse
+	record            *ConfigRecord
+	options           *AccessOptionsResponse
+	runtimeRootAccess bool
+	runtimeUser       runtimeNavigationUserContext
+	runtimeUserID     string
 }
 
 func (r *memoryRepository) GetConfig(_ context.Context, _ requestctx.TenantInfo, configKey string) (*ConfigRecord, error) {
@@ -82,6 +85,45 @@ func (r *memoryRepository) ListAccessOptionPage(_ context.Context, _ requestctx.
 	copy.Page = req.Page
 	copy.PageSize = req.PageSize
 	return &copy, nil
+}
+
+func (r *memoryRepository) LoadRuntimeNavigationState(_ context.Context, _ requestctx.TenantInfo, configKey string, userID string, rootAccess bool) (*runtimeNavigationState, error) {
+	r.runtimeRootAccess = rootAccess
+	r.runtimeUserID = userID
+
+	user := r.runtimeUser
+	if !user.Authenticated {
+		user = runtimeNavigationUserContext{
+			Authenticated: true,
+			UserID:        "1",
+			CompanyID:     "10",
+			CompanyTypeID: "100",
+			JobTypeID:     "20",
+		}
+	}
+	if rootAccess {
+		user = runtimeNavigationUserContext{
+			Authenticated: true,
+			IsRoot:        true,
+			UserID:        userID,
+		}
+	}
+
+	if r.record == nil || r.record.ConfigKey != configKey {
+		return &runtimeNavigationState{User: user}, nil
+	}
+
+	definition, err := decodeDefinition(r.record.DefinitionJSON)
+	if err != nil {
+		return nil, err
+	}
+	rows := buildDerivedNavigationRows(definition)
+	return &runtimeNavigationState{
+		User:     user,
+		Items:    rows.Items,
+		Policies: rows.Policies,
+		Subjects: rows.Subjects,
+	}, nil
 }
 
 func navigationBuilderTestContext() context.Context {
@@ -307,6 +349,50 @@ func TestLoadRuntimeNavigationExcludesInactiveItems(t *testing.T) {
 	}
 	if safety.Children[0].ID != "nav.entry.business-tree" {
 		t.Fatalf("remaining child id = %q", safety.Children[0].ID)
+	}
+}
+
+func TestLoadRuntimeNavigationUsesRootAccessFromClaims(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["404"]}`)
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	repo := &memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	}
+	service := NewService(repo)
+
+	ctx := requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{
+		Level:    100,
+		Role:     "root",
+		TenantID: "101",
+		UserID:   "root-user",
+	})
+	ctx = requestctx.WithTenant(ctx, requestctx.TenantInfo{
+		DBName:         "tenant_101",
+		DBInstanceCode: "local",
+		ID:             "101",
+		Name:           "Demo Tenant",
+	})
+
+	out, err := service.LoadRuntimeNavigation(ctx)
+	if err != nil {
+		t.Fatalf("LoadRuntimeNavigation returned error: %v", err)
+	}
+	if !repo.runtimeRootAccess {
+		t.Fatalf("runtime root access flag = false, want true")
+	}
+	if repo.runtimeUserID != "root-user" {
+		t.Fatalf("runtime user id = %q, want root-user", repo.runtimeUserID)
+	}
+	if !hasRuntimeItem(out.Items, "nav.group.safety") {
+		t.Fatalf("root did not receive access-restricted branch: %#v", out.Items)
 	}
 }
 

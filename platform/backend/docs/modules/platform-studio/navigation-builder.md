@@ -50,13 +50,15 @@ Tenant schema surfaces:
 - optimistic version checks
 - definition validation
 - duplicate target prevention
-- runtime sidebar projection via `GET /app/navigation`
+- runtime app menu and utility rail visibility projection via
+  `GET /app/navigation`, including root/admin access-policy bypass while
+  preserving inactive item filtering
 
 It does not own:
 
 - Form Builder model/view authoring
 - Form Builder runtime record behavior
-- backend ACL/grant enforcement in the current runtime slice
+- direct Form View/App Page route or API guards in the current runtime slice
 - Business Tree page data
 - frontend-only editor state
 

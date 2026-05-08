@@ -188,6 +188,7 @@ type TenantRuntimeNavigationItem = {
   externalUrl?: string;
   icon?: string;
   id: string;
+  key?: string;
   label: string;
   path?: string;
   targetType?: string;
@@ -196,6 +197,8 @@ type TenantRuntimeNavigationItem = {
 
 type TenantRuntimeNavigationResponse = {
   items: TenantRuntimeNavigationItem[];
+  utilityRail: TenantRuntimeNavigationItem[];
+  utilityRailConfigured: boolean;
 };
 
 type TenantBusinessTreeClient = {
@@ -1418,6 +1421,7 @@ function normalizeTenantRuntimeNavigationItem(payload: unknown, fieldName: strin
     externalUrl: normalizeOptionalString(record.externalUrl),
     icon: normalizeOptionalString(record.icon),
     id: assertString(record.id, `${fieldName}.id`),
+    key: normalizeOptionalString(record.key),
     label: assertString(record.label, `${fieldName}.label`),
     path: normalizeOptionalString(record.path),
     targetType: normalizeOptionalString(record.targetType),
@@ -1428,9 +1432,12 @@ function normalizeTenantRuntimeNavigationItem(payload: unknown, fieldName: strin
 function normalizeTenantRuntimeNavigationResponse(payload: unknown): TenantRuntimeNavigationResponse {
   const record = normalizeJsonRecord(payload, "runtimeNavigation");
   const items = Array.isArray(record.items) ? record.items : [];
+  const utilityRail = Array.isArray(record.utilityRail) ? record.utilityRail : [];
 
   return {
     items: items.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `runtimeNavigation.items[${index}]`)),
+    utilityRail: utilityRail.map((entry, index) => normalizeTenantRuntimeNavigationItem(entry, `runtimeNavigation.utilityRail[${index}]`)),
+    utilityRailConfigured: record.utilityRailConfigured === true,
   };
 }
 

@@ -73,6 +73,10 @@ Last compacted: 2026-04-25
   breadcrumb from the configured Navigation Builder path and target metadata;
   their backing APIs are denied when the current user cannot access the matching
   Navigation Builder target.
+- Direct Form View route rendering is also gated against the filtered
+  `GET /app/navigation` runtime tree. If a parent group is hidden by access,
+  the child Form View URL shows the restricted route state instead of the
+  collection table.
 - Business Tree is the first tenant app page. Its canonical direct route is
   `/app/pages/business-tree`, and Navigation Builder can expose it through an
   App Page target.

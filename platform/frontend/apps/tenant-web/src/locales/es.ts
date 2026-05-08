@@ -116,6 +116,10 @@ export const tenantSpanishMessages = {
       },
       runtime: {
         forms: {
+          deniedAction: "Abrir panel",
+          deniedDescription: "Tu acceso de navegacion actual no incluye esta vista de formulario. Pide a un administrador que actualice el acceso del menu de la app si necesitas abrirla.",
+          deniedEyebrow: "Acceso restringido",
+          deniedTitle: "La vista de formulario no esta disponible",
           headerMeta: "Formularios",
           headerTitle: "Formularios",
           viewHeaderMeta: "Formularios / {{modelLabel}} / {{viewLabel}}",

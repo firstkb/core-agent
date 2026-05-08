@@ -32,6 +32,7 @@ import {
   MenuTrigger,
   PlusIcon,
   SearchIcon,
+  ShieldKeyIcon,
   StarIcon,
   TopLoader,
   createTopLoaderController,
@@ -107,27 +108,84 @@ function scrollToDashboardSection(sectionId?: string) {
   });
 }
 
-function PlatformStudioAccessDenied({
-  onOpenDashboard,
-}: {
-  onOpenDashboard: () => void;
-}) {
-  const { t } = useTranslation();
+type RuntimeFormRouteTarget = {
+  modelId: string;
+  viewId: string;
+};
 
+function decodePathSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function getRuntimeFormRouteTarget(pathname: string): RuntimeFormRouteTarget | null {
+  const match = /^\/app\/forms\/([^/]+)\/views\/([^/]+)(?:\/|$)/.exec(pathname);
+  if (!match) {
+    return null;
+  }
+
+  const modelId = decodePathSegment(match[1] ?? "").trim();
+  const viewId = decodePathSegment(match[2] ?? "").trim();
+  if (!modelId || !viewId) {
+    return null;
+  }
+
+  return { modelId, viewId };
+}
+
+function runtimeFormRoutePath(target: RuntimeFormRouteTarget) {
+  return `/app/forms/${encodeURIComponent(target.modelId)}/views/${encodeURIComponent(target.viewId)}`;
+}
+
+function runtimeNavigationIncludesFormView(
+  items: ReadonlyArray<TenantRuntimeNavigationItem>,
+  target: RuntimeFormRouteTarget,
+): boolean {
+  const targetPath = runtimeFormRoutePath(target);
+
+  for (const item of items) {
+    if (item.targetType === "form_view" && item.path === targetPath) {
+      return true;
+    }
+    if (item.children.length > 0 && runtimeNavigationIncludesFormView(item.children, target)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function RouteAccessDenied({
+  actionLabel,
+  description,
+  eyebrow,
+  onOpenDashboard,
+  title,
+}: {
+  actionLabel: string;
+  description: string;
+  eyebrow: string;
+  onOpenDashboard: () => void;
+  title: string;
+}) {
   return (
     <main className="tenant-web__route-access-denied">
       <section className="tenant-web__route-access-denied-surface">
-        <span className="tenant-web__route-access-denied-eyebrow">
-          {t("tenant.navigation.platformStudio.deniedEyebrow")}
+        <span className="tenant-web__route-access-denied-icon" aria-hidden="true">
+          <ShieldKeyIcon />
         </span>
-        <h1>{t("tenant.navigation.platformStudio.deniedTitle")}</h1>
-        <p>{t("tenant.navigation.platformStudio.deniedDescription")}</p>
+        <span className="tenant-web__route-access-denied-eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
         <button
           className="tenant-web__route-access-denied-button"
           onClick={onOpenDashboard}
           type="button"
         >
-          {t("tenant.navigation.platformStudio.deniedAction")}
+          {actionLabel}
         </button>
       </section>
     </main>
@@ -158,6 +216,7 @@ export function PrivateApp({
   const [, setPlatformStudioHeaderVersion] = useState(0);
   const [favoriteShortcuts, setFavoriteShortcuts] = useState<TenantFavoriteShortcut[]>([]);
   const [runtimeNavigationItems, setRuntimeNavigationItems] = useState<TenantRuntimeNavigationItem[]>([]);
+  const [runtimeNavigationReady, setRuntimeNavigationReady] = useState(false);
   const [runtimeUtilityRailItems, setRuntimeUtilityRailItems] =
     useState<TenantRuntimeNavigationItem[] | null>(null);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
@@ -337,6 +396,7 @@ export function PrivateApp({
       const nextNavigation = await navigationClient.getRuntimeNavigation(accessToken);
       setRuntimeNavigationItems(nextNavigation.items);
       setRuntimeUtilityRailItems(nextNavigation.utilityRailConfigured ? nextNavigation.utilityRail : null);
+      setRuntimeNavigationReady(true);
     } catch (navigationError) {
       if (isUnauthorizedApiError(navigationError)) {
         void signOut();
@@ -366,6 +426,28 @@ export function PrivateApp({
 
   const platformStudioIsVisible = railUtilityIsVisible("rail.platform-studio", "platform-studio");
   const platformStudioRouteDenied = isPlatformStudioPath(location.pathname) && !platformStudioIsVisible;
+  const runtimeFormRouteTarget = useMemo(
+    () => getRuntimeFormRouteTarget(location.pathname),
+    [location.pathname],
+  );
+  const runtimeFormRouteDenied = runtimeNavigationReady &&
+    runtimeFormRouteTarget !== null &&
+    !runtimeNavigationIncludesFormView(runtimeNavigationItems, runtimeFormRouteTarget);
+  const routeAccessDenied = platformStudioRouteDenied
+    ? {
+      actionLabel: t("tenant.navigation.platformStudio.deniedAction"),
+      description: t("tenant.navigation.platformStudio.deniedDescription"),
+      eyebrow: t("tenant.navigation.platformStudio.deniedEyebrow"),
+      title: t("tenant.navigation.platformStudio.deniedTitle"),
+    }
+    : runtimeFormRouteDenied
+      ? {
+        actionLabel: t("tenant.navigation.runtime.forms.deniedAction"),
+        description: t("tenant.navigation.runtime.forms.deniedDescription"),
+        eyebrow: t("tenant.navigation.runtime.forms.deniedEyebrow"),
+        title: t("tenant.navigation.runtime.forms.deniedTitle"),
+      }
+      : null;
 
   function renderProfileMenuItems() {
     return (
@@ -619,8 +701,14 @@ export function PrivateApp({
         surfaceLabel={t("tenant.shell.surfaceLabel")}
           surfaceTone="workspace"
         >
-          {platformStudioRouteDenied ? (
-            <PlatformStudioAccessDenied onOpenDashboard={() => openDashboard()} />
+          {routeAccessDenied ? (
+            <RouteAccessDenied
+              actionLabel={routeAccessDenied.actionLabel}
+              description={routeAccessDenied.description}
+              eyebrow={routeAccessDenied.eyebrow}
+              onOpenDashboard={() => openDashboard()}
+              title={routeAccessDenied.title}
+            />
           ) : (
             <Outlet />
           )}

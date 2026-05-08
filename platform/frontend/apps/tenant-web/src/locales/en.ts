@@ -116,6 +116,10 @@ export const tenantEnglishMessages = {
       },
       runtime: {
         forms: {
+          deniedAction: "Open dashboard",
+          deniedDescription: "Your current navigation access does not include this form view. Ask an administrator to update the app menu access if you need it.",
+          deniedEyebrow: "Access restricted",
+          deniedTitle: "Form view is not available",
           headerMeta: "Forms",
           headerTitle: "Forms",
           viewHeaderMeta: "Forms / {{modelLabel}} / {{viewLabel}}",

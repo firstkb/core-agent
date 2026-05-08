@@ -72,6 +72,13 @@ const emptyAccessOptions: TenantNavigationAccessOptionsResponse = {
   users: [],
 };
 
+const accessRecipientCategories: NavigationBuilderAccessRecipientKind[] = [
+  "users",
+  "companies",
+  "companyTypes",
+  "jobtypes",
+];
+
 function mergeAccessOptionCache(
   cache: TenantNavigationAccessOptionsResponse,
   category: NavigationBuilderAccessRecipientKind,
@@ -214,6 +221,60 @@ export function NavigationBuilderPage() {
   ) => {
     setAccessOptionCache((cache) => mergeAccessOptionCache(cache, category, items));
   }, []);
+
+  useEffect(() => {
+    const access = activeTreePanel === "railbar"
+      ? selectedRailItem?.access
+      : selectedNode?.access;
+
+    if (!access) {
+      return undefined;
+    }
+
+    const missingRequests = accessRecipientCategories
+      .map((category) => {
+        const cachedIds = new Set(accessOptionCache[category].map((option) => option.id));
+        const ids = access[category].filter((id) => !cachedIds.has(id));
+
+        return {
+          category,
+          ids,
+        };
+      })
+      .filter((request) => request.ids.length > 0);
+
+    if (missingRequests.length === 0) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    for (const request of missingRequests) {
+      void loadAccessOptionPage({
+        category: request.category,
+        ids: request.ids,
+        page: 1,
+        pageSize: Math.min(100, Math.max(25, request.ids.length)),
+      }).then((response) => {
+        if (!cancelled) {
+          handleAccessOptionsLoaded(request.category, response.items);
+        }
+      }).catch(() => {
+        // Best-effort label hydration. The access dialog owns visible load errors.
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    accessOptionCache,
+    activeTreePanel,
+    handleAccessOptionsLoaded,
+    loadAccessOptionPage,
+    selectedNode,
+    selectedRailItem,
+  ]);
 
   useEffect(() => {
     let cancelled = false;

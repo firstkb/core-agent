@@ -18,6 +18,7 @@ import {
   isNavigationBuilderRailItemActive,
   navigationBuilderDashboardNodeId,
   navigationBuilderRailItems,
+  normalizeNavigationBuilderAccessPolicy,
   type NavigationBuilderAccessPolicy,
   type NavigationBuilderAccessMode,
   type NavigationBuilderChannel,
@@ -449,10 +450,13 @@ function encodeNodeType(node: NavigationBuilderNode, childNodes: ReadonlyArray<N
   }
 }
 
-function encodeNodeMeta(node: NavigationBuilderNode): NavigationBuilderNodeMeta {
+function encodeNodeMeta(
+  node: NavigationBuilderNode,
+  access: NavigationBuilderAccessPolicy,
+): NavigationBuilderNodeMeta {
   return {
-    accessMode: node.access.mode,
-    accessSummary: getNavigationBuilderAccessSummary(node.access),
+    accessMode: access.mode,
+    accessSummary: getNavigationBuilderAccessSummary(access),
     builderKind: node.kind,
     description: node.description,
     diagnostic: node.diagnostic,
@@ -477,6 +481,7 @@ function encodeNavigationNode(
   const target = nodeType === "menu_title" || nodeType === "menu_group"
     ? undefined
     : encodeTarget(node.target);
+  const access = normalizeNavigationBuilderAccessPolicy(node.access, node.accessMode);
 
   return {
     active: isNavigationBuilderNodeActive(node),
@@ -487,8 +492,8 @@ function encodeNavigationNode(
     icon: node.kind === "section" ? undefined : node.iconKey,
     id: node.id,
     label: node.label,
-    meta: encodeNodeMeta(node),
-    access: encodeNavigationAccessPayload(node.access),
+    meta: encodeNodeMeta(node, access),
+    access: encodeNavigationAccessPayload(access),
     target,
     type: nodeType,
   };
@@ -508,9 +513,11 @@ export function encodeNavigationBuilderDefinition(
 }
 
 function encodeNavigationRailItem(item: NavigationBuilderRailItem): TenantNavigationRailItem {
+  const access = normalizeNavigationBuilderAccessPolicy(item.access, item.accessMode);
+
   return {
     active: isNavigationBuilderRailItemActive(item),
-    access: encodeNavigationAccessPayload(item.access),
+    access: encodeNavigationAccessPayload(access),
     id: item.id,
     key: item.routeKey,
     label: item.label,

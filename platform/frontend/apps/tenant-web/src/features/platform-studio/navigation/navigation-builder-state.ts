@@ -244,6 +244,42 @@ export function createNavigationBuilderAccessPolicy(
   };
 }
 
+function isNavigationBuilderAccessMode(value: unknown): value is NavigationBuilderAccessMode {
+  return value === "inherit" ||
+    value === "all-authenticated" ||
+    value === "root-only" ||
+    value === "selected-only" ||
+    value === "everyone-except";
+}
+
+function normalizeNavigationBuilderAccessIds(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(value
+    .map((id) => typeof id === "string" || typeof id === "number" ? String(id).trim() : "")
+    .filter(Boolean))].sort();
+}
+
+export function normalizeNavigationBuilderAccessPolicy(
+  access: NavigationBuilderAccessPolicy | undefined,
+  fallbackMode: unknown = "inherit",
+): NavigationBuilderAccessPolicy {
+  const mode = isNavigationBuilderAccessMode(access?.mode)
+    ? access.mode
+    : isNavigationBuilderAccessMode(fallbackMode)
+      ? fallbackMode
+      : "inherit";
+
+  return createNavigationBuilderAccessPolicy(mode, {
+    companies: normalizeNavigationBuilderAccessIds(access?.companies),
+    companyTypes: normalizeNavigationBuilderAccessIds(access?.companyTypes),
+    jobtypes: normalizeNavigationBuilderAccessIds(access?.jobtypes),
+    users: normalizeNavigationBuilderAccessIds(access?.users),
+  });
+}
+
 export function getNavigationBuilderAccessSummary(
   access: NavigationBuilderAccessPolicy,
 ) {
@@ -320,7 +356,7 @@ export function cloneNavigationBuilderNodes(
 ): NavigationBuilderNode[] {
   return nodes.map((node) => ({
     ...node,
-    access: cloneNavigationBuilderAccessPolicy(node.access),
+    access: cloneNavigationBuilderAccessPolicy(node.access, node.accessMode),
     target: node.target ? { ...node.target } : undefined,
   }));
 }
@@ -330,20 +366,15 @@ export function cloneNavigationBuilderRailItems(
 ): NavigationBuilderRailItem[] {
   return railItems.map((item) => ({
     ...item,
-    access: cloneNavigationBuilderAccessPolicy(item.access),
+    access: cloneNavigationBuilderAccessPolicy(item.access, item.accessMode),
   }));
 }
 
 function cloneNavigationBuilderAccessPolicy(
-  access: NavigationBuilderAccessPolicy,
+  access: NavigationBuilderAccessPolicy | undefined,
+  fallbackMode: unknown = "inherit",
 ): NavigationBuilderAccessPolicy {
-  return {
-    companies: [...access.companies],
-    companyTypes: [...access.companyTypes],
-    jobtypes: [...access.jobtypes],
-    mode: access.mode,
-    users: [...access.users],
-  };
+  return normalizeNavigationBuilderAccessPolicy(access, fallbackMode);
 }
 
 export function isNavigationBuilderContainerNode(
@@ -870,7 +901,10 @@ export function countNavigationBuilderUnsavedChanges(
   let count = 0;
 
   for (const nodeId of nodeIds) {
-    if (JSON.stringify(draftById.get(nodeId)) !== JSON.stringify(savedById.get(nodeId))) {
+    if (
+      JSON.stringify(normalizeNavigationBuilderNodeForComparison(draftById.get(nodeId))) !==
+      JSON.stringify(normalizeNavigationBuilderNodeForComparison(savedById.get(nodeId)))
+    ) {
       count += 1;
     }
   }
@@ -879,10 +913,40 @@ export function countNavigationBuilderUnsavedChanges(
   const savedRailById = new Map(savedRailItems.map((item) => [item.id, item]));
   const railIds = new Set([...draftRailById.keys(), ...savedRailById.keys()]);
   for (const railId of railIds) {
-    if (JSON.stringify(draftRailById.get(railId)) !== JSON.stringify(savedRailById.get(railId))) {
+    if (
+      JSON.stringify(normalizeNavigationBuilderRailItemForComparison(draftRailById.get(railId))) !==
+      JSON.stringify(normalizeNavigationBuilderRailItemForComparison(savedRailById.get(railId)))
+    ) {
       count += 1;
     }
   }
 
   return count;
+}
+
+function normalizeNavigationBuilderNodeForComparison(
+  node: NavigationBuilderNode | undefined,
+) {
+  if (!node) {
+    return undefined;
+  }
+
+  return {
+    ...node,
+    access: normalizeNavigationBuilderAccessPolicy(node.access, node.accessMode),
+    target: node.target ? { ...node.target } : undefined,
+  };
+}
+
+function normalizeNavigationBuilderRailItemForComparison(
+  item: NavigationBuilderRailItem | undefined,
+) {
+  if (!item) {
+    return undefined;
+  }
+
+  return {
+    ...item,
+    access: normalizeNavigationBuilderAccessPolicy(item.access, item.accessMode),
+  };
 }

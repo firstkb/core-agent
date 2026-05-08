@@ -634,32 +634,15 @@ export function PrivateApp({
               </MenuContent>
             </Menu>
 
-            <Menu align="end">
-              <MenuTrigger>
-                <button
-                  aria-label={t("tenant.shell.aria.openNotifications")}
-                  className="workspace-shell__header-icon-button"
-                  type="button"
-                >
-                  <BellIcon />
-                  <span className="workspace-shell__header-icon-badge">
-                    {offlineSyncStatus.queuedActions}
-                  </span>
-                </button>
-              </MenuTrigger>
-              <MenuContent className="workspace-shell__header-menu">
-                <MenuLabel>{t("tenant.shell.menu.notifications")}</MenuLabel>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>
-                  {t("tenant.shell.menu.dashboardRefreshed")}
-                </MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("help")}>
-                  {t("tenant.shell.menu.loadingGuidance")}
-                </MenuItem>
-                <MenuItem onClick={() => setUtilityPanel("tasks")}>
-                  {t("tenant.shell.menu.operatorNotes", { count: offlineSyncStatus.queuedActions })}
-                </MenuItem>
-              </MenuContent>
-            </Menu>
+            <button
+              aria-label={t("tenant.shell.aria.notificationsComingSoon")}
+              className="workspace-shell__header-icon-button tenant-web__header-icon-button--disabled"
+              disabled
+              title={t("tenant.shell.menu.notificationsComingSoon")}
+              type="button"
+            >
+              <BellIcon />
+            </button>
           </div>
         }
         headerCenter={

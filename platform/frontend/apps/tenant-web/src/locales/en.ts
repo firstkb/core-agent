@@ -840,6 +840,7 @@ export const tenantEnglishMessages = {
       actionsLabel: "Workspace Actions",
       startNewLabel: "Quick Actions",
       aria: {
+        notificationsComingSoon: "Notifications coming soon",
         openNotifications: "Open notifications",
         openUserMenu: "Open user menu",
         openWorkspaceActions: "Open workspace actions",
@@ -854,6 +855,7 @@ export const tenantEnglishMessages = {
         formViewCreateFallback: "Form view",
         noCreateActions: "No forms available",
         notifications: "Notifications",
+        notificationsComingSoon: "Notifications coming soon",
         openDashboard: "Open dashboard",
         operatorNotes: "{{count}} operator notes still pinned",
         reviewFavorites: "Review favorites",

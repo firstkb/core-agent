@@ -240,6 +240,15 @@ a {
   color: #ffd5df;
 }
 
+.workspace-shell__header-icon-button.tenant-web__header-icon-button--disabled,
+.workspace-shell__header-icon-button.tenant-web__header-icon-button--disabled:hover {
+  border-color: color-mix(in srgb, var(--color-border-default) 66%, transparent);
+  background: color-mix(in srgb, var(--color-control-bg-disabled) 82%, var(--color-bg-canvas) 18%);
+  color: var(--color-control-disabled-text);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .tenant-web__utility-sheet {
   width: min(100%, 24rem);
   max-height: min(85dvh, 42rem);

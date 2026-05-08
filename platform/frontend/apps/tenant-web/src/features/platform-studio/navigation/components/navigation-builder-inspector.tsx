@@ -52,6 +52,7 @@ type NavigationBuilderInspectorProps = {
   onDeleteNode: (node: NavigationBuilderNode) => void;
   onNodeChange: (node: NavigationBuilderNode) => void;
   onRailItemChange: (railItem: NavigationBuilderRailItem) => void;
+  parentAccess?: NavigationBuilderAccessPolicy | null;
   railItem?: NavigationBuilderRailItem | null;
 };
 
@@ -126,6 +127,10 @@ function accessPolicyHasRecipients(access: NavigationBuilderAccessPolicy) {
     access.companies.length > 0 ||
     access.companyTypes.length > 0 ||
     access.jobtypes.length > 0;
+}
+
+function accessPolicyDefinesScope(access: NavigationBuilderAccessPolicy | null | undefined) {
+  return Boolean(access && access.mode !== "inherit" && access.mode !== "all-authenticated");
 }
 
 function getAccessRecipientOptions(
@@ -296,6 +301,7 @@ function AccessEditor({
   onChooseRecipients,
   options,
   optionsError,
+  parentAccess,
 }: {
   access: NavigationBuilderAccessPolicy;
   canManageRootAccess: boolean;
@@ -305,20 +311,33 @@ function AccessEditor({
   onChooseRecipients: (category: NavigationBuilderAccessRecipientKind) => void;
   options: TenantNavigationAccessOptionsResponse;
   optionsError: string | null;
+  parentAccess?: NavigationBuilderAccessPolicy | null;
 }) {
   const canEditStrategy = canEdit && (access.mode !== "root-only" || canManageRootAccess);
   const showsRule = access.mode === "selected-only" || access.mode === "everyone-except";
   const hasRecipients = accessPolicyHasRecipients(access);
-  const effectiveSummary = access.mode === "all-authenticated"
+  const localSummary = access.mode === "all-authenticated"
     ? "Uses app default access"
     : getNavigationBuilderAccessSummary(access);
-  const effectiveHint = access.mode === "selected-only"
+  const parentDefinesScope = accessPolicyDefinesScope(parentAccess);
+  const parentSummary = parentAccess ? getNavigationBuilderAccessSummary(parentAccess) : "";
+  const effectiveSummary = parentDefinesScope
+    ? accessPolicyDefinesScope(access)
+      ? "Restricted by parent + this item"
+      : "Restricted by parent"
+    : localSummary;
+  const localHint = access.mode === "selected-only"
     ? "Visible only when one direct user or audience rule branch matches."
     : access.mode === "everyone-except"
       ? "Visible unless one direct user or audience rule branch matches."
       : access.mode === "root-only"
         ? "Only root users can see this item. Only root users can change this strategy."
         : "Resolved from the nearest parent that defines access.";
+  const effectiveHint = parentDefinesScope
+    ? accessPolicyDefinesScope(access)
+      ? "Visible only when parent access and this item rule both match."
+      : `Parent: ${parentSummary}.`
+    : localHint;
   const emptyRecipientCopy = access.mode === "everyone-except"
     ? "Choose who should be excluded."
     : "Choose who can see this item.";
@@ -333,6 +352,16 @@ function AccessEditor({
           onChange={onAccessChange}
         />
       </ElementSection>
+
+      {parentDefinesScope ? (
+        <div className="tenant-web__navigation-builder-access-parent-notice">
+          <WarningTriangleIcon />
+          <span>
+            <strong>Restricted by parent</strong>
+            <small>{parentSummary}. Child access can only narrow this scope, not expand it.</small>
+          </span>
+        </div>
+      ) : null}
 
       {!showsRule ? (
         <div className="tenant-web__navigation-builder-access-effective">
@@ -749,6 +778,7 @@ export function NavigationBuilderInspector({
   onDeleteNode,
   onNodeChange,
   onRailItemChange,
+  parentAccess,
   railItem,
 }: NavigationBuilderInspectorProps) {
   if (railItem) {
@@ -829,6 +859,7 @@ export function NavigationBuilderInspector({
                     onChooseRecipients={onChooseAccessRecipients}
                     options={accessOptions}
                     optionsError={accessOptionsError}
+                    parentAccess={null}
                   />
                 </TabsPanel>
 
@@ -1010,6 +1041,7 @@ export function NavigationBuilderInspector({
                   onChooseRecipients={onChooseAccessRecipients}
                   options={accessOptions}
                   optionsError={accessOptionsError}
+                  parentAccess={parentAccess}
                 />
               </TabsPanel>
 

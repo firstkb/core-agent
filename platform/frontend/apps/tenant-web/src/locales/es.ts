@@ -115,6 +115,12 @@ export const tenantSpanishMessages = {
         note: "Resumen del espacio de trabajo",
       },
       runtime: {
+        appPages: {
+          deniedAction: "Abrir panel",
+          deniedDescription: "Tu acceso de navegacion actual no incluye esta pagina de la app. Pide a un administrador que actualice el acceso del menu de la app si necesitas abrirla.",
+          deniedEyebrow: "Acceso restringido",
+          deniedTitle: "La pagina de la app no esta disponible",
+        },
         forms: {
           deniedAction: "Abrir panel",
           deniedDescription: "Tu acceso de navegacion actual no incluye esta vista de formulario. Pide a un administrador que actualice el acceso del menu de la app si necesitas abrirla.",

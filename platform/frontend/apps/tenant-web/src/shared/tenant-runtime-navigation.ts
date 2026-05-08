@@ -61,6 +61,16 @@ export function findTenantRuntimeNavigationItemByPath(
   return match;
 }
 
+export function tenantRuntimeNavigationIncludesTargetPath(
+  items: ReadonlyArray<TenantRuntimeNavigationItem>,
+  targetType: string,
+  pathname: string,
+) {
+  const item = findTenantRuntimeNavigationItemByPath(items, pathname);
+
+  return Boolean(item && item.targetType === targetType);
+}
+
 export function getTenantRuntimeNavigationTarget(
   items: ReadonlyArray<TenantRuntimeNavigationItem>,
   itemId: string,

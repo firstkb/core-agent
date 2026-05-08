@@ -55,7 +55,10 @@ import {
 } from "../shared/navigation";
 import { TenantFavoritesRefreshProvider } from "../shared/tenant-favorites-refresh";
 import { TenantSidebarNavigation } from "../shared/tenant-sidebar-navigation";
-import { tenantRuntimeNavigationRefreshEvent } from "../shared/tenant-runtime-navigation";
+import {
+  tenantRuntimeNavigationIncludesTargetPath,
+  tenantRuntimeNavigationRefreshEvent,
+} from "../shared/tenant-runtime-navigation";
 import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
@@ -136,26 +139,14 @@ function getRuntimeFormRouteTarget(pathname: string): RuntimeFormRouteTarget | n
   return { modelId, viewId };
 }
 
-function runtimeFormRoutePath(target: RuntimeFormRouteTarget) {
-  return `/app/forms/${encodeURIComponent(target.modelId)}/views/${encodeURIComponent(target.viewId)}`;
-}
-
-function runtimeNavigationIncludesFormView(
-  items: ReadonlyArray<TenantRuntimeNavigationItem>,
-  target: RuntimeFormRouteTarget,
-): boolean {
-  const targetPath = runtimeFormRoutePath(target);
-
-  for (const item of items) {
-    if (item.targetType === "form_view" && item.path === targetPath) {
-      return true;
-    }
-    if (item.children.length > 0 && runtimeNavigationIncludesFormView(item.children, target)) {
-      return true;
-    }
+function isRuntimeAppPageRoute(pathname: string) {
+  const match = /^\/app\/pages\/([^/]+)(?:\/|$)/.exec(pathname);
+  if (!match) {
+    return false;
   }
 
-  return false;
+  const pageId = decodePathSegment(match[1] ?? "").trim();
+  return Boolean(pageId);
 }
 
 function RouteAccessDenied({
@@ -432,7 +423,14 @@ export function PrivateApp({
   );
   const runtimeFormRouteDenied = runtimeNavigationReady &&
     runtimeFormRouteTarget !== null &&
-    !runtimeNavigationIncludesFormView(runtimeNavigationItems, runtimeFormRouteTarget);
+    !tenantRuntimeNavigationIncludesTargetPath(runtimeNavigationItems, "form_view", location.pathname);
+  const isRuntimeAppPageRoutePath = useMemo(
+    () => isRuntimeAppPageRoute(location.pathname),
+    [location.pathname],
+  );
+  const runtimeAppPageRouteDenied = runtimeNavigationReady &&
+    isRuntimeAppPageRoutePath &&
+    !tenantRuntimeNavigationIncludesTargetPath(runtimeNavigationItems, "app_page", location.pathname);
   const routeAccessDenied = platformStudioRouteDenied
     ? {
       actionLabel: t("tenant.navigation.platformStudio.deniedAction"),
@@ -447,7 +445,14 @@ export function PrivateApp({
         eyebrow: t("tenant.navigation.runtime.forms.deniedEyebrow"),
         title: t("tenant.navigation.runtime.forms.deniedTitle"),
       }
-      : null;
+      : runtimeAppPageRouteDenied
+        ? {
+          actionLabel: t("tenant.navigation.runtime.appPages.deniedAction"),
+          description: t("tenant.navigation.runtime.appPages.deniedDescription"),
+          eyebrow: t("tenant.navigation.runtime.appPages.deniedEyebrow"),
+          title: t("tenant.navigation.runtime.appPages.deniedTitle"),
+        }
+        : null;
 
   function renderProfileMenuItems() {
     return (

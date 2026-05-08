@@ -139,6 +139,9 @@ export function NavigationBuilderPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const selectedNodeCandidate = findNavigationBuilderNode(draftNodes, selectedNodeId);
   const selectedNode = selectedNodeCandidate?.isLocked ? null : selectedNodeCandidate;
+  const selectedNodeParentAccess = selectedNode?.parentId
+    ? findNavigationBuilderNode(draftNodes, selectedNode.parentId)?.access ?? null
+    : null;
   const deleteNode = deleteNodeId
     ? findNavigationBuilderNode(draftNodes, deleteNodeId)
     : null;
@@ -625,6 +628,7 @@ export function NavigationBuilderPage() {
           onDeleteNode={(node) => setDeleteNodeId(node.id)}
           onNodeChange={handleSelectedNodeChange}
           onRailItemChange={handleSelectedRailItemChange}
+          parentAccess={activeTreePanel === "sidebar" ? selectedNodeParentAccess : null}
           canManageRootAccess={canManageRootAccess}
           railItem={activeTreePanel === "railbar" ? selectedRailItem : null}
         />

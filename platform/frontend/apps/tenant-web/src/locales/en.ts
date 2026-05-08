@@ -115,6 +115,12 @@ export const tenantEnglishMessages = {
         note: "Workspace overview",
       },
       runtime: {
+        appPages: {
+          deniedAction: "Open dashboard",
+          deniedDescription: "Your current navigation access does not include this app page. Ask an administrator to update the app menu access if you need it.",
+          deniedEyebrow: "Access restricted",
+          deniedTitle: "App page is not available",
+        },
         forms: {
           deniedAction: "Open dashboard",
           deniedDescription: "Your current navigation access does not include this form view. Ask an administrator to update the app menu access if you need it.",

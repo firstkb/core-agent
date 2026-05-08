@@ -9,6 +9,12 @@ Use this bridge when Maestro, Charlie, Mason, Scout, or Lens are doing
 frontend-heavy product work and official Build Web Apps capabilities are
 available in the current Codex environment.
 
+If the owner names `UI Quality Pack`, or the task only needs local UI quality
+discipline rather than official Build Web Apps capabilities, use
+`maestro/packs/ui-quality/PACK.md` first. It covers local state/accessibility
+checks, anti-generic UI rules, five-axis critique, and targeted P0/P1 fix
+passes without depending on the Build Web Apps plugin.
+
 Do not hard-code local plugin cache paths. Plugin cache hashes and installation
 locations may change between sessions. Discover active skills through the
 current Codex skill/tool surface first. If discovery is unavailable, use this
@@ -43,6 +49,20 @@ defaults:
   Supabase/Postgres schema/query/config work. Do not use it as a generic backend
   substitute for platform runtime contracts.
 
+## Local UI Quality Pack
+
+Use `maestro/packs/ui-quality/PACK.md` when:
+
+- the owner explicitly asks for UI Quality Pack;
+- the task is a normal visible product UI slice and local guidance is enough;
+- the work needs state coverage, accessibility, anti-AI-slop, visual critique,
+  or a targeted fix pass;
+- Build Web Apps would be heavier than the task or unavailable.
+
+Keep using official Build Web Apps when the task needs generated visual assets,
+new app/site composition, React/Next specialization, shadcn guidance, Stripe, or
+Supabase/Postgres guidance.
+
 ## Frontend Slice Review Checklist
 
 For visible frontend implementation or review, include the relevant subset:
@@ -66,5 +86,5 @@ For visible frontend implementation or review, include the relevant subset:
 ## Fallback Rule
 
 If official Build Web Apps skills are not available in the session, say so in
-evidence and run the repo-local checklist above. Do not block a normal product
-slice solely because the plugin is absent.
+evidence and run the UI Quality Pack plus the repo-local checklist above. Do
+not block a normal product slice solely because the plugin is absent.

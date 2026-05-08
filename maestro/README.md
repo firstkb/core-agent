@@ -89,6 +89,8 @@ maestro/
     release.md.tmpl
     closeout.md.tmpl
   examples/
+  packs/
+    ui-quality/
   artifact/
     active/
     archive/
@@ -104,6 +106,10 @@ For Maestro vNext, treat these as authoritative:
 4. `maestro/contracts/*.json`;
 5. `maestro/templates/*.tmpl`;
 6. `.codex/config.toml` and `.codex/agents/*` for available system agents.
+
+Optional packs under `maestro/packs/**` are lazy-read workflow accelerators,
+not source of truth over the runtime contract, product memory, UI Kit, source
+code, or owner decisions.
 
 Supporting docs under `maestro/docs/` explain the model, but
 `runtime-contract.md` is the shortest normative contract. Use

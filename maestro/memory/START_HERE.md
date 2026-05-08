@@ -2,7 +2,7 @@
 
 Status: active first-read memory
 Scope: compact routing for platform product agents
-Last updated: 2026-05-01
+Last updated: 2026-05-08
 
 ## Current Objective
 
@@ -81,6 +81,10 @@ first-read file.
 - Consider Build Web Apps for visible frontend work; use its relevant skills
   selectively when frontend-heavy design, React, or implementation quality
   would benefit.
+- Use `maestro/packs/ui-quality/PACK.md` when the owner names `UI Quality Pack`
+  or a visible UI task needs local state coverage, anti-generic UI checks,
+  five-axis critique, or a targeted P0/P1 fix pass without invoking Build Web
+  Apps.
 - Standard UI viewport matrix: desktop `1440x900`, mobile `390x844`; add
   tablet/narrow desktop `768x1024` when shell/sidebar/grid breakpoints matter.
 - Local Browser Use auth lives only in ignored `maestro/memory/local/browser-use-auth.md` when owner-provided.

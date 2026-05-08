@@ -79,6 +79,8 @@ the baseline confirms no broader product context is needed.
 
 Maestro chooses the workflow first. Plugins, MCP tools, browser tools, and
 Build-Web-Apps-style helpers are replaceable accelerators, not source of truth.
+Optional Maestro packs under `maestro/packs/**` follow the same rule: they are
+lazy-read workflow aids, not product memory, agent skills, or runtime law.
 
 Use repository-native stack, contracts, components, tests, and design
 conventions before plugin defaults. For UI or web-app work, Maestro should
@@ -92,6 +94,13 @@ Known Build Web Apps capabilities may include `frontend-app-builder`,
 `supabase-postgres-best-practices`. Maestro must consider Build Web Apps for
 visible frontend work, but use only the relevant capability and adapt it to the
 existing repository.
+
+For visible frontend work where local prompt discipline is enough, or when the
+owner explicitly says `UI Quality Pack`, read `maestro/packs/ui-quality/PACK.md`
+and then only the needed checklist or template. Use it for state coverage,
+anti-generic UI checks, five-axis critique, and targeted P0/P1 fix passes. Do
+not let it override UI Kit, frontend lane rules, product contracts, or owner
+decisions.
 
 For UI-visible work, Browser Use is the default structured in-Codex browser
 surface for local route smoke, interactions, DOM/log checks, screenshots, and

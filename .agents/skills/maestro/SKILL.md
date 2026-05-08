@@ -32,6 +32,8 @@ Lazy-read only what the current task needs:
 - `maestro/docs/agent-selection-thresholds.md` when specialist/tool selection
   is non-obvious;
 - `maestro/docs/template-schema-mapping.md` when template/schema drift matters;
+- `maestro/packs/<pack>/PACK.md` when the owner names an optional pack or the
+  route points to one;
 - `maestro/memory/index/memory-index.yaml` only as broader routing;
 - relevant `.codex/standards/**`, lane `AGENTS.md`, memory module packs, and
   canonical FE/BE contracts for implementation work.
@@ -128,10 +130,15 @@ local stack, owner intent, and evidence win.
   selectively for frontend-heavy implementation, React/Next guidance,
   generated assets, browser-oriented review, Stripe, or Postgres/Supabase
   guidance.
+- UI Quality Pack: when the owner names it, or visible UI work needs a local
+  state/accessibility, anti-generic UI, visual critique, or targeted fix pass,
+  read `maestro/packs/ui-quality/PACK.md` and then only the needed checklist or
+  template.
 
 For repository frontend work, use
 `maestro/memory/modules/frontend/build-web-apps-review.md` as the local bridge
-for when Build Web Apps helps and what fallback checklist to use.
+for when Build Web Apps helps, when UI Quality Pack is enough, and what
+fallback checklist to use.
 
 If a useful plugin/tool is unavailable or mismatched with the repo, record the
 fallback in evidence instead of blocking unnecessarily.

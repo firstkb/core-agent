@@ -28,6 +28,8 @@ Use the longer docs in `maestro/docs/` for rationale and edge cases.
   Do not recreate a local `maestro/archive/` instruction surface.
 - Do not recreate backend, frontend, local env, service, or dashboard surfaces.
 - Use `maestro/artifact/active/` and `maestro/artifact/archive/` only for compact native work records.
+- Use `maestro/packs/**` only for optional lazy-read operating packs. Packs do
+  not replace runtime contracts, memory, source code, or active agent skills.
 - Keep persisted Maestro docs, contracts, templates, and artifacts in English.
 - Keep contracts compact and enforceable. Prefer cross-field schema rules over prose-only gates.
 - Preserve old module artifacts; do not silently convert `artifacts/<module>/...` into vNext folders.

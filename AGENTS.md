@@ -31,6 +31,12 @@ Platform product memory:
 - `maestro/memory/` does not replace `.codex/`, `.agents/`, source code, or tracked canonical FE/BE docs when those surfaces own runtime behavior.
 - the former `platform/docs/ai/**` layer is fully retired and deleted; use `maestro/memory/durable/legacy-memory-import.md`, compact archive summaries, and git history for provenance.
 
+Optional Maestro packs:
+
+- `maestro/packs/**` contains lazy-read operating packs, not durable product memory and not active agent skills.
+- Packs help with specific workflows such as UI quality, but repository contracts, source code, UI Kit, memory routes, and owner decisions remain higher priority.
+- Raw local reference folders may inspire packs, but agents should use the tracked pack entrypoints and not depend on `reference-code/**` being present.
+
 ## AGENTS Responsibility Boundaries
 
 Keep each `AGENTS.md` file narrow to avoid duplicated policy and conflicting
@@ -88,6 +94,8 @@ Ordinary agent work should read only:
 - the relevant skill body under `.agents/skills/<skill>/SKILL.md`
 - relevant files under `.codex/contracts/<agent>/`, `.codex/templates/<agent>/`, and `.codex/standards/`
 - relevant `maestro/docs/**`, `maestro/contracts/**`, and `maestro/templates/**` files when the task explicitly targets Maestro vNext
+- relevant `maestro/packs/**` entrypoints only when the owner names a pack,
+  the route points to one, or a specific workflow needs it
 - `.codex/config.toml` and `.codex/agents/*` when the task depends on runtime wiring
 - for explicit legacy module-orchestrator continuation only, the exact target
   files under `artifacts/<module>/...` and

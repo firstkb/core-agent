@@ -100,6 +100,22 @@ routes:
       - maestro/memory/docs/frontend/doc-map.md
       - maestro/memory/docs/frontend/drift-report.md
 
+  ui_quality_pack:
+    triggers:
+      - UI Quality Pack
+      - ui-quality
+      - anti-AI-slop
+      - anti AI slop
+      - five-axis critique
+      - visual review rubric
+      - state coverage
+      - state/accessibility
+      - targeted UI fix pass
+      - UI critique
+      - visual critique
+    read:
+      - maestro/packs/ui-quality/PACK.md
+
   docs_rewrite:
     triggers:
       - docs rewrite

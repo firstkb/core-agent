@@ -26,9 +26,9 @@ import {
   getNavigationBuilderChildren,
   isNavigationBuilderContainerNode,
   isNavigationBuilderNodeActive,
-  navigationBuilderRailItems,
   type NavigationBuilderAddNodeKind,
   type NavigationBuilderNode,
+  type NavigationBuilderRailItem,
 } from "../navigation-builder-state";
 import {
   NavigationBuilderNodeIcon,
@@ -43,6 +43,7 @@ type NavigationBuilderTreePanelProps = {
   onReorderNode: (activeNodeId: string, overNodeId: string) => void;
   onSelectRailItem: (railItemId: string) => void;
   onSelectNode: (nodeId: string) => void;
+  railItems: ReadonlyArray<NavigationBuilderRailItem>;
   selectedRailItemId: string;
   selectedNodeId: string;
 };
@@ -413,14 +414,16 @@ function NavigationBuilderRootAddRow({
 
 function NavigationBuilderRailBarPanel({
   onSelectRailItem,
+  railItems,
   selectedRailItemId,
 }: {
   onSelectRailItem: (railItemId: string) => void;
+  railItems: ReadonlyArray<NavigationBuilderRailItem>;
   selectedRailItemId: string;
 }) {
   return (
     <div className="tenant-web__navigation-builder-rail-list">
-      {navigationBuilderRailItems.map((item) => (
+      {railItems.map((item) => (
         <button
           className={`tenant-web__navigation-builder-rail-row${item.id === selectedRailItemId ? " tenant-web__navigation-builder-rail-row--active" : ""}`}
           key={item.id}
@@ -461,6 +464,7 @@ export function NavigationBuilderTreePanel({
   onReorderNode,
   onSelectRailItem,
   onSelectNode,
+  railItems,
   selectedRailItemId,
   selectedNodeId,
 }: NavigationBuilderTreePanelProps) {
@@ -558,6 +562,7 @@ export function NavigationBuilderTreePanel({
             <TabsPanel value="railbar">
               <NavigationBuilderRailBarPanel
                 onSelectRailItem={onSelectRailItem}
+                railItems={railItems}
                 selectedRailItemId={selectedRailItemId}
               />
             </TabsPanel>

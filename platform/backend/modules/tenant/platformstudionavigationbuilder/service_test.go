@@ -11,7 +11,9 @@ import (
 )
 
 type memoryRepository struct {
-	record *ConfigRecord
+	optionPage *AccessOptionsPageResponse
+	record     *ConfigRecord
+	options    *AccessOptionsResponse
 }
 
 func (r *memoryRepository) GetConfig(_ context.Context, _ requestctx.TenantInfo, configKey string) (*ConfigRecord, error) {
@@ -23,7 +25,7 @@ func (r *memoryRepository) GetConfig(_ context.Context, _ requestctx.TenantInfo,
 	return &copy, nil
 }
 
-func (r *memoryRepository) SaveConfig(_ context.Context, _ requestctx.TenantInfo, record ConfigRecord, expectedVersion *int64) (*ConfigRecord, error) {
+func (r *memoryRepository) SaveConfig(_ context.Context, _ requestctx.TenantInfo, record ConfigRecord, _ NavigationDefinition, expectedVersion *int64) (*ConfigRecord, error) {
 	if r.record == nil {
 		if expectedVersion != nil && *expectedVersion != 0 {
 			return nil, ErrConflict
@@ -50,6 +52,35 @@ func (r *memoryRepository) SaveConfig(_ context.Context, _ requestctx.TenantInfo
 	r.record = &record
 	copy := *r.record
 	copy.DefinitionJSON = append([]byte(nil), r.record.DefinitionJSON...)
+	return &copy, nil
+}
+
+func (r *memoryRepository) ListAccessOptions(_ context.Context, _ requestctx.TenantInfo) (*AccessOptionsResponse, error) {
+	if r.options == nil {
+		return &AccessOptionsResponse{}, nil
+	}
+	copy := *r.options
+	copy.Users = append([]AccessRecipientOption(nil), r.options.Users...)
+	copy.Companies = append([]AccessRecipientOption(nil), r.options.Companies...)
+	copy.CompanyTypes = append([]AccessRecipientOption(nil), r.options.CompanyTypes...)
+	copy.JobTypes = append([]AccessRecipientOption(nil), r.options.JobTypes...)
+	return &copy, nil
+}
+
+func (r *memoryRepository) ListAccessOptionPage(_ context.Context, _ requestctx.TenantInfo, req AccessOptionsPageRequest) (*AccessOptionsPageResponse, error) {
+	if r.optionPage == nil {
+		return &AccessOptionsPageResponse{
+			Category: req.Category,
+			Items:    []AccessRecipientOption{},
+			Page:     req.Page,
+			PageSize: req.PageSize,
+		}, nil
+	}
+	copy := *r.optionPage
+	copy.Items = append([]AccessRecipientOption(nil), r.optionPage.Items...)
+	copy.Category = req.Category
+	copy.Page = req.Page
+	copy.PageSize = req.PageSize
 	return &copy, nil
 }
 
@@ -291,6 +322,66 @@ func TestSaveConfigRequiresTenantAndClaims(t *testing.T) {
 	_, err = service.SaveConfig(ctx, SaveConfigRequest{Definition: sampleDefinition()})
 	if !errors.Is(err, ErrTenantMissing) {
 		t.Fatalf("SaveConfig without tenant = %v, want ErrTenantMissing", err)
+	}
+}
+
+func TestLoadAccessOptionsRequiresTenantAndClaims(t *testing.T) {
+	service := NewService(&memoryRepository{})
+
+	_, err := service.LoadAccessOptions(context.Background())
+	if !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("LoadAccessOptions without claims = %v, want ErrUnauthorized", err)
+	}
+
+	ctx := requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{UserID: "user-1"})
+	_, err = service.LoadAccessOptions(ctx)
+	if !errors.Is(err, ErrTenantMissing) {
+		t.Fatalf("LoadAccessOptions without tenant = %v, want ErrTenantMissing", err)
+	}
+}
+
+func TestLoadAccessOptionsNormalizesNilCollections(t *testing.T) {
+	service := NewService(&memoryRepository{options: &AccessOptionsResponse{}})
+
+	out, err := service.LoadAccessOptions(navigationBuilderTestContext())
+	if err != nil {
+		t.Fatalf("LoadAccessOptions returned error: %v", err)
+	}
+	if out.Users == nil || out.Companies == nil || out.CompanyTypes == nil || out.JobTypes == nil {
+		t.Fatalf("access option collections should be normalized: %#v", out)
+	}
+}
+
+func TestLoadAccessOptionPageNormalizesRequest(t *testing.T) {
+	service := NewService(&memoryRepository{optionPage: &AccessOptionsPageResponse{
+		Items: []AccessRecipientOption{{ID: "42", Label: "Anna"}},
+		Total: 1,
+	}})
+
+	out, err := service.LoadAccessOptionPage(navigationBuilderTestContext(), AccessOptionsPageRequest{
+		Category: "company_type",
+		IDs:      []string{" gc ", "gc", ""},
+		Page:     -1,
+		PageSize: 1000,
+		Search:   "  General Contractor  ",
+	})
+	if err != nil {
+		t.Fatalf("LoadAccessOptionPage returned error: %v", err)
+	}
+	if out.Category != "companyTypes" {
+		t.Fatalf("category = %q, want companyTypes", out.Category)
+	}
+	if out.Page != 1 || out.PageSize != 100 {
+		t.Fatalf("page = %d pageSize = %d, want normalized 1/100", out.Page, out.PageSize)
+	}
+}
+
+func TestLoadAccessOptionPageRejectsUnknownCategory(t *testing.T) {
+	service := NewService(&memoryRepository{})
+
+	_, err := service.LoadAccessOptionPage(navigationBuilderTestContext(), AccessOptionsPageRequest{Category: "teams"})
+	if !errors.Is(err, ErrInvalidAccessOptions) {
+		t.Fatalf("LoadAccessOptionPage error = %v, want ErrInvalidAccessOptions", err)
 	}
 }
 

@@ -94,6 +94,9 @@ Current tenant runtime support tables include:
 - `ps_model`
 - `ps_view`
 - `ps_navigation_config`
+- `ps_navigation_runtime_item`
+- `ps_navigation_access_policy`
+- `ps_navigation_access_subject`
 
 Current Platform Studio runtime/static-model support is extended by tenant forward migrations after the baseline.
 

@@ -1,5 +1,7 @@
 import {
   Button,
+  Combobox,
+  type ComboboxOption,
   Dialog,
   DialogBody,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  Select,
 } from "@platform/ui-kit";
 import {
   useEffect,
@@ -119,6 +120,37 @@ function isValidExternalLinkUrl(value: string) {
   }
 }
 
+function getFormViewTargetIdentity(target: NavigationBuilderFormViewTarget) {
+  return getNavigationBuilderTargetIdentity({
+    kind: "form-view",
+    modelId: target.modelId,
+    routePath: target.routePath,
+    targetType: "form_builder_view",
+    viewId: target.viewId,
+  });
+}
+
+function getTargetUsageMap(
+  nodes: ReadonlyArray<NavigationBuilderNode>,
+  formViewTargets: ReadonlyArray<NavigationBuilderFormViewTarget>,
+) {
+  const usageMap = new Map<string, string>();
+
+  for (const node of nodes) {
+    const identity = getNavigationBuilderTargetIdentity(node.target);
+    if (!identity || usageMap.has(identity)) {
+      continue;
+    }
+
+    const path = getNavigationBuilderNodePath(nodes, node.id)
+      .map((entry) => getNavigationBuilderNodeLabel(entry, formViewTargets))
+      .join(" > ");
+    usageMap.set(identity, path || getNavigationBuilderNodeLabel(node, formViewTargets));
+  }
+
+  return usageMap;
+}
+
 export function NavigationBuilderAddDialog({
   formViewTargets,
   nodes,
@@ -143,6 +175,72 @@ export function NavigationBuilderAddDialog({
     () => navigationBuilderAppModules.find((appModule) => appModule.key === selectedTargetId) ?? null,
     [selectedTargetId],
   );
+  const targetUsageMap = useMemo(
+    () => getTargetUsageMap(nodes, formViewTargets),
+    [formViewTargets, nodes],
+  );
+  const formViewOptions = useMemo<ComboboxOption[]>(
+    () => formViewTargets.map((target) => {
+      const usedPath = targetUsageMap.get(getFormViewTargetIdentity(target));
+
+      return {
+        description: usedPath ? `Used in ${usedPath}` : target.description || target.modelLabel,
+        disabled: Boolean(usedPath),
+        label: target.label,
+        meta: usedPath ? "Used" : undefined,
+        searchText: `${target.label} ${target.modelLabel} ${target.viewLabel} ${target.description}`,
+        value: target.id,
+      };
+    }),
+    [formViewTargets, targetUsageMap],
+  );
+  const appPageOptions = useMemo<ComboboxOption[]>(
+    () => navigationBuilderAppPages.map((page) => {
+      const identity = getNavigationBuilderTargetIdentity({
+        kind: "app-page",
+        pageKey: page.key,
+        routePath: page.routePath,
+      });
+      const usedPath = targetUsageMap.get(identity);
+
+      return {
+        description: usedPath ? `Used in ${usedPath}` : page.description,
+        disabled: Boolean(usedPath),
+        label: page.label,
+        meta: usedPath ? "Used" : undefined,
+        searchText: `${page.label} ${page.description}`,
+        value: page.key,
+      };
+    }),
+    [targetUsageMap],
+  );
+  const appModuleOptions = useMemo<ComboboxOption[]>(
+    () => navigationBuilderAppModules.map((appModule) => {
+      const identity = getNavigationBuilderTargetIdentity({
+        disabled: true,
+        kind: "app-module",
+        moduleKey: appModule.key,
+      });
+      const usedPath = targetUsageMap.get(identity);
+
+      return {
+        description: usedPath ? `Used in ${usedPath}` : appModule.description,
+        disabled: true,
+        label: appModule.label,
+        meta: usedPath ? "Used" : "Later",
+        searchText: `${appModule.label} ${appModule.description}`,
+        value: appModule.key,
+      };
+    }),
+    [targetUsageMap],
+  );
+  const pickerOptions = request?.kind === "form-view"
+    ? formViewOptions
+    : request?.kind === "app-page"
+      ? appPageOptions
+      : request?.kind === "app-module"
+        ? appModuleOptions
+        : [];
 
   useEffect(() => {
     setCustomLabel("");
@@ -167,13 +265,7 @@ export function NavigationBuilderAddDialog({
     }
 
     if (request.kind === "form-view" && selectedFormViewTarget) {
-      return getNavigationBuilderTargetIdentity({
-        kind: "form-view",
-        modelId: selectedFormViewTarget.modelId,
-        routePath: selectedFormViewTarget.routePath,
-        targetType: "form_builder_view",
-        viewId: selectedFormViewTarget.viewId,
-      });
+      return getFormViewTargetIdentity(selectedFormViewTarget);
     }
 
     if (request.kind === "app-page" && selectedAppPage) {
@@ -314,38 +406,23 @@ export function NavigationBuilderAddDialog({
             ) : (
               <label className="tenant-web__navigation-builder-field">
                 <span>{copy.pickerLabel}</span>
-                <Select
+                <Combobox
                   disabled={request?.kind === "form-view" && formViewTargets.length === 0}
-                  onChange={(event) => handleTargetChange(event.target.value)}
-                  value={selectedTargetId}
-                >
-                  <option value="">
-                    {request?.kind === "form-view" && formViewTargets.length === 0
+                  emptyLabel="No matching targets"
+                  label={copy.pickerLabel}
+                  onValueChange={(value) => handleTargetChange(value ?? "")}
+                  options={pickerOptions}
+                  placeholder={
+                    request?.kind === "form-view" && formViewTargets.length === 0
                       ? "No Form Builder views loaded"
-                      : copy.placeholder}
-                  </option>
-                  {request?.kind === "form-view" ? (
-                    formViewTargets.map((target) => (
-                      <option key={target.id} value={target.id}>
-                        {target.label}
-                      </option>
-                    ))
-                  ) : null}
-                  {request?.kind === "app-page" ? (
-                    navigationBuilderAppPages.map((page) => (
-                      <option key={page.key} value={page.key}>
-                        {page.label}
-                      </option>
-                    ))
-                  ) : null}
-                  {request?.kind === "app-module" ? (
-                    navigationBuilderAppModules.map((appModule) => (
-                      <option key={appModule.key} value={appModule.key}>
-                        {appModule.label}
-                      </option>
-                    ))
-                  ) : null}
-                </Select>
+                      : copy.placeholder
+                  }
+                  searchInputAriaLabel={`Search ${copy.pickerLabel}`}
+                  searchPlaceholder={`Search ${copy.pickerLabel.toLowerCase()}`}
+                  selectionMode="single"
+                  triggerAriaLabel={copy.pickerLabel}
+                  value={selectedTargetId || null}
+                />
               </label>
             )}
 

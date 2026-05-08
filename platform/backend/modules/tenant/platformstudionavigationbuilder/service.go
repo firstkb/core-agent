@@ -13,15 +13,18 @@ import (
 )
 
 var (
-	ErrConflict          = errors.New("navigation builder version conflict")
-	ErrInvalidDefinition = errors.New("navigation builder invalid definition")
-	ErrTenantMissing     = errors.New("navigation builder tenant missing")
-	ErrUnauthorized      = errors.New("navigation builder unauthorized")
+	ErrInvalidAccessOptions = errors.New("navigation builder invalid access options request")
+	ErrConflict             = errors.New("navigation builder version conflict")
+	ErrInvalidDefinition    = errors.New("navigation builder invalid definition")
+	ErrTenantMissing        = errors.New("navigation builder tenant missing")
+	ErrUnauthorized         = errors.New("navigation builder unauthorized")
 )
 
 type Repository interface {
 	GetConfig(ctx context.Context, tenant requestctx.TenantInfo, configKey string) (*ConfigRecord, error)
-	SaveConfig(ctx context.Context, tenant requestctx.TenantInfo, record ConfigRecord, expectedVersion *int64) (*ConfigRecord, error)
+	ListAccessOptionPage(ctx context.Context, tenant requestctx.TenantInfo, req AccessOptionsPageRequest) (*AccessOptionsPageResponse, error)
+	ListAccessOptions(ctx context.Context, tenant requestctx.TenantInfo) (*AccessOptionsResponse, error)
+	SaveConfig(ctx context.Context, tenant requestctx.TenantInfo, record ConfigRecord, definition NavigationDefinition, expectedVersion *int64) (*ConfigRecord, error)
 }
 
 type Service struct {
@@ -88,6 +91,133 @@ func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigation
 	}, nil
 }
 
+func (s *Service) LoadAccessOptions(ctx context.Context) (*AccessOptionsResponse, error) {
+	tenant, _, err := requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	options, err := s.repo.ListAccessOptions(ctx, tenant)
+	if err != nil {
+		return nil, err
+	}
+	if options == nil {
+		return &AccessOptionsResponse{
+			Users:        []AccessRecipientOption{},
+			Companies:    []AccessRecipientOption{},
+			CompanyTypes: []AccessRecipientOption{},
+			JobTypes:     []AccessRecipientOption{},
+		}, nil
+	}
+	if options.Users == nil {
+		options.Users = []AccessRecipientOption{}
+	}
+	if options.Companies == nil {
+		options.Companies = []AccessRecipientOption{}
+	}
+	if options.CompanyTypes == nil {
+		options.CompanyTypes = []AccessRecipientOption{}
+	}
+	if options.JobTypes == nil {
+		options.JobTypes = []AccessRecipientOption{}
+	}
+	return options, nil
+}
+
+func (s *Service) LoadAccessOptionPage(ctx context.Context, req AccessOptionsPageRequest) (*AccessOptionsPageResponse, error) {
+	tenant, _, err := requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	normalized, err := normalizeAccessOptionsPageRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	page, err := s.repo.ListAccessOptionPage(ctx, tenant, normalized)
+	if err != nil {
+		return nil, err
+	}
+	if page == nil {
+		return &AccessOptionsPageResponse{
+			Category: normalized.Category,
+			Items:    []AccessRecipientOption{},
+			Page:     normalized.Page,
+			PageSize: normalized.PageSize,
+		}, nil
+	}
+	if page.Items == nil {
+		page.Items = []AccessRecipientOption{}
+	}
+	return page, nil
+}
+
+func normalizeAccessOptionsPageRequest(req AccessOptionsPageRequest) (AccessOptionsPageRequest, error) {
+	category := normalizeAccessOptionsCategory(req.Category)
+	if category == "" {
+		return AccessOptionsPageRequest{}, ErrInvalidAccessOptions
+	}
+
+	page := req.Page
+	if page < 1 {
+		page = 1
+	}
+
+	pageSize := req.PageSize
+	if pageSize < 1 {
+		pageSize = 50
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	search := strings.TrimSpace(req.Search)
+	if len(search) > 120 {
+		search = search[:120]
+	}
+
+	ids := make([]string, 0, len(req.IDs))
+	seenIDs := map[string]struct{}{}
+	for _, id := range req.IDs {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, ok := seenIDs[id]; ok {
+			continue
+		}
+		seenIDs[id] = struct{}{}
+		ids = append(ids, id)
+		if len(ids) >= 100 {
+			break
+		}
+	}
+
+	return AccessOptionsPageRequest{
+		Category: category,
+		IDs:      ids,
+		Page:     page,
+		PageSize: pageSize,
+		Search:   search,
+	}, nil
+}
+
+func normalizeAccessOptionsCategory(category string) string {
+	switch strings.TrimSpace(category) {
+	case "users", "user":
+		return "users"
+	case "companies", "company":
+		return "companies"
+	case "companyTypes", "company_types", "company-types", "companyType", "company_type", "company-type":
+		return "companyTypes"
+	case "jobtypes", "jobTypes", "job_types", "job-types", "jobtype", "jobType", "job_type", "job-type":
+		return "jobtypes"
+	default:
+		return ""
+	}
+}
+
 func (s *Service) SaveConfig(ctx context.Context, req SaveConfigRequest) (*SaveConfigResponse, error) {
 	tenant, claims, err := requireAuthoringContext(ctx)
 	if err != nil {
@@ -110,7 +240,7 @@ func (s *Service) SaveConfig(ctx context.Context, req SaveConfigRequest) (*SaveC
 		DefinitionJSON: payload,
 		UpdatedAt:      s.now(),
 		UpdatedBy:      strings.TrimSpace(claims.UserID),
-	}, req.ExpectedVersion)
+	}, definition, req.ExpectedVersion)
 	if err != nil {
 		return nil, err
 	}

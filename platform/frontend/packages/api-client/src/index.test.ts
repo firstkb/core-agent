@@ -345,6 +345,98 @@ describe("api-client tenant navigation", () => {
     );
   });
 
+  it("loads Navigation Builder access options", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          companies: [
+            { id: "108", label: "eSafety Systems", subtitle: "General Contractor" },
+          ],
+          companyTypes: [
+            { id: "7", label: "General Contractor", subtitle: "High risk" },
+          ],
+          jobtypes: [
+            { id: "5", label: "Foreman", subtitle: "Active" },
+          ],
+          users: [
+            { id: "42", label: "Anna K", subtitle: "anna@example.test · eSafety Systems" },
+          ],
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantNavigationClient("/tenant-api").loadAccessOptions("token");
+
+    expect(out.users[0]).toMatchObject({
+      id: "42",
+      label: "Anna K",
+    });
+    expect(out.companies[0].subtitle).toBe("General Contractor");
+    expect(out.companyTypes[0].label).toBe("General Contractor");
+    expect(out.jobtypes[0].label).toBe("Foreman");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/navigation/access-options",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("loads a paged Navigation Builder access option search result", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          category: "companies",
+          hasMore: true,
+          items: [
+            {
+              fields: {
+                email: "safety@example.test",
+                phone: "555-0100",
+                type: "General Contractor",
+              },
+              id: "108",
+              label: "eSafety Systems",
+              subtitle: "General Contractor",
+            },
+          ],
+          page: 2,
+          pageSize: 25,
+          total: 52,
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantNavigationClient("/tenant-api").loadAccessOptionPage("token", {
+      category: "companies",
+      ids: ["108"],
+      page: 2,
+      pageSize: 25,
+      search: "safety",
+    });
+
+    expect(out.items[0].fields?.phone).toBe("555-0100");
+    expect(out.hasMore).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/navigation/access-options/page?category=companies&search=safety&page=2&pageSize=25&ids=108",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
   it("loads runtime sidebar navigation from the tenant api", async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({
@@ -557,6 +649,70 @@ describe("api-client tenant form builder authoring", () => {
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
       "/tenant-api/app/platform-studio/forms/models",
+      expect.objectContaining({
+        headers: expect.any(Headers),
+        method: "GET",
+      }),
+    );
+  });
+
+  it("lists the form builder model catalog with views from the tenant api", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          items: [
+            {
+              canEditViewsOnly: false,
+              displayName: "Site Audit",
+              id: "site-audit",
+              isStructureLocked: false,
+              key: "site-audit",
+              modelStructureVersion: 3,
+              name: "Site Audit",
+              storageKey: "site_audit",
+              title: "Site Audit",
+              version: 4,
+              views: [
+                {
+                  displayName: "Default",
+                  id: "view-default",
+                  isActive: true,
+                  isDefault: true,
+                  isViewLocked: false,
+                  key: "default",
+                  kind: "form",
+                  lastAlignedModelStructureVersion: 3,
+                  modelId: "site-audit",
+                  name: "Default",
+                  title: "Default",
+                  version: 2,
+                },
+              ],
+            },
+          ],
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const out = await createTenantFormBuilderAuthoringClient("/tenant-api").listCatalog("token");
+
+    expect(out[0]).toMatchObject({
+      displayName: "Site Audit",
+      id: "site-audit",
+      views: [
+        expect.objectContaining({
+          id: "view-default",
+          modelId: "site-audit",
+        }),
+      ],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/platform-studio/forms/catalog",
       expect.objectContaining({
         headers: expect.any(Headers),
         method: "GET",

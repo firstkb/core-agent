@@ -28,6 +28,12 @@ Last compacted: 2026-05-06
   `PUT /app/platform-studio/navigation`, stores definitions in
   `ps_navigation_config`, enforces duplicate target validation, and uses
   optimistic `expectedVersion` checks.
+- Access authoring is active for app menu and utility rail items. Navigation
+  Builder writes canonical policy into `ps_navigation_config.definition_json`,
+  and backend `Save` synchronizes derived runtime/access tables in the same
+  transaction. Runtime sidebar filtering, utility rail visibility, and future
+  direct route/API guards still need the derived backend evaluator; they must
+  not rely on frontend-only checks or repeated ad hoc JSON parsing.
 - Runtime sidebar projection is active through `GET /app/navigation`. It reads
   the saved Navigation Builder definition, excludes inactive app menu entries,
   and projects Form View/App Page targets to tenant runtime routes. Tenant-web
@@ -68,8 +74,19 @@ Last compacted: 2026-05-06
   additions use the bottom root add row. Titles and final entries do not show
   `+` actions.
 - V1 has a separate left-panel `Utility rail` tab for static shell utilities such as
-  Platform Studio, Task Manager, Favorites, and Help Center. Rail access is
-  preview/mock only until backend enforcement exists.
+  Platform Studio, Task Manager, Favorites, and Help Center. Rail access uses
+  the same authoring model as app menu access but remains one-level.
+- V1 editable Access strategy exposes `Inherit from parent`, `Selected
+  recipients only`, and `Everyone except selected recipients`. `All
+  authenticated users` remains a persisted default/compatibility mode but is
+  not exposed as an editable child-item strategy because children cannot expand
+  a restricted parent. Recipient pickers use centered table dialogs with
+  server-side search and pagination for large users/company/jobtype lists.
+  Access source entities are current `users`, `company`, `companytype`, and
+  `jobtype`; matching is `users OR ((companies OR company types) AND job types)`.
+  Effective child access is bounded by parent access; children can narrow but
+  cannot expand beyond parent. External Link access controls only sidebar
+  visibility, not the external resource.
 - V1 navigation icons are configurable for every editable app menu item except
   `Menu title`. The icon picker starts with `None` so any item can render
   without an icon, and the dictionary includes inspection-oriented choices such

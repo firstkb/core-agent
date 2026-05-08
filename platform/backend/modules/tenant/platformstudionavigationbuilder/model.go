@@ -59,6 +59,37 @@ type NavigationRailItem struct {
 	Access json.RawMessage `json:"access,omitempty"`
 }
 
+type AccessRecipientOption struct {
+	ID       string            `json:"id"`
+	Label    string            `json:"label"`
+	Fields   map[string]string `json:"fields,omitempty"`
+	Subtitle string            `json:"subtitle,omitempty"`
+}
+
+type AccessOptionsResponse struct {
+	Users        []AccessRecipientOption `json:"users"`
+	Companies    []AccessRecipientOption `json:"companies"`
+	CompanyTypes []AccessRecipientOption `json:"companyTypes"`
+	JobTypes     []AccessRecipientOption `json:"jobtypes"`
+}
+
+type AccessOptionsPageRequest struct {
+	Category string
+	IDs      []string
+	Page     int
+	PageSize int
+	Search   string
+}
+
+type AccessOptionsPageResponse struct {
+	Category string                  `json:"category"`
+	HasMore  bool                    `json:"hasMore"`
+	Items    []AccessRecipientOption `json:"items"`
+	Page     int                     `json:"page"`
+	PageSize int                     `json:"pageSize"`
+	Total    int                     `json:"total"`
+}
+
 type ValidationMessage struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`

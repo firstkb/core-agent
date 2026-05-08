@@ -1,10 +1,13 @@
 import { type ReactNode } from "react";
 
+import type { TenantNavigationAccessOption, TenantNavigationAccessOptionsResponse } from "@platform/api-client";
 import {
   Button,
   Card,
   CardContent,
   Input,
+  RadioGroup,
+  RadioGroupItem,
   Select,
   Switch,
   Tabs,
@@ -17,12 +20,15 @@ import {
 import { PlatformStudioPanelScroll } from "../../platform-studio-panel-scroll";
 import {
   getNavigationBuilderNodeLabel,
+  getNavigationBuilderAccessSummary,
   getNavigationBuilderTargetLabel,
   isNavigationBuilderNodeActive,
   navigationBuilderIconOptions,
   navigationBuilderAppModules,
   navigationBuilderAppPages,
   setNavigationBuilderNodeActive,
+  type NavigationBuilderAccessPolicy,
+  type NavigationBuilderAccessRecipientKind,
   type NavigationBuilderAccessMode,
   type NavigationBuilderChannel,
   type NavigationBuilderFormViewTarget,
@@ -33,19 +39,37 @@ import {
 import { NavigationBuilderIconGlyph } from "./navigation-builder-icons";
 
 type NavigationBuilderInspectorProps = {
+  accessOptions: TenantNavigationAccessOptionsResponse;
+  accessOptionsError: string | null;
   formViewTargets: ReadonlyArray<NavigationBuilderFormViewTarget>;
+  isLoadingAccessOptions: boolean;
   node: NavigationBuilderNode | null;
-  onConfigureAccess: () => void;
+  onAccessChange: (access: NavigationBuilderAccessPolicy) => void;
+  onChooseAccessRecipients: (category: NavigationBuilderAccessRecipientKind) => void;
   onDeleteNode: (node: NavigationBuilderNode) => void;
   onNodeChange: (node: NavigationBuilderNode) => void;
   railItem?: NavigationBuilderRailItem | null;
 };
 
 const accessModeLabels: Record<NavigationBuilderAccessMode, string> = {
-  "all-authenticated": "All authenticated users",
-  "custom-preview": "Custom access preview",
-  inherit: "Inherits parent access",
+  "all-authenticated": "Inherits parent",
+  "everyone-except": "Everyone except",
+  inherit: "Inherits parent",
+  "selected-only": "Selected only",
 };
+
+const accessModeDescriptions: Record<NavigationBuilderAccessMode, string> = {
+  "all-authenticated": "Use the parent rule",
+  "everyone-except": "Hide selected recipients",
+  inherit: "Use the parent rule",
+  "selected-only": "Show selected recipients",
+};
+
+const editableAccessModes: NavigationBuilderAccessMode[] = [
+  "inherit",
+  "selected-only",
+  "everyone-except",
+];
 
 const statusLabels: Record<NavigationBuilderNodeStatus, string> = {
   broken: "Broken target",
@@ -80,6 +104,290 @@ function ElementSection({
         <span>{title}</span>
       </div>
       {children}
+    </div>
+  );
+}
+
+function accessPolicyHasRecipients(access: NavigationBuilderAccessPolicy) {
+  return access.users.length > 0 ||
+    access.companies.length > 0 ||
+    access.companyTypes.length > 0 ||
+    access.jobtypes.length > 0;
+}
+
+function getAccessRecipientOptions(
+  options: TenantNavigationAccessOptionsResponse,
+  category: NavigationBuilderAccessRecipientKind,
+) {
+  return options[category];
+}
+
+function formatSelectedAccessLabels(
+  ids: ReadonlyArray<string>,
+  options: ReadonlyArray<TenantNavigationAccessOption>,
+) {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const labelById = new Map(options.map((option) => [option.id, option.label]));
+  return ids.map((id) => labelById.get(id) ?? id);
+}
+
+function getAccessRecipientEmptyCopy(category: NavigationBuilderAccessRecipientKind) {
+  switch (category) {
+    case "companies":
+      return "Any company";
+    case "companyTypes":
+      return "Any company type";
+    case "jobtypes":
+      return "Any job type";
+    case "users":
+      return "No direct users";
+  }
+}
+
+function setAccessMode(
+  access: NavigationBuilderAccessPolicy,
+  mode: NavigationBuilderAccessMode,
+): NavigationBuilderAccessPolicy {
+  return {
+    ...access,
+    mode,
+  };
+}
+
+function getVisibleAccessMode(mode: NavigationBuilderAccessMode) {
+  return mode === "all-authenticated" ? "inherit" : mode;
+}
+
+function AccessModePicker({
+  access,
+  disabled,
+  onChange,
+}: {
+  access: NavigationBuilderAccessPolicy;
+  disabled: boolean;
+  onChange: (access: NavigationBuilderAccessPolicy) => void;
+}) {
+  const selectedMode = getVisibleAccessMode(access.mode);
+
+  return (
+    <RadioGroup aria-label="Access strategy" className="tenant-web__navigation-builder-access-mode-grid">
+      {editableAccessModes.map((mode) => (
+        <label
+          className={`tenant-web__navigation-builder-access-mode${disabled ? " tenant-web__navigation-builder-access-option--disabled" : ""}`}
+          key={mode}
+        >
+          <RadioGroupItem
+            checked={selectedMode === mode}
+            disabled={disabled}
+            name="navigation-access-mode"
+            onChange={() => onChange(setAccessMode(access, mode))}
+          />
+          <span>
+            <strong>{accessModeLabels[mode]}</strong>
+            <small>{accessModeDescriptions[mode]}</small>
+          </span>
+        </label>
+      ))}
+    </RadioGroup>
+  );
+}
+
+function AccessRecipientRuleRow({
+  access,
+  category,
+  disabled,
+  label,
+  onChoose,
+  options,
+}: {
+  access: NavigationBuilderAccessPolicy;
+  category: NavigationBuilderAccessRecipientKind;
+  disabled: boolean;
+  label: string;
+  onChoose: (category: NavigationBuilderAccessRecipientKind) => void;
+  options: TenantNavigationAccessOptionsResponse;
+}) {
+  const ids = access[category];
+  const labels = formatSelectedAccessLabels(ids, getAccessRecipientOptions(options, category));
+  const visibleLabels = labels.slice(0, 3);
+  const overflowCount = labels.length - visibleLabels.length;
+  const emptyCopy = getAccessRecipientEmptyCopy(category);
+  const countCopy = ids.length > 0 ? `${ids.length} selected` : null;
+
+  return (
+    <div className={`tenant-web__navigation-builder-access-rule-row tenant-web__navigation-builder-access-rule-row--${category}`}>
+      <div className="tenant-web__navigation-builder-access-rule-row-main">
+        <div className="tenant-web__navigation-builder-access-rule-row-heading">
+          <strong>{label}</strong>
+          {countCopy ? (
+            <span className="tenant-web__navigation-builder-access-count-chip">{countCopy}</span>
+          ) : null}
+        </div>
+        <div className="tenant-web__navigation-builder-access-chip-row">
+          {visibleLabels.length === 0 ? (
+            <span className="tenant-web__navigation-builder-access-empty-chip">{emptyCopy}</span>
+          ) : visibleLabels.map((value) => (
+            <span className="tenant-web__navigation-builder-access-chip" key={value}>{value}</span>
+          ))}
+          {overflowCount > 0 ? (
+            <span className="tenant-web__navigation-builder-access-chip">+{overflowCount}</span>
+          ) : null}
+        </div>
+      </div>
+      <Button
+        disabled={disabled}
+        onClick={() => onChoose(category)}
+        size="sm"
+        variant="outline"
+      >
+        Choose {label.toLowerCase()}
+      </Button>
+    </div>
+  );
+}
+
+function AccessRuleOperator({ children }: { children: ReactNode }) {
+  return (
+    <div className="tenant-web__navigation-builder-access-rule-operator">
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function AccessEditor({
+  access,
+  canEdit,
+  isLoadingOptions,
+  onAccessChange,
+  onChooseRecipients,
+  options,
+  optionsError,
+}: {
+  access: NavigationBuilderAccessPolicy;
+  canEdit: boolean;
+  isLoadingOptions: boolean;
+  onAccessChange: (access: NavigationBuilderAccessPolicy) => void;
+  onChooseRecipients: (category: NavigationBuilderAccessRecipientKind) => void;
+  options: TenantNavigationAccessOptionsResponse;
+  optionsError: string | null;
+}) {
+  const showsRule = access.mode === "selected-only" || access.mode === "everyone-except";
+  const hasRecipients = accessPolicyHasRecipients(access);
+  const effectiveSummary = access.mode === "all-authenticated"
+    ? "Uses app default access"
+    : getNavigationBuilderAccessSummary(access);
+  const effectiveHint = access.mode === "selected-only"
+    ? "Visible only when one direct user or audience rule branch matches."
+    : access.mode === "everyone-except"
+      ? "Visible unless one direct user or audience rule branch matches."
+      : "Resolved from the nearest parent that defines access.";
+  const emptyRecipientCopy = access.mode === "everyone-except"
+    ? "Choose who should be excluded."
+    : "Choose who can see this item.";
+
+  return (
+    <div className="tenant-web__navigation-builder-field-stack">
+      <ElementSection title="Strategy">
+        <AccessModePicker
+          access={access}
+          disabled={!canEdit}
+          onChange={onAccessChange}
+        />
+      </ElementSection>
+
+      {!showsRule ? (
+        <div className="tenant-web__navigation-builder-access-effective">
+          <span>Effective access</span>
+          <strong>{effectiveSummary}</strong>
+          <small>{effectiveHint}</small>
+        </div>
+      ) : null}
+
+      {showsRule ? (
+        <ElementSection title="Recipients">
+          <div className="tenant-web__navigation-builder-access-inline-summary">
+            <strong>{effectiveSummary}</strong>
+            <span>{effectiveHint}</span>
+          </div>
+          <div className="tenant-web__navigation-builder-access-expression" aria-label="Access recipient rule">
+            <span>Users</span>
+            <strong>OR</strong>
+            <span>(Companies OR company types) AND job types</span>
+          </div>
+          <div className="tenant-web__navigation-builder-access-rule-board">
+            <div className="tenant-web__navigation-builder-access-rule-card tenant-web__navigation-builder-access-rule-card--users">
+              <div className="tenant-web__navigation-builder-access-rule-card-header">
+                <strong>Direct users</strong>
+                <span>Specific people</span>
+              </div>
+              <AccessRecipientRuleRow
+                access={access}
+                category="users"
+                disabled={!canEdit || isLoadingOptions}
+                label="Users"
+                onChoose={onChooseRecipients}
+                options={options}
+              />
+            </div>
+
+            <AccessRuleOperator>OR</AccessRuleOperator>
+
+            <div className="tenant-web__navigation-builder-access-rule-card tenant-web__navigation-builder-access-rule-card--audience">
+              <div className="tenant-web__navigation-builder-access-rule-card-header">
+                <strong>Audience rule</strong>
+                <span>Company scope plus role</span>
+              </div>
+              <AccessRecipientRuleRow
+                access={access}
+                category="companies"
+                disabled={!canEdit || isLoadingOptions}
+                label="Companies"
+                onChoose={onChooseRecipients}
+                options={options}
+              />
+              <AccessRuleOperator>OR</AccessRuleOperator>
+              <AccessRecipientRuleRow
+                access={access}
+                category="companyTypes"
+                disabled={!canEdit || isLoadingOptions}
+                label="Company types"
+                onChoose={onChooseRecipients}
+                options={options}
+              />
+              <AccessRuleOperator>AND</AccessRuleOperator>
+              <AccessRecipientRuleRow
+                access={access}
+                category="jobtypes"
+                disabled={!canEdit || isLoadingOptions}
+                label="Job types"
+                onChoose={onChooseRecipients}
+                options={options}
+              />
+            </div>
+          </div>
+          {!hasRecipients ? (
+            <p className="tenant-web__navigation-builder-access-validation">
+              {emptyRecipientCopy}
+            </p>
+          ) : null}
+        </ElementSection>
+      ) : null}
+
+      {isLoadingOptions ? (
+        <p className="tenant-web__platform-studio-inline-help">
+          <span>Loading recipient lists...</span>
+        </p>
+      ) : null}
+
+      {optionsError ? (
+        <p className="tenant-web__platform-studio-inline-help">
+          <WarningTriangleIcon />
+          <span>{optionsError}</span>
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -394,9 +702,13 @@ function isPlannedAppModuleTarget(node: NavigationBuilderNode) {
 }
 
 export function NavigationBuilderInspector({
+  accessOptions,
+  accessOptionsError,
   formViewTargets,
+  isLoadingAccessOptions,
   node,
-  onConfigureAccess,
+  onAccessChange,
+  onChooseAccessRecipients,
   onDeleteNode,
   onNodeChange,
   railItem,
@@ -456,22 +768,15 @@ export function NavigationBuilderInspector({
                 </TabsPanel>
 
                 <TabsPanel value="access">
-                  <div className="tenant-web__navigation-builder-field-stack">
-                    <div className="tenant-web__navigation-builder-access-summary">
-                      <span>{accessModeLabels[railItem.accessMode]}</span>
-                      <strong>{railItem.accessSummary}</strong>
-                    </div>
-                    <Button
-                      onClick={onConfigureAccess}
-                      variant="outline"
-                    >
-                      Configure access preview
-                    </Button>
-                    <p className="tenant-web__platform-studio-inline-help">
-                      <WarningTriangleIcon />
-                      <span>Utility rail access is preview-only in V1. Backend route/API enforcement is not active yet.</span>
-                    </p>
-                  </div>
+                  <AccessEditor
+                    access={railItem.access}
+                    canEdit
+                    isLoadingOptions={isLoadingAccessOptions}
+                    onAccessChange={onAccessChange}
+                    onChooseRecipients={onChooseAccessRecipients}
+                    options={accessOptions}
+                    optionsError={accessOptionsError}
+                  />
                 </TabsPanel>
 
               </div>
@@ -643,23 +948,15 @@ export function NavigationBuilderInspector({
               </TabsPanel>
 
               <TabsPanel value="access">
-                <div className="tenant-web__navigation-builder-field-stack">
-                  <div className="tenant-web__navigation-builder-access-summary">
-                    <span>{accessModeLabels[node.accessMode]}</span>
-                    <strong>{node.accessSummary}</strong>
-                  </div>
-                  <Button
-                    disabled={!canEditAccess}
-                    onClick={onConfigureAccess}
-                    variant="outline"
-                  >
-                    Configure access preview
-                  </Button>
-                  <p className="tenant-web__platform-studio-inline-help">
-                    <WarningTriangleIcon />
-                    <span>Access is preview-only in V1. Backend route/API enforcement is not active yet.</span>
-                  </p>
-                </div>
+                <AccessEditor
+                  access={node.access}
+                  canEdit={canEditAccess}
+                  isLoadingOptions={isLoadingAccessOptions}
+                  onAccessChange={onAccessChange}
+                  onChooseRecipients={onChooseAccessRecipients}
+                  options={accessOptions}
+                  optionsError={accessOptionsError}
+                />
               </TabsPanel>
 
             </div>

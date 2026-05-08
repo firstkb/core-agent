@@ -22,7 +22,12 @@ Runtime composition:
 Tenant schema:
 
 - `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
+- `platform/backend/migrations/postgres/tenant/011_platform_studio_navigation_access_runtime.sql`
+- `platform/backend/migrations/postgres/tenant/012_platform_studio_navigation_access_company_type.sql`
 - `ps_navigation_config`
+- `ps_navigation_runtime_item`
+- `ps_navigation_access_policy`
+- `ps_navigation_access_subject`
 
 ## Current API
 
@@ -34,6 +39,11 @@ Authoring routes:
 Runtime route:
 
 - `GET /app/navigation`
+
+Access authoring lookup route:
+
+- `GET /app/platform-studio/navigation/access-options`
+- `GET /app/platform-studio/navigation/access-options/page?category=users|companies|companyTypes|jobtypes&search=&page=&pageSize=&ids=...`
 
 All routes use the tenant secure route baseline. Tenant and user identity come
 from trusted request context, not request payload fields.
@@ -58,6 +68,19 @@ Columns:
 
 The API uses optimistic versioning. `expectedVersion` may be provided on save;
 when it does not match the stored version, the service returns a conflict.
+
+On each successful `Save`, backend synchronizes derived runtime/access tables in
+the same transaction:
+
+- `ps_navigation_runtime_item`: flattened app menu and utility rail items with
+  parent id, type, target columns, target path/url, active state, order, depth,
+  and breadcrumb JSON.
+- `ps_navigation_access_policy`: one access mode row per runtime item.
+- `ps_navigation_access_subject`: unified recipient rows for `user`, `company`,
+  `company_type`, and `jobtype` subjects.
+
+The derived rows are fully rebuilt from `definition_json`; they are not editable
+state and must not drift into a second source of truth.
 
 ## Definition Contract
 
@@ -95,8 +118,29 @@ Validation owns:
 - duplicate target prevention across the app menu;
 - utility rail id/key/label presence and duplicate key prevention.
 
-Access is not enforced by this first slice. Any access payload remains inert
-configuration data until a later accepted ACL contract lands.
+Access is not enforced by the current runtime slice. Authoring is active:
+`ps_navigation_config.definition_json` remains the source of truth for access
+policy, `GET /app/platform-studio/navigation/access-options` remains a
+compatibility bulk lookup, the paged `/access-options/page` lookup is the
+preferred UI picker API for large recipient sets, and backend `Save`
+synchronizes derived runtime/access tables for the future evaluator. Runtime
+`/app/navigation`, utility rail visibility, and future direct Form View/App Page
+route/API guards should use one backend evaluator over those derived rows.
+
+Supported persisted access modes:
+
+- inherit from parent;
+- all authenticated users, retained as default/compatibility mode but not
+  exposed as an editable V1 child-item strategy;
+- selected recipients only;
+- everyone except selected recipients.
+
+Planned recipient sources are current tenant `users`, `company`, `companytype`,
+and `jobtype`. Matching semantics are `users OR ((companies OR company types)
+AND job types)`, where an empty dimension means "any" inside that branch.
+Parent access always bounds child access; a child may narrow access but must not
+expand beyond parent access. External Link access controls only navigation
+visibility, not the external destination.
 
 ## Runtime Projection
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
 )
@@ -18,6 +20,22 @@ func NewHandler(service *Service) *Handler {
 
 func (h *Handler) LoadConfig(ctx context.Context, _ *http.Request, _ struct{}) (*LoadConfigResponse, error) {
 	out, err := h.service.LoadConfig(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadAccessOptions(ctx context.Context, _ *http.Request, _ struct{}) (*AccessOptionsResponse, error) {
+	out, err := h.service.LoadAccessOptions(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) LoadAccessOptionPage(ctx context.Context, r *http.Request, _ struct{}) (*AccessOptionsPageResponse, error) {
+	out, err := h.service.LoadAccessOptionPage(ctx, parseAccessOptionsPageRequest(r))
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -40,12 +58,46 @@ func (h *Handler) LoadRuntimeNavigation(ctx context.Context, _ *http.Request, _ 
 	return out, nil
 }
 
+func parseAccessOptionsPageRequest(r *http.Request) AccessOptionsPageRequest {
+	query := r.URL.Query()
+	return AccessOptionsPageRequest{
+		Category: strings.TrimSpace(query.Get("category")),
+		IDs:      parseAccessOptionsIDs(query["ids"]),
+		Page:     parsePositiveInt(query.Get("page")),
+		PageSize: parsePositiveInt(query.Get("pageSize")),
+		Search:   strings.TrimSpace(query.Get("search")),
+	}
+}
+
+func parseAccessOptionsIDs(values []string) []string {
+	ids := []string{}
+	for _, value := range values {
+		for _, part := range strings.Split(value, ",") {
+			id := strings.TrimSpace(part)
+			if id != "" {
+				ids = append(ids, id)
+			}
+		}
+	}
+	return ids
+}
+
+func parsePositiveInt(value string) int {
+	parsed, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil || parsed < 1 {
+		return 0
+	}
+	return parsed
+}
+
 func mapError(err error) *apperr.AppError {
 	switch {
 	case errors.Is(err, ErrUnauthorized):
 		return apperr.New("NAVIGATION_BUILDER_UNAUTHORIZED", http.StatusUnauthorized, "unauthorized")
 	case errors.Is(err, ErrTenantMissing):
 		return apperr.New("NAVIGATION_BUILDER_TENANT_MISSING", http.StatusForbidden, "tenant context missing")
+	case errors.Is(err, ErrInvalidAccessOptions):
+		return apperr.New("NAVIGATION_BUILDER_ACCESS_OPTIONS_INVALID", http.StatusBadRequest, "invalid access options request")
 	case errors.Is(err, ErrInvalidDefinition):
 		return apperr.New("NAVIGATION_BUILDER_INVALID", http.StatusBadRequest, "invalid navigation definition")
 	case errors.Is(err, ErrConflict):

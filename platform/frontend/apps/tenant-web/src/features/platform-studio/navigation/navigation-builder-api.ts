@@ -8,11 +8,16 @@ import type {
 
 import {
   cloneNavigationBuilderNodes,
+  cloneNavigationBuilderRailItems,
   createInitialNavigationBuilderNodes,
+  createNavigationBuilderAccessPolicy,
+  getNavigationBuilderAccessSummary,
   getNavigationBuilderChildren,
   getNavigationBuilderTargetRoute,
   isNavigationBuilderNodeActive,
   navigationBuilderDashboardNodeId,
+  navigationBuilderRailItems,
+  type NavigationBuilderAccessPolicy,
   type NavigationBuilderAccessMode,
   type NavigationBuilderChannel,
   type NavigationBuilderNode,
@@ -40,6 +45,14 @@ type NavigationBuilderNodeMeta = {
   };
 };
 
+type TenantNavigationAccessPayload = {
+  companies: string[];
+  companyTypes: string[];
+  jobtypes: string[];
+  mode: "all_authenticated" | "everyone_except" | "inherit" | "selected_only";
+  users: string[];
+};
+
 type DecodeOptions = {
   seedWhenEmpty?: boolean;
 };
@@ -53,9 +66,87 @@ function readString(value: unknown) {
 }
 
 function readAccessMode(value: unknown): NavigationBuilderAccessMode | undefined {
-  return value === "inherit" || value === "all-authenticated" || value === "custom-preview"
+  return value === "inherit" ||
+    value === "all-authenticated" ||
+    value === "selected-only" ||
+    value === "everyone-except"
     ? value
     : undefined;
+}
+
+function readAccessModeFromApi(value: unknown): NavigationBuilderAccessMode | undefined {
+  switch (value) {
+    case "inherit":
+      return "inherit";
+    case "all_authenticated":
+    case "all-authenticated":
+      return "all-authenticated";
+    case "selected_only":
+    case "selected-only":
+      return "selected-only";
+    case "everyone_except":
+    case "everyone-except":
+      return "everyone-except";
+    default:
+      return undefined;
+  }
+}
+
+function readAccessSubjectIds(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [...new Set(value
+    .map((entry) => {
+      if (typeof entry === "string" || typeof entry === "number") {
+        return String(entry).trim();
+      }
+      return "";
+    })
+    .filter(Boolean))].sort();
+}
+
+function readNavigationAccessPayload(
+  rawAccess: unknown,
+  meta: NavigationBuilderNodeMeta = {},
+): NavigationBuilderAccessPolicy {
+  if (isRecord(rawAccess)) {
+    return createNavigationBuilderAccessPolicy(
+      readAccessModeFromApi(rawAccess.mode) ?? readAccessMode(rawAccess.accessMode) ?? meta.accessMode ?? "inherit",
+      {
+        companies: readAccessSubjectIds(rawAccess.companies ?? rawAccess.companyIds),
+        companyTypes: readAccessSubjectIds(rawAccess.companyTypes ?? rawAccess.companyTypeIds),
+        jobtypes: readAccessSubjectIds(rawAccess.jobtypes ?? rawAccess.jobTypeIds ?? rawAccess.jobtypeIds),
+        users: readAccessSubjectIds(rawAccess.users ?? rawAccess.userIds),
+      },
+    );
+  }
+
+  return createNavigationBuilderAccessPolicy(meta.accessMode ?? "inherit");
+}
+
+function encodeNavigationAccessPayload(access: NavigationBuilderAccessPolicy): TenantNavigationAccessPayload {
+  return {
+    companies: [...access.companies],
+    companyTypes: [...access.companyTypes],
+    jobtypes: [...access.jobtypes],
+    mode: encodeNavigationAccessMode(access.mode),
+    users: [...access.users],
+  };
+}
+
+function encodeNavigationAccessMode(mode: NavigationBuilderAccessMode): TenantNavigationAccessPayload["mode"] {
+  switch (mode) {
+    case "all-authenticated":
+      return "all_authenticated";
+    case "selected-only":
+      return "selected_only";
+    case "everyone-except":
+      return "everyone_except";
+    case "inherit":
+      return "inherit";
+  }
 }
 
 function readChannel(value: unknown): NavigationBuilderChannel {
@@ -207,9 +298,11 @@ function decodeNavigationNode(
   const meta = readNodeMeta(source);
   const target = decodeTarget(source, meta);
   const kind = decodeNodeKind(source, meta);
+  const access = readNavigationAccessPayload(source.access, meta);
   const node: NavigationBuilderNode = {
-    accessMode: meta.accessMode ?? "inherit",
-    accessSummary: meta.accessSummary ?? "Inherits parent access",
+    access,
+    accessMode: access.mode,
+    accessSummary: getNavigationBuilderAccessSummary(access),
     channel: readChannel(source.channel),
     description: meta.description,
     diagnostic: meta.diagnostic,
@@ -250,6 +343,41 @@ export function decodeNavigationBuilderDefinition(
   return dashboardNode
     ? [dashboardNode, ...decodedNodes]
     : decodedNodes;
+}
+
+export function decodeNavigationBuilderRailItems(
+  definition: TenantNavigationDefinition,
+  options: DecodeOptions = {},
+): NavigationBuilderRailItem[] {
+  if (definition.utilityRail.length === 0 && options.seedWhenEmpty) {
+    return cloneNavigationBuilderRailItems(navigationBuilderRailItems);
+  }
+
+  const fallbackById = new Map(navigationBuilderRailItems.map((item) => [item.id, item]));
+  return definition.utilityRail.map((source) => {
+    const fallback = fallbackById.get(source.id);
+    const sourceAccess = readNavigationAccessPayload(
+      source.access,
+      fallback ? { accessMode: fallback.accessMode, accessSummary: fallback.accessSummary } : {},
+    );
+    const access = source.access ? sourceAccess : fallback?.access ?? sourceAccess;
+
+    return {
+      access,
+      accessMode: access.mode,
+      accessSummary: getNavigationBuilderAccessSummary(access),
+      channel: fallback?.channel ?? "web",
+      description: fallback?.description ?? "",
+      id: source.id,
+      label: source.label,
+      routeKey: source.key,
+      status: source.active === false
+        ? "hidden"
+        : access.mode === "inherit" || access.mode === "all-authenticated"
+          ? "visible"
+          : "restricted",
+    };
+  });
 }
 
 function encodeTarget(target: NavigationBuilderTarget | undefined): TenantNavigationTarget | undefined {
@@ -315,8 +443,8 @@ function encodeNodeType(node: NavigationBuilderNode, childNodes: ReadonlyArray<N
 
 function encodeNodeMeta(node: NavigationBuilderNode): NavigationBuilderNodeMeta {
   return {
-    accessMode: node.accessMode,
-    accessSummary: node.accessSummary,
+    accessMode: node.access.mode,
+    accessSummary: getNavigationBuilderAccessSummary(node.access),
     builderKind: node.kind,
     description: node.description,
     diagnostic: node.diagnostic,
@@ -352,6 +480,7 @@ function encodeNavigationNode(
     id: node.id,
     label: node.label,
     meta: encodeNodeMeta(node),
+    access: encodeNavigationAccessPayload(node.access),
     target,
     type: nodeType,
   };
@@ -373,13 +502,7 @@ export function encodeNavigationBuilderDefinition(
 function encodeNavigationRailItem(item: NavigationBuilderRailItem): TenantNavigationRailItem {
   return {
     active: item.status !== "hidden",
-    access: {
-      accessMode: item.accessMode,
-      accessSummary: item.accessSummary,
-      channel: item.channel,
-      description: item.description,
-      status: item.status,
-    },
+    access: encodeNavigationAccessPayload(item.access),
     id: item.id,
     key: item.routeKey,
     label: item.label,

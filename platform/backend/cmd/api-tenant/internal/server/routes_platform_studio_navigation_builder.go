@@ -58,6 +58,48 @@ func (srv *Server) registerPlatformStudioNavigationBuilderRoutes(b *router.Build
 	)
 
 	register(
+		"NAVIGATION_BUILDER_ACCESS_OPTIONS_GET",
+		http.MethodGet,
+		"/app/platform-studio/navigation/access-options",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*navigationbuilder.AccessOptionsResponse, error) {
+			info, err := srv.platformStudioNavigationBuilderHTTP.LoadAccessOptions(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(
+					srv.logger,
+					ctx,
+					"NAVIGATION_BUILDER_ACCESS_OPTIONS_GET",
+					http.StatusInternalServerError,
+					"cannot load navigation builder access options",
+					err,
+					srv.FieldsForLog(ctx, r, nil)...,
+				)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
+		"NAVIGATION_BUILDER_ACCESS_OPTIONS_PAGE_GET",
+		http.MethodGet,
+		"/app/platform-studio/navigation/access-options/page",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*navigationbuilder.AccessOptionsPageResponse, error) {
+			info, err := srv.platformStudioNavigationBuilderHTTP.LoadAccessOptionPage(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(
+					srv.logger,
+					ctx,
+					"NAVIGATION_BUILDER_ACCESS_OPTIONS_PAGE_GET",
+					http.StatusInternalServerError,
+					"cannot load navigation builder access option page",
+					err,
+					srv.FieldsForLog(ctx, r, nil)...,
+				)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
 		"NAVIGATION_BUILDER_CONFIG_SAVE",
 		http.MethodPut,
 		"/app/platform-studio/navigation",

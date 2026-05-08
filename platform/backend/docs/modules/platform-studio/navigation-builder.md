@@ -34,6 +34,8 @@ Tenant module surface:
 Tenant schema surfaces:
 
 - `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
+- `platform/backend/migrations/postgres/tenant/011_platform_studio_navigation_access_runtime.sql`
+- `platform/backend/migrations/postgres/tenant/012_platform_studio_navigation_access_company_type.sql`
 - `platform/backend/bundle/tenant_schema_full.sql`
 
 ## Current Module Responsibility
@@ -41,7 +43,10 @@ Tenant schema surfaces:
 `platformstudionavigationbuilder` owns:
 
 - Navigation Builder authoring transport
+- access recipient lookup transport for current users, companies, company
+  types, and job types, including paged/search lookup for large picker dialogs
 - saved navigation definition persistence
+- derived runtime/access table synchronization on save
 - optimistic version checks
 - definition validation
 - duplicate target prevention
@@ -51,7 +56,7 @@ It does not own:
 
 - Form Builder model/view authoring
 - Form Builder runtime record behavior
-- backend ACL/grant enforcement in the first slice
+- backend ACL/grant enforcement in the current runtime slice
 - Business Tree page data
 - frontend-only editor state
 
@@ -69,6 +74,7 @@ Service orchestration:
 Persistence:
 
 - `repository.go`
+- `derived.go`
 
 Shared shapes:
 

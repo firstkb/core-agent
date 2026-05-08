@@ -224,11 +224,11 @@ builder node and root add affordance; production builder state must not seed
 mock app menu entries.
 Dashboard is not selectable for editing in the app menu tree. App Module remains
 a disabled future add choice until concrete app module runtime routes exist.
-Rail utilities such as Platform Studio, Task
-Manager, Favorites, and Help Center are shown in a separate Navigation Builder
-RailBar editor tab, but access is preview/mock only until real backend
-enforcement exists. Navigation Builder should distinguish app page targets from
-broader product module targets.
+Rail utilities such as Platform Studio, Task Manager, Favorites, and Help Center
+are shown in a separate Navigation Builder RailBar editor tab. Rail access is
+authored and saved through the same inline Access strategy/rule composer as app
+menu items, but runtime rail enforcement remains planned. Navigation Builder
+should distinguish app page targets from broader product module targets.
 
 ## Platform Studio Ownership
 

@@ -10,6 +10,10 @@ import {
   createTenantNavigationClient,
   isUnauthorizedApiError,
   requestWithUnauthorizedRetry,
+  type TenantNavigationAccessOption,
+  type TenantNavigationAccessOptionPageRequest,
+  type TenantNavigationAccessOptionPageResponse,
+  type TenantNavigationAccessOptionsResponse,
 } from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 import {
@@ -21,7 +25,7 @@ import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-co
 import { tenantRuntimeNavigationRefreshEvent } from "../../../../shared/tenant-runtime-navigation";
 import { useFormBuilderAuthoring } from "../../forms/forms-authoring-context";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
-import { NavigationBuilderAccessSheet } from "../components/navigation-builder-access-sheet";
+import { NavigationBuilderAccessDialog } from "../components/navigation-builder-access-dialog";
 import {
   NavigationBuilderAddDialog,
   type NavigationBuilderAddTargetResult,
@@ -36,24 +40,51 @@ import {
 import {
   buildNavigationBuilderFormViewTargets,
   cloneNavigationBuilderNodes,
+  cloneNavigationBuilderRailItems,
   countNavigationBuilderUnsavedChanges,
   createInitialNavigationBuilderNodes,
   createNavigationBuilderNode,
   findNavigationBuilderNode,
+  getNavigationBuilderAccessSummary,
   navigationBuilderRailItems,
   reorderNavigationBuilderNode,
   removeNavigationBuilderNode,
   syncNavigationBuilderFormViewLabels,
   updateNavigationBuilderNode,
+  type NavigationBuilderAccessPolicy,
+  type NavigationBuilderAccessRecipientKind,
   type NavigationBuilderAddNodeKind,
   type NavigationBuilderNode,
+  type NavigationBuilderRailItem,
 } from "../navigation-builder-state";
 import {
   decodeNavigationBuilderDefinition,
+  decodeNavigationBuilderRailItems,
   encodeNavigationBuilderDefinition,
 } from "../navigation-builder-api";
 
 const initialNavigationBuilderNodes = createInitialNavigationBuilderNodes();
+const emptyAccessOptions: TenantNavigationAccessOptionsResponse = {
+  companies: [],
+  companyTypes: [],
+  jobtypes: [],
+  users: [],
+};
+
+function mergeAccessOptionCache(
+  cache: TenantNavigationAccessOptionsResponse,
+  category: NavigationBuilderAccessRecipientKind,
+  items: ReadonlyArray<TenantNavigationAccessOption>,
+) {
+  const byId = new Map(cache[category].map((item) => [item.id, item]));
+  for (const item of items) {
+    byId.set(item.id, item);
+  }
+  return {
+    ...cache,
+    [category]: [...byId.values()],
+  };
+}
 
 export function NavigationBuilderPage() {
   const runtimeConfig = useTenantRuntimeConfig();
@@ -77,11 +108,20 @@ export function NavigationBuilderPage() {
   const [savedNodes, setSavedNodes] = useState(() =>
     cloneNavigationBuilderNodes(initialNavigationBuilderNodes),
   );
+  const [draftRailItems, setDraftRailItems] = useState(() =>
+    cloneNavigationBuilderRailItems(navigationBuilderRailItems),
+  );
+  const [savedRailItems, setSavedRailItems] = useState(() =>
+    cloneNavigationBuilderRailItems(navigationBuilderRailItems),
+  );
   const [selectedNodeId, setSelectedNodeId] = useState("");
   const [activeTreePanel, setActiveTreePanel] =
     useState<NavigationBuilderTreePanelValue>("sidebar");
   const [selectedRailItemId, setSelectedRailItemId] = useState("rail.platform-studio");
-  const [isAccessSheetOpen, setIsAccessSheetOpen] = useState(false);
+  const [accessPickerCategory, setAccessPickerCategory] =
+    useState<NavigationBuilderAccessRecipientKind | null>(null);
+  const [accessOptionCache, setAccessOptionCache] =
+    useState<TenantNavigationAccessOptionsResponse>(emptyAccessOptions);
   const [pendingAdd, setPendingAdd] = useState<NavigationBuilderPendingAdd | null>(null);
   const [deleteNodeId, setDeleteNodeId] = useState<string | null>(null);
   const [configVersion, setConfigVersion] = useState(0);
@@ -94,15 +134,16 @@ export function NavigationBuilderPage() {
     ? findNavigationBuilderNode(draftNodes, deleteNodeId)
     : null;
   const selectedRailItem =
-    navigationBuilderRailItems.find((item) => item.id === selectedRailItemId)
-    ?? navigationBuilderRailItems[0];
+    draftRailItems.find((item) => item.id === selectedRailItemId)
+    ?? draftRailItems[0]
+    ?? null;
   const formViewTargets = useMemo(
     () => buildNavigationBuilderFormViewTargets(models),
     [models],
   );
   const unsavedChanges = useMemo(
-    () => countNavigationBuilderUnsavedChanges(draftNodes, savedNodes),
-    [draftNodes, savedNodes],
+    () => countNavigationBuilderUnsavedChanges(draftNodes, savedNodes, draftRailItems, savedRailItems),
+    [draftNodes, draftRailItems, savedNodes, savedRailItems],
   );
   const saveStatusLabel = isLoadingConfig
     ? "Loading..."
@@ -153,6 +194,21 @@ export function NavigationBuilderPage() {
     );
   }, [formViewTargets]);
 
+  const loadAccessOptionPage = useCallback(
+    async (request: TenantNavigationAccessOptionPageRequest): Promise<TenantNavigationAccessOptionPageResponse> =>
+      requestWithSession((accessToken) =>
+        navigationClient.loadAccessOptionPage(accessToken, request),
+      ),
+    [navigationClient, requestWithSession],
+  );
+
+  const handleAccessOptionsLoaded = useCallback((
+    category: NavigationBuilderAccessRecipientKind,
+    items: ReadonlyArray<TenantNavigationAccessOption>,
+  ) => {
+    setAccessOptionCache((cache) => mergeAccessOptionCache(cache, category, items));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -173,12 +229,20 @@ export function NavigationBuilderPage() {
         const nextNodes = decodeNavigationBuilderDefinition(response.definition, {
           seedWhenEmpty: isNewConfig,
         });
+        const nextRailItems = decodeNavigationBuilderRailItems(response.definition, {
+          seedWhenEmpty: isNewConfig,
+        });
         const persistedNodes = isNewConfig
           ? decodeNavigationBuilderDefinition(response.definition)
           : nextNodes;
+        const persistedRailItems = isNewConfig
+          ? decodeNavigationBuilderRailItems(response.definition)
+          : nextRailItems;
         setConfigVersion(response.version);
         setDraftNodes(cloneNavigationBuilderNodes(nextNodes));
         setSavedNodes(cloneNavigationBuilderNodes(persistedNodes));
+        setDraftRailItems(cloneNavigationBuilderRailItems(nextRailItems));
+        setSavedRailItems(cloneNavigationBuilderRailItems(persistedRailItems));
         setSelectedNodeId((currentNodeId) => {
           const currentNode = findNavigationBuilderNode(nextNodes, currentNodeId);
 
@@ -308,6 +372,71 @@ export function NavigationBuilderPage() {
     );
   }
 
+  function updateRailItem(
+    railItemId: string,
+    update: (railItem: NavigationBuilderRailItem) => NavigationBuilderRailItem,
+  ) {
+    setDraftRailItems((currentItems) =>
+      currentItems.map((item) => item.id === railItemId ? update(item) : item),
+    );
+  }
+
+  function applyAccessChange(access: NavigationBuilderAccessPolicy) {
+    const nextAccess = {
+      companies: [...access.companies],
+      companyTypes: [...access.companyTypes],
+      jobtypes: [...access.jobtypes],
+      mode: access.mode,
+      users: [...access.users],
+    };
+    const accessSummary = getNavigationBuilderAccessSummary(nextAccess);
+    const nextStatus = nextAccess.mode === "inherit" || nextAccess.mode === "all-authenticated"
+      ? "visible"
+      : "restricted";
+
+    if (activeTreePanel === "railbar" && selectedRailItem) {
+      updateRailItem(selectedRailItem.id, (item) => ({
+        ...item,
+        access: nextAccess,
+        accessMode: nextAccess.mode,
+        accessSummary,
+        status: item.status === "hidden" ? item.status : nextStatus,
+      }));
+      return;
+    }
+
+    if (!selectedNode || selectedNode.isLocked) {
+      return;
+    }
+
+    setDraftNodes((currentNodes) =>
+      updateNavigationBuilderNode(currentNodes, selectedNode.id, (node) => ({
+        ...node,
+        access: nextAccess,
+        accessMode: nextAccess.mode,
+        accessSummary,
+        status: node.status === "hidden" || node.status === "broken" ? node.status : nextStatus,
+      })),
+    );
+  }
+
+  function applyAccessRecipients(
+    category: NavigationBuilderAccessRecipientKind,
+    ids: string[],
+  ) {
+    const currentAccess = activeTreePanel === "railbar"
+      ? selectedRailItem?.access
+      : selectedNode?.access;
+    if (!currentAccess) {
+      return;
+    }
+
+    applyAccessChange({
+      ...currentAccess,
+      [category]: [...ids],
+    });
+  }
+
   function handleConfirmDeleteNode() {
     if (!deleteNode || deleteNode.isLocked) {
       setDeleteNodeId(null);
@@ -330,15 +459,18 @@ export function NavigationBuilderPage() {
     try {
       const response = await requestWithSession((accessToken) =>
         navigationClient.saveConfig(accessToken, {
-          definition: encodeNavigationBuilderDefinition(draftNodes, navigationBuilderRailItems),
+          definition: encodeNavigationBuilderDefinition(draftNodes, draftRailItems),
           expectedVersion: configVersion,
         }),
       );
       const nextNodes = decodeNavigationBuilderDefinition(response.definition);
+      const nextRailItems = decodeNavigationBuilderRailItems(response.definition);
 
       setConfigVersion(response.version);
       setDraftNodes(cloneNavigationBuilderNodes(nextNodes));
       setSavedNodes(cloneNavigationBuilderNodes(nextNodes));
+      setDraftRailItems(cloneNavigationBuilderRailItems(nextRailItems));
+      setSavedRailItems(cloneNavigationBuilderRailItems(nextRailItems));
       window.dispatchEvent(new Event(tenantRuntimeNavigationRefreshEvent));
     } catch (error) {
       if (error instanceof ApiClientError && error.statusCode === 409) {
@@ -407,23 +539,37 @@ export function NavigationBuilderPage() {
           onReorderNode={handleReorderNode}
           onSelectRailItem={setSelectedRailItemId}
           onSelectNode={setSelectedNodeId}
-          selectedRailItemId={selectedRailItem.id}
+          railItems={draftRailItems}
+          selectedRailItemId={selectedRailItem?.id ?? ""}
           selectedNodeId={selectedNode?.id ?? ""}
         />
         <NavigationBuilderInspector
           formViewTargets={formViewTargets}
+          accessOptions={accessOptionCache}
+          accessOptionsError={null}
+          isLoadingAccessOptions={false}
           node={activeTreePanel === "sidebar" ? selectedNode : null}
-          onConfigureAccess={() => setIsAccessSheetOpen(true)}
+          onAccessChange={applyAccessChange}
+          onChooseAccessRecipients={setAccessPickerCategory}
           onDeleteNode={(node) => setDeleteNodeId(node.id)}
           onNodeChange={handleSelectedNodeChange}
           railItem={activeTreePanel === "railbar" ? selectedRailItem : null}
         />
       </section>
 
-      <NavigationBuilderAccessSheet
+      <NavigationBuilderAccessDialog
+        category={accessPickerCategory}
+        loadOptions={loadAccessOptionPage}
         node={activeTreePanel === "sidebar" ? selectedNode : selectedRailItem}
-        onOpenChange={setIsAccessSheetOpen}
-        open={isAccessSheetOpen}
+        onApply={applyAccessRecipients}
+        onOptionsLoaded={handleAccessOptionsLoaded}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAccessPickerCategory(null);
+          }
+        }}
+        open={Boolean(accessPickerCategory)}
+        options={accessOptionCache}
       />
       <NavigationBuilderAddDialog
         formViewTargets={formViewTargets}

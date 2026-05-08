@@ -23,7 +23,22 @@ export type NavigationBuilderTargetKind =
 export type NavigationBuilderAccessMode =
   | "inherit"
   | "all-authenticated"
-  | "custom-preview";
+  | "selected-only"
+  | "everyone-except";
+
+export type NavigationBuilderAccessPolicy = {
+  companies: string[];
+  companyTypes: string[];
+  jobtypes: string[];
+  mode: NavigationBuilderAccessMode;
+  users: string[];
+};
+
+export type NavigationBuilderAccessRecipientKind =
+  | "companies"
+  | "companyTypes"
+  | "jobtypes"
+  | "users";
 
 export type NavigationBuilderNodeStatus =
   | "visible"
@@ -70,6 +85,7 @@ export type NavigationBuilderTarget =
     };
 
 export type NavigationBuilderNode = {
+  access: NavigationBuilderAccessPolicy;
   accessMode: NavigationBuilderAccessMode;
   accessSummary: string;
   channel: NavigationBuilderChannel;
@@ -90,6 +106,7 @@ export type NavigationBuilderNode = {
 };
 
 export type NavigationBuilderRailItem = {
+  access: NavigationBuilderAccessPolicy;
   accessMode: NavigationBuilderAccessMode;
   accessSummary: string;
   channel: NavigationBuilderChannel;
@@ -163,8 +180,9 @@ export const navigationBuilderIconOptions = [
 
 export const navigationBuilderRailItems = [
   {
-    accessMode: "custom-preview",
-    accessSummary: "Visible to studio users",
+    access: createNavigationBuilderAccessPolicy("inherit"),
+    accessMode: "inherit",
+    accessSummary: "Inherits parent access",
     channel: "web",
     description: "Opens Platform Studio from the utility rail.",
     id: "rail.platform-studio",
@@ -173,8 +191,9 @@ export const navigationBuilderRailItems = [
     status: "restricted",
   },
   {
-    accessMode: "custom-preview",
-    accessSummary: "Hidden until Task Manager ships",
+    access: createNavigationBuilderAccessPolicy("inherit"),
+    accessMode: "inherit",
+    accessSummary: "Inherits parent access",
     channel: "web",
     description: "Future task and assignment workspace.",
     id: "rail.task-manager",
@@ -183,6 +202,7 @@ export const navigationBuilderRailItems = [
     status: "hidden",
   },
   {
+    access: createNavigationBuilderAccessPolicy("all-authenticated"),
     accessMode: "all-authenticated",
     accessSummary: "Visible to all authenticated tenant users",
     channel: "web",
@@ -193,6 +213,7 @@ export const navigationBuilderRailItems = [
     status: "visible",
   },
   {
+    access: createNavigationBuilderAccessPolicy("all-authenticated"),
     accessMode: "all-authenticated",
     accessSummary: "Visible to all authenticated tenant users",
     channel: "web",
@@ -204,9 +225,66 @@ export const navigationBuilderRailItems = [
   },
 ] satisfies ReadonlyArray<NavigationBuilderRailItem>;
 
+export function createNavigationBuilderAccessPolicy(
+  mode: NavigationBuilderAccessMode = "inherit",
+  overrides: Partial<Omit<NavigationBuilderAccessPolicy, "mode">> = {},
+): NavigationBuilderAccessPolicy {
+  return {
+    companies: [...(overrides.companies ?? [])],
+    companyTypes: [...(overrides.companyTypes ?? [])],
+    jobtypes: [...(overrides.jobtypes ?? [])],
+    mode,
+    users: [...(overrides.users ?? [])],
+  };
+}
+
+export function getNavigationBuilderAccessSummary(
+  access: NavigationBuilderAccessPolicy,
+) {
+  const recipientCount =
+    access.users.length +
+    access.companies.length +
+    access.companyTypes.length +
+    access.jobtypes.length;
+
+  switch (access.mode) {
+    case "inherit":
+      return "Inherits parent access";
+    case "all-authenticated":
+      return "Visible to all authenticated tenant users";
+    case "selected-only":
+      return recipientCount === 0
+        ? "No recipients selected"
+        : `Visible to ${formatNavigationBuilderRecipientCount(access)}`;
+    case "everyone-except":
+      return recipientCount === 0
+        ? "No exclusions selected"
+        : `Hidden from ${formatNavigationBuilderRecipientCount(access)}`;
+  }
+}
+
+function formatNavigationBuilderRecipientCount(access: NavigationBuilderAccessPolicy) {
+  const parts = [
+    formatCount(access.users.length, "user"),
+    formatCount(access.companies.length, "company", "companies"),
+    formatCount(access.companyTypes.length, "company type"),
+    formatCount(access.jobtypes.length, "job type"),
+  ].filter(Boolean);
+
+  return parts.join(", ");
+}
+
+function formatCount(count: number, singular: string, plural = `${singular}s`) {
+  if (count === 0) {
+    return "";
+  }
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export function createInitialNavigationBuilderNodes(): NavigationBuilderNode[] {
   return [
     {
+      access: createNavigationBuilderAccessPolicy("all-authenticated"),
       accessMode: "all-authenticated",
       accessSummary: "Visible to all authenticated tenant users",
       channel: "web",
@@ -232,7 +310,32 @@ export function createInitialNavigationBuilderNodes(): NavigationBuilderNode[] {
 export function cloneNavigationBuilderNodes(
   nodes: ReadonlyArray<NavigationBuilderNode>,
 ): NavigationBuilderNode[] {
-  return nodes.map((node) => ({ ...node, target: node.target ? { ...node.target } : undefined }));
+  return nodes.map((node) => ({
+    ...node,
+    access: cloneNavigationBuilderAccessPolicy(node.access),
+    target: node.target ? { ...node.target } : undefined,
+  }));
+}
+
+export function cloneNavigationBuilderRailItems(
+  railItems: ReadonlyArray<NavigationBuilderRailItem>,
+): NavigationBuilderRailItem[] {
+  return railItems.map((item) => ({
+    ...item,
+    access: cloneNavigationBuilderAccessPolicy(item.access),
+  }));
+}
+
+function cloneNavigationBuilderAccessPolicy(
+  access: NavigationBuilderAccessPolicy,
+): NavigationBuilderAccessPolicy {
+  return {
+    companies: [...access.companies],
+    companyTypes: [...access.companyTypes],
+    jobtypes: [...access.jobtypes],
+    mode: access.mode,
+    users: [...access.users],
+  };
 }
 
 export function isNavigationBuilderContainerNode(
@@ -500,6 +603,7 @@ export function createNavigationBuilderNode(
   switch (kind) {
     case "section":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Menu titles do not have access rules",
         channel: "web",
@@ -511,6 +615,7 @@ export function createNavigationBuilderNode(
       };
     case "menu-group":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Inherits parent access",
         channel: "web",
@@ -524,6 +629,7 @@ export function createNavigationBuilderNode(
       };
     case "app-module":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Module access applies to child entries unless overridden",
         channel: "web",
@@ -539,6 +645,7 @@ export function createNavigationBuilderNode(
       };
     case "app-page":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Inherits parent access",
         channel: "web",
@@ -554,6 +661,7 @@ export function createNavigationBuilderNode(
       };
     case "form-view":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Inherits parent access",
         channel: "web",
@@ -569,6 +677,7 @@ export function createNavigationBuilderNode(
       };
     case "external-link":
       return {
+        access: createNavigationBuilderAccessPolicy("inherit"),
         accessMode: "inherit",
         accessSummary: "Inherits parent access",
         channel: "web",
@@ -717,6 +826,8 @@ export function reorderNavigationBuilderNode(
 export function countNavigationBuilderUnsavedChanges(
   draftNodes: ReadonlyArray<NavigationBuilderNode>,
   savedNodes: ReadonlyArray<NavigationBuilderNode>,
+  draftRailItems: ReadonlyArray<NavigationBuilderRailItem> = [],
+  savedRailItems: ReadonlyArray<NavigationBuilderRailItem> = [],
 ) {
   const draftById = new Map(draftNodes.map((node) => [node.id, node]));
   const savedById = new Map(savedNodes.map((node) => [node.id, node]));
@@ -725,6 +836,15 @@ export function countNavigationBuilderUnsavedChanges(
 
   for (const nodeId of nodeIds) {
     if (JSON.stringify(draftById.get(nodeId)) !== JSON.stringify(savedById.get(nodeId))) {
+      count += 1;
+    }
+  }
+
+  const draftRailById = new Map(draftRailItems.map((item) => [item.id, item]));
+  const savedRailById = new Map(savedRailItems.map((item) => [item.id, item]));
+  const railIds = new Set([...draftRailById.keys(), ...savedRailById.keys()]);
+  for (const railId of railIds) {
+    if (JSON.stringify(draftRailById.get(railId)) !== JSON.stringify(savedRailById.get(railId))) {
       count += 1;
     }
   }

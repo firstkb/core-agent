@@ -20,9 +20,9 @@ Read with:
 - Platform Studio is the tenant-web builder/configuration tool suite.
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
-- Navigation Builder has an active V1 surface plus backend persistence and
-  runtime sidebar projection. Real ACL enforcement and utility rail access
-  enforcement remain planned.
+- Navigation Builder has an active V1 surface plus backend persistence,
+  access authoring, and runtime sidebar projection. Runtime ACL enforcement and
+  utility rail access enforcement remain planned.
 - Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.
@@ -75,8 +75,18 @@ Navigation Builder:
 - owns rail utility visibility/access UX for static shell utilities such as
   Platform Studio, Task Manager, Favorites, and Help Center
 - is expected to own access/permission assignment unless a later accepted decision creates a separate Access Builder
-- V1 access controls are preview/mock only and must not be described as
-  enforced route/API security
+- V1 access authoring writes saved policy for app menu and utility rail items
+  but must not be described as enforced route/API security until runtime
+  evaluator and guards land.
+- V1 Access tab shows strategy and recipient logic inline. Selection dialogs
+  only choose records for users, companies, company types, and job types.
+  The editable strategy UI exposes `Inherits parent access`, `Selected
+  recipients only`, and `Everyone except selected recipients`; `All
+  authenticated users` is retained only as a default/compatibility mode because
+  child access cannot expand a restricted parent. Recipient selection uses
+  centered table dialogs with search and pagination instead of loading bulk
+  lists into the builder page.
+  Matching semantics are `users OR ((companies OR company types) AND job types)`.
 - V1 uses editable draft behavior plus explicit `Save`; realtime live
   navigation mutation is not the accepted interaction model
 - V1 sorting is per parent level. Moving an item affects only siblings under
@@ -245,8 +255,8 @@ Route rules:
   do not seed mock Safety/Training/Form View entries into production builder
   state.
 - Rail utility access is separate from the sidebar tree. Navigation Builder V1
-  exposes utility rail items as a dedicated left-panel tab, but access remains
-  preview/mock only until backend enforcement lands.
+  exposes utility rail items as a dedicated left-panel tab and uses the same
+  saved access policy model, but runtime rail enforcement remains planned.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

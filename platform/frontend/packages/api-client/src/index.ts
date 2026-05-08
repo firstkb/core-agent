@@ -144,6 +144,39 @@ type TenantNavigationConfigResponse = {
   version: number;
 };
 
+type TenantNavigationAccessOption = {
+  fields?: Record<string, string>;
+  id: string;
+  label: string;
+  subtitle?: string;
+};
+
+type TenantNavigationAccessOptionCategory = "companies" | "companyTypes" | "jobtypes" | "users";
+
+type TenantNavigationAccessOptionPageRequest = {
+  category: TenantNavigationAccessOptionCategory;
+  ids?: string[];
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+type TenantNavigationAccessOptionPageResponse = {
+  category: TenantNavigationAccessOptionCategory;
+  hasMore: boolean;
+  items: TenantNavigationAccessOption[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
+type TenantNavigationAccessOptionsResponse = {
+  companies: TenantNavigationAccessOption[];
+  companyTypes: TenantNavigationAccessOption[];
+  jobtypes: TenantNavigationAccessOption[];
+  users: TenantNavigationAccessOption[];
+};
+
 type TenantNavigationSaveInput = {
   definition: TenantNavigationDefinition;
   expectedVersion?: number;
@@ -171,6 +204,11 @@ type TenantBusinessTreeClient = {
 
 type TenantNavigationClient = {
   getRuntimeNavigation: (accessToken: string) => Promise<TenantRuntimeNavigationResponse>;
+  loadAccessOptionPage: (
+    accessToken: string,
+    request: TenantNavigationAccessOptionPageRequest,
+  ) => Promise<TenantNavigationAccessOptionPageResponse>;
+  loadAccessOptions: (accessToken: string) => Promise<TenantNavigationAccessOptionsResponse>;
   loadConfig: (accessToken: string) => Promise<TenantNavigationConfigResponse>;
   saveConfig: (accessToken: string, input: TenantNavigationSaveInput) => Promise<TenantNavigationConfigResponse>;
 };
@@ -323,6 +361,10 @@ type FormBuilderViewSummary = {
   version: number;
 };
 
+type FormBuilderModelCatalogItem = FormBuilderModelSummary & {
+  views: FormBuilderViewSummary[];
+};
+
 type FormBuilderModelDetail = FormBuilderModelSummary & {
   fields: FormBuilderModelFieldSummary[];
   selectedViewId?: string;
@@ -431,6 +473,7 @@ type TenantFormBuilderAuthoringClient = {
   exportModelData: (accessToken: string, modelId: string) => Promise<FormBuilderDownloadedFile>;
   getModel: (accessToken: string, modelId: string) => Promise<FormBuilderModelDetail>;
   getView: (accessToken: string, modelId: string, viewId: string) => Promise<FormBuilderViewDetail>;
+  listCatalog: (accessToken: string) => Promise<FormBuilderModelCatalogItem[]>;
   listModels: (accessToken: string) => Promise<FormBuilderModelSummary[]>;
   listViews: (accessToken: string, modelId: string) => Promise<FormBuilderViewSummary[]>;
 };
@@ -888,6 +931,28 @@ function normalizeOptionalString(value: unknown) {
   return normalized ? normalized : undefined;
 }
 
+function normalizeOptionalStringRecord(value: unknown, fieldName: string) {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    throw new ApiClientError(`Invalid ${fieldName} received from API.`, {
+      code: "invalid_payload",
+      payload: value,
+    });
+  }
+
+  const out: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    const normalizedKey = key.trim();
+    if (!normalizedKey || typeof entry !== "string" || !entry.trim()) {
+      continue;
+    }
+    out[normalizedKey] = entry.trim();
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
+
 function normalizeOptionalPositiveInteger(value: unknown, fieldName: string) {
   if (value === undefined || value === null) {
     return undefined;
@@ -964,6 +1029,17 @@ function normalizeFormBuilderViewSummary(payload: unknown, fieldName: string): F
     name: normalizeOptionalString(record.name) ?? displayName,
     title: normalizeOptionalString(record.title) ?? displayName,
     version: normalizeOptionalPositiveInteger(record.version, `${fieldName}.version`) ?? 1,
+  };
+}
+
+function normalizeFormBuilderModelCatalogItem(payload: unknown, fieldName: string): FormBuilderModelCatalogItem {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const model = normalizeFormBuilderModelSummary(record, fieldName);
+  const views = Array.isArray(record.views) ? record.views : [];
+
+  return {
+    ...model,
+    views: views.map((entry, index) => normalizeFormBuilderViewSummary(entry, `${fieldName}.views[${index}]`)),
   };
 }
 
@@ -1266,6 +1342,61 @@ function normalizeTenantNavigationConfigResponse(payload: unknown): TenantNaviga
     updatedBy: normalizeOptionalString(record.updatedBy),
     validationSummary: normalizeTenantNavigationValidationSummary(record.validationSummary),
     version: assertNonNegativeInteger(record.version, "navigationConfig.version"),
+  };
+}
+
+function normalizeTenantNavigationAccessOption(payload: unknown, fieldName: string): TenantNavigationAccessOption {
+  const record = normalizeJsonRecord(payload, fieldName);
+
+  return {
+    fields: normalizeOptionalStringRecord(record.fields, `${fieldName}.fields`),
+    id: assertString(record.id, `${fieldName}.id`),
+    label: assertString(record.label, `${fieldName}.label`),
+    subtitle: normalizeOptionalString(record.subtitle),
+  };
+}
+
+function normalizeTenantNavigationAccessOptionCategory(
+  value: unknown,
+  fieldName: string,
+): TenantNavigationAccessOptionCategory {
+  if (value === "companies" || value === "companyTypes" || value === "jobtypes" || value === "users") {
+    return value;
+  }
+  throw new ApiClientError(`${fieldName} was not a valid access option category.`, { payload: value });
+}
+
+function normalizeTenantNavigationAccessOptionPageResponse(payload: unknown): TenantNavigationAccessOptionPageResponse {
+  const record = normalizeJsonRecord(payload, "navigationAccessOptionPage");
+  const items = Array.isArray(record.items) ? record.items : [];
+
+  return {
+    category: normalizeTenantNavigationAccessOptionCategory(record.category, "navigationAccessOptionPage.category"),
+    hasMore: Boolean(record.hasMore),
+    items: items.map((entry, index) =>
+      normalizeTenantNavigationAccessOption(entry, `navigationAccessOptionPage.items[${index}]`)),
+    page: assertNonNegativeInteger(record.page, "navigationAccessOptionPage.page"),
+    pageSize: assertNonNegativeInteger(record.pageSize, "navigationAccessOptionPage.pageSize"),
+    total: assertNonNegativeInteger(record.total, "navigationAccessOptionPage.total"),
+  };
+}
+
+function normalizeTenantNavigationAccessOptionsResponse(payload: unknown): TenantNavigationAccessOptionsResponse {
+  const record = normalizeJsonRecord(payload, "navigationAccessOptions");
+  const users = Array.isArray(record.users) ? record.users : [];
+  const companies = Array.isArray(record.companies) ? record.companies : [];
+  const companyTypes = Array.isArray(record.companyTypes) ? record.companyTypes : [];
+  const jobtypes = Array.isArray(record.jobtypes) ? record.jobtypes : [];
+
+  return {
+    companies: companies.map((entry, index) =>
+      normalizeTenantNavigationAccessOption(entry, `navigationAccessOptions.companies[${index}]`)),
+    companyTypes: companyTypes.map((entry, index) =>
+      normalizeTenantNavigationAccessOption(entry, `navigationAccessOptions.companyTypes[${index}]`)),
+    jobtypes: jobtypes.map((entry, index) =>
+      normalizeTenantNavigationAccessOption(entry, `navigationAccessOptions.jobtypes[${index}]`)),
+    users: users.map((entry, index) =>
+      normalizeTenantNavigationAccessOption(entry, `navigationAccessOptions.users[${index}]`)),
   };
 }
 
@@ -1592,6 +1723,26 @@ function createTenantBusinessTreeClient(baseUrl: string): TenantBusinessTreeClie
   };
 }
 
+function buildTenantNavigationAccessOptionPagePath(request: TenantNavigationAccessOptionPageRequest) {
+  const searchParams = new URLSearchParams();
+  searchParams.set("category", request.category);
+  if (request.search?.trim()) {
+    searchParams.set("search", request.search.trim());
+  }
+  if (typeof request.page === "number") {
+    searchParams.set("page", String(request.page));
+  }
+  if (typeof request.pageSize === "number") {
+    searchParams.set("pageSize", String(request.pageSize));
+  }
+  for (const id of request.ids ?? []) {
+    if (id.trim()) {
+      searchParams.append("ids", id.trim());
+    }
+  }
+  return `/app/platform-studio/navigation/access-options/page?${searchParams.toString()}`;
+}
+
 function createTenantNavigationClient(baseUrl: string): TenantNavigationClient {
   return {
     async getRuntimeNavigation(accessToken: string) {
@@ -1602,6 +1753,28 @@ function createTenantNavigationClient(baseUrl: string): TenantNavigationClient {
       });
 
       return normalizeTenantRuntimeNavigationResponse(envelope.data);
+    },
+    async loadAccessOptionPage(accessToken: string, request: TenantNavigationAccessOptionPageRequest) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        buildTenantNavigationAccessOptionPagePath(request),
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeTenantNavigationAccessOptionPageResponse(envelope.data);
+    },
+    async loadAccessOptions(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/navigation/access-options", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+
+      return normalizeTenantNavigationAccessOptionsResponse(envelope.data);
     },
     async loadConfig(accessToken: string) {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/navigation", {
@@ -1745,6 +1918,17 @@ function createTenantFormBuilderAuthoringClient(baseUrl: string): TenantFormBuil
       );
 
       return normalizeFormBuilderViewDetail(envelope.data);
+    },
+    async listCatalog(accessToken: string) {
+      const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/forms/catalog", {
+        accessToken,
+        method: "GET",
+        timeoutMs: profileBootstrapRequestTimeoutMs,
+      });
+      const payload = normalizeJsonRecord(envelope.data, "modelCatalog");
+      const items = Array.isArray(payload.items) ? payload.items : [];
+
+      return items.map((entry, index) => normalizeFormBuilderModelCatalogItem(entry, `modelCatalog.items[${index}]`));
     },
     async listModels(accessToken: string) {
       const envelope = await requestEnvelope<unknown>(baseUrl, "/app/platform-studio/forms/models", {
@@ -1914,6 +2098,11 @@ export type {
   TenantBusinessTreeNode,
   TenantBusinessTreeNodeKind,
   TenantBusinessTreeNodesResponse,
+  TenantNavigationAccessOptionCategory,
+  TenantNavigationAccessOptionPageRequest,
+  TenantNavigationAccessOptionPageResponse,
+  TenantNavigationAccessOption,
+  TenantNavigationAccessOptionsResponse,
   TenantNavigationClient,
   TenantNavigationConfigResponse,
   TenantNavigationDefinition,
@@ -1935,6 +2124,7 @@ export type {
   FormBuilderCreateViewInput,
   FormBuilderCopyViewInput,
   FormBuilderDownloadedFile,
+  FormBuilderModelCatalogItem,
   FormBuilderModelDetail,
   FormBuilderModelFieldSummary,
   FormBuilderModelSummary,

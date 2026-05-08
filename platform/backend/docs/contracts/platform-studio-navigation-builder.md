@@ -126,8 +126,9 @@ compatibility bulk lookup, the paged `/access-options/page` lookup is the
 preferred UI picker API for large recipient sets, and backend `Save`
 synchronizes derived runtime/access tables used by the runtime evaluator.
 `/app/navigation` filters app menu and utility rail visibility through those
-derived rows. Future direct Form View/App Page route/API guards should reuse the
-same evaluator semantics rather than parse authoring JSON independently.
+derived rows. Direct Form View/App Page/Platform Studio route and API guards
+reuse the same evaluator semantics instead of parsing authoring JSON
+independently.
 
 Supported persisted access modes:
 
@@ -183,11 +184,25 @@ Runtime visibility rules:
 - empty, consecutive, and trailing `menu_title` items are suppressed after
   filtering.
 
+Direct route/API guards:
+
+- runtime Form View APIs under `/app/forms/:modelId/views/:viewId/*` require an
+  active accessible `form_view` Navigation Builder target for the same
+  `modelId`/`viewId`;
+- app page APIs such as `/app/pages/business-tree/*` require an active
+  accessible `app_page` target for that page/route;
+- Platform Studio APIs under `/app/platform-studio/*` require access to the
+  utility rail item keyed `platform-studio`;
+- if no utility rail rows have ever been saved, Platform Studio keeps the
+  legacy allow-by-default fallback so first-time tenants do not lose builder
+  access before their first Navigation Builder save;
+- root/admin claims bypass direct target checks.
+
 ## Boundary Guardrails
 
 - Do not expand `platformstudioformbuilder` for Navigation Builder behavior.
-- Do not claim Navigation Builder access configuration protects direct Form
-  View/App Page route/API access until those guards are wired to the runtime
-  evaluator.
+- Direct runtime target guards must stay wired to the derived Navigation Builder
+  evaluator; do not reimplement access by reading authoring JSON in another
+  module.
 - Do not treat `Save` as a separate publish lifecycle.
 - Do not trust tenant ids from request payloads.

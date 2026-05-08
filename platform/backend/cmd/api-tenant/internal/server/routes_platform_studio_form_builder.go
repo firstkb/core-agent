@@ -14,6 +14,11 @@ import (
 
 func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	register := func(id router.RouteID, method, path string, h http.Handler) {
+		if strings.HasPrefix(path, "/app/platform-studio/") {
+			h = srv.withPlatformStudioAccess(h)
+		} else if strings.HasPrefix(path, "/app/forms/") {
+			h = srv.withRuntimeFormViewAccess(h)
+		}
 		b.Handle(id, method, path, router.TierSecure, h)
 	}
 
@@ -261,11 +266,6 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		exportModelBundleHandler,
 	)
 
-	// TODO(form-builder-runtime-access-v1): after Navigation Builder ACL exists, enforce
-	// runtime/navigation grants on the `/app/forms/...` runtime endpoints below. Keep that guard
-	// attached to the runtime route namespace and the `form_builder_view` target, not to a
-	// request payload source flag. Until that ACL model exists, keep runtime routes on the
-	// current tenant-auth baseline; do not invent a temporary grants policy.
 	register(
 		"FORM_BUILDER_RUNTIME_FAVORITES_LIST",
 		http.MethodGet,
@@ -384,13 +384,6 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}",
 		loadRuntimeViewRecordHandler,
 	)
-
-	// TODO(form-builder-preview-access-v1): enforce Platform Studio access on the mirrored preview
-	// runtime endpoints under `/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/*`.
-	// Keep that guard attached to the preview API namespace. Do not multiplex preview vs runtime
-	// access through an extra request-source parameter; the API route namespace is the contract.
-	// If a future helper seam such as `authorizeRuntimeViewAccess(...)` is added before the full
-	// ACL model lands, keep it allow-by-default rather than inventing a temporary policy.
 
 	register(
 		"FORM_BUILDER_MODEL_DELETE",

@@ -38,13 +38,15 @@ Last compacted: 2026-05-06
 - Supported app menu node types are `menu_title`, `menu_group`, `form_view`,
   `app_page`, `external_link`, and `app_module`.
 - Duplicate target prevention is enforced by backend validation before save.
-- Access payloads remain inert/mock configuration until a later ACL contract
-  lands.
+- Access payloads are persisted into derived runtime/access rows and enforce
+  sidebar/utility rail visibility plus current direct Form View, App Page, and
+  Platform Studio API target access.
 - Runtime sidebar projection excludes inactive app menu entries and resolves
   Form View/App Page targets to tenant runtime routes. Tenant top bar title and
   breadcrumb resolve from Navigation Builder path/target metadata.
 
 ## Planned / Watch
 
-- Add real ACL/grant enforcement only after the accepted access contract exists.
+- Future App Module and additional App Page routes must attach to the same
+  derived access evaluator.
 - Keep Form Builder as model/view authoring owner only.

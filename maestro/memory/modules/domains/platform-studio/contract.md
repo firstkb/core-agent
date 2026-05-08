@@ -16,9 +16,9 @@ Status: active compact contract
 - Platform Studio is the umbrella product surface.
 - Platform Studio is a suite of builder/configuration tools, not a synonym for Form Builder.
 - Form Builder is the active backend-backed builder tool.
-- Navigation Builder has an active V1 surface plus backend persistence and
-  runtime sidebar/utility rail visibility projection; direct Form View/App Page
-  route/API ACL enforcement remains planned.
+- Navigation Builder has an active V1 surface plus backend persistence,
+  runtime sidebar/utility rail visibility projection, and direct Form
+  View/App Page/Platform Studio route/API target guards.
 - Action Builder, PDF Builder, and Report Builder are planned but not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - `@platform/platform-studio-core` owns shared non-UI contracts/helpers.
@@ -34,7 +34,8 @@ Status: active compact contract
   exposure, and utility rail visibility/access filtering. It uses a
   dedicated backend package `platformstudionavigationbuilder` for saved
   definition persistence, validation, protected root-only access, and runtime
-  navigation projection; do not add this to `platformstudioformbuilder`. V1
+  navigation projection plus target access checks; do not add this to
+  `platformstudioformbuilder`. V1
   already exposes a separate RailBar utility tab;
   access/permission assignment is expected to live here unless a later accepted
   decision creates a separate Access Builder.
@@ -90,4 +91,6 @@ Status: active compact contract
 - Real runtime list route direction is `/app/forms/:modelId/views/:viewId`.
 - Platform Studio preview route is `/app/platform-studio/forms/:modelId/views/:viewId`.
 - Runtime ACL is attached to typed target `{ targetType: form_builder_view, modelId, viewId }`.
-- Until Navigation Builder ACL lands, do not invent temporary runtime grants.
+- Navigation Builder direct target guards enforce Form View/App Page runtime
+  APIs and Platform Studio API access through the derived runtime/access
+  evaluator.

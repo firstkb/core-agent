@@ -201,6 +201,95 @@ func TestRuntimeNavigationRootOnlyAccess(t *testing.T) {
 	}
 }
 
+func TestRuntimeNavigationTargetAccessRespectsParentAndChild(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["10"],"jobTypes":["20"]}`)
+	definition.AppMenu[1].Children[0].Access = json.RawMessage(`{"mode":"selected_only","users":["1"]}`)
+	definition.AppMenu[1].Children[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["999"]}`)
+
+	state := runtimeStateForDefinition(definition, runtimeNavigationUserContext{
+		Authenticated: true,
+		UserID:        "1",
+		CompanyID:     "10",
+		JobTypeID:     "20",
+	})
+
+	if !runtimeNavigationAppMenuTargetAllowed(state, RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "sor",
+		ViewID:     "view-default",
+	}) {
+		t.Fatalf("expected direct form view target access through allowed parent and child")
+	}
+
+	if runtimeNavigationAppMenuTargetAllowed(state, RuntimeTargetAccessRequest{
+		TargetType: TargetTypeAppPage,
+		PageID:     "business-tree",
+		Route:      "/app/pages/business-tree",
+	}) {
+		t.Fatalf("expected app page target to be denied by child access")
+	}
+
+	state.User.UserID = "2"
+	if runtimeNavigationAppMenuTargetAllowed(state, RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "sor",
+		ViewID:     "view-default",
+	}) {
+		t.Fatalf("expected form view target to be denied when child narrows beyond parent")
+	}
+}
+
+func TestRuntimeNavigationTargetAccessDeniesHiddenParent(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["999"]}`)
+
+	state := runtimeStateForDefinition(definition, runtimeNavigationUserContext{
+		Authenticated: true,
+		UserID:        "1",
+		CompanyID:     "10",
+		JobTypeID:     "20",
+	})
+
+	if runtimeNavigationAppMenuTargetAllowed(state, RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "sor",
+		ViewID:     "view-default",
+	}) {
+		t.Fatalf("expected form view target to be denied when parent is hidden")
+	}
+}
+
+func TestRuntimeNavigationUtilityRailTargetAccess(t *testing.T) {
+	definition := sampleDefinition()
+	definition.UtilityRail[0].Access = json.RawMessage(`{"mode":"selected_only","users":["1"]}`)
+
+	state := runtimeStateForDefinition(definition, runtimeNavigationUserContext{
+		Authenticated: true,
+		UserID:        "1",
+	})
+
+	allowed, configured := runtimeNavigationUtilityRailTargetAllowed(state, "platform-studio")
+	if !configured || !allowed {
+		t.Fatalf("expected platform studio rail access for selected user, got configured=%v allowed=%v", configured, allowed)
+	}
+
+	state.User.UserID = "2"
+	allowed, configured = runtimeNavigationUtilityRailTargetAllowed(state, "platform-studio")
+	if !configured || allowed {
+		t.Fatalf("expected platform studio rail denial for other user, got configured=%v allowed=%v", configured, allowed)
+	}
+
+	state = runtimeStateForDefinition(NavigationDefinition{SchemaVersion: SchemaVersionV1}, runtimeNavigationUserContext{
+		Authenticated: true,
+		UserID:        "2",
+	})
+	allowed, configured = runtimeNavigationUtilityRailTargetAllowed(state, "platform-studio")
+	if configured || allowed {
+		t.Fatalf("expected unconfigured utility rail to report no configured row, got configured=%v allowed=%v", configured, allowed)
+	}
+}
+
 func TestRuntimeNavigationSuppressesEmptyMenuTitlesAfterAccessFiltering(t *testing.T) {
 	definition := NavigationDefinition{
 		SchemaVersion: SchemaVersionV1,

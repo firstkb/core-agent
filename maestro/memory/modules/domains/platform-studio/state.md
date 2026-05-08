@@ -32,7 +32,9 @@ Last compacted: 2026-04-25
   `GET/PUT /app/platform-studio/navigation` for authoring and
   `GET /app/navigation` for runtime sidebar projection, stores saved
   definitions in `ps_navigation_config`, validates duplicate targets, excludes
-  inactive runtime items, and uses optimistic version checks.
+  inactive runtime items, uses optimistic version checks, and now enforces
+  direct target checks for Form View APIs, app page APIs, and Platform Studio
+  APIs through derived runtime/access rows.
 
 ## Accepted / Planned
 
@@ -44,11 +46,11 @@ Last compacted: 2026-04-25
   toggle with eye-off inactive badges, Dashboard locked without lock badge, Form
   View labels derived from selected View titles, draft/Save UX, access mock UI,
   optional icon picker for every editable non-title app menu item with `None`,
-  runtime sidebar projection for active saved app menu entries, and UI Lab-style
-  runtime `Menu title` headings with empty/consecutive/trailing title suppression.
-  Real rail
-  utility visibility/access enforcement and real access/permission enforcement
-  remain planned unless a later decision splits access into a dedicated tool.
+  runtime sidebar projection for active saved app menu entries, UI Lab-style
+  runtime `Menu title` headings with empty/consecutive/trailing title
+  suppression, rail utility visibility/access enforcement, and direct runtime
+  target API enforcement. Further effective-access UX remains planned unless a
+  later decision splits access into a dedicated tool.
 - Action Builder is planned but not active; it owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder is planned but not active; it owns generated PDF/template configuration over authored/runtime data.
 - Report Builder is planned but not active; it owns report definitions and analytical/read-only reporting outputs.
@@ -58,7 +60,6 @@ Last compacted: 2026-04-25
 - No active import route/service exists yet.
 - Final export-data product decision remains open: raw table, authored/runtime view, or both.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support; static/external multivalue writes remain deferred.
-- Dedicated runtime-vs-preview backend guards remain follow-up.
 - Lookup-heavy filter compiler path remains unfinished for `Contact`, `Project`, `Company`, `Reported By`, and similar presets.
 - Per-tenant `jobtype` seed/backfill may be needed if tenant-owned rows are required beyond bootstrap `tenant_id = 0`.
 
@@ -68,8 +69,7 @@ Last compacted: 2026-04-25
 - Non-default views can accidentally mutate model-owned schema/blueprint.
 - Runtime apply partial failure can be hidden if UI only shows generic save failure.
 - Temporary `/draft` terminology can leak back into product lifecycle language.
-- Navigation Builder ACL absence can tempt temporary runtime grants.
 - Planned tool concerns can accidentally be implemented inside Form Builder, creating scope creep and future extraction debt.
-- Navigation Builder ACL absence can tempt conflating runtime visibility with
-  backend route/API authorization; V1 runtime projection is visibility only.
+- Navigation Builder access is now enforced by the derived evaluator for
+  runtime targets, so new targets must not add parallel grants or JSON parsing.
 - Platform Studio docs are large and can create context overload without this compact pack.

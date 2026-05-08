@@ -58,6 +58,13 @@ func (h *Handler) LoadRuntimeNavigation(ctx context.Context, _ *http.Request, _ 
 	return out, nil
 }
 
+func (h *Handler) AuthorizeRuntimeTarget(ctx context.Context, req RuntimeTargetAccessRequest) error {
+	if err := h.service.AuthorizeRuntimeTarget(ctx, req); err != nil {
+		return mapError(err)
+	}
+	return nil
+}
+
 func parseAccessOptionsPageRequest(r *http.Request) AccessOptionsPageRequest {
 	query := r.URL.Query()
 	return AccessOptionsPageRequest{
@@ -92,6 +99,10 @@ func parsePositiveInt(value string) int {
 
 func mapError(err error) *apperr.AppError {
 	switch {
+	case errors.Is(err, ErrAccessDenied):
+		return apperr.New("NAVIGATION_BUILDER_ACCESS_DENIED", http.StatusForbidden, "navigation access denied")
+	case errors.Is(err, ErrInvalidAccessTarget):
+		return apperr.New("NAVIGATION_BUILDER_ACCESS_TARGET_INVALID", http.StatusBadRequest, "invalid navigation access target")
 	case errors.Is(err, ErrUnauthorized):
 		return apperr.New("NAVIGATION_BUILDER_UNAUTHORIZED", http.StatusUnauthorized, "unauthorized")
 	case errors.Is(err, ErrTenantMissing):

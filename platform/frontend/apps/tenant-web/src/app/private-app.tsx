@@ -107,6 +107,33 @@ function scrollToDashboardSection(sectionId?: string) {
   });
 }
 
+function PlatformStudioAccessDenied({
+  onOpenDashboard,
+}: {
+  onOpenDashboard: () => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <main className="tenant-web__route-access-denied">
+      <section className="tenant-web__route-access-denied-surface">
+        <span className="tenant-web__route-access-denied-eyebrow">
+          {t("tenant.navigation.platformStudio.deniedEyebrow")}
+        </span>
+        <h1>{t("tenant.navigation.platformStudio.deniedTitle")}</h1>
+        <p>{t("tenant.navigation.platformStudio.deniedDescription")}</p>
+        <button
+          className="tenant-web__route-access-denied-button"
+          onClick={onOpenDashboard}
+          type="button"
+        >
+          {t("tenant.navigation.platformStudio.deniedAction")}
+        </button>
+      </section>
+    </main>
+  );
+}
+
 export function PrivateApp({
   tenantName,
   userSession,
@@ -336,6 +363,9 @@ export function PrivateApp({
       runtimeUtilityRailItemKeys.has(id) ||
       runtimeUtilityRailItemKeys.has(key);
   }
+
+  const platformStudioIsVisible = railUtilityIsVisible("rail.platform-studio", "platform-studio");
+  const platformStudioRouteDenied = isPlatformStudioPath(location.pathname) && !platformStudioIsVisible;
 
   function renderProfileMenuItems() {
     return (
@@ -589,7 +619,11 @@ export function PrivateApp({
         surfaceLabel={t("tenant.shell.surfaceLabel")}
           surfaceTone="workspace"
         >
-          <Outlet />
+          {platformStudioRouteDenied ? (
+            <PlatformStudioAccessDenied onOpenDashboard={() => openDashboard()} />
+          ) : (
+            <Outlet />
+          )}
         </WorkspaceShell>
 
         <TenantRailUtilitySheet

@@ -13,6 +13,8 @@ import (
 )
 
 var (
+	ErrAccessDenied         = errors.New("navigation builder access denied")
+	ErrInvalidAccessTarget  = errors.New("navigation builder invalid access target")
 	ErrInvalidAccessOptions = errors.New("navigation builder invalid access options request")
 	ErrConflict             = errors.New("navigation builder version conflict")
 	ErrInvalidDefinition    = errors.New("navigation builder invalid definition")
@@ -94,6 +96,91 @@ func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigation
 		response.UtilityRail = []RuntimeNavigationItem{}
 	}
 	return &response, nil
+}
+
+func (s *Service) CheckRuntimeTargetAccess(ctx context.Context, req RuntimeTargetAccessRequest) (*RuntimeTargetAccessResponse, error) {
+	tenant, claims, err := requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	target, err := normalizeRuntimeTargetAccessRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if claimsHaveRootAccess(claims) {
+		return &RuntimeTargetAccessResponse{Allowed: true, Reason: "root"}, nil
+	}
+
+	state, err := s.repo.LoadRuntimeNavigationState(ctx, tenant, ConfigKeyDefault, claims.UserID, false)
+	if err != nil {
+		return nil, err
+	}
+	if state == nil {
+		state = &runtimeNavigationState{}
+	}
+
+	switch target.TargetType {
+	case RuntimeTargetTypeUtilityRail:
+		allowed, configured := runtimeNavigationUtilityRailTargetAllowed(*state, target.UtilityKey)
+		if !configured {
+			return &RuntimeTargetAccessResponse{Allowed: true, Reason: "utility_rail_unconfigured"}, nil
+		}
+		if allowed {
+			return &RuntimeTargetAccessResponse{Allowed: true, Reason: "utility_rail_allowed"}, nil
+		}
+		return &RuntimeTargetAccessResponse{Allowed: false, Reason: "utility_rail_denied"}, nil
+	case TargetTypeFormView, TargetTypeAppPage:
+		if runtimeNavigationAppMenuTargetAllowed(*state, target) {
+			return &RuntimeTargetAccessResponse{Allowed: true, Reason: "app_menu_allowed"}, nil
+		}
+		return &RuntimeTargetAccessResponse{Allowed: false, Reason: "app_menu_denied"}, nil
+	default:
+		return nil, ErrInvalidAccessTarget
+	}
+}
+
+func (s *Service) AuthorizeRuntimeTarget(ctx context.Context, req RuntimeTargetAccessRequest) error {
+	result, err := s.CheckRuntimeTargetAccess(ctx, req)
+	if err != nil {
+		return err
+	}
+	if result == nil || !result.Allowed {
+		return ErrAccessDenied
+	}
+	return nil
+}
+
+func normalizeRuntimeTargetAccessRequest(req RuntimeTargetAccessRequest) (RuntimeTargetAccessRequest, error) {
+	targetType := strings.TrimSpace(req.TargetType)
+	target := RuntimeTargetAccessRequest{
+		TargetType: targetType,
+		ModelID:    strings.TrimSpace(req.ModelID),
+		ViewID:     strings.TrimSpace(req.ViewID),
+		PageID:     strings.TrimSpace(req.PageID),
+		Route:      strings.TrimSpace(req.Route),
+		UtilityKey: strings.TrimSpace(req.UtilityKey),
+	}
+
+	switch targetType {
+	case TargetTypeFormView:
+		if target.ModelID == "" || target.ViewID == "" {
+			return RuntimeTargetAccessRequest{}, ErrInvalidAccessTarget
+		}
+	case TargetTypeAppPage:
+		if target.PageID == "" && target.Route == "" {
+			return RuntimeTargetAccessRequest{}, ErrInvalidAccessTarget
+		}
+	case RuntimeTargetTypeUtilityRail:
+		if target.UtilityKey == "" {
+			return RuntimeTargetAccessRequest{}, ErrInvalidAccessTarget
+		}
+	default:
+		return RuntimeTargetAccessRequest{}, ErrInvalidAccessTarget
+	}
+
+	return target, nil
 }
 
 func claimsHaveRootAccess(claims requestctx.ClaimsInfo) bool {

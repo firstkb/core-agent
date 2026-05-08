@@ -42,8 +42,10 @@ Last compacted: 2026-04-25
 - Install prompting is mounted on public `/sign-in` only.
 - Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
 - Form Builder is active backend-backed authoring; Navigation Builder has an
-  active V1 surface plus backend persistence and runtime sidebar projection; Action
-  Builder, PDF Builder, and Report Builder are planned.
+  active V1 surface plus backend persistence, runtime sidebar/utility rail
+  projection, and direct target guards for current Form View, App Page, and
+  Platform Studio APIs; Action Builder, PDF Builder, and Report Builder are
+  planned.
 - Published runtime navigation currently consumes published metadata and renders `/app/:routeKey/*` entries.
 - Published runtime consumption is not the full Navigation Builder contract.
 - Navigation Builder V1 lives at `/builder/navigation` with draft/Save UI,
@@ -57,7 +59,7 @@ Last compacted: 2026-04-25
   optional icon picker for every editable non-title app menu item with `None`,
   and mock-only access controls.
 - Navigation Builder persistence lives at
-  `GET/PUT /app/platform-studio/navigation` backed by `ps_navigation_config`;
+`GET/PUT /app/platform-studio/navigation` backed by `ps_navigation_config`;
   runtime sidebar projection lives at `GET /app/navigation`.
 - Tenant sidebar prefers saved Navigation Builder runtime items when present
   and falls back to published runtime metadata when no saved app menu exists.
@@ -68,7 +70,9 @@ Last compacted: 2026-04-25
   renders no icon. Mobile sidebar panels and collapsed desktop hover-preview
   panels close after actionable sidebar/rail navigation selections.
 - App Page and Form View runtime screens resolve the tenant top bar title and
-  breadcrumb from the configured Navigation Builder path and target metadata.
+  breadcrumb from the configured Navigation Builder path and target metadata;
+  their backing APIs are denied when the current user cannot access the matching
+  Navigation Builder target.
 - Business Tree is the first tenant app page. Its canonical direct route is
   `/app/pages/business-tree`, and Navigation Builder can expose it through an
   App Page target.
@@ -90,11 +94,9 @@ Last compacted: 2026-04-25
   where `main_company_id IS NULL`. The first slice does not render a synthetic
   `Root` node and does not introduce a replacement for legacy
   `CONFIG_COMPANYID`.
-- `code-confirmed` Current access is authenticated tenant users. Route/service
-  boundaries contain TODOs for future Navigation Builder page permissions.
-- `planned` Follow-ups: real rail utility visibility/access enforcement,
-  Navigation Builder-backed page access control,
-  real product-module target contracts, parent company
+- `code-confirmed` Business Tree node API is guarded by the Navigation Builder
+  App Page target evaluator.
+- `planned` Follow-ups: real product-module target contracts, parent company
   existence validation for `contacts:*` and `projects:*` lazy parents; large
   tenant performance and possible tree virtualization; optional explicit root
   company setting only if legacy imports require it; authenticated browser smoke

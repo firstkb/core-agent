@@ -463,6 +463,132 @@ func TestLoadRuntimeNavigationUsesRootAccessFromClaims(t *testing.T) {
 	}
 }
 
+func TestAuthorizeRuntimeTargetAllowsConfiguredFormView(t *testing.T) {
+	raw, err := json.Marshal(sampleDefinition())
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	err = service.AuthorizeRuntimeTarget(navigationBuilderTestContext(), RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "sor",
+		ViewID:     "view-default",
+	})
+	if err != nil {
+		t.Fatalf("AuthorizeRuntimeTarget returned error: %v", err)
+	}
+}
+
+func TestAuthorizeRuntimeTargetDeniesFormViewWhenParentDenied(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["999"]}`)
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	err = service.AuthorizeRuntimeTarget(navigationBuilderTestContext(), RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "sor",
+		ViewID:     "view-default",
+	})
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Fatalf("AuthorizeRuntimeTarget error = %v, want ErrAccessDenied", err)
+	}
+}
+
+func TestAuthorizeRuntimeTargetAllowsPlatformStudioWhenRailUnconfigured(t *testing.T) {
+	definition := sampleDefinition()
+	definition.UtilityRail = []NavigationRailItem{}
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	err = service.AuthorizeRuntimeTarget(navigationBuilderTestContext(), RuntimeTargetAccessRequest{
+		TargetType: RuntimeTargetTypeUtilityRail,
+		UtilityKey: "platform-studio",
+	})
+	if err != nil {
+		t.Fatalf("AuthorizeRuntimeTarget returned error: %v", err)
+	}
+}
+
+func TestAuthorizeRuntimeTargetDeniesPlatformStudioWhenRailRestricted(t *testing.T) {
+	definition := sampleDefinition()
+	definition.UtilityRail[0].Access = json.RawMessage(`{"mode":"selected_only","users":["999"]}`)
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	err = service.AuthorizeRuntimeTarget(navigationBuilderTestContext(), RuntimeTargetAccessRequest{
+		TargetType: RuntimeTargetTypeUtilityRail,
+		UtilityKey: "platform-studio",
+	})
+	if !errors.Is(err, ErrAccessDenied) {
+		t.Fatalf("AuthorizeRuntimeTarget error = %v, want ErrAccessDenied", err)
+	}
+}
+
+func TestAuthorizeRuntimeTargetRootBypassesTargetRestrictions(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"selected_only","companies":["999"]}`)
+	definition.UtilityRail[0].Access = json.RawMessage(`{"mode":"selected_only","users":["999"]}`)
+	raw, err := json.Marshal(definition)
+	if err != nil {
+		t.Fatalf("marshal sample definition: %v", err)
+	}
+	repo := &memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	}
+	service := NewService(repo)
+
+	err = service.AuthorizeRuntimeTarget(navigationBuilderRootTestContext(), RuntimeTargetAccessRequest{
+		TargetType: TargetTypeFormView,
+		ModelID:    "missing",
+		ViewID:     "missing",
+	})
+	if err != nil {
+		t.Fatalf("AuthorizeRuntimeTarget root returned error: %v", err)
+	}
+	if repo.runtimeRootAccess {
+		t.Fatalf("root target authorization should bypass without loading runtime state")
+	}
+}
+
 func TestSaveConfigRequiresTenantAndClaims(t *testing.T) {
 	service := NewService(&memoryRepository{})
 

@@ -41,9 +41,9 @@ Last compacted: 2026-05-06
   filtering, and projects Form View/App Page targets to tenant runtime routes.
   Root/admin claims bypass Navigation Builder access policies but still respect
   inactive item filtering.
-  Direct Form View/App Page route/API guards remain planned and must reuse this
-  derived evaluator semantics rather than frontend-only checks or ad hoc JSON
-  parsing.
+  Direct Form View/App Page APIs, app page APIs, and Platform Studio APIs now
+  reuse this derived evaluator for target access checks rather than
+  frontend-only checks or ad hoc JSON parsing.
 - V1 targets: Form View, App Page, External Link, and future App Module pages.
 - App Modules can have nested subitems. Single app pages such as Business Tree
   are App Page targets, not product modules.
@@ -122,8 +122,8 @@ Last compacted: 2026-05-06
 - Do not put Navigation Builder persistence or validation in
   `platformstudioformbuilder`.
 - Keep `/app/platform-studio/forms/...` as preview/authoring context, not a navigation target.
-- V1 Access UI now drives runtime navigation visibility, but must not be claimed
-  as direct backend route/API enforcement until Form View/App Page guards land.
+- Direct backend route/API enforcement must stay attached to the derived
+  Navigation Builder evaluator and not to frontend-only visibility checks.
 - Dashboard is a locked static preview item; do not let users remove or move it,
   do not let users select it for editing, and do not show the lock badge for
   Dashboard. Reserve lock badges for access/restricted items.

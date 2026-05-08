@@ -25,6 +25,7 @@ Navigation Builder backend currently runs inside:
 Route and wiring surfaces:
 
 - `platform/backend/cmd/api-tenant/internal/server/routes_platform_studio_navigation_builder.go`
+- `platform/backend/cmd/api-tenant/internal/server/routes_navigation_access_guard.go`
 - `platform/backend/cmd/api-tenant/internal/server/wiring_platform_studio_navigation_builder.go`
 
 Tenant module surface:
@@ -54,6 +55,8 @@ Tenant schema surfaces:
 - runtime app menu and utility rail visibility projection via
   `GET /app/navigation`, including root/admin access-policy bypass while
   preserving inactive item filtering
+- direct target access evaluation for runtime Form View APIs, app page APIs,
+  and Platform Studio API routes
 - protected `root_only` access mode; only root/admin claims may save
   definitions that contain or introduce root-only navigation items
 
@@ -61,7 +64,6 @@ It does not own:
 
 - Form Builder model/view authoring
 - Form Builder runtime record behavior
-- direct Form View/App Page route or API guards in the current runtime slice
 - Business Tree page data
 - frontend-only editor state
 
@@ -74,6 +76,7 @@ Transport:
 Service orchestration:
 
 - `service.go`
+- `runtime_access.go`
 - `validation.go`
 
 Persistence:

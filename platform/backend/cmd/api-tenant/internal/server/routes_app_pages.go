@@ -11,13 +11,12 @@ import (
 )
 
 func (srv *Server) registerAppPageRoutes(b *router.Builder) {
-	// TODO: Replace authenticated-only access with Navigation Builder page permissions.
 	b.Handle(
 		"BUSINESS_TREE_NODES",
 		http.MethodGet,
 		"/app/pages/business-tree/nodes",
 		router.TierSecure,
-		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*businesstree.NodesResponse, error) {
+		srv.withRuntimeAppPageAccess("business-tree", "/app/pages/business-tree", handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*businesstree.NodesResponse, error) {
 			info, err := srv.businessTreePageHTTP.ListNodes(ctx, r, struct{}{})
 			if err != nil {
 				return nil, apperr.WrapAndLog(
@@ -31,6 +30,6 @@ func (srv *Server) registerAppPageRoutes(b *router.Builder) {
 				)
 			}
 			return info, nil
-		}, srv.logger),
+		}, srv.logger)),
 	)
 }

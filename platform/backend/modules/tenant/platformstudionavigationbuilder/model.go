@@ -20,6 +20,8 @@ const (
 	TargetTypeAppPage     = "app_page"
 	TargetTypeExternalURL = "external_link"
 	TargetTypeAppModule   = "app_module"
+
+	RuntimeTargetTypeUtilityRail = "utility_rail"
 )
 
 type NavigationDefinition struct {
@@ -130,6 +132,20 @@ type RuntimeNavigationResponse struct {
 	Items                 []RuntimeNavigationItem `json:"items"`
 	UtilityRail           []RuntimeNavigationItem `json:"utilityRail"`
 	UtilityRailConfigured bool                    `json:"utilityRailConfigured"`
+}
+
+type RuntimeTargetAccessRequest struct {
+	TargetType string `json:"targetType"`
+	ModelID    string `json:"modelId,omitempty"`
+	ViewID     string `json:"viewId,omitempty"`
+	PageID     string `json:"pageId,omitempty"`
+	Route      string `json:"route,omitempty"`
+	UtilityKey string `json:"utilityKey,omitempty"`
+}
+
+type RuntimeTargetAccessResponse struct {
+	Allowed bool   `json:"allowed"`
+	Reason  string `json:"reason,omitempty"`
 }
 
 type RuntimeNavigationItem struct {

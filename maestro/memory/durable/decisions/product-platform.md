@@ -284,10 +284,9 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   `ps_navigation_config.definition_json`, but access enforcement must not rely
   on frontend-only checks or repeated ad hoc JSON parsing. On Navigation Builder
   `Save`, backend should validate the saved definition and synchronize derived
-  runtime/access tables in the same transaction. Runtime `/app/navigation` and
-  utility rail visibility use one backend evaluator over those derived rows;
-  future direct Form View/App Page route/API guards should reuse the same
-  evaluator semantics.
+  runtime/access tables in the same transaction. Runtime `/app/navigation`,
+  utility rail visibility, and direct Form View/App Page/Platform Studio API
+  target guards use one backend evaluator over those derived rows.
 - Access model: supported modes are `inherit`, `all authenticated users`,
   `root only`, `selected recipients only`, and `everyone except selected recipients`.
   Recipient matching uses current `users`, `company`, `companytype`, and

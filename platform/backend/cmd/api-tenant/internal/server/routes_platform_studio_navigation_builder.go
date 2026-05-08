@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/apperr"
 	"dtriton.com/platform/backend/internal/platform/httpx/handler"
@@ -12,6 +13,9 @@ import (
 
 func (srv *Server) registerPlatformStudioNavigationBuilderRoutes(b *router.Builder) {
 	register := func(id router.RouteID, method, path string, h http.Handler) {
+		if strings.HasPrefix(path, "/app/platform-studio/") {
+			h = srv.withPlatformStudioAccess(h)
+		}
 		b.Handle(id, method, path, router.TierSecure, h)
 	}
 

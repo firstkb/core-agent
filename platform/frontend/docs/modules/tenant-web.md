@@ -222,8 +222,10 @@ Current published runtime fallback behavior:
 
 Navigation Builder now has a UI-first authoring route at `/builder/navigation`,
 backend persistence at `GET/PUT /app/platform-studio/navigation`, and runtime
-sidebar/utility rail visibility projection at `GET /app/navigation`; direct
-Form View/App Page route/API guards remain planned Platform Studio scope.
+sidebar/utility rail visibility projection at `GET /app/navigation`. Direct
+Form View/App Page APIs now use Navigation Builder target guards, and Platform
+Studio APIs/routes are blocked when the configured utility rail access excludes
+the current user.
 Empty or missing Navigation Builder configs render only the locked Dashboard
 builder node and root add affordance; production builder state must not seed
 mock app menu entries.

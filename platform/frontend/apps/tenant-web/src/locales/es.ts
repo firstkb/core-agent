@@ -123,6 +123,10 @@ export const tenantSpanishMessages = {
         headerTitle: "Runtime",
       },
       platformStudio: {
+        deniedAction: "Abrir panel",
+        deniedDescription: "Tu acceso de navegacion actual no incluye Platform Studio. Pide a un usuario root que actualice el acceso del utility rail si necesitas esta herramienta.",
+        deniedEyebrow: "Acceso restringido",
+        deniedTitle: "Platform Studio no esta disponible",
         headerMeta: "Platform Studio",
         forms: {
           headerMeta: "Platform Studio / Form Builder",

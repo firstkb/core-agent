@@ -21,8 +21,9 @@ Read with:
 - Platform Studio is not a synonym for Form Builder.
 - Form Builder is the current active implementation tool.
 - Navigation Builder has an active V1 surface plus backend persistence,
-  access authoring, and runtime sidebar/utility rail visibility projection.
-  Direct Form View/App Page route/API ACL enforcement remains planned.
+  access authoring, runtime sidebar/utility rail visibility projection, and
+  direct runtime target guards for Form View, App Page, and Platform Studio
+  APIs.
 - Action Builder, PDF Builder, and Report Builder are planned tools.
 - Planned tool concerns must not be implemented inside Form Builder just because Form Builder is active first.
 - Platform Studio UI stays app-local in `tenant-web`.
@@ -76,8 +77,8 @@ Navigation Builder:
   Platform Studio, Task Manager, Favorites, and Help Center
 - is expected to own access/permission assignment unless a later accepted decision creates a separate Access Builder
 - V1 access authoring writes saved policy for app menu and utility rail items
-  but must not be described as enforced route/API security until runtime
-  evaluator and guards land.
+  and the backend uses derived runtime/access rows to enforce sidebar
+  visibility plus direct Form View/App Page/Platform Studio API access.
 - V1 Access tab shows strategy and recipient logic inline. Selection dialogs
   only choose records for users, companies, company types, and job types.
   The editable strategy UI exposes `Inherits parent access`, `Selected
@@ -237,6 +238,10 @@ Route rules:
 - active route params are `modelId` and `viewId`
 - visible UI copy uses `Model` and `View`
 - `/app/platform-studio/forms/...` is preview/authoring context, not a Navigation Builder runtime target
+- direct Form View APIs require an accessible Navigation Builder Form View
+  target; direct App Page APIs require an accessible App Page target; Platform
+  Studio APIs require the `platform-studio` utility rail item unless the utility
+  rail has never been configured
 
 ## Current Decisions
 
@@ -261,6 +266,8 @@ Route rules:
 - Root-only navigation access is a protected Navigation Builder strategy:
   root users can assign it, and backend save rejects non-root attempts to create
   or remove root-only protection.
+- Platform Studio direct route UX shows a restricted state when the saved
+  utility rail excludes the current user from Platform Studio.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

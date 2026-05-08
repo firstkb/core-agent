@@ -166,6 +166,65 @@ func filterRuntimeAppMenuItems(
 	return suppressEmptyRuntimeMenuTitles(items)
 }
 
+func runtimeNavigationAppMenuTargetAllowed(state runtimeNavigationState, target RuntimeTargetAccessRequest) bool {
+	index := buildRuntimeNavigationAccessIndex(state.Policies, state.Subjects)
+	children := buildRuntimeNavigationChildren(state.Items, navigationOwnerTypeAppMenuItem)
+	return runtimeNavigationAppMenuTargetAllowedFromParent("", children, index, state.User, true, target)
+}
+
+func runtimeNavigationAppMenuTargetAllowedFromParent(
+	parentID string,
+	children map[string][]derivedNavigationItem,
+	index runtimeNavigationAccessIndex,
+	user runtimeNavigationUserContext,
+	parentAllowed bool,
+	target RuntimeTargetAccessRequest,
+) bool {
+	for _, record := range children[parentID] {
+		if !record.Active {
+			continue
+		}
+
+		allowed := parentAllowed && runtimeNavigationItemAllowed(record, index, user)
+		if !allowed {
+			continue
+		}
+
+		if runtimeNavigationItemMatchesTarget(record, target) {
+			return true
+		}
+
+		if runtimeNavigationAppMenuTargetAllowedFromParent(record.ItemID, children, index, user, allowed, target) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func runtimeNavigationItemMatchesTarget(record derivedNavigationItem, target RuntimeTargetAccessRequest) bool {
+	switch target.TargetType {
+	case TargetTypeFormView:
+		return record.TargetType == TargetTypeFormView &&
+			strings.TrimSpace(record.TargetModelID) == target.ModelID &&
+			strings.TrimSpace(record.TargetViewID) == target.ViewID
+	case TargetTypeAppPage:
+		if record.TargetType != TargetTypeAppPage {
+			return false
+		}
+		if target.PageID != "" && strings.TrimSpace(record.TargetPageID) == target.PageID {
+			return true
+		}
+		if target.Route != "" {
+			return strings.TrimSpace(record.TargetRoute) == target.Route ||
+				strings.TrimSpace(record.TargetPath) == target.Route
+		}
+		return false
+	default:
+		return false
+	}
+}
+
 func filterRuntimeUtilityRailItems(
 	state runtimeNavigationState,
 	index runtimeNavigationAccessIndex,
@@ -195,6 +254,38 @@ func filterRuntimeUtilityRailItems(
 	}
 
 	return items, len(records) > 0
+}
+
+func runtimeNavigationUtilityRailTargetAllowed(state runtimeNavigationState, utilityKey string) (bool, bool) {
+	index := buildRuntimeNavigationAccessIndex(state.Policies, state.Subjects)
+	utilityKey = strings.TrimSpace(utilityKey)
+	configured := false
+
+	for _, record := range state.Items {
+		if record.OwnerType != navigationOwnerTypeUtilityRailItem {
+			continue
+		}
+		configured = true
+		if !runtimeNavigationUtilityRailItemMatches(record, utilityKey) {
+			continue
+		}
+		if !record.Active {
+			return false, configured
+		}
+		return runtimeNavigationItemAllowed(record, index, state.User), configured
+	}
+
+	return false, configured
+}
+
+func runtimeNavigationUtilityRailItemMatches(record derivedNavigationItem, utilityKey string) bool {
+	if utilityKey == "" {
+		return false
+	}
+	itemID := strings.TrimSpace(record.ItemID)
+	return itemID == utilityKey ||
+		strings.TrimPrefix(itemID, "rail.") == utilityKey ||
+		strings.TrimSpace(record.TargetRoute) == utilityKey
 }
 
 func runtimeNavigationItemAllowed(

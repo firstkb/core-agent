@@ -23,7 +23,8 @@ instead of them.
 - Runtime/preview list endpoints exist for meta, query, search suggestions, saved filters, favorite toggle, and record detail.
 - `/app/me/favorites` lists runtime favorites.
 - Runtime and preview APIs are separate route namespaces.
-- Runtime ACL is still on the current tenant-auth baseline until Navigation Builder ACL exists.
+- Runtime Form View APIs are guarded by the Navigation Builder derived target
+  evaluator; future Form Builder runtime endpoints must reuse that guard.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
 - Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
 - Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.

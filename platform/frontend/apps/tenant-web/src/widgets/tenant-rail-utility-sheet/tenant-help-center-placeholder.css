@@ -1,6 +1,11 @@
-.tenant-web__utility-sheet--help {
-  width: min(100%, 44rem);
-  max-height: min(88dvh, 46rem);
+.ui-dialog.tenant-web__utility-sheet-surface--help {
+  width: calc(100vw - 2rem);
+  max-width: 58rem;
+}
+
+.ui-dialog__content.tenant-web__utility-sheet.tenant-web__utility-sheet--help {
+  width: 100%;
+  max-height: min(88dvh, 50rem);
 }
 
 .tenant-web__utility-sheet-body--help {
@@ -196,8 +201,13 @@
 }
 
 @media (max-width: 720px) {
-  .tenant-web__utility-sheet--help {
-    width: min(100%, 34rem);
+  .ui-dialog.tenant-web__utility-sheet-surface--help {
+    width: calc(100vw - 1rem);
+    max-width: 34rem;
+  }
+
+  .ui-dialog__content.tenant-web__utility-sheet.tenant-web__utility-sheet--help {
+    width: 100%;
   }
 
   .tenant-web__help-center-topic-grid {

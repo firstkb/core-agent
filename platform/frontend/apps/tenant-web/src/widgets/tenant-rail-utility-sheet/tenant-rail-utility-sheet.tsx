@@ -78,7 +78,11 @@ export function TenantRailUtilitySheet({
   const isHelpPanel = panel === "help";
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={panel !== null}>
+    <Dialog
+      onOpenChange={onOpenChange}
+      open={panel !== null}
+      surfaceClassName={isHelpPanel ? "tenant-web__utility-sheet-surface--help" : undefined}
+    >
       <DialogContent
         className={`tenant-web__utility-sheet${isFavoritesPanel ? " tenant-web__utility-sheet--favorites" : ""}${isHelpPanel ? " tenant-web__utility-sheet--help" : ""}`}
       >

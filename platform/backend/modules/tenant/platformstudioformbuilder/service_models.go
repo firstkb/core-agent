@@ -35,6 +35,35 @@ func (s *Service) ListModels(ctx context.Context) (*ListModelsResponse, error) {
 	return &ListModelsResponse{Items: items}, nil
 }
 
+func (s *Service) ListCatalog(ctx context.Context) (*ListCatalogResponse, error) {
+	tenant, claims, err := s.requireAuthoringContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	models, viewsByModel, err := s.repo.ListModelCatalog(ctx, tenant)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]ModelCatalogItem, 0, len(models))
+	for _, model := range models {
+		if isStaticModelRestrictedForActor(claims, &model) {
+			continue
+		}
+		summary := buildModelSummary(&model)
+		if dataCount, ok := s.loadModelDataCount(ctx, tenant, &model); ok {
+			summary.DataCount = &dataCount
+		}
+		items = append(items, ModelCatalogItem{
+			ModelSummary: summary,
+			Views:        buildSortedViewSummaries(viewsByModel[model.ModelID]),
+		})
+	}
+
+	return &ListCatalogResponse{Items: items}, nil
+}
+
 func (s *Service) GetModel(ctx context.Context, modelID string) (*ModelDetailResponse, error) {
 	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
@@ -236,6 +265,17 @@ func buildModelDetailResponse(model *ModelRecord, views []ViewRecord, selectedVi
 	}
 
 	fields := buildFieldSummaries(model.DefinitionJSON)
+	viewSummaries := buildSortedViewSummaries(views)
+
+	return &ModelDetailResponse{
+		ModelSummary:   buildModelSummary(model),
+		Fields:         fields,
+		Views:          viewSummaries,
+		SelectedViewID: selectedViewID,
+	}
+}
+
+func buildSortedViewSummaries(views []ViewRecord) []ViewSummary {
 	viewSummaries := make([]ViewSummary, 0, len(views))
 	for _, view := range views {
 		viewSummaries = append(viewSummaries, buildViewSummary(&view))
@@ -248,12 +288,7 @@ func buildModelDetailResponse(model *ModelRecord, views []ViewRecord, selectedVi
 		return viewSummaries[i].Title < viewSummaries[j].Title
 	})
 
-	return &ModelDetailResponse{
-		ModelSummary:   buildModelSummary(model),
-		Fields:         fields,
-		Views:          viewSummaries,
-		SelectedViewID: selectedViewID,
-	}
+	return viewSummaries
 }
 
 func buildModelSummary(model *ModelRecord) ModelSummary {

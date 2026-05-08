@@ -8,6 +8,44 @@ import (
 	"fmt"
 )
 
+func loadModelsTx(ctx context.Context, tx *sql.Tx) ([]ModelRecord, error) {
+	const query = `
+SELECT guid,
+       model_id,
+       model_key,
+       COALESCE(storage_key, '') AS storage_key,
+       display_name,
+       COALESCE(description, '') AS description,
+       source_type,
+       status,
+       version,
+       published_version,
+       structure_version,
+       COALESCE(model_locked, false) AS model_locked,
+       definition_json
+  FROM ps_model
+ ORDER BY updated_at DESC, model_id ASC`
+
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: list models: %w", err)
+	}
+	defer rows.Close()
+
+	records := make([]ModelRecord, 0)
+	for rows.Next() {
+		record, err := scanModelRecord(rows)
+		if err != nil {
+			return nil, fmt.Errorf("form builder: scan model: %w", err)
+		}
+		records = append(records, *record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form builder: list models rows: %w", err)
+	}
+	return records, nil
+}
+
 func loadModelTx(ctx context.Context, tx *sql.Tx, modelID string) (*ModelRecord, error) {
 	const query = `
 SELECT guid,
@@ -36,6 +74,47 @@ SELECT guid,
 		return nil, fmt.Errorf("form builder: load model: %w", err)
 	}
 	return record, nil
+}
+
+func loadAllViewsTx(ctx context.Context, tx *sql.Tx) ([]ViewRecord, error) {
+	const query = `
+SELECT guid,
+       model_id,
+       view_id,
+       view_key,
+       display_name,
+       COALESCE(description, '') AS description,
+       view_type,
+       is_default,
+       COALESCE(is_active, true) AS is_active,
+       COALESCE(view_locked, false) AS view_locked,
+       status,
+       version,
+       published_version,
+       last_aligned_model_structure_version,
+       definition_json,
+       published_artifacts_json
+  FROM ps_view
+ ORDER BY model_id ASC, is_default DESC, updated_at DESC, view_id ASC`
+
+	rows, err := tx.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("form builder: load all views: %w", err)
+	}
+	defer rows.Close()
+
+	records := make([]ViewRecord, 0)
+	for rows.Next() {
+		record, err := scanViewRecord(rows)
+		if err != nil {
+			return nil, fmt.Errorf("form builder: scan view: %w", err)
+		}
+		records = append(records, *record)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form builder: load all views rows: %w", err)
+	}
+	return records, nil
 }
 
 func loadViewsTx(ctx context.Context, tx *sql.Tx, modelID string) ([]ViewRecord, error) {

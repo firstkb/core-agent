@@ -206,6 +206,20 @@ func (srv *Server) registerPlatformStudioFormBuilderRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_BUILDER_CATALOG_LIST",
+		http.MethodGet,
+		"/app/platform-studio/forms/catalog",
+		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formbuilder.ListCatalogResponse, error) {
+			info, err := srv.platformStudioFormBuilderHTTP.ListCatalog(ctx, r, struct{}{})
+			if err != nil {
+				return nil, apperr.WrapAndLog(srv.logger, ctx, "FORM_BUILDER_CATALOG_LIST",
+					http.StatusInternalServerError, "cannot list form builder catalog", err, srv.FieldsForLog(ctx, r, nil)...)
+			}
+			return info, nil
+		}, srv.logger),
+	)
+
+	register(
 		"FORM_BUILDER_MODEL_CREATE",
 		http.MethodPost,
 		"/app/platform-studio/forms/models",

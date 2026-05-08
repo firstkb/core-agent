@@ -27,6 +27,14 @@ func (h *Handler) ListModels(ctx context.Context, _ *http.Request, _ struct{}) (
 	return out, nil
 }
 
+func (h *Handler) ListCatalog(ctx context.Context, _ *http.Request, _ struct{}) (*ListCatalogResponse, error) {
+	out, err := h.service.ListCatalog(ctx)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) CreateModel(ctx context.Context, _ *http.Request, req CreateModelRequest) (*ModelDetailResponse, error) {
 	out, err := h.service.CreateModel(ctx, req)
 	if err != nil {

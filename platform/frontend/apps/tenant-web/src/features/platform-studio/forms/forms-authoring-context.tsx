@@ -19,6 +19,7 @@ import {
   type FormBuilderCreateModelInput,
   type FormBuilderCreateViewInput,
   type FormBuilderDownloadedFile,
+  type FormBuilderModelCatalogItem,
   type FormBuilderModelDetail,
   type FormBuilderModelFieldSummary,
   type FormBuilderModelSummary,
@@ -210,6 +211,15 @@ function mapModelDetailToPlaceholder(
   });
 }
 
+function mapModelCatalogItemToPlaceholder(
+  item: FormBuilderModelCatalogItem,
+  existing?: FormsPlaceholderModel | null,
+): FormsPlaceholderModel {
+  const summaryModel = mapModelSummaryToPlaceholder(item, existing);
+
+  return withModelViews(summaryModel, item.views);
+}
+
 function upsertModel(
   currentModels: ReadonlyArray<FormsPlaceholderModel>,
   nextModel: FormsPlaceholderModel,
@@ -314,16 +324,9 @@ export function FormBuilderAuthoringProvider({
     setModelsError(null);
 
     try {
-      const modelSummaries = await requestWithSession((accessToken) => authoringClient.listModels(accessToken));
-      const summaryModels = modelSummaries.map((summary) =>
-        mapModelSummaryToPlaceholder(summary, getFormsPlaceholderModel(summary.id, modelsRef.current)));
-      const nextModels = await Promise.all(
-        summaryModels.map(async (model) => {
-          const views = await requestWithSession((accessToken) => authoringClient.listViews(accessToken, model.id));
-
-          return withModelViews(model, views);
-        }),
-      );
+      const catalog = await requestWithSession((accessToken) => authoringClient.listCatalog(accessToken));
+      const nextModels = catalog.map((item) =>
+        mapModelCatalogItemToPlaceholder(item, getFormsPlaceholderModel(item.id, modelsRef.current)));
 
       commitModels(
         nextModels,

@@ -18,6 +18,7 @@ func NewRepository(client *postgres.Client) Repository {
 
 type Repository interface {
 	ListModels(ctx context.Context, tenant requestctx.TenantInfo) ([]ModelRecord, error)
+	ListModelCatalog(ctx context.Context, tenant requestctx.TenantInfo) ([]ModelRecord, map[string][]ViewRecord, error)
 	GetModel(ctx context.Context, tenant requestctx.TenantInfo, modelID string) (*ModelRecord, error)
 	ListViews(ctx context.Context, tenant requestctx.TenantInfo, modelID string) ([]ViewRecord, error)
 	GetView(ctx context.Context, tenant requestctx.TenantInfo, modelID, viewID string) (*ViewRecord, error)

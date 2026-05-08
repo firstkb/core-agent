@@ -71,6 +71,24 @@ func (r *memoryRepository) ListModels(_ context.Context, _ requestctx.TenantInfo
 	return items, nil
 }
 
+func (r *memoryRepository) ListModelCatalog(ctx context.Context, tenant requestctx.TenantInfo) ([]ModelRecord, map[string][]ViewRecord, error) {
+	models, err := r.ListModels(ctx, tenant)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	viewsByModel := make(map[string][]ViewRecord, len(models))
+	for _, model := range models {
+		views, err := r.ListViews(ctx, tenant, model.ModelID)
+		if err != nil {
+			return nil, nil, err
+		}
+		viewsByModel[model.ModelID] = views
+	}
+
+	return models, viewsByModel, nil
+}
+
 func (r *memoryRepository) GetModel(_ context.Context, _ requestctx.TenantInfo, modelID string) (*ModelRecord, error) {
 	for _, record := range r.models {
 		if record.ModelID == modelID || record.ModelKey == modelID {
@@ -2361,6 +2379,64 @@ func TestListModelsShowsStaticModelsForRoot(t *testing.T) {
 	}
 	if counts[staticModel.ModelID] != 64 {
 		t.Fatalf("static model dataCount = %d, want %d", counts[staticModel.ModelID], 64)
+	}
+}
+
+func TestListCatalogIncludesViewsAndHidesStaticModelsForNonRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	managedModel, managedView := seedCanonicalModelAndDefaultView(t, repo)
+	staticModel, _ := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	svc := NewService(repo)
+
+	out, err := svc.ListCatalog(testContext())
+	if err != nil {
+		t.Fatalf("ListCatalog returned error: %v", err)
+	}
+	if len(out.Items) != 1 {
+		t.Fatalf("expected only managed model for non-root, got %#v", out.Items)
+	}
+	if out.Items[0].ID != managedModel.ModelID {
+		t.Fatalf("visible model id = %q, want %q", out.Items[0].ID, managedModel.ModelID)
+	}
+	if len(out.Items[0].Views) != 1 || out.Items[0].Views[0].ID != managedView.ViewID {
+		t.Fatalf("catalog views = %#v, want default view %q", out.Items[0].Views, managedView.ViewID)
+	}
+	for _, item := range out.Items {
+		if item.ID == staticModel.ModelID {
+			t.Fatalf("static model %q should be hidden from non-root catalog", staticModel.ModelID)
+		}
+	}
+}
+
+func TestListCatalogShowsStaticModelsForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	managedModel, _ := seedCanonicalModelAndDefaultView(t, repo)
+	staticModel, staticView := seedExternalModelAndDefaultView(t, repo, "state-directory")
+	repo.relationRowCounts[resolveModelDataCountRelationName(staticModel)] = 64
+	svc := NewService(repo)
+
+	out, err := svc.ListCatalog(rootTestContext())
+	if err != nil {
+		t.Fatalf("ListCatalog returned error: %v", err)
+	}
+	if len(out.Items) != 2 {
+		t.Fatalf("expected managed and static models for root, got %#v", out.Items)
+	}
+
+	viewsByModel := map[string][]ViewSummary{}
+	for _, item := range out.Items {
+		viewsByModel[item.ID] = item.Views
+		if item.ID == staticModel.ModelID {
+			if item.DataCount == nil || *item.DataCount != 64 {
+				t.Fatalf("static model dataCount = %#v, want 64", item.DataCount)
+			}
+		}
+	}
+	if len(viewsByModel[managedModel.ModelID]) != 1 {
+		t.Fatalf("managed model catalog views = %#v, want one default view", viewsByModel[managedModel.ModelID])
+	}
+	if len(viewsByModel[staticModel.ModelID]) != 1 || viewsByModel[staticModel.ModelID][0].ID != staticView.ViewID {
+		t.Fatalf("static model catalog views = %#v, want view %q", viewsByModel[staticModel.ModelID], staticView.ViewID)
 	}
 }
 

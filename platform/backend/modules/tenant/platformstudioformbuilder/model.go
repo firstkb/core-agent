@@ -95,6 +95,15 @@ type ListModelsResponse struct {
 	Items []ModelSummary `json:"items"`
 }
 
+type ModelCatalogItem struct {
+	ModelSummary
+	Views []ViewSummary `json:"views"`
+}
+
+type ListCatalogResponse struct {
+	Items []ModelCatalogItem `json:"items"`
+}
+
 type ListViewsResponse struct {
 	Items []ViewSummary `json:"items"`
 }

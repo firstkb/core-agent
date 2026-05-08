@@ -92,6 +92,7 @@ Rules:
 
 Current Platform Studio authoring API routes:
 
+- `GET /app/platform-studio/forms/catalog`
 - `GET /app/platform-studio/forms/models`
 - `POST /app/platform-studio/forms/models`
 - `GET /app/platform-studio/forms/models/{modelId}`
@@ -103,6 +104,11 @@ Current Platform Studio authoring API routes:
 - `DELETE /app/platform-studio/forms/models/{modelId}/views/{viewId}`
 - `GET /app/platform-studio/forms/models/{modelId}/views/{viewId}/authoring`
 - `PUT /app/platform-studio/forms/models/{modelId}/views/{viewId}/authoring`
+
+`GET /app/platform-studio/forms/catalog` is the batch authoring catalog for
+Platform Studio shells that need model and view labels together, including
+Navigation Builder Form View target pickers. It returns `ModelSummary` records
+with embedded `views` summaries and must avoid per-model HTTP view waterfalls.
 
 Legacy authoring aliases:
 

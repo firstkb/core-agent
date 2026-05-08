@@ -64,6 +64,10 @@ import {
   TenantRailUtilitySheet,
   type TenantRailUtilityPanel,
 } from "../widgets/tenant-rail-utility-sheet/tenant-rail-utility-sheet";
+import {
+  TenantWorkspaceSearchDialog,
+  type TenantWorkspaceSearchUtility,
+} from "../widgets/tenant-workspace-search-dialog/tenant-workspace-search-dialog";
 import { TenantBrandImage } from "./tenant-brand-image";
 import { useTenantRuntimeConfig } from "./tenant-runtime-config-context";
 import { TenantWorkspaceUserProvider } from "./tenant-workspace-user-context";
@@ -212,6 +216,7 @@ export function PrivateApp({
   const [runtimeNavigationReady, setRuntimeNavigationReady] = useState(false);
   const [runtimeUtilityRailItems, setRuntimeUtilityRailItems] =
     useState<TenantRuntimeNavigationItem[] | null>(null);
+  const [workspaceSearchOpen, setWorkspaceSearchOpen] = useState(false);
   const [utilityPanel, setUtilityPanel] = useState<TenantRailUtilityPanel | null>(null);
   const [themeMode, setThemeMode] = useState<TenantThemeMode>(() => {
     if (typeof window !== "undefined") {
@@ -287,7 +292,7 @@ export function PrivateApp({
       }
 
       event.preventDefault();
-      setUtilityPanel("search");
+      setWorkspaceSearchOpen(true);
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -557,6 +562,51 @@ export function PrivateApp({
   ].filter(({ runtimeRailId, runtimeRailKey }) =>
     railUtilityIsVisible(runtimeRailId, runtimeRailKey),
   ).map(({ item }) => item);
+  const workspaceSearchUtilities: TenantWorkspaceSearchUtility[] = [
+    {
+      description: t("tenant.shell.workspaceSearch.utilities.dashboard"),
+      icon: "dashboard",
+      id: "dashboard",
+      label: t("tenant.navigation.dashboard.label"),
+      path: "/dashboard",
+    },
+    ...(platformStudioIsVisible
+      ? [{
+        description: t("tenant.shell.workspaceSearch.utilities.platformStudio"),
+        icon: "platform-studio" as const,
+        id: "platform-studio",
+        label: t("tenant.navigation.platformStudio.label"),
+        path: platformStudioPaths.forms,
+      }]
+      : []),
+    ...(railUtilityIsVisible("rail.task-manager", "task-manager")
+      ? [{
+        description: t("tenant.shell.workspaceSearch.utilities.tasks"),
+        icon: "tasks" as const,
+        id: "tasks",
+        label: t("tenant.shell.menu.tasksCenter"),
+        panel: "tasks" as const,
+      }]
+      : []),
+    ...(railUtilityIsVisible("rail.favorites", "favorites")
+      ? [{
+        description: t("tenant.shell.workspaceSearch.utilities.favorites"),
+        icon: "favorites" as const,
+        id: "favorites",
+        label: t("tenant.shell.menu.favorites"),
+        panel: "favorites" as const,
+      }]
+      : []),
+    ...(railUtilityIsVisible("rail.help-center", "help-center")
+      ? [{
+        description: t("tenant.shell.workspaceSearch.utilities.help"),
+        icon: "help" as const,
+        id: "help",
+        label: t("tenant.shell.menu.helpCenter"),
+        panel: "help" as const,
+      }]
+      : []),
+  ];
 
   return (
     <TenantWorkspaceUserProvider value={userSession}>
@@ -616,7 +666,7 @@ export function PrivateApp({
           <button
             aria-label={t("tenant.shell.aria.openWorkspaceSearch")}
             className="workspace-shell__header-search"
-            onClick={() => setUtilityPanel("search")}
+            onClick={() => setWorkspaceSearchOpen(true)}
             title={t("tenant.shell.searchTitle")}
             type="button"
           >
@@ -763,6 +813,21 @@ export function PrivateApp({
           }}
           onScrollToSection={(sectionId) => openDashboard(sectionId)}
           panel={utilityPanel}
+        />
+        <TenantWorkspaceSearchDialog
+          createActions={runtimeCreateActions}
+          favorites={favoriteShortcuts}
+          navigationItems={runtimeNavigationItems}
+          onNavigate={(path) => {
+            void guardedNavigate(path);
+          }}
+          onOpenChange={setWorkspaceSearchOpen}
+          onOpenExternal={(url) => {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }}
+          onOpenUtilityPanel={setUtilityPanel}
+          open={workspaceSearchOpen}
+          utilities={workspaceSearchUtilities}
         />
       </>
       </TenantFavoritesRefreshProvider>

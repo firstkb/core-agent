@@ -155,6 +155,9 @@ Current shell behavior:
 - closes mobile sidebar panels and collapsed desktop hover-preview panels after
   any actionable sidebar/rail navigation selection
 - opens workspace search with `Ctrl+K` or `Meta+K`
+- workspace search is an app-local modal over already loaded, access-filtered
+  shell data: Navigation Builder runtime entries, create actions, favorites,
+  and visible utility rail items. It does not run remote record search yet.
 - uses tenant logo assets from `/tenant/*` with fallback app assets under `/assets/*`
 - shows build metadata from `getAppBuildMetadata()`
 - signs out through `auth-core`

@@ -18,8 +18,9 @@ import { useTranslation } from "@platform/i18n";
 import type { TenantFavoriteShortcut } from "@platform/api-client";
 
 import { tenantDashboardSectionIds } from "../../pages/dashboard/page";
+import { TenantHelpCenterPlaceholder } from "./tenant-help-center-placeholder";
 
-type TenantRailUtilityPanel = "favorites" | "help" | "search" | "tasks";
+type TenantRailUtilityPanel = "favorites" | "help" | "tasks";
 
 type TenantRailUtilitySheetProps = {
   favorites: TenantFavoriteShortcut[];
@@ -41,12 +42,8 @@ const panelCopy: Record<
     title: "Favorites",
   },
   help: {
-    description: "Runbooks, mock references, and tenant support notes stay grouped as workspace-level utilities.",
-    title: "Help and support",
-  },
-  search: {
-    description: "Workspace search and command palette wiring stays separate from Help Center utilities.",
-    title: "Search and commands",
+    description: "Guides, configuration help, and support resources will live here as workspace-level utilities.",
+    title: "Help Center",
   },
   tasks: {
     description: "Pinned review notes stay visible as one operator utility while tenant routing remains reduced to a single dashboard route.",
@@ -78,24 +75,25 @@ export function TenantRailUtilitySheet({
   }
 
   const isFavoritesPanel = panel === "favorites";
+  const isHelpPanel = panel === "help";
 
   return (
     <Dialog onOpenChange={onOpenChange} open={panel !== null}>
-      <DialogContent className={`tenant-web__utility-sheet${isFavoritesPanel ? " tenant-web__utility-sheet--favorites" : ""}`}>
+      <DialogContent
+        className={`tenant-web__utility-sheet${isFavoritesPanel ? " tenant-web__utility-sheet--favorites" : ""}${isHelpPanel ? " tenant-web__utility-sheet--help" : ""}`}
+      >
         <DialogHeader>
           <div>
-            <DialogTitle>{panel === "search" ? t("tenant.shell.searchPanel.title") : panelCopy[panel].title}</DialogTitle>
-            {(panel === "search"
-              ? t("tenant.shell.searchPanel.description")
-              : panelCopy[panel].description) ? (
+            <DialogTitle>{panelCopy[panel].title}</DialogTitle>
+            {panelCopy[panel].description ? (
               <DialogDescription>
-                {panel === "search" ? t("tenant.shell.searchPanel.description") : panelCopy[panel].description}
+                {panelCopy[panel].description}
               </DialogDescription>
             ) : null}
           </div>
         </DialogHeader>
 
-        <DialogBody className={`tenant-web__utility-sheet-body${isFavoritesPanel ? " tenant-web__utility-sheet-body--favorites" : ""}`}>
+        <DialogBody className={`tenant-web__utility-sheet-body${isFavoritesPanel ? " tenant-web__utility-sheet-body--favorites" : ""}${isHelpPanel ? " tenant-web__utility-sheet-body--help" : ""}`}>
           {panel === "tasks" ? (
             <>
               <Card>
@@ -173,7 +171,7 @@ export function TenantRailUtilitySheet({
                   </CardHeader>
                   <CardContent>
                     <Button onClick={() => handleSelect()} variant="outline">
-                      {t("tenant.shell.searchPanel.primaryAction")}
+                      {t("tenant.shell.favoritesPanel.primaryAction")}
                     </Button>
                   </CardContent>
                 </Card>
@@ -182,72 +180,9 @@ export function TenantRailUtilitySheet({
           ) : null}
 
           {panel === "help" ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Dashboard shell</CardTitle>
-                  <CardDescription>Return to the main canvas when you want to validate tenant shell spacing, chrome, and scroll behavior.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect()} variant="outline">
-                    Open dashboard
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Loading state docs</CardTitle>
-                  <CardDescription>Review the tenant loading areas in the modules section when you need the placeholder contract in context.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.modules)} variant="outline">
-                    Review loading docs
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Support runbook</CardTitle>
-                  <CardDescription>The sync queue block remains the best tenant-side reference while a real help center has not been implemented yet.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.queue)} variant="outline">
-                    Open support notes
-                  </Button>
-                </CardContent>
-              </Card>
-            </>
+            <TenantHelpCenterPlaceholder onOpenDashboard={() => handleSelect()} />
           ) : null}
 
-          {panel === "search" ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("tenant.shell.searchPanel.primaryCardTitle")}</CardTitle>
-                  <CardDescription>{t("tenant.shell.searchPanel.primaryCardDescription")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect()} variant="outline">
-                    {t("tenant.shell.searchPanel.primaryAction")}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("tenant.shell.searchPanel.secondaryCardTitle")}</CardTitle>
-                  <CardDescription>{t("tenant.shell.searchPanel.secondaryCardDescription")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => handleSelect(tenantDashboardSectionIds.modules)} variant="outline">
-                    {t("tenant.shell.searchPanel.secondaryAction")}
-                  </Button>
-                </CardContent>
-              </Card>
-            </>
-          ) : null}
         </DialogBody>
       </DialogContent>
     </Dialog>

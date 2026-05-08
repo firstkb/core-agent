@@ -72,6 +72,10 @@ Last compacted: 2026-04-25
 - Tenant top-bar `+` menu renders `createActions` from `GET /app/navigation`
   as Start New links for accessible Form View targets, avoiding startup
   discovery requests across every available model/view.
+- Tenant workspace search opens from the top bar or `Ctrl+K`/`Meta+K` as an
+  app-local modal over already loaded, access-filtered runtime navigation,
+  create actions, favorites, and visible utility rail items. Remote record
+  search is a future backend slice.
 - App Page and Form View runtime screens resolve the tenant top bar title and
   breadcrumb from the configured Navigation Builder path and target metadata;
   their backing APIs are denied when the current user cannot access the matching

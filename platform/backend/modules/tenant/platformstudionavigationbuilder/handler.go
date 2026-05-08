@@ -100,6 +100,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("NAVIGATION_BUILDER_ACCESS_OPTIONS_INVALID", http.StatusBadRequest, "invalid access options request")
 	case errors.Is(err, ErrInvalidDefinition):
 		return apperr.New("NAVIGATION_BUILDER_INVALID", http.StatusBadRequest, "invalid navigation definition")
+	case errors.Is(err, ErrRootAccessRequired):
+		return apperr.New("NAVIGATION_BUILDER_ROOT_ACCESS_REQUIRED", http.StatusForbidden, "root access is required to save root-only navigation items")
 	case errors.Is(err, ErrConflict):
 		return apperr.New("NAVIGATION_BUILDER_CONFLICT", http.StatusConflict, "navigation definition version conflict")
 	default:

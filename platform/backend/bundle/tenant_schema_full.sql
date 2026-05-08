@@ -5444,7 +5444,7 @@ CREATE TABLE IF NOT EXISTS ps_navigation_access_policy (
     CHECK (owner_type IN ('app_menu_item', 'utility_rail_item')),
   CONSTRAINT ps_navigation_access_policy_owner_id_chk CHECK (btrim(owner_id) <> ''),
   CONSTRAINT ps_navigation_access_policy_mode_chk
-    CHECK (access_mode IN ('inherit', 'all_authenticated', 'selected_only', 'everyone_except'))
+    CHECK (access_mode IN ('inherit', 'all_authenticated', 'root_only', 'selected_only', 'everyone_except'))
 );
 
 CREATE INDEX IF NOT EXISTS ix_ps_navigation_access_policy_config_mode

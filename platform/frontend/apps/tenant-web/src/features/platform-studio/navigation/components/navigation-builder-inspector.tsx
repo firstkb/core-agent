@@ -43,6 +43,7 @@ import { NavigationBuilderIconGlyph } from "./navigation-builder-icons";
 type NavigationBuilderInspectorProps = {
   accessOptions: TenantNavigationAccessOptionsResponse;
   accessOptionsError: string | null;
+  canManageRootAccess: boolean;
   formViewTargets: ReadonlyArray<NavigationBuilderFormViewTarget>;
   isLoadingAccessOptions: boolean;
   node: NavigationBuilderNode | null;
@@ -58,6 +59,7 @@ const accessModeLabels: Record<NavigationBuilderAccessMode, string> = {
   "all-authenticated": "Inherits parent",
   "everyone-except": "Everyone except",
   inherit: "Inherits parent",
+  "root-only": "Root only",
   "selected-only": "Selected only",
 };
 
@@ -65,11 +67,19 @@ const accessModeDescriptions: Record<NavigationBuilderAccessMode, string> = {
   "all-authenticated": "Use the parent rule",
   "everyone-except": "Hide selected recipients",
   inherit: "Use the parent rule",
+  "root-only": "Only root can see and manage",
   "selected-only": "Show selected recipients",
 };
 
 const editableAccessModes: NavigationBuilderAccessMode[] = [
   "inherit",
+  "selected-only",
+  "everyone-except",
+];
+
+const rootEditableAccessModes: NavigationBuilderAccessMode[] = [
+  "inherit",
+  "root-only",
   "selected-only",
   "everyone-except",
 ];
@@ -164,36 +174,53 @@ function getVisibleAccessMode(mode: NavigationBuilderAccessMode) {
   return mode === "all-authenticated" ? "inherit" : mode;
 }
 
+function getEditableAccessModes(canManageRootAccess: boolean, currentMode: NavigationBuilderAccessMode) {
+  if (canManageRootAccess || currentMode === "root-only") {
+    return rootEditableAccessModes;
+  }
+  return editableAccessModes;
+}
+
 function AccessModePicker({
   access,
+  canManageRootAccess,
   disabled,
   onChange,
 }: {
   access: NavigationBuilderAccessPolicy;
+  canManageRootAccess: boolean;
   disabled: boolean;
   onChange: (access: NavigationBuilderAccessPolicy) => void;
 }) {
   const selectedMode = getVisibleAccessMode(access.mode);
+  const modes = getEditableAccessModes(canManageRootAccess, selectedMode);
 
   return (
-    <RadioGroup aria-label="Access strategy" className="tenant-web__navigation-builder-access-mode-grid">
-      {editableAccessModes.map((mode) => (
-        <label
-          className={`tenant-web__navigation-builder-access-mode${disabled ? " tenant-web__navigation-builder-access-option--disabled" : ""}`}
-          key={mode}
-        >
-          <RadioGroupItem
-            checked={selectedMode === mode}
-            disabled={disabled}
-            name="navigation-access-mode"
-            onChange={() => onChange(setAccessMode(access, mode))}
-          />
-          <span>
-            <strong>{accessModeLabels[mode]}</strong>
-            <small>{accessModeDescriptions[mode]}</small>
-          </span>
-        </label>
-      ))}
+    <RadioGroup
+      aria-label="Access strategy"
+      className={`tenant-web__navigation-builder-access-mode-grid${modes.length > 3 ? " tenant-web__navigation-builder-access-mode-grid--root" : ""}`}
+    >
+      {modes.map((mode) => {
+        const modeDisabled = disabled || (mode === "root-only" && !canManageRootAccess);
+
+        return (
+          <label
+            className={`tenant-web__navigation-builder-access-mode${modeDisabled ? " tenant-web__navigation-builder-access-option--disabled" : ""}`}
+            key={mode}
+          >
+            <RadioGroupItem
+              checked={selectedMode === mode}
+              disabled={modeDisabled}
+              name="navigation-access-mode"
+              onChange={() => onChange(setAccessMode(access, mode))}
+            />
+            <span>
+              <strong>{accessModeLabels[mode]}</strong>
+              <small>{accessModeDescriptions[mode]}</small>
+            </span>
+          </label>
+        );
+      })}
     </RadioGroup>
   );
 }
@@ -262,6 +289,7 @@ function AccessRuleOperator({ children }: { children: ReactNode }) {
 
 function AccessEditor({
   access,
+  canManageRootAccess,
   canEdit,
   isLoadingOptions,
   onAccessChange,
@@ -270,6 +298,7 @@ function AccessEditor({
   optionsError,
 }: {
   access: NavigationBuilderAccessPolicy;
+  canManageRootAccess: boolean;
   canEdit: boolean;
   isLoadingOptions: boolean;
   onAccessChange: (access: NavigationBuilderAccessPolicy) => void;
@@ -277,6 +306,7 @@ function AccessEditor({
   options: TenantNavigationAccessOptionsResponse;
   optionsError: string | null;
 }) {
+  const canEditStrategy = canEdit && (access.mode !== "root-only" || canManageRootAccess);
   const showsRule = access.mode === "selected-only" || access.mode === "everyone-except";
   const hasRecipients = accessPolicyHasRecipients(access);
   const effectiveSummary = access.mode === "all-authenticated"
@@ -286,7 +316,9 @@ function AccessEditor({
     ? "Visible only when one direct user or audience rule branch matches."
     : access.mode === "everyone-except"
       ? "Visible unless one direct user or audience rule branch matches."
-      : "Resolved from the nearest parent that defines access.";
+      : access.mode === "root-only"
+        ? "Only root users can see this item. Only root users can change this strategy."
+        : "Resolved from the nearest parent that defines access.";
   const emptyRecipientCopy = access.mode === "everyone-except"
     ? "Choose who should be excluded."
     : "Choose who can see this item.";
@@ -296,7 +328,8 @@ function AccessEditor({
       <ElementSection title="Strategy">
         <AccessModePicker
           access={access}
-          disabled={!canEdit}
+          canManageRootAccess={canManageRootAccess}
+          disabled={!canEditStrategy}
           onChange={onAccessChange}
         />
       </ElementSection>
@@ -707,6 +740,7 @@ function isPlannedAppModuleTarget(node: NavigationBuilderNode) {
 export function NavigationBuilderInspector({
   accessOptions,
   accessOptionsError,
+  canManageRootAccess,
   formViewTargets,
   isLoadingAccessOptions,
   node,
@@ -788,6 +822,7 @@ export function NavigationBuilderInspector({
                 <TabsPanel value="access">
                   <AccessEditor
                     access={railItem.access}
+                    canManageRootAccess={canManageRootAccess}
                     canEdit
                     isLoadingOptions={isLoadingAccessOptions}
                     onAccessChange={onAccessChange}
@@ -968,6 +1003,7 @@ export function NavigationBuilderInspector({
               <TabsPanel value="access">
                 <AccessEditor
                   access={node.access}
+                  canManageRootAccess={canManageRootAccess}
                   canEdit={canEditAccess}
                   isLoadingOptions={isLoadingAccessOptions}
                   onAccessChange={onAccessChange}

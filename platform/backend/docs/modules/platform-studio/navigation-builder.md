@@ -36,6 +36,7 @@ Tenant schema surfaces:
 - `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
 - `platform/backend/migrations/postgres/tenant/011_platform_studio_navigation_access_runtime.sql`
 - `platform/backend/migrations/postgres/tenant/012_platform_studio_navigation_access_company_type.sql`
+- `platform/backend/migrations/postgres/tenant/013_platform_studio_navigation_root_access.sql`
 - `platform/backend/bundle/tenant_schema_full.sql`
 
 ## Current Module Responsibility
@@ -53,6 +54,8 @@ Tenant schema surfaces:
 - runtime app menu and utility rail visibility projection via
   `GET /app/navigation`, including root/admin access-policy bypass while
   preserving inactive item filtering
+- protected `root_only` access mode; only root/admin claims may save
+  definitions that contain or introduce root-only navigation items
 
 It does not own:
 

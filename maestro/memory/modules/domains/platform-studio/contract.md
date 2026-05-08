@@ -33,9 +33,9 @@ Status: active compact contract
   authored runtime route targets, draft/Save UX, active/inactive runtime sidebar
   exposure, and utility rail visibility/access filtering. It uses a
   dedicated backend package `platformstudionavigationbuilder` for saved
-  definition persistence, validation, and runtime navigation projection; do not add this to
-  `platformstudioformbuilder`. V1 already exposes a separate RailBar utility
-  tab;
+  definition persistence, validation, protected root-only access, and runtime
+  navigation projection; do not add this to `platformstudioformbuilder`. V1
+  already exposes a separate RailBar utility tab;
   access/permission assignment is expected to live here unless a later accepted
   decision creates a separate Access Builder.
 - A single tenant app page such as Business Tree is not a product module.

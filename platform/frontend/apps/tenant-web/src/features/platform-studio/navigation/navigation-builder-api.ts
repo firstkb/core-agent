@@ -50,7 +50,7 @@ type TenantNavigationAccessPayload = {
   companies: string[];
   companyTypes: string[];
   jobtypes: string[];
-  mode: "all_authenticated" | "everyone_except" | "inherit" | "selected_only";
+  mode: "all_authenticated" | "everyone_except" | "inherit" | "root_only" | "selected_only";
   users: string[];
 };
 
@@ -69,6 +69,7 @@ function readString(value: unknown) {
 function readAccessMode(value: unknown): NavigationBuilderAccessMode | undefined {
   return value === "inherit" ||
     value === "all-authenticated" ||
+    value === "root-only" ||
     value === "selected-only" ||
     value === "everyone-except"
     ? value
@@ -82,6 +83,9 @@ function readAccessModeFromApi(value: unknown): NavigationBuilderAccessMode | un
     case "all_authenticated":
     case "all-authenticated":
       return "all-authenticated";
+    case "root_only":
+    case "root-only":
+      return "root-only";
     case "selected_only":
     case "selected-only":
       return "selected-only";
@@ -141,6 +145,8 @@ function encodeNavigationAccessMode(mode: NavigationBuilderAccessMode): TenantNa
   switch (mode) {
     case "all-authenticated":
       return "all_authenticated";
+    case "root-only":
+      return "root_only";
     case "selected-only":
       return "selected_only";
     case "everyone-except":

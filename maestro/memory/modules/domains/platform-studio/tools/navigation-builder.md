@@ -84,7 +84,9 @@ Last compacted: 2026-05-06
   items expose a `Show in utility rail` active toggle and inactive rail items
   are excluded from runtime utility rail output.
 - V1 editable Access strategy exposes `Inherit from parent`, `Selected
-  recipients only`, and `Everyone except selected recipients`. `All
+  recipients only`, and `Everyone except selected recipients`. For root users it
+  also exposes `Root only` as a protected strategy in a two-row strategy grid.
+  `All
   authenticated users` remains a persisted default/compatibility mode but is
   not exposed as an editable child-item strategy because children cannot expand
   a restricted parent. Recipient pickers use centered table dialogs with
@@ -93,7 +95,9 @@ Last compacted: 2026-05-06
   `jobtype`; matching is `users OR ((companies OR company types) AND job types)`.
   Effective child access is bounded by parent access; children can narrow but
   cannot expand beyond parent. External Link access controls only sidebar
-  visibility, not the external resource.
+  visibility, not the external resource. Only root/admin claims may save a
+  definition that contains or introduces `Root only`; non-root users must not be
+  able to remove root-only protection through the UI or direct API calls.
 - V1 navigation icons are configurable for every editable app menu item except
   `Menu title`. The icon picker starts with `None` so any item can render
   without an icon, and the dictionary includes inspection-oriented choices such

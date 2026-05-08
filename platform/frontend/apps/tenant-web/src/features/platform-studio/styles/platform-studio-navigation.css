@@ -585,6 +585,10 @@
   gap: 0.45rem;
 }
 
+.tenant-web__navigation-builder-access-mode-grid--root {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .tenant-web__navigation-builder-access-mode {
   display: flex;
   align-items: center;

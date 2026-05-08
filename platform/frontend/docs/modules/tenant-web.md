@@ -233,7 +233,9 @@ Rail utilities such as Platform Studio, Task Manager, Favorites, and Help Center
 are shown in a separate Navigation Builder RailBar editor tab. Rail access is
 authored and saved through the same inline Access strategy/rule composer as app
 menu items, and rail active/access filtering is applied by the backend runtime
-navigation projection. Navigation Builder should distinguish app page targets
+navigation projection. Root users can assign protected root-only access to app
+menu and rail items; backend save prevents non-root users from creating or
+removing that protection. Navigation Builder should distinguish app page targets
 from broader product module targets.
 
 ## Platform Studio Ownership

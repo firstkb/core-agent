@@ -213,6 +213,8 @@ func runtimeNavigationItemAllowed(
 	switch mode {
 	case NavigationAccessModeAllAuthenticated:
 		return user.Authenticated
+	case NavigationAccessModeRootOnly:
+		return false
 	case NavigationAccessModeSelectedOnly:
 		return user.Authenticated && subjects.Match(user)
 	case NavigationAccessModeEveryoneExcept:

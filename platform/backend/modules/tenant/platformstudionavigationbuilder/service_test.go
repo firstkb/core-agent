@@ -139,6 +139,21 @@ func navigationBuilderTestContext() context.Context {
 	})
 }
 
+func navigationBuilderRootTestContext() context.Context {
+	ctx := requestctx.WithClaims(context.Background(), requestctx.ClaimsInfo{
+		Level:    100,
+		Role:     "root",
+		TenantID: "101",
+		UserID:   "99999999-9999-9999-9999-999999999999",
+	})
+	return requestctx.WithTenant(ctx, requestctx.TenantInfo{
+		DBName:         "tenant_101",
+		DBInstanceCode: "local",
+		ID:             "101",
+		Name:           "Demo Tenant",
+	})
+}
+
 func sampleDefinition() NavigationDefinition {
 	return NavigationDefinition{
 		SchemaVersion: SchemaVersionV1,
@@ -280,6 +295,58 @@ func TestSaveConfigRejectsDuplicateTargets(t *testing.T) {
 	_, err := service.SaveConfig(navigationBuilderTestContext(), SaveConfigRequest{Definition: definition})
 	if !errors.Is(err, ErrInvalidDefinition) {
 		t.Fatalf("SaveConfig error = %v, want ErrInvalidDefinition", err)
+	}
+}
+
+func TestSaveConfigRootOnlyAccessRequiresRoot(t *testing.T) {
+	definition := sampleDefinition()
+	definition.UtilityRail = []NavigationRailItem{
+		{ID: "rail.platform-studio", Key: "platform-studio", Label: "Platform Studio", Active: boolPtr(true), Access: json.RawMessage(`{"mode":"root_only"}`)},
+	}
+	service := NewService(&memoryRepository{})
+
+	_, err := service.SaveConfig(navigationBuilderTestContext(), SaveConfigRequest{Definition: definition})
+	if !errors.Is(err, ErrRootAccessRequired) {
+		t.Fatalf("SaveConfig error = %v, want ErrRootAccessRequired", err)
+	}
+
+	out, err := service.SaveConfig(navigationBuilderRootTestContext(), SaveConfigRequest{Definition: definition})
+	if err != nil {
+		t.Fatalf("root SaveConfig returned error: %v", err)
+	}
+	if out.ValidationSummary.CanSave != true {
+		t.Fatalf("root SaveConfig validation summary = %#v", out.ValidationSummary)
+	}
+}
+
+func TestSaveConfigCannotRemoveExistingRootOnlyAccessWithoutRoot(t *testing.T) {
+	rootDefinition := sampleDefinition()
+	rootDefinition.UtilityRail = []NavigationRailItem{
+		{ID: "rail.platform-studio", Key: "platform-studio", Label: "Platform Studio", Active: boolPtr(true), Access: json.RawMessage(`{"mode":"root_only"}`)},
+	}
+	raw, err := json.Marshal(rootDefinition)
+	if err != nil {
+		t.Fatalf("marshal root definition: %v", err)
+	}
+	service := NewService(&memoryRepository{
+		record: &ConfigRecord{
+			ConfigKey:      ConfigKeyDefault,
+			DefinitionJSON: raw,
+			Version:        1,
+		},
+	})
+
+	nextDefinition := sampleDefinition()
+	nextDefinition.UtilityRail = []NavigationRailItem{
+		{ID: "rail.platform-studio", Key: "platform-studio", Label: "Platform Studio", Active: boolPtr(true), Access: json.RawMessage(`{"mode":"inherit"}`)},
+	}
+	expectedVersion := int64(1)
+	_, err = service.SaveConfig(navigationBuilderTestContext(), SaveConfigRequest{
+		Definition:      nextDefinition,
+		ExpectedVersion: &expectedVersion,
+	})
+	if !errors.Is(err, ErrRootAccessRequired) {
+		t.Fatalf("SaveConfig error = %v, want ErrRootAccessRequired", err)
 	}
 }
 

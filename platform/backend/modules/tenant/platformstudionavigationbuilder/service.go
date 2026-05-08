@@ -16,6 +16,7 @@ var (
 	ErrInvalidAccessOptions = errors.New("navigation builder invalid access options request")
 	ErrConflict             = errors.New("navigation builder version conflict")
 	ErrInvalidDefinition    = errors.New("navigation builder invalid definition")
+	ErrRootAccessRequired   = errors.New("navigation builder root access required")
 	ErrTenantMissing        = errors.New("navigation builder tenant missing")
 	ErrUnauthorized         = errors.New("navigation builder unauthorized")
 )
@@ -97,6 +98,32 @@ func (s *Service) LoadRuntimeNavigation(ctx context.Context) (*RuntimeNavigation
 
 func claimsHaveRootAccess(claims requestctx.ClaimsInfo) bool {
 	return claims.Level >= 100 || strings.EqualFold(strings.TrimSpace(claims.Role), "root")
+}
+
+func definitionHasRootOnlyAccess(definition NavigationDefinition) bool {
+	for i := range definition.AppMenu {
+		if nodeHasRootOnlyAccess(definition.AppMenu[i]) {
+			return true
+		}
+	}
+	for i := range definition.UtilityRail {
+		if parseNavigationAccess(definition.UtilityRail[i].Access).Mode == NavigationAccessModeRootOnly {
+			return true
+		}
+	}
+	return false
+}
+
+func nodeHasRootOnlyAccess(node NavigationNode) bool {
+	if parseNavigationAccess(node.Access, node.Meta).Mode == NavigationAccessModeRootOnly {
+		return true
+	}
+	for i := range node.Children {
+		if nodeHasRootOnlyAccess(node.Children[i]) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Service) LoadAccessOptions(ctx context.Context) (*AccessOptionsResponse, error) {
@@ -236,6 +263,24 @@ func (s *Service) SaveConfig(ctx context.Context, req SaveConfigRequest) (*SaveC
 	validation := ValidateDefinition(definition)
 	if !validation.CanSave {
 		return nil, ErrInvalidDefinition
+	}
+
+	if !claimsHaveRootAccess(claims) {
+		currentRecord, err := s.repo.GetConfig(ctx, tenant, ConfigKeyDefault)
+		if err != nil {
+			return nil, err
+		}
+		currentHasRootOnly := false
+		if currentRecord != nil {
+			currentDefinition, err := decodeDefinition(currentRecord.DefinitionJSON)
+			if err != nil {
+				return nil, err
+			}
+			currentHasRootOnly = definitionHasRootOnlyAccess(currentDefinition)
+		}
+		if currentHasRootOnly || definitionHasRootOnlyAccess(definition) {
+			return nil, ErrRootAccessRequired
+		}
 	}
 
 	payload, err := json.Marshal(definition)

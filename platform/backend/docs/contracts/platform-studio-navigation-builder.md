@@ -24,6 +24,7 @@ Tenant schema:
 - `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
 - `platform/backend/migrations/postgres/tenant/011_platform_studio_navigation_access_runtime.sql`
 - `platform/backend/migrations/postgres/tenant/012_platform_studio_navigation_access_company_type.sql`
+- `platform/backend/migrations/postgres/tenant/013_platform_studio_navigation_root_access.sql`
 - `ps_navigation_config`
 - `ps_navigation_runtime_item`
 - `ps_navigation_access_policy`
@@ -133,6 +134,7 @@ Supported persisted access modes:
 - inherit from parent;
 - all authenticated users, retained as default/compatibility mode but not
   exposed as an editable V1 child-item strategy;
+- root only;
 - selected recipients only;
 - everyone except selected recipients.
 
@@ -142,6 +144,11 @@ AND job types)`, where an empty dimension means "any" inside that branch.
 Parent access always bounds child access; a child may narrow access but must not
 expand beyond parent access. External Link access controls only navigation
 visibility, not the external destination.
+
+`root_only` is a protected access mode. Only root/admin claims (`level >= 100`
+or `role = root`) may save a definition that introduces root-only access or a
+definition where root-only access already exists. This prevents non-root users
+from removing root-only protection through a direct save request.
 
 ## Runtime Projection
 
@@ -167,6 +174,7 @@ Runtime visibility rules:
 - root/admin claims (`level >= 100` or `role = root`) bypass Navigation
   Builder access policy checks but still respect inactive item filtering;
 - `inherit` means "same as parent"; at root it behaves as authenticated access;
+- `root_only` is visible only to root/admin claims;
 - `selected_only` requires a direct user match or the audience rule
   `(companies OR company types) AND job types`;
 - `everyone_except` hides matching recipients and shows other authenticated

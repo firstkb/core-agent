@@ -289,14 +289,16 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   future direct Form View/App Page route/API guards should reuse the same
   evaluator semantics.
 - Access model: supported modes are `inherit`, `all authenticated users`,
-  `selected recipients only`, and `everyone except selected recipients`.
+  `root only`, `selected recipients only`, and `everyone except selected recipients`.
   Recipient matching uses current `users`, `company`, `companytype`, and
   `jobtype` sources: `users OR ((companies OR company types) AND job types)`,
   where an empty audience dimension means any value inside that branch. Parent
   access always limits children; children may only narrow effective access, not
   expand it beyond the parent. Root/admin claims bypass access policy checks in
   runtime navigation evaluation, but inactive app menu and utility rail items
-  remain hidden.
+  remain hidden. `root only` is protected: only root/admin claims may save a
+  definition that contains or introduces root-only navigation items, so non-root
+  users cannot remove that protection through direct save requests.
 - Storage rule: `definition_json` is the authoring source of truth; derived
   access/runtime rows are not edited directly and should be fully rebuilt from
   the saved definition.

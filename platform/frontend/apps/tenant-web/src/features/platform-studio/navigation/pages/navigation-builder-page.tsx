@@ -22,6 +22,7 @@ import {
 } from "@platform/ui-kit";
 
 import { useTenantRuntimeConfig } from "../../../../app/tenant-runtime-config-context";
+import { useTenantWorkspaceUser } from "../../../../app/tenant-workspace-user-context";
 import { tenantRuntimeNavigationRefreshEvent } from "../../../../shared/tenant-runtime-navigation";
 import { useFormBuilderAuthoring } from "../../forms/forms-authoring-context";
 import { PlatformStudioTabs } from "../../platform-studio-tabs";
@@ -88,6 +89,7 @@ function mergeAccessOptionCache(
 
 export function NavigationBuilderPage() {
   const runtimeConfig = useTenantRuntimeConfig();
+  const workspaceUser = useTenantWorkspaceUser();
   const navigationClient = useMemo(
     () => createTenantNavigationClient(runtimeConfig.tenantApiUrl),
     [runtimeConfig.tenantApiUrl],
@@ -152,6 +154,10 @@ export function NavigationBuilderPage() {
       : unsavedChanges === 0
         ? "Saved"
         : `${unsavedChanges} unsaved ${unsavedChanges === 1 ? "change" : "changes"}`;
+  const canManageRootAccess =
+    workspaceUser.isRoot ||
+    workspaceUser.level >= 100 ||
+    workspaceUser.role.trim().toLowerCase() === "root";
 
   const requestWithSession = useCallback(async <T,>(request: (accessToken: string) => Promise<T>) => {
     const accessToken = getAccessToken();
@@ -558,6 +564,7 @@ export function NavigationBuilderPage() {
           onDeleteNode={(node) => setDeleteNodeId(node.id)}
           onNodeChange={handleSelectedNodeChange}
           onRailItemChange={handleSelectedRailItemChange}
+          canManageRootAccess={canManageRootAccess}
           railItem={activeTreePanel === "railbar" ? selectedRailItem : null}
         />
       </section>

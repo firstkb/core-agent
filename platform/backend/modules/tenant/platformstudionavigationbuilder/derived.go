@@ -16,6 +16,7 @@ const (
 
 	NavigationAccessModeInherit          = "inherit"
 	NavigationAccessModeAllAuthenticated = "all_authenticated"
+	NavigationAccessModeRootOnly         = "root_only"
 	NavigationAccessModeSelectedOnly     = "selected_only"
 	NavigationAccessModeEveryoneExcept   = "everyone_except"
 
@@ -223,6 +224,8 @@ func normalizeNavigationAccessMode(value string) string {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case NavigationAccessModeAllAuthenticated, "all-authenticated", "all_authenticated_users":
 		return NavigationAccessModeAllAuthenticated
+	case NavigationAccessModeRootOnly, "root-only", "root", "root_only_users", "root-only-users", "platform_admins_only", "platform-admins-only":
+		return NavigationAccessModeRootOnly
 	case NavigationAccessModeSelectedOnly, "selected-only", "selected", "selected_recipients_only", "selected-recipients-only":
 		return NavigationAccessModeSelectedOnly
 	case NavigationAccessModeEveryoneExcept, "everyone-except", "everyone_except_selected", "everyone-except-selected", "except_selected":

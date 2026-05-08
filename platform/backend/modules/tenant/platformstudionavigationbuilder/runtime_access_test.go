@@ -167,6 +167,40 @@ func TestRuntimeNavigationRootBypassesAccessButNotInactiveItems(t *testing.T) {
 	}
 }
 
+func TestRuntimeNavigationRootOnlyAccess(t *testing.T) {
+	definition := sampleDefinition()
+	definition.AppMenu[1].Access = json.RawMessage(`{"mode":"root_only"}`)
+	definition.UtilityRail = []NavigationRailItem{
+		{ID: "rail.platform-studio", Key: "platform-studio", Label: "Platform Studio", Active: boolPtr(true), Access: json.RawMessage(`{"mode":"root_only"}`)},
+	}
+
+	regularUser := buildRuntimeNavigationResponse(runtimeStateForDefinition(definition, runtimeNavigationUserContext{
+		Authenticated: true,
+		UserID:        "501",
+		CompanyID:     "10",
+		CompanyTypeID: "300",
+		JobTypeID:     "20",
+	}))
+	if hasRuntimeItem(regularUser.Items, "nav.group.safety") {
+		t.Fatalf("regular user sees root-only app menu branch: %#v", regularUser.Items)
+	}
+	if got := len(regularUser.UtilityRail); got != 0 {
+		t.Fatalf("regular user root-only utility rail count = %d, want 0: %#v", got, regularUser.UtilityRail)
+	}
+
+	rootUser := buildRuntimeNavigationResponse(runtimeStateForDefinition(definition, runtimeNavigationUserContext{
+		Authenticated: true,
+		IsRoot:        true,
+		UserID:        "root-admin",
+	}))
+	if !hasRuntimeItem(rootUser.Items, "nav.group.safety") {
+		t.Fatalf("root user does not see root-only app menu branch: %#v", rootUser.Items)
+	}
+	if got, want := len(rootUser.UtilityRail), 1; got != want {
+		t.Fatalf("root utility rail count = %d, want %d: %#v", got, want, rootUser.UtilityRail)
+	}
+}
+
 func TestRuntimeNavigationSuppressesEmptyMenuTitlesAfterAccessFiltering(t *testing.T) {
 	definition := NavigationDefinition{
 		SchemaVersion: SchemaVersionV1,

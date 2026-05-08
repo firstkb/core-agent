@@ -258,6 +258,9 @@ Route rules:
   exposes utility rail items as a dedicated left-panel tab and uses the same
   saved access policy model, active/inactive toggle, and runtime visibility
   projection as app menu items.
+- Root-only navigation access is a protected Navigation Builder strategy:
+  root users can assign it, and backend save rejects non-root attempts to create
+  or remove root-only protection.
 - Events, notification side effects, and post-submit automation are Action Builder concerns.
 - PDF and report generation are separate tool concerns unless an accepted lower-level capability contract says otherwise.
 

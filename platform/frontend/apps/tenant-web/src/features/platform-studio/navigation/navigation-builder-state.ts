@@ -23,6 +23,7 @@ export type NavigationBuilderTargetKind =
 export type NavigationBuilderAccessMode =
   | "inherit"
   | "all-authenticated"
+  | "root-only"
   | "selected-only"
   | "everyone-except";
 
@@ -257,6 +258,8 @@ export function getNavigationBuilderAccessSummary(
       return "Inherits parent access";
     case "all-authenticated":
       return "Visible to all authenticated tenant users";
+    case "root-only":
+      return "Visible only to root users";
     case "selected-only":
       return recipientCount === 0
         ? "No recipients selected"

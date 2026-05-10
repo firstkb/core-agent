@@ -177,13 +177,14 @@ Statuses:
 - Model/View: affected fields using `db_lookup` and lookup presets such as Contact, Company, Project, Reported By, and similar lookup-heavy fields.
 - Symptom: Lookup-heavy fields need a dedicated review of per-field settings and View filter behavior. Current filter UX/compiler behavior may not expose the right lookup-specific operators, display outputs, or derived values consistently for each lookup field.
 - Expected: Each lookup field/preset should have clear authoring settings, predictable display/stored value semantics, and View filters that expose useful lookup-aware filter choices for that specific field.
-- Actual: Dedicated per-lookup settings/filter review is not implemented in this stabilization pass.
+- Actual: Dedicated per-lookup settings/filter review is only partially implemented. Generic lookup active filtering and preset lookup authoring controls exist, but Form render/runtime enforcement and View filter compiler improvements remain future work.
 - Evidence: Owner requested future work on 2026-05-03: review settings for every Lookup field and improve View filters for each lookup field.
 - Priority: medium.
-- Status: next-slice.
+- Status: partial.
 - Owner decision: Record as future Form Builder work; do not close the current Form Builder stabilization thread.
-- Fixed in: pending.
-- Verification: pending.
+- Resolution: First Form Builder authoring pass added preset display-template selects and explicit preset filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`. Preset filters now use the shared tenant dictionary route `/app/dictionaries/{dictionaryKey}/options` and UI Kit Combobox multiselects for `jobtypes`, `companies`, and `companyTypes` instead of raw ID text inputs. Active-record filtering remains a runtime/default concern, not a preset Form Builder setting.
+- Fixed in: pending current commit.
+- Verification: targeted backend dictionary tests, targeted preset lookup settings Vitest, tenant-web `tsc --noEmit`, and targeted ESLint passed. Browser/manual verification remains pending.
 
 ## FB-RT-012 - Subform View tab lost title editing
 

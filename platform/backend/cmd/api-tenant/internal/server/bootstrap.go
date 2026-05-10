@@ -48,6 +48,7 @@ func Bootstrap(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	}
 
 	server.businessTreePageHTTP = buildBusinessTreePage(server.sqlClient)
+	server.dictionaryHTTP = buildTenantDictionaryModule(server.sqlClient)
 	server.profileHTTP = buildTenantProfileModule(server.sqlClient)
 	server.platformStudioFormBuilderHTTP = buildPlatformStudioFormBuilderModule(server.sqlClient)
 	server.platformStudioFormRuntimeHTTP = buildPlatformStudioFormRuntimeModule(server.sqlClient)

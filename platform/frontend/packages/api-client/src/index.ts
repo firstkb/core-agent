@@ -177,6 +177,33 @@ type TenantNavigationAccessOptionsResponse = {
   users: TenantNavigationAccessOption[];
 };
 
+type TenantDictionaryKey = "companies" | "companyTypes" | "contacts" | "jobtypes" | "projects";
+
+type TenantDictionaryOption = {
+  description?: string;
+  fields?: Record<string, string>;
+  id: string;
+  label: string;
+  value: string;
+};
+
+type TenantDictionaryOptionsRequest = {
+  dictionary: TenantDictionaryKey | string;
+  ids?: string[];
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+type TenantDictionaryOptionsResponse = {
+  dictionary: string;
+  hasMore: boolean;
+  items: TenantDictionaryOption[];
+  page: number;
+  pageSize: number;
+  total: number;
+};
+
 type TenantNavigationSaveInput = {
   definition: TenantNavigationDefinition;
   expectedVersion?: number;
@@ -225,6 +252,13 @@ type TenantNavigationClient = {
   loadAccessOptions: (accessToken: string) => Promise<TenantNavigationAccessOptionsResponse>;
   loadConfig: (accessToken: string) => Promise<TenantNavigationConfigResponse>;
   saveConfig: (accessToken: string, input: TenantNavigationSaveInput) => Promise<TenantNavigationConfigResponse>;
+};
+
+type TenantDictionaryClient = {
+  loadOptions: (
+    accessToken: string,
+    request: TenantDictionaryOptionsRequest,
+  ) => Promise<TenantDictionaryOptionsResponse>;
 };
 
 type TenantFavoritesClient = {
@@ -1414,6 +1448,34 @@ function normalizeTenantNavigationAccessOptionsResponse(payload: unknown): Tenan
   };
 }
 
+function normalizeTenantDictionaryOption(payload: unknown, fieldName: string): TenantDictionaryOption {
+  const record = normalizeJsonRecord(payload, fieldName);
+  const id = assertString(record.id, `${fieldName}.id`);
+  const value = typeof record.value === "string" ? record.value : id;
+
+  return {
+    description: normalizeOptionalString(record.description),
+    fields: normalizeOptionalStringRecord(record.fields, `${fieldName}.fields`),
+    id,
+    label: assertString(record.label, `${fieldName}.label`),
+    value,
+  };
+}
+
+function normalizeTenantDictionaryOptionsResponse(payload: unknown): TenantDictionaryOptionsResponse {
+  const record = normalizeJsonRecord(payload, "dictionaryOptions");
+  const items = Array.isArray(record.items) ? record.items : [];
+
+  return {
+    dictionary: assertString(record.dictionary, "dictionaryOptions.dictionary"),
+    hasMore: Boolean(record.hasMore),
+    items: items.map((entry, index) => normalizeTenantDictionaryOption(entry, `dictionaryOptions.items[${index}]`)),
+    page: assertNonNegativeInteger(record.page, "dictionaryOptions.page"),
+    pageSize: assertNonNegativeInteger(record.pageSize, "dictionaryOptions.pageSize"),
+    total: assertNonNegativeInteger(record.total, "dictionaryOptions.total"),
+  };
+}
+
 function normalizeStringArray(payload: unknown, fieldName: string) {
   if (!Array.isArray(payload)) {
     return [];
@@ -1778,6 +1840,45 @@ function buildTenantNavigationAccessOptionPagePath(request: TenantNavigationAcce
   return `/app/platform-studio/navigation/access-options/page?${searchParams.toString()}`;
 }
 
+function buildTenantDictionaryOptionsPath(request: TenantDictionaryOptionsRequest) {
+  const dictionary = request.dictionary.trim();
+  const searchParams = new URLSearchParams();
+  if (request.search?.trim()) {
+    searchParams.set("search", request.search.trim());
+  }
+  if (typeof request.page === "number") {
+    searchParams.set("page", String(request.page));
+  }
+  if (typeof request.pageSize === "number") {
+    searchParams.set("pageSize", String(request.pageSize));
+  }
+  for (const id of request.ids ?? []) {
+    if (id.trim()) {
+      searchParams.append("ids", id.trim());
+    }
+  }
+  const suffix = searchParams.toString();
+  return `/app/dictionaries/${encodeURIComponent(dictionary)}/options${suffix ? `?${suffix}` : ""}`;
+}
+
+function createTenantDictionaryClient(baseUrl: string): TenantDictionaryClient {
+  return {
+    async loadOptions(accessToken: string, request: TenantDictionaryOptionsRequest) {
+      const envelope = await requestEnvelope<unknown>(
+        baseUrl,
+        buildTenantDictionaryOptionsPath(request),
+        {
+          accessToken,
+          method: "GET",
+          timeoutMs: profileBootstrapRequestTimeoutMs,
+        },
+      );
+
+      return normalizeTenantDictionaryOptionsResponse(envelope.data);
+    },
+  };
+}
+
 function createTenantNavigationClient(baseUrl: string): TenantNavigationClient {
   return {
     async getRuntimeNavigation(accessToken: string) {
@@ -2097,6 +2198,7 @@ export {
   createApiClient,
   createAuthClient,
   createTenantBusinessTreeClient,
+  createTenantDictionaryClient,
   createTenantFavoritesClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
@@ -2133,6 +2235,11 @@ export type {
   TenantBusinessTreeNode,
   TenantBusinessTreeNodeKind,
   TenantBusinessTreeNodesResponse,
+  TenantDictionaryClient,
+  TenantDictionaryKey,
+  TenantDictionaryOption,
+  TenantDictionaryOptionsRequest,
+  TenantDictionaryOptionsResponse,
   TenantNavigationAccessOptionCategory,
   TenantNavigationAccessOptionPageRequest,
   TenantNavigationAccessOptionPageResponse,

@@ -1,4 +1,12 @@
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import type { TenantDictionaryOption } from "@platform/api-client";
 import { type useTranslation } from "@platform/i18n";
+import type { ComboboxOption } from "@platform/ui-kit";
 
 import {
   getFieldTypeKey,
@@ -9,10 +17,11 @@ import {
 } from "../controller/form-builder-workspace-lookup-options";
 import {
   getPresetLookupFilterDefinitions,
-  getPresetLookupFilterValueText,
+  getPresetLookupFilterValueIds,
   getPresetLookupTemplateOptions,
   resolvePresetLookupTemplateKey,
 } from "../forms-preset-lookup-settings";
+import { useFormBuilderAuthoring } from "../forms-authoring-context";
 import {
   type FormsPlaceholderChoiceDisplay,
   type FormsPlaceholderField,
@@ -60,7 +69,7 @@ type SelectedFieldSettingsSectionProps = {
     updater: (currentStyle: FormsPlaceholderFieldOptionStyle | undefined) => FormsPlaceholderFieldOptionStyle | undefined,
   ) => void;
   onPlaceholderChange: (placeholder: string) => void;
-  onPresetLookupFilterTextChange: (field: string, valueText: string) => void;
+  onPresetLookupFilterValueChange: (field: string, values: ReadonlyArray<string>) => void;
   onPresetLookupTemplateChange: (templateKey: string) => void;
   onTagModeChange: (tagMode: FormsPlaceholderTagMode) => void;
   onTagsMaxChange: (maxTags: string) => void;
@@ -106,7 +115,7 @@ export function SelectedFieldSettingsSection({
   onOptionRemove,
   onOptionStyleChange,
   onPlaceholderChange,
-  onPresetLookupFilterTextChange,
+  onPresetLookupFilterValueChange,
   onPresetLookupTemplateChange,
   onTagModeChange,
   onTagsMaxChange,
@@ -130,8 +139,16 @@ export function SelectedFieldSettingsSection({
   selectedLookupStoredValueSummary,
   t,
 }: SelectedFieldSettingsSectionProps) {
+  const { loadDictionaryOptions } = useFormBuilderAuthoring();
   const canEditFieldSettings = canEditSettings && canEditModelDefinition;
   const fieldTypeLabel = t(getFieldTypeKey(selectedField));
+  const [filterSearchByField, setFilterSearchByField] = useState<Record<string, string>>({});
+  const [filterOptionsByField, setFilterOptionsByField] = useState<Record<string, readonly ComboboxOption[]>>({});
+  const [filterLoadingByField, setFilterLoadingByField] = useState<Record<string, boolean>>({});
+  const presetLookupFilterDefinitions = useMemo(
+    () => selectedFieldIsPresetLookup ? getPresetLookupFilterDefinitions(selectedField) : [],
+    [selectedField, selectedFieldIsPresetLookup],
+  );
   const presetLookupTemplateOptions = selectedFieldIsPresetLookup
     ? getPresetLookupTemplateOptions(selectedField).map((option) => ({
         key: option.key,
@@ -139,13 +156,107 @@ export function SelectedFieldSettingsSection({
       }))
     : [];
   const presetLookupFilterRows = selectedFieldIsPresetLookup
-    ? getPresetLookupFilterDefinitions(selectedField).map((definition) => ({
+    ? presetLookupFilterDefinitions.map((definition) => ({
         field: definition.field,
         label: t(definition.labelKey),
+        loading: Boolean(filterLoadingByField[definition.field]),
+        options: filterOptionsByField[definition.field] ?? [],
         placeholder: t(definition.placeholderKey),
-        valueText: getPresetLookupFilterValueText(selectedField, definition.field),
+        searchValue: filterSearchByField[definition.field] ?? "",
+        selectedValues: getPresetLookupFilterValueIds(selectedField, definition.field),
       }))
     : [];
+
+  useEffect(() => {
+    setFilterSearchByField({});
+    setFilterOptionsByField({});
+    setFilterLoadingByField({});
+  }, [selectedField.id, selectedField.preset]);
+
+  useEffect(() => {
+    if (!selectedFieldIsPresetLookup || presetLookupFilterDefinitions.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+
+    for (const definition of presetLookupFilterDefinitions) {
+      const selectedValues = getPresetLookupFilterValueIds(selectedField, definition.field);
+      const search = filterSearchByField[definition.field] ?? "";
+
+      setFilterLoadingByField((current) => ({
+        ...current,
+        [definition.field]: true,
+      }));
+
+      const searchRequest = loadDictionaryOptions({
+        dictionary: definition.dictionaryKey,
+        pageSize: 25,
+        search,
+      });
+      const selectedRequest = selectedValues.length > 0
+        ? loadDictionaryOptions({
+            dictionary: definition.dictionaryKey,
+            ids: [...selectedValues],
+            pageSize: selectedValues.length,
+          })
+        : Promise.resolve(null);
+
+      void Promise.all([searchRequest, selectedRequest])
+        .then(([searchResponse, selectedResponse]) => {
+          if (cancelled) {
+            return;
+          }
+
+          setFilterOptionsByField((current) => ({
+            ...current,
+            [definition.field]: mergeDictionaryOptions([
+              ...(selectedResponse?.items ?? []),
+              ...searchResponse.items,
+            ]),
+          }));
+        })
+        .catch(() => {
+          if (cancelled) {
+            return;
+          }
+
+          setFilterOptionsByField((current) => ({
+            ...current,
+            [definition.field]: [],
+          }));
+        })
+        .finally(() => {
+          if (cancelled) {
+            return;
+          }
+
+          setFilterLoadingByField((current) => ({
+            ...current,
+            [definition.field]: false,
+          }));
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    filterSearchByField,
+    loadDictionaryOptions,
+    presetLookupFilterDefinitions,
+    selectedField,
+    selectedFieldIsPresetLookup,
+  ]);
+
+  function handlePresetLookupFilterSearchChange(field: string, searchValue: string) {
+    setFilterSearchByField((current) =>
+      current[field] === searchValue ? current : {
+        ...current,
+        [field]: searchValue,
+      }
+    );
+  }
 
   return (
     <>
@@ -211,10 +322,14 @@ export function SelectedFieldSettingsSection({
             displayModeSearchSelect: t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect"),
             displayTemplate: t("tenant.platformStudio.forms.builder.fieldSettings.displayTemplate"),
             filters: t("tenant.platformStudio.forms.builder.fieldSettings.filters"),
+            loadingFilterOptions: t("tenant.platformStudio.forms.builder.fieldSettings.loadingFilterOptions"),
+            noFilterOptions: t("tenant.platformStudio.forms.builder.fieldSettings.noFilterOptions"),
+            searchFilterOptions: t("tenant.platformStudio.forms.builder.fieldSettings.searchFilterOptions"),
           }}
           onChooseSource={onChooseLookupSource}
           onDisplayModeChange={onLookupDisplayModeChange}
-          onPresetFilterTextChange={onPresetLookupFilterTextChange}
+          onPresetFilterSearchChange={handlePresetLookupFilterSearchChange}
+          onPresetFilterValueChange={onPresetLookupFilterValueChange}
           onPresetTemplateChange={onPresetLookupTemplateChange}
           presetFilterRows={presetLookupFilterRows}
           presetLookupSummary={selectedFieldIsPresetLookup && selectedLookupSourceSummary
@@ -318,4 +433,30 @@ export function SelectedFieldSettingsSection({
       ) : null}
     </>
   );
+}
+
+function mergeDictionaryOptions(options: ReadonlyArray<TenantDictionaryOption>): ComboboxOption[] {
+  const merged = new Map<string, ComboboxOption>();
+
+  for (const option of options) {
+    const value = (option.value || option.id).trim();
+    const label = option.label.trim();
+    if (!value || !label || merged.has(value)) {
+      continue;
+    }
+
+    const description = option.description?.trim();
+    merged.set(value, {
+      description: description || undefined,
+      label,
+      searchText: [
+        label,
+        description,
+        ...Object.values(option.fields ?? {}),
+      ].filter(Boolean).join(" "),
+      value,
+    });
+  }
+
+  return [...merged.values()];
 }

@@ -439,7 +439,13 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 13 files, 38 tests;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode.
+- Form Builder preset lookup filter authoring follow-up completed:
+  - added shared tenant dictionary service/route `GET /app/dictionaries/{dictionaryKey}/options` for `companies`, `companyTypes`, `contacts`, `jobtypes`, and `projects`;
+  - dictionary options return `label`, optional second-line `description`, and fields for remote search/hydration, matching the legacy dictionary behavior without copying legacy access logic;
+  - preset lookup filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects` now use UI Kit Combobox multiselect options from the route instead of raw ID inputs;
+  - user-facing display-template labels were simplified to readable examples while the schema still stores canonical `lookupConfig.displayTemplate`;
+  - current implementation intentionally leaves dictionary-specific access rules and Form render query enforcement for follow-up work.
 
 ## Next Action
 
-Next allowed action is owner review of runtime `uniqueValue` enforcement, minimal autofill sync, and the unsaved-create navigation dialog for root forms/subforms, followed by either a commit or the next approved runtime field/action slice.
+Next allowed action is owner review of Form Builder preset lookup filter authoring and dictionary option UX, followed by the separate Form render/runtime implementation for applying authored lookup filters and display templates.

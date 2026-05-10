@@ -15,6 +15,7 @@ import (
 
 	tenantsvc "dtriton.com/platform/backend/internal/platform/tenant"
 	businesstree "dtriton.com/platform/backend/modules/tenant/apppages/businesstree"
+	dictionarysvc "dtriton.com/platform/backend/modules/tenant/dictionarysvc"
 	formbuilder "dtriton.com/platform/backend/modules/tenant/platformstudioformbuilder"
 	formruntime "dtriton.com/platform/backend/modules/tenant/platformstudioformruntime"
 	navigationbuilder "dtriton.com/platform/backend/modules/tenant/platformstudionavigationbuilder"
@@ -69,6 +70,7 @@ type Server struct {
 
 	tokenValidator                      authpkg.JWTIssuer
 	businessTreePageHTTP                *businesstree.Handler
+	dictionaryHTTP                      *dictionarysvc.Handler
 	profileHTTP                         *profilesvc.Handler
 	platformStudioFormBuilderHTTP       *formbuilder.Handler
 	platformStudioFormRuntimeHTTP       *formruntime.Handler

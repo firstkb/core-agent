@@ -1,6 +1,7 @@
 import {
   Button,
-  Input,
+  Combobox,
+  type ComboboxOption,
   Label,
   Select,
 } from "@platform/ui-kit";
@@ -20,6 +21,9 @@ type LookupFieldSettingsLabels = {
   displayModeSearchSelect: string;
   displayTemplate: string;
   filters: string;
+  loadingFilterOptions: string;
+  noFilterOptions: string;
+  searchFilterOptions: string;
 };
 
 type LookupFieldPresetTemplateOption = {
@@ -30,8 +34,11 @@ type LookupFieldPresetTemplateOption = {
 type LookupFieldPresetFilterRow = {
   field: string;
   label: string;
+  loading: boolean;
+  options: readonly ComboboxOption[];
   placeholder: string;
-  valueText: string;
+  searchValue: string;
+  selectedValues: readonly string[];
 };
 
 type LookupFieldSettingsProps = {
@@ -41,7 +48,8 @@ type LookupFieldSettingsProps = {
   labels: LookupFieldSettingsLabels;
   onChooseSource: () => void;
   onDisplayModeChange: (displayMode: FormsPlaceholderLookupDisplayMode) => void;
-  onPresetFilterTextChange: (field: string, valueText: string) => void;
+  onPresetFilterSearchChange: (field: string, searchValue: string) => void;
+  onPresetFilterValueChange: (field: string, values: ReadonlyArray<string>) => void;
   onPresetTemplateChange: (templateKey: string) => void;
   presetFilterRows: ReadonlyArray<LookupFieldPresetFilterRow>;
   presetLookupSummary: LookupFieldSettingsSummary | null;
@@ -58,7 +66,8 @@ export function LookupFieldSettings({
   labels,
   onChooseSource,
   onDisplayModeChange,
-  onPresetFilterTextChange,
+  onPresetFilterSearchChange,
+  onPresetFilterValueChange,
   onPresetTemplateChange,
   presetFilterRows,
   presetLookupSummary,
@@ -139,12 +148,24 @@ export function LookupFieldSettings({
               <Label htmlFor={`tenant-platform-studio-preset-lookup-filter-${row.field}`}>
                 {row.label}
               </Label>
-              <Input
+              <Combobox
                 disabled={!canChooseSource}
+                emptyLabel={labels.noFilterOptions}
+                filterMode="none"
                 id={`tenant-platform-studio-preset-lookup-filter-${row.field}`}
-                onChange={(event) => onPresetFilterTextChange(row.field, event.target.value)}
+                label={row.label}
+                loading={row.loading}
+                loadingLabel={labels.loadingFilterOptions}
+                onSearchValueChange={(value) => onPresetFilterSearchChange(row.field, value)}
+                onValueChange={(values) => onPresetFilterValueChange(row.field, values)}
+                options={row.options}
                 placeholder={row.placeholder}
-                value={row.valueText}
+                searchInputAriaLabel={`${labels.searchFilterOptions} ${row.label}`}
+                searchPlaceholder={`${labels.searchFilterOptions} ${row.label}`}
+                searchValue={row.searchValue}
+                selectionMode="multiple"
+                triggerAriaLabel={row.label}
+                value={row.selectedValues}
               />
             </div>
           ))}

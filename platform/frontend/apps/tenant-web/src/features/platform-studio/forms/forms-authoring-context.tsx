@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 
 import {
   ApiClientError,
+  createTenantDictionaryClient,
   createTenantFormBuilderAuthoringClient,
   isUnauthorizedApiError,
   requestWithUnauthorizedRetry,
@@ -24,6 +25,8 @@ import {
   type FormBuilderModelFieldSummary,
   type FormBuilderModelSummary,
   type FormBuilderViewSummary,
+  type TenantDictionaryOptionsRequest,
+  type TenantDictionaryOptionsResponse,
 } from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 
@@ -60,6 +63,7 @@ type FormBuilderAuthoringContextValue = {
   exportModelBundle: (modelId: string) => Promise<FormBuilderDownloadedFile>;
   exportModelData: (modelId: string) => Promise<FormBuilderDownloadedFile>;
   isLoadingModels: boolean;
+  loadDictionaryOptions: (request: TenantDictionaryOptionsRequest) => Promise<TenantDictionaryOptionsResponse>;
   models: ReadonlyArray<FormsPlaceholderModel>;
   modelsError: string | null;
   refreshModels: () => Promise<void>;
@@ -258,6 +262,10 @@ export function FormBuilderAuthoringProvider({
     () => createTenantFormBuilderAuthoringClient(runtimeConfig.tenantApiUrl),
     [runtimeConfig.tenantApiUrl],
   );
+  const dictionaryClient = useMemo(
+    () => createTenantDictionaryClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
   const {
     checkAuth,
     getAccessToken,
@@ -423,6 +431,10 @@ export function FormBuilderAuthoringProvider({
     return requestWithSession((accessToken) => authoringClient.exportModelBundle(accessToken, trimmedModelId));
   }, [authoringClient, requestWithSession]);
 
+  const loadDictionaryOptions = useCallback((request: TenantDictionaryOptionsRequest) =>
+    requestWithSession((accessToken) => dictionaryClient.loadOptions(accessToken, request)),
+  [dictionaryClient, requestWithSession]);
+
   useEffect(() => {
     void refreshModels().catch(() => {});
   }, [refreshModels]);
@@ -439,6 +451,7 @@ export function FormBuilderAuthoringProvider({
         exportModelBundle,
         exportModelData,
         isLoadingModels,
+        loadDictionaryOptions,
         models,
         modelsError,
         refreshModels,

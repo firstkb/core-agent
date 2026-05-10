@@ -238,6 +238,13 @@ Relationship preset lookup settings:
 - Preset filter values are saved in `lookupConfig.filters[]` with operator
   `in`. Contact supports `job_type_id` and `company_id`; Company supports
   `company_type_id` and `main_company_id`; Project supports `company_id`.
+- Preset filter authoring uses the tenant dictionary options route instead of
+  hardcoded ids or loading full source tables in the browser. Options are shown
+  with the UI Kit Combobox two-line label/description pattern, and both lines
+  participate in remote search.
+- Current preset filter dictionaries are `jobtypes`, `companies`, and
+  `companyTypes`; the same `/app/dictionaries/{dictionaryKey}/options` route is
+  intended for future Form render lookup controls.
 - Active-record filtering is not a Form Builder preset lookup setting. Runtime
   lookup query code may enforce active defaults separately.
 

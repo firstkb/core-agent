@@ -16,6 +16,7 @@ export type FormsPresetLookupTemplateOption = {
 };
 
 export type FormsPresetLookupFilterDefinition = {
+  dictionaryKey: string;
   field: string;
   labelKey: string;
   placeholderKey: string;
@@ -43,7 +44,7 @@ const presetLookupTemplateOptions: Record<FormsPresetLookupKind, ReadonlyArray<F
       displayFields: ["first_name", "last_name"],
       displayTemplate: "first_name + ' ' + last_name",
       key: "contact_full_name",
-      label: "First Name + ' ' + Last Name",
+      label: "First Name Last Name",
       searchFields: ["first_name", "last_name"],
       sortField: "last_name",
     },
@@ -51,7 +52,7 @@ const presetLookupTemplateOptions: Record<FormsPresetLookupKind, ReadonlyArray<F
       displayFields: ["employee_number", "first_name", "last_name"],
       displayTemplate: "employee_number + ', ' + first_name + ' ' + last_name",
       key: "contact_employee_full_name",
-      label: "Empl ID + ', ' + First Name + ' ' + Last Name",
+      label: "Employee ID, First Name Last Name",
       searchFields: ["employee_number", "first_name", "last_name"],
       sortField: "employee_number",
     },
@@ -61,7 +62,7 @@ const presetLookupTemplateOptions: Record<FormsPresetLookupKind, ReadonlyArray<F
       displayFields: ["project_number", "name"],
       displayTemplate: "project_number + ', ' + name",
       key: "project_number_name",
-      label: "Project Num + ', ' + Project Name",
+      label: "Project #, Project Name",
       searchFields: ["project_number", "name"],
       sortField: "project_number",
     },
@@ -79,11 +80,13 @@ const presetLookupTemplateOptions: Record<FormsPresetLookupKind, ReadonlyArray<F
 const presetLookupFilterDefinitions: Record<FormsPresetLookupKind, ReadonlyArray<FormsPresetLookupFilterDefinition>> = {
   company_lookup: [
     {
+      dictionaryKey: "companyTypes",
       field: "company_type_id",
       labelKey: "tenant.platformStudio.forms.builder.fieldSettings.companyTypeFilter",
       placeholderKey: "tenant.platformStudio.forms.builder.fieldSettings.lookupFilterValuePlaceholder",
     },
     {
+      dictionaryKey: "companies",
       field: "main_company_id",
       labelKey: "tenant.platformStudio.forms.builder.fieldSettings.mainCompanyFilter",
       placeholderKey: "tenant.platformStudio.forms.builder.fieldSettings.lookupFilterValuePlaceholder",
@@ -91,11 +94,13 @@ const presetLookupFilterDefinitions: Record<FormsPresetLookupKind, ReadonlyArray
   ],
   contact_lookup: [
     {
+      dictionaryKey: "jobtypes",
       field: "job_type_id",
       labelKey: "tenant.platformStudio.forms.builder.fieldSettings.contactJobTypeFilter",
       placeholderKey: "tenant.platformStudio.forms.builder.fieldSettings.lookupFilterValuePlaceholder",
     },
     {
+      dictionaryKey: "companies",
       field: "company_id",
       labelKey: "tenant.platformStudio.forms.builder.fieldSettings.businessUnitFilter",
       placeholderKey: "tenant.platformStudio.forms.builder.fieldSettings.lookupFilterValuePlaceholder",
@@ -103,6 +108,7 @@ const presetLookupFilterDefinitions: Record<FormsPresetLookupKind, ReadonlyArray
   ],
   project_lookup: [
     {
+      dictionaryKey: "companies",
       field: "company_id",
       labelKey: "tenant.platformStudio.forms.builder.fieldSettings.businessUnitFilter",
       placeholderKey: "tenant.platformStudio.forms.builder.fieldSettings.lookupFilterValuePlaceholder",
@@ -181,17 +187,22 @@ export function resolvePresetLookupTemplateKey(field: FormsPlaceholderField): st
 }
 
 export function getPresetLookupFilterValueText(field: FormsPlaceholderField, filterField: string): string {
+  return getPresetLookupFilterValueIds(field, filterField).join(", ");
+}
+
+export function getPresetLookupFilterValueIds(field: FormsPlaceholderField, filterField: string): ReadonlyArray<string> {
   const matchingFilter = field.lookupConfig?.filters?.find((filter) => filter.field === filterField);
 
   if (!matchingFilter || matchingFilter.value === undefined) {
-    return "";
+    return [];
   }
 
   if (Array.isArray(matchingFilter.value)) {
-    return matchingFilter.value.map(String).join(", ");
+    return matchingFilter.value.map(String).map((value) => value.trim()).filter(Boolean);
   }
 
-  return String(matchingFilter.value);
+  const value = String(matchingFilter.value).trim();
+  return value ? [value] : [];
 }
 
 export function applyPresetLookupTemplate(
@@ -227,6 +238,14 @@ export function applyPresetLookupFilterValueText(
   filterField: string,
   valueText: string,
 ): FormsPlaceholderField {
+  return applyPresetLookupFilterValues(field, filterField, parseFilterValueText(valueText));
+}
+
+export function applyPresetLookupFilterValues(
+  field: FormsPlaceholderField,
+  filterField: string,
+  values: ReadonlyArray<string>,
+): FormsPlaceholderField {
   const kind = getPresetLookupKind(field);
 
   if (!kind || !getPresetLookupFilterDefinitions(kind).some((definition) => definition.field === filterField)) {
@@ -234,7 +253,9 @@ export function applyPresetLookupFilterValueText(
   }
 
   const baseField = applyPresetLookupTemplate(field, resolvePresetLookupTemplateKey(field));
-  const nextFilterValues = parseFilterValueText(valueText);
+  const nextFilterValues = values
+    .map((value) => value.trim())
+    .filter(Boolean);
   const nextManagedFilter = nextFilterValues.length > 0
     ? {
         field: filterField,

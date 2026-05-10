@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyPresetLookupFilterValueText,
+  applyPresetLookupFilterValues,
   applyPresetLookupTemplate,
   buildDefaultPresetLookupFieldSettings,
+  getPresetLookupFilterDefinitions,
+  getPresetLookupFilterValueIds,
   getPresetLookupFilterValueText,
+  getPresetLookupTemplateOptions,
   resolvePresetLookupTemplateKey,
 } from "./forms-preset-lookup-settings";
 import type { FormsPlaceholderField } from "./forms-placeholder-data";
@@ -62,6 +66,7 @@ describe("Form Builder preset lookup settings", () => {
     ]);
     expect(nextField.sourceFilters).toBeUndefined();
     expect(getPresetLookupFilterValueText(nextField, "company_id")).toBe("12, 45");
+    expect(getPresetLookupFilterValueIds(nextField, "company_id")).toEqual(["12", "45"]);
   });
 
   it("clears only the edited preset lookup filter", () => {
@@ -78,6 +83,29 @@ describe("Form Builder preset lookup settings", () => {
 
     expect(nextField.lookupConfig?.filters).toEqual([
       { field: "job_type_id", operator: "in", value: ["2"] },
+    ]);
+  });
+
+  it("stores preset lookup filter values from selected dictionary options", () => {
+    const field = createPresetLookupField();
+    const nextField = applyPresetLookupFilterValues(field, "job_type_id", ["2", " ", "5"]);
+
+    expect(nextField.lookupConfig?.filters).toEqual([
+      { field: "job_type_id", operator: "in", value: ["2", "5"] },
+    ]);
+  });
+
+  it("exposes user-readable template and filter option labels", () => {
+    const templateLabels = getPresetLookupTemplateOptions("contact_lookup").map((option) => option.label);
+    const filterDefinitions = getPresetLookupFilterDefinitions("company_lookup");
+
+    expect(templateLabels).toEqual([
+      "First Name Last Name",
+      "Employee ID, First Name Last Name",
+    ]);
+    expect(filterDefinitions).toMatchObject([
+      { dictionaryKey: "companyTypes", field: "company_type_id" },
+      { dictionaryKey: "companies", field: "main_company_id" },
     ]);
   });
 

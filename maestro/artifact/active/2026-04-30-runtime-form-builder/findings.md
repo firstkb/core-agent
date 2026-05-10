@@ -182,9 +182,9 @@ Statuses:
 - Priority: medium.
 - Status: partial.
 - Owner decision: Record as future Form Builder work; do not close the current Form Builder stabilization thread.
-- Resolution: First Form Builder authoring pass added preset display-template selects and explicit preset filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`. Preset filters now use shared tenant dictionary routes and UI Kit Combobox multiselects for `jobtypes`, `companies`, and `companyTypes` instead of raw ID text inputs. Named dictionaries use `GET /app/dictionaries/{dictionaryKey}/options`; generic ordinary lookup option sources can use `POST /app/dictionaries/options/query` with `sourceModel`, selected fields, filters, search, ids, and paging. Combobox filter pickers debounce remote search by 300 ms, load the first 10 options, and load additional pages on scroll. Active-record filtering remains a runtime/default concern, not a preset Form Builder setting.
-- Fixed in: pending current commit.
-- Verification: targeted backend dictionary tests, targeted preset lookup settings Vitest, tenant-web `tsc --noEmit`, and targeted ESLint passed. Browser/manual verification remains pending.
+- Resolution: First Form Builder authoring pass added preset display-template selects and explicit preset filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`. Preset filters now use shared tenant dictionary routes and UI Kit Combobox multiselects for `jobtypes`, `companies`, and `companyTypes` instead of raw ID text inputs. Named dictionaries use `GET /app/dictionaries/{dictionaryKey}/options`; generic ordinary lookup option sources can use `POST /app/dictionaries/options/query` with `sourceModel`, selected fields, filters, search, ids, and paging. Combobox filter pickers debounce remote search by 300 ms, load the first 10 options, and load additional pages on scroll. DB LOOKUP filter authoring is complete for the current Form Builder scope. Active-record filtering remains a runtime/default concern, not a preset Form Builder setting.
+- Fixed in: `c3bd9bf` and `8d68cb6`.
+- Verification: targeted backend dictionary tests, targeted preset lookup settings Vitest, tenant-web `tsc --noEmit`, targeted ESLint, and Browser Use verification passed.
 
 ## FB-RT-012 - Subform View tab lost title editing
 

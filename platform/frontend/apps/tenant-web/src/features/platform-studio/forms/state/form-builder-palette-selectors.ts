@@ -11,7 +11,6 @@ import {
 import {
   formBuilderElementDefinitions,
   formBuilderFieldDefinitions,
-  getFormBuilderFieldPaletteSection,
 } from "../forms-builder-library";
 import type {
   FormBuilderDocument,
@@ -149,7 +148,7 @@ export function getFieldPaletteItems(
       !normalizedSearch || getFormsPlaceholderFieldSearchText({ ...definition.template, id: definition.idBase }).includes(normalizedSearch),
     )
     .map((definition) => ({
-      category: getFormBuilderFieldPaletteSection(definition.template),
+      category: definition.section,
       descriptionKey: "tenant.platformStudio.forms.builder.palette.fieldDescription",
       definition,
       disabled: !access.canAddFieldItems,

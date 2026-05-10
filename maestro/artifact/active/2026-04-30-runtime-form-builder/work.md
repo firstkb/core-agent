@@ -447,7 +447,11 @@ View/read remains the existing `CollectionTable` modal path for now.
   - filter option pickers debounce remote search by 300 ms, load the first 10 values, and request additional pages on scroll; dropdown width is constrained to the triggering field width;
   - user-facing display-template labels were simplified to readable examples while the schema still stores canonical `lookupConfig.displayTemplate`;
   - current implementation intentionally leaves dictionary-specific access rules and Form render query enforcement for follow-up work.
+- Form Builder palette cleanup:
+  - moved `Long text historical` from `Basic fields` to `Ready-made fields` and made palette rendering respect the library definition's explicit `section`;
+  - DB LOOKUP filter authoring work is considered complete for the current Form Builder scope;
+  - next requested Form Builder field focus is `Checklist subform`.
 
 ## Next Action
 
-Next allowed action is owner review of Form Builder preset lookup filter authoring and dictionary option UX, followed by the separate Form render/runtime implementation for applying authored lookup filters and display templates.
+Next allowed action is Checklist subform analysis/implementation planning. Separate Form render/runtime work remains responsible for applying authored lookup filters and display templates outside Form Builder authoring.

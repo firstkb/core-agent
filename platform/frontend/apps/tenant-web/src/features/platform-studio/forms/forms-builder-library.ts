@@ -277,7 +277,7 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     idBase: "long-text-historical",
     labelKey: "tenant.platformStudio.forms.builder.fieldType.long_text_historical",
     searchTerms: ["long text historical", "memo with updates", "history", "append notes"],
-    section: "basicFields",
+    section: "readyMadeFields",
     template: createFieldTemplate("core", "long_text", "Long text historical", {
       historicalUpdates: true,
     }),

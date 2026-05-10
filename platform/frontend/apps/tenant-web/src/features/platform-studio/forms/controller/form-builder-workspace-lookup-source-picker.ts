@@ -3,9 +3,12 @@ import {
 } from "./form-builder-workspace-lookup-options";
 import {
   type FormsPlaceholderField,
+  type FormsPlaceholderLookupConfig,
+  type FormsPlaceholderLookupFilter,
 } from "../forms-placeholder-data";
 
 export type FormBuilderLookupSourcePickerState = {
+  activeFilterEnabled: boolean;
   fieldId: string;
   modelId: string;
   selectedFieldKeys: ReadonlyArray<string>;
@@ -17,6 +20,37 @@ type ApplyLookupSourcePickerSelectionInput = {
   picker: FormBuilderLookupSourcePickerState;
   sourceModel: LookupSourceModelOption;
 };
+
+function isActiveLookupFilter(filter: FormsPlaceholderLookupFilter, activeField: string) {
+  return filter.field === activeField && (filter.operator ?? "eq") === "eq" && filter.value === true;
+}
+
+export function hasActiveLookupFilter(
+  lookupConfig: FormsPlaceholderLookupConfig | undefined,
+  activeField = "active",
+) {
+  return lookupConfig?.filters?.some((filter) => isActiveLookupFilter(filter, activeField)) ?? false;
+}
+
+function mergeActiveLookupFilter(
+  filters: ReadonlyArray<FormsPlaceholderLookupFilter> | undefined,
+  activeField: string,
+  enabled: boolean,
+) {
+  const remainingFilters = (filters ?? []).filter((filter) => !isActiveLookupFilter(filter, activeField));
+  if (!enabled) {
+    return remainingFilters.length > 0 ? remainingFilters : undefined;
+  }
+
+  return [
+    ...remainingFilters,
+    {
+      field: activeField,
+      operator: "eq" as const,
+      value: true,
+    },
+  ];
+}
 
 export function applyLookupSourcePickerSelectionToField({
   field,
@@ -41,6 +75,9 @@ export function applyLookupSourcePickerSelectionToField({
   );
   const nextGroupByField = nonStoredDisplayFields[0] ?? effectiveDisplayFields[0];
   const nextItemLabelFields = nonStoredDisplayFields.slice(1);
+  const existingFilters = field.lookupConfig?.sourceModel === sourceModel.id
+    ? field.lookupConfig?.filters
+    : undefined;
 
   return {
     ...field,
@@ -60,6 +97,9 @@ export function applyLookupSourcePickerSelectionToField({
       searchFields: [...effectiveDisplayFields],
       sortField: picker.sortFieldKey || sourceModel.defaultSortField,
       sourceModel: sourceModel.id,
+      filters: sourceModel.activeFilterField
+        ? mergeActiveLookupFilter(existingFilters, sourceModel.activeFilterField, picker.activeFilterEnabled)
+        : undefined,
       storedTextFields: field.preset === "db_lookup_value" ? [...effectiveDisplayFields] : undefined,
       storedValueField: field.preset === "db_lookup_value" ? undefined : sourceModel.storedValueField,
     },

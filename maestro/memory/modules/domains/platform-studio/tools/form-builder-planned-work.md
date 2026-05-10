@@ -38,6 +38,7 @@ instead of them.
 - View-list warning triangles are topology drift indicators only. Field setting changes and layout-only blueprint edits do not advance `modelStructureVersion`; field add/remove, scope moves, and subform-scope topology changes do.
 - Form Builder does not expose View Active/Inactive status or controls. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; old payloads may be tolerated and dropped. Backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata for now. Navigation Builder owns sidebar/runtime exposure and placement.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
+- Generic `DB lookup`, `DB lookup value`, and `DB lookup multi` source picker authoring supports `lookupConfig.filters[]`; the current UI exposes only `Only active records`, saved as `{ field: "active", operator: "eq", value: true }` when the selected source has a boolean `active` field.
 - Static/external model work includes code-backed seed migrations for `state`, `timezone`, `companytype`, `jobtype`, `events`, `mails`, `users`, `company`, `projects`, `industry_size`, and `industry_type`; exact table-by-table/static lookup details beyond these seeds still require retained exact-detail docs.
 - `Projects` is available as a locked external Form Builder model/view with `Project #` default sorting, Main/Details tabs, Company/Contact/State/Industry lookups, suggest-text project metadata fields, status options, and canonical `industry_size_id` / `industry_type_id` lookup columns replacing old `projects.size` / `projects.type`.
 - Static seeded form layouts require model-owned `layoutBlueprint.containers[].containerKey` and view-owned container UI nodes to use the same canonical keys. Missing UI node `containerKey` values can create duplicate empty tabs/sections during authoring reconciliation.
@@ -60,7 +61,7 @@ instead of them.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
 - Static/external multivalue storage remains deferred to a future explicit slice.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
-- Lookup field authoring settings and View filters need a per-lookup review for `db_lookup`, `Contact`, `Project`, `Company`, `Reported By`, and similar lookup-heavy presets, including lookup-aware operators, display outputs, stored values, and derived values.
+- Lookup field authoring settings and View filters need a per-lookup review for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup-heavy presets, plus expansion of generic `db_lookup` filters beyond the current active-record shortcut, including lookup-aware operators, display outputs, stored values, and derived values.
 - Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.
 

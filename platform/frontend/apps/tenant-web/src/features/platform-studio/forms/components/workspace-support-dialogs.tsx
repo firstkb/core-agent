@@ -26,11 +26,13 @@ export type WorkspaceLookupSourceDialogProps = {
   lookupSourcePickerModel: LookupSourceModelOption | null;
   lookupSourcePickerModelItems: ReadonlyArray<LookupSourcePickerModelItem>;
   lookupSourcePickerSelectedFieldsSummary: string;
+  onLookupSourcePickerActiveFilterChange: (enabled: boolean) => void;
   onLookupSourcePickerFieldCheckedChange: (fieldKey: string, checked: boolean) => void;
   onLookupSourcePickerModelChange: (
     modelId: string,
     selectedFieldKeys: ReadonlyArray<string>,
     sortFieldKey: string,
+    activeFilterEnabled: boolean,
   ) => void;
   onLookupSourcePickerOpenChange: (open: boolean) => void;
   onLookupSourcePickerSortFieldChange: (fieldKey: string) => void;
@@ -79,6 +81,7 @@ export function WorkspaceLookupSourceDialog({
   lookupSourcePickerModel,
   lookupSourcePickerModelItems,
   lookupSourcePickerSelectedFieldsSummary,
+  onLookupSourcePickerActiveFilterChange,
   onLookupSourcePickerFieldCheckedChange,
   onLookupSourcePickerModelChange,
   onLookupSourcePickerOpenChange,
@@ -88,6 +91,7 @@ export function WorkspaceLookupSourceDialog({
 }: WorkspaceLookupSourceDialogProps) {
   return (
     <LookupSourcePickerDialog
+      activeFilterEnabled={lookupSourcePicker?.activeFilterEnabled ?? false}
       canEdit={canEditSettings}
       error={lookupSourcePickerError}
       isLoading={isLookupSourcePickerLoading}
@@ -99,6 +103,7 @@ export function WorkspaceLookupSourceDialog({
         emptyDisplayFields: t("tenant.platformStudio.forms.builder.fieldSettings.emptyDisplayFields"),
         noAvailableModels: t("tenant.platformStudio.forms.builder.fieldSettings.noAvailableModels"),
         noSourceSelected: t("tenant.platformStudio.forms.builder.fieldSettings.noSourceSelected"),
+        onlyActiveRecords: t("tenant.platformStudio.forms.builder.fieldSettings.onlyActiveRecords"),
         save: t("tenant.platformStudio.forms.builder.saveAction"),
         selectedFields: t("tenant.platformStudio.forms.builder.fieldSettings.selectedFields"),
         sortBy: t("tenant.platformStudio.forms.builder.fieldSettings.sortBy"),
@@ -108,6 +113,7 @@ export function WorkspaceLookupSourceDialog({
       }}
       modelItems={lookupSourcePickerModelItems}
       onCancel={closeLookupSourcePicker}
+      onActiveFilterChange={onLookupSourcePickerActiveFilterChange}
       onFieldCheckedChange={onLookupSourcePickerFieldCheckedChange}
       onModelChange={onLookupSourcePickerModelChange}
       onOpenChange={onLookupSourcePickerOpenChange}

@@ -29,6 +29,21 @@ export type FormsPlaceholderFieldStatus = "draft" | "persisted" | "published";
 export type FormsPlaceholderFieldSemanticRole = "reportedBy" | "reportedDate" | "workflowStatus";
 export type FormsPlaceholderTagMode = "create_only" | "select_existing" | "select_or_create";
 export type FormsPlaceholderLookupDisplayMode = "catalog_modal" | "search_select";
+export type FormsPlaceholderLookupFilterOperator =
+  | "contains"
+  | "eq"
+  | "in"
+  | "is_empty"
+  | "is_not_empty"
+  | "not_eq"
+  | "not_in"
+  | "starts_with";
+export type FormsPlaceholderLookupFilterScalar = boolean | number | string;
+export type FormsPlaceholderLookupFilter = {
+  field: string;
+  operator?: FormsPlaceholderLookupFilterOperator;
+  value?: FormsPlaceholderLookupFilterScalar | ReadonlyArray<FormsPlaceholderLookupFilterScalar>;
+};
 export type FormsPlaceholderLookupSearchBehavior = "ajax" | "prefetch";
 export type FormsPlaceholderSelectionMode = "multiple" | "single";
 export type FormsPlaceholderFieldOptionStyle = {
@@ -46,6 +61,7 @@ export type FormsPlaceholderChoiceDisplay = {
 export type FormsPlaceholderLookupConfig = {
   displayMode?: FormsPlaceholderLookupDisplayMode;
   displayTemplate?: string;
+  filters?: ReadonlyArray<FormsPlaceholderLookupFilter>;
   groupByField?: string;
   itemLabelFields?: ReadonlyArray<string>;
   searchBehavior?: FormsPlaceholderLookupSearchBehavior;
@@ -65,6 +81,16 @@ export const formsPlaceholderChoiceOptionStyleVariants: ReadonlyArray<FormsPlace
   "warning",
   "danger",
 ];
+const formsPlaceholderLookupFilterOperators: ReadonlySet<FormsPlaceholderLookupFilterOperator> = new Set([
+  "contains",
+  "eq",
+  "in",
+  "is_empty",
+  "is_not_empty",
+  "not_eq",
+  "not_in",
+  "starts_with",
+]);
 export type FormsPlaceholderSuggestSearchMode = "contains" | "prefix";
 export type FormsPlaceholderSuggestSourceMode = "same_field_distinct_values";
 export type FormsPlaceholderSuggestConfig = {
@@ -742,6 +768,10 @@ function isLookupSearchBehavior(value: unknown): value is FormsPlaceholderLookup
   return value === "ajax" || value === "prefetch";
 }
 
+function isLookupFilterOperator(value: unknown): value is FormsPlaceholderLookupFilterOperator {
+  return typeof value === "string" && formsPlaceholderLookupFilterOperators.has(value as FormsPlaceholderLookupFilterOperator);
+}
+
 function isSelectionMode(value: unknown): value is FormsPlaceholderSelectionMode {
   return value === "multiple" || value === "single";
 }
@@ -763,6 +793,80 @@ function normalizeOptionalString(value: unknown, fallback: string | undefined) {
   return typeof value === "string" && value.trim().length > 0
     ? value
     : fallback;
+}
+
+function normalizeLookupFilterValue(
+  value: unknown,
+): FormsPlaceholderLookupFilterScalar | ReadonlyArray<FormsPlaceholderLookupFilterScalar> | undefined {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized ? normalized : undefined;
+  }
+
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const out: FormsPlaceholderLookupFilterScalar[] = [];
+  value.forEach((entry) => {
+    const normalized = normalizeLookupFilterValue(entry);
+    if (
+      typeof normalized === "boolean"
+      || typeof normalized === "number"
+      || typeof normalized === "string"
+    ) {
+      out.push(normalized);
+    }
+  });
+
+  return out.length > 0 ? out : undefined;
+}
+
+function normalizeLookupFilters(
+  value: unknown,
+  fallback: ReadonlyArray<FormsPlaceholderLookupFilter> | undefined,
+) {
+  if (!Array.isArray(value)) {
+    return fallback
+      ? fallback.map((filter) => ({
+          ...filter,
+          value: Array.isArray(filter.value) ? [...filter.value] : filter.value,
+        }))
+      : undefined;
+  }
+
+  const filters = value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return [];
+    }
+
+    const candidate = entry as Partial<FormsPlaceholderLookupFilter>;
+    const field = typeof candidate.field === "string" ? candidate.field.trim() : "";
+    if (!field) {
+      return [];
+    }
+
+    const operator = isLookupFilterOperator(candidate.operator) ? candidate.operator : "eq";
+    const normalized: FormsPlaceholderLookupFilter = {
+      field,
+      operator,
+    };
+    const filterValue = normalizeLookupFilterValue(candidate.value);
+    if (operator !== "is_empty" && operator !== "is_not_empty" && typeof filterValue !== "undefined") {
+      normalized.value = filterValue;
+    }
+    return [normalized];
+  });
+
+  return filters.length > 0 ? filters : undefined;
 }
 
 function isChoiceOptionStyleVariant(value: unknown): value is FormsPlaceholderChoiceOptionStyleVariant {
@@ -836,6 +940,10 @@ function normalizeLookupConfig(
     return fallback
       ? {
           ...fallback,
+          filters: fallback.filters?.map((filter) => ({
+            ...filter,
+            value: Array.isArray(filter.value) ? [...filter.value] : filter.value,
+          })),
           itemLabelFields: fallback.itemLabelFields ? [...fallback.itemLabelFields] : undefined,
           searchFields: fallback.searchFields ? [...fallback.searchFields] : undefined,
           storedTextFields: fallback.storedTextFields ? [...fallback.storedTextFields] : undefined,
@@ -847,6 +955,7 @@ function normalizeLookupConfig(
   return {
     displayMode: isLookupDisplayMode(candidate.displayMode) ? candidate.displayMode : fallback?.displayMode,
     displayTemplate: normalizeOptionalString(candidate.displayTemplate, fallback?.displayTemplate),
+    filters: normalizeLookupFilters(candidate.filters, fallback?.filters),
     groupByField: normalizeOptionalString(candidate.groupByField, fallback?.groupByField),
     itemLabelFields: normalizeStringList(candidate.itemLabelFields, fallback?.itemLabelFields),
     searchBehavior: isLookupSearchBehavior(candidate.searchBehavior) ? candidate.searchBehavior : fallback?.searchBehavior,
@@ -1296,6 +1405,11 @@ export function getFormsPlaceholderFieldSearchText(field: FormsPlaceholderField)
     field.lookupConfig?.sourceModel,
     field.lookupConfig?.displayMode,
     field.lookupConfig?.displayTemplate,
+    field.lookupConfig?.filters
+      ?.map((filter) => `${filter.field} ${filter.operator ?? ""} ${
+        Array.isArray(filter.value) ? filter.value.join(" ") : String(filter.value ?? "")
+      }`)
+      .join(" "),
     field.lookupConfig?.searchBehavior,
     field.lookupConfig?.searchFields?.join(" "),
     field.lookupConfig?.sortField,

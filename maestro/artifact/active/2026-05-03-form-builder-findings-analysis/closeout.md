@@ -5,7 +5,7 @@
 
 ## Summary
 
-The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls, retires `isActive` from Form Builder view config so Navigation Builder remains the owner of sidebar/runtime exposure, and adds the static Projects model/view with canonical industry lookup tables. Project static model runtime corrections are also recorded here.
+The source Form Builder findings file was copied into a new Maestro artifact and analyzed against current Form Builder contracts, memory, and targeted FE/BE source. Slices 1-6 are implemented and verified. Follow-up work now also removes Form Builder ownership of View Active/Inactive controls, retires `isActive` from Form Builder view config so Navigation Builder remains the owner of sidebar/runtime exposure, and adds the static Projects model/view with canonical industry lookup tables. Project static model runtime corrections and first generic DB lookup filter authoring are also recorded here.
 
 ## Outcome
 
@@ -34,6 +34,7 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 - Corrected `industry_size` and `industry_type` audit surfaces with `guid`, `created_at`, `updated_at`, indexes, and `set_updated_at()` triggers after owner review.
 - Fixed authoring save validation for underscore static model ids (`industry_size`, `industry_type`) by comparing normalized payload ids to normalized path ids.
 - Added migration `010_projects_static_layout_blueprint_fix.sql` to rewrite Projects metadata to one canonical Main/Details tab tree with matching `containerKey` values in `layoutBlueprint` and `uiSchema`.
+- Added Form Builder authoring support for `lookupConfig.filters[]` on the first three generic DB lookup fields, with current UI limited to `Only active records` as `{ field: "active", operator: "eq", value: true }`.
 
 ## Checks
 
@@ -42,8 +43,8 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, the static Projects model/view, and the static metadata `containerKey` requirement. Per-lookup settings/View filter review, Project Access List management, and final `isActive` DB/API cleanup remain future work.
+Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, the static Projects model/view, the static metadata `containerKey` requirement, and the first generic DB lookup filter authoring shortcut. Per-lookup preset filter review, Project Access List management, runtime lookup query enforcement, and final `isActive` DB/API cleanup remain future work.
 
 ## Next Step
 
-Owner should manually test that `industry_size` / `industry_type` save normally in Form Builder and that the Projects view opens with populated Main/Details tabs.
+Owner should manually test that the source picker for `DB lookup`, `DB lookup value`, and `DB lookup multi` saves the `Only active records` filter when the selected source has a boolean `active` field.

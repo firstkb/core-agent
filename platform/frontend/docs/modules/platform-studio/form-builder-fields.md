@@ -199,6 +199,35 @@ Preset rules:
 - `Contact`, `Company`, and `Project` compile to `db_lookup` with target/source preset metadata
 - single and multiple relationship palette entries remain separate user-facing shortcuts even when they share the same preset family
 
+Generic DB lookup source settings:
+
+- The first generic relationship entries, `DB lookup`, `DB lookup value`, and
+  `DB lookup multi`, share the manual source picker for source model, display
+  fields, stored value/text behavior, and sort field.
+- The source picker can author lookup source filters in
+  `lookupConfig.filters[]`. Current UI exposes only the boolean active-record
+  shortcut when the selected source has a boolean `active` field:
+
+```json
+{
+  "lookupConfig": {
+    "sourceModel": "company",
+    "filters": [
+      {
+        "field": "active",
+        "operator": "eq",
+        "value": true
+      }
+    ]
+  }
+}
+```
+
+- `lookupConfig.filters[]` is an authoring contract for lookup source selection
+  and is intentionally shaped for future operators such as `in`, `not_eq`, and
+  dynamic-token values. Runtime lookup query enforcement remains a separate
+  implementation concern.
+
 ## Choice Fields
 
 The `Choice fields` palette section contains:

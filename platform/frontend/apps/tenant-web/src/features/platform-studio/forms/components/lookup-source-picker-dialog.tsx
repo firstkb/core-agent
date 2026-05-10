@@ -16,6 +16,7 @@ export type LookupSourcePickerFieldOption = {
 };
 
 export type LookupSourcePickerModelOption = {
+  activeFilterField: string;
   defaultSortField: string;
   fields: ReadonlyArray<LookupSourcePickerFieldOption>;
   id: string;
@@ -23,6 +24,7 @@ export type LookupSourcePickerModelOption = {
 };
 
 export type LookupSourcePickerModelItem = {
+  activeFilterField: string;
   defaultDisplayFields: ReadonlyArray<string>;
   defaultSortField: string;
   fieldCount: number | null;
@@ -38,6 +40,7 @@ type LookupSourcePickerDialogLabels = {
   emptyDisplayFields: string;
   noAvailableModels: string;
   noSourceSelected: string;
+  onlyActiveRecords: string;
   save: string;
   selectedFields: string;
   sortBy: string;
@@ -58,10 +61,13 @@ type LookupSourcePickerDialogProps = {
     modelId: string,
     selectedFieldKeys: ReadonlyArray<string>,
     sortFieldKey: string,
+    activeFilterEnabled: boolean,
   ) => void;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
+  onActiveFilterChange: (enabled: boolean) => void;
   onSortFieldChange: (fieldKey: string) => void;
+  activeFilterEnabled: boolean;
   open: boolean;
   selectedFieldKeys: ReadonlyArray<string>;
   selectedFieldsSummary: string;
@@ -71,6 +77,7 @@ type LookupSourcePickerDialogProps = {
 };
 
 export function LookupSourcePickerDialog({
+  activeFilterEnabled,
   canEdit,
   error,
   isLoading,
@@ -81,6 +88,7 @@ export function LookupSourcePickerDialog({
   onModelChange,
   onOpenChange,
   onSave,
+  onActiveFilterChange,
   onSortFieldChange,
   open,
   selectedFieldKeys,
@@ -129,6 +137,7 @@ export function LookupSourcePickerDialog({
                                 modelOption.id,
                                 modelOption.defaultDisplayFields,
                                 modelOption.defaultSortField,
+                                Boolean(modelOption.activeFilterField),
                               )}
                               type="radio"
                               value={modelOption.id}
@@ -233,6 +242,25 @@ export function LookupSourcePickerDialog({
                       ))}
                     </Select>
                   </div>
+
+                  {selectedModel.activeFilterField ? (
+                    <label className="tenant-web__platform-studio-lookup-picker-option">
+                      <input
+                        checked={activeFilterEnabled}
+                        disabled={!canEdit}
+                        onChange={(event) => onActiveFilterChange(event.target.checked)}
+                        type="checkbox"
+                      />
+                      <div className="tenant-web__platform-studio-compact-row-main">
+                        <span className="tenant-web__platform-studio-compact-row-label">
+                          {labels.onlyActiveRecords}
+                        </span>
+                        <span className="tenant-web__platform-studio-compact-row-summary">
+                          {selectedModel.activeFilterField}
+                        </span>
+                      </div>
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
 

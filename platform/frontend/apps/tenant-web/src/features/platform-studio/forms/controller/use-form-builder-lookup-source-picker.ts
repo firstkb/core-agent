@@ -11,6 +11,7 @@ import {
 } from "./form-builder-workspace-lookup-options";
 import {
   type FormBuilderLookupSourcePickerState,
+  hasActiveLookupFilter,
 } from "./form-builder-workspace-lookup-source-picker";
 import {
   type FormsPlaceholderField,
@@ -57,9 +58,12 @@ export function useFormBuilderLookupSourcePicker({
     const initialModelId = requestedModelId && availableLookupSourceModels.some((entry) => entry.id === requestedModelId)
       ? requestedModelId
       : availableLookupSourceModels[0]?.id ?? "";
+    const initialSourceModel = getLookupSourceModelById(availableLookupSourceModels, initialModelId);
 
     setLookupSourcePickerError(null);
     setLookupSourcePicker({
+      activeFilterEnabled: hasActiveLookupFilter(selectedField.lookupConfig)
+        || (!requestedModelId && Boolean(initialSourceModel?.activeFilterField)),
       fieldId: selectedField.id,
       modelId: initialModelId,
       selectedFieldKeys: selectedField.displayFields?.length
@@ -73,14 +77,27 @@ export function useFormBuilderLookupSourcePicker({
     modelId: string,
     selectedFieldKeys: ReadonlyArray<string>,
     sortFieldKey: string,
+    activeFilterEnabled: boolean,
   ) => {
     setLookupSourcePicker((currentValue) =>
       currentValue
         ? {
             ...currentValue,
+            activeFilterEnabled,
             modelId,
             selectedFieldKeys: [...selectedFieldKeys],
             sortFieldKey,
+          }
+        : currentValue
+    );
+  }, []);
+
+  const setLookupSourcePickerActiveFilter = useCallback((activeFilterEnabled: boolean) => {
+    setLookupSourcePicker((currentValue) =>
+      currentValue
+        ? {
+            ...currentValue,
+            activeFilterEnabled,
           }
         : currentValue
     );
@@ -196,5 +213,6 @@ export function useFormBuilderLookupSourcePicker({
     setLookupSourcePickerFieldChecked,
     setLookupSourcePickerModel,
     setLookupSourcePickerSortField,
+    setLookupSourcePickerActiveFilter,
   } as const;
 }

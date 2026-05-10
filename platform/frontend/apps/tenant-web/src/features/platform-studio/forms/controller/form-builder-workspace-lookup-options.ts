@@ -10,10 +10,12 @@ type Translate = ReturnType<typeof useTranslation>["t"];
 
 export type LookupSourceFieldOption = {
   key: string;
+  kind?: string;
   label: string;
 };
 
 export type LookupSourceModelOption = {
+  activeFilterField: string;
   defaultDisplayFields: ReadonlyArray<string>;
   defaultSortField: string;
   defaultSearchFields: ReadonlyArray<string>;
@@ -36,6 +38,7 @@ export function buildLookupSourceFieldOptions(
   fields: ReadonlyArray<{
     displayName?: string;
     id?: string;
+    kind?: string;
     label?: string;
     storageKey?: string;
   }>,
@@ -43,7 +46,7 @@ export function buildLookupSourceFieldOptions(
   const seen = new Set<string>();
   const out: LookupSourceFieldOption[] = [];
 
-  const appendField = (key: string | undefined, label: string | undefined) => {
+  const appendField = (key: string | undefined, label: string | undefined, kind?: string) => {
     const normalizedKey = key?.trim();
     if (!normalizedKey || seen.has(normalizedKey)) {
       return;
@@ -52,13 +55,14 @@ export function buildLookupSourceFieldOptions(
     seen.add(normalizedKey);
     out.push({
       key: normalizedKey,
+      kind: kind?.trim() || undefined,
       label: label?.trim() || normalizedKey,
     });
   };
 
   appendField(rootRecordLookupSourceField.key, rootRecordLookupSourceField.label);
   fields.forEach((field) => {
-    appendField(field.storageKey ?? field.id, field.displayName ?? field.label ?? field.storageKey ?? field.id);
+    appendField(field.storageKey ?? field.id, field.displayName ?? field.label ?? field.storageKey ?? field.id, field.kind);
   });
 
   return out;
@@ -80,8 +84,10 @@ export function buildLookupSourceModelOption(
     ? [dataFields[0].key]
     : [rootRecordLookupSourceField.key];
   const defaultSortField = dataFields[0]?.key ?? rootRecordLookupSourceField.key;
+  const activeFilterField = dataFields.find((field) => field.key === "active" && field.kind === "boolean")?.key ?? "";
 
   return {
+    activeFilterField,
     defaultDisplayFields,
     defaultSearchFields: normalizedFields.map((field) => field.key),
     defaultSortField,
@@ -101,6 +107,7 @@ export function buildLookupSourceModelFromPlaceholderModel(
     model.fields.map((field) => ({
       displayName: field.displayName,
       id: field.id,
+      kind: field.kind,
       label: field.label,
       storageKey: field.storageKey,
     })),
@@ -126,6 +133,7 @@ export function buildLookupSourceModelFromDraft(
           : typeof entry.id === "string"
             ? entry.id
             : undefined,
+        kind: typeof entry.kind === "string" ? entry.kind : undefined,
         label: typeof entry.label === "string" ? entry.label : undefined,
         storageKey: typeof entry.storageKey === "string" ? entry.storageKey : undefined,
       }];

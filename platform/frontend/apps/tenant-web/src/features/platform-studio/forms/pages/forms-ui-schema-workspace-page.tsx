@@ -338,6 +338,7 @@ export function FormsViewWorkspacePage() {
     lookupSourcePickerModel,
     onLookupSourcePickerOpenChange,
     openLookupSourcePicker,
+    setLookupSourcePickerActiveFilter,
     setLookupSourcePickerFieldChecked,
     setLookupSourcePickerModel,
     setLookupSourcePickerSortField,
@@ -964,6 +965,7 @@ export function FormsViewWorkspacePage() {
         onDeleteNodeOpenChange={setDeleteNodeOpen}
         onDebugOpenChange={setDebugOpen}
         onLeaveConfirmOpenChange={onLeaveConfirmOpenChange}
+        onLookupSourcePickerActiveFilterChange={setLookupSourcePickerActiveFilter}
         onLookupSourcePickerFieldCheckedChange={setLookupSourcePickerFieldChecked}
         onLookupSourcePickerModelChange={setLookupSourcePickerModel}
         onLookupSourcePickerOpenChange={onLookupSourcePickerOpenChange}

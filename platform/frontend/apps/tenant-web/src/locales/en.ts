@@ -457,6 +457,7 @@ export const tenantEnglishMessages = {
             newSourceFilter: "Source filter",
             noAvailableModels: "No models are available yet.",
             noSourceSelected: "Choose a source model to pick fields.",
+            onlyActiveRecords: "Only active records",
             options: "Options",
             orientation: "Orientation",
             orientationHorizontal: "Horizontal",

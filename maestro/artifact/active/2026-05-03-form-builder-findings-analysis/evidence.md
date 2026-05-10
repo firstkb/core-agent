@@ -116,6 +116,14 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 | `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after memory/artifact updates. |
 | `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after memory/artifact updates. |
 | `scripts/preflight.sh` | passed | lite preflight passed | Includes docs memory, env policy, and runtime drift checks after Projects layout correction. |
+| Owner lookup filter decision | accepted | use `lookupConfig.filters[]`, not a special `activeFilter`; first slice exposes only active-record filter for `DB lookup`, `DB lookup value`, and `DB lookup multi` | Runtime lookup query enforcement remains out of scope for this Form Builder authoring slice. |
+| `pnpm --filter @platform/tenant-web test -- form-builder-workspace-lookup-source-picker` | passed | 1 file / 2 tests passed | Covers saving and removing the active-record filter in `lookupConfig.filters[]`. |
+| `pnpm --filter @platform/tenant-web typecheck` | passed | `tsc --noEmit` exited 0 | Run after adding lookup filter authoring types/UI. Node engine warning remains in this shell. |
+| `pnpm --filter @platform/tenant-web lint` | passed | `eslint .` exited 0 | Run after lookup source picker UI updates. Node engine warning remains in this shell. |
+| `git diff --check` | passed | no output | Whitespace check after lookup filter authoring. |
+| `python3 scripts/checks/docs_memory_check.py --check` | passed | `Docs/memory check passed.` | Docs/memory hygiene after docs/artifact/memory updates. |
+| `python3 scripts/checks/check_env_policy.py --check` | passed | `Env policy check passed.` | Env policy check after docs/artifact/memory updates. |
+| `scripts/preflight.sh` | failed then passed | default system `python3` is 3.9.6 and lacks `tomllib`; rerun with `/opt/homebrew/bin` first passed lite preflight | No code failure; environment interpreter mismatch only. |
 
 ## Changed Files
 

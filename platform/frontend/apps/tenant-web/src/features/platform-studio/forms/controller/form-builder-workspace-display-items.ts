@@ -247,6 +247,7 @@ export function createLookupSourcePickerModelItems({
     const loadedModelOption = sourceModelsById[modelOption.id];
 
     return {
+      activeFilterField: loadedModelOption?.activeFilterField ?? modelOption.activeFilterField,
       defaultDisplayFields: loadedModelOption ? [...loadedModelOption.defaultDisplayFields] : [],
       defaultSortField: loadedModelOption?.defaultSortField ?? "",
       fieldCount: loadedModelOption?.fields.length ?? null,

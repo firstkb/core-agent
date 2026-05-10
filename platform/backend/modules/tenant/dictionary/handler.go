@@ -1,4 +1,4 @@
-package dictionarysvc
+package dictionary
 
 import (
 	"context"
@@ -20,6 +20,14 @@ func NewHandler(service *Service) *Handler {
 
 func (h *Handler) ListOptions(ctx context.Context, r *http.Request, _ struct{}) (*OptionsResponse, error) {
 	out, err := h.service.ListOptions(ctx, parseOptionsRequest(r))
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) QueryOptions(ctx context.Context, _ *http.Request, req OptionsRequest) (*OptionsResponse, error) {
+	out, err := h.service.ListOptions(ctx, req)
 	if err != nil {
 		return nil, mapError(err)
 	}

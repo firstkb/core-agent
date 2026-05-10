@@ -165,7 +165,7 @@ export function PopoverTrigger({ children }: PopoverTriggerProps) {
 
 export type PopoverContentProps = HTMLAttributes<HTMLDivElement>;
 
-export function PopoverContent({ children, className, ...props }: PopoverContentProps) {
+export function PopoverContent({ children, className, style: contentStyle, ...props }: PopoverContentProps) {
   const { align, contentId, contentRef, open, side, sideOffset, triggerRef } =
     usePopoverContext();
   const [positionReady, setPositionReady] = useState(false);
@@ -206,6 +206,7 @@ export function PopoverContent({ children, className, ...props }: PopoverContent
       role="dialog"
       style={{
         ...style,
+        ...contentStyle,
         pointerEvents: positionReady ? "auto" : "none",
         visibility: positionReady ? "visible" : "hidden",
       }}

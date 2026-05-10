@@ -33,8 +33,10 @@ type LookupFieldPresetTemplateOption = {
 
 type LookupFieldPresetFilterRow = {
   field: string;
+  hasMoreOptions: boolean;
   label: string;
   loading: boolean;
+  loadingMore: boolean;
   options: readonly ComboboxOption[];
   placeholder: string;
   searchValue: string;
@@ -48,6 +50,7 @@ type LookupFieldSettingsProps = {
   labels: LookupFieldSettingsLabels;
   onChooseSource: () => void;
   onDisplayModeChange: (displayMode: FormsPlaceholderLookupDisplayMode) => void;
+  onPresetFilterLoadMore: (field: string) => void;
   onPresetFilterSearchChange: (field: string, searchValue: string) => void;
   onPresetFilterValueChange: (field: string, values: ReadonlyArray<string>) => void;
   onPresetTemplateChange: (templateKey: string) => void;
@@ -66,6 +69,7 @@ export function LookupFieldSettings({
   labels,
   onChooseSource,
   onDisplayModeChange,
+  onPresetFilterLoadMore,
   onPresetFilterSearchChange,
   onPresetFilterValueChange,
   onPresetTemplateChange,
@@ -152,10 +156,14 @@ export function LookupFieldSettings({
                 disabled={!canChooseSource}
                 emptyLabel={labels.noFilterOptions}
                 filterMode="none"
+                hasMoreOptions={row.hasMoreOptions}
                 id={`tenant-platform-studio-preset-lookup-filter-${row.field}`}
                 label={row.label}
                 loading={row.loading}
+                loadingMore={row.loadingMore}
                 loadingLabel={labels.loadingFilterOptions}
+                loadMoreLabel={labels.loadingFilterOptions}
+                onLoadMore={() => onPresetFilterLoadMore(row.field)}
                 onSearchValueChange={(value) => onPresetFilterSearchChange(row.field, value)}
                 onValueChange={(values) => onPresetFilterValueChange(row.field, values)}
                 options={row.options}

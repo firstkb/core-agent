@@ -241,10 +241,14 @@ Relationship preset lookup settings:
 - Preset filter authoring uses the tenant dictionary options route instead of
   hardcoded ids or loading full source tables in the browser. Options are shown
   with the UI Kit Combobox two-line label/description pattern, and both lines
-  participate in remote search.
+  participate in remote search. Filter pickers load the first page of 10
+  options and request more pages when the user scrolls.
 - Current preset filter dictionaries are `jobtypes`, `companies`, and
   `companyTypes`; the same `/app/dictionaries/{dictionaryKey}/options` route is
-  intended for future Form render lookup controls.
+  intended for future Form render lookup controls. Generic lookup option
+  requests use `POST /app/dictionaries/options/query` with `sourceModel`,
+  field selections, sort field, stored value field, filters, search, and
+  paging.
 - Active-record filtering is not a Form Builder preset lookup setting. Runtime
   lookup query code may enforce active defaults separately.
 

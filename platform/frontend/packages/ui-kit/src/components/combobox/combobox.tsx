@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
+  type CSSProperties,
   type UIEvent as ReactUiEvent,
 } from "react";
 
@@ -96,10 +97,14 @@ type ComboboxBaseProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "defa
   initialVisibleCount?: number;
   invalid?: boolean;
   label?: ReactNode;
+  hasMoreOptions?: boolean;
   loading?: boolean;
   loadingLabel?: ReactNode;
+  loadingMore?: boolean;
+  loadMoreLabel?: ReactNode;
   loadMoreStep?: number;
   name?: string;
+  onLoadMore?: () => void;
   options: readonly ComboboxOption[];
   placeholder?: ReactNode;
   searchInputAriaLabel?: string;
@@ -150,14 +155,18 @@ export function Combobox({
     disabled = false,
     emptyLabel = "No matching options",
     filterMode = "local",
+    hasMoreOptions = false,
     id,
     initialVisibleCount,
     invalid = false,
     label = "Select an option",
     loading = false,
     loadingLabel = "Searching…",
+    loadingMore = false,
+    loadMoreLabel = loadingLabel,
     loadMoreStep,
     name,
+    onLoadMore,
     onSearchValueChange: _onSearchValueChange,
     onValueChange: _onValueChange,
     options,
@@ -202,6 +211,8 @@ export function Combobox({
   const [visibleCount, setVisibleCount] = useState(safeInitialVisibleCount);
   const optionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [contentWidth, setContentWidth] = useState<number | null>(null);
   const isSearchControlled = searchValue !== undefined;
 
   const focusSearchInput = useCallback(() => {
@@ -283,6 +294,7 @@ export function Combobox({
     [filteredOptions, progressiveLoadEnabled, visibleCount],
   );
   const hasMoreVisibleOptions = progressiveLoadEnabled && renderedOptions.length < filteredOptions.length;
+  const hasRemoteMoreOptions = Boolean(onLoadMore && hasMoreOptions);
   const triggerValue = useMemo<ReactNode>(() => {
     if (!multiple) {
       return selectedOption ? selectedOption.label : placeholder;
@@ -364,6 +376,26 @@ export function Combobox({
     setVisibleCount(safeInitialVisibleCount);
   }, [open, options, progressiveLoadEnabled, query, safeInitialVisibleCount]);
 
+  useEffect(() => {
+    if (!open || typeof window === "undefined") {
+      return;
+    }
+
+    function updateContentWidth() {
+      const nextWidth = triggerButtonRef.current?.getBoundingClientRect().width ?? null;
+      setContentWidth(nextWidth && Number.isFinite(nextWidth) ? nextWidth : null);
+    }
+
+    updateContentWidth();
+    const frameId = window.requestAnimationFrame(updateContentWidth);
+    window.addEventListener("resize", updateContentWidth);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", updateContentWidth);
+    };
+  }, [open]);
+
   function resetSearchIfNeeded() {
     if (!isSearchControlled) {
       setQuery("");
@@ -441,13 +473,24 @@ export function Combobox({
   }
 
   function handleListScroll(event: ReactUiEvent<HTMLDivElement>) {
-    if (!hasMoreVisibleOptions || loading) {
+    if (loading) {
       return;
     }
 
     const target = event.currentTarget;
 
     if (target.scrollTop + target.clientHeight < target.scrollHeight - 24) {
+      return;
+    }
+
+    if (hasRemoteMoreOptions) {
+      if (!loadingMore) {
+        onLoadMore?.();
+      }
+      return;
+    }
+
+    if (!hasMoreVisibleOptions) {
       return;
     }
 
@@ -539,6 +582,7 @@ export function Combobox({
             className="ui-combobox__trigger"
             disabled={disabled}
             id={triggerId}
+            ref={triggerButtonRef}
             role="combobox"
             type="button"
           >
@@ -557,6 +601,9 @@ export function Combobox({
         <PopoverContent
           aria-label={typeof label === "string" ? label : "Options"}
           className="ui-combobox__content"
+          style={contentWidth ? ({
+            "--ui-combobox-content-width": `${contentWidth}px`,
+          } as CSSProperties) : undefined}
         >
           <div className="ui-combobox__search">
             <Input
@@ -581,46 +628,51 @@ export function Combobox({
             onScroll={handleListScroll}
             role="listbox"
           >
-            {loading ? (
+            {loading && renderedOptions.length === 0 ? (
               <div className="ui-combobox__empty">{loadingLabel}</div>
             ) : renderedOptions.length > 0 ? (
-              renderedOptions.map((option) => {
-                const selected = multiple
-                  ? selectedValueSet.has(option.value)
-                  : option.value === selectedValue;
+              <>
+                {renderedOptions.map((option) => {
+                  const selected = multiple
+                    ? selectedValueSet.has(option.value)
+                    : option.value === selectedValue;
 
-                return (
-                  <button
-                    aria-selected={selected}
-                    className={cx(
-                      "ui-combobox__option",
-                      selected && "ui-combobox__option--selected",
-                      option.value === activeValue && "ui-combobox__option--active",
-                    )}
-                    disabled={option.disabled}
-                    key={option.value}
-                    onClick={() => selectValue(option.value)}
-                    onFocus={() => setActiveValue(option.value)}
-                    onKeyDown={handleOptionKeyDown}
-                    ref={(node) => {
-                      optionRefs.current[option.value] = node;
-                    }}
-                    role="option"
-                    type="button"
-                  >
-                    <span className="ui-combobox__option-copy">
-                      <span className="ui-combobox__option-label">{option.label}</span>
-                      {option.description ? (
-                        <span className="ui-combobox__option-description">{option.description}</span>
-                      ) : null}
-                    </span>
-                    <span className="ui-combobox__option-trailing">
-                      {option.meta ? <span className="ui-combobox__option-meta">{option.meta}</span> : null}
-                      {selected ? <ComboboxCheckIcon /> : null}
-                    </span>
-                  </button>
-                );
-              })
+                  return (
+                    <button
+                      aria-selected={selected}
+                      className={cx(
+                        "ui-combobox__option",
+                        selected && "ui-combobox__option--selected",
+                        option.value === activeValue && "ui-combobox__option--active",
+                      )}
+                      disabled={option.disabled}
+                      key={option.value}
+                      onClick={() => selectValue(option.value)}
+                      onFocus={() => setActiveValue(option.value)}
+                      onKeyDown={handleOptionKeyDown}
+                      ref={(node) => {
+                        optionRefs.current[option.value] = node;
+                      }}
+                      role="option"
+                      type="button"
+                    >
+                      <span className="ui-combobox__option-copy">
+                        <span className="ui-combobox__option-label">{option.label}</span>
+                        {option.description ? (
+                          <span className="ui-combobox__option-description">{option.description}</span>
+                        ) : null}
+                      </span>
+                      <span className="ui-combobox__option-trailing">
+                        {option.meta ? <span className="ui-combobox__option-meta">{option.meta}</span> : null}
+                        {selected ? <ComboboxCheckIcon /> : null}
+                      </span>
+                    </button>
+                  );
+                })}
+                {loadingMore ? (
+                  <div className="ui-combobox__empty ui-combobox__empty--loading-more">{loadMoreLabel}</div>
+                ) : null}
+              </>
             ) : (
               <div className="ui-combobox__empty">{emptyLabel}</div>
             )}

@@ -123,15 +123,20 @@ Export routes:
 Shared tenant dictionary routes:
 
 - `GET /app/dictionaries/{dictionaryKey}/options`
+- `POST /app/dictionaries/options/query`
 
-The tenant dictionary route is a shared lookup option source for Form Builder
+The tenant dictionary module is a shared lookup option source for Form Builder
 authoring and future Form render lookup controls. It returns paged options with
 `id`, `value`, `label`, optional `description`, and optional string `fields`.
-It supports `search`, repeated `ids`, `page`, and `pageSize` query parameters.
-Current dictionaries are `companies`, `companyTypes`, `contacts`, `jobtypes`,
-and `projects`, with aliases accepted for singular/preset-facing names. The
-route currently uses tenant-secure baseline access only; lookup-specific access
-rules remain a separate future decision.
+The named `GET` route supports `search`, repeated `ids`, `page`, and `pageSize`
+query parameters. Current named dictionaries are `companies`, `companyTypes`,
+`contacts`, `jobtypes`, and `projects`, with aliases accepted for
+singular/preset-facing names. The generic `POST` route supports ordinary lookup
+sources by accepting `sourceModel`, `displayFields`, `searchFields`,
+`sortField`, `storedValueField`, `filters[]`, `search`, `ids`, `page`, and
+`pageSize`; filters use the Form Builder lookup filter shape (`field`,
+`operator`, `value`). The route currently uses tenant-secure baseline access
+only; lookup-specific access rules remain a separate future decision.
 
 Authoring access baseline:
 

@@ -43,6 +43,8 @@ type LookupSummary = {
   summary: string;
 };
 
+const presetLookupFilterPageSize = 10;
+
 type SelectedFieldSettingsSectionProps = {
   canEditModelDefinition: boolean;
   canEditSettings: boolean;
@@ -144,7 +146,10 @@ export function SelectedFieldSettingsSection({
   const fieldTypeLabel = t(getFieldTypeKey(selectedField));
   const [filterSearchByField, setFilterSearchByField] = useState<Record<string, string>>({});
   const [filterOptionsByField, setFilterOptionsByField] = useState<Record<string, readonly ComboboxOption[]>>({});
+  const [filterHasMoreByField, setFilterHasMoreByField] = useState<Record<string, boolean>>({});
   const [filterLoadingByField, setFilterLoadingByField] = useState<Record<string, boolean>>({});
+  const [filterLoadingMoreByField, setFilterLoadingMoreByField] = useState<Record<string, boolean>>({});
+  const [filterPageByField, setFilterPageByField] = useState<Record<string, number>>({});
   const presetLookupFilterDefinitions = useMemo(
     () => selectedFieldIsPresetLookup ? getPresetLookupFilterDefinitions(selectedField) : [],
     [selectedField, selectedFieldIsPresetLookup],
@@ -158,8 +163,10 @@ export function SelectedFieldSettingsSection({
   const presetLookupFilterRows = selectedFieldIsPresetLookup
     ? presetLookupFilterDefinitions.map((definition) => ({
         field: definition.field,
+        hasMoreOptions: Boolean(filterHasMoreByField[definition.field]),
         label: t(definition.labelKey),
         loading: Boolean(filterLoadingByField[definition.field]),
+        loadingMore: Boolean(filterLoadingMoreByField[definition.field]),
         options: filterOptionsByField[definition.field] ?? [],
         placeholder: t(definition.placeholderKey),
         searchValue: filterSearchByField[definition.field] ?? "",
@@ -170,7 +177,10 @@ export function SelectedFieldSettingsSection({
   useEffect(() => {
     setFilterSearchByField({});
     setFilterOptionsByField({});
+    setFilterHasMoreByField({});
     setFilterLoadingByField({});
+    setFilterLoadingMoreByField({});
+    setFilterPageByField({});
   }, [selectedField.id, selectedField.preset]);
 
   useEffect(() => {
@@ -191,7 +201,8 @@ export function SelectedFieldSettingsSection({
 
       const searchRequest = loadDictionaryOptions({
         dictionary: definition.dictionaryKey,
-        pageSize: 25,
+        page: 1,
+        pageSize: presetLookupFilterPageSize,
         search,
       });
       const selectedRequest = selectedValues.length > 0
@@ -215,6 +226,14 @@ export function SelectedFieldSettingsSection({
               ...searchResponse.items,
             ]),
           }));
+          setFilterHasMoreByField((current) => ({
+            ...current,
+            [definition.field]: searchResponse.hasMore,
+          }));
+          setFilterPageByField((current) => ({
+            ...current,
+            [definition.field]: searchResponse.page,
+          }));
         })
         .catch(() => {
           if (cancelled) {
@@ -224,6 +243,14 @@ export function SelectedFieldSettingsSection({
           setFilterOptionsByField((current) => ({
             ...current,
             [definition.field]: [],
+          }));
+          setFilterHasMoreByField((current) => ({
+            ...current,
+            [definition.field]: false,
+          }));
+          setFilterPageByField((current) => ({
+            ...current,
+            [definition.field]: 1,
           }));
         })
         .finally(() => {
@@ -256,6 +283,57 @@ export function SelectedFieldSettingsSection({
         [field]: searchValue,
       }
     );
+  }
+
+  function handlePresetLookupFilterLoadMore(field: string) {
+    const definition = presetLookupFilterDefinitions.find((entry) => entry.field === field);
+    if (
+      !definition
+      || filterLoadingByField[field]
+      || filterLoadingMoreByField[field]
+      || !filterHasMoreByField[field]
+    ) {
+      return;
+    }
+
+    const nextPage = (filterPageByField[field] ?? 1) + 1;
+    setFilterLoadingMoreByField((current) => ({
+      ...current,
+      [field]: true,
+    }));
+
+    void loadDictionaryOptions({
+      dictionary: definition.dictionaryKey,
+      page: nextPage,
+      pageSize: presetLookupFilterPageSize,
+      search: filterSearchByField[field] ?? "",
+    })
+      .then((response) => {
+        setFilterOptionsByField((current) => ({
+          ...current,
+          [field]: mergeComboboxOptions(current[field] ?? [], mergeDictionaryOptions(response.items)),
+        }));
+        setFilterHasMoreByField((current) => ({
+          ...current,
+          [field]: response.hasMore,
+        }));
+        setFilterPageByField((current) => ({
+          ...current,
+          [field]: response.page,
+        }));
+      })
+      .catch(() => {
+        setFilterHasMoreByField((current) => ({
+          ...current,
+          [field]: false,
+        }));
+      })
+      .finally(() => {
+        setFilterLoadingMoreByField((current) => ({
+          ...current,
+          [field]: false,
+        }));
+      });
   }
 
   return (
@@ -328,6 +406,7 @@ export function SelectedFieldSettingsSection({
           }}
           onChooseSource={onChooseLookupSource}
           onDisplayModeChange={onLookupDisplayModeChange}
+          onPresetFilterLoadMore={handlePresetLookupFilterLoadMore}
           onPresetFilterSearchChange={handlePresetLookupFilterSearchChange}
           onPresetFilterValueChange={onPresetLookupFilterValueChange}
           onPresetTemplateChange={onPresetLookupTemplateChange}
@@ -458,5 +537,19 @@ function mergeDictionaryOptions(options: ReadonlyArray<TenantDictionaryOption>):
     });
   }
 
+  return [...merged.values()];
+}
+
+function mergeComboboxOptions(
+  currentOptions: ReadonlyArray<ComboboxOption>,
+  nextOptions: ReadonlyArray<ComboboxOption>,
+): ComboboxOption[] {
+  const merged = new Map<string, ComboboxOption>();
+  for (const option of [...currentOptions, ...nextOptions]) {
+    if (!option.value || merged.has(option.value)) {
+      continue;
+    }
+    merged.set(option.value, option);
+  }
   return [...merged.values()];
 }

@@ -2,11 +2,11 @@ package server
 
 import (
 	"dtriton.com/platform/backend/internal/platform/postgres"
-	dictionarysvc "dtriton.com/platform/backend/modules/tenant/dictionarysvc"
+	dictionary "dtriton.com/platform/backend/modules/tenant/dictionary"
 )
 
-func buildTenantDictionaryModule(sqlClient *postgres.Client) *dictionarysvc.Handler {
-	repo := dictionarysvc.NewRepository(sqlClient)
-	service := dictionarysvc.NewService(repo)
-	return dictionarysvc.NewHandler(service)
+func buildTenantDictionaryModule(sqlClient *postgres.Client) *dictionary.Handler {
+	repo := dictionary.NewRepository(sqlClient)
+	service := dictionary.NewService(repo)
+	return dictionary.NewHandler(service)
 }

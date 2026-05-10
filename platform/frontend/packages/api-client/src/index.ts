@@ -179,6 +179,23 @@ type TenantNavigationAccessOptionsResponse = {
 
 type TenantDictionaryKey = "companies" | "companyTypes" | "contacts" | "jobtypes" | "projects";
 
+type TenantDictionaryFilterOperator =
+  | "contains"
+  | "eq"
+  | "in"
+  | "is_empty"
+  | "is_not_empty"
+  | "not_eq"
+  | "starts_with";
+
+type TenantDictionaryFilterScalar = boolean | number | string;
+
+type TenantDictionaryFilter = {
+  field: string;
+  operator?: TenantDictionaryFilterOperator;
+  value?: TenantDictionaryFilterScalar | TenantDictionaryFilterScalar[];
+};
+
 type TenantDictionaryOption = {
   description?: string;
   fields?: Record<string, string>;
@@ -188,11 +205,17 @@ type TenantDictionaryOption = {
 };
 
 type TenantDictionaryOptionsRequest = {
-  dictionary: TenantDictionaryKey | string;
+  dictionary?: TenantDictionaryKey | string;
+  displayFields?: string[];
+  filters?: TenantDictionaryFilter[];
   ids?: string[];
   page?: number;
   pageSize?: number;
   search?: string;
+  searchFields?: string[];
+  sortField?: string;
+  sourceModel?: string;
+  storedValueField?: string;
 };
 
 type TenantDictionaryOptionsResponse = {
@@ -1841,7 +1864,10 @@ function buildTenantNavigationAccessOptionPagePath(request: TenantNavigationAcce
 }
 
 function buildTenantDictionaryOptionsPath(request: TenantDictionaryOptionsRequest) {
-  const dictionary = request.dictionary.trim();
+  const dictionary = request.dictionary?.trim() ?? "";
+  if (!dictionary) {
+    throw new ApiClientError("Dictionary key is required.");
+  }
   const searchParams = new URLSearchParams();
   if (request.search?.trim()) {
     searchParams.set("search", request.search.trim());
@@ -1861,9 +1887,44 @@ function buildTenantDictionaryOptionsPath(request: TenantDictionaryOptionsReques
   return `/app/dictionaries/${encodeURIComponent(dictionary)}/options${suffix ? `?${suffix}` : ""}`;
 }
 
+function shouldQueryTenantDictionaryOptions(request: TenantDictionaryOptionsRequest) {
+  return Boolean(request.sourceModel?.trim());
+}
+
+function buildTenantDictionaryOptionsQueryBody(request: TenantDictionaryOptionsRequest): TenantDictionaryOptionsRequest {
+  return {
+    dictionary: request.dictionary?.trim() || undefined,
+    displayFields: request.displayFields?.map((field) => field.trim()).filter(Boolean),
+    filters: request.filters,
+    ids: request.ids?.map((id) => id.trim()).filter(Boolean),
+    page: request.page,
+    pageSize: request.pageSize,
+    search: request.search?.trim() || undefined,
+    searchFields: request.searchFields?.map((field) => field.trim()).filter(Boolean),
+    sortField: request.sortField?.trim() || undefined,
+    sourceModel: request.sourceModel?.trim() || undefined,
+    storedValueField: request.storedValueField?.trim() || undefined,
+  };
+}
+
 function createTenantDictionaryClient(baseUrl: string): TenantDictionaryClient {
   return {
     async loadOptions(accessToken: string, request: TenantDictionaryOptionsRequest) {
+      if (shouldQueryTenantDictionaryOptions(request)) {
+        const envelope = await requestEnvelope<unknown>(
+          baseUrl,
+          "/app/dictionaries/options/query",
+          {
+            accessToken,
+            body: buildTenantDictionaryOptionsQueryBody(request),
+            method: "POST",
+            timeoutMs: profileBootstrapRequestTimeoutMs,
+          },
+        );
+
+        return normalizeTenantDictionaryOptionsResponse(envelope.data);
+      }
+
       const envelope = await requestEnvelope<unknown>(
         baseUrl,
         buildTenantDictionaryOptionsPath(request),
@@ -2236,6 +2297,9 @@ export type {
   TenantBusinessTreeNodeKind,
   TenantBusinessTreeNodesResponse,
   TenantDictionaryClient,
+  TenantDictionaryFilter,
+  TenantDictionaryFilterOperator,
+  TenantDictionaryFilterScalar,
   TenantDictionaryKey,
   TenantDictionaryOption,
   TenantDictionaryOptionsRequest,

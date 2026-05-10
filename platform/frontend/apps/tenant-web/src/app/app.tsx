@@ -418,6 +418,26 @@ export function App({
               <Route element={<FormsRuntimeFormPage mode="edit" />} path="app/forms/:modelId/views/:viewId/edit/:docGuid" />
               <Route element={<FormsRuntimeListPage />} path="app/forms/:modelId/views/:viewId/view/:docGuid" />
               <Route
+                element={<FormsRuntimeFormPage entryContext="preview" mode="create" />}
+                path="app/platform-studio/forms/:modelId/views/:viewId/new"
+              />
+              <Route
+                element={<FormsRuntimeFormPage entryContext="preview" mode="create" scope="subform" />}
+                path="app/platform-studio/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/new"
+              />
+              <Route
+                element={<FormsRuntimeFormPage entryContext="preview" mode="edit" scope="subform" />}
+                path="app/platform-studio/forms/:modelId/views/:viewId/edit/:parentDocGuid/subforms/:subformId/edit/:docGuid"
+              />
+              <Route
+                element={<FormsRuntimeFormPage entryContext="preview" mode="edit" />}
+                path="app/platform-studio/forms/:modelId/views/:viewId/edit/:docGuid"
+              />
+              <Route
+                element={<FormsRuntimeListPage entryContext="preview" />}
+                path="app/platform-studio/forms/:modelId/views/:viewId/view/:docGuid"
+              />
+              <Route
                 element={<FormsRuntimeListPage entryContext="preview" />}
                 path="app/platform-studio/forms/:modelId/views/:viewId"
               />

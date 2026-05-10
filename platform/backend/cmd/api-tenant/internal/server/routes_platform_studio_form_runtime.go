@@ -45,9 +45,23 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_RUNTIME_PREVIEW_FORM_LOAD",
+		http.MethodGet,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/form",
+		loadFormHandler,
+	)
+
+	register(
 		"FORM_RUNTIME_RECORD_FORM_LOAD",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}/form",
+		loadFormHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_RECORD_FORM_LOAD",
+		http.MethodGet,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}/form",
 		loadFormHandler,
 	)
 
@@ -75,6 +89,13 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_CREATE_FORM_LOAD",
+		http.MethodGet,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/form",
+		loadSubformHandler,
+	)
+
+	register(
 		"FORM_RUNTIME_SUBFORM_RECORD_FORM_LOAD",
 		http.MethodGet,
 		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}/form",
@@ -82,129 +103,190 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 	)
 
 	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_RECORD_FORM_LOAD",
+		http.MethodGet,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}/form",
+		loadSubformHandler,
+	)
+
+	createRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.CreateRecord(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_RECORD_CREATE",
+				http.StatusInternalServerError,
+				"cannot create form runtime record",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	register(
 		"FORM_RUNTIME_RECORD_CREATE",
 		http.MethodPost,
 		"/app/forms/{modelId}/views/{viewId}/records",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.CreateRecord(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_RECORD_CREATE",
-					http.StatusInternalServerError,
-					"cannot create form runtime record",
-					err,
-					srv.FieldsForLog(ctx, r, req)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		createRecordHandler,
 	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_RECORD_CREATE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records",
+		createRecordHandler,
+	)
+
+	updateRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.UpdateRecord(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_RECORD_UPDATE",
+				http.StatusInternalServerError,
+				"cannot update form runtime record",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_RUNTIME_RECORD_UPDATE",
 		http.MethodPatch,
 		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.UpdateRecord(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_RECORD_UPDATE",
-					http.StatusInternalServerError,
-					"cannot update form runtime record",
-					err,
-					srv.FieldsForLog(ctx, r, req)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		updateRecordHandler,
 	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_RECORD_UPDATE",
+		http.MethodPatch,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}",
+		updateRecordHandler,
+	)
+
+	createSubformRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.CreateSubformRecord(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_SUBFORM_RECORD_CREATE",
+				http.StatusInternalServerError,
+				"cannot create form runtime subform record",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_RUNTIME_SUBFORM_RECORD_CREATE",
 		http.MethodPost,
 		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/records",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.CreateSubformRecord(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_SUBFORM_RECORD_CREATE",
-					http.StatusInternalServerError,
-					"cannot create form runtime subform record",
-					err,
-					srv.FieldsForLog(ctx, r, req)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		createSubformRecordHandler,
 	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_RECORD_CREATE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/records",
+		createSubformRecordHandler,
+	)
+
+	updateSubformRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.UpdateSubformRecord(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_SUBFORM_RECORD_UPDATE",
+				http.StatusInternalServerError,
+				"cannot update form runtime subform record",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_RUNTIME_SUBFORM_RECORD_UPDATE",
 		http.MethodPatch,
 		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.UpdateSubformRecord(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_SUBFORM_RECORD_UPDATE",
-					http.StatusInternalServerError,
-					"cannot update form runtime subform record",
-					err,
-					srv.FieldsForLog(ctx, r, req)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		updateSubformRecordHandler,
 	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_RECORD_UPDATE",
+		http.MethodPatch,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}",
+		updateSubformRecordHandler,
+	)
+
+	deleteSubformRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formruntime.RuntimeViewDeleteResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.DeleteSubformRecord(ctx, r)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_SUBFORM_RECORD_DELETE",
+				http.StatusInternalServerError,
+				"cannot delete form runtime subform record",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_RUNTIME_SUBFORM_RECORD_DELETE",
 		http.MethodDelete,
 		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formruntime.RuntimeViewDeleteResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.DeleteSubformRecord(ctx, r)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_SUBFORM_RECORD_DELETE",
-					http.StatusInternalServerError,
-					"cannot delete form runtime subform record",
-					err,
-					srv.FieldsForLog(ctx, r, nil)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		deleteSubformRecordHandler,
 	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_RECORD_DELETE",
+		http.MethodDelete,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}",
+		deleteSubformRecordHandler,
+	)
+
+	finishRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordFinishRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.FinishRecord(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_RECORD_FINISH",
+				http.StatusInternalServerError,
+				"cannot finish form runtime record",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
 
 	register(
 		"FORM_RUNTIME_RECORD_FINISH",
 		http.MethodPost,
 		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}/finish",
-		handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordFinishRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
-			info, err := srv.platformStudioFormRuntimeHTTP.FinishRecord(ctx, r, req)
-			if err != nil {
-				return nil, apperr.WrapAndLog(
-					srv.logger,
-					ctx,
-					"FORM_RUNTIME_RECORD_FINISH",
-					http.StatusInternalServerError,
-					"cannot finish form runtime record",
-					err,
-					srv.FieldsForLog(ctx, r, req)...,
-				)
-			}
-			return info, nil
-		}, srv.logger),
+		finishRecordHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_RECORD_FINISH",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}/finish",
+		finishRecordHandler,
 	)
 
 	register(

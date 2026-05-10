@@ -63,4 +63,11 @@ describe("platform studio route meta", () => {
       "Platform Studio / Form Builder / Customer Profile / Intake Form",
     );
   });
+
+  it("keeps preview runtime create routes inside Platform Studio", () => {
+    expect(getPlatformStudioHeaderTitle(translate, "/app/platform-studio/forms/customer-profile/views/intake-form/new")).toBe("Intake Form");
+    expect(getPlatformStudioHeaderMeta(translate, "/app/platform-studio/forms/customer-profile/views/intake-form/new")).toBe(
+      "Platform Studio / Form Builder / Customer Profile / Intake Form",
+    );
+  });
 });

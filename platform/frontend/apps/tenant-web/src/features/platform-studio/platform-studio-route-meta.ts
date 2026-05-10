@@ -19,6 +19,7 @@ const platformStudioRoutePatterns = {
   model: "/builder/forms/:modelId",
   navigation: "/builder/navigation",
   previewRuntimeView: "/app/platform-studio/forms/:modelId/views/:viewId",
+  previewRuntimeViewNested: "/app/platform-studio/forms/:modelId/views/:viewId/*",
   root: "/builder",
   view: "/builder/forms/:modelId/views/:viewId",
 } as const;
@@ -76,13 +77,15 @@ export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRout
 
   const canonicalViewMatch = matchPath(platformStudioRoutePatterns.view, pathname) as PathMatch<"modelId" | "viewId"> | null;
   const previewRuntimeViewMatch = matchPath(platformStudioRoutePatterns.previewRuntimeView, pathname) as PathMatch<"modelId" | "viewId"> | null;
+  const previewRuntimeViewNestedMatch = matchPath(platformStudioRoutePatterns.previewRuntimeViewNested, pathname) as PathMatch<"modelId" | "viewId"> | null;
   const legacyViewMatch = matchPath(platformStudioRoutePatterns.legacyView, pathname) as PathMatch<"modelId" | "viewId"> | null;
   const legacyObjectViewMatch = matchPath(platformStudioRoutePatterns.legacyObjectView, pathname) as PathMatch<"objectId" | "screenId"> | null;
   const legacyObjectScreenMatch = matchPath(platformStudioRoutePatterns.legacyObjectScreen, pathname) as PathMatch<"objectId" | "screenId"> | null;
-  if (canonicalViewMatch || previewRuntimeViewMatch || legacyViewMatch || legacyObjectViewMatch || legacyObjectScreenMatch) {
+  if (canonicalViewMatch || previewRuntimeViewMatch || previewRuntimeViewNestedMatch || legacyViewMatch || legacyObjectViewMatch || legacyObjectScreenMatch) {
     const modelId =
       canonicalViewMatch?.params.modelId ??
       previewRuntimeViewMatch?.params.modelId ??
+      previewRuntimeViewNestedMatch?.params.modelId ??
       legacyViewMatch?.params.modelId ??
       legacyObjectViewMatch?.params.objectId ??
       legacyObjectScreenMatch?.params.objectId ??
@@ -90,6 +93,7 @@ export function getPlatformStudioRouteMeta(pathname: string): PlatformStudioRout
     const viewId =
       canonicalViewMatch?.params.viewId ??
       previewRuntimeViewMatch?.params.viewId ??
+      previewRuntimeViewNestedMatch?.params.viewId ??
       legacyViewMatch?.params.viewId ??
       legacyObjectViewMatch?.params.screenId ??
       legacyObjectScreenMatch?.params.screenId ??

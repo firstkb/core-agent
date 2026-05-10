@@ -424,19 +424,23 @@ export function PrivateApp({
   }
 
   const platformStudioIsVisible = railUtilityIsVisible("rail.platform-studio", "platform-studio");
-  const platformStudioRouteDenied = isPlatformStudioPath(location.pathname) && !platformStudioIsVisible;
+  const platformStudioRouteDenied = !userSession.isRoot &&
+    isPlatformStudioPath(location.pathname) &&
+    !platformStudioIsVisible;
   const runtimeFormRouteTarget = useMemo(
     () => getRuntimeFormRouteTarget(location.pathname),
     [location.pathname],
   );
-  const runtimeFormRouteDenied = runtimeNavigationReady &&
+  const runtimeFormRouteDenied = !userSession.isRoot &&
+    runtimeNavigationReady &&
     runtimeFormRouteTarget !== null &&
     !tenantRuntimeNavigationIncludesTargetPath(runtimeNavigationItems, "form_view", location.pathname);
   const isRuntimeAppPageRoutePath = useMemo(
     () => isRuntimeAppPageRoute(location.pathname),
     [location.pathname],
   );
-  const runtimeAppPageRouteDenied = runtimeNavigationReady &&
+  const runtimeAppPageRouteDenied = !userSession.isRoot &&
+    runtimeNavigationReady &&
     isRuntimeAppPageRoutePath &&
     !tenantRuntimeNavigationIncludesTargetPath(runtimeNavigationItems, "app_page", location.pathname);
   const routeAccessDenied = platformStudioRouteDenied

@@ -20,24 +20,35 @@ const formRuntimeRoutePatterns = {
   view: "/app/forms/:modelId/views/:viewId/view/:docGuid",
 } as const;
 
+export type FormRuntimeRouteContext = "preview" | "runtime";
+
+function formRuntimeBasePath(modelId: string, viewId: string, routeContext: FormRuntimeRouteContext) {
+  const encodedModelId = encodeURIComponent(modelId);
+  const encodedViewId = encodeURIComponent(viewId);
+
+  return routeContext === "preview"
+    ? `/app/platform-studio/forms/${encodedModelId}/views/${encodedViewId}`
+    : `/app/forms/${encodedModelId}/views/${encodedViewId}`;
+}
+
 export const formRuntimePaths = {
-  create(modelId: string, viewId: string) {
-    return `${formRuntimePaths.list(modelId, viewId)}/new`;
+  create(modelId: string, viewId: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return `${formRuntimePaths.list(modelId, viewId, routeContext)}/new`;
   },
-  edit(modelId: string, viewId: string, docGuid: string) {
-    return `${formRuntimePaths.list(modelId, viewId)}/edit/${encodeURIComponent(docGuid)}`;
+  edit(modelId: string, viewId: string, docGuid: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return `${formRuntimePaths.list(modelId, viewId, routeContext)}/edit/${encodeURIComponent(docGuid)}`;
   },
-  list(modelId: string, viewId: string) {
-    return `/app/forms/${encodeURIComponent(modelId)}/views/${encodeURIComponent(viewId)}`;
+  list(modelId: string, viewId: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return formRuntimeBasePath(modelId, viewId, routeContext);
   },
-  subformCreate(modelId: string, viewId: string, parentDocGuid: string, subformId: string) {
-    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/new`;
+  subformCreate(modelId: string, viewId: string, parentDocGuid: string, subformId: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid, routeContext)}/subforms/${encodeURIComponent(subformId)}/new`;
   },
-  subformEdit(modelId: string, viewId: string, parentDocGuid: string, subformId: string, docGuid: string) {
-    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/edit/${encodeURIComponent(docGuid)}`;
+  subformEdit(modelId: string, viewId: string, parentDocGuid: string, subformId: string, docGuid: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return `${formRuntimePaths.edit(modelId, viewId, parentDocGuid, routeContext)}/subforms/${encodeURIComponent(subformId)}/edit/${encodeURIComponent(docGuid)}`;
   },
-  view(modelId: string, viewId: string, docGuid: string) {
-    return `${formRuntimePaths.list(modelId, viewId)}/view/${encodeURIComponent(docGuid)}`;
+  view(modelId: string, viewId: string, docGuid: string, routeContext: FormRuntimeRouteContext = "runtime") {
+    return `${formRuntimePaths.list(modelId, viewId, routeContext)}/view/${encodeURIComponent(docGuid)}`;
   },
 } as const;
 

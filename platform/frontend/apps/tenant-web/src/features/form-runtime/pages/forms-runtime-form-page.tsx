@@ -50,7 +50,10 @@ import {
   type FormRuntimeRecordMutationResponse,
   type FormRuntimeRecordValidationError,
 } from "../form-runtime-collection-table-client";
-import { formRuntimePaths } from "../form-runtime-route-meta";
+import {
+  formRuntimePaths,
+  type FormRuntimeRouteContext,
+} from "../form-runtime-route-meta";
 import "./form-runtime.css";
 
 type FinishDialogState = {
@@ -329,9 +332,11 @@ function runtimeFormLoadErrorFromRequest(requestError: unknown): RuntimeFormLoad
 }
 
 export function FormsRuntimeFormPage({
+  entryContext = "runtime",
   mode,
   scope = "root",
 }: {
+  entryContext?: FormRuntimeRouteContext;
   mode: RuntimeFormMode;
   scope?: "root" | "subform";
 }) {
@@ -367,10 +372,11 @@ export function FormsRuntimeFormPage({
       ? createFormRuntimeCollectionTableClient({
         baseUrl: runtimeConfig.tenantApiUrl,
         modelId,
+        routeContext: entryContext,
         viewId,
       })
       : null,
-    [modelId, runtimeConfig.tenantApiUrl, viewId],
+    [entryContext, modelId, runtimeConfig.tenantApiUrl, viewId],
   );
   const [formLoadError, setFormLoadError] = useState<RuntimeFormLoadErrorState | null>(null);
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
@@ -603,7 +609,7 @@ export function FormsRuntimeFormPage({
             {formLoadError.description}
           </p>
           <Button
-            onClick={() => navigate(formRuntimePaths.list(modelId, viewId))}
+            onClick={() => navigate(formRuntimePaths.list(modelId, viewId, entryContext))}
             type="button"
             variant="secondary"
           >
@@ -626,8 +632,8 @@ export function FormsRuntimeFormPage({
   const runtimeDefinition = definition;
   const runtimeFormResponse = formResponse;
   const parentFormPath = isSubform
-    ? formRuntimePaths.edit(modelId, viewId, parentDocGuid)
-    : formRuntimePaths.list(modelId, viewId);
+    ? formRuntimePaths.edit(modelId, viewId, parentDocGuid, entryContext)
+    : formRuntimePaths.list(modelId, viewId, entryContext);
 
   function currentRuntimeFormSession(docGuid = currentDocGuidRef.current): RuntimeFormSessionState {
     const serializedValues = serializeRuntimeFormValues(latestValuesRef.current);
@@ -938,8 +944,8 @@ export function FormsRuntimeFormPage({
 
         if (response.docGuid && options?.replaceRouteAfterCreate !== false) {
           const nextEditPath = isSubform
-            ? formRuntimePaths.subformEdit(modelId, viewId, parentDocGuid, subformId, response.docGuid)
-            : formRuntimePaths.edit(modelId, viewId, response.docGuid);
+            ? formRuntimePaths.subformEdit(modelId, viewId, parentDocGuid, subformId, response.docGuid, entryContext)
+            : formRuntimePaths.edit(modelId, viewId, response.docGuid, entryContext);
           const restoredValues = {
             ...serializeRuntimeFormValues(latestValuesRef.current),
             ...response.values,
@@ -1312,7 +1318,7 @@ export function FormsRuntimeFormPage({
         return;
       }
 
-      navigate(formRuntimePaths.subformCreate(modelId, viewId, parentGuid, subform.schemaScopeId), {
+      navigate(formRuntimePaths.subformCreate(modelId, viewId, parentGuid, subform.schemaScopeId, entryContext), {
         state: {
           parentRuntimeFormSession: currentRuntimeFormSession(parentGuid),
         },
@@ -1327,7 +1333,7 @@ export function FormsRuntimeFormPage({
         return;
       }
 
-      navigate(formRuntimePaths.subformEdit(modelId, viewId, parentGuid, subform.schemaScopeId, row.id), {
+      navigate(formRuntimePaths.subformEdit(modelId, viewId, parentGuid, subform.schemaScopeId, row.id, entryContext), {
         state: {
           parentRuntimeFormSession: currentRuntimeFormSession(parentGuid),
         },

@@ -29,8 +29,8 @@ export const tenantEnglishMessages = {
         noRecords: "No records found",
       },
       errors: {
-        remoteAdapter: "Remote adapter",
-        remoteMetadata: "The remote collection adapter did not return metadata. Retry to reload the backend contract.",
+        remoteAdapter: "Request issue",
+        remoteMetadata: "The table could not complete this request. Retry, or refresh the page if the data changed.",
         requestFailed: "Collection request failed",
         retryRequest: "Retry request",
       },

@@ -518,6 +518,9 @@ func deleteSubformMultiValueRowsForRootDocGuidsTx(
 	docGuids []string,
 	rootWhereClause string,
 ) error {
+	if !runtimeFieldsHaveMultiValue(subformScope.Fields) {
+		return nil
+	}
 	if strings.TrimSpace(subformScope.MultiValueTableName) == "" ||
 		strings.TrimSpace(subformScope.MultiValueOwnerForeignKey) == "" ||
 		strings.TrimSpace(subformScope.SourceIDColumn) == "" ||
@@ -802,6 +805,9 @@ func deleteRootMultiValueRowsForDocGuidsTx(
 	scope runtimeRootScopePlan,
 	docGuids []string,
 ) error {
+	if !runtimeFieldsHaveMultiValue(scope.Fields) {
+		return nil
+	}
 	if strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
 		return nil
 	}
@@ -834,6 +840,9 @@ func deleteMultiValueRowsForOwnerTx(
 	scope runtimeRootScopePlan,
 	ownerID int64,
 ) error {
+	if !runtimeFieldsHaveMultiValue(scope.Fields) {
+		return nil
+	}
 	if ownerID == 0 || strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
 		return nil
 	}
@@ -850,6 +859,15 @@ func deleteMultiValueRowsForOwnerTx(
 		return fmt.Errorf("form runtime: delete multivalue rows for owner: %w", err)
 	}
 	return nil
+}
+
+func runtimeFieldsHaveMultiValue(fields []runtimeFieldPlan) bool {
+	for _, field := range fields {
+		if field.Supported && field.MultiValue {
+			return true
+		}
+	}
+	return false
 }
 
 func quoteIdentifier(value string) string {

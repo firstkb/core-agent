@@ -279,17 +279,17 @@ export function FormsRuntimeListPage({
     <div className="tenant-web__form-runtime-list-page">
       <CollectionTablePage
         adapter={adapter}
-        getCreatePath={() => formRuntimePaths.create(modelId, viewId)}
+        getCreatePath={() => formRuntimePaths.create(modelId, viewId, entryContext)}
         isIgnorableError={isUnauthorizedApiError}
         key={`${entryContext}:${modelId}:${viewId}`}
         onFavoriteToggleSuccess={onFavoritesRefresh}
         resolveFrontendRowActionPath={(action, row) => {
           if (action.id === "edit") {
-            return formRuntimePaths.edit(modelId, viewId, row.id);
+            return formRuntimePaths.edit(modelId, viewId, row.id, entryContext);
           }
 
           if (action.id === "view") {
-            return formRuntimePaths.view(modelId, viewId, row.id);
+            return formRuntimePaths.view(modelId, viewId, row.id, entryContext);
           }
 
           return null;
@@ -301,7 +301,7 @@ export function FormsRuntimeListPage({
           if (!open) {
             setActiveDocGuid("");
             if (routeDocGuid) {
-              navigate(formRuntimePaths.list(modelId, viewId), { replace: true });
+              navigate(formRuntimePaths.list(modelId, viewId, entryContext), { replace: true });
             }
           }
         }}

@@ -29,8 +29,8 @@ export const tenantSpanishMessages = {
         noRecords: "No se encontraron registros",
       },
       errors: {
-        remoteAdapter: "Adaptador remoto",
-        remoteMetadata: "El adaptador remoto de colecciones no devolvio metadatos. Vuelve a cargar el contrato del backend.",
+        remoteAdapter: "Problema de solicitud",
+        remoteMetadata: "La tabla no pudo completar esta solicitud. Reintenta o actualiza la pagina si los datos cambiaron.",
         requestFailed: "Fallo la solicitud de la coleccion",
         retryRequest: "Reintentar solicitud",
       },

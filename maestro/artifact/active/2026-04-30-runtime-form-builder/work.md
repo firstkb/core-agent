@@ -466,6 +466,10 @@ View/read remains the existing `CollectionTable` modal path for now.
   - fixed a draft reset bug where loading source models for the picker could reinitialize `modelDraft` from the server and remove a newly added unsaved lookup field from the model while the canvas still contained its node;
   - source picker save now updates the field captured by the open picker instead of depending on the currently selected/stale field reference;
   - browser smoke on `https://demo.platform.localhost/builder/forms/lookup/views/view-default` passed for adding a DB lookup, choosing `LOOKUP Option` source fields, closing the picker with settings applied, and saving the authoring state without `FORM_BUILDER_INVALID`.
+- Form Builder runtime apply/storage drift fix completed:
+  - root cause: PostgreSQL rejected `CREATE OR REPLACE VIEW` when generic lookup output columns were inserted before existing later columns, rolling back the whole runtime apply transaction including new physical lookup columns;
+  - generated grid views are now dropped before rebuilding the generated data view, then recreated after the data view is dropped/recreated with the new shape;
+  - local `108-demo` runtime apply repaired the `lookup` model storage: `ps_lookup.db_lookup_2_id` exists, and `vw_lookup` exposes `db_lookup_2_id`, `db_lookup_2__label`, and `db_lookup__label`.
 - Runtime lookup `search_select` implementation slice completed:
   - confirmed current UI Kit `Combobox` already had the needed async hooks, so no duplicate combobox was introduced;
   - `@platform/forms` now compiles lookup metadata from schema and renders `db_lookup`, `db_lookup_value`, `db_lookup_multi`, and preset lookup shortcuts through an app-agnostic async lookup callback;
@@ -514,4 +518,4 @@ View/read remains the existing `CollectionTable` modal path for now.
 
 ## Next Action
 
-Next allowed action is owner review of the Form Builder generic DB lookup source picker fix. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner review of the Form Builder generic DB lookup source picker and runtime apply/storage drift fixes. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

@@ -293,8 +293,9 @@ Statuses:
 - Actual: The compiled schema referenced scalar runtime column `db_lookup_2_id`, but the actual `ps_lookup`/`vw_lookup` relations did not contain `db_lookup_2_id` / `db_lookup_2`. `platformstudioformruntime` selected every supported scalar field column during record load, so one missing column failed the whole form.
 - Evidence: Owner supplied schema on 2026-05-10. Local DB check showed `ERROR: column "db_lookup_2_id" does not exist` for `ps_lookup` and `ERROR: column "db_lookup_2" does not exist` for `vw_lookup`.
 - Priority: high.
-- Status: partial.
-- Owner decision: Keep runtime edit resilient; deeper Form Builder apply/storage drift review can be handled separately if the column should have been created by save/apply.
+- Status: resolved.
+- Owner decision: Keep runtime edit resilient and fix the Form Builder apply/storage drift so authored generic lookup fields create physical storage on save/apply.
 - Runtime resolution: `platformstudioformruntime` record reads now inspect actual relation columns and skip missing supported scalar fields instead of failing the whole form. First-slice `catalog_modal` lookup hydration also avoids remote dictionary calls and falls back to raw stored values if needed.
+- Apply resolution: Form Builder runtime apply now drops generated grid views before rebuilding the generated data view, drops/recreates the data view instead of relying on `CREATE OR REPLACE VIEW` to accept changed column shape, and then recreates the grid views. This lets new lookup output columns such as `db_lookup__label` be inserted before later fields without PostgreSQL rejecting the view replacement and rolling back newly added physical columns such as `db_lookup_2_id`.
 - Fixed in: current change set.
-- Verification: `go test ./modules/tenant/platformstudioformruntime` passed; `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `git diff --check` passed; `scripts/preflight.sh` passed.
+- Verification: `go test ./modules/tenant/platformstudioformruntime` passed; `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `go test ./modules/tenant/platformstudioformbuilder` passed; one local runtime apply against `108-demo` rebuilt `lookup` runtime storage, after which `ps_lookup` contains `db_lookup_2_id` and `vw_lookup` contains `db_lookup_2_id`, `db_lookup_2__label`, and `db_lookup__label`; `git diff --check` passed; `scripts/preflight.sh` passed.

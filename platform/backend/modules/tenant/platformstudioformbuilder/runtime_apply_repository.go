@@ -108,6 +108,17 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 	if err != nil {
 		return result, err
 	}
+	gridViewExisted := make(map[string]bool, len(scope.GridViews))
+	for _, gridView := range scope.GridViews {
+		existed, err := relationExistsTx(ctx, tx, gridView.Name)
+		if err != nil {
+			return result, err
+		}
+		gridViewExisted[gridView.Name] = existed
+		if err := dropRuntimeViewTx(ctx, tx, gridView.Name); err != nil {
+			return result, err
+		}
+	}
 	lookupOutputs, err := ensureScopeDataViewTx(ctx, tx, scope)
 	if err != nil {
 		return result, err
@@ -123,16 +134,12 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 	result.LookupOutputs = lookupOutputs
 
 	for _, gridView := range scope.GridViews {
-		gridExisted, err := relationExistsTx(ctx, tx, gridView.Name)
-		if err != nil {
-			return result, err
-		}
 		if err := ensureGridViewTx(ctx, tx, scope.DataViewName, gridView); err != nil {
 			return result, err
 		}
 		result.GridViews = append(result.GridViews, RuntimeApplyArtifactResult{
 			Name:   gridView.Name,
-			Action: chooseRuntimeViewAction(gridExisted),
+			Action: chooseRuntimeViewAction(gridViewExisted[gridView.Name]),
 		})
 	}
 
@@ -252,6 +259,9 @@ func ensureManagedMultiValueTableTx(ctx context.Context, tx *sql.Tx, scope runti
 
 func ensureScopeDataViewTx(ctx context.Context, tx *sql.Tx, scope runtimeApplyScopePlan) ([]RuntimeApplyLookupOutputResult, error) {
 	statement, lookupOutputs := buildRuntimeScopeDataViewSQL(scope)
+	if err := dropRuntimeViewTx(ctx, tx, scope.DataViewName); err != nil {
+		return nil, err
+	}
 	if _, err := tx.ExecContext(ctx, statement); err != nil {
 		return nil, fmt.Errorf("form builder: create runtime data view %s: %w", scope.DataViewName, err)
 	}
@@ -260,11 +270,18 @@ func ensureScopeDataViewTx(ctx context.Context, tx *sql.Tx, scope runtimeApplySc
 
 func ensureGridViewTx(ctx context.Context, tx *sql.Tx, dataViewName string, gridView runtimeApplyGridViewPlan) error {
 	statement := buildRuntimeGridViewSQL(dataViewName, gridView)
-	if _, err := tx.ExecContext(ctx, fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(gridView.Name))); err != nil {
-		return fmt.Errorf("form builder: drop runtime grid view %s: %w", gridView.Name, err)
+	if err := dropRuntimeViewTx(ctx, tx, gridView.Name); err != nil {
+		return err
 	}
 	if _, err := tx.ExecContext(ctx, statement); err != nil {
 		return fmt.Errorf("form builder: create runtime grid view %s: %w", gridView.Name, err)
+	}
+	return nil
+}
+
+func dropRuntimeViewTx(ctx context.Context, tx *sql.Tx, viewName string) error {
+	if _, err := tx.ExecContext(ctx, fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(viewName))); err != nil {
+		return fmt.Errorf("form builder: drop runtime view %s: %w", viewName, err)
 	}
 	return nil
 }

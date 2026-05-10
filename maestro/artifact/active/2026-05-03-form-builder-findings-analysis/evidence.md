@@ -288,9 +288,63 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 - `platform/backend/docs/reference/import-field-mapping.md`
 - `platform/backend/migrations/postgres/tenant/009_industry_reference_audit_columns.sql`
 
+## Preset DB Lookup Authoring Evidence
+
+- Implemented Form Builder-only authoring controls for preset lookup shortcuts:
+  `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`.
+- Display template selections persist through `lookupConfig.displayTemplate`,
+  `displayFields`, `lookupConfig.searchFields`, and `lookupConfig.sortField`.
+- Preset filter values persist through `lookupConfig.filters[]` with
+  `operator: "in"`. Current authored filters are Contact `job_type_id` /
+  `company_id`, Company `company_type_id` / `main_company_id`, and Project
+  `company_id`.
+- Active-record filtering is intentionally not authored for these preset lookup
+  fields; runtime/query handling remains separate follow-up scope.
+
+Checks:
+
+- `git diff --check` passed.
+- `../../node_modules/.bin/vitest run src/features/platform-studio/forms/forms-preset-lookup-settings.test.ts src/features/platform-studio/forms/forms-builder-library.test.ts` passed from `platform/frontend/apps/tenant-web`.
+- Initial root-level vitest invocation failed because Vitest scanned
+  `platform/frontend/.local/config/caddy` and hit `EACCES`; the same targeted
+  tests passed when run from the tenant-web app workspace.
+- `pnpm --filter @platform/tenant-web typecheck` passed.
+- `pnpm --filter @platform/tenant-web lint` passed.
+- `scripts/preflight.sh` failed under the system Python because `tomllib` is not
+  available; `env PATH="/opt/homebrew/bin:$PATH" scripts/preflight.sh` passed.
+
+Browser QA:
+
+- Used Browser Use against
+  `https://demo.platform.localhost/builder/forms/lookup/views/view-default`.
+- Selected the canvas `Reported By` preset lookup field and confirmed the
+  settings panel shows `Display template`, Contact filter fields, and no
+  `Only active records` preset control.
+- Interacted with the template select and filter inputs, then reloaded the page
+  to discard QA-only unsaved changes; `Save` returned to disabled.
+
+## Preset DB Lookup Authoring Changed Files
+
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-field-settings.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-field-settings-section.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-tab-body.tsx`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-selected-field-settings-handlers.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-system-fields.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-builder-library.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-preset-lookup-settings.test.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/forms-preset-lookup-settings.ts`
+- `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/pages/forms-ui-schema-workspace-page.tsx`
+- `platform/frontend/apps/tenant-web/src/locales/en.ts`
+- `platform/frontend/apps/tenant-web/src/locales/es.ts`
+- `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+
 ## Browser / Visual Evidence
 
-- Skipped for Slice 4. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in this pass.
+- Preset DB lookup authoring was checked with Browser Use in the in-app browser.
+- Earlier Slice 4 browser smoke remains skipped. The implementation uses strict semantic variants and existing product tokens; no local browser/dev-stack smoke was requested in that pass.
 
 ## Review Evidence
 
@@ -298,14 +352,18 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 
 ## Skipped Checks
 
-- Browser smoke skipped; see note above.
+- Browser smoke is still skipped for the earlier Slice 4 only; current preset DB
+  lookup authoring has Browser Use evidence.
+- Root-level targeted Vitest invocation was skipped after EACCES on
+  `platform/frontend/.local/config/caddy`; targeted app-workspace Vitest was
+  used instead and passed.
 
 ## Residual Risks
 
 - Existing uncommitted changes remain in `maestro-improvements.md` and `work.md` under the source 2026-04-30 artifact and were not reverted or included intentionally.
 - Node engine mismatch warning remains in this shell (`v18.17.0` vs package `>=22.12.0`), although tenant-web typecheck/lint/tests passed.
 - Ready-made `radio_group` and `checkbox_group` defaults remain unchanged pending an explicit product decision.
-- Lookup field authoring settings and View lookup filters are recorded as the next likely slice and remain unimplemented.
+- Preset DB lookup runtime/query enforcement and View lookup filters remain follow-up scope; current work is Form Builder authoring and schema persistence only.
 - Slice 4 visual appearance is covered by token-backed CSS and schema/unit tests; no browser screenshot evidence has been collected yet.
 - Slice 5 has focused controller coverage and typecheck/lint/preflight; no browser visual smoke was run for the Subform View title input.
 - Slice 6 intentionally does not enforce uniqueness at runtime/create/edit/save and does not touch `@platform/forms`; that work remains with the owner-selected follow-up.

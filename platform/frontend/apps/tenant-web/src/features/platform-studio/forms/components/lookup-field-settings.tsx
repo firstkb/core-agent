@@ -1,5 +1,6 @@
 import {
   Button,
+  Input,
   Label,
   Select,
 } from "@platform/ui-kit";
@@ -17,6 +18,20 @@ type LookupFieldSettingsLabels = {
   displayMode: string;
   displayModeCatalogModal: string;
   displayModeSearchSelect: string;
+  displayTemplate: string;
+  filters: string;
+};
+
+type LookupFieldPresetTemplateOption = {
+  key: string;
+  label: string;
+};
+
+type LookupFieldPresetFilterRow = {
+  field: string;
+  label: string;
+  placeholder: string;
+  valueText: string;
 };
 
 type LookupFieldSettingsProps = {
@@ -26,7 +41,12 @@ type LookupFieldSettingsProps = {
   labels: LookupFieldSettingsLabels;
   onChooseSource: () => void;
   onDisplayModeChange: (displayMode: FormsPlaceholderLookupDisplayMode) => void;
+  onPresetFilterTextChange: (field: string, valueText: string) => void;
+  onPresetTemplateChange: (templateKey: string) => void;
+  presetFilterRows: ReadonlyArray<LookupFieldPresetFilterRow>;
   presetLookupSummary: LookupFieldSettingsSummary | null;
+  presetTemplateKey: string;
+  presetTemplateOptions: ReadonlyArray<LookupFieldPresetTemplateOption>;
   showDisplayMode: boolean;
   sourceRows: ReadonlyArray<LookupFieldSettingsSummary>;
 };
@@ -38,10 +58,18 @@ export function LookupFieldSettings({
   labels,
   onChooseSource,
   onDisplayModeChange,
+  onPresetFilterTextChange,
+  onPresetTemplateChange,
+  presetFilterRows,
   presetLookupSummary,
+  presetTemplateKey,
+  presetTemplateOptions,
   showDisplayMode,
   sourceRows,
 }: LookupFieldSettingsProps) {
+  const hasPresetTemplateOptions = presetTemplateOptions.length > 0;
+  const hasPresetFilters = presetFilterRows.length > 0;
+
   return (
     <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
       <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
@@ -71,11 +99,65 @@ export function LookupFieldSettings({
         </>
       )}
 
-      {showDisplayMode ? (
+      {hasPresetTemplateOptions ? (
         <>
           <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
             <span>{labels.display}</span>
           </div>
+
+          <div className="tenant-web__platform-studio-form-group">
+            <Label htmlFor="tenant-platform-studio-preset-lookup-display-template">
+              {labels.displayTemplate}
+            </Label>
+            <Select
+              disabled={!canChooseSource}
+              id="tenant-platform-studio-preset-lookup-display-template"
+              onChange={(event) => onPresetTemplateChange(event.target.value)}
+              value={presetTemplateKey}
+            >
+              {presetTemplateOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </>
+      ) : null}
+
+      {hasPresetFilters ? (
+        <>
+          <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
+            <span>{labels.filters}</span>
+          </div>
+
+          {presetFilterRows.map((row) => (
+            <div
+              className="tenant-web__platform-studio-form-group"
+              key={row.field}
+            >
+              <Label htmlFor={`tenant-platform-studio-preset-lookup-filter-${row.field}`}>
+                {row.label}
+              </Label>
+              <Input
+                disabled={!canChooseSource}
+                id={`tenant-platform-studio-preset-lookup-filter-${row.field}`}
+                onChange={(event) => onPresetFilterTextChange(row.field, event.target.value)}
+                placeholder={row.placeholder}
+                value={row.valueText}
+              />
+            </div>
+          ))}
+        </>
+      ) : null}
+
+      {showDisplayMode ? (
+        <>
+          {!hasPresetTemplateOptions ? (
+            <div className="tenant-web__platform-studio-labeled-divider tenant-web__platform-studio-labeled-divider--compact">
+              <span>{labels.display}</span>
+            </div>
+          ) : null}
 
           <div className="tenant-web__platform-studio-form-group">
             <Label htmlFor="tenant-platform-studio-lookup-display-mode">

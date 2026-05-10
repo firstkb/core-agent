@@ -6,6 +6,9 @@ import {
   type FormBuilderWorkspaceAccess,
 } from "../forms-builder-state";
 import {
+  buildDefaultPresetLookupFieldSettings,
+} from "../forms-preset-lookup-settings";
+import {
   createFormsPlaceholderStorageKey,
   type FormsPlaceholderField,
   type FormsPlaceholderFieldSemanticRole,
@@ -130,7 +133,7 @@ export function getSystemFieldTemplate(
   if (role === "reportedBy") {
     return {
       displayName: "Reported By",
-      displayFields: ["Full name", "Email"],
+      ...buildDefaultPresetLookupFieldSettings("contact_lookup"),
       family: "preset",
       id: nextId,
       isPersisted: false,
@@ -140,8 +143,6 @@ export function getSystemFieldTemplate(
       preset: "contact_lookup",
       semanticRole: "reportedBy",
       selectionMode: "single",
-      sourceFilters: ["Only active contacts"],
-      sourceLabel: "Contacts",
       status: "draft",
       storageKey: createFormsPlaceholderStorageKey("Reported By", nextId),
     };

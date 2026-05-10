@@ -422,6 +422,8 @@ export function FormsViewWorkspacePage() {
     updateSelectedNodeText,
     updateSelectedNodeTitle,
     updateSelectedNodeVisibility,
+    updateSelectedPresetLookupFilterText,
+    updateSelectedPresetLookupTemplate,
     updateSelectedTagsMax,
     updateSelectedTagsMode,
     updateSelectedViewOnlyBinding,
@@ -844,6 +846,8 @@ export function FormsViewWorkspacePage() {
                       onOptionRemove={removeSelectedFieldOption}
                       onOptionStyleChange={updateSelectedFieldChoiceStyle}
                       onPlaceholderChange={updateSelectedFieldPlaceholder}
+                      onPresetLookupFilterTextChange={updateSelectedPresetLookupFilterText}
+                      onPresetLookupTemplateChange={updateSelectedPresetLookupTemplate}
                       onRequiredChange={updateSelectedNodeRequired}
                       onRichTextChange={updateSelectedNodeText}
                       onTagModeChange={updateSelectedTagsMode}

@@ -16,10 +16,10 @@ The owner found multiple Form Builder defects while working on runtime display o
 ## Continuity Snapshot
 
 - Latest owner correction: use `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` as the input file and create a separate artifact folder.
-- Current phase: `Project static model implementation`
+- Current phase: `Preset DB lookup authoring`
 - Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. Owner approved dropping old `projects.size` / `projects.type` in favor of `industry_size_id` / `industry_type_id` on 2026-05-07. No release/deploy gate is in scope.
-- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, View Active/Inactive UI, Project static model, Project correction, and first generic DB lookup filter checks are recorded in `evidence.md`.
+- Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, View Active/Inactive UI, Project static model, Project correction, first generic DB lookup filter checks, and preset DB lookup authoring checks are recorded in `evidence.md`.
 - Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
 - Next allowed action: owner manual test that Form Builder still loads/saves views normally and no longer exposes or writes View Active/Inactive as authoring config.
 
@@ -50,6 +50,8 @@ The owner found multiple Form Builder defects while working on runtime display o
 - Correction after owner review: `industry_size` and `industry_type` are new tenant tables and must include `guid`, `created_at`, `updated_at`, and the shared `set_updated_at()` trigger.
 - Correction after owner runtime test: static model authoring save compares normalized payload ids to normalized path ids so `industry_type` and `industry_size` do not fail as `invalid payload`; static seeded UI container nodes must carry explicit `containerKey` values that match `layoutBlueprint`.
 - First generic DB lookup filter decision: use future-shaped `lookupConfig.filters[]`; current UI exposes only an `Only active records` shortcut for `DB lookup`, `DB lookup value`, and `DB lookup multi`, saved as `{ field: "active", operator: "eq", value: true }` when the source has a boolean `active` field.
+- Preset DB lookup decision: `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects` author only display templates and explicit preset filters in Form Builder. Active-record defaults are not authored for these presets and remain a runtime/query concern.
+- Preset DB lookup filters use `lookupConfig.filters[]` with `operator: "in"` for current static filters: Contact `job_type_id` / `company_id`, Company `company_type_id` / `main_company_id`, and Project `company_id`.
 
 ## Plan
 
@@ -71,6 +73,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 16. Correct `industry_size` and `industry_type` audit columns/triggers after owner review.
 17. Correct static Projects authoring metadata and static underscore model save validation after owner runtime test.
 18. Add first generic DB lookup `lookupConfig.filters[]` authoring for the active-record shortcut.
+19. Add preset DB lookup display template and filter authoring for Contact, Company, and Project single/multi shortcuts.
 
 ## Risks / Gates
 
@@ -90,4 +93,4 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Run final local checks for the first generic DB lookup filter authoring, then commit the slice. Owner manual testing should confirm the DB lookup source picker can save the `Only active records` filter for the first three generic lookup fields.
+Run final local checks for preset DB lookup authoring, then commit the slice. Owner manual testing should confirm preset lookup fields can save display templates and filter values without adding Form Builder-owned active filters.

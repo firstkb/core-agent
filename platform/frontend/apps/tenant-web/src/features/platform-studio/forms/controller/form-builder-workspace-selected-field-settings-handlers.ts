@@ -11,6 +11,10 @@ import {
   supportsUniqueValue,
 } from "./form-builder-workspace-unique-value";
 import {
+  applyPresetLookupFilterValueText,
+  applyPresetLookupTemplate,
+} from "../forms-preset-lookup-settings";
+import {
   type FormBuilderDocument,
   type FormBuilderNode,
   updateFormBuilderNode,
@@ -122,6 +126,14 @@ export function createSelectedFieldSettingsHandlers({
     }));
   }
 
+  function updateSelectedPresetLookupTemplate(templateKey: string) {
+    updateSelectedField((field) => applyPresetLookupTemplate(field, templateKey));
+  }
+
+  function updateSelectedPresetLookupFilterText(filterField: string, valueText: string) {
+    updateSelectedField((field) => applyPresetLookupFilterValueText(field, filterField, valueText));
+  }
+
   function updateSelectedFieldAutocomplete(checked: boolean) {
     updateSelectedField((field) => ({
       ...field,
@@ -230,6 +242,8 @@ export function createSelectedFieldSettingsHandlers({
     updateSelectedFieldUniqueValue,
     updateSelectedFieldValidation,
     updateSelectedLookupDisplayMode,
+    updateSelectedPresetLookupFilterText,
+    updateSelectedPresetLookupTemplate,
     updateSelectedTagsMax,
     updateSelectedTagsMode,
     updateSelectedViewOnlyBinding,

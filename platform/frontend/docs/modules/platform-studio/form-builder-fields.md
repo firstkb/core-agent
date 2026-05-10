@@ -228,6 +228,19 @@ Generic DB lookup source settings:
   dynamic-token values. Runtime lookup query enforcement remains a separate
   implementation concern.
 
+Relationship preset lookup settings:
+
+- `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`
+  keep fixed source model presets, but Form Builder can author a display
+  template select and preset filter values.
+- Display templates are saved through `lookupConfig.displayTemplate`,
+  `displayFields`, `lookupConfig.searchFields`, and `lookupConfig.sortField`.
+- Preset filter values are saved in `lookupConfig.filters[]` with operator
+  `in`. Contact supports `job_type_id` and `company_id`; Company supports
+  `company_type_id` and `main_company_id`; Project supports `company_id`.
+- Active-record filtering is not a Form Builder preset lookup setting. Runtime
+  lookup query code may enforce active defaults separately.
+
 ## Choice Fields
 
 The `Choice fields` palette section contains:

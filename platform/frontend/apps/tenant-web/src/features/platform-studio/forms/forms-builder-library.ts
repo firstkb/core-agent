@@ -10,6 +10,9 @@ import {
   formsPlaceholderRelationshipPresets,
   formsPlaceholderReadyMadePresets,
 } from "./forms-builder-contract";
+import {
+  buildDefaultPresetLookupFieldSettings,
+} from "./forms-preset-lookup-settings";
 import type {
   FormsPlaceholderField,
   FormsPlaceholderFieldFamily,
@@ -427,19 +430,9 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["contact", "reported by", "lookup"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Contact", {
-      displayFields: ["Full name", "Email"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "users_firstname + ' ' + users_lastname",
-        searchBehavior: "ajax",
-        searchFields: ["users_firstname", "users_lastname"],
-        sourceModel: "contacts",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("contact_lookup"),
       preset: "contact_lookup",
       selectionMode: "single",
-      sourceFilters: ["Only active contacts"],
-      sourceLabel: "Contacts",
     }),
   },
   {
@@ -448,18 +441,9 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["contacts", "reported by multiple", "lookup multiple"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Contacts", {
-      displayFields: ["Full name", "Email"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "users_firstname + ' ' + users_lastname",
-        searchBehavior: "ajax",
-        searchFields: ["users_firstname", "users_lastname"],
-        sourceModel: "contacts",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("contact_lookup"),
       preset: "contact_lookup",
       selectionMode: "multiple",
-      sourceFilters: ["Only active contacts"],
       sourceLabel: "Contacts",
     }),
   },
@@ -469,18 +453,9 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["company", "lookup"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Company", {
-      displayFields: ["Company name"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "company_name",
-        searchBehavior: "ajax",
-        searchFields: ["company_name"],
-        sourceModel: "companies",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("company_lookup"),
       preset: "company_lookup",
       selectionMode: "single",
-      sourceLabel: "Companies",
     }),
   },
   {
@@ -489,15 +464,7 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["companies", "company multiple", "lookup multiple"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Companies", {
-      displayFields: ["Company name"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "company_name",
-        searchBehavior: "ajax",
-        searchFields: ["company_name"],
-        sourceModel: "companies",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("company_lookup"),
       preset: "company_lookup",
       selectionMode: "multiple",
       sourceLabel: "Companies",
@@ -509,18 +476,9 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["project", "lookup"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Project", {
-      displayFields: ["Project #", "Project name"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "projects_num + ', ' + projects_name",
-        searchBehavior: "ajax",
-        searchFields: ["projects_num", "projects_name"],
-        sourceModel: "projects",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("project_lookup"),
       preset: "project_lookup",
       selectionMode: "single",
-      sourceLabel: "Projects",
     }),
   },
   {
@@ -529,15 +487,7 @@ export const formBuilderFieldDefinitions: ReadonlyArray<FormBuilderLibraryFieldD
     searchTerms: ["projects", "project multiple", "lookup multiple"],
     section: "relationships",
     template: createFieldTemplate("preset", "db_lookup", "Projects", {
-      displayFields: ["Project #", "Project name"],
-      lookupConfig: {
-        displayMode: "search_select",
-        displayTemplate: "projects_num + ', ' + projects_name",
-        searchBehavior: "ajax",
-        searchFields: ["projects_num", "projects_name"],
-        sourceModel: "projects",
-        storedValueField: "doc_id",
-      },
+      ...buildDefaultPresetLookupFieldSettings("project_lookup"),
       preset: "project_lookup",
       selectionMode: "multiple",
       sourceLabel: "Projects",

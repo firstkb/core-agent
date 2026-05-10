@@ -8,6 +8,12 @@ import {
   type LookupSourceModelOption,
 } from "../controller/form-builder-workspace-lookup-options";
 import {
+  getPresetLookupFilterDefinitions,
+  getPresetLookupFilterValueText,
+  getPresetLookupTemplateOptions,
+  resolvePresetLookupTemplateKey,
+} from "../forms-preset-lookup-settings";
+import {
   type FormsPlaceholderChoiceDisplay,
   type FormsPlaceholderField,
   type FormsPlaceholderFieldOptionStyle,
@@ -54,6 +60,8 @@ type SelectedFieldSettingsSectionProps = {
     updater: (currentStyle: FormsPlaceholderFieldOptionStyle | undefined) => FormsPlaceholderFieldOptionStyle | undefined,
   ) => void;
   onPlaceholderChange: (placeholder: string) => void;
+  onPresetLookupFilterTextChange: (field: string, valueText: string) => void;
+  onPresetLookupTemplateChange: (templateKey: string) => void;
   onTagModeChange: (tagMode: FormsPlaceholderTagMode) => void;
   onTagsMaxChange: (maxTags: string) => void;
   onUniqueValueChange: (checked: boolean) => void;
@@ -98,6 +106,8 @@ export function SelectedFieldSettingsSection({
   onOptionRemove,
   onOptionStyleChange,
   onPlaceholderChange,
+  onPresetLookupFilterTextChange,
+  onPresetLookupTemplateChange,
   onTagModeChange,
   onTagsMaxChange,
   onUniqueValueChange,
@@ -122,6 +132,20 @@ export function SelectedFieldSettingsSection({
 }: SelectedFieldSettingsSectionProps) {
   const canEditFieldSettings = canEditSettings && canEditModelDefinition;
   const fieldTypeLabel = t(getFieldTypeKey(selectedField));
+  const presetLookupTemplateOptions = selectedFieldIsPresetLookup
+    ? getPresetLookupTemplateOptions(selectedField).map((option) => ({
+        key: option.key,
+        label: option.label,
+      }))
+    : [];
+  const presetLookupFilterRows = selectedFieldIsPresetLookup
+    ? getPresetLookupFilterDefinitions(selectedField).map((definition) => ({
+        field: definition.field,
+        label: t(definition.labelKey),
+        placeholder: t(definition.placeholderKey),
+        valueText: getPresetLookupFilterValueText(selectedField, definition.field),
+      }))
+    : [];
 
   return (
     <>
@@ -185,12 +209,19 @@ export function SelectedFieldSettingsSection({
             displayMode: t("tenant.platformStudio.forms.builder.fieldSettings.displayMode"),
             displayModeCatalogModal: t("tenant.platformStudio.forms.builder.fieldSettings.displayModeCatalogModal"),
             displayModeSearchSelect: t("tenant.platformStudio.forms.builder.fieldSettings.displayModeSearchSelect"),
+            displayTemplate: t("tenant.platformStudio.forms.builder.fieldSettings.displayTemplate"),
+            filters: t("tenant.platformStudio.forms.builder.fieldSettings.filters"),
           }}
           onChooseSource={onChooseLookupSource}
           onDisplayModeChange={onLookupDisplayModeChange}
+          onPresetFilterTextChange={onPresetLookupFilterTextChange}
+          onPresetTemplateChange={onPresetLookupTemplateChange}
+          presetFilterRows={presetLookupFilterRows}
           presetLookupSummary={selectedFieldIsPresetLookup && selectedLookupSourceSummary
             ? selectedLookupSourceSummary
             : null}
+          presetTemplateKey={selectedFieldIsPresetLookup ? resolvePresetLookupTemplateKey(selectedField) : ""}
+          presetTemplateOptions={presetLookupTemplateOptions}
           showDisplayMode={selectedFieldShowsLookupDisplayMode}
           sourceRows={[
             {

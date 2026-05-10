@@ -66,6 +66,8 @@ type SelectionInspectorTabBodyProps = {
     updater: (currentStyle: FormsPlaceholderFieldOptionStyle | undefined) => FormsPlaceholderFieldOptionStyle | undefined,
   ) => void;
   onPlaceholderChange: (placeholder: string) => void;
+  onPresetLookupFilterTextChange: (field: string, valueText: string) => void;
+  onPresetLookupTemplateChange: (templateKey: string) => void;
   onRequiredChange: (checked: boolean) => void;
   onRichTextChange: (value: string) => void;
   onTagModeChange: (tagMode: FormsPlaceholderTagMode) => void;
@@ -135,6 +137,8 @@ export function SelectionInspectorTabBody({
   onOptionRemove,
   onOptionStyleChange,
   onPlaceholderChange,
+  onPresetLookupFilterTextChange,
+  onPresetLookupTemplateChange,
   onRequiredChange,
   onRichTextChange,
   onTagModeChange,
@@ -246,6 +250,8 @@ export function SelectionInspectorTabBody({
                 onOptionRemove={onOptionRemove}
                 onOptionStyleChange={onOptionStyleChange}
                 onPlaceholderChange={onPlaceholderChange}
+                onPresetLookupFilterTextChange={onPresetLookupFilterTextChange}
+                onPresetLookupTemplateChange={onPresetLookupTemplateChange}
                 onTagModeChange={onTagModeChange}
                 onTagsMaxChange={onTagsMaxChange}
                 onUniqueValueChange={onUniqueValueChange}

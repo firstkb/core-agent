@@ -122,6 +122,7 @@ export type FormRuntimeFormResponse = {
 export type FormRuntimeRecordMutationRequest = {
   clientCreateToken?: string;
   expectedRevision?: string;
+  lookupLabels?: Record<string, Record<string, string>>;
   values: Record<string, unknown>;
 };
 

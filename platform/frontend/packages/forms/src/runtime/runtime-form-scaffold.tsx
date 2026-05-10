@@ -102,6 +102,7 @@ function RuntimeNode({
   definitionId,
   errors,
   labels,
+  loadLookupOptions,
   node,
   onActiveTabChange,
   onFieldChange,
@@ -117,6 +118,7 @@ function RuntimeNode({
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
+  loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   node: RuntimeFormNodeDefinition;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
@@ -139,6 +141,7 @@ function RuntimeNode({
         errors={errors ?? {}}
         field={node}
         labels={labels}
+        loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
         value={values[node.id]}
         values={values}
@@ -178,6 +181,7 @@ function RuntimeNode({
             definitionId={definitionId}
             errors={errors}
             labels={labels}
+            loadLookupOptions={loadLookupOptions}
             nodes={nodes}
             onActiveTabChange={onActiveTabChange}
             onFieldChange={onFieldChange}
@@ -203,6 +207,7 @@ function RuntimeNodeList({
   definitionId,
   errors,
   labels,
+  loadLookupOptions,
   nodes,
   onActiveTabChange,
   onFieldChange,
@@ -219,6 +224,7 @@ function RuntimeNodeList({
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
+  loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
@@ -239,6 +245,7 @@ function RuntimeNodeList({
           errors={errors}
           key={node.id}
           labels={labels}
+          loadLookupOptions={loadLookupOptions}
           node={node}
           onActiveTabChange={onActiveTabChange}
           onFieldChange={onFieldChange}
@@ -261,6 +268,7 @@ export function RuntimeFormScaffold({
   definition,
   errors = {},
   labels,
+  loadLookupOptions,
   onActiveTabChange,
   onBack,
   onFieldChange,
@@ -328,6 +336,7 @@ export function RuntimeFormScaffold({
                   errors={errors}
                   key={node.id}
                   labels={resolvedLabels}
+                  loadLookupOptions={loadLookupOptions}
                   node={node}
                   onActiveTabChange={onActiveTabChange}
                   onFieldChange={onFieldChange}

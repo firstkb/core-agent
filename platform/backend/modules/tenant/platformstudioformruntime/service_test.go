@@ -132,6 +132,64 @@ func TestCreateRecordPassesManagedMultiSelectValues(t *testing.T) {
 	}
 }
 
+func TestCreateRecordPassesManagedLookupMultiValues(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":       "related_contacts",
+		"kind":          "db_lookup",
+		"label":         "Related Contacts",
+		"selectionMode": "multiple",
+		"storageKey":    "related_contacts",
+	})
+	svc := NewService(repo)
+
+	out, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		LookupLabels: map[string]map[string]string{
+			"related_contacts": {
+				"1": "Andrew Owner",
+				"2": "Jane Owner",
+			},
+		},
+		Values: map[string]any{
+			"location":         "HQ",
+			"related_contacts": []any{"1", "2", "2", ""},
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateRecord returned error: %v", err)
+	}
+	expected := []string{"1", "2"}
+	if got, ok := repo.lastCreateValues["related_contacts"].([]string); !ok || !stringSlicesEqual(got, expected) {
+		t.Fatalf("stored related_contacts = %#v, want %#v", repo.lastCreateValues["related_contacts"], expected)
+	}
+	if got, ok := out.Values["related_contacts"].([]string); !ok || !stringSlicesEqual(got, expected) {
+		t.Fatalf("response related_contacts = %#v, want %#v", out.Values["related_contacts"], expected)
+	}
+}
+
+func TestCreateRecordNormalizesLookupValueAsText(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":    "vendor_name",
+		"kind":       "db_lookup",
+		"label":      "Vendor Name",
+		"preset":     "db_lookup_value",
+		"storageKey": "vendor_name",
+	})
+	svc := NewService(repo)
+
+	_, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"location":    "HQ",
+			"vendor_name": "Acme Electrical",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateRecord returned error: %v", err)
+	}
+	assertValue(t, repo.lastCreateValues, "vendor_name", "Acme Electrical")
+}
+
 func TestLoadFormReturnsSchemasAndCreateDefaults(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)
@@ -533,6 +591,16 @@ func enableRuntimeActiveField(repo *recordingRuntimeRepo, visible bool, canDelet
 	uiSchema["rootScope"] = rootUIScope
 	viewPayload["uiSchema"] = uiSchema
 	repo.view.DefinitionJSON = mustJSON(viewPayload)
+}
+
+func addRuntimeRootField(repo *recordingRuntimeRepo, field map[string]any) {
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootScope := asMap(dataSchema["rootScope"])
+	rootScope["fields"] = append(asSlice(rootScope["fields"]), field)
+	dataSchema["rootScope"] = rootScope
+	modelPayload["dataSchema"] = dataSchema
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
 }
 
 func enableRuntimeUniqueField(repo *recordingRuntimeRepo, scopeID string, fieldID string, attributes map[string]any) {

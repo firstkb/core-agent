@@ -13,6 +13,10 @@ import type {
   RuntimeFormGroupLayoutDefinition,
   RuntimeFormInputMode,
   RuntimeFormLayoutDefinition,
+  RuntimeFormLookupDefinition,
+  RuntimeFormLookupFilter,
+  RuntimeFormLookupFilterOperator,
+  RuntimeFormLookupFilterScalar,
   RuntimeFormMode,
   RuntimeFormNodeDefinition,
   RuntimeFormNodeRules,
@@ -103,6 +107,15 @@ const runtimeInputModes = new Set<RuntimeFormInputMode>([
 ]);
 
 const runtimeTextValidations = new Set<RuntimeFormTextValidation>(["email", "phone", "url"]);
+const runtimeLookupFilterOperators = new Set<RuntimeFormLookupFilterOperator>([
+  "contains",
+  "eq",
+  "in",
+  "is_empty",
+  "is_not_empty",
+  "not_eq",
+  "starts_with",
+]);
 
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -128,6 +141,20 @@ function firstStringValue(...values: unknown[]) {
     }
   }
   return "";
+}
+
+function stringListValue(...values: unknown[]) {
+  for (const value of values) {
+    const out = asArray(value)
+      .flatMap((entry) => {
+        const normalized = stringValue(entry);
+        return normalized ? [normalized] : [];
+      });
+    if (out.length > 0) {
+      return out;
+    }
+  }
+  return undefined;
 }
 
 function boolValue(value: unknown, fallback = false) {
@@ -427,13 +454,91 @@ function readRuntimeRules(rawRules: unknown): RuntimeFormNodeRules | undefined {
   };
 }
 
+function readLookupFilterScalar(value: unknown): RuntimeFormLookupFilterScalar | undefined {
+  if (typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return undefined;
+}
+
+function readLookupFilters(value: unknown): RuntimeFormLookupFilter[] | undefined {
+  const filters = asArray(value)
+    .filter(isRecord)
+    .flatMap((filter): RuntimeFormLookupFilter[] => {
+      const field = stringValue(filter.field);
+      const operator = stringValue(filter.operator) as RuntimeFormLookupFilterOperator;
+      if (!field || (operator && !runtimeLookupFilterOperators.has(operator))) {
+        return [];
+      }
+
+      const scalarValue = readLookupFilterScalar(filter.value);
+      const values = asArray(filter.value)
+        .flatMap((entry) => {
+          const scalar = readLookupFilterScalar(entry);
+          return scalar === undefined ? [] : [scalar];
+        });
+      const out: RuntimeFormLookupFilter = { field };
+      if (operator) {
+        out.operator = operator;
+      }
+      if (values.length > 0) {
+        out.value = values;
+      } else if (scalarValue !== undefined) {
+        out.value = scalarValue;
+      }
+      return [out];
+    });
+
+  return filters.length > 0 ? filters : undefined;
+}
+
+function readLookupDisplayMode(lookupConfig: JsonRecord): RuntimeFormLookupDefinition["displayMode"] {
+  return stringValue(lookupConfig.displayMode) === "catalog_modal" ? "catalog_modal" : "search_select";
+}
+
+function readLookupDefinition(field: JsonRecord): RuntimeFormLookupDefinition | undefined {
+  const kind = stringValue(field.kind, stringValue(field.dataType, stringValue(field.baseType)));
+  if (kind !== "db_lookup") {
+    return undefined;
+  }
+
+  const lookupConfig = asRecord(field.lookupConfig);
+  const preset = firstStringValue(field.preset) || undefined;
+  const selectionMode = stringValue(field.selectionMode) === "multiple" || preset === "db_lookup_multi"
+    ? "multiple"
+    : "single";
+  const displayFields = stringListValue(lookupConfig.displayFields, field.displayFields);
+  const searchFields = stringListValue(lookupConfig.searchFields);
+  const storedTextFields = stringListValue(lookupConfig.storedTextFields);
+
+  return {
+    dictionary: firstStringValue(lookupConfig.dictionary, field.dictionary) || undefined,
+    displayFields,
+    displayMode: readLookupDisplayMode(lookupConfig),
+    displayTemplate: firstStringValue(lookupConfig.displayTemplate) || undefined,
+    filters: readLookupFilters(lookupConfig.filters),
+    preset,
+    searchFields,
+    selectionMode,
+    sortField: firstStringValue(lookupConfig.sortField) || undefined,
+    sourceModel: firstStringValue(lookupConfig.sourceModel) || undefined,
+    storedTextFields,
+    storedValueField: firstStringValue(lookupConfig.storedValueField) || undefined,
+    valueMode: preset === "db_lookup_value" ? "text" : "stored_value",
+  };
+}
+
 function runtimeFieldType(field: JsonRecord): RuntimeFormFieldType | null {
   const kind = stringValue(field.kind, stringValue(field.dataType, stringValue(field.baseType)));
   const selectionMode = stringValue(field.selectionMode);
+  const preset = stringValue(field.preset);
 
   if (kind === "db_lookup") {
-    if (selectionMode === "multiple") {
-      return null;
+    if (selectionMode === "multiple" || preset === "db_lookup_multi") {
+      return "multi_select";
     }
     return "single_select";
   }
@@ -465,6 +570,7 @@ function createFieldNode(
   const isChoiceField = isChoiceFieldType(type);
   const inputMode = type === "short_text" ? readInputMode(field) : undefined;
   const validation = type === "short_text" ? readTextValidation(field) : undefined;
+  const lookup = readLookupDefinition(field);
   return {
     autocomplete: type === "short_text" ? firstStringValue(field.autocomplete, field.autoComplete) || undefined : undefined,
     choiceAllowEmpty: type === "single_select" ? readChoiceAllowEmpty(field) : undefined,
@@ -476,6 +582,7 @@ function createFieldNode(
     inputMode,
     inputType: type === "short_text" ? readTextInputType(field, inputMode, validation) : undefined,
     label: stringValue(field.label, stringValue(field.displayName, fieldId)),
+    lookup,
     mask: type === "short_text" ? firstStringValue(field.mask) || undefined : undefined,
     nodeType: "field",
     options: optionsList.length > 0 ? optionsList : undefined,

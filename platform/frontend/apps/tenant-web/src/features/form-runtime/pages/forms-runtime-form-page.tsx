@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { ApiClientError, isUnauthorizedApiError } from "@platform/api-client";
+import {
+  ApiClientError,
+  createTenantDictionaryClient,
+  isUnauthorizedApiError,
+  type TenantDictionaryFilter,
+  type TenantDictionaryOptionsRequest,
+} from "@platform/api-client";
 import { useAuth } from "@platform/auth-core";
 import {
   applyRuntimeWorkflowStatus,
@@ -11,7 +17,12 @@ import {
   type RuntimeFormActiveTabs,
   type RuntimeFormCommitMode,
   type RuntimeFormDefinition,
+  type RuntimeFormFieldChangeMeta,
   type RuntimeFormFieldType,
+  type RuntimeFormLookupDefinition,
+  type RuntimeFormLookupFilter,
+  type RuntimeFormLookupOptionsRequest,
+  type RuntimeFormLookupOptionsResponse,
   type RuntimeFormMode,
   type RuntimeFormSaveState,
   type RuntimeFormSubformDataById,
@@ -301,6 +312,128 @@ function runtimeFormValueToDomString(value: RuntimeFormValue | undefined) {
   return "";
 }
 
+function dictionaryKeyForLookupPreset(preset: string | undefined) {
+  switch (preset) {
+    case "company_lookup":
+      return "companies";
+    case "contact_lookup":
+      return "contacts";
+    case "project_lookup":
+      return "projects";
+    default:
+      return undefined;
+  }
+}
+
+function lookupUsesNamedPresetDictionary(lookup: RuntimeFormLookupDefinition) {
+  return Boolean(dictionaryKeyForLookupPreset(lookup.preset));
+}
+
+function storedValueFieldForLookup(lookup: RuntimeFormLookupDefinition) {
+  if (lookup.valueMode === "text") {
+    return lookup.storedValueField;
+  }
+  return lookup.storedValueField;
+}
+
+function isLookupFilterValueArray(
+  value: RuntimeFormLookupFilter["value"],
+): value is ReadonlyArray<string | number | boolean> {
+  return Array.isArray(value);
+}
+
+function tenantDictionaryFilters(filters: ReadonlyArray<RuntimeFormLookupFilter> | undefined): TenantDictionaryFilter[] | undefined {
+  return filters?.map((filter): TenantDictionaryFilter => {
+    const value = filter.value;
+    return {
+      field: filter.field,
+      operator: filter.operator,
+      value: isLookupFilterValueArray(value) ? [...value] : value,
+    };
+  });
+}
+
+function buildRuntimeLookupDictionaryRequest(
+  request: RuntimeFormLookupOptionsRequest,
+): TenantDictionaryOptionsRequest | null {
+  const { lookup } = request;
+  const useNamedPresetDictionary = lookupUsesNamedPresetDictionary(lookup);
+  const dictionary = useNamedPresetDictionary
+    ? dictionaryKeyForLookupPreset(lookup.preset)
+    : lookup.sourceModel
+      ? lookup.dictionary
+      : lookup.dictionary;
+  const sourceModel = useNamedPresetDictionary ? undefined : lookup.sourceModel;
+
+  if (!sourceModel && !dictionary) {
+    return null;
+  }
+
+  return {
+    dictionary,
+    displayFields: sourceModel && lookup.displayFields ? [...lookup.displayFields] : undefined,
+    filters: sourceModel ? tenantDictionaryFilters(lookup.filters) : undefined,
+    ids: request.ids ? [...request.ids] : undefined,
+    page: request.page,
+    pageSize: request.pageSize,
+    search: request.search,
+    searchFields: sourceModel && lookup.searchFields ? [...lookup.searchFields] : undefined,
+    sortField: sourceModel ? lookup.sortField : undefined,
+    sourceModel,
+    storedValueField: sourceModel ? storedValueFieldForLookup(lookup) : undefined,
+  };
+}
+
+function hasLookupLabels(labels: Record<string, Record<string, string>>) {
+  return Object.values(labels).some((fieldLabels) => Object.keys(fieldLabels).length > 0);
+}
+
+function cloneLookupLabels(labels: Record<string, Record<string, string>>) {
+  return Object.fromEntries(
+    Object.entries(labels).flatMap(([fieldId, fieldLabels]) => {
+      const entries = Object.entries(fieldLabels).filter(([value, label]) => value.trim() && label.trim());
+      return entries.length > 0 ? [[fieldId, Object.fromEntries(entries)]] : [];
+    }),
+  );
+}
+
+function mergeLookupLabels(
+  target: Record<string, Record<string, string>>,
+  fieldId: string,
+  labels: Record<string, string> | undefined,
+) {
+  if (!labels || Object.keys(labels).length === 0) {
+    return;
+  }
+  target[fieldId] = {
+    ...target[fieldId],
+    ...labels,
+  };
+}
+
+function mergeLookupLabelMaps(
+  left: Record<string, Record<string, string>>,
+  right: Record<string, Record<string, string>>,
+) {
+  const out: Record<string, Record<string, string>> = cloneLookupLabels(left);
+  Object.entries(right).forEach(([fieldId, labels]) => {
+    mergeLookupLabels(out, fieldId, labels);
+  });
+  return out;
+}
+
+function lookupLabelsForChangedValues(
+  changedValues: Record<string, unknown>,
+  labels: Record<string, Record<string, string>>,
+) {
+  return Object.fromEntries(
+    Object.keys(changedValues).flatMap((fieldId) => {
+      const fieldLabels = labels[fieldId];
+      return fieldLabels && Object.keys(fieldLabels).length > 0 ? [[fieldId, fieldLabels]] : [];
+    }),
+  );
+}
+
 function isConflictRuntimeError(requestError: unknown) {
   return requestError instanceof ApiClientError
     && (requestError.statusCode === 409 || requestError.code === "FORM_RUNTIME_CONFLICT");
@@ -378,6 +511,10 @@ export function FormsRuntimeFormPage({
       : null,
     [entryContext, modelId, runtimeConfig.tenantApiUrl, viewId],
   );
+  const dictionaryClient = useMemo(
+    () => createTenantDictionaryClient(runtimeConfig.tenantApiUrl),
+    [runtimeConfig.tenantApiUrl],
+  );
   const [formLoadError, setFormLoadError] = useState<RuntimeFormLoadErrorState | null>(null);
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
   const [values, setValues] = useState<RuntimeFormValues>({});
@@ -422,8 +559,10 @@ export function FormsRuntimeFormPage({
   const lastPatchSucceededRef = useRef(true);
   const lastPatchValidationErrorsRef = useRef<ReadonlyArray<FormRuntimeRecordValidationError>>([]);
   const latestValuesRef = useRef<RuntimeFormValues>({});
+  const latestLookupLabelsRef = useRef<Record<string, Record<string, string>>>({});
   const patchInFlightRef = useRef(false);
   const patchPromiseRef = useRef<Promise<void> | null>(null);
+  const pendingLookupLabelsRef = useRef<Record<string, Record<string, string>>>({});
   const pendingPatchValuesRef = useRef<Record<string, unknown>>({});
   const revisionRef = useRef(restoredSession?.revision ?? "");
   const runtimeControlSyncTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
@@ -443,6 +582,30 @@ export function FormsRuntimeFormPage({
     }
     return accessToken;
   }, [getAccessToken, signOut]);
+
+  const loadRuntimeLookupOptions = useCallback(async (
+    request: RuntimeFormLookupOptionsRequest,
+  ): Promise<RuntimeFormLookupOptionsResponse> => {
+    const dictionaryRequest = buildRuntimeLookupDictionaryRequest(request);
+    if (!dictionaryRequest) {
+      return { hasMore: false, options: [] };
+    }
+
+    const accessToken = getRuntimeAccessToken();
+    if (!accessToken) {
+      return { hasMore: false, options: [] };
+    }
+
+    const response = await dictionaryClient.loadOptions(accessToken, dictionaryRequest);
+    return {
+      hasMore: response.hasMore,
+      options: response.items.map((item) => ({
+        description: item.description,
+        label: item.label,
+        value: request.lookup.valueMode === "text" ? item.label : item.value,
+      })),
+    };
+  }, [dictionaryClient, getRuntimeAccessToken]);
 
   useEffect(() => {
     const restoredActiveTabs = restoredSession?.activeTabs ?? {};
@@ -535,6 +698,8 @@ export function FormsRuntimeFormPage({
     }
     runtimeControlSyncTimersRef.current.forEach((timer) => clearTimeout(timer));
     runtimeControlSyncTimersRef.current = [];
+    latestLookupLabelsRef.current = {};
+    pendingLookupLabelsRef.current = {};
     pendingPatchValuesRef.current = {};
     lastPatchSucceededRef.current = true;
     lastPatchValidationErrorsRef.current = [];
@@ -774,7 +939,9 @@ export function FormsRuntimeFormPage({
     }
 
     const patchValues = pendingPatchValuesRef.current;
+    const patchLookupLabels = lookupLabelsForChangedValues(patchValues, pendingLookupLabelsRef.current);
     pendingPatchValuesRef.current = {};
+    pendingLookupLabelsRef.current = {};
     patchInFlightRef.current = true;
     lastPatchSucceededRef.current = true;
     lastPatchValidationErrorsRef.current = [];
@@ -785,10 +952,12 @@ export function FormsRuntimeFormPage({
     const patchPromise = (isSubform
       ? runtimeClient.updateSubformRecord(accessToken, parentDocGuid, subformId, docGuid, {
         expectedRevision: revisionRef.current || undefined,
+        lookupLabels: hasLookupLabels(patchLookupLabels) ? patchLookupLabels : undefined,
         values: patchValues,
       })
       : runtimeClient.updateRecord(accessToken, docGuid, {
         expectedRevision: revisionRef.current || undefined,
+        lookupLabels: hasLookupLabels(patchLookupLabels) ? patchLookupLabels : undefined,
         values: patchValues,
       }))
       .then((response) => {
@@ -797,6 +966,7 @@ export function FormsRuntimeFormPage({
             ...patchValues,
             ...pendingPatchValuesRef.current,
           };
+          pendingLookupLabelsRef.current = mergeLookupLabelMaps(patchLookupLabels, pendingLookupLabelsRef.current);
           lastPatchValidationErrorsRef.current = response.validationErrors ?? [];
           lastPatchSucceededRef.current = false;
           handleRuntimeServerValidation(response.validationErrors, options);
@@ -814,6 +984,7 @@ export function FormsRuntimeFormPage({
           ...patchValues,
           ...pendingPatchValuesRef.current,
         };
+        pendingLookupLabelsRef.current = mergeLookupLabelMaps(patchLookupLabels, pendingLookupLabelsRef.current);
         lastPatchSucceededRef.current = false;
         handleRuntimeRequestError(requestError);
       })
@@ -835,7 +1006,15 @@ export function FormsRuntimeFormPage({
     return true;
   }
 
-  function schedulePatch(patchValues: Record<string, unknown>) {
+  function schedulePatch(
+    patchValues: Record<string, unknown>,
+    lookupLabels?: Record<string, Record<string, string>>,
+  ) {
+    pendingLookupLabelsRef.current = mergeLookupLabelMaps(
+      pendingLookupLabelsRef.current,
+      lookupLabels ?? {},
+    );
+
     if (!hasServerRecordRef.current) {
       pendingPatchValuesRef.current = {
         ...pendingPatchValuesRef.current,
@@ -914,6 +1093,9 @@ export function FormsRuntimeFormPage({
 
     const mutationInput = {
       clientCreateToken: clientCreateTokenRef.current,
+      lookupLabels: hasLookupLabels(latestLookupLabelsRef.current)
+        ? cloneLookupLabels(latestLookupLabelsRef.current)
+        : undefined,
       values: serializeRuntimeFormValues(createValues),
     };
     const createPromise = (isSubform
@@ -1043,10 +1225,19 @@ export function FormsRuntimeFormPage({
     }
   }
 
-  function commitRuntimeValueChanges(changedValues: Record<string, RuntimeFormValue>) {
+  function commitRuntimeValueChanges(
+    changedValues: Record<string, RuntimeFormValue>,
+    metaByField?: Record<string, RuntimeFormFieldChangeMeta | undefined>,
+  ) {
     if (Object.keys(changedValues).length === 0) {
       return;
     }
+    const changedLookupLabels: Record<string, Record<string, string>> = {};
+    Object.keys(changedValues).forEach((fieldId) => {
+      const labels = metaByField?.[fieldId]?.lookupLabels;
+      mergeLookupLabels(changedLookupLabels, fieldId, labels);
+      mergeLookupLabels(latestLookupLabelsRef.current, fieldId, labels);
+    });
 
     let nextValues: RuntimeFormValues = {
       ...latestValuesRef.current,
@@ -1072,17 +1263,26 @@ export function FormsRuntimeFormPage({
           ...pendingPatchValuesRef.current,
           ...changedValues,
         };
+        pendingLookupLabelsRef.current = mergeLookupLabelMaps(
+          pendingLookupLabelsRef.current,
+          changedLookupLabels,
+        );
         return;
       }
       void createRecordIfReady(nextValues);
       return;
     }
 
-    schedulePatch(changedValues);
+    schedulePatch(changedValues, changedLookupLabels);
   }
 
-  function handleFieldChange(fieldId: string, value: RuntimeFormValue) {
-    commitRuntimeValueChanges({ [fieldId]: value });
+  function handleFieldChange(
+    fieldId: string,
+    value: RuntimeFormValue,
+    _field: unknown,
+    meta?: RuntimeFormFieldChangeMeta,
+  ) {
+    commitRuntimeValueChanges({ [fieldId]: value }, { [fieldId]: meta });
   }
 
   function syncRuntimeControlValuesFromDom() {
@@ -1402,6 +1602,7 @@ export function FormsRuntimeFormPage({
           finish: "Save",
           onlineFormTitle: "Subform",
         } : undefined}
+        loadLookupOptions={loadRuntimeLookupOptions}
         onActiveTabChange={handleActiveTabChange}
         onBack={handleBackToList}
         onFieldChange={handleFieldChange}

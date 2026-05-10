@@ -7,9 +7,10 @@ import (
 )
 
 type RuntimeViewRecordMutationRequest struct {
-	ClientCreateToken string         `json:"clientCreateToken,omitempty"`
-	ExpectedRevision  string         `json:"expectedRevision,omitempty"`
-	Values            map[string]any `json:"values"`
+	ClientCreateToken string                       `json:"clientCreateToken,omitempty"`
+	ExpectedRevision  string                       `json:"expectedRevision,omitempty"`
+	LookupLabels      map[string]map[string]string `json:"lookupLabels,omitempty"`
+	Values            map[string]any               `json:"values"`
 }
 
 type RuntimeViewRecordFinishRequest struct {
@@ -66,10 +67,11 @@ type ViewRecord struct {
 }
 
 type runtimeRecordMutationRow struct {
-	DocGuid  string
-	Revision string
-	SourceID int64
-	Values   map[string]any
+	DocGuid      string
+	LookupLabels map[string]map[string]string
+	Revision     string
+	SourceID     int64
+	Values       map[string]any
 }
 
 type runtimeRootScopePlan struct {
@@ -108,19 +110,34 @@ type runtimeSubformScopePlan struct {
 }
 
 type runtimeFieldPlan struct {
-	FieldID     string
-	Label       string
-	Kind        string
-	StorageKey  string
-	Preset      string
-	Validation  string
-	ColumnName  string
-	MultiValue  bool
-	Required    bool
-	Supported   bool
-	UniqueValue bool
-	OptionLabel map[string]string
-	OptionValue []string
+	FieldID                string
+	Label                  string
+	Kind                   string
+	StorageKey             string
+	Preset                 string
+	SelectionMode          string
+	Validation             string
+	ColumnName             string
+	LookupDictionary       string
+	LookupDisplayFields    []string
+	LookupFilters          []runtimeLookupFilterPlan
+	LookupSearchFields     []string
+	LookupSortField        string
+	LookupSourceModel      string
+	LookupStoredTextFields []string
+	LookupStoredValueField string
+	MultiValue             bool
+	Required               bool
+	Supported              bool
+	UniqueValue            bool
+	OptionLabel            map[string]string
+	OptionValue            []string
+}
+
+type runtimeLookupFilterPlan struct {
+	Field    string
+	Operator string
+	Value    any
 }
 
 type runtimeSystemFieldBindings struct {

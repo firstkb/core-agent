@@ -177,21 +177,35 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 	}
 	kind := chooseString(normalizeString(field["kind"]), chooseString(normalizeString(field["dataType"]), normalizeString(field["baseType"])))
 	preset := normalizeString(field["preset"])
+	selectionMode := normalizeString(field["selectionMode"])
+	if preset == "db_lookup_multi" {
+		selectionMode = "multiple"
+	}
 	validation := normalizeString(field["validation"])
 	fieldRuntime := asMap(field["runtime"])
+	lookupConfig := asMap(field["lookupConfig"])
 	sourceColumn := normalizeString(fieldRuntime["sourceColumnName"])
 
 	plan := runtimeFieldPlan{
-		FieldID:     fieldID,
-		Label:       chooseString(normalizeString(field["label"]), chooseString(normalizeString(field["displayName"]), fieldID)),
-		Kind:        kind,
-		StorageKey:  storageKey,
-		Preset:      preset,
-		Validation:  validation,
-		Required:    getBoolValue(field, "required", false),
-		UniqueValue: getBoolValue(field, "uniqueValue", false) && supportsRuntimeUniqueValue(kind, preset, validation),
-		OptionLabel: readOptionLabels(asSlice(field["options"])),
-		OptionValue: readOptionValues(asSlice(field["options"])),
+		FieldID:                fieldID,
+		Label:                  chooseString(normalizeString(field["label"]), chooseString(normalizeString(field["displayName"]), fieldID)),
+		Kind:                   kind,
+		StorageKey:             storageKey,
+		Preset:                 preset,
+		SelectionMode:          selectionMode,
+		Validation:             validation,
+		LookupDictionary:       chooseString(normalizeString(lookupConfig["dictionary"]), normalizeString(field["dictionary"])),
+		LookupDisplayFields:    readStringList(lookupConfig["displayFields"], field["displayFields"]),
+		LookupFilters:          readRuntimeLookupFilters(asSlice(lookupConfig["filters"])),
+		LookupSearchFields:     readStringList(lookupConfig["searchFields"]),
+		LookupSortField:        normalizeString(lookupConfig["sortField"]),
+		LookupSourceModel:      normalizeString(lookupConfig["sourceModel"]),
+		LookupStoredTextFields: readStringList(lookupConfig["storedTextFields"]),
+		LookupStoredValueField: normalizeString(lookupConfig["storedValueField"]),
+		Required:               getBoolValue(field, "required", false),
+		UniqueValue:            getBoolValue(field, "uniqueValue", false) && supportsRuntimeUniqueValue(kind, preset, validation),
+		OptionLabel:            readOptionLabels(asSlice(field["options"])),
+		OptionValue:            readOptionValues(asSlice(field["options"])),
 	}
 
 	switch {
@@ -207,7 +221,10 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		kind == "date_time":
 		plan.ColumnName = runtimeFieldColumnIdentifier(storageKey)
 		plan.Supported = true
-	case kind == "db_lookup" && normalizeString(field["selectionMode"]) == "multiple":
+	case kind == "db_lookup" && selectionMode == "multiple" && isManagedRuntimeSourceType(sourceType):
+		plan.MultiValue = true
+		plan.Supported = true
+	case kind == "db_lookup" && selectionMode == "multiple":
 		plan.Supported = false
 	case (kind == "multi_select" || kind == "tags") && isManagedRuntimeSourceType(sourceType):
 		plan.MultiValue = true
@@ -259,6 +276,42 @@ func readSystemFieldBindings(rootScope map[string]any) runtimeSystemFieldBinding
 			FinalValue:   normalizeString(workflow["finalValue"]),
 		},
 	}
+}
+
+func readStringList(values ...any) []string {
+	out := []string{}
+	seen := map[string]struct{}{}
+	for _, value := range values {
+		for _, rawItem := range asSlice(value) {
+			item := normalizeString(rawItem)
+			if item == "" {
+				continue
+			}
+			if _, ok := seen[item]; ok {
+				continue
+			}
+			seen[item] = struct{}{}
+			out = append(out, item)
+		}
+	}
+	return out
+}
+
+func readRuntimeLookupFilters(filters []any) []runtimeLookupFilterPlan {
+	out := make([]runtimeLookupFilterPlan, 0, len(filters))
+	for _, rawFilter := range filters {
+		filter := asMap(rawFilter)
+		field := normalizeString(filter["field"])
+		if field == "" {
+			continue
+		}
+		out = append(out, runtimeLookupFilterPlan{
+			Field:    field,
+			Operator: normalizeString(filter["operator"]),
+			Value:    filter["value"],
+		})
+	}
+	return out
 }
 
 func readOptionValues(options []any) []string {

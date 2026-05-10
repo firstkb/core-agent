@@ -71,6 +71,7 @@ export function RuntimeField({
   errors,
   field,
   labels,
+  loadLookupOptions,
   onFieldChange,
   value,
   values,
@@ -79,6 +80,7 @@ export function RuntimeField({
   errors: RuntimeFormValidationErrors;
   field: RuntimeFormFieldDefinition;
   labels: RuntimeFormResolvedLabels;
+  loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
   value: RuntimeFormValue | undefined;
   values: RuntimeFormValues;
@@ -112,6 +114,7 @@ export function RuntimeField({
         field={field}
         groupName={`${definitionId}-${field.id}`}
         labels={labels}
+        loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
         value={value}
       />

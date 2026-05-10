@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `unique_value_runtime_enforcement_ready_for_review`
+- Status: `lookup_search_select_runtime_slice_ready_for_review`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -22,6 +22,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - In: architecture recommendation, codebase/reference inspection, first implementation slice proposal, package boundaries, API contract outline, risk gates.
 - Current approved backend slice: extend the dedicated tenant `platformstudioformruntime` package for DEFAULT subform form read/create/edit/delete under an existing parent record.
 - Current approved frontend/runtime slice: render subform nodes as parent child tables, wire subform Add/Edit/Delete actions, and open child subform forms as separate routes with `Back`/`Save`.
+- Current approved lookup slice: implement `search_select` runtime rendering for `db_lookup`, `db_lookup_value`, `db_lookup_multi`, and preset lookup shortcuts through the tenant dictionary endpoint; keep `catalog_modal` staged behind a fallback trigger.
 - Out for current backend slice: migrations, Navigation Builder ACL, Action Builder side effects, PDF/report behavior, CHECKLIST subforms, preview write routes, and broad runtime list/read migration out of `platformstudioformbuilder`.
 
 ## Decisions
@@ -45,6 +46,13 @@ View/read remains the existing `CollectionTable` modal path for now.
 - `Back to list` behavior: before the record is created, warn that entered data will be lost; after the record exists, return to the list and leave current status unchanged. If autosave is pending, wait for save completion before navigating instead of showing avoidable errors.
 - Text-like runtime controls (`short_text`, numeric/date inputs, `long_text`, rich-text textarea fallback) commit changes on blur so slow typing does not create avoidable autosave requests; choice/toggle controls still commit immediately because their value change is the explicit action.
 - Runtime form reads must hydrate the current option for single-value `contact_lookup` fields when a record/default value contains an id, allowing readonly and editable lookup controls to display the label without an initial per-field AJAX request.
+- Runtime lookup implementation planning is tracked in `lookup-runtime-implementation-plan.md`. First slice is `search_select`; `catalog_modal` is staged behind a trigger/fallback. Ordinary DB lookup uses `lookupConfig` as the generic dictionary source; Contact/Company/Project preset shortcuts use named dictionaries. `db_lookup_multi` requires a runtime BE support fix because runtime apply already creates multivalue storage, while `platformstudioformruntime` currently disables multiple lookup fields. `db_lookup_value` must save selected text, not an integer relation id.
+- Runtime lookup first slice is implemented: `@platform/forms` uses the existing UI Kit Combobox remote hooks for `search_select`; `tenant-web` adapts lookup metadata to the tenant dictionary client; `platformstudioformruntime` supports managed `db_lookup_multi` multivalue persistence with display-only labels; and `db_lookup_value` normalizes selected text instead of integer ids.
+- Runtime lookup follow-up decision: form open must not call lookup endpoints for search-select fields. The field should load options only after the user activates the dropdown; selected-value remote hydration is also lazy unless labels are already supplied by the runtime form response.
+- Runtime lookup preset correction: Contact, Contacts, Company, Companies, Project, and Projects shortcuts use named dictionary routes (`contacts`, `companies`, `projects`) instead of generic `sourceModel` POST. Ordinary DB lookup fields still use generic lookup when `lookupConfig.sourceModel` is present. This avoids treating named dictionary aliases such as `contacts` as Form Builder model ids.
+- Runtime edit form reads must include current selected lookup options in the form payload so existing records display labels without frontend lookup calls on initial render. For multivalue lookup fields, stored `value_label` values are reused; missing labels can be resolved server-side through the same dictionary contract.
+- If `Reported By` is bound as a system field but the current authenticated user cannot be resolved to a business/contact id, the runtime must not trap the owner in a readonly empty required field. The field is made editable in that form response so the owner can choose a reporter manually.
+- Dynamic/token lookup filters remain staged. Current runtime supports static `lookupConfig.filters[]`; Form Builder dynamic filter-rule types exist but are not wired as runtime lookup dependency filters in this slice.
 - System Field bindings and `semanticRole` metadata do not automatically make a field readonly. They control runtime semantics such as create defaults and workflow/status commands. A runtime field is readonly only when the authored schema/view explicitly marks the field/node readonly. This allows owners to expose fields such as Reported By, Reported Date, or Status for user edits when the view is configured that way.
 - Runtime list row actions should present `edit` before `view` when both actions are available.
 - Runtime list checkbox/bulk action behavior must stay metadata-driven by the runtime surface, not inferred inside the generic `CollectionTable`. Show bulk `Active` / `No active` only when a supported `active` field exists in the source/schema, that field is present in the current view/table output, and the view permits edit.
@@ -148,6 +156,7 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Choice Button styles follow-up is tracked as `FB-RT-005` in `findings.md`; current runtime implementation intentionally ignores per-option styling and implements only render style plus orientation.
 - Managed multiselect persistence issue is tracked as `FB-RT-006` in `findings.md`.
 - Form Builder choice/grid authoring follow-ups are tracked as `FB-RT-007` in `findings.md`.
+- Lookup runtime implementation state and staged follow-ups are tracked in `maestro/artifact/active/2026-04-30-runtime-form-builder/lookup-runtime-implementation-plan.md`.
 
 ## Evidence
 
@@ -451,7 +460,52 @@ View/read remains the existing `CollectionTable` modal path for now.
   - moved `Long text historical` from `Basic fields` to `Ready-made fields` and made palette rendering respect the library definition's explicit `section`;
   - DB LOOKUP filter authoring work is considered complete for the current Form Builder scope;
   - next requested Form Builder field focus is `Checklist subform`.
+- Runtime lookup `search_select` implementation slice completed:
+  - confirmed current UI Kit `Combobox` already had the needed async hooks, so no duplicate combobox was introduced;
+  - `@platform/forms` now compiles lookup metadata from schema and renders `db_lookup`, `db_lookup_value`, `db_lookup_multi`, and preset lookup shortcuts through an app-agnostic async lookup callback;
+  - `tenant-web` now adapts runtime lookup requests to the tenant dictionary client, including generic `sourceModel` POST, named preset fallback, static filters, ids hydration, search, paging, and text-value storage for `db_lookup_value`;
+  - mutation payloads now support display-only `lookupLabels` so managed multivalue lookup rows can persist labels in generated multivalue storage;
+  - `platformstudioformruntime` now supports managed lookup multi values as multivalue fields, writes `value_kind = "lookup"`, stores `lookup_target_id` when the selected value is numeric, and treats `db_lookup_value` as text;
+  - `catalog_modal` remains staged and renders as a clear fallback trigger instead of the wrong control.
+- Runtime lookup checks passed:
+  - `go test ./modules/tenant/platformstudioformruntime`;
+  - `pnpm --filter @platform/forms test`: 1 file, 15 tests;
+  - `pnpm --filter @platform/forms typecheck`;
+  - `pnpm --filter @platform/forms lint`;
+  - `pnpm --filter @platform/tenant-web typecheck`;
+  - `pnpm --filter @platform/tenant-web lint`;
+  - `pnpm --filter @platform/tenant-web test`: 18 files, 70 tests;
+  - `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server`;
+  - `git diff --check`;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use desktop smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/new`: all lookup fields rendered, `DB lookup` dropdown loaded backend options, search for `2` returned filtered options, and `DB lookup multi` dropdown rendered options;
+  - Browser Use mobile smoke at `390x844`: form shell and lookup fields rendered in the mobile layout;
+  - Browser console error log was empty.
+- Runtime lookup follow-up fixes completed:
+  - `@platform/forms` now gates remote lookup loading behind user activation of the combobox, preventing eager lookup calls on form start;
+  - selected-value lookup hydration is lazy with the same activation guard, so the form does not fan out dictionary calls during initial render;
+  - `tenant-web` now routes `contact_lookup`, `company_lookup`, and `project_lookup` runtime fields through named dictionary GET requests instead of invalid generic dictionary POST payloads;
+  - Browser Use desktop smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/new` confirmed Contact, Contacts, Company, Companies, Project, Projects, DB lookup, DB lookup value, and DB lookup multi open and render backend options with an empty browser console error log;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 15 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 18 files, 70 tests;
+  - `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
+- Runtime lookup reopen fixes completed:
+  - stale preview/runtime record-detail queries now filter requested projection columns against the actual runtime relation columns, avoiding 500s when a lookup label output is not present in an older data view;
+  - runtime form load now adds current selected lookup options to `dataSchema` for existing records, so edit forms show labels without eager frontend lookup requests;
+  - managed multivalue lookup loads now retain stored `value_label` values for current-option hydration;
+  - `db_lookup_value` option loading now keeps dictionary row identity for the remote query and maps option value to the displayed text on the frontend, so it shows the same option set as the equivalent lookup multi field while still saving text;
+  - empty unresolved `Reported By` system fields are made editable in the response instead of readonly-empty;
+  - Browser Use desktop smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/edit/d703b619-d27a-49be-86ca-15cf2bc6b5e5` confirmed the form reloads without console errors and displays DB lookup, DB lookup value, DB lookup multi, Contact(s), Company/Companies, and Project(s) values;
+  - Browser Use desktop smoke on `/new` confirmed `DB lookup value` and `DB lookup multi` both render 6 backend options;
+  - `go test ./modules/tenant/platformstudioformruntime` passed;
+  - `go test ./modules/tenant/platformstudioformbuilder` passed;
+  - `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./modules/tenant/platformstudioformbuilder ./cmd/api-tenant/internal/server` passed;
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 15 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 18 files, 70 tests;
+  - `git diff --check` passed.
 
 ## Next Action
 
-Next allowed action is Checklist subform analysis/implementation planning. Separate Form render/runtime work remains responsible for applying authored lookup filters and display templates outside Form Builder authoring.
+Next allowed action is owner review or commit for the lookup `search_select` slice. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, and lookup-aware View filter UX remain staged follow-up work unless the owner explicitly reorders them.

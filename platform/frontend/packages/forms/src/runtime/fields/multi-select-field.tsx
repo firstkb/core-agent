@@ -16,17 +16,37 @@ import {
   getComboboxOptions,
 } from "./choice-field-utils";
 import type { RuntimeFieldControlProps } from "./field-types";
+import { LookupField } from "./lookup-field";
 
 export function MultiSelectField({
   controlId,
   disabled,
   error,
   field,
+  groupName,
+  labels,
+  loadLookupOptions,
   onFieldChange,
   value,
 }: RuntimeFieldControlProps) {
   const selectedValues = getArrayValue(value);
   const comboboxOptions = useMemo(() => getComboboxOptions(field), [field.options]);
+
+  if (field.lookup) {
+    return (
+      <LookupField
+        controlId={controlId}
+        disabled={disabled}
+        error={error}
+        field={field}
+        groupName={groupName}
+        labels={labels}
+        loadLookupOptions={loadLookupOptions}
+        onFieldChange={onFieldChange}
+        value={value}
+      />
+    );
+  }
 
   if (getChoiceRenderStyle(field) === "buttons") {
     return (

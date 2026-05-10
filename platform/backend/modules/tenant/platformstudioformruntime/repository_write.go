@@ -322,9 +322,11 @@ func loadRootRecordTx(
 		}
 		return nil, fmt.Errorf("form runtime: load root record: %w", err)
 	}
-	if err := loadMultiValueValuesTx(ctx, tx, scope, row.SourceID, row.Values); err != nil {
+	lookupLabels, err := loadMultiValueValuesTx(ctx, tx, scope, row.SourceID, row.Values)
+	if err != nil {
 		return nil, err
 	}
+	row.LookupLabels = lookupLabels
 	return row, nil
 }
 
@@ -367,9 +369,11 @@ func loadSubformRecordTx(
 		}
 		return nil, fmt.Errorf("form runtime: load subform record: %w", err)
 	}
-	if err := loadMultiValueValuesTx(ctx, tx, recordScope, row.SourceID, row.Values); err != nil {
+	lookupLabels, err := loadMultiValueValuesTx(ctx, tx, recordScope, row.SourceID, row.Values)
+	if err != nil {
 		return nil, err
 	}
+	row.LookupLabels = lookupLabels
 	return row, nil
 }
 
@@ -705,22 +709,33 @@ func replaceMultiValueFieldTx(
 	}
 
 	insertQuery := fmt.Sprintf(
-		`INSERT INTO %s (%s, %s, %s, %s, %s, %s)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO %s (%s, %s, %s, %s, %s, %s, %s)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		qualifiedIdentifier(scope.MultiValueTableName),
 		quoteIdentifier(scope.MultiValueOwnerForeignKey),
 		quoteIdentifier("field_key"),
 		quoteIdentifier("value_kind"),
 		quoteIdentifier("value_key"),
 		quoteIdentifier("value_label"),
+		quoteIdentifier("lookup_target_id"),
 		quoteIdentifier("sort_order"),
 	)
+	valueKind := "option"
+	if field.Kind == "db_lookup" {
+		valueKind = "lookup"
+	}
 	for index, value := range selectedValues {
 		label := field.OptionLabel[value]
 		if strings.TrimSpace(label) == "" {
 			label = value
 		}
-		if _, err := tx.ExecContext(ctx, insertQuery, ownerID, field.StorageKey, "option", value, label, int64(index)); err != nil {
+		var lookupTargetID any
+		if valueKind == "lookup" {
+			if parsed, ok := normalizeRuntimeInt64(value); ok {
+				lookupTargetID = parsed
+			}
+		}
+		if _, err := tx.ExecContext(ctx, insertQuery, ownerID, field.StorageKey, valueKind, value, label, lookupTargetID, int64(index)); err != nil {
 			return fmt.Errorf("form runtime: insert multivalue field %s: %w", field.FieldID, err)
 		}
 	}
@@ -733,7 +748,8 @@ func loadMultiValueValuesTx(
 	scope runtimeRootScopePlan,
 	ownerID int64,
 	values map[string]any,
-) error {
+) (map[string]map[string]string, error) {
+	lookupLabels := map[string]map[string]string{}
 	fieldsByStorageKey := map[string]runtimeFieldPlan{}
 	for _, field := range scope.Fields {
 		if !field.Supported || !field.MultiValue || strings.TrimSpace(field.StorageKey) == "" {
@@ -743,17 +759,18 @@ func loadMultiValueValuesTx(
 		values[field.FieldID] = []string{}
 	}
 	if ownerID == 0 || len(fieldsByStorageKey) == 0 || strings.TrimSpace(scope.MultiValueTableName) == "" || strings.TrimSpace(scope.MultiValueOwnerForeignKey) == "" {
-		return nil
+		return lookupLabels, nil
 	}
 
 	query := fmt.Sprintf(
-		`SELECT %s, COALESCE(%s, '')
+		`SELECT %s, COALESCE(%s, ''), COALESCE(%s, '')
 		   FROM %s
 		  WHERE %s = current_setting('app.tenant_id', true)::bigint
 		    AND %s = $1
 		  ORDER BY %s, %s, %s`,
 		quoteIdentifier("field_key"),
 		quoteIdentifier("value_key"),
+		quoteIdentifier("value_label"),
 		qualifiedIdentifier(scope.MultiValueTableName),
 		quoteIdentifier("tenant_id"),
 		quoteIdentifier(scope.MultiValueOwnerForeignKey),
@@ -763,27 +780,35 @@ func loadMultiValueValuesTx(
 	)
 	rows, err := tx.QueryContext(ctx, query, ownerID)
 	if err != nil {
-		return fmt.Errorf("form runtime: load multivalue fields: %w", err)
+		return nil, fmt.Errorf("form runtime: load multivalue fields: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var fieldKey string
 		var value string
-		if err := rows.Scan(&fieldKey, &value); err != nil {
-			return fmt.Errorf("form runtime: scan multivalue field: %w", err)
+		var label string
+		if err := rows.Scan(&fieldKey, &value, &label); err != nil {
+			return nil, fmt.Errorf("form runtime: scan multivalue field: %w", err)
 		}
 		field, ok := fieldsByStorageKey[strings.TrimSpace(fieldKey)]
 		if !ok || strings.TrimSpace(value) == "" {
 			continue
 		}
+		value = strings.TrimSpace(value)
 		current, _ := values[field.FieldID].([]string)
-		values[field.FieldID] = append(current, strings.TrimSpace(value))
+		values[field.FieldID] = append(current, value)
+		if label = strings.TrimSpace(label); label != "" {
+			if lookupLabels[field.FieldID] == nil {
+				lookupLabels[field.FieldID] = map[string]string{}
+			}
+			lookupLabels[field.FieldID][value] = label
+		}
 	}
 	if err := rows.Err(); err != nil {
-		return fmt.Errorf("form runtime: read multivalue fields: %w", err)
+		return nil, fmt.Errorf("form runtime: read multivalue fields: %w", err)
 	}
-	return nil
+	return lookupLabels, nil
 }
 
 func mergeChangedMultiValueValues(scope runtimeRootScopePlan, values map[string]any, changedValues map[string]any) {

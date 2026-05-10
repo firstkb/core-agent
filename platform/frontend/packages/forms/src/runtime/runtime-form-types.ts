@@ -54,10 +54,74 @@ export type RuntimeFormSubformColumnType = "badge" | "boolean" | "date" | "date_
 export type RuntimeFormSubformSortDirection = "asc" | "desc";
 
 export type RuntimeFormFieldOption = {
+  description?: ReactNode;
   label: string;
   styleVariant?: RuntimeFormChoiceOptionStyleVariant;
   value: string;
 };
+
+export type RuntimeFormLookupDisplayMode = "catalog_modal" | "search_select";
+export type RuntimeFormLookupSelectionMode = "multiple" | "single";
+export type RuntimeFormLookupValueMode = "stored_value" | "text";
+export type RuntimeFormLookupFilterOperator =
+  | "contains"
+  | "eq"
+  | "in"
+  | "is_empty"
+  | "is_not_empty"
+  | "not_eq"
+  | "starts_with";
+export type RuntimeFormLookupFilterScalar = boolean | number | string;
+
+export type RuntimeFormLookupFilter = {
+  field: string;
+  operator?: RuntimeFormLookupFilterOperator;
+  value?: RuntimeFormLookupFilterScalar | ReadonlyArray<RuntimeFormLookupFilterScalar>;
+};
+
+export type RuntimeFormLookupDefinition = {
+  dictionary?: string;
+  displayFields?: ReadonlyArray<string>;
+  displayMode: RuntimeFormLookupDisplayMode;
+  displayTemplate?: string;
+  filters?: ReadonlyArray<RuntimeFormLookupFilter>;
+  preset?: string;
+  searchFields?: ReadonlyArray<string>;
+  selectionMode: RuntimeFormLookupSelectionMode;
+  sortField?: string;
+  sourceModel?: string;
+  storedTextFields?: ReadonlyArray<string>;
+  storedValueField?: string;
+  valueMode: RuntimeFormLookupValueMode;
+};
+
+export type RuntimeFormLookupOption = {
+  description?: string;
+  label: string;
+  value: string;
+};
+
+export type RuntimeFormLookupOptionsRequest = {
+  fieldId: string;
+  ids?: ReadonlyArray<string>;
+  lookup: RuntimeFormLookupDefinition;
+  page: number;
+  pageSize: number;
+  search?: string;
+};
+
+export type RuntimeFormLookupOptionsResponse = {
+  hasMore: boolean;
+  options: ReadonlyArray<RuntimeFormLookupOption>;
+};
+
+export type RuntimeFormFieldChangeMeta = {
+  lookupLabels?: Record<string, string>;
+};
+
+export type RuntimeFormLookupLoader = (
+  request: RuntimeFormLookupOptionsRequest,
+) => Promise<RuntimeFormLookupOptionsResponse>;
 
 export type RuntimeFormRuleOperator =
   | "eq"
@@ -114,6 +178,7 @@ export type RuntimeFormFieldDefinition = {
   inputType?: RuntimeFormTextInputType;
   label: string;
   labelLayout?: RuntimeFormFieldLabelLayout;
+  lookup?: RuntimeFormLookupDefinition;
   mask?: string;
   nodeType?: "field";
   options?: ReadonlyArray<RuntimeFormFieldOption>;
@@ -314,8 +379,14 @@ export type RuntimeFormScaffoldProps = {
   activeTabs?: RuntimeFormActiveTabs;
   onActiveTabChange?: (layoutId: string, tabId: string) => void;
   onBack: () => void;
-  onFieldChange: (fieldId: string, value: RuntimeFormValue, field: RuntimeFormFieldDefinition) => void;
+  onFieldChange: (
+    fieldId: string,
+    value: RuntimeFormValue,
+    field: RuntimeFormFieldDefinition,
+    meta?: RuntimeFormFieldChangeMeta,
+  ) => void;
   onFinish: () => void;
+  loadLookupOptions?: RuntimeFormLookupLoader;
   onSubformAdd?: (subform: RuntimeFormSubformDefinition) => void;
   onSubformDelete?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
   onSubformEdit?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;

@@ -134,3 +134,32 @@ func runtimeSubformNodeTitle(uiSchema map[string]any, scopeID string) string {
 	}
 	return ""
 }
+
+func makeRuntimeFieldEditable(dataSchema map[string]any, uiSchema map[string]any, fieldID string) {
+	fieldID = normalizeString(fieldID)
+	if fieldID == "" {
+		return
+	}
+
+	rootDataScope := asMap(dataSchema["rootScope"])
+	for _, rawField := range asSlice(rootDataScope["fields"]) {
+		field := asMap(rawField)
+		currentFieldID := chooseString(normalizeString(field["fieldId"]), chooseString(normalizeString(field["id"]), normalizeString(field["key"])))
+		if currentFieldID != fieldID {
+			continue
+		}
+		field["readonly"] = false
+	}
+
+	rootUIScope := asMap(uiSchema["rootScope"])
+	for _, rawNode := range asSlice(rootUIScope["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["fieldId"]) != fieldID {
+			continue
+		}
+		if normalizeString(node["visibility"]) == "readonly" {
+			delete(node, "visibility")
+		}
+		node["readonly"] = false
+	}
+}

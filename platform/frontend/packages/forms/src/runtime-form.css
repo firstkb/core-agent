@@ -378,6 +378,18 @@
   max-width: 100%;
 }
 
+.platform-runtime-form__lookup-catalog-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.platform-runtime-form__lookup-catalog-note {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+}
+
 .platform-runtime-form__field.ui-field--required > .ui-combobox .ui-combobox__trigger {
   border-left-width: 2px;
   border-left-color: var(--color-warning);

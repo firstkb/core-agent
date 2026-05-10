@@ -173,6 +173,12 @@ func (r *repository) QueryRuntimeRows(
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	columnSet, err := relationColumnsTx(ctx, tx, relationName)
+	if err != nil {
+		return nil, 0, err
+	}
+	columnNames = filterExistingRuntimeColumns(columnNames, columnSet)
+
 	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM %s t`, qualifiedIdentifier(relationName))
 	if whereClause != "" {
 		countQuery += "\n WHERE " + whereClause
@@ -252,6 +258,23 @@ func (r *repository) QueryRuntimeRows(
 	}
 
 	return records, totalItems, nil
+}
+
+func filterExistingRuntimeColumns(columnNames []string, columnSet map[string]struct{}) []string {
+	if len(columnSet) == 0 {
+		return columnNames
+	}
+	out := make([]string, 0, len(columnNames))
+	for _, columnName := range columnNames {
+		columnName = strings.TrimSpace(columnName)
+		if columnName == "" {
+			continue
+		}
+		if _, ok := columnSet[columnName]; ok {
+			out = append(out, columnName)
+		}
+	}
+	return out
 }
 
 func (r *repository) ResolveRuntimeSourceGUIDColumn(

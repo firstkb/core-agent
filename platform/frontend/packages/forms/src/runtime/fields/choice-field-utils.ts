@@ -26,8 +26,9 @@ export function getChoiceRenderStyle(field: RuntimeFormFieldDefinition) {
 
 export function getComboboxOptions(field: RuntimeFormFieldDefinition): ComboboxOption[] {
   return (field.options ?? []).map((option) => ({
+    description: option.description,
     label: option.label,
-    searchText: `${option.label} ${option.value}`,
+    searchText: `${option.label} ${option.description ?? ""} ${option.value}`,
     value: option.value,
   }));
 }

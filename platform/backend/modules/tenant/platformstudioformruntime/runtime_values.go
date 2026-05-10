@@ -49,6 +49,18 @@ func normalizeMutationValue(field runtimeFieldPlan, value any) any {
 		return nil
 	}
 
+	if field.MultiValue {
+		return normalizeRuntimeStringArray(value)
+	}
+	if field.Kind == "db_lookup" && field.Preset == "db_lookup_value" {
+		if typed, ok := value.(string); ok {
+			if strings.TrimSpace(typed) == "" {
+				return nil
+			}
+			return strings.TrimSpace(typed)
+		}
+	}
+
 	switch field.Kind {
 	case "boolean":
 		switch typed := value.(type) {

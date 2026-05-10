@@ -445,6 +445,104 @@ describe("runtime form helpers", () => {
     ]);
   });
 
+  it("compiles lookup fields into async select definitions", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              displayFields: ["name"],
+              fieldId: "company",
+              kind: "db_lookup",
+              label: "Company",
+              lookupConfig: {
+                displayMode: "search_select",
+                filters: [
+                  { field: "active", operator: "eq", value: true },
+                ],
+                searchFields: ["name"],
+                sortField: "name",
+                sourceModel: "company",
+                storedValueField: "doc_id",
+              },
+              preset: "company_lookup",
+              selectionMode: "single",
+              storageKey: "company",
+            },
+            {
+              fieldId: "contacts",
+              kind: "db_lookup",
+              label: "Contacts",
+              lookupConfig: {
+                displayMode: "search_select",
+                sourceModel: "contact",
+              },
+              selectionMode: "multiple",
+              storageKey: "contacts",
+            },
+            {
+              fieldId: "vendor_name",
+              kind: "db_lookup",
+              label: "Vendor Name",
+              lookupConfig: {
+                displayMode: "catalog_modal",
+                displayFields: ["name"],
+                sourceModel: "company",
+                storedTextFields: ["name"],
+              },
+              preset: "db_lookup_value",
+              storageKey: "vendor_name",
+            },
+          ],
+        },
+      },
+      mode: "edit",
+      modelId: "lookup",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            { fieldId: "company", id: "node-company", order: 1, type: "field" },
+            { fieldId: "contacts", id: "node-contacts", order: 2, type: "field" },
+            { fieldId: "vendor_name", id: "node-vendor-name", order: 3, type: "field" },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    expect(findRuntimeFormField(definition, "company")).toMatchObject({
+      lookup: {
+        displayFields: ["name"],
+        displayMode: "search_select",
+        filters: [{ field: "active", operator: "eq", value: true }],
+        preset: "company_lookup",
+        searchFields: ["name"],
+        selectionMode: "single",
+        sortField: "name",
+        sourceModel: "company",
+        storedValueField: "doc_id",
+        valueMode: "stored_value",
+      },
+      type: "single_select",
+    });
+    expect(findRuntimeFormField(definition, "contacts")).toMatchObject({
+      lookup: {
+        selectionMode: "multiple",
+      },
+      type: "multi_select",
+    });
+    expect(findRuntimeFormField(definition, "vendor_name")).toMatchObject({
+      lookup: {
+        displayMode: "catalog_modal",
+        displayFields: ["name"],
+        selectionMode: "single",
+        storedTextFields: ["name"],
+        valueMode: "text",
+      },
+    });
+  });
+
   it("compiles short text input settings and ready-made text presets", () => {
     const definition = createRuntimeFormDefinitionFromSchema({
       commitMode: "autosave",

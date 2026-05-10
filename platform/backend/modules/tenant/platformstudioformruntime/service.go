@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	dictionary "dtriton.com/platform/backend/modules/tenant/dictionary"
 )
 
 var (
@@ -40,15 +41,24 @@ type Repository interface {
 }
 
 type Service struct {
-	now  func() time.Time
-	repo Repository
+	lookupOptions lookupOptionsProvider
+	now           func() time.Time
+	repo          Repository
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{
-		now:  func() time.Time { return time.Now().UTC() },
+type lookupOptionsProvider interface {
+	ListOptions(ctx context.Context, req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error)
+}
+
+func NewService(repo Repository, lookupOptions ...lookupOptionsProvider) *Service {
+	service := &Service{
+		now: func() time.Time { return time.Now().UTC() },
 		repo: repo,
 	}
+	if len(lookupOptions) > 0 {
+		service.lookupOptions = lookupOptions[0]
+	}
+	return service
 }
 
 func (s *Service) LoadForm(
@@ -70,6 +80,7 @@ func (s *Service) LoadForm(
 	docGuid = strings.TrimSpace(docGuid)
 	values := map[string]any{}
 	revision := ""
+	var lookupLabels map[string]map[string]string
 	if docGuid == "" {
 		if err := s.applyCreateSystemDefaults(ctx, tenant, claims, scopeContext.Scope, values); err != nil {
 			return nil, err
@@ -80,12 +91,16 @@ func (s *Service) LoadForm(
 			return nil, err
 		}
 		values = row.Values
+		lookupLabels = row.LookupLabels
 		revision = row.Revision
 		docGuid = row.DocGuid
 	}
 
 	response := buildRuntimeViewFormResponse(scopeContext, docGuid, revision, values)
-	if err := s.attachCurrentLookupOptions(ctx, tenant, scopeContext.Scope, response.DataSchema, values); err != nil {
+	if isEmptyRuntimeValue(values[scopeContext.Scope.SystemFields.ReportedBy]) {
+		makeRuntimeFieldEditable(response.DataSchema, response.UISchema, scopeContext.Scope.SystemFields.ReportedBy)
+	}
+	if err := s.attachCurrentLookupOptions(ctx, tenant, scopeContext.Scope, response.DataSchema, values, lookupLabels); err != nil {
 		return nil, err
 	}
 	return response, nil
@@ -121,18 +136,20 @@ func (s *Service) LoadSubform(
 
 	values := map[string]any{}
 	revision := ""
+	var lookupLabels map[string]map[string]string
 	if docGuid != "" {
 		row, err := s.repo.LoadSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, docGuid)
 		if err != nil {
 			return nil, err
 		}
 		values = row.Values
+		lookupLabels = row.LookupLabels
 		revision = row.Revision
 		docGuid = row.DocGuid
 	}
 
 	response := buildRuntimeSubformFormResponse(scopeContext, subformScope, docGuid, revision, values)
-	if err := s.attachCurrentLookupOptions(ctx, tenant, rootScopeFromSubform(scopeContext.Scope, subformScope), response.DataSchema, values); err != nil {
+	if err := s.attachCurrentLookupOptions(ctx, tenant, rootScopeFromSubform(scopeContext.Scope, subformScope), response.DataSchema, values, lookupLabels); err != nil {
 		return nil, err
 	}
 	return response, nil
@@ -154,6 +171,7 @@ func (s *Service) CreateRecord(
 		return nil, err
 	}
 
+	scope = withRuntimeMutationLookupLabels(scope, req.LookupLabels)
 	values := s.prepareMutationValues(scope, req.Values)
 	if err := s.applyCreateSystemDefaults(ctx, tenant, claims, scope, values); err != nil {
 		return nil, err
@@ -217,6 +235,7 @@ func (s *Service) CreateSubformRecord(
 		return nil, ErrRuntimeUnsupported
 	}
 	mutationScope := rootScopeFromSubform(scopeContext.Scope, subformScope)
+	mutationScope = withRuntimeMutationLookupLabels(mutationScope, req.LookupLabels)
 	values := s.prepareMutationValues(mutationScope, req.Values)
 	if validationErrors := validateRequiredValues(mutationScope, values); len(validationErrors) > 0 {
 		return &RuntimeViewRecordMutationResponse{
@@ -271,6 +290,7 @@ func (s *Service) UpdateRecord(
 	if err != nil {
 		return nil, err
 	}
+	scope = withRuntimeMutationLookupLabels(scope, req.LookupLabels)
 	values := s.prepareMutationValues(scope, req.Values)
 	validationErrors, err := s.validateRootUniqueValues(ctx, tenant, scope, values, docGuid)
 	if err != nil {
@@ -318,6 +338,7 @@ func (s *Service) UpdateSubformRecord(
 		return nil, ErrRuntimeUnsupported
 	}
 	mutationScope := rootScopeFromSubform(scopeContext.Scope, subformScope)
+	mutationScope = withRuntimeMutationLookupLabels(mutationScope, req.LookupLabels)
 	values := s.prepareMutationValues(mutationScope, req.Values)
 	validationErrors, err := s.validateSubformUniqueValues(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, docGuid)
 	if err != nil {

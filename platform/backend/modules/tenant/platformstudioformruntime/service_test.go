@@ -3,10 +3,12 @@ package platformstudioformruntime
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
+	dictionary "dtriton.com/platform/backend/modules/tenant/dictionary"
 )
 
 func TestReadOptionValuesSupportsStringAndObjectOptions(t *testing.T) {
@@ -221,6 +223,126 @@ func TestLoadFormReturnsSchemasAndCreateDefaults(t *testing.T) {
 	option := options[0].(map[string]any)
 	if option["value"] != "77" || option["label"] != "Andrew Owner" {
 		t.Fatalf("reported_by current option = %#v, want Andrew Owner/77", option)
+	}
+}
+
+func TestBuildReturningClauseSkipsMissingRuntimeFieldColumns(t *testing.T) {
+	scope := runtimeRootScopePlan{
+		Fields: []runtimeFieldPlan{
+			{FieldID: "existing", ColumnName: "existing_col", Kind: "short_text", Supported: true},
+			{FieldID: "missing", ColumnName: "missing_col", Kind: "short_text", Supported: true},
+		},
+		SourceGUIDColumn:    "_guid",
+		SourceIDColumn:      "_id",
+		SourceUpdatedColumn: "_updated_at",
+	}
+	clause, fields := buildReturningClauseForColumns(scope, map[string]struct{}{
+		"_guid":        {},
+		"_id":          {},
+		"_updated_at":  {},
+		"existing_col": {},
+	})
+
+	if strings.Contains(clause, "missing_col") {
+		t.Fatalf("returning clause includes missing column: %s", clause)
+	}
+	if !strings.Contains(clause, "existing_col") {
+		t.Fatalf("returning clause does not include existing column: %s", clause)
+	}
+	if len(fields) != 1 || fields[0].FieldID != "existing" {
+		t.Fatalf("returning fields = %#v, want only existing", fields)
+	}
+}
+
+func TestAttachCurrentLookupOptionsSkipsCatalogModalRemoteHydration(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":       "catalog_pick",
+		"kind":          "db_lookup",
+		"label":         "Catalog Pick",
+		"selectionMode": "single",
+		"storageKey":    "catalog_pick",
+		"lookupConfig": map[string]any{
+			"displayMode":      "catalog_modal",
+			"displayFields":    []any{"catalog", "hazard"},
+			"searchFields":     []any{"catalog", "hazard"},
+			"sourceModel":      "lookup-option",
+			"storedValueField": "doc_id",
+		},
+	})
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	scope, err := buildRuntimeRootScopePlan(repo.model, repo.view)
+	if err != nil {
+		t.Fatalf("buildRuntimeRootScopePlan returned error: %v", err)
+	}
+
+	lookupOptions := &recordingLookupOptionsProvider{err: dictionary.ErrInvalidDictionary}
+	svc := NewService(repo, lookupOptions)
+	tenant, _ := requestctx.Tenant(testRuntimeContext())
+	if err := svc.attachCurrentLookupOptions(testRuntimeContext(), tenant, scope, dataSchema, map[string]any{
+		"catalog_pick": "lookup-guid",
+	}, nil); err != nil {
+		t.Fatalf("attachCurrentLookupOptions returned error: %v", err)
+	}
+
+	if lookupOptions.calls != 0 {
+		t.Fatalf("lookup provider calls = %d, want 0 for catalog_modal fallback", lookupOptions.calls)
+	}
+	field := findDataSchemaField(dataSchema, "catalog_pick")
+	options := asSlice(field["options"])
+	if len(options) != 1 {
+		t.Fatalf("catalog_pick options = %d, want 1 fallback option", len(options))
+	}
+	option := asMap(options[0])
+	if option["value"] != "lookup-guid" || option["label"] != "lookup-guid" {
+		t.Fatalf("catalog_pick fallback option = %#v, want raw lookup-guid", option)
+	}
+}
+
+func TestAttachCurrentLookupOptionsFallsBackOnInvalidDictionary(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":       "catalog_pick",
+		"kind":          "db_lookup",
+		"label":         "Catalog Pick",
+		"selectionMode": "single",
+		"storageKey":    "catalog_pick",
+		"lookupConfig": map[string]any{
+			"displayMode":      "search_select",
+			"displayFields":    []any{"catalog", "hazard"},
+			"searchFields":     []any{"catalog", "hazard"},
+			"sourceModel":      "lookup-option",
+			"storedValueField": "doc_id",
+		},
+	})
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	scope, err := buildRuntimeRootScopePlan(repo.model, repo.view)
+	if err != nil {
+		t.Fatalf("buildRuntimeRootScopePlan returned error: %v", err)
+	}
+
+	lookupOptions := &recordingLookupOptionsProvider{err: dictionary.ErrInvalidDictionary}
+	svc := NewService(repo, lookupOptions)
+	tenant, _ := requestctx.Tenant(testRuntimeContext())
+	if err := svc.attachCurrentLookupOptions(testRuntimeContext(), tenant, scope, dataSchema, map[string]any{
+		"catalog_pick": "lookup-guid",
+	}, nil); err != nil {
+		t.Fatalf("attachCurrentLookupOptions returned error: %v", err)
+	}
+
+	if lookupOptions.calls != 1 {
+		t.Fatalf("lookup provider calls = %d, want 1", lookupOptions.calls)
+	}
+	field := findDataSchemaField(dataSchema, "catalog_pick")
+	options := asSlice(field["options"])
+	if len(options) != 1 {
+		t.Fatalf("catalog_pick options = %d, want 1 fallback option", len(options))
+	}
+	option := asMap(options[0])
+	if option["value"] != "lookup-guid" || option["label"] != "lookup-guid" {
+		t.Fatalf("catalog_pick fallback option = %#v, want raw lookup-guid", option)
 	}
 }
 
@@ -701,6 +823,19 @@ type recordingUniqueCheck struct {
 	ParentDocGuid  string
 	ScopeID        string
 	Value          string
+}
+
+type recordingLookupOptionsProvider struct {
+	calls int
+	err   error
+}
+
+func (p *recordingLookupOptionsProvider) ListOptions(_ context.Context, _ dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+	p.calls++
+	if p.err != nil {
+		return nil, p.err
+	}
+	return &dictionary.OptionsResponse{}, nil
 }
 
 func newRecordingRuntimeRepo() *recordingRuntimeRepo {

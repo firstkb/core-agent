@@ -282,3 +282,19 @@ Statuses:
 - Resolution: Workspace draft initialization now keys off the route draft signature and does not reset `modelDraft` when background source-model loading changes `resolvedModel`. Source picker save now updates the field id captured by the open picker via functional model draft update, avoiding stale selected-field references.
 - Fixed in: current change set.
 - Verification: `pnpm exec tsc --noEmit` passed in `platform/frontend/apps/tenant-web`; targeted ESLint passed for the changed frontend files; Browser Use smoke passed for add generic DB lookup -> choose source fields/sort/active filter -> picker save -> authoring save without `FORM_BUILDER_INVALID`.
+
+## FB-RT-018 - Runtime edit form can fail when authored schema gets ahead of physical storage
+
+- Area: Form Builder runtime apply/storage drift and Form Runtime edit reads.
+- URL: `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/edit/d703b619-d27a-49be-86ca-15cf2bc6b5e5`
+- Model/View: `lookup` / `view-default`.
+- Symptom: After adding `DB lookup Button` with `lookupConfig.displayMode = catalog_modal`, clicking Edit returned backend `500 FORM_RUNTIME_INTERNAL` from `GET /app/platform-studio/forms/lookup/views/view-default/runtime/records/{docGuid}/form`.
+- Expected: Edit form should open even while an authored field is newly added or not yet supported by the current runtime slice. Unsupported or unapplied fields should not block the whole record form.
+- Actual: The compiled schema referenced scalar runtime column `db_lookup_2_id`, but the actual `ps_lookup`/`vw_lookup` relations did not contain `db_lookup_2_id` / `db_lookup_2`. `platformstudioformruntime` selected every supported scalar field column during record load, so one missing column failed the whole form.
+- Evidence: Owner supplied schema on 2026-05-10. Local DB check showed `ERROR: column "db_lookup_2_id" does not exist` for `ps_lookup` and `ERROR: column "db_lookup_2" does not exist` for `vw_lookup`.
+- Priority: high.
+- Status: partial.
+- Owner decision: Keep runtime edit resilient; deeper Form Builder apply/storage drift review can be handled separately if the column should have been created by save/apply.
+- Runtime resolution: `platformstudioformruntime` record reads now inspect actual relation columns and skip missing supported scalar fields instead of failing the whole form. First-slice `catalog_modal` lookup hydration also avoids remote dictionary calls and falls back to raw stored values if needed.
+- Fixed in: current change set.
+- Verification: `go test ./modules/tenant/platformstudioformruntime` passed; `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `git diff --check` passed; `scripts/preflight.sh` passed.

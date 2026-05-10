@@ -195,6 +195,7 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		SelectionMode:          selectionMode,
 		Validation:             validation,
 		LookupDictionary:       chooseString(normalizeString(lookupConfig["dictionary"]), normalizeString(field["dictionary"])),
+		LookupDisplayMode:      readRuntimeLookupDisplayMode(lookupConfig),
 		LookupDisplayFields:    readStringList(lookupConfig["displayFields"], field["displayFields"]),
 		LookupFilters:          readRuntimeLookupFilters(asSlice(lookupConfig["filters"])),
 		LookupSearchFields:     readStringList(lookupConfig["searchFields"]),
@@ -249,6 +250,13 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		plan.ColumnName = chooseString(plan.ColumnName, storageKey)
 	}
 	return plan
+}
+
+func readRuntimeLookupDisplayMode(lookupConfig map[string]any) string {
+	if normalizeString(lookupConfig["displayMode"]) == "catalog_modal" {
+		return "catalog_modal"
+	}
+	return "search_select"
 }
 
 func supportsRuntimeUniqueValue(kind string, preset string, validation string) bool {

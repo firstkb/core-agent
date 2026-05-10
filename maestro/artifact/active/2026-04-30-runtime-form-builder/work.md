@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `lookup_search_select_runtime_slice_ready_for_review`
+- Status: `lookup_runtime_regression_fix_ready_for_owner_smoke`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -51,6 +51,8 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime lookup follow-up decision: form open must not call lookup endpoints for search-select fields. The field should load options only after the user activates the dropdown; selected-value remote hydration is also lazy unless labels are already supplied by the runtime form response.
 - Runtime lookup preset correction: Contact, Contacts, Company, Companies, Project, and Projects shortcuts use named dictionary routes (`contacts`, `companies`, `projects`) instead of generic `sourceModel` POST. Ordinary DB lookup fields still use generic lookup when `lookupConfig.sourceModel` is present. This avoids treating named dictionary aliases such as `contacts` as Form Builder model ids.
 - Runtime edit form reads must include current selected lookup options in the form payload so existing records display labels without frontend lookup calls on initial render. For multivalue lookup fields, stored `value_label` values are reused; missing labels can be resolved server-side through the same dictionary contract.
+- Runtime edit form reads must tolerate schema/storage drift after Form Builder authoring changes. If the authored schema references a supported scalar field column that has not yet been physically applied to the runtime table, the read path skips that missing column instead of failing the whole form load. Writes to unapplied columns still require the runtime apply/storage issue to be resolved before the field can persist.
+- Runtime `catalog_modal` lookup remains staged. The read path must not remote-hydrate catalog-modal labels in the first search-select slice; it falls back to raw stored values if needed so an unsupported catalog-modal field cannot block edit form load.
 - If `Reported By` is bound as a system field but the current authenticated user cannot be resolved to a business/contact id, the runtime must not trap the owner in a readonly empty required field. The field is made editable in that form response so the owner can choose a reporter manually.
 - Dynamic/token lookup filters remain staged. Current runtime supports static `lookupConfig.filters[]`; Form Builder dynamic filter-rule types exist but are not wired as runtime lookup dependency filters in this slice.
 - System Field bindings and `semanticRole` metadata do not automatically make a field readonly. They control runtime semantics such as create defaults and workflow/status commands. A runtime field is readonly only when the authored schema/view explicitly marks the field/node readonly. This allows owners to expose fields such as Reported By, Reported Date, or Status for user edits when the view is configured that way.

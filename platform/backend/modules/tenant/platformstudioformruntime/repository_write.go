@@ -303,7 +303,10 @@ func loadRootRecordTx(
 		return nil, ErrInvalidRequest
 	}
 
-	returningClause, returningFields := buildReturningClause(scope)
+	returningClause, returningFields, err := buildExistingColumnReturningClause(ctx, tx, scope)
+	if err != nil {
+		return nil, err
+	}
 	whereClause := fmt.Sprintf("%s::text = $1", quoteIdentifier(scope.SourceGUIDColumn))
 	if scope.TenantScoped && scope.SourceTenantColumn != "" {
 		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(scope.SourceTenantColumn))
@@ -346,7 +349,10 @@ func loadSubformRecordTx(
 		return nil, err
 	}
 	recordScope := rootScopeFromSubform(rootScope, subformScope)
-	returningClause, returningFields := buildReturningClause(recordScope)
+	returningClause, returningFields, err := buildExistingColumnReturningClause(ctx, tx, recordScope)
+	if err != nil {
+		return nil, err
+	}
 	whereClause := fmt.Sprintf(
 		"%s::text = $1 AND %s = $2",
 		quoteIdentifier(recordScope.SourceGUIDColumn),
@@ -584,11 +590,24 @@ func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) (
 }
 
 func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPlan) {
+	return buildReturningClauseForColumns(scope, nil)
+}
+
+func buildExistingColumnReturningClause(ctx context.Context, tx *sql.Tx, scope runtimeRootScopePlan) (string, []runtimeFieldPlan, error) {
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return "", nil, err
+	}
+	returningClause, returningFields := buildReturningClauseForColumns(scope, columnSet)
+	return returningClause, returningFields, nil
+}
+
+func buildReturningClauseForColumns(scope runtimeRootScopePlan, columnSet map[string]struct{}) (string, []runtimeFieldPlan) {
 	selectList := []string{
 		fmt.Sprintf("COALESCE(%s::text, '') AS __record_id", quoteIdentifier(scope.SourceIDColumn)),
 		fmt.Sprintf("COALESCE(%s::text, '') AS __doc_guid", quoteIdentifier(scope.SourceGUIDColumn)),
 	}
-	if scope.SourceUpdatedColumn != "" {
+	if scope.SourceUpdatedColumn != "" && runtimeColumnExists(columnSet, scope.SourceUpdatedColumn) {
 		selectList = append(selectList, fmt.Sprintf("COALESCE(%s::text, '') AS __revision", quoteIdentifier(scope.SourceUpdatedColumn)))
 	} else {
 		selectList = append(selectList, "'' AS __revision")
@@ -599,6 +618,9 @@ func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPla
 		if !field.Supported || field.MultiValue || field.ColumnName == "" {
 			continue
 		}
+		if !runtimeColumnExists(columnSet, field.ColumnName) {
+			continue
+		}
 		fields = append(fields, field)
 		selectList = append(selectList, fmt.Sprintf(
 			"COALESCE(%s::text, '') AS %s",
@@ -607,6 +629,14 @@ func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPla
 		))
 	}
 	return strings.Join(selectList, ", "), fields
+}
+
+func runtimeColumnExists(columnSet map[string]struct{}, columnName string) bool {
+	if len(columnSet) == 0 {
+		return true
+	}
+	_, ok := columnSet[normalizeString(columnName)]
+	return ok
 }
 
 func scanMutationRow(row *sql.Row, fields []runtimeFieldPlan) (*runtimeRecordMutationRow, error) {

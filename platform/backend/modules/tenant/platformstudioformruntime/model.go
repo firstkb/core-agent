@@ -119,6 +119,7 @@ type runtimeFieldPlan struct {
 	Validation             string
 	ColumnName             string
 	LookupDictionary       string
+	LookupDisplayMode      string
 	LookupDisplayFields    []string
 	LookupFilters          []runtimeLookupFilterPlan
 	LookupSearchFields     []string

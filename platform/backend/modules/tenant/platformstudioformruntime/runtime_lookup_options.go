@@ -2,6 +2,7 @@ package platformstudioformruntime
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 
@@ -45,9 +46,17 @@ func (s *Service) attachCurrentLookupOptions(
 		if len(missingValues) == 0 {
 			continue
 		}
+		if field.LookupDisplayMode == "catalog_modal" {
+			addFallbackCurrentLookupOptions(dataSchema, field.FieldID, missingValues)
+			continue
+		}
 
 		resolvedLabels, err := s.resolveCurrentLookupLabels(ctx, tenant, field, missingValues)
 		if err != nil {
+			if errors.Is(err, dictionary.ErrInvalidDictionary) {
+				addFallbackCurrentLookupOptions(dataSchema, field.FieldID, missingValues)
+				continue
+			}
 			return err
 		}
 		for _, selectedValue := range missingValues {
@@ -56,6 +65,12 @@ func (s *Service) attachCurrentLookupOptions(
 		}
 	}
 	return nil
+}
+
+func addFallbackCurrentLookupOptions(dataSchema map[string]any, fieldID string, values []string) {
+	for _, selectedValue := range values {
+		addCurrentOptionToDataSchemaField(dataSchema, fieldID, selectedValue, selectedValue)
+	}
 }
 
 func (s *Service) resolveCurrentLookupLabels(

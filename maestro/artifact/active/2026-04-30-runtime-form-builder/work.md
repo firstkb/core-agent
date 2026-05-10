@@ -444,7 +444,7 @@ View/read remains the existing `CollectionTable` modal path for now.
   - added generic dictionary query route `POST /app/dictionaries/options/query` for ordinary lookup sources using `sourceModel`, selected display/search/sort/stored-value fields, filters, search, ids, and paging;
   - dictionary options return `label`, optional second-line `description`, and fields for remote search/hydration, matching the legacy dictionary behavior without copying legacy access logic;
   - preset lookup filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects` now use UI Kit Combobox multiselect options from the route instead of raw ID inputs;
-  - filter option pickers load the first 10 values and request additional pages on scroll; dropdown width is constrained to the triggering field width;
+  - filter option pickers debounce remote search by 300 ms, load the first 10 values, and request additional pages on scroll; dropdown width is constrained to the triggering field width;
   - user-facing display-template labels were simplified to readable examples while the schema still stores canonical `lookupConfig.displayTemplate`;
   - current implementation intentionally leaves dictionary-specific access rules and Form render query enforcement for follow-up work.
 

@@ -44,6 +44,7 @@ type LookupSummary = {
 };
 
 const presetLookupFilterPageSize = 10;
+const presetLookupFilterSearchDebounceMs = 300;
 
 type SelectedFieldSettingsSectionProps = {
   canEditModelDefinition: boolean;
@@ -145,6 +146,7 @@ export function SelectedFieldSettingsSection({
   const canEditFieldSettings = canEditSettings && canEditModelDefinition;
   const fieldTypeLabel = t(getFieldTypeKey(selectedField));
   const [filterSearchByField, setFilterSearchByField] = useState<Record<string, string>>({});
+  const [filterRequestSearchByField, setFilterRequestSearchByField] = useState<Record<string, string>>({});
   const [filterOptionsByField, setFilterOptionsByField] = useState<Record<string, readonly ComboboxOption[]>>({});
   const [filterHasMoreByField, setFilterHasMoreByField] = useState<Record<string, boolean>>({});
   const [filterLoadingByField, setFilterLoadingByField] = useState<Record<string, boolean>>({});
@@ -176,12 +178,25 @@ export function SelectedFieldSettingsSection({
 
   useEffect(() => {
     setFilterSearchByField({});
+    setFilterRequestSearchByField({});
     setFilterOptionsByField({});
     setFilterHasMoreByField({});
     setFilterLoadingByField({});
     setFilterLoadingMoreByField({});
     setFilterPageByField({});
   }, [selectedField.id, selectedField.preset]);
+
+  useEffect(() => {
+    const timeoutId = globalThis.setTimeout(() => {
+      setFilterRequestSearchByField((current) =>
+        areStringRecordsEqual(current, filterSearchByField) ? current : filterSearchByField
+      );
+    }, presetLookupFilterSearchDebounceMs);
+
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [filterSearchByField]);
 
   useEffect(() => {
     if (!selectedFieldIsPresetLookup || presetLookupFilterDefinitions.length === 0) {
@@ -192,7 +207,7 @@ export function SelectedFieldSettingsSection({
 
     for (const definition of presetLookupFilterDefinitions) {
       const selectedValues = getPresetLookupFilterValueIds(selectedField, definition.field);
-      const search = filterSearchByField[definition.field] ?? "";
+      const search = filterRequestSearchByField[definition.field] ?? "";
 
       setFilterLoadingByField((current) => ({
         ...current,
@@ -269,7 +284,7 @@ export function SelectedFieldSettingsSection({
       cancelled = true;
     };
   }, [
-    filterSearchByField,
+    filterRequestSearchByField,
     loadDictionaryOptions,
     presetLookupFilterDefinitions,
     selectedField,
@@ -283,6 +298,18 @@ export function SelectedFieldSettingsSection({
         [field]: searchValue,
       }
     );
+    setFilterHasMoreByField((current) => ({
+      ...current,
+      [field]: false,
+    }));
+    setFilterLoadingMoreByField((current) => ({
+      ...current,
+      [field]: false,
+    }));
+    setFilterPageByField((current) => ({
+      ...current,
+      [field]: 1,
+    }));
   }
 
   function handlePresetLookupFilterLoadMore(field: string) {
@@ -306,7 +333,7 @@ export function SelectedFieldSettingsSection({
       dictionary: definition.dictionaryKey,
       page: nextPage,
       pageSize: presetLookupFilterPageSize,
-      search: filterSearchByField[field] ?? "",
+      search: filterRequestSearchByField[field] ?? "",
     })
       .then((response) => {
         setFilterOptionsByField((current) => ({
@@ -552,4 +579,16 @@ function mergeComboboxOptions(
     merged.set(option.value, option);
   }
   return [...merged.values()];
+}
+
+function areStringRecordsEqual(
+  left: Record<string, string>,
+  right: Record<string, string>,
+) {
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length !== rightKeys.length) {
+    return false;
+  }
+  return leftKeys.every((key) => left[key] === right[key]);
 }

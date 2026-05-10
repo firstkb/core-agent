@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -128,6 +129,7 @@ export function FormsViewWorkspacePage() {
   const [savedLayoutBlueprintDraft, setSavedLayoutBlueprintDraft] = useState<Record<string, unknown>>(() =>
     createEmptyLayoutBlueprint(resolvedModel),
   );
+  const initializedRouteDraftSignatureRef = useRef<string | null>(null);
   const currentModel = modelDraft;
   const currentView = findFormsPlaceholderScreenById(currentModel.screens, resolvedView.id) ?? resolvedView;
   const shouldSyncHydratedFieldNodeTitlesWithModel =
@@ -375,15 +377,26 @@ export function FormsViewWorkspacePage() {
   });
 
   useEffect(() => {
+    if (!hasResolvedWorkspace || !routeDraftSignature) {
+      initializedRouteDraftSignatureRef.current = null;
+      const nextModelDraft = cloneFormsPlaceholderModel(resolvedModel);
+      const nextLayoutBlueprint = createEmptyLayoutBlueprint(nextModelDraft);
+      setModelDraft(nextModelDraft);
+      setSavedModelDraft(nextModelDraft);
+      setLayoutBlueprintDraft(nextLayoutBlueprint);
+      setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
+      return;
+    }
+
+    if (initializedRouteDraftSignatureRef.current === routeDraftSignature) {
+      return;
+    }
+
+    initializedRouteDraftSignatureRef.current = routeDraftSignature;
     const nextModelDraft = cloneFormsPlaceholderModel(resolvedModel);
     setModelDraft(nextModelDraft);
     setSavedModelDraft(nextModelDraft);
-    if (!hasResolvedWorkspace) {
-      const nextLayoutBlueprint = createEmptyLayoutBlueprint(nextModelDraft);
-      setLayoutBlueprintDraft(nextLayoutBlueprint);
-      setSavedLayoutBlueprintDraft(nextLayoutBlueprint);
-    }
-  }, [hasResolvedWorkspace, resolvedModel]);
+  }, [hasResolvedWorkspace, resolvedModel, routeDraftSignature]);
 
   const {
     leaveConfirmOpen,

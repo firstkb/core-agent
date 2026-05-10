@@ -207,28 +207,24 @@ export function createFormBuilderWorkspaceMutationHandlers({
   }
 
   function saveLookupSourcePicker() {
-    if (!selectedField || selectedField.kind !== "db_lookup" || !lookupSourcePickerModel || !lookupSourcePicker) {
-      return;
-    }
-    if (lookupSourcePickerModel.id === currentModel.id) {
+    if (!lookupSourcePickerModel || !lookupSourcePicker) {
       return;
     }
 
-    if (!applyLookupSourcePickerSelectionToField({
-      field: selectedField,
-      picker: lookupSourcePicker,
-      sourceModel: lookupSourcePickerModel,
-    })) {
-      return;
-    }
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      fields: currentModelDraft.fields.map((field) => {
+        if (field.id !== lookupSourcePicker.fieldId || field.kind !== "db_lookup") {
+          return field;
+        }
 
-    updateSelectedField((field) =>
-      applyLookupSourcePickerSelectionToField({
-        field,
-        picker: lookupSourcePicker,
-        sourceModel: lookupSourcePickerModel,
-      }) ?? field
-    );
+        return applyLookupSourcePickerSelectionToField({
+          field,
+          picker: lookupSourcePicker,
+          sourceModel: lookupSourcePickerModel,
+        }) ?? field;
+      }),
+    }));
 
     closeLookupSourcePicker();
   }

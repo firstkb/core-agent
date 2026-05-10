@@ -460,6 +460,10 @@ View/read remains the existing `CollectionTable` modal path for now.
   - moved `Long text historical` from `Basic fields` to `Ready-made fields` and made palette rendering respect the library definition's explicit `section`;
   - DB LOOKUP filter authoring work is considered complete for the current Form Builder scope;
   - next requested Form Builder field focus is `Checklist subform`.
+- Form Builder generic DB lookup source picker fix completed:
+  - fixed a draft reset bug where loading source models for the picker could reinitialize `modelDraft` from the server and remove a newly added unsaved lookup field from the model while the canvas still contained its node;
+  - source picker save now updates the field captured by the open picker instead of depending on the currently selected/stale field reference;
+  - browser smoke on `https://demo.platform.localhost/builder/forms/lookup/views/view-default` passed for adding a DB lookup, choosing `LOOKUP Option` source fields, closing the picker with settings applied, and saving the authoring state without `FORM_BUILDER_INVALID`.
 - Runtime lookup `search_select` implementation slice completed:
   - confirmed current UI Kit `Combobox` already had the needed async hooks, so no duplicate combobox was introduced;
   - `@platform/forms` now compiles lookup metadata from schema and renders `db_lookup`, `db_lookup_value`, `db_lookup_multi`, and preset lookup shortcuts through an app-agnostic async lookup callback;
@@ -508,4 +512,4 @@ View/read remains the existing `CollectionTable` modal path for now.
 
 ## Next Action
 
-Next allowed action is owner review or commit for the lookup `search_select` slice. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, and lookup-aware View filter UX remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner review of the Form Builder generic DB lookup source picker fix. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

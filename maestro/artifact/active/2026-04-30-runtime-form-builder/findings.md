@@ -266,3 +266,19 @@ Statuses:
 - Resolution: Removed the Active/Inactive eye icon from the Views panel, removed the View Active switch from the View tab, removed the active-view update handler from Form Builder controls, removed `isActive` from frontend view config/schema/fallback routing, stopped writing `isActive` to new `ps_view.definition_json` payloads, and documented that Navigation Builder owns sidebar/runtime exposure.
 - Fixed in: current change set.
 - Verification: `pnpm test`, `pnpm typecheck`, `pnpm lint`, `git diff --check`, and `scripts/preflight.sh` passed.
+
+## FB-RT-017 - New generic DB lookup can lose source picker changes and fail save
+
+- Area: Form Builder DB lookup source picker and authoring save.
+- URL: `https://demo.platform.localhost/builder/forms/lookup/views/view-default`
+- Model/View: `lookup` / `view-default`.
+- Symptom: After adding a generic `DB lookup` field, the Source button/picker could appear not to save the selected source. Moving the field and saving the view then returned backend `400 FORM_BUILDER_INVALID`.
+- Expected: A newly added generic DB lookup should keep its model draft entry while source-model metadata is loaded, apply the chosen source/display/sort/filter settings, and save a valid authoring payload.
+- Actual: Opening the source picker loaded lookup source models, changed the shared `resolvedModel` object reference, and caused the workspace page to reinitialize `modelDraft` from the persisted server model. The canvas still had the newly added field node, but `currentModel.fields` no longer contained the field, so picker save could not apply settings and backend validation later rejected the orphaned layout node/placement.
+- Evidence: Owner report on 2026-05-10 with `PUT /app/platform-studio/forms/models/lookup/views/view-default/authoring` returning `FORM_BUILDER_INVALID`; browser smoke reproduced the source picker no-op before the draft reset fix.
+- Priority: high.
+- Status: resolved.
+- Owner decision: Keep generic DB lookup authoring stable in Form Builder; Form render/runtime behavior remains a separate workstream.
+- Resolution: Workspace draft initialization now keys off the route draft signature and does not reset `modelDraft` when background source-model loading changes `resolvedModel`. Source picker save now updates the field id captured by the open picker via functional model draft update, avoiding stale selected-field references.
+- Fixed in: current change set.
+- Verification: `pnpm exec tsc --noEmit` passed in `platform/frontend/apps/tenant-web`; targeted ESLint passed for the changed frontend files; Browser Use smoke passed for add generic DB lookup -> choose source fields/sort/active filter -> picker save -> authoring save without `FORM_BUILDER_INVALID`.

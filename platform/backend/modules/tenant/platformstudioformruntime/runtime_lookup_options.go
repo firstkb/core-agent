@@ -30,7 +30,7 @@ func (s *Service) attachCurrentLookupOptions(
 		currentLabels := normalizeRuntimeLookupLabelMap(lookupLabels[field.FieldID])
 		if field.Preset == "db_lookup_value" {
 			for _, selectedValue := range selectedValues {
-				addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, selectedValue)
+				addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, selectedValue, nil)
 			}
 			continue
 		}
@@ -38,7 +38,7 @@ func (s *Service) attachCurrentLookupOptions(
 		missingValues := []string{}
 		for _, selectedValue := range selectedValues {
 			if label := strings.TrimSpace(currentLabels[selectedValue]); label != "" {
-				addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label)
+				addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label, nil)
 			} else {
 				missingValues = append(missingValues, selectedValue)
 			}
@@ -46,12 +46,7 @@ func (s *Service) attachCurrentLookupOptions(
 		if len(missingValues) == 0 {
 			continue
 		}
-		if field.LookupDisplayMode == "catalog_modal" {
-			addFallbackCurrentLookupOptions(dataSchema, field.FieldID, missingValues)
-			continue
-		}
-
-		resolvedLabels, err := s.resolveCurrentLookupLabels(ctx, tenant, field, missingValues)
+		resolvedOptions, err := s.resolveCurrentLookupOptions(ctx, tenant, field, missingValues)
 		if err != nil {
 			if errors.Is(err, dictionary.ErrInvalidDictionary) {
 				addFallbackCurrentLookupOptions(dataSchema, field.FieldID, missingValues)
@@ -60,8 +55,9 @@ func (s *Service) attachCurrentLookupOptions(
 			return err
 		}
 		for _, selectedValue := range missingValues {
-			label := chooseString(strings.TrimSpace(resolvedLabels[selectedValue]), selectedValue)
-			addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label)
+			option := resolvedOptions[selectedValue]
+			label := chooseString(strings.TrimSpace(option.Label), selectedValue)
+			addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label, option.Fields)
 		}
 	}
 	return nil
@@ -69,17 +65,22 @@ func (s *Service) attachCurrentLookupOptions(
 
 func addFallbackCurrentLookupOptions(dataSchema map[string]any, fieldID string, values []string) {
 	for _, selectedValue := range values {
-		addCurrentOptionToDataSchemaField(dataSchema, fieldID, selectedValue, selectedValue)
+		addCurrentOptionToDataSchemaField(dataSchema, fieldID, selectedValue, selectedValue, nil)
 	}
 }
 
-func (s *Service) resolveCurrentLookupLabels(
+type runtimeCurrentLookupOption struct {
+	Fields map[string]string
+	Label  string
+}
+
+func (s *Service) resolveCurrentLookupOptions(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,
 	field runtimeFieldPlan,
 	values []string,
-) (map[string]string, error) {
-	out := map[string]string{}
+) (map[string]runtimeCurrentLookupOption, error) {
+	out := map[string]runtimeCurrentLookupOption{}
 	values = normalizeRuntimeStringArray(values)
 	if len(values) == 0 {
 		return out, nil
@@ -96,7 +97,10 @@ func (s *Service) resolveCurrentLookupLabels(
 				value := strings.TrimSpace(item.Value)
 				label := strings.TrimSpace(item.Label)
 				if value != "" && label != "" {
-					out[value] = label
+					out[value] = runtimeCurrentLookupOption{
+						Fields: item.Fields,
+						Label:  label,
+					}
 				}
 			}
 			return out, nil
@@ -115,7 +119,7 @@ func (s *Service) resolveCurrentLookupLabels(
 			return nil, err
 		}
 		for id, label := range labels {
-			out[strconv.FormatInt(id, 10)] = label
+			out[strconv.FormatInt(id, 10)] = runtimeCurrentLookupOption{Label: label}
 		}
 	}
 	return out, nil
@@ -200,7 +204,7 @@ func selectedLookupValues(value any) []string {
 	return normalizeRuntimeStringArray(value)
 }
 
-func addCurrentOptionToDataSchemaField(dataSchema map[string]any, fieldID string, value string, label string) {
+func addCurrentOptionToDataSchemaField(dataSchema map[string]any, fieldID string, value string, label string, optionFields map[string]string) {
 	rootScope := asMap(dataSchema["rootScope"])
 	fields := asSlice(rootScope["fields"])
 	for _, rawField := range fields {
@@ -216,13 +220,33 @@ func addCurrentOptionToDataSchemaField(dataSchema map[string]any, fieldID string
 				if strings.TrimSpace(normalizeString(option["label"])) == "" {
 					option["label"] = label
 				}
+				if len(optionFields) > 0 {
+					option["fields"] = runtimeLookupOptionFields(optionFields)
+				}
 				return
 			}
 		}
-		field["options"] = append(options, map[string]any{
+		nextOption := map[string]any{
 			"label": label,
 			"value": value,
-		})
+		}
+		if len(optionFields) > 0 {
+			nextOption["fields"] = runtimeLookupOptionFields(optionFields)
+		}
+		field["options"] = append(options, nextOption)
 		return
 	}
+}
+
+func runtimeLookupOptionFields(fields map[string]string) map[string]any {
+	out := make(map[string]any, len(fields))
+	for key, value := range fields {
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		if key == "" || value == "" {
+			continue
+		}
+		out[key] = value
+	}
+	return out
 }

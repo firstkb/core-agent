@@ -55,6 +55,7 @@ export type RuntimeFormSubformSortDirection = "asc" | "desc";
 
 export type RuntimeFormFieldOption = {
   description?: ReactNode;
+  fields?: Record<string, string>;
   label: string;
   styleVariant?: RuntimeFormChoiceOptionStyleVariant;
   value: string;
@@ -97,6 +98,7 @@ export type RuntimeFormLookupDefinition = {
 
 export type RuntimeFormLookupOption = {
   description?: string;
+  fields?: Record<string, string>;
   label: string;
   value: string;
 };

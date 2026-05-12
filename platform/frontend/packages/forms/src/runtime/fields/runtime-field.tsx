@@ -30,6 +30,7 @@ import type { RuntimeFieldControlProps } from "./field-types";
 
 function isLabelableField(field: RuntimeFormFieldDefinition) {
   return field.type !== "radio"
+    && field.lookup?.displayMode !== "catalog_modal"
     && field.choiceRenderStyle !== "buttons"
     && !field.readonly
     && field.type !== "readonly"
@@ -90,23 +91,27 @@ export function RuntimeField({
   const labelLayout = field.labelLayout ?? (field.width === "full" ? "responsive-inline" : "stacked");
   const required = isRuntimeFieldRequired(field, values, field.required);
   const disabled = field.disabled || field.readonly || false;
+  const usesCatalogLookup = field.lookup?.displayMode === "catalog_modal";
 
   return (
     <Field
       className={cx(
         "platform-runtime-form__field",
         field.width === "full" && "platform-runtime-form__field--full",
+        usesCatalogLookup && "platform-runtime-form__field--catalog-lookup",
       )}
       invalid={Boolean(error)}
-      layout={labelLayout}
+      layout={usesCatalogLookup ? "stacked" : labelLayout}
       required={required}
     >
-      <FieldLabel
-        htmlFor={isLabelableField(field) ? controlId : undefined}
-        id={`${controlId}-label`}
-      >
-        {field.label}
-      </FieldLabel>
+      {usesCatalogLookup ? null : (
+        <FieldLabel
+          htmlFor={isLabelableField(field) ? controlId : undefined}
+          id={`${controlId}-label`}
+        >
+          {field.label}
+        </FieldLabel>
+      )}
       <RuntimeFieldControl
         controlId={controlId}
         disabled={disabled}
@@ -116,6 +121,7 @@ export function RuntimeField({
         labels={labels}
         loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
+        required={required}
         value={value}
       />
       {field.helperText ? <FieldHint>{field.helperText}</FieldHint> : null}

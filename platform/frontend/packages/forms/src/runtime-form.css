@@ -425,16 +425,185 @@
   max-width: 100%;
 }
 
-.platform-runtime-form__lookup-catalog-fallback {
+.platform-runtime-form__lookup-catalog {
   display: flex;
-  flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  align-items: flex-start;
+  gap: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 40%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-bg-surface-muted) 72%, var(--color-bg-surface));
+}
+
+.platform-runtime-form__lookup-catalog-trigger {
+  flex: 0 0 auto;
+}
+
+.platform-runtime-form__field--catalog-lookup.ui-field--required .platform-runtime-form__lookup-catalog-trigger {
+  border-left-width: 2px;
+  border-left-color: var(--color-warning);
+}
+
+.platform-runtime-form__lookup-catalog-required {
+  color: var(--color-warning);
+}
+
+.platform-runtime-form__lookup-catalog-summary {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 2.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0 var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.platform-runtime-form__lookup-catalog-summary-title {
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+}
+
+.platform-runtime-form__lookup-catalog-summary-description,
+.platform-runtime-form__lookup-catalog-summary-empty {
+  color: var(--color-text-secondary);
+}
+
+.platform-runtime-form__lookup-catalog-dialog.ui-dialog {
+  max-width: min(100%, 40rem);
+}
+
+.platform-runtime-form__lookup-catalog-dialog-content.ui-dialog__content {
+  max-height: min(84vh, 48rem);
+  gap: var(--space-4);
+  padding: 0;
+  overflow: hidden;
+}
+
+.platform-runtime-form__lookup-catalog-dialog-header {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+}
+
+.platform-runtime-form__lookup-catalog-dialog-body.ui-dialog__body {
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6) var(--space-6);
+}
+
+.platform-runtime-form__lookup-catalog-search {
+  flex: 0 0 auto;
+}
+
+.platform-runtime-form__lookup-catalog-state {
+  display: flex;
+  min-height: 5rem;
   align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  border: 1px dashed color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.platform-runtime-form__lookup-catalog-state--error {
+  border-color: color-mix(in srgb, var(--color-danger) 32%, var(--color-border-default));
+  color: var(--color-danger);
+}
+
+.platform-runtime-form__lookup-catalog-groups,
+.platform-runtime-form__lookup-catalog-options {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.platform-runtime-form__lookup-catalog-group {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
   gap: var(--space-2);
 }
 
-.platform-runtime-form__lookup-catalog-note {
-  color: var(--color-text-tertiary);
+.platform-runtime-form__lookup-catalog-group-trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-bg-surface-muted) 78%, var(--color-bg-surface));
+  color: var(--color-text-primary);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.platform-runtime-form__lookup-catalog-group-trigger::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--motion-fast) var(--easing-standard);
+}
+
+.platform-runtime-form__lookup-catalog-group-trigger[aria-expanded="true"]::after {
+  transform: rotate(225deg);
+}
+
+.platform-runtime-form__lookup-catalog-group-trigger:hover {
+  border-color: color-mix(in srgb, var(--color-border-default) 88%, transparent);
+  background: var(--color-bg-surface-muted);
+}
+
+.platform-runtime-form__lookup-catalog-group-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.platform-runtime-form__lookup-catalog-option {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+}
+
+.platform-runtime-form__lookup-catalog-option-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.125rem;
+  color: var(--color-text-primary);
+}
+
+.platform-runtime-form__lookup-catalog-option-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.platform-runtime-form__lookup-catalog-option-description {
+  color: var(--color-text-secondary);
   font-size: var(--font-size-xs);
+}
+
+.platform-runtime-form__lookup-catalog-load-more {
+  align-self: center;
 }
 
 .platform-runtime-form__field.ui-field--required > .ui-combobox .ui-combobox__trigger {
@@ -641,5 +810,26 @@
 
   .platform-runtime-form__topbar > .ui-inline-status {
     align-self: flex-start;
+  }
+
+  .platform-runtime-form__lookup-catalog {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .platform-runtime-form__lookup-catalog-trigger,
+  .platform-runtime-form__lookup-catalog-summary {
+    width: 100%;
+  }
+
+  .platform-runtime-form__lookup-catalog-summary {
+    min-height: 0;
+    padding: 0;
+  }
+
+  .platform-runtime-form__lookup-catalog-dialog-header,
+  .platform-runtime-form__lookup-catalog-dialog-body.ui-dialog__body {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
   }
 }

@@ -292,8 +292,18 @@ function readOptions(field: JsonRecord): RuntimeFormFieldOption[] {
         labelCandidate || value,
         value,
         optionStyleVariantByOption.get(value) ?? optionStyleVariantByOption.get(labelCandidate),
+        readOptionFields(option),
       )];
     });
+}
+
+function readOptionFields(option: JsonRecord) {
+  const fields = asRecord(option.fields);
+  const entries = Object.entries(fields).flatMap(([key, value]) => {
+    const fieldValue = stringValue(value);
+    return key && fieldValue ? [[key, fieldValue]] : [];
+  });
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 function isChoiceFieldType(type: RuntimeFormFieldType) {
@@ -308,10 +318,14 @@ function createRuntimeOption(
   label: string,
   value: string,
   styleVariant: RuntimeFormChoiceOptionStyleVariant | undefined,
+  fields?: Record<string, string>,
 ): RuntimeFormFieldOption {
-  return styleVariant && styleVariant !== "default"
-    ? { label, styleVariant, value }
-    : { label, value };
+  return {
+    ...(fields ? { fields } : {}),
+    label,
+    ...(styleVariant && styleVariant !== "default" ? { styleVariant } : {}),
+    value,
+  };
 }
 
 function readChoiceOptionStyleVariants(field: JsonRecord) {

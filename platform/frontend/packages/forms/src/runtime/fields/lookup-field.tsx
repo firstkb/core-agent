@@ -7,7 +7,6 @@ import {
 } from "react";
 
 import {
-  Button,
   Combobox,
   type ComboboxOption,
 } from "@platform/ui-kit";
@@ -21,6 +20,7 @@ import type {
   RuntimeFormLookupOption,
 } from "../runtime-form-types";
 import type { RuntimeFieldControlProps } from "./field-types";
+import { LookupCatalogField } from "./lookup-catalog-field";
 
 const LOOKUP_DEBOUNCE_MS = 300;
 const LOOKUP_PAGE_SIZE = 10;
@@ -28,6 +28,7 @@ const LOOKUP_PAGE_SIZE = 10;
 function runtimeOptionFromLookupOption(option: RuntimeFormLookupOption): RuntimeFormFieldOption {
   return {
     description: option.description,
+    fields: option.fields,
     label: option.label,
     value: option.value,
   };
@@ -79,9 +80,11 @@ export function LookupField({
   disabled,
   error,
   field,
+  groupName,
   labels,
   loadLookupOptions,
   onFieldChange,
+  required,
   value,
 }: RuntimeFieldControlProps) {
   const lookup = field.lookup;
@@ -204,14 +207,18 @@ export function LookupField({
 
   if (lookup.displayMode === "catalog_modal") {
     return (
-      <div className="platform-runtime-form__lookup-catalog-fallback">
-        <Button disabled={disabled} type="button" variant="secondary">
-          Open catalog
-        </Button>
-        <span className="platform-runtime-form__lookup-catalog-note">
-          Catalog lookup will be available in the next slice.
-        </span>
-      </div>
+      <LookupCatalogField
+        controlId={controlId}
+        disabled={disabled}
+        error={error}
+        field={field}
+        groupName={groupName}
+        labels={labels}
+        loadLookupOptions={loadLookupOptions}
+        onFieldChange={onFieldChange}
+        required={required}
+        value={value}
+      />
     );
   }
 

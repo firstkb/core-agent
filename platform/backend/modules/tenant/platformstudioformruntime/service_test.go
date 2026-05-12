@@ -254,7 +254,7 @@ func TestBuildReturningClauseSkipsMissingRuntimeFieldColumns(t *testing.T) {
 	}
 }
 
-func TestAttachCurrentLookupOptionsSkipsCatalogModalRemoteHydration(t *testing.T) {
+func TestAttachCurrentLookupOptionsHydratesCatalogModalCurrentLabel(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	addRuntimeRootField(repo, map[string]any{
 		"fieldId":       "catalog_pick",
@@ -277,7 +277,16 @@ func TestAttachCurrentLookupOptionsSkipsCatalogModalRemoteHydration(t *testing.T
 		t.Fatalf("buildRuntimeRootScopePlan returned error: %v", err)
 	}
 
-	lookupOptions := &recordingLookupOptionsProvider{err: dictionary.ErrInvalidDictionary}
+	lookupOptions := &recordingLookupOptionsProvider{
+		items: []dictionary.Option{{
+			Fields: map[string]string{
+				"catalog": "TEST",
+				"hazard":  "Catalog Label",
+			},
+			Label: "Catalog Label",
+			Value: "lookup-guid",
+		}},
+	}
 	svc := NewService(repo, lookupOptions)
 	tenant, _ := requestctx.Tenant(testRuntimeContext())
 	if err := svc.attachCurrentLookupOptions(testRuntimeContext(), tenant, scope, dataSchema, map[string]any{
@@ -286,8 +295,8 @@ func TestAttachCurrentLookupOptionsSkipsCatalogModalRemoteHydration(t *testing.T
 		t.Fatalf("attachCurrentLookupOptions returned error: %v", err)
 	}
 
-	if lookupOptions.calls != 0 {
-		t.Fatalf("lookup provider calls = %d, want 0 for catalog_modal fallback", lookupOptions.calls)
+	if lookupOptions.calls != 1 {
+		t.Fatalf("lookup provider calls = %d, want 1", lookupOptions.calls)
 	}
 	field := findDataSchemaField(dataSchema, "catalog_pick")
 	options := asSlice(field["options"])
@@ -295,8 +304,12 @@ func TestAttachCurrentLookupOptionsSkipsCatalogModalRemoteHydration(t *testing.T
 		t.Fatalf("catalog_pick options = %d, want 1 fallback option", len(options))
 	}
 	option := asMap(options[0])
-	if option["value"] != "lookup-guid" || option["label"] != "lookup-guid" {
-		t.Fatalf("catalog_pick fallback option = %#v, want raw lookup-guid", option)
+	if option["value"] != "lookup-guid" || option["label"] != "Catalog Label" {
+		t.Fatalf("catalog_pick hydrated option = %#v, want Catalog Label", option)
+	}
+	fields := asMap(option["fields"])
+	if fields["catalog"] != "TEST" || fields["hazard"] != "Catalog Label" {
+		t.Fatalf("catalog_pick fields = %#v, want dictionary fields", fields)
 	}
 }
 
@@ -849,6 +862,7 @@ type recordingUniqueCheck struct {
 type recordingLookupOptionsProvider struct {
 	calls int
 	err   error
+	items []dictionary.Option
 }
 
 func (p *recordingLookupOptionsProvider) ListOptions(_ context.Context, _ dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
@@ -856,7 +870,7 @@ func (p *recordingLookupOptionsProvider) ListOptions(_ context.Context, _ dictio
 	if p.err != nil {
 		return nil, p.err
 	}
-	return &dictionary.OptionsResponse{}, nil
+	return &dictionary.OptionsResponse{Items: p.items}, nil
 }
 
 func newRecordingRuntimeRepo() *recordingRuntimeRepo {

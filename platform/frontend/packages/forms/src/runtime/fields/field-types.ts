@@ -14,5 +14,6 @@ export type RuntimeFieldControlProps = {
   labels: RuntimeFormResolvedLabels;
   loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  required: boolean;
   value: RuntimeFormValue | undefined;
 };

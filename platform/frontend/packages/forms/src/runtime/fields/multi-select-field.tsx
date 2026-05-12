@@ -27,6 +27,7 @@ export function MultiSelectField({
   labels,
   loadLookupOptions,
   onFieldChange,
+  required,
   value,
 }: RuntimeFieldControlProps) {
   const selectedValues = getArrayValue(value);
@@ -43,6 +44,7 @@ export function MultiSelectField({
         labels={labels}
         loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
+        required={required}
         value={value}
       />
     );

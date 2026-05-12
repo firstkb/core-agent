@@ -601,6 +601,7 @@ export function FormsRuntimeFormPage({
       hasMore: response.hasMore,
       options: response.items.map((item) => ({
         description: item.description,
+        fields: item.fields,
         label: item.label,
         value: request.lookup.valueMode === "text" ? item.label : item.value,
       })),

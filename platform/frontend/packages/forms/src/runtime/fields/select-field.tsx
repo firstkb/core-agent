@@ -28,6 +28,7 @@ export function SelectField({
   labels,
   loadLookupOptions,
   onFieldChange,
+  required,
   value,
 }: RuntimeFieldControlProps) {
   const stringValue = getStringValue(value);
@@ -44,6 +45,7 @@ export function SelectField({
       labels={labels}
       loadLookupOptions={loadLookupOptions}
       onFieldChange={onFieldChange}
+      required={required}
       value={value}
     />;
   }

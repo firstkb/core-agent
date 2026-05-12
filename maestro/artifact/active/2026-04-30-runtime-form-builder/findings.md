@@ -183,7 +183,7 @@ Statuses:
 - Status: partial.
 - Owner decision: Record as future Form Builder work; do not close the current Form Builder stabilization thread.
 - Resolution: First Form Builder authoring pass added preset display-template selects and explicit preset filters for `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects`. Preset filters now use shared tenant dictionary routes and UI Kit Combobox multiselects for `jobtypes`, `companies`, and `companyTypes` instead of raw ID text inputs. Named dictionaries use `GET /app/dictionaries/{dictionaryKey}/options` for unfiltered requests and `POST /app/dictionaries/options/query` when filters are present; generic ordinary lookup option sources also use `POST /app/dictionaries/options/query` with `sourceModel`, selected fields, filters, search, ids, and paging. Runtime form lookup requests now preserve `lookupConfig.filters[]` for named preset dictionaries, and backend dictionary sources enforce the supported filter columns for contacts, companies, and projects. Combobox filter pickers debounce remote search by 300 ms, load the first 10 options, and load additional pages on scroll. DB LOOKUP filter authoring and runtime static filter enforcement are complete for the current scope. Active-record filtering remains a runtime/default concern, not a preset Form Builder setting.
-- Fixed in: `c3bd9bf`, `8d68cb6`, and `a5fcf50`.
+- Fixed in: `c3bd9bf`, `8d68cb6`, and the current runtime lookup dictionary filter fix.
 - Verification: targeted backend dictionary/runtime tests, API client Vitest/typecheck, tenant-web typecheck, `git diff --check`, Browser Use runtime lookup smoke, and `scripts/preflight.sh` passed.
 
 ## FB-RT-012 - Subform View tab lost title editing

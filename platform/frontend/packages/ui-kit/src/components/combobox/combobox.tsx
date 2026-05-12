@@ -608,6 +608,7 @@ export function Combobox({
           <div className="ui-combobox__search">
             <Input
               autoFocus={open}
+              autoComplete="off"
               aria-controls={listId}
               aria-label={searchInputAriaLabel}
               className="ui-combobox__search-input"

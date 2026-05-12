@@ -18,6 +18,7 @@ import {
 
 import type {
   RuntimeFormActiveTabs,
+  RuntimeFormAccordionLayoutDefinition,
   RuntimeFormLayoutDefinition,
   RuntimeFormNodeDefinition,
   RuntimeFormTabsLayoutDefinition,
@@ -135,19 +136,12 @@ export function RuntimeLayoutNode({
 
   if (layout.layoutType === "accordion") {
     return (
-      <div className={cx("platform-runtime-form__accordion", layout.width === "full" && "platform-runtime-form__field--full")}>
-        <RuntimeLayoutHeader description={layout.description} title={layout.title} />
-        <Accordion defaultValue={layout.items[0]?.id} variant="muted">
-          {layout.items.map((item) => (
-            <AccordionItem key={item.id} value={item.id}>
-              <AccordionTrigger>{item.title}</AccordionTrigger>
-              <AccordionContent>
-                {renderNodes(item.nodes)}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+      <RuntimeAccordionLayout
+        layout={layout}
+        renderNodes={renderNodes}
+        revealFieldId={revealFieldId}
+        revealRequestKey={revealRequestKey}
+      />
     );
   }
 
@@ -155,6 +149,52 @@ export function RuntimeLayoutNode({
     <div className={cx("platform-runtime-form__group", layout.width === "full" && "platform-runtime-form__field--full")}>
       <RuntimeLayoutHeader description={layout.description} title={layout.title} />
       {renderNodes(layout.nodes)}
+    </div>
+  );
+}
+
+function RuntimeAccordionLayout({
+  layout,
+  renderNodes,
+  revealFieldId,
+  revealRequestKey,
+}: {
+  layout: RuntimeFormAccordionLayoutDefinition;
+  renderNodes: RenderNodes;
+  revealFieldId?: string;
+  revealRequestKey?: number;
+}) {
+  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveItemId((currentItemId) => layout.items.some((item) => item.id === currentItemId) ? currentItemId : null);
+  }, [layout.items]);
+
+  useEffect(() => {
+    const containingItem = layout.items.find((item) => runtimeNodesContainField(item.nodes, revealFieldId));
+
+    if (containingItem) {
+      setActiveItemId(containingItem.id);
+    }
+  }, [layout.items, revealFieldId, revealRequestKey]);
+
+  function handleItemChange(nextValue: string | string[] | null) {
+    setActiveItemId(typeof nextValue === "string" ? nextValue : null);
+  }
+
+  return (
+    <div className={cx("platform-runtime-form__accordion", layout.width === "full" && "platform-runtime-form__field--full")}>
+      <RuntimeLayoutHeader description={layout.description} title={layout.title} />
+      <Accordion onValueChange={handleItemChange} value={activeItemId} variant="outline">
+        {layout.items.map((item) => (
+          <AccordionItem key={item.id} value={item.id}>
+            <AccordionTrigger>{item.title}</AccordionTrigger>
+            <AccordionContent>
+              {activeItemId === item.id ? renderNodes(item.nodes) : null}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   );
 }

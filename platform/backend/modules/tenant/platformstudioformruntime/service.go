@@ -52,7 +52,7 @@ type lookupOptionsProvider interface {
 
 func NewService(repo Repository, lookupOptions ...lookupOptionsProvider) *Service {
 	service := &Service{
-		now: func() time.Time { return time.Now().UTC() },
+		now:  func() time.Time { return time.Now().UTC() },
 		repo: repo,
 	}
 	if len(lookupOptions) > 0 {

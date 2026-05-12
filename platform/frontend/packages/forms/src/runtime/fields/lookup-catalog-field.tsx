@@ -224,8 +224,11 @@ export function LookupCatalogField({
         if (cancelled || requestKeyRef.current !== requestKey) {
           return;
         }
+        const baseOptions = requestSearchValue.trim()
+          ? []
+          : fieldOptionLookupOptions(field.options);
         setOptions((currentOptions) => page === 1
-          ? mergeLookupOptions(fieldOptionLookupOptions(field.options), response.options)
+          ? mergeLookupOptions(baseOptions, response.options)
           : mergeLookupOptions(currentOptions, response.options));
         setHasMoreOptions(response.hasMore);
       })
@@ -248,7 +251,7 @@ export function LookupCatalogField({
   }, [field.id, field.options, loadLookupOptions, lookup, open, page, requestNonce, requestSearchValue]);
 
   useEffect(() => {
-    if (!open || !lookup || !loadLookupOptions || !selectedValue) {
+    if (!open || !lookup || !loadLookupOptions || !selectedValue || requestSearchValue.trim()) {
       return;
     }
 
@@ -280,7 +283,7 @@ export function LookupCatalogField({
     return () => {
       cancelled = true;
     };
-  }, [field.id, loadLookupOptions, lookup, open, options, selectedValue]);
+  }, [field.id, loadLookupOptions, lookup, open, options, requestSearchValue, selectedValue]);
 
   const selectedOption = selectedCatalogOption(selectedValue, options, field.options);
   const groupedCatalog = useMemo(
@@ -379,7 +382,6 @@ export function LookupCatalogField({
             <Input
               autoComplete="off"
               className="platform-runtime-form__lookup-catalog-search"
-              disabled={loading && page === 1}
               onChange={(event) => setSearchValue(event.currentTarget.value)}
               placeholder={labels.catalogSearchPlaceholder}
               value={searchValue}
@@ -423,6 +425,7 @@ export function LookupCatalogField({
                               lookup={lookup}
                               onSelect={handleSelect}
                               option={option}
+                              selectLabel={labels.catalogSelect}
                             />
                           ))}
                         </div>
@@ -441,6 +444,7 @@ export function LookupCatalogField({
                     lookup={lookup}
                     onSelect={handleSelect}
                     option={option}
+                    selectLabel={labels.catalogSelect}
                   />
                 ))}
               </div>
@@ -470,11 +474,13 @@ function CatalogOptionRow({
   lookup,
   onSelect,
   option,
+  selectLabel,
 }: {
   groupField?: string;
   lookup: RuntimeFormLookupDefinition;
   onSelect: (option: RuntimeFormLookupOption) => void;
   option: RuntimeFormLookupOption;
+  selectLabel: RuntimeFormResolvedLabels["catalogSelect"];
 }) {
   const view = catalogOptionView(option, lookup, groupField);
 
@@ -487,7 +493,7 @@ function CatalogOptionRow({
         type="button"
         variant="success"
       >
-        Select
+        {selectLabel}
       </Button>
       <div className="platform-runtime-form__lookup-catalog-option-text">
         <span className="platform-runtime-form__lookup-catalog-option-title">{view.title}</span>

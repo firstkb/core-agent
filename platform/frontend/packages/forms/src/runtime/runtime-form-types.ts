@@ -361,6 +361,7 @@ export type RuntimeFormResolvedLabels = {
   catalogOpen: string;
   catalogRetry: ReactNode;
   catalogSearchPlaceholder: string;
+  catalogSelect: ReactNode;
   createModeInfo: ReactNode;
   createTitle: ReactNode;
   editModeInfo: ReactNode;

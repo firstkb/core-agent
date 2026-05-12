@@ -578,7 +578,14 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
   - `git diff --check`;
   - `scripts/preflight.sh` passed in lite mode.
+- Runtime catalog-modal search refinement completed:
+  - catalog search input no longer disables during debounced remote loading, so focus remains in the search field while the user pauses typing;
+  - active search result lists no longer merge in current selected/hydrated options, so searches with no backend matches show the empty state instead of the selected value;
+  - catalog row `Select` action is now part of runtime labels and is translated by tenant-web.
+- Runtime catalog-modal search checks passed:
+  - Browser Use smoke on the Spanish UI confirmed search `Test` returns catalog rows with translated `Seleccionar` buttons and keeps input focus;
+  - Browser Use smoke confirmed search `3333` shows `No se encontraron opciones del catalogo.`, renders no select rows, and keeps input focus.
 
 ## Next Action
 
-Next allowed action is owner retest of runtime form language switching on the `lookup` form. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of runtime catalog modal search and runtime form language switching on the `lookup` form. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

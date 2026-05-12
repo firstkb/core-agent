@@ -564,6 +564,7 @@ export function FormsRuntimeFormPage({
     catalogOpen: t("tenant.runtime.forms.form.catalog.open"),
     catalogRetry: t("tenant.runtime.forms.form.catalog.retry"),
     catalogSearchPlaceholder: t("tenant.runtime.forms.form.catalog.searchPlaceholder"),
+    catalogSelect: t("tenant.runtime.forms.form.catalog.select"),
     createModeInfo: t("tenant.runtime.forms.form.createModeInfo"),
     createTitle: t("tenant.runtime.forms.form.createTitle"),
     editModeInfo: t("tenant.runtime.forms.form.editModeInfo"),

@@ -171,6 +171,7 @@ export const tenantEnglishMessages = {
             open: "Open catalog",
             retry: "Retry",
             searchPlaceholder: "Search catalog",
+            select: "Select",
           },
           createModeInfo: "Complete the required fields to create this record. Changes will save automatically after it is created.",
           createTitle: "Start new record",

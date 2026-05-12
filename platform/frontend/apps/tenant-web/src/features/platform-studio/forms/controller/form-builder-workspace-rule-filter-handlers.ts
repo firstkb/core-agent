@@ -1,4 +1,7 @@
 import {
+  sanitizeLookupFilterCondition,
+} from "../components/lookup-filter-editor-helpers";
+import {
   type FormBuilderDocument,
   type FormBuilderFilterCondition,
   type FormBuilderNode,
@@ -87,6 +90,12 @@ export function createFormBuilderRuleFilterHandlers({
     updateDocument((currentDocument) => applySelectedNodeRulesUpdate(currentDocument, selectedNode.id, updater));
   }
 
+  function sanitizeFilterCondition(condition: FormBuilderFilterCondition): FormBuilderFilterCondition {
+    return "editorType" in condition && condition.editorType === "lookup"
+      ? sanitizeLookupFilterCondition(condition)
+      : condition;
+  }
+
   function updateVisibilityRules(
     updater: (
       rules: NonNullable<FormBuilderNode["rules"]>["visibilityRules"],
@@ -171,7 +180,7 @@ export function createFormBuilderRuleFilterHandlers({
     }
 
     updateDefaultFilters((conditions) =>
-      upsertDefaultFilterCondition(conditions, defaultFilterEditor.index, defaultFilterEditor.draft)
+      upsertDefaultFilterCondition(conditions, defaultFilterEditor.index, sanitizeFilterCondition(defaultFilterEditor.draft))
     );
     closeDefaultFilterEditor();
   }
@@ -182,7 +191,10 @@ export function createFormBuilderRuleFilterHandlers({
     }
 
     updateQuickFilters((quickFilters) =>
-      upsertQuickFilter(quickFilters, quickFilterEditor.index, quickFilterEditor.draft)
+      upsertQuickFilter(quickFilters, quickFilterEditor.index, {
+        ...quickFilterEditor.draft,
+        conditions: quickFilterEditor.draft.conditions.map(sanitizeFilterCondition),
+      })
     );
     closeQuickFilterEditor();
   }

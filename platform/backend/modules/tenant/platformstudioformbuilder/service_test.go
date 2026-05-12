@@ -26,6 +26,8 @@ type memoryRepository struct {
 	runtimeFavorites                   map[string]RuntimeFavoriteRecord
 	runtimeSavedFilters                map[string][]collectiontable.SavedFilterSet
 	lastRuntimePlan                    *runtimeApplyPlan
+	runtimeActorCompanyID              int64
+	runtimeActorUserID                 int64
 	lastExportRelationName             string
 	lastExportColumnNames              []string
 	lastExportOrderByColumn            string
@@ -179,6 +181,17 @@ func (r *memoryRepository) QueryRuntimeRows(
 		})
 	}
 	return items, totalItems, nil
+}
+
+func (r *memoryRepository) ResolveRuntimeViewListActorContext(
+	_ context.Context,
+	_ requestctx.TenantInfo,
+	_ string,
+) (runtimeViewListActorContext, error) {
+	return runtimeViewListActorContext{
+		CompanyID: r.runtimeActorCompanyID,
+		UserID:    r.runtimeActorUserID,
+	}, nil
 }
 
 func (r *memoryRepository) ResolveRuntimeSourceGUIDColumn(

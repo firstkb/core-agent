@@ -2,6 +2,7 @@ import {
   type FormBuilderFilterScalar,
   type FormBuilderLookupDynamicToken,
   type FormBuilderLookupFilterClause,
+  type FormBuilderLookupFilterCondition,
   type FormBuilderLookupPreset,
 } from "../forms-builder-state";
 import { type FormsPlaceholderField } from "../forms-placeholder-data";
@@ -26,13 +27,6 @@ export type LookupClauseDefinition = {
   tokenOptions?: ReadonlyArray<FormBuilderLookupDynamicToken>;
   valueMode: FormBuilderLookupFilterClause["valueMode"];
 };
-
-const mockContactJobTypeOptions = [
-  { label: "Inspector", value: "inspector" },
-  { label: "Supervisor", value: "supervisor" },
-  { label: "Foreman", value: "foreman" },
-  { label: "Manager", value: "manager" },
-] as const;
 
 const mockBusinessUnitTypeOptions = [
   { label: "Business Unit", value: "business_unit" },
@@ -70,16 +64,14 @@ const lookupClauseDefinitionsByPreset: Record<
     },
   ],
   contact_lookup: [
-    { clauseKey: "contact_job_title", literalOptions: mockContactJobTypeOptions, valueMode: "literal" },
     {
       clauseKey: "active_account",
-      defaultDynamicToken: "current_user_id",
-      tokenOptions: ["current_user_id"],
-      valueMode: "dynamic_token",
+      defaultValue: false,
+      valueMode: "boolean_flag",
     },
     {
       clauseKey: "by_user_company",
-      defaultValue: true,
+      defaultValue: false,
       valueMode: "boolean_flag",
     },
   ],
@@ -149,6 +141,47 @@ export function createDefaultLookupClause(definition: LookupClauseDefinition): F
   };
 }
 
+function normalizeLookupClauseForDefinition(
+  clause: FormBuilderLookupFilterClause,
+  definition: LookupClauseDefinition,
+): FormBuilderLookupFilterClause {
+  if (definition.valueMode === "boolean_flag") {
+    return {
+      clauseKey: definition.clauseKey,
+      id: clause.id,
+      value: typeof clause.value === "boolean"
+        ? clause.value
+        : typeof definition.defaultValue === "boolean"
+          ? definition.defaultValue
+          : true,
+      valueMode: "boolean_flag",
+    };
+  }
+
+  if (definition.valueMode === "dynamic_token") {
+    const tokenOptions = definition.tokenOptions ?? lookupDynamicTokenOptions;
+    const dynamicToken = clause.dynamicToken && tokenOptions.includes(clause.dynamicToken)
+      ? clause.dynamicToken
+      : definition.defaultDynamicToken ?? tokenOptions[0] ?? lookupDynamicTokenOptions[0];
+
+    return {
+      clauseKey: definition.clauseKey,
+      dynamicToken,
+      id: clause.id,
+      valueMode: "dynamic_token",
+    };
+  }
+
+  return {
+    clauseKey: definition.clauseKey,
+    id: clause.id,
+    value: typeof clause.value === "string" || typeof clause.value === "number" || typeof clause.value === "boolean"
+      ? clause.value
+      : definition.defaultValue ?? "",
+    valueMode: "literal",
+  };
+}
+
 export function getLookupClauseDefinitions(
   lookupPreset: FormBuilderLookupPreset,
 ) {
@@ -157,4 +190,30 @@ export function getLookupClauseDefinitions(
   }
 
   return lookupClauseDefinitionsByPreset[lookupPreset];
+}
+
+export function sanitizeLookupFilterCondition(
+  condition: FormBuilderLookupFilterCondition,
+): FormBuilderLookupFilterCondition {
+  const definitions = getLookupClauseDefinitions(condition.lookupPreset);
+  if (definitions.length === 0) {
+    return {
+      ...condition,
+      clauses: [],
+    };
+  }
+
+  const clauses = definitions
+    .flatMap((definition) => {
+      const existingClause = condition.clauses.find((entry) => entry.clauseKey === definition.clauseKey);
+      return existingClause
+        ? [normalizeLookupClauseForDefinition(existingClause, definition)]
+        : [];
+    })
+    .filter((clause) => clause.valueMode !== "boolean_flag" || Boolean(clause.value));
+
+  return {
+    ...condition,
+    clauses,
+  };
 }

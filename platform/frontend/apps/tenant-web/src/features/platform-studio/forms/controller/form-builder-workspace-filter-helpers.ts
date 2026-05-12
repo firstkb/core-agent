@@ -9,6 +9,7 @@ import {
   getLookupClauseKey,
   getLookupDynamicTokenKey,
   lookupDynamicTokenOptions,
+  sanitizeLookupFilterCondition,
 } from "../components/lookup-filter-editor-helpers";
 import {
   type FormBuilderFilterCondition,
@@ -121,7 +122,8 @@ export function getFilterConditionSummary(
   }
 
   if ("editorType" in condition && condition.editorType === "lookup") {
-    const activeClauses = condition.clauses.filter((clause) => {
+    const lookupCondition = sanitizeLookupFilterCondition(condition);
+    const activeClauses = lookupCondition.clauses.filter((clause) => {
       if (clause.valueMode === "boolean_flag") {
         return Boolean(clause.value);
       }

@@ -18,6 +18,13 @@ type runtimeViewListWhereBuilder struct {
 	clauses []string
 }
 
+type runtimeViewListFilterContext struct {
+	CurrentUserCompanyID int64
+	CurrentUserID        int64
+	DataViewName         string
+	RootActor            bool
+}
+
 func (b *runtimeViewListWhereBuilder) nextArgIndex() int {
 	return len(b.args) + 1
 }
@@ -43,10 +50,11 @@ func buildRuntimeViewListWhereClause(
 	defaultFilters map[string]any,
 	fields []collectiontable.FieldDefinition,
 	fieldMeta []runtimeViewListFieldMeta,
+	filterContext runtimeViewListFilterContext,
 ) (string, []any, error) {
 	var builder runtimeViewListWhereBuilder
 
-	defaultClause, defaultArgs, err := buildRuntimeViewListDefaultFiltersClause(defaultFilters, fieldMeta, builder.nextArgIndex())
+	defaultClause, defaultArgs, err := buildRuntimeViewListDefaultFiltersClause(defaultFilters, fieldMeta, builder.nextArgIndex(), filterContext)
 	if err != nil {
 		return "", nil, err
 	}
@@ -66,6 +74,7 @@ func buildRuntimeViewListDefaultFiltersClause(
 	defaultFilters map[string]any,
 	fields []runtimeViewListFieldMeta,
 	baseArgIndex int,
+	filterContext runtimeViewListFilterContext,
 ) (string, []any, error) {
 	if len(defaultFilters) == 0 {
 		return "", nil, nil
@@ -96,10 +105,51 @@ func buildRuntimeViewListDefaultFiltersClause(
 
 	clauses := make([]string, 0, len(conditions))
 	args := make([]any, 0)
+	lookupGroups := make(map[string][]runtimeViewListFieldMeta)
+	lookupGroupOrder := make([]string, 0)
+	lookupGroupFieldSeen := make(map[string]struct{})
 	for _, rawCondition := range conditions {
+		condition := asMap(rawCondition)
+		if normalizeString(condition["editorType"]) == "lookup" {
+			groups, err := collectRuntimeViewListLookupFilterGroups(condition, fieldsByID, filterContext)
+			if err != nil {
+				return "", nil, err
+			}
+			for _, groupKey := range runtimeViewListLookupGroupKeys(groups) {
+				groupFields := groups[groupKey]
+				if _, ok := lookupGroups[groupKey]; !ok {
+					lookupGroupOrder = append(lookupGroupOrder, groupKey)
+				}
+				for _, groupField := range groupFields {
+					fieldKey := groupKey + "\x00" + chooseString(groupField.AuthoringFieldID, groupField.FieldID)
+					if _, ok := lookupGroupFieldSeen[fieldKey]; ok {
+						continue
+					}
+					lookupGroupFieldSeen[fieldKey] = struct{}{}
+					lookupGroups[groupKey] = append(lookupGroups[groupKey], groupField)
+				}
+			}
+			continue
+		}
 		clause, clauseArgs, err := buildRuntimeViewListDefaultFilterConditionClause(
-			asMap(rawCondition),
+			condition,
 			fieldsByID,
+			baseArgIndex+len(args),
+		)
+		if err != nil {
+			return "", nil, err
+		}
+		if strings.TrimSpace(clause) == "" {
+			continue
+		}
+		clauses = append(clauses, clause)
+		args = append(args, clauseArgs...)
+	}
+	for _, groupKey := range lookupGroupOrder {
+		clause, clauseArgs, err := buildRuntimeViewListLookupSemanticGroupClause(
+			groupKey,
+			lookupGroups[groupKey],
+			filterContext,
 			baseArgIndex+len(args),
 		)
 		if err != nil {
@@ -192,6 +242,168 @@ func buildRuntimeViewListDefaultFilterConditionClause(
 	default:
 		return "", nil, collectiontable.ErrInvalidQuery
 	}
+}
+
+func runtimeViewListDefaultFiltersRequireActorContext(defaultFilters map[string]any) bool {
+	for _, rawCondition := range asSlice(defaultFilters["conditions"]) {
+		condition := asMap(rawCondition)
+		if normalizeString(condition["editorType"]) != "lookup" {
+			continue
+		}
+		for _, rawClause := range asSlice(condition["clauses"]) {
+			clause := asMap(rawClause)
+			if !runtimeViewListLookupClauseEnabled(clause) {
+				continue
+			}
+			switch normalizeString(clause["clauseKey"]) {
+			case "active_account", "by_user_company":
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func collectRuntimeViewListLookupFilterGroups(
+	condition map[string]any,
+	fieldsByID map[string]runtimeViewListFieldMeta,
+	filterContext runtimeViewListFilterContext,
+) (map[string][]runtimeViewListFieldMeta, error) {
+	if len(condition) == 0 {
+		return nil, collectiontable.ErrInvalidQuery
+	}
+
+	fieldID := normalizeString(condition["fieldId"])
+	if fieldID == "" {
+		return nil, collectiontable.ErrInvalidQuery
+	}
+
+	field, ok := fieldsByID[fieldID]
+	if !ok {
+		if normalizeString(condition["lookupPreset"]) == "contact_lookup" {
+			return nil, nil
+		}
+		return nil, collectiontable.ErrInvalidQuery
+	}
+
+	lookupPreset := chooseString(normalizeString(condition["lookupPreset"]), field.Preset)
+	if lookupPreset != "contact_lookup" {
+		return nil, collectiontable.ErrInvalidQuery
+	}
+	if filterContext.RootActor {
+		return nil, nil
+	}
+	if field.Kind != "db_lookup" || field.Preset != "contact_lookup" || field.SelectionMode == "multiple" {
+		return nil, nil
+	}
+
+	out := make(map[string][]runtimeViewListFieldMeta)
+	for _, rawClause := range asSlice(condition["clauses"]) {
+		clause := asMap(rawClause)
+		if !runtimeViewListLookupClauseEnabled(clause) {
+			continue
+		}
+		switch clauseKey := normalizeString(clause["clauseKey"]); clauseKey {
+		case "active_account", "by_user_company":
+			out[clauseKey] = append(out[clauseKey], field)
+		default:
+			return nil, collectiontable.ErrInvalidQuery
+		}
+	}
+	return out, nil
+}
+
+func runtimeViewListLookupGroupKeys(groups map[string][]runtimeViewListFieldMeta) []string {
+	if len(groups) == 0 {
+		return nil
+	}
+	ordered := make([]string, 0, len(groups))
+	for _, groupKey := range []string{"active_account", "by_user_company"} {
+		if _, ok := groups[groupKey]; ok {
+			ordered = append(ordered, groupKey)
+		}
+	}
+	for groupKey := range groups {
+		if groupKey == "active_account" || groupKey == "by_user_company" {
+			continue
+		}
+		ordered = append(ordered, groupKey)
+	}
+	return ordered
+}
+
+func buildRuntimeViewListLookupSemanticGroupClause(
+	groupKey string,
+	fields []runtimeViewListFieldMeta,
+	filterContext runtimeViewListFilterContext,
+	argIndex int,
+) (string, []any, error) {
+	if len(fields) == 0 || filterContext.RootActor {
+		return "", nil, nil
+	}
+	if strings.TrimSpace(filterContext.DataViewName) == "" {
+		return "", nil, collectiontable.ErrInvalidQuery
+	}
+
+	value := int64(0)
+	predicates := make([]string, 0, len(fields))
+	switch strings.TrimSpace(groupKey) {
+	case "active_account":
+		value = filterContext.CurrentUserID
+		if value == 0 {
+			return "FALSE", nil, nil
+		}
+		for _, field := range fields {
+			columnName := strings.TrimSpace(field.DataColumnName)
+			if columnName == "" {
+				return "", nil, collectiontable.ErrInvalidQuery
+			}
+			predicates = append(predicates, fmt.Sprintf(`dv.%s = $%d::bigint`, quoteIdentifier(columnName), argIndex))
+		}
+	case "by_user_company":
+		value = filterContext.CurrentUserCompanyID
+		if value == 0 {
+			return "FALSE", nil, nil
+		}
+		for _, field := range fields {
+			columnName := strings.TrimSpace(field.LookupOutputs["company_id"])
+			if columnName == "" {
+				return "", nil, collectiontable.ErrInvalidQuery
+			}
+			predicates = append(predicates, fmt.Sprintf(`dv.%s = $%d::bigint`, quoteIdentifier(columnName), argIndex))
+		}
+	default:
+		return "", nil, collectiontable.ErrInvalidQuery
+	}
+	if len(predicates) == 0 {
+		return "", nil, nil
+	}
+
+	groupClause := predicates[0]
+	if len(predicates) > 1 {
+		groupClause = "(" + strings.Join(predicates, " OR ") + ")"
+	}
+	return buildRuntimeViewListDataViewExistsClause(filterContext.DataViewName, groupClause), []any{value}, nil
+}
+
+func buildRuntimeViewListDataViewExistsClause(dataViewName string, predicate string) string {
+	return fmt.Sprintf(
+		`EXISTS (SELECT 1 FROM %s dv WHERE dv.%s = t.%s AND dv.%s IS NOT DISTINCT FROM t.%s AND %s)`,
+		qualifiedIdentifier(strings.TrimSpace(dataViewName)),
+		quoteIdentifier("_id"),
+		quoteIdentifier("_id"),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier("tenant_id"),
+		predicate,
+	)
+}
+
+func runtimeViewListLookupClauseEnabled(clause map[string]any) bool {
+	if normalizeString(clause["valueMode"]) != "boolean_flag" {
+		return false
+	}
+	value, ok := clause["value"].(bool)
+	return ok && value
 }
 
 func normalizeRuntimeViewListAuthoringOperator(operator string) string {

@@ -1,7 +1,7 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-10
+Last verified: 2026-05-12
 Verification mode: implementation update plus tracked docs and targeted FE checks
 
 This file preserves Form Builder planned work without turning it into active
@@ -41,6 +41,8 @@ instead of them.
 - Form Builder palette grouping treats each library field definition's explicit `section` as the source of truth; `Long text historical` belongs under `Ready-made fields`, not `Basic fields`.
 - Generic `DB lookup`, `DB lookup value`, and `DB lookup multi` source picker authoring supports `lookupConfig.filters[]`; the current UI exposes only `Only active records`, saved as `{ field: "active", operator: "eq", value: true }` when the selected source has a boolean `active` field. Form Builder authoring work for DB LOOKUP filters is complete for the current scope; Form render/runtime application remains a separate implementation stream.
 - Preset DB lookup shortcuts `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects` author display templates and explicit preset filters in Form Builder. Preset filters save to `lookupConfig.filters[]` with `operator: "in"`; active-record filtering is not exposed as a preset Form Builder setting. Preset filter values are selected through the shared tenant dictionary routes using two-line Combobox options rather than raw id text inputs, with 300 ms remote-search debounce, first-page loading, and additional pages loaded on scroll.
+- View Filter authoring excludes multiple-value lookup fields from selectable filter targets. `contact_lookup` View Filters expose only `User Active Account` and `By User's Company` as switches, both off by default; `Contact Job Type` is not a View Filter clause.
+- Runtime list View Filter compilation applies single-value `contact_lookup` semantic filters for non-root users and ignores those contact filters for root users. Matching semantic clauses across multiple contact fields are grouped with OR, while different semantic groups are combined with AND. `User Active Account` compares the lookup storage id to the current user business id; `By User's Company` compares the lookup-derived company id to the current user's company id.
 - The shared tenant dictionary module supports named dictionaries `companies`, `companyTypes`, `contacts`, `jobtypes`, and `projects` through `GET /app/dictionaries/{dictionaryKey}/options`, plus generic ordinary lookup sources through `POST /app/dictionaries/options/query` using `sourceModel`, selected display/search/sort/stored-value fields, `filters[]`, search, ids, and paging. It is route-level tenant-secure only for now; dictionary-specific access rules are still future scope.
 - Static/external model work includes code-backed seed migrations for `state`, `timezone`, `companytype`, `jobtype`, `events`, `mails`, `users`, `company`, `projects`, `industry_size`, and `industry_type`; exact table-by-table/static lookup details beyond these seeds still require retained exact-detail docs.
 - `Projects` is available as a locked external Form Builder model/view with `Project #` default sorting, Main/Details tabs, Company/Contact/State/Industry lookups, suggest-text project metadata fields, status options, and canonical `industry_size_id` / `industry_type_id` lookup columns replacing old `projects.size` / `projects.type`.
@@ -65,8 +67,8 @@ instead of them.
 - Final `Export data` product semantics remain open: raw table, authored/runtime view, or both.
 - Static/external multivalue storage remains deferred to a future explicit slice.
 - Destructive/data-preserving runtime migration mode is future scope; ordinary runtime apply remains additive-only.
-- Lookup field runtime/query handling still needs implementation for authored preset filters and display template output for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup-heavy presets, plus expansion of generic `db_lookup` filters beyond the current active-record shortcut, including lookup-aware operators, display outputs, stored values, and derived values.
-- Lookup-heavy filter compiler improvements remain follow-up for `Contact`, `Project`, `Company`, `Reported By`, and similar lookup presets.
+- Lookup field runtime/query handling still needs implementation for remaining authored preset filters and display template output for `Project`, `Company`, and similar lookup-heavy presets, plus expansion of generic `db_lookup` filters beyond the current active-record shortcut, including lookup-aware operators, display outputs, stored values, and derived values.
+- Lookup-heavy filter compiler follow-up remains for non-contact lookup presets and future multivalue lookup filters. The single-value `contact_lookup` compiler rule is code-backed; do not add an FE-only hidden flag for the completed `User Active Account` / `By User's Company` grouping behavior unless the filter schema is explicitly expanded.
 - The 14 retained exact-detail docs remain until typed schemas, tests, generated registries, or code-backed docs replace their payload detail.
 
 ## Do Not Misread

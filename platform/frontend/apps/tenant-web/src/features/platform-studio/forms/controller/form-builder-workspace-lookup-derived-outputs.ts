@@ -175,6 +175,10 @@ export function createLookupDerivedOutputPseudoFields({
   );
 }
 
+export function getViewFilterBaseFields(fields: ReadonlyArray<FormsPlaceholderField>) {
+  return fields.filter((field) => !(field.kind === "db_lookup" && (field.selectionMode ?? "single") === "multiple"));
+}
+
 export function getFieldsWithLookupDerivedOutputs({
   document,
   fields,

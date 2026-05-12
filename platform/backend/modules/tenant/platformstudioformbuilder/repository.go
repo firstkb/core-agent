@@ -51,6 +51,11 @@ type Repository interface {
 		whereArgs []any,
 		limit int,
 	) ([]runtimeRelationSuggestion, error)
+	ResolveRuntimeViewListActorContext(
+		ctx context.Context,
+		tenant requestctx.TenantInfo,
+		userGUID string,
+	) (runtimeViewListActorContext, error)
 	GetRuntimeFavoriteState(
 		ctx context.Context,
 		tenant requestctx.TenantInfo,
@@ -110,4 +115,9 @@ type runtimeRelationQueryRow struct {
 type runtimeRelationSuggestion struct {
 	Count int
 	Value string
+}
+
+type runtimeViewListActorContext struct {
+	CompanyID int64
+	UserID    int64
 }

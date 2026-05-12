@@ -1,7 +1,7 @@
 # Work
 
 - Work ID: `2026-04-30-runtime-form-builder`
-- Status: `lookup_runtime_regression_fix_ready_for_owner_smoke`
+- Status: `lookup_view_filter_runtime_contact_compiler_done`
 - Owner goal: Prepare the implementation path for reusable runtime add/edit forms opened from `CollectionTable` row `edit` and toolbar `Start New` actions, first for `tenant-web` and later for `platform-admin-web`.
 
 ## Understanding
@@ -524,7 +524,19 @@ View/read remains the existing `CollectionTable` modal path for now.
   - Browser Use smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/new` confirmed the runtime form opens, the `Contact` combobox loads dictionary options, and the browser console has no errors;
   - `git diff --check` passed;
   - `scripts/preflight.sh` passed in lite mode.
+- Form Builder contact lookup View Filter authoring refinement completed:
+  - multiple lookup fields are excluded from View Filter target choices because runtime/list filtering over multivalue bridge storage needs a separate compiler contract;
+  - `Contact Job Type` was removed from the `contact_lookup` View Filter modal;
+  - `User Active Account` and `By User's Company` are switches and default to off when a new View Filter is created;
+  - stale/legacy contact lookup clauses are sanitized when editing/saving so hidden clauses are not preserved accidentally;
+  - backend follow-up decision: when two or more single-value `contact_lookup` fields in the same view use the same semantic clause, such as `User Active Account`, runtime/list filter compilation should OR those field predicates together and AND different semantic groups. This should be a backend compiler rule derived from existing `filterDefinitions`, not an FE-only marker.
+- Runtime list contact lookup View Filter compiler completed:
+  - `platformstudioformbuilder` now builds a runtime filter context from the authenticated actor only when active single-value `contact_lookup` View Filter clauses require it;
+  - root users ignore `Reported By` / `Contact` user-scoped lookup View Filters for runtime table output;
+  - non-root users apply `User Active Account` against the lookup storage id and `By User's Company` against the lookup-derived company id;
+  - repeated semantic clauses across multiple single-value contact fields are OR-grouped, while different semantic groups remain AND-grouped;
+  - lookup filter predicates use the root data view through `EXISTS`, so the filter works even when the contact field is not visible as a grid column.
 
 ## Next Action
 
-Next allowed action is owner smoke of runtime preset lookup filters in a user form, especially Contact filtered by Job Type. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of runtime list output for root and non-root users with `Reported By` / `Contact` View Filters. Separate `catalog_modal`, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

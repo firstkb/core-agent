@@ -3,7 +3,9 @@ package platformstudioformbuilder
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
@@ -258,6 +260,55 @@ func (r *repository) QueryRuntimeRows(
 	}
 
 	return records, totalItems, nil
+}
+
+func (r *repository) ResolveRuntimeViewListActorContext(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	userGUID string,
+) (runtimeViewListActorContext, error) {
+	userGUID = strings.TrimSpace(userGUID)
+	if userGUID == "" {
+		return runtimeViewListActorContext{}, nil
+	}
+	tenantID, err := strconv.ParseInt(strings.TrimSpace(tenant.ID), 10, 64)
+	if err != nil || tenantID == 0 {
+		return runtimeViewListActorContext{}, ErrTenantMissing
+	}
+
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return runtimeViewListActorContext{}, fmt.Errorf("form builder: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return runtimeViewListActorContext{}, fmt.Errorf("form builder: begin runtime actor context tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	const query = `
+SELECT id,
+       company_id
+  FROM users
+ WHERE tenant_id = $1
+   AND guid = $2
+ LIMIT 1`
+	var out runtimeViewListActorContext
+	var companyID sql.NullInt64
+	if err := tx.QueryRowContext(ctx, query, tenantID, userGUID).Scan(&out.UserID, &companyID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return runtimeViewListActorContext{}, nil
+		}
+		return runtimeViewListActorContext{}, fmt.Errorf("form builder: resolve runtime actor context: %w", err)
+	}
+	if companyID.Valid {
+		out.CompanyID = companyID.Int64
+	}
+	if err := tx.Commit(); err != nil {
+		return runtimeViewListActorContext{}, fmt.Errorf("form builder: commit runtime actor context tx: %w", err)
+	}
+	return out, nil
 }
 
 func filterExistingRuntimeColumns(columnNames []string, columnSet map[string]struct{}) []string {

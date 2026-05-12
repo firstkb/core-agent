@@ -22,8 +22,10 @@ type runtimeViewListContext struct {
 	CanDelete         bool
 	CanEdit           bool
 	CanView           bool
+	DataViewName      string
 	DefaultFilters    map[string]any
 	FieldDefinitions  []collectiontable.FieldDefinition
+	FilterFields      []runtimeViewListFieldMeta
 	Fields            []runtimeViewListFieldMeta
 	GridViewName      string
 	HasRecordGUID     bool
@@ -38,9 +40,14 @@ type runtimeViewListContext struct {
 type runtimeViewListFieldMeta struct {
 	AuthoringFieldID string
 	ColumnName       string
+	DataColumnName   string
 	FieldID          string
+	Kind             string
 	Label            string
+	LookupOutputs    map[string]string
+	Preset           string
 	QueryKind        string
+	SelectionMode    string
 	Type             string
 }
 
@@ -171,7 +178,7 @@ func (s *Service) QueryRuntimeViewList(
 	viewID string,
 	req RuntimeViewListQueryRequest,
 ) (*RuntimeViewListQueryResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -189,11 +196,16 @@ func (s *Service) QueryRuntimeViewList(
 		page = 1
 	}
 	pageSize := collectiontable.NormalizePageSize(req.PageSize, runtimeViewListPageSizeOptions, runtimeViewListDefaultPageSize)
+	filterContext, err := s.buildRuntimeViewListFilterContext(ctx, tenant, claims, runtimeContext)
+	if err != nil {
+		return nil, err
+	}
 	whereClause, whereArgs, err := buildRuntimeViewListWhereClause(
 		req.QuickFilters,
 		runtimeContext.DefaultFilters,
 		runtimeContext.FieldDefinitions,
-		runtimeContext.Fields,
+		runtimeContext.FilterFields,
+		filterContext,
 	)
 	if err != nil {
 		return nil, err
@@ -263,7 +275,7 @@ func (s *Service) LoadRuntimeViewListSearchSuggestions(
 	modelID string,
 	viewID string,
 ) (*RuntimeViewListSearchSuggestionsResponse, error) {
-	tenant, _, err := s.requireAuthoringContext(ctx)
+	tenant, claims, err := s.requireAuthoringContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -272,11 +284,16 @@ func (s *Service) LoadRuntimeViewListSearchSuggestions(
 	if err != nil {
 		return nil, err
 	}
+	filterContext, err := s.buildRuntimeViewListFilterContext(ctx, tenant, claims, runtimeContext)
+	if err != nil {
+		return nil, err
+	}
 	whereClause, whereArgs, err := buildRuntimeViewListWhereClause(
 		nil,
 		runtimeContext.DefaultFilters,
 		runtimeContext.FieldDefinitions,
-		runtimeContext.Fields,
+		runtimeContext.FilterFields,
+		filterContext,
 	)
 	if err != nil {
 		return nil, err
@@ -319,6 +336,29 @@ func (s *Service) LoadRuntimeViewListSearchSuggestions(
 	return &RuntimeViewListSearchSuggestionsResponse{
 		Groups: groups,
 	}, nil
+}
+
+func (s *Service) buildRuntimeViewListFilterContext(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	claims requestctx.ClaimsInfo,
+	runtimeContext *runtimeViewListContext,
+) (runtimeViewListFilterContext, error) {
+	filterContext := runtimeViewListFilterContext{
+		DataViewName: strings.TrimSpace(runtimeContext.DataViewName),
+		RootActor:    isRootActor(claims),
+	}
+	if filterContext.RootActor || !runtimeViewListDefaultFiltersRequireActorContext(runtimeContext.DefaultFilters) {
+		return filterContext, nil
+	}
+
+	actorContext, err := s.repo.ResolveRuntimeViewListActorContext(ctx, tenant, claims.UserID)
+	if err != nil {
+		return runtimeViewListFilterContext{}, err
+	}
+	filterContext.CurrentUserCompanyID = actorContext.CompanyID
+	filterContext.CurrentUserID = actorContext.UserID
+	return filterContext, nil
 }
 
 func (s *Service) loadRuntimeViewListContext(
@@ -388,6 +428,7 @@ func (s *Service) loadRuntimeViewListContext(
 
 	dataSchema := asMap(modelPayload["dataSchema"])
 	fields := buildRuntimeViewListFields(dataSchema, asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
+	filterFields := buildRuntimeViewListFilterFields(dataSchema, asMap(viewPayload["uiSchema"]), rootScope.Fields, fields)
 	defaultSortColumn, defaultSortDir := buildRuntimeViewListDefaultSort(asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
 	fieldDefinitions := make([]collectiontable.FieldDefinition, 0, len(fields))
 	columnDefinitions := make([]collectiontable.ColumnDefinition, 0, len(fields))
@@ -425,8 +466,10 @@ func (s *Service) loadRuntimeViewListContext(
 		CanDelete:         readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canDelete", true),
 		CanEdit:           readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canEdit", true),
 		CanView:           readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
+		DataViewName:      rootScope.DataViewName,
 		DefaultFilters:    readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
 		FieldDefinitions:  fieldDefinitions,
+		FilterFields:      filterFields,
 		Fields:            fields,
 		GridViewName:      gridViewName,
 		HasRecordGUID:     hasRecordGUID,
@@ -617,6 +660,104 @@ func buildRuntimeViewListFields(
 		})
 	}
 	return out
+}
+
+func buildRuntimeViewListFilterFields(
+	dataSchema map[string]any,
+	uiSchema map[string]any,
+	fields []runtimeApplyFieldPlan,
+	listFields []runtimeViewListFieldMeta,
+) []runtimeViewListFieldMeta {
+	out := make([]runtimeViewListFieldMeta, 0, len(listFields)+len(fields))
+	indexByAuthoringID := make(map[string]int, len(listFields)+len(fields))
+	for _, field := range listFields {
+		index := len(out)
+		out = append(out, field)
+		if authoringFieldID := strings.TrimSpace(field.AuthoringFieldID); authoringFieldID != "" {
+			indexByAuthoringID[authoringFieldID] = index
+		}
+	}
+
+	rootFields := asSlice(asMap(dataSchema["rootScope"])["fields"])
+	fieldSchemaByID := make(map[string]map[string]any, len(rootFields))
+	for _, rawField := range rootFields {
+		field := asMap(rawField)
+		fieldID := chooseString(normalizeString(field["fieldId"]), chooseString(normalizeString(field["id"]), normalizeString(field["key"])))
+		if fieldID == "" {
+			continue
+		}
+		fieldSchemaByID[fieldID] = field
+	}
+	viewFieldTitlesByID := buildRuntimeViewListFieldTitlesByID(uiSchema)
+
+	for _, field := range fields {
+		if !field.Supported || field.Kind != "db_lookup" || field.Preset != "contact_lookup" || field.SelectionMode == "multiple" {
+			continue
+		}
+		lookupOutputs := make(map[string]string, len(field.LookupDerivedOutputs))
+		for _, output := range field.LookupDerivedOutputs {
+			outputKey := strings.TrimSpace(output.OutputKey)
+			columnName := strings.TrimSpace(output.ColumnName)
+			if outputKey == "" || columnName == "" {
+				continue
+			}
+			lookupOutputs[outputKey] = columnName
+		}
+		schemaField := fieldSchemaByID[field.FieldID]
+		label := chooseString(
+			viewFieldTitlesByID[field.FieldID],
+			chooseString(
+				normalizeString(schemaField["label"]),
+				chooseString(normalizeString(schemaField["displayName"]), humanizeIdentifier(field.StorageKey)),
+			),
+		)
+		meta := runtimeViewListFieldMeta{
+			AuthoringFieldID: field.FieldID,
+			ColumnName:       runtimeGridDefaultAliasForField(field),
+			DataColumnName:   field.ColumnName,
+			FieldID:          runtimeGridDefaultAliasForField(field),
+			Kind:             field.Kind,
+			Label:            label,
+			LookupOutputs:    lookupOutputs,
+			Preset:           field.Preset,
+			QueryKind:        runtimeViewListFieldQueryKind(field.Kind),
+			SelectionMode:    field.SelectionMode,
+			Type:             runtimeViewListFieldType(field.Kind),
+		}
+		if meta.ColumnName == "" {
+			meta.ColumnName = field.ColumnName
+		}
+		if meta.FieldID == "" {
+			meta.FieldID = field.FieldID
+		}
+
+		if index, ok := indexByAuthoringID[field.FieldID]; ok {
+			out[index] = mergeRuntimeViewListFieldMeta(out[index], meta)
+			continue
+		}
+		indexByAuthoringID[field.FieldID] = len(out)
+		out = append(out, meta)
+	}
+	return out
+}
+
+func mergeRuntimeViewListFieldMeta(existing runtimeViewListFieldMeta, update runtimeViewListFieldMeta) runtimeViewListFieldMeta {
+	if strings.TrimSpace(existing.DataColumnName) == "" {
+		existing.DataColumnName = update.DataColumnName
+	}
+	if strings.TrimSpace(existing.Kind) == "" {
+		existing.Kind = update.Kind
+	}
+	if len(existing.LookupOutputs) == 0 {
+		existing.LookupOutputs = update.LookupOutputs
+	}
+	if strings.TrimSpace(existing.Preset) == "" {
+		existing.Preset = update.Preset
+	}
+	if strings.TrimSpace(existing.SelectionMode) == "" {
+		existing.SelectionMode = update.SelectionMode
+	}
+	return existing
 }
 
 func buildRuntimeViewListFieldTitlesByID(uiSchema map[string]any) map[string]string {

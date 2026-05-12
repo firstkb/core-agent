@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import {
   Input,
   Label,
@@ -16,6 +18,7 @@ import {
   getLookupClauseKey,
   getLookupDynamicTokenKey,
   lookupDynamicTokenOptions,
+  sanitizeLookupFilterCondition,
 } from "./lookup-filter-editor-helpers";
 
 type LookupFilterEditorProps = {
@@ -32,6 +35,11 @@ export function LookupFilterEditor({
   t,
 }: LookupFilterEditorProps) {
   const clauseDefinitions = getLookupClauseDefinitions(condition.lookupPreset);
+  const sanitizedCondition = useMemo(
+    () => sanitizeLookupFilterCondition(condition),
+    [condition],
+  );
+
   if (clauseDefinitions.length === 0) {
     return (
       <p className="tenant-web__platform-studio-inline-help">
@@ -43,7 +51,7 @@ export function LookupFilterEditor({
   return (
     <div className="tenant-web__platform-studio-builder-stack tenant-web__platform-studio-builder-stack--tight">
       {clauseDefinitions.map((definition) => {
-        const clause = condition.clauses.find((entry) => entry.clauseKey === definition.clauseKey)
+        const clause = sanitizedCondition.clauses.find((entry) => entry.clauseKey === definition.clauseKey)
           ?? createDefaultLookupClause(definition);
 
         if (definition.valueMode === "boolean_flag") {
@@ -53,22 +61,24 @@ export function LookupFilterEditor({
                 {t(getLookupClauseKey(definition.clauseKey))}
               </span>
               <Switch
-                checked={condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey && Boolean(entry.value))}
+                checked={sanitizedCondition.clauses.some((entry) => entry.clauseKey === definition.clauseKey && Boolean(entry.value))}
                 disabled={disabled}
                 onCheckedChange={(checked) => onChange({
-                  ...condition,
+                  ...sanitizedCondition,
                   clauses: checked
-                    ? condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                      ? condition.clauses.map((entry) =>
+                    ? sanitizedCondition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
+                      ? sanitizedCondition.clauses.map((entry) =>
                           entry.clauseKey === definition.clauseKey
                             ? {
-                                ...entry,
+                                clauseKey: definition.clauseKey,
+                                id: entry.id,
                                 value: true,
+                                valueMode: "boolean_flag",
                               }
                             : entry,
                         )
-                      : [...condition.clauses, { ...clause, value: true }]
-                    : condition.clauses.filter((entry) => entry.clauseKey !== definition.clauseKey),
+                      : [...sanitizedCondition.clauses, { ...clause, value: true, valueMode: "boolean_flag" }]
+                    : sanitizedCondition.clauses.filter((entry) => entry.clauseKey !== definition.clauseKey),
                 })}
                 size="sm"
               />
@@ -104,9 +114,9 @@ export function LookupFilterEditor({
                 disabled={disabled}
                 id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
                 onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
+                  ...sanitizedCondition,
+                  clauses: sanitizedCondition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
+                    ? sanitizedCondition.clauses.map((entry) =>
                         entry.clauseKey === definition.clauseKey
                           ? {
                               ...entry,
@@ -114,7 +124,7 @@ export function LookupFilterEditor({
                             }
                           : entry,
                       )
-                    : [...condition.clauses, {
+                    : [...sanitizedCondition.clauses, {
                         ...clause,
                         dynamicToken: event.target.value as FormBuilderLookupDynamicToken,
                       }],
@@ -141,9 +151,9 @@ export function LookupFilterEditor({
                 disabled={disabled}
                 id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
                 onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
+                  ...sanitizedCondition,
+                  clauses: sanitizedCondition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
+                    ? sanitizedCondition.clauses.map((entry) =>
                         entry.clauseKey === definition.clauseKey
                           ? {
                               ...entry,
@@ -151,7 +161,7 @@ export function LookupFilterEditor({
                             }
                           : entry,
                       )
-                    : [...condition.clauses, {
+                    : [...sanitizedCondition.clauses, {
                         ...clause,
                         value: event.target.value,
                       }],
@@ -170,9 +180,9 @@ export function LookupFilterEditor({
                 disabled={disabled}
                 id={`tenant-platform-studio-lookup-clause-${definition.clauseKey}`}
                 onChange={(event) => onChange({
-                  ...condition,
-                  clauses: condition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
-                    ? condition.clauses.map((entry) =>
+                  ...sanitizedCondition,
+                  clauses: sanitizedCondition.clauses.some((entry) => entry.clauseKey === definition.clauseKey)
+                    ? sanitizedCondition.clauses.map((entry) =>
                         entry.clauseKey === definition.clauseKey
                           ? {
                               ...entry,
@@ -180,7 +190,7 @@ export function LookupFilterEditor({
                             }
                           : entry,
                       )
-                    : [...condition.clauses, {
+                    : [...sanitizedCondition.clauses, {
                         ...clause,
                         value: event.target.value,
                       }],

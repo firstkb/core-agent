@@ -97,13 +97,22 @@ func setTenantContextTx(ctx context.Context, tx *sql.Tx, tenant requestctx.Tenan
 }
 
 func listOptionsTx(ctx context.Context, tx *sql.Tx, req OptionsRequest) (*OptionsResponse, error) {
-	source, label, err := optionsSource(req.Dictionary)
+	source, label, filterColumns, err := optionsSource(req.Dictionary)
 	if err != nil {
 		return nil, err
 	}
 
 	conditions := []string{"TRUE"}
 	args := []any{}
+	for _, filter := range req.Filters {
+		clause, err := genericFilterClause(filter, filterColumns, &args)
+		if err != nil {
+			return nil, err
+		}
+		if clause != "" {
+			conditions = append(conditions, clause)
+		}
+	}
 	if req.Search != "" {
 		args = append(args, "%"+strings.ToLower(req.Search)+"%")
 		conditions = append(conditions, fmt.Sprintf("LOWER(search_text) LIKE $%d", len(args)))
@@ -510,7 +519,7 @@ func unionFieldColumns(groups ...[]string) []string {
 	return out
 }
 
-func optionsSource(dictionary string) (string, string, error) {
+func optionsSource(dictionary string) (string, string, map[string]string, error) {
 	switch dictionary {
 	case "companies":
 		return `
@@ -525,9 +534,16 @@ SELECT _id::text AS id,
          'phone', NULLIF(phone, ''),
          'contact', NULLIF(contact_name, '')
        )) AS fields,
-       concat_ws(' ', name, company_type__label, city, state__label, email::text, phone, contact_name) AS search_text
+       concat_ws(' ', name, company_type__label, city, state__label, email::text, phone, contact_name) AS search_text,
+       active AS active,
+       company_type_id AS company_type_id,
+       main_company_id AS main_company_id
   FROM vw_company
- WHERE active IS TRUE`, "companies", nil
+ WHERE active IS TRUE`, "companies", map[string]string{
+				"active":          "active",
+				"company_type_id": "company_type_id",
+				"main_company_id": "main_company_id",
+			}, nil
 	case "companyTypes":
 		return `
 SELECT id::text AS id,
@@ -537,7 +553,7 @@ SELECT id::text AS id,
          'risk', NULLIF(risk, '')
        )) AS fields,
        concat_ws(' ', name, risk) AS search_text
-  FROM companytype`, "company types", nil
+  FROM companytype`, "company types", map[string]string{}, nil
 	case "contacts":
 		return `
 SELECT _id::text AS id,
@@ -557,18 +573,28 @@ SELECT _id::text AS id,
          'email', NULLIF(email::text, ''),
          'phone', NULLIF(phone, '')
        )) AS fields,
-       concat_ws(' ', first_name, last_name, employee_number, email::text, company__label, job_type__label, phone) AS search_text
+       concat_ws(' ', first_name, last_name, employee_number, email::text, company__label, job_type__label, phone) AS search_text,
+       active AS active,
+       company_id AS company_id,
+       job_type_id AS job_type_id
   FROM vw_users
- WHERE active IS TRUE`, "contacts", nil
+ WHERE active IS TRUE`, "contacts", map[string]string{
+				"active":      "active",
+				"company_id":  "company_id",
+				"job_type_id": "job_type_id",
+			}, nil
 	case "jobtypes":
 		return `
 SELECT id::text AS id,
        name AS label,
        '' AS description,
        jsonb_build_object() AS fields,
-       name AS search_text
+       name AS search_text,
+       active AS active
   FROM jobtype
- WHERE active IS TRUE`, "job types", nil
+ WHERE active IS TRUE`, "job types", map[string]string{
+				"active": "active",
+			}, nil
 	case "projects":
 		return `
 SELECT _id::text AS id,
@@ -587,11 +613,22 @@ SELECT _id::text AS id,
          'status', NULLIF(status, ''),
          'city', NULLIF(city, '')
        )) AS fields,
-       concat_ws(' ', project_number, name, city, company__label, status) AS search_text
+       concat_ws(' ', project_number, name, city, company__label, status) AS search_text,
+       active AS active,
+       company_id AS company_id,
+       contractor_company_id AS contractor_company_id,
+       status AS status,
+       subcontractor_company_id AS subcontractor_company_id
   FROM vw_projects
- WHERE active IS TRUE`, "projects", nil
+ WHERE active IS TRUE`, "projects", map[string]string{
+				"active":                   "active",
+				"company_id":               "company_id",
+				"contractor_company_id":    "contractor_company_id",
+				"status":                   "status",
+				"subcontractor_company_id": "subcontractor_company_id",
+			}, nil
 	default:
-		return "", "", ErrInvalidDictionary
+		return "", "", nil, ErrInvalidDictionary
 	}
 }
 

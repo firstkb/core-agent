@@ -125,6 +125,7 @@ func lookupOptionsRequestForField(field runtimeFieldPlan, values []string) (dict
 	if dictionaryKey := dictionaryKeyForLookupPreset(field.Preset); dictionaryKey != "" {
 		return dictionary.OptionsRequest{
 			Dictionary: dictionaryKey,
+			Filters:    dictionaryLookupFilters(field.LookupFilters),
 			IDs:        values,
 			Page:       1,
 			PageSize:   len(values),
@@ -148,6 +149,7 @@ func lookupOptionsRequestForField(field runtimeFieldPlan, values []string) (dict
 	if field.LookupDictionary != "" {
 		return dictionary.OptionsRequest{
 			Dictionary: field.LookupDictionary,
+			Filters:    dictionaryLookupFilters(field.LookupFilters),
 			IDs:        values,
 			Page:       1,
 			PageSize:   len(values),

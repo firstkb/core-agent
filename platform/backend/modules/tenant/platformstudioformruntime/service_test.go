@@ -346,6 +346,27 @@ func TestAttachCurrentLookupOptionsFallsBackOnInvalidDictionary(t *testing.T) {
 	}
 }
 
+func TestLookupOptionsRequestForPresetIncludesLookupFilters(t *testing.T) {
+	req, ok := lookupOptionsRequestForField(runtimeFieldPlan{
+		Preset: "contact_lookup",
+		LookupFilters: []runtimeLookupFilterPlan{
+			{Field: "job_type_id", Operator: "in", Value: []string{"2", "3"}},
+		},
+	}, []string{"7"})
+	if !ok {
+		t.Fatal("lookupOptionsRequestForField returned ok=false")
+	}
+	if req.Dictionary != "contacts" {
+		t.Fatalf("dictionary = %q, want contacts", req.Dictionary)
+	}
+	if got := req.Filters; len(got) != 1 || got[0].Field != "job_type_id" || got[0].Operator != "in" {
+		t.Fatalf("filters = %#v, want job_type_id in", got)
+	}
+	if got := req.IDs; len(got) != 1 || got[0] != "7" {
+		t.Fatalf("ids = %#v, want [7]", got)
+	}
+}
+
 func TestCreateRecordIsIdempotentForDuplicateClientToken(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	repo.createErr = ErrCreateTokenConflict

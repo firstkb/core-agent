@@ -1888,7 +1888,7 @@ function buildTenantDictionaryOptionsPath(request: TenantDictionaryOptionsReques
 }
 
 function shouldQueryTenantDictionaryOptions(request: TenantDictionaryOptionsRequest) {
-  return Boolean(request.sourceModel?.trim());
+  return Boolean(request.sourceModel?.trim() || request.filters?.length);
 }
 
 function buildTenantDictionaryOptionsQueryBody(request: TenantDictionaryOptionsRequest): TenantDictionaryOptionsRequest {

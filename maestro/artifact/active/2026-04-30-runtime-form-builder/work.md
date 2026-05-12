@@ -515,7 +515,16 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/forms typecheck`, `lint`, and `test` passed: 1 file, 15 tests;
   - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`, `lint`, and `test` passed: 18 files, 70 tests;
   - `git diff --check` passed.
+- Runtime preset lookup filter enforcement completed:
+  - runtime lookup requests now keep authored `lookupConfig.filters[]` for named preset dictionaries, not only generic `sourceModel` lookup sources;
+  - `@platform/api-client` uses `POST /app/dictionaries/options/query` whenever a named dictionary request includes filters, so filter payloads are not lost on the GET route;
+  - backend named dictionary sources now apply safe filter columns for preset lookup sources: `contacts` supports `job_type_id` and `company_id`, `companies` supports `company_type_id` and `main_company_id`, and `projects` supports `company_id` plus project company/status columns;
+  - `platformstudioformruntime` passes lookup filters to dictionary hydration for named preset/current-value requests as well as generic lookup requests;
+  - targeted checks passed: `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime`, `pnpm -C platform/frontend --filter @platform/api-client test`, `pnpm -C platform/frontend --filter @platform/api-client typecheck`, and `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - Browser Use smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/new` confirmed the runtime form opens, the `Contact` combobox loads dictionary options, and the browser console has no errors;
+  - `git diff --check` passed;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is owner review of the Form Builder generic DB lookup source picker and runtime apply/storage drift fixes. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner smoke of runtime preset lookup filters in a user form, especially Contact filtered by Job Type. Separate `catalog_modal`, dynamic lookup filters, dictionary-specific access rules, lookup-aware View filter UX, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

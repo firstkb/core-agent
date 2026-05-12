@@ -5,6 +5,7 @@ import {
   createAdminEmployeesClient,
   createAuthClient,
   createTenantBusinessTreeClient,
+  createTenantDictionaryClient,
   createTenantFormBuilderAuthoringClient,
   createTenantFormBuilderDraftClient,
   createTenantNavigationClient,
@@ -187,6 +188,53 @@ describe("api-client unauthorized recovery", () => {
 
     expect(recoverUnauthorized).not.toHaveBeenCalled();
     expect(request).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("api-client tenant dictionary", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("uses the query endpoint when a named dictionary request includes filters", async () => {
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({
+        data: {
+          dictionary: "contacts",
+          hasMore: false,
+          items: [],
+          page: 1,
+          pageSize: 10,
+          total: 0,
+        },
+        status: "ok",
+      }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createTenantDictionaryClient("/tenant-api").loadOptions("token", {
+      dictionary: "contacts",
+      filters: [
+        { field: "job_type_id", operator: "in", value: ["2", "3"] },
+      ],
+      pageSize: 10,
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/tenant-api/app/dictionaries/options/query",
+      expect.objectContaining({
+        body: JSON.stringify({
+          dictionary: "contacts",
+          filters: [
+            { field: "job_type_id", operator: "in", value: ["2", "3"] },
+          ],
+          pageSize: 10,
+        }),
+        method: "POST",
+      }),
+    );
   });
 });
 

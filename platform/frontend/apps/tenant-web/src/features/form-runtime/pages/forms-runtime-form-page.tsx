@@ -372,7 +372,7 @@ function buildRuntimeLookupDictionaryRequest(
   return {
     dictionary,
     displayFields: sourceModel && lookup.displayFields ? [...lookup.displayFields] : undefined,
-    filters: sourceModel ? tenantDictionaryFilters(lookup.filters) : undefined,
+    filters: tenantDictionaryFilters(lookup.filters),
     ids: request.ids ? [...request.ids] : undefined,
     page: request.page,
     pageSize: request.pageSize,

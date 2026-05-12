@@ -88,11 +88,13 @@ function resolveFooterInfo(
   const backLabel = getPlainLabel(labels.backToList, "Back to list");
   const finalStatus = humanizeStatusValue(definition.workflowStatus?.finalValue);
   const finishCopy = finalStatus
-    ? `When you click "${finishLabel}", the form will have the status "${finalStatus}".`
-    : `When you click "${finishLabel}", the form will run the configured finish action.`;
+    ? labels.finishBackInfoStatusTemplate
+      .replace("{{finish}}", finishLabel)
+      .replace("{{status}}", finalStatus)
+    : labels.finishBackInfoActionTemplate.replace("{{finish}}", finishLabel);
   const backCopy = definition.mode === "create"
-    ? `If the record has not been created yet, "${backLabel}" will ask before discarding entered data; after creation, it keeps the current status.`
-    : `When you click "${backLabel}", the form will keep the current status.`;
+    ? labels.finishBackInfoCreateBackTemplate.replace("{{back}}", backLabel)
+    : labels.finishBackInfoEditBackTemplate.replace("{{back}}", backLabel);
 
   return `${finishCopy} ${backCopy}`;
 }

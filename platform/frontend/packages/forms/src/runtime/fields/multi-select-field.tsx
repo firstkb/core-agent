@@ -86,15 +86,15 @@ export function MultiSelectField({
     <Combobox
       aria-invalid={error ? "true" : undefined}
       disabled={disabled}
-      emptyLabel="No options"
+      emptyLabel={labels.noOptions}
       id={controlId}
       invalid={Boolean(error)}
       label={field.label}
       onValueChange={(nextValues) => onFieldChange(field.id, nextValues, field)}
       options={comboboxOptions}
-      placeholder={field.placeholder ?? "Select values"}
-      searchInputAriaLabel={`Search ${field.label}`}
-      searchPlaceholder={`Search ${field.label}`}
+      placeholder={field.placeholder ?? labels.selectValuesPlaceholder}
+      searchInputAriaLabel={`${labels.search} ${field.label}`}
+      searchPlaceholder={`${labels.search} ${field.label}`}
       selectionMode="multiple"
       triggerAriaLabel={field.label}
       value={selectedValues}

@@ -227,7 +227,7 @@ export function LookupField({
       <Combobox
         aria-invalid={error ? "true" : undefined}
         disabled={disabled || !loadLookupOptions}
-        emptyLabel="No options"
+        emptyLabel={labels.noOptions}
         filterMode="none"
         hasMoreOptions={hasMoreOptions}
         id={controlId}
@@ -249,9 +249,9 @@ export function LookupField({
           });
         }}
         options={comboboxOptions}
-        placeholder={field.placeholder ?? "Select values"}
-        searchInputAriaLabel={`Search ${field.label}`}
-        searchPlaceholder={`Search ${field.label}`}
+        placeholder={field.placeholder ?? labels.selectValuesPlaceholder}
+        searchInputAriaLabel={`${labels.search} ${field.label}`}
+        searchPlaceholder={`${labels.search} ${field.label}`}
         searchValue={searchValue}
         selectionMode="multiple"
         triggerAriaLabel={field.label}
@@ -265,7 +265,7 @@ export function LookupField({
     <Combobox
       aria-invalid={error ? "true" : undefined}
       disabled={disabled || !loadLookupOptions}
-      emptyLabel="No options"
+      emptyLabel={labels.noOptions}
       filterMode="none"
       hasMoreOptions={hasMoreOptions}
       id={controlId}
@@ -289,8 +289,8 @@ export function LookupField({
       }}
       options={comboboxOptions}
       placeholder={field.placeholder ?? labels.selectPlaceholder}
-      searchInputAriaLabel={`Search ${field.label}`}
-      searchPlaceholder={`Search ${field.label}`}
+      searchInputAriaLabel={`${labels.search} ${field.label}`}
+      searchPlaceholder={`${labels.search} ${field.label}`}
       searchValue={searchValue}
       selectionMode="single"
       triggerAriaLabel={field.label}

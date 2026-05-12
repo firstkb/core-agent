@@ -43,14 +43,18 @@ function formatUsDateParts(year: string, month: string, day: string) {
   return `${month}/${day}/${year}`;
 }
 
-function formatSubformCellValue(value: string, type: RuntimeFormSubformDefinition["columns"][number]["type"]) {
+function formatSubformCellValue(
+  value: string,
+  type: RuntimeFormSubformDefinition["columns"][number]["type"],
+  labels: RuntimeFormResolvedLabels,
+) {
   const normalizedValue = value.trim();
   if (!normalizedValue) {
-    return "-";
+    return labels.emptyValue;
   }
 
   if (type === "boolean") {
-    return normalizedValue === "true" || normalizedValue === "1" ? "Yes" : "No";
+    return normalizedValue === "true" || normalizedValue === "1" ? labels.booleanYes : labels.booleanNo;
   }
 
   if (type === "date") {
@@ -157,7 +161,7 @@ export function RuntimeSubformNode({
               <TableRow key={row.id}>
                 {subform.columns.map((column) => {
                   const cell = row.cells[column.fieldId];
-                  const text = formatSubformCellValue(getSubformCellText(row, column.fieldId), column.type);
+                  const text = formatSubformCellValue(getSubformCellText(row, column.fieldId), column.type, labels);
                   return (
                     <TableCell key={column.id}>
                       {column.type === "html" && cell?.html ? (

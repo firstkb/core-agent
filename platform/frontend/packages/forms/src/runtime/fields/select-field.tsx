@@ -93,15 +93,15 @@ export function SelectField({
     <Combobox
       aria-invalid={error ? "true" : undefined}
       disabled={disabled}
-      emptyLabel="No options"
+      emptyLabel={labels.noOptions}
       id={controlId}
       invalid={Boolean(error)}
       label={field.label}
       onValueChange={(nextValue) => onFieldChange(field.id, nextValue ?? "", field)}
       options={comboboxOptions}
       placeholder={field.placeholder ?? labels.selectPlaceholder}
-      searchInputAriaLabel={`Search ${field.label}`}
-      searchPlaceholder={`Search ${field.label}`}
+      searchInputAriaLabel={`${labels.search} ${field.label}`}
+      searchPlaceholder={`${labels.search} ${field.label}`}
       selectionMode="single"
       triggerAriaLabel={field.label}
       value={stringValue || null}

@@ -12,6 +12,7 @@ import type {
   RuntimeFormGridLayoutDefinition,
   RuntimeFormGroupLayoutDefinition,
   RuntimeFormInputMode,
+  RuntimeFormLabels,
   RuntimeFormLayoutDefinition,
   RuntimeFormLookupDefinition,
   RuntimeFormLookupFilter,
@@ -32,6 +33,7 @@ import type {
   RuntimeFormTextValidation,
   RuntimeFormVisibilityRule,
 } from "./runtime-form";
+import { resolveRuntimeFormLabels } from "./runtime/runtime-form-labels";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -39,6 +41,7 @@ export type RuntimeFormSchemaSource = {
   commitMode: RuntimeFormCommitMode;
   dataSchema?: JsonRecord;
   description?: string;
+  labels?: RuntimeFormLabels;
   mode: RuntimeFormMode;
   modelId: string;
   title?: string;
@@ -51,6 +54,7 @@ type CompileContext = {
   nodesByParentId: Map<string | null, JsonRecord[]>;
   subformDataScopeById: Map<string, JsonRecord>;
   subformUiScopeById: Map<string, JsonRecord>;
+  labels: ReturnType<typeof resolveRuntimeFormLabels>;
   workflowStatus?: {
     fieldId: string;
     finalValue?: string;
@@ -610,7 +614,7 @@ function createFieldNode(
   };
 }
 
-function createContentNode(node: JsonRecord): RuntimeFormContentDefinition | null {
+function createContentNode(context: CompileContext, node: JsonRecord): RuntimeFormContentDefinition | null {
   const id = stringValue(node.id);
   const nodeType = stringValue(node.type);
   if (!id) {
@@ -645,7 +649,7 @@ function createContentNode(node: JsonRecord): RuntimeFormContentDefinition | nul
     return {
       contentType: "view_only_field",
       id,
-      label: stringValue(node.title, "Output"),
+      label: stringValue(node.title, context.labels.generatedOutputLabel),
       nodeType: "content",
       rules: readRuntimeRules(node.rules),
       value: stringValue(node.text),
@@ -756,7 +760,7 @@ function createSubformNode(context: CompileContext, node: JsonRecord): RuntimeFo
     schemaScopeId,
     subformType: stringValue(node.subformType, stringValue(dataScope.subformType, "DEFAULT")),
     tableKey: stringValue(node.tableKey, schemaScopeId),
-    title: stringValue(node.title, stringValue(dataScope.displayName, "Subform")),
+    title: stringValue(node.title, stringValue(dataScope.displayName, String(context.labels.generatedSubformTitle))),
     width: "full",
   };
 }
@@ -798,7 +802,7 @@ function createLayoutNode(context: CompileContext, node: JsonRecord): RuntimeFor
       .map((tabNode) => ({
         id: stringValue(tabNode.id),
         nodes: createRuntimeNodes(context, stringValue(tabNode.id)),
-        title: stringValue(tabNode.title, "Tab"),
+        title: stringValue(tabNode.title, String(context.labels.generatedTabTitle)),
       }))
       .filter((tab) => tab.id && tab.nodes.length > 0);
     if (tabs.length === 0) {
@@ -824,7 +828,7 @@ function createLayoutNode(context: CompileContext, node: JsonRecord): RuntimeFor
       .map((itemNode) => ({
         id: stringValue(itemNode.id),
         nodes: createRuntimeNodes(context, stringValue(itemNode.id)),
-        title: stringValue(itemNode.title, "Item"),
+        title: stringValue(itemNode.title, String(context.labels.generatedAccordionItemTitle)),
       }))
       .filter((item) => item.id && item.nodes.length > 0);
     if (items.length === 0) {
@@ -883,7 +887,7 @@ function createRuntimeNodes(
       }
 
       if (nodeType === "heading" || nodeType === "text" || nodeType === "rich_text" || nodeType === "view_only_field") {
-        const content = createContentNode(node);
+        const content = createContentNode(context, node);
         return content ? [content] : [];
       }
 
@@ -943,8 +947,10 @@ export function createRuntimeFormDefinitionFromSchema(source: RuntimeFormSchemaS
   const dataSchema = asRecord(source.dataSchema);
   const uiSchema = asRecord(source.uiSchema);
   const workflowStatus = readWorkflowStatus(uiSchema);
+  const labels = resolveRuntimeFormLabels(source.labels);
   const context: CompileContext = {
     fieldById: createFieldMap(dataSchema),
+    labels,
     nodesByParentId: createNodesByParentId(uiSchema),
     subformDataScopeById: createSubformDataScopeMap(dataSchema),
     subformUiScopeById: createSubformUiScopeMap(uiSchema),
@@ -958,7 +964,7 @@ export function createRuntimeFormDefinitionFromSchema(source: RuntimeFormSchemaS
     id: `runtime-${source.modelId}-${source.viewId}`,
     mode: source.mode,
     sections,
-    title: source.title || (source.mode === "create" ? "Start new record" : "Edit record"),
+    title: source.title || (source.mode === "create" ? labels.createTitle : labels.editTitle),
     workflowStatus,
   };
 }

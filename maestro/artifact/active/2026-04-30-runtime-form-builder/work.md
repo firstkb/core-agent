@@ -564,7 +564,21 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check`;
   - Browser Use desktop smoke confirmed reloaded selected value renders as category/title text, opening one category then another closes the previous category, and console errors remain empty;
   - Browser Use mobile smoke at `390x844` confirmed the trigger opens the dialog, the reloaded selected value has category/title text, and console errors remain empty.
+- Runtime form localization slice completed:
+  - shared `@platform/forms` now accepts expanded runtime labels for form shell actions, save states, validation dialogs, readonly boolean/empty values, select/lookup empty/search/load-more states, catalog modal states, generated schema fallback titles, and finish/back info copy;
+  - tenant-web owns the translations and passes labels from `useTranslation()` into runtime schema compilation and `RuntimeFormScaffold`, keeping the shared forms package i18n-agnostic;
+  - root form and subform copy can diverge through translated subform overrides for `Back`, `Save`, and subform online-form guidance;
+  - English and Spanish locale dictionaries include the new runtime form text keys;
+  - Browser Use desktop smoke on `https://demo.platform.localhost/app/platform-studio/forms/lookup/views/view-default/edit/2cc38427-fa36-4ab6-9255-f78fef59659a` confirmed the form reloads, renders runtime shell text, and keeps the catalog selected value as category/title text instead of raw id.
+- Runtime form localization checks passed:
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/forms lint`;
+  - `pnpm -C platform/frontend --filter @platform/forms test`: 1 file, 15 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
+  - `git diff --check`;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is owner retest of the runtime `DB lookup Button` catalog modal on the `lookup` form. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of runtime form language switching on the `lookup` form. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

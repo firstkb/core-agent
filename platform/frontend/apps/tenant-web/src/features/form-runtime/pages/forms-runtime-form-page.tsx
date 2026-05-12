@@ -19,6 +19,7 @@ import {
   type RuntimeFormDefinition,
   type RuntimeFormFieldChangeMeta,
   type RuntimeFormFieldType,
+  type RuntimeFormLabels,
   type RuntimeFormLookupDefinition,
   type RuntimeFormLookupFilter,
   type RuntimeFormLookupOptionsRequest,
@@ -32,6 +33,7 @@ import {
   type RuntimeFormValue,
   type RuntimeFormValues,
 } from "@platform/forms";
+import { useTranslation } from "@platform/i18n";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -222,9 +224,9 @@ function hasRuntimeValidationErrors(errors: RuntimeFormValidationErrors) {
   return Object.values(errors).some(Boolean);
 }
 
-function inputValidationErrorsOnly(errors: RuntimeFormValidationErrors) {
+function inputValidationErrorsOnly(errors: RuntimeFormValidationErrors, requiredError: string) {
   return Object.fromEntries(
-    Object.entries(errors).filter(([, message]) => message && message !== "This field is required."),
+    Object.entries(errors).filter(([, message]) => message && message !== requiredError),
   );
 }
 
@@ -241,12 +243,27 @@ function findFirstValidationError(
   };
 }
 
-function runtimeClientValidationDialogMessage(error: ReturnType<typeof findFirstValidationError>) {
-  if (error.message === "This field is required.") {
-    return `Please fill field: "${error.label}"`;
+function translatedTemplate(template: string, values: Record<string, string>) {
+  return Object.entries(values).reduce(
+    (message, [key, value]) => message.replaceAll(`{{${key}}}`, value),
+    template,
+  );
+}
+
+function runtimeClientValidationDialogMessage(
+  error: ReturnType<typeof findFirstValidationError>,
+  labels: RuntimeFormLabels & {
+    requiredError: string;
+    validationFillField: string;
+    validationFillFieldCorrectly: string;
+  },
+) {
+  const fieldLabel = String(error.label);
+  if (error.message === labels.requiredError) {
+    return translatedTemplate(labels.validationFillField, { field: fieldLabel });
   }
 
-  return `Please fill field correctly: "${error.label}"`;
+  return translatedTemplate(labels.validationFillFieldCorrectly, { field: fieldLabel });
 }
 
 function runtimeValidationErrorsFromServer(
@@ -449,18 +466,26 @@ function isNotFoundRuntimeError(requestError: unknown) {
     );
 }
 
-function runtimeFormLoadErrorFromRequest(requestError: unknown): RuntimeFormLoadErrorState {
+function runtimeFormLoadErrorFromRequest(
+  requestError: unknown,
+  labels: {
+    genericDescription: string;
+    genericTitle: string;
+    notFoundDescription: string;
+    notFoundTitle: string;
+  },
+): RuntimeFormLoadErrorState {
   if (isNotFoundRuntimeError(requestError)) {
     return {
       code: "404",
-      description: "This form, view, or record was not found. It may have been deleted, or the link may contain an incorrect id.",
-      title: "Form not found",
+      description: labels.notFoundDescription,
+      title: labels.notFoundTitle,
     };
   }
 
   return {
-    description: "Please try again. If the problem continues, return to the list and open the record again.",
-    title: "Could not load form",
+    description: labels.genericDescription,
+    title: labels.genericTitle,
   };
 }
 
@@ -477,6 +502,7 @@ export function FormsRuntimeFormPage({
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const runtimeConfig = useTenantRuntimeConfig();
   const { getAccessToken, signOut } = useAuth();
   const modelId = params.modelId?.trim() ?? "";
@@ -526,6 +552,76 @@ export function FormsRuntimeFormPage({
   const [subformDeleteDialog, setSubformDeleteDialog] = useState<SubformDeleteDialogState | null>(null);
   const [subforms, setSubforms] = useState<RuntimeFormSubformDataById>({});
   const [unsavedLeaveDialog, setUnsavedLeaveDialog] = useState<UnsavedLeaveDialogState | null>(null);
+  const rootRuntimeLabels = useMemo(() => ({
+    backToList: t("tenant.runtime.forms.form.backToList"),
+    booleanNo: t("tenant.runtime.forms.form.boolean.no"),
+    booleanYes: t("tenant.runtime.forms.form.boolean.yes"),
+    catalogEmpty: t("tenant.runtime.forms.form.catalog.empty"),
+    catalogGroupOther: t("tenant.runtime.forms.form.catalog.groupOther"),
+    catalogLoadError: t("tenant.runtime.forms.form.catalog.loadError"),
+    catalogLoading: t("tenant.runtime.forms.form.catalog.loading"),
+    catalogNoSelection: t("tenant.runtime.forms.form.catalog.noSelection"),
+    catalogOpen: t("tenant.runtime.forms.form.catalog.open"),
+    catalogRetry: t("tenant.runtime.forms.form.catalog.retry"),
+    catalogSearchPlaceholder: t("tenant.runtime.forms.form.catalog.searchPlaceholder"),
+    createModeInfo: t("tenant.runtime.forms.form.createModeInfo"),
+    createTitle: t("tenant.runtime.forms.form.createTitle"),
+    editModeInfo: t("tenant.runtime.forms.form.editModeInfo"),
+    editTitle: t("tenant.runtime.forms.form.editTitle"),
+    emptyValue: t("tenant.runtime.forms.form.emptyValue"),
+    finish: t("tenant.runtime.forms.form.finish"),
+    finishBackInfoActionTemplate: t("tenant.runtime.forms.form.finishInfo.action"),
+    finishBackInfoCreateBackTemplate: t("tenant.runtime.forms.form.finishInfo.createBack"),
+    finishBackInfoEditBackTemplate: t("tenant.runtime.forms.form.finishInfo.editBack"),
+    finishBackInfoStatusTemplate: t("tenant.runtime.forms.form.finishInfo.status"),
+    generatedAccordionItemTitle: t("tenant.runtime.forms.form.generated.accordionItem"),
+    generatedOutputLabel: t("tenant.runtime.forms.form.generated.output"),
+    generatedSubformTitle: t("tenant.runtime.forms.form.generated.subform"),
+    generatedTabTitle: t("tenant.runtime.forms.form.generated.tab"),
+    invalidEmailError: t("tenant.runtime.forms.form.validation.invalidEmail"),
+    invalidMaskError: t("tenant.runtime.forms.form.validation.invalidMask"),
+    invalidPhoneError: t("tenant.runtime.forms.form.validation.invalidPhone"),
+    invalidUrlError: t("tenant.runtime.forms.form.validation.invalidUrl"),
+    loadMore: t("tenant.runtime.forms.form.loadMore"),
+    noOptions: t("tenant.runtime.forms.form.noOptions"),
+    onlineFormTitle: t("tenant.runtime.forms.form.onlineTitle"),
+    requiredError: t("tenant.runtime.forms.form.validation.required"),
+    saveStates: {
+      dirty: t("tenant.runtime.forms.form.saveStates.dirty"),
+      error: t("tenant.runtime.forms.form.saveStates.error"),
+      idle: t("tenant.runtime.forms.form.saveStates.idle"),
+      saved: t("tenant.runtime.forms.form.saveStates.saved"),
+      saving: t("tenant.runtime.forms.form.saveStates.saving"),
+    },
+    search: t("tenant.runtime.forms.form.search"),
+    selectPlaceholder: t("tenant.runtime.forms.form.selectPlaceholder"),
+    selectValuesPlaceholder: t("tenant.runtime.forms.form.selectValuesPlaceholder"),
+    subformAdd: t("tenant.runtime.forms.form.subform.add"),
+    subformDelete: t("tenant.runtime.forms.form.subform.delete"),
+    subformEdit: t("tenant.runtime.forms.form.subform.edit"),
+    subformEmpty: t("tenant.runtime.forms.form.subform.empty"),
+    validationFillField: t("tenant.runtime.forms.form.validation.fillField"),
+    validationFillFieldCorrectly: t("tenant.runtime.forms.form.validation.fillFieldCorrectly"),
+  }), [t]);
+  const runtimeLabels = useMemo(() => {
+    if (!isSubform) {
+      return rootRuntimeLabels;
+    }
+    return {
+      ...rootRuntimeLabels,
+      backToList: t("tenant.runtime.forms.form.subform.back"),
+      createModeInfo: t("tenant.runtime.forms.form.subform.createModeInfo"),
+      editModeInfo: t("tenant.runtime.forms.form.subform.editModeInfo"),
+      finish: t("tenant.runtime.forms.form.subform.save"),
+      onlineFormTitle: t("tenant.runtime.forms.form.subform.title"),
+    };
+  }, [isSubform, rootRuntimeLabels, t]);
+  const loadErrorLabels = useMemo(() => ({
+    genericDescription: t("tenant.runtime.forms.form.loadError.genericDescription"),
+    genericTitle: t("tenant.runtime.forms.form.loadError.genericTitle"),
+    notFoundDescription: t("tenant.runtime.forms.form.loadError.notFoundDescription"),
+    notFoundTitle: t("tenant.runtime.forms.form.loadError.notFoundTitle"),
+  }), [t]);
   const definition = useMemo(() => {
     if (!formResponse) {
       return null;
@@ -534,13 +630,14 @@ export function FormsRuntimeFormPage({
       commitMode,
       dataSchema: formResponse.dataSchema,
       description: formResponse.description,
+      labels: runtimeLabels,
       mode,
       modelId,
       title: formResponse.title,
       uiSchema: formResponse.uiSchema,
       viewId,
     });
-  }, [commitMode, formResponse, mode, modelId, viewId]);
+  }, [commitMode, formResponse, mode, modelId, runtimeLabels, viewId]);
   const initialValues = useMemo<RuntimeFormValues>(() => {
     if (!definition || !formResponse) {
       return {};
@@ -651,7 +748,7 @@ export function FormsRuntimeFormPage({
           return;
         }
         setFormResponse(null);
-        setFormLoadError(runtimeFormLoadErrorFromRequest(requestError));
+        setFormLoadError(runtimeFormLoadErrorFromRequest(requestError, loadErrorLabels));
         setSaveState("error");
       });
 
@@ -662,6 +759,7 @@ export function FormsRuntimeFormPage({
     client,
     getRuntimeAccessToken,
     isSubform,
+    loadErrorLabels,
     mode,
     parentDocGuid,
     restoredSession,
@@ -779,7 +877,7 @@ export function FormsRuntimeFormPage({
             type="button"
             variant="secondary"
           >
-            Back to list
+            {runtimeLabels.backToList}
           </Button>
         </div>
       </div>
@@ -789,7 +887,7 @@ export function FormsRuntimeFormPage({
     return (
       <div className="tenant-web__form-runtime-form-page">
         <div className="tenant-web__form-runtime-form-state">
-          Loading form...
+          {t("tenant.runtime.forms.form.loading")}
         </div>
       </div>
     );
@@ -853,7 +951,7 @@ export function FormsRuntimeFormPage({
     }
     if (isConflictRuntimeError(requestError)) {
       setFinishDialog({
-        message: "This record changed on the server. Please reload before continuing.",
+        message: t("tenant.runtime.forms.form.messages.conflict"),
         tone: "danger",
       });
       setSaveState("error");
@@ -909,7 +1007,7 @@ export function FormsRuntimeFormPage({
     revealRuntimeField(firstError.fieldId);
     setFinishDialog({
       fieldId: firstError.fieldId,
-      message: firstRuntimeValidationMessage(validationErrors) ?? runtimeClientValidationDialogMessage(firstError),
+      message: firstRuntimeValidationMessage(validationErrors) ?? runtimeClientValidationDialogMessage(firstError, runtimeLabels),
       tone: "danger",
     });
   }
@@ -1067,11 +1165,11 @@ export function FormsRuntimeFormPage({
         revealRuntimeField(firstError.fieldId);
         setFinishDialog({
           fieldId: firstError.fieldId,
-          message: runtimeClientValidationDialogMessage(firstError),
+          message: runtimeClientValidationDialogMessage(firstError, runtimeLabels),
           tone: "danger",
         });
       } else {
-        const inputErrors = inputValidationErrorsOnly(nextErrors);
+        const inputErrors = inputValidationErrorsOnly(nextErrors, runtimeLabels.requiredError);
         if (hasRuntimeValidationErrors(inputErrors)) {
           setErrors((currentErrors) => ({
             ...currentErrors,
@@ -1114,7 +1212,7 @@ export function FormsRuntimeFormPage({
             revealRuntimeField(firstError.fieldId);
             setFinishDialog({
               fieldId: firstError.fieldId,
-              message: firstRuntimeValidationMessage(response.validationErrors) ?? `Please fill field: "${firstError.label}"`,
+              message: firstRuntimeValidationMessage(response.validationErrors) ?? runtimeClientValidationDialogMessage(firstError, runtimeLabels),
               tone: "danger",
             });
           }
@@ -1342,7 +1440,7 @@ export function FormsRuntimeFormPage({
       setSaveState("error");
       setFinishDialog({
         fieldId: firstError.fieldId,
-        message: runtimeClientValidationDialogMessage(firstError),
+        message: runtimeClientValidationDialogMessage(firstError, runtimeLabels),
         tone: "danger",
       });
       return;
@@ -1358,7 +1456,7 @@ export function FormsRuntimeFormPage({
         return;
       }
       setFinishDialog({
-        message: "Could not save record.",
+        message: t("tenant.runtime.forms.form.messages.saveFailed"),
         tone: "danger",
       });
       return;
@@ -1373,7 +1471,7 @@ export function FormsRuntimeFormPage({
         return;
       }
       setFinishDialog({
-        message: "Could not save record.",
+        message: t("tenant.runtime.forms.form.messages.saveFailed"),
         tone: "danger",
       });
       return;
@@ -1382,7 +1480,7 @@ export function FormsRuntimeFormPage({
     if (isSubform) {
       setSaveState("saved");
       setFinishDialog({
-        message: "Successfully saved to server.",
+        message: t("tenant.runtime.forms.form.messages.saved"),
         tone: "success",
       });
       return;
@@ -1402,14 +1500,14 @@ export function FormsRuntimeFormPage({
       applyMutationResponse(response, { serverWins: true });
       setSaveState("saved");
       setFinishDialog({
-        message: "Successfully saved to server.",
+        message: t("tenant.runtime.forms.form.messages.saved"),
         tone: "success",
       });
     } catch (requestError) {
       const errorKind = handleRuntimeRequestError(requestError);
       if (errorKind !== "conflict" && errorKind !== "auth") {
         setFinishDialog({
-          message: "Could not save record.",
+          message: t("tenant.runtime.forms.form.messages.saveFailed"),
           tone: "danger",
         });
       }
@@ -1436,7 +1534,7 @@ export function FormsRuntimeFormPage({
           return;
         }
         setFinishDialog({
-          message: "Could not save record.",
+          message: t("tenant.runtime.forms.form.messages.saveFailed"),
           tone: "danger",
         });
         return;
@@ -1486,7 +1584,7 @@ export function FormsRuntimeFormPage({
       if (!docGuid) {
         if (!lastCreateBlockedByValidationRef.current) {
           setFinishDialog({
-            message: "Could not save record.",
+            message: t("tenant.runtime.forms.form.messages.saveFailed"),
             tone: "danger",
           });
         }
@@ -1503,7 +1601,7 @@ export function FormsRuntimeFormPage({
         return null;
       }
       setFinishDialog({
-        message: "Could not save record.",
+        message: t("tenant.runtime.forms.form.messages.saveFailed"),
         tone: "danger",
       });
       return null;
@@ -1578,7 +1676,7 @@ export function FormsRuntimeFormPage({
         const errorKind = handleRuntimeRequestError(requestError);
         if (errorKind !== "conflict" && errorKind !== "auth") {
           setFinishDialog({
-            message: "Could not delete record.",
+            message: t("tenant.runtime.forms.form.messages.deleteFailed"),
             tone: "danger",
           });
         }
@@ -1596,13 +1694,7 @@ export function FormsRuntimeFormPage({
         activeTabs={activeTabs}
         definition={runtimeDefinition}
         errors={errors}
-        labels={isSubform ? {
-          backToList: "Back",
-          createModeInfo: "Complete the required fields to create this item. Changes will save automatically after it is created.",
-          editModeInfo: "This item saves changes automatically as you work.",
-          finish: "Save",
-          onlineFormTitle: "Subform",
-        } : undefined}
+        labels={runtimeLabels}
         loadLookupOptions={loadRuntimeLookupOptions}
         onActiveTabChange={handleActiveTabChange}
         onBack={handleBackToList}
@@ -1650,7 +1742,7 @@ export function FormsRuntimeFormPage({
               onClick={handleFinishDialogAction}
               variant={finishDialog?.tone === "success" ? "success" : "danger"}
             >
-              OK
+              {t("tenant.runtime.forms.form.dialog.ok")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1665,17 +1757,17 @@ export function FormsRuntimeFormPage({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete record?</AlertDialogTitle>
+            <AlertDialogTitle>{t("tenant.runtime.forms.form.deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This subform record will be permanently deleted.
+              {t("tenant.runtime.forms.form.deleteDialog.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel variant="outline">
-              Cancel
+              {t("tenant.runtime.forms.form.dialog.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmSubformDelete} variant="danger">
-              Delete
+              {t("tenant.runtime.forms.form.dialog.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1690,19 +1782,19 @@ export function FormsRuntimeFormPage({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogTitle>{t("tenant.runtime.forms.form.unsavedDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
               {unsavedLeaveDialog?.scope === "subform"
-                ? "This subform item has not been created yet. Entered data will be lost."
-                : "This form has not been created yet. Entered data will be lost."}
+                ? t("tenant.runtime.forms.form.unsavedDialog.subformDescription")
+                : t("tenant.runtime.forms.form.unsavedDialog.rootDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel variant="outline">
-              Stay
+              {t("tenant.runtime.forms.form.dialog.stay")}
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmUnsavedLeave} variant="danger">
-              Leave
+              {t("tenant.runtime.forms.form.dialog.leave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

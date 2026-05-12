@@ -351,22 +351,49 @@ export type RuntimeFormDefinition = {
 
 export type RuntimeFormResolvedLabels = {
   backToList: ReactNode;
+  booleanNo: string;
+  booleanYes: string;
+  catalogEmpty: ReactNode;
+  catalogGroupOther: string;
+  catalogLoadError: ReactNode;
+  catalogLoading: ReactNode;
+  catalogNoSelection: ReactNode;
+  catalogOpen: string;
+  catalogRetry: ReactNode;
+  catalogSearchPlaceholder: string;
   createModeInfo: ReactNode;
+  createTitle: ReactNode;
   editModeInfo: ReactNode;
+  editTitle: ReactNode;
+  emptyValue: string;
   finish: ReactNode;
+  finishBackInfoActionTemplate: string;
+  finishBackInfoCreateBackTemplate: string;
+  finishBackInfoEditBackTemplate: string;
+  finishBackInfoStatusTemplate: string;
   finishBackInfo?: ReactNode;
+  generatedAccordionItemTitle: ReactNode;
+  generatedOutputLabel: string;
+  generatedSubformTitle: ReactNode;
+  generatedTabTitle: ReactNode;
   invalidEmailError: string;
   invalidMaskError: string;
   invalidPhoneError: string;
   invalidUrlError: string;
+  loadMore: ReactNode;
+  noOptions: ReactNode;
   onlineFormTitle: ReactNode;
   requiredError: string;
+  search: string;
   saveStates: Record<RuntimeFormSaveState, ReactNode>;
   selectPlaceholder: string;
+  selectValuesPlaceholder: string;
   subformAdd: ReactNode;
   subformDelete: ReactNode;
   subformEdit: ReactNode;
   subformEmpty: ReactNode;
+  validationFillField: string;
+  validationFillFieldCorrectly: string;
 };
 
 export type RuntimeFormLabels = Partial<Omit<RuntimeFormResolvedLabels, "saveStates">> & {

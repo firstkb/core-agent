@@ -4,6 +4,7 @@ import type {
   RuntimeFormFieldDefinition,
   RuntimeFormLayoutDefinition,
   RuntimeFormNodeDefinition,
+  RuntimeFormResolvedLabels,
   RuntimeFormSectionDefinition,
   RuntimeFormSubformDefinition,
   RuntimeFormValue,
@@ -108,17 +109,22 @@ function formatUsDateTimeValue(value: string) {
   return time ? `${date} ${time}` : date;
 }
 
-export function formatReadonlyValue(field: RuntimeFormFieldDefinition, value: RuntimeFormValue | undefined) {
+export function formatReadonlyValue(
+  field: RuntimeFormFieldDefinition,
+  value: RuntimeFormValue | undefined,
+  labels?: Pick<RuntimeFormResolvedLabels, "booleanNo" | "booleanYes" | "emptyValue">,
+) {
+  const emptyValue = labels?.emptyValue ?? "-";
   if (isRuntimeFormStringArray(value)) {
-    return value.length > 0 ? value.map((item) => getOptionLabel(field, item)).join(", ") : "-";
+    return value.length > 0 ? value.map((item) => getOptionLabel(field, item)).join(", ") : emptyValue;
   }
 
   if (typeof value === "boolean") {
-    return value ? "Yes" : "No";
+    return value ? (labels?.booleanYes ?? "Yes") : (labels?.booleanNo ?? "No");
   }
 
   if (!value?.trim()) {
-    return "-";
+    return emptyValue;
   }
 
   if (field.type === "date") {

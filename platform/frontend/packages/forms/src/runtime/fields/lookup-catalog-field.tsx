@@ -19,6 +19,7 @@ import type {
   RuntimeFormFieldOption,
   RuntimeFormLookupDefinition,
   RuntimeFormLookupOption,
+  RuntimeFormResolvedLabels,
 } from "../runtime-form-types";
 import {
   getStringValue,
@@ -103,6 +104,7 @@ function catalogOptionView(
 function catalogGroups(
   options: ReadonlyArray<RuntimeFormLookupOption>,
   lookup: RuntimeFormLookupDefinition,
+  labels: RuntimeFormResolvedLabels,
 ) {
   const groupField = catalogGroupField(lookup);
   const hasGroupData = Boolean(groupField && options.some((option) => optionFieldValue(option, groupField)));
@@ -116,7 +118,7 @@ function catalogGroups(
 
   const groupMap = new Map<string, RuntimeFormLookupOption[]>();
   options.forEach((option) => {
-    const group = optionFieldValue(option, groupField) || "Other";
+    const group = optionFieldValue(option, groupField) || labels.catalogGroupOther;
     groupMap.set(group, [...(groupMap.get(group) ?? []), option]);
   });
 
@@ -152,6 +154,7 @@ export function LookupCatalogField({
   disabled,
   error,
   field,
+  labels,
   loadLookupOptions,
   onFieldChange,
   required,
@@ -280,7 +283,10 @@ export function LookupCatalogField({
   }, [field.id, loadLookupOptions, lookup, open, options, selectedValue]);
 
   const selectedOption = selectedCatalogOption(selectedValue, options, field.options);
-  const groupedCatalog = useMemo(() => lookup ? catalogGroups(options, lookup) : { groupField: undefined, groups: [] }, [lookup, options]);
+  const groupedCatalog = useMemo(
+    () => lookup ? catalogGroups(options, lookup, labels) : { groupField: undefined, groups: [] },
+    [labels, lookup, options],
+  );
   const hasSearch = requestSearchValue.trim().length > 0;
   const flatOptions = groupedCatalog.groupField ? [] : options;
   const isDisabled = disabled || !loadLookupOptions;
@@ -341,7 +347,7 @@ export function LookupCatalogField({
     <div className="platform-runtime-form__lookup-catalog">
       <Button
         aria-invalid={error ? "true" : undefined}
-        aria-label={`Open ${field.label} catalog`}
+        aria-label={`${labels.catalogOpen} ${field.label}`}
         className="platform-runtime-form__lookup-catalog-trigger"
         disabled={isDisabled}
         id={controlId}
@@ -360,7 +366,7 @@ export function LookupCatalogField({
             {selectedView.description ? <span className="platform-runtime-form__lookup-catalog-summary-description">{selectedView.description}</span> : null}
           </>
         ) : (
-          <span className="platform-runtime-form__lookup-catalog-summary-empty">No catalog item selected</span>
+          <span className="platform-runtime-form__lookup-catalog-summary-empty">{labels.catalogNoSelection}</span>
         )}
       </div>
 
@@ -375,23 +381,23 @@ export function LookupCatalogField({
               className="platform-runtime-form__lookup-catalog-search"
               disabled={loading && page === 1}
               onChange={(event) => setSearchValue(event.currentTarget.value)}
-              placeholder="Search catalog"
+              placeholder={labels.catalogSearchPlaceholder}
               value={searchValue}
             />
 
             {loading && page === 1 ? (
-              <div className="platform-runtime-form__lookup-catalog-state">Loading catalog...</div>
+              <div className="platform-runtime-form__lookup-catalog-state">{labels.catalogLoading}</div>
             ) : null}
 
             {loadError ? (
               <div className="platform-runtime-form__lookup-catalog-state platform-runtime-form__lookup-catalog-state--error">
-                <span>Could not load catalog options.</span>
-                <Button onClick={retryLoad} size="sm" type="button" variant="secondary">Retry</Button>
+                <span>{labels.catalogLoadError}</span>
+                <Button onClick={retryLoad} size="sm" type="button" variant="secondary">{labels.catalogRetry}</Button>
               </div>
             ) : null}
 
             {!loading && !loadError && options.length === 0 ? (
-              <div className="platform-runtime-form__lookup-catalog-state">No catalog options found.</div>
+              <div className="platform-runtime-form__lookup-catalog-state">{labels.catalogEmpty}</div>
             ) : null}
 
             {!loading && !loadError && groupedCatalog.groupField ? (
@@ -449,7 +455,7 @@ export function LookupCatalogField({
                 type="button"
                 variant="secondary"
               >
-                Load more
+                {labels.loadMore}
               </Button>
             ) : null}
           </DialogBody>

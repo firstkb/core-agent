@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import {
   Button,
   Label,
@@ -14,7 +16,14 @@ export type ViewSettingsFilterFieldOption = {
 };
 
 export type ViewSettingsDefaultFilterItem = {
+  actionItems?: ReadonlyArray<{
+    fieldLabel: string;
+    index: number;
+  }>;
+  connective?: "or";
   fieldLabel: string;
+  fieldLabels?: ReadonlyArray<string>;
+  id?: string;
   index: number;
   summary: string;
 };
@@ -95,40 +104,70 @@ export function ViewSettingsDefaultFiltersSection({
               {emptyText}
             </p>
           ) : (
-            filters.map((filter) => (
-              <div className="tenant-web__platform-studio-compact-row" key={`default-filter-${filter.index}`}>
-                <div className="tenant-web__platform-studio-compact-row-main">
-                  <span className="tenant-web__platform-studio-compact-row-label">
-                    {filter.fieldLabel}
-                  </span>
-                  <span className="tenant-web__platform-studio-compact-row-summary">
-                    {filter.summary}
-                  </span>
+            filters.map((filter) => {
+              const actionItems = filter.actionItems ?? [{
+                fieldLabel: filter.fieldLabel,
+                index: filter.index,
+              }];
+              const fieldLabels = filter.fieldLabels ?? [filter.fieldLabel];
+              const isOrGroup = filter.connective === "or" && fieldLabels.length > 1;
+
+              return (
+                <div
+                  className="tenant-web__platform-studio-compact-row"
+                  key={filter.id ?? `default-filter-${filter.index}`}
+                >
+                  <div className="tenant-web__platform-studio-compact-row-main">
+                    <span className="tenant-web__platform-studio-compact-row-title-wrap">
+                      {fieldLabels.map((label, labelIndex) => (
+                        <Fragment key={`${filter.id ?? filter.index}-${label}-${labelIndex}`}>
+                          <span className="tenant-web__platform-studio-compact-row-label">
+                            {label}
+                          </span>
+                          {isOrGroup && labelIndex < fieldLabels.length - 1 ? (
+                            <span className="tenant-web__platform-studio-compact-row-or-chip">
+                              OR
+                            </span>
+                          ) : null}
+                        </Fragment>
+                      ))}
+                    </span>
+                    <span className="tenant-web__platform-studio-compact-row-summary">
+                      {filter.summary}
+                    </span>
+                  </div>
+                  <Menu align="end">
+                    <MenuTrigger>
+                      <button
+                        aria-label={actionsMenuLabel}
+                        className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
+                        type="button"
+                      >
+                        <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">
+                          ⋮
+                        </span>
+                      </button>
+                    </MenuTrigger>
+                    <MenuContent className="tenant-web__platform-studio-menu">
+                      {actionItems.map((action) => (
+                        <MenuItem key={`edit-${action.index}`} onClick={() => onEditFilter(action.index)}>
+                          {actionItems.length > 1 ? `${editFilterLabel} ${action.fieldLabel}` : editFilterLabel}
+                        </MenuItem>
+                      ))}
+                      {actionItems.map((action) => (
+                        <MenuItem
+                          key={`delete-${action.index}`}
+                          onClick={() => onDeleteFilter(action.index)}
+                          tone="danger"
+                        >
+                          {actionItems.length > 1 ? `${deleteFilterLabel} ${action.fieldLabel}` : deleteFilterLabel}
+                        </MenuItem>
+                      ))}
+                    </MenuContent>
+                  </Menu>
                 </div>
-                <Menu align="end">
-                  <MenuTrigger>
-                    <button
-                      aria-label={actionsMenuLabel}
-                      className="tenant-web__platform-studio-menu-trigger tenant-web__platform-studio-menu-trigger--compact"
-                      type="button"
-                    >
-                      <span aria-hidden="true" className="tenant-web__platform-studio-menu-trigger-dots">⋮</span>
-                    </button>
-                  </MenuTrigger>
-                  <MenuContent className="tenant-web__platform-studio-menu">
-                    <MenuItem onClick={() => onEditFilter(filter.index)}>
-                      {editFilterLabel}
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => onDeleteFilter(filter.index)}
-                      tone="danger"
-                    >
-                      {deleteFilterLabel}
-                    </MenuItem>
-                  </MenuContent>
-                </Menu>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

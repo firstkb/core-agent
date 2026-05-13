@@ -19,6 +19,8 @@ import {
   isFormBuilderContainer,
   type FormBuilderDocument,
   type FormBuilderFilterCondition,
+  type FormBuilderLookupFilterClause,
+  type FormBuilderLookupFilterCondition,
   type FormBuilderGridColumnDefinition,
   type FormBuilderNode,
   type FormBuilderRequirementRule,
@@ -57,6 +59,14 @@ type FilterConditionSummaryResolver = (
   fields: ReadonlyArray<FormsPlaceholderField>,
   t: Translate,
 ) => string;
+
+const lookupFilterOrGroupClauseKeys = new Set([
+  "active_account",
+  "by_user_company",
+  "business_unit_is_user_company",
+  "main_company_is_user_company",
+  "project_in_user_access",
+]);
 
 export function createCanvasBreadcrumbItems({
   breadcrumb,
@@ -228,12 +238,86 @@ export function createViewSettingsDefaultFilterItems({
   getFilterConditionSummary: FilterConditionSummaryResolver;
   t: Translate;
 }): ReadonlyArray<ViewSettingsDefaultFilterItem> {
-  return conditions.map((condition, index) => ({
-    fieldLabel: fields.find((field) => field.id === condition.fieldId)?.label
-      ?? t("tenant.platformStudio.forms.builder.filter.fieldLabel"),
-    index,
-    summary: getFilterConditionSummary(condition, fields, t),
-  }));
+  const fieldLabelsById = new Map(fields.map((field) => [field.id, field.label]));
+  const fieldsById = new Map(fields.map((field) => [field.id, field]));
+  const lookupGroupsByClauseKey = new Map<string, ViewSettingsDefaultFilterItem>();
+  const items: ViewSettingsDefaultFilterItem[] = [];
+
+  conditions.forEach((condition, index) => {
+    const fieldLabel = fieldLabelsById.get(condition.fieldId)
+      ?? t("tenant.platformStudio.forms.builder.filter.fieldLabel");
+    const field = fieldsById.get(condition.fieldId);
+    const activeLookupClauses = getDisplayableLookupOrClauses(condition, field);
+
+    if (activeLookupClauses.length === 0 || !isLookupFilterCondition(condition)) {
+      items.push({
+        fieldLabel,
+        id: `default-filter-${index}`,
+        index,
+        summary: getFilterConditionSummary(condition, fields, t),
+      });
+      return;
+    }
+
+    for (const clause of activeLookupClauses) {
+      const group = lookupGroupsByClauseKey.get(clause.clauseKey);
+      if (group) {
+        if (!group.actionItems?.some((action) => action.index === index)) {
+          group.actionItems = [...(group.actionItems ?? []), { fieldLabel, index }];
+          group.fieldLabels = [...(group.fieldLabels ?? []), fieldLabel];
+        }
+        continue;
+      }
+
+      const groupedCondition: FormBuilderLookupFilterCondition = {
+        ...condition,
+        clauses: [clause],
+      };
+      const nextGroup: ViewSettingsDefaultFilterItem = {
+        actionItems: [{ fieldLabel, index }],
+        connective: "or",
+        fieldLabel,
+        fieldLabels: [fieldLabel],
+        id: `default-filter-lookup-or-${clause.clauseKey}`,
+        index,
+        summary: getFilterConditionSummary(groupedCondition, fields, t),
+      };
+
+      lookupGroupsByClauseKey.set(clause.clauseKey, nextGroup);
+      items.push(nextGroup);
+    }
+  });
+
+  return items;
+}
+
+function getDisplayableLookupOrClauses(
+  condition: FormBuilderFilterCondition,
+  field: FormsPlaceholderField | undefined,
+): ReadonlyArray<FormBuilderLookupFilterClause> {
+  if (!isLookupFilterCondition(condition) || !field || field.kind !== "db_lookup") {
+    return [];
+  }
+
+  if (field.selectionMode === "multiple") {
+    return [];
+  }
+
+  if (condition.lookupPreset !== field.preset) {
+    return [];
+  }
+
+  return condition.clauses.filter((clause) =>
+    clause.valueMode === "boolean_flag" &&
+    clause.value === true &&
+    lookupFilterOrGroupClauseKeys.has(clause.clauseKey)
+  );
+}
+
+function isLookupFilterCondition(
+  condition: FormBuilderFilterCondition,
+): condition is FormBuilderLookupFilterCondition {
+  return "editorType" in condition && condition.editorType === "lookup";
 }
 
 export function createLookupSourcePickerModelItems({

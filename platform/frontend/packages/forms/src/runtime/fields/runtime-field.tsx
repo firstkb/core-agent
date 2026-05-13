@@ -28,13 +28,26 @@ import { SelectField } from "./select-field";
 import { LongTextField } from "./text-field";
 import type { RuntimeFieldControlProps } from "./field-types";
 
-function isLabelableField(field: RuntimeFormFieldDefinition) {
-  return field.type !== "radio"
-    && field.lookup?.displayMode !== "catalog_modal"
-    && field.choiceRenderStyle !== "buttons"
-    && !field.readonly
-    && field.type !== "readonly"
-    && field.type !== "system";
+export type RuntimeFieldLabelActivation = "focus" | "native" | "none";
+
+export function getRuntimeFieldLabelActivation(field: RuntimeFormFieldDefinition): RuntimeFieldLabelActivation {
+  if (field.readonly || field.type === "readonly" || field.type === "system") {
+    return "none";
+  }
+
+  if (field.lookup?.displayMode === "catalog_modal") {
+    return "none";
+  }
+
+  if (field.type === "radio" || field.choiceRenderStyle === "buttons") {
+    return "none";
+  }
+
+  if (field.lookup || field.type === "single_select" || field.type === "multi_select") {
+    return "focus";
+  }
+
+  return "native";
 }
 
 function RuntimeFieldControl(props: RuntimeFieldControlProps) {
@@ -92,6 +105,15 @@ export function RuntimeField({
   const required = isRuntimeFieldRequired(field, values, field.required);
   const disabled = field.disabled || field.readonly || false;
   const usesCatalogLookup = field.lookup?.displayMode === "catalog_modal";
+  const labelActivation = getRuntimeFieldLabelActivation(field);
+
+  function handleLabelClick() {
+    if (labelActivation !== "focus" || typeof document === "undefined") {
+      return;
+    }
+
+    document.getElementById(controlId)?.focus();
+  }
 
   return (
     <Field
@@ -106,8 +128,9 @@ export function RuntimeField({
     >
       {usesCatalogLookup ? null : (
         <FieldLabel
-          htmlFor={isLabelableField(field) ? controlId : undefined}
+          htmlFor={labelActivation === "native" ? controlId : undefined}
           id={`${controlId}-label`}
+          onClick={handleLabelClick}
         >
           {field.label}
         </FieldLabel>

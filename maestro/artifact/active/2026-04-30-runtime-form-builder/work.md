@@ -633,7 +633,21 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check`;
   - `scripts/preflight.sh` passed in lite mode;
   - Browser Use desktop smoke confirmed `Company name` renders `Atlas Safety Holdings` on the lookup edit form and the view-only readonly border is neutral, not warning/required.
+- Runtime form label activation rule accepted and implemented:
+  - native text/date/number/textarea controls and switch controls use native label activation;
+  - combobox/search-select labels are focus-only: clicking the label focuses the trigger but must not open the dropdown or start lazy lookup loading;
+  - catalog-modal, readonly/system, button-style choice, radio group headings, and view-only displays do not use interactive top-level label activation;
+  - option-level radio/buttons keep their own direct interaction semantics.
+- Runtime form label activation checks passed:
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/forms lint`;
+  - `pnpm -C platform/frontend --filter @platform/forms test`: 1 file, 17 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
+  - `git diff --check`;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use desktop smoke confirmed clicking the `DB lookup` label focuses its combobox trigger without opening the dropdown/listbox.
 
 ## Next Action
 
-Next allowed action is owner retest of view-only lookup-derived outputs and then choose the next runtime field slice. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of runtime label activation and then choose the next runtime field slice. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

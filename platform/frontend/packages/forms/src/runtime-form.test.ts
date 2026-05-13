@@ -8,6 +8,7 @@ import {
 import type { RuntimeFormDefinition, RuntimeFormSubformDefinition } from "./runtime-form";
 import { createRuntimeFormFixture } from "./runtime-form-fixtures";
 import { createRuntimeFormDefinitionFromSchema } from "./runtime-form-schema";
+import { getRuntimeFieldLabelActivation } from "./runtime/fields/runtime-field";
 import { formatReadonlyValue } from "./runtime/runtime-form-utils";
 
 describe("runtime form helpers", () => {
@@ -50,6 +51,58 @@ describe("runtime form helpers", () => {
       label: "Follow-up at",
       type: "date_time",
     }, "2026-05-03T14:05")).toBe("05/03/2026 2:05 PM");
+  });
+
+  it("classifies runtime field label activation by control behavior", () => {
+    expect(getRuntimeFieldLabelActivation({
+      id: "name",
+      label: "Name",
+      type: "short_text",
+    })).toBe("native");
+    expect(getRuntimeFieldLabelActivation({
+      id: "active",
+      label: "Active",
+      type: "boolean",
+    })).toBe("native");
+    expect(getRuntimeFieldLabelActivation({
+      id: "status",
+      label: "Status",
+      options: [{ label: "Open", value: "open" }],
+      type: "single_select",
+    })).toBe("focus");
+    expect(getRuntimeFieldLabelActivation({
+      id: "contact",
+      label: "Contact",
+      lookup: {
+        displayMode: "search_select",
+        selectionMode: "single",
+        valueMode: "stored_value",
+      },
+      type: "single_select",
+    })).toBe("focus");
+    expect(getRuntimeFieldLabelActivation({
+      id: "catalog",
+      label: "Catalog",
+      lookup: {
+        displayMode: "catalog_modal",
+        selectionMode: "single",
+        valueMode: "stored_value",
+      },
+      type: "single_select",
+    })).toBe("none");
+    expect(getRuntimeFieldLabelActivation({
+      choiceRenderStyle: "buttons",
+      id: "priority",
+      label: "Priority",
+      options: [{ label: "High", value: "high" }],
+      type: "single_select",
+    })).toBe("none");
+    expect(getRuntimeFieldLabelActivation({
+      id: "readonly",
+      label: "Readonly",
+      readonly: true,
+      type: "short_text",
+    })).toBe("none");
   });
 
   it("applies same-scope requirement rules during validation", () => {

@@ -536,6 +536,33 @@ View/read remains the existing `CollectionTable` modal path for now.
   - non-root users apply `User Active Account` against the lookup storage id and `By User's Company` against the lookup-derived company id;
   - repeated semantic clauses across multiple single-value contact fields are OR-grouped, while different semantic groups remain AND-grouped;
   - lookup filter predicates use the root data view through `EXISTS`, so the filter works even when the contact field is not visible as a grid column.
+- Form Builder company lookup View Filter authoring and runtime compiler completed:
+  - single-value `company_lookup` fields now expose only two View Filter switches: `Business Unit is User's Company` and `Main Company is User's Company`;
+  - both company switches default to off, and stale Business Unit Type/Name/Division-style clauses are sanitized out on edit/save;
+  - multiple company lookup fields remain excluded from View Filters with the rest of multivalue lookups;
+  - root users ignore these user-company filters for runtime table output, matching the contact lookup rule;
+  - non-root users apply `Business Unit is User's Company` against the lookup storage id and `Main Company is User's Company` through `company.main_company_id`;
+  - repeated company semantic clauses across multiple single-value company fields are OR-grouped, while different semantic groups remain AND-grouped.
+- Form Builder company lookup View Filter checks passed:
+  - `go test ./modules/tenant/platformstudioformbuilder`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web test`: 20 files, 76 tests;
+  - Browser Use smoke on `https://demo.platform.localhost/builder/forms/lookup/views/view-default` confirmed the Company filter modal shows only the two new switches and no legacy Business Unit Type/Name/Division clauses;
+  - `git diff --check`, docs/memory check, env policy check, and `scripts/preflight.sh` passed.
+- Form Builder project lookup View Filter authoring and runtime compiler completed:
+  - single-value `project_lookup` fields now expose only one View Filter switch: `Project is in User's Access List`;
+  - the project switch defaults to off, and stale `assigned_projects` / Business Unit clauses are sanitized out on edit/save;
+  - multiple project lookup fields remain excluded from View Filters with the rest of multivalue lookups;
+  - root users ignore this user-project filter for runtime table output, matching the contact/company lookup rule;
+  - non-root users apply `Project is in User's Access List` by checking the selected project id against `projectsaccess.project_id` for the current user's `users.id`;
+  - repeated project access clauses across multiple single-value project fields are OR-grouped.
+- Form Builder project lookup View Filter checks passed:
+  - `go test ./modules/tenant/platformstudioformbuilder`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web test`: 20 files, 78 tests;
+  - Browser Use smoke on `https://demo.platform.localhost/builder/forms/lookup/views/view-default` confirmed the Project filter modal shows only `Project is in User's Access List`, with no legacy `Assigned projects` / Business Unit clauses and no browser console errors.
 - Runtime catalog-modal lookup first slice completed:
   - `@platform/forms` now renders `lookup.displayMode = "catalog_modal"` as a real UI Kit dialog instead of a fallback note;
   - the form row uses the authored field label/title as the primary trigger button and shows a selected summary beside it inside a light surface background;
@@ -563,6 +590,10 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
   - `git diff --check`;
   - Browser Use desktop smoke confirmed reloaded selected value renders as category/title text, opening one category then another closes the previous category, and console errors remain empty;
+- Form Builder View Filter target cleanup completed:
+  - lookup-derived alias pseudo-fields such as `Reported By / Label`, `Company / Type`, `Project / Name`, and generic `DB lookup / Label` are no longer offered in `View -> Filters`;
+  - real single-value lookup fields remain selectable so the dedicated lookup filter UI can own field-specific settings;
+  - multiple-value lookup fields remain excluded from `View -> Filters`.
   - Browser Use mobile smoke at `390x844` confirmed the trigger opens the dialog, the reloaded selected value has category/title text, and console errors remain empty.
 - Runtime form localization slice completed:
   - shared `@platform/forms` now accepts expanded runtime labels for form shell actions, save states, validation dialogs, readonly boolean/empty values, select/lookup empty/search/load-more states, catalog modal states, generated schema fallback titles, and finish/back info copy;
@@ -588,4 +619,4 @@ View/read remains the existing `CollectionTable` modal path for now.
 
 ## Next Action
 
-Next allowed action is owner retest of runtime catalog modal search and runtime form language switching on the `lookup` form. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, non-contact lookup View Filter compilers, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of company/project lookup View Filters on runtime table output. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

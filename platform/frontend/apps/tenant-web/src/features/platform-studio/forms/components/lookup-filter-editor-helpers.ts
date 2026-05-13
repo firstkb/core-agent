@@ -28,39 +28,20 @@ export type LookupClauseDefinition = {
   valueMode: FormBuilderLookupFilterClause["valueMode"];
 };
 
-const mockBusinessUnitTypeOptions = [
-  { label: "Business Unit", value: "business_unit" },
-  { label: "Division", value: "division" },
-  { label: "Department", value: "department" },
-  { label: "Vendor", value: "vendor" },
-] as const;
-
-const mockBusinessUnitOptions = [
-  { label: "Roofing", value: "roofing" },
-  { label: "Electrical", value: "electrical" },
-  { label: "Safety", value: "safety" },
-  { label: "Operations", value: "operations" },
-] as const;
-
 const lookupClauseDefinitionsByPreset: Record<
   Exclude<FormBuilderLookupPreset, "generic_db_lookup">,
   ReadonlyArray<LookupClauseDefinition>
 > = {
   company_lookup: [
-    { clauseKey: "business_unit_type", literalOptions: mockBusinessUnitTypeOptions, valueMode: "literal" },
-    { clauseKey: "business_unit_name", valueMode: "literal" },
-    { clauseKey: "main_company_name", valueMode: "literal" },
     {
-      clauseKey: "business_unit_scope",
-      defaultDynamicToken: "current_user_company_id",
-      tokenOptions: ["current_user_company_id", "current_user_division_id"],
-      valueMode: "dynamic_token",
+      clauseKey: "business_unit_is_user_company",
+      defaultValue: false,
+      valueMode: "boolean_flag",
     },
     {
-      clauseKey: "main_company_scope",
-      defaultDynamicToken: "current_user_company_name",
-      tokenOptions: ["current_user_company_name", "current_user_division_name"],
-      valueMode: "dynamic_token",
+      clauseKey: "main_company_is_user_company",
+      defaultValue: false,
+      valueMode: "boolean_flag",
     },
   ],
   contact_lookup: [
@@ -76,12 +57,10 @@ const lookupClauseDefinitionsByPreset: Record<
     },
   ],
   project_lookup: [
-    { clauseKey: "business_unit_id", literalOptions: mockBusinessUnitOptions, valueMode: "literal" },
     {
-      clauseKey: "assigned_projects",
-      defaultDynamicToken: "assigned_projects",
-      tokenOptions: ["assigned_projects"],
-      valueMode: "dynamic_token",
+      clauseKey: "project_in_user_access",
+      defaultValue: false,
+      valueMode: "boolean_flag",
     },
   ],
 };

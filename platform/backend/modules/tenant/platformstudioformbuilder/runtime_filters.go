@@ -256,7 +256,7 @@ func runtimeViewListDefaultFiltersRequireActorContext(defaultFilters map[string]
 				continue
 			}
 			switch normalizeString(clause["clauseKey"]) {
-			case "active_account", "by_user_company":
+			case "active_account", "by_user_company", "business_unit_is_user_company", "main_company_is_user_company", "project_in_user_access":
 				return true
 			}
 		}
@@ -280,20 +280,20 @@ func collectRuntimeViewListLookupFilterGroups(
 
 	field, ok := fieldsByID[fieldID]
 	if !ok {
-		if normalizeString(condition["lookupPreset"]) == "contact_lookup" {
+		if runtimeViewListSupportsLookupFilterPreset(normalizeString(condition["lookupPreset"])) {
 			return nil, nil
 		}
 		return nil, collectiontable.ErrInvalidQuery
 	}
 
 	lookupPreset := chooseString(normalizeString(condition["lookupPreset"]), field.Preset)
-	if lookupPreset != "contact_lookup" {
+	if !runtimeViewListSupportsLookupFilterPreset(lookupPreset) {
 		return nil, collectiontable.ErrInvalidQuery
 	}
 	if filterContext.RootActor {
 		return nil, nil
 	}
-	if field.Kind != "db_lookup" || field.Preset != "contact_lookup" || field.SelectionMode == "multiple" {
+	if field.Kind != "db_lookup" || field.Preset != lookupPreset || field.SelectionMode == "multiple" {
 		return nil, nil
 	}
 
@@ -305,6 +305,19 @@ func collectRuntimeViewListLookupFilterGroups(
 		}
 		switch clauseKey := normalizeString(clause["clauseKey"]); clauseKey {
 		case "active_account", "by_user_company":
+			if lookupPreset != "contact_lookup" {
+				return nil, collectiontable.ErrInvalidQuery
+			}
+			out[clauseKey] = append(out[clauseKey], field)
+		case "business_unit_is_user_company", "main_company_is_user_company":
+			if lookupPreset != "company_lookup" {
+				return nil, collectiontable.ErrInvalidQuery
+			}
+			out[clauseKey] = append(out[clauseKey], field)
+		case "project_in_user_access":
+			if lookupPreset != "project_lookup" {
+				return nil, collectiontable.ErrInvalidQuery
+			}
 			out[clauseKey] = append(out[clauseKey], field)
 		default:
 			return nil, collectiontable.ErrInvalidQuery
@@ -313,18 +326,31 @@ func collectRuntimeViewListLookupFilterGroups(
 	return out, nil
 }
 
+func runtimeViewListSupportsLookupFilterPreset(preset string) bool {
+	switch strings.TrimSpace(preset) {
+	case "contact_lookup", "company_lookup", "project_lookup":
+		return true
+	default:
+		return false
+	}
+}
+
 func runtimeViewListLookupGroupKeys(groups map[string][]runtimeViewListFieldMeta) []string {
 	if len(groups) == 0 {
 		return nil
 	}
 	ordered := make([]string, 0, len(groups))
-	for _, groupKey := range []string{"active_account", "by_user_company"} {
+	for _, groupKey := range []string{"active_account", "by_user_company", "business_unit_is_user_company", "main_company_is_user_company", "project_in_user_access"} {
 		if _, ok := groups[groupKey]; ok {
 			ordered = append(ordered, groupKey)
 		}
 	}
 	for groupKey := range groups {
-		if groupKey == "active_account" || groupKey == "by_user_company" {
+		if groupKey == "active_account" ||
+			groupKey == "by_user_company" ||
+			groupKey == "business_unit_is_user_company" ||
+			groupKey == "main_company_is_user_company" ||
+			groupKey == "project_in_user_access" {
 			continue
 		}
 		ordered = append(ordered, groupKey)
@@ -372,6 +398,42 @@ func buildRuntimeViewListLookupSemanticGroupClause(
 			}
 			predicates = append(predicates, fmt.Sprintf(`dv.%s = $%d::bigint`, quoteIdentifier(columnName), argIndex))
 		}
+	case "business_unit_is_user_company":
+		value = filterContext.CurrentUserCompanyID
+		if value == 0 {
+			return "FALSE", nil, nil
+		}
+		for _, field := range fields {
+			columnName := strings.TrimSpace(field.DataColumnName)
+			if columnName == "" {
+				return "", nil, collectiontable.ErrInvalidQuery
+			}
+			predicates = append(predicates, fmt.Sprintf(`dv.%s = $%d::bigint`, quoteIdentifier(columnName), argIndex))
+		}
+	case "main_company_is_user_company":
+		value = filterContext.CurrentUserCompanyID
+		if value == 0 {
+			return "FALSE", nil, nil
+		}
+		for _, field := range fields {
+			columnName := strings.TrimSpace(field.DataColumnName)
+			if columnName == "" {
+				return "", nil, collectiontable.ErrInvalidQuery
+			}
+			predicates = append(predicates, buildRuntimeViewListCompanyMainCompanyPredicate(columnName, argIndex))
+		}
+	case "project_in_user_access":
+		value = filterContext.CurrentUserID
+		if value == 0 {
+			return "FALSE", nil, nil
+		}
+		for _, field := range fields {
+			columnName := strings.TrimSpace(field.DataColumnName)
+			if columnName == "" {
+				return "", nil, collectiontable.ErrInvalidQuery
+			}
+			predicates = append(predicates, buildRuntimeViewListProjectAccessPredicate(columnName, argIndex))
+		}
 	default:
 		return "", nil, collectiontable.ErrInvalidQuery
 	}
@@ -384,6 +446,32 @@ func buildRuntimeViewListLookupSemanticGroupClause(
 		groupClause = "(" + strings.Join(predicates, " OR ") + ")"
 	}
 	return buildRuntimeViewListDataViewExistsClause(filterContext.DataViewName, groupClause), []any{value}, nil
+}
+
+func buildRuntimeViewListCompanyMainCompanyPredicate(companyColumnName string, argIndex int) string {
+	return fmt.Sprintf(
+		`EXISTS (SELECT 1 FROM %s lookup_company WHERE lookup_company.%s = dv.%s AND lookup_company.%s IS NOT DISTINCT FROM dv.%s AND lookup_company.%s = $%d::bigint)`,
+		qualifiedIdentifier("company"),
+		quoteIdentifier("id"),
+		quoteIdentifier(strings.TrimSpace(companyColumnName)),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier("main_company_id"),
+		argIndex,
+	)
+}
+
+func buildRuntimeViewListProjectAccessPredicate(projectColumnName string, argIndex int) string {
+	return fmt.Sprintf(
+		`EXISTS (SELECT 1 FROM %s project_access WHERE project_access.%s = dv.%s AND project_access.%s IS NOT DISTINCT FROM dv.%s AND project_access.%s = $%d::bigint)`,
+		qualifiedIdentifier("projectsaccess"),
+		quoteIdentifier("project_id"),
+		quoteIdentifier(strings.TrimSpace(projectColumnName)),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier("tenant_id"),
+		quoteIdentifier("user_id"),
+		argIndex,
+	)
 }
 
 func buildRuntimeViewListDataViewExistsClause(dataViewName string, predicate string) string {

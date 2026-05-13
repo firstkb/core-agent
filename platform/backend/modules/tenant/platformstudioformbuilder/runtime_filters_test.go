@@ -273,6 +273,96 @@ func TestQueryRuntimeViewListGroupsContactLookupDefaultFiltersBySemanticOR(t *te
 	}
 }
 
+func TestQueryRuntimeViewListIgnoresCompanyLookupDefaultFiltersForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	configureCompanyLookupDefaultFilters(t, model, view)
+
+	svc := NewService(repo)
+	_, err := svc.QueryRuntimeViewList(rootTestContext(), model.ModelID, view.ViewID, RuntimeViewListQueryRequest{})
+	if err != nil {
+		t.Fatalf("QueryRuntimeViewList returned error: %v", err)
+	}
+	if repo.lastRuntimeWhereClause != "" {
+		t.Fatalf("root where clause = %q, want empty", repo.lastRuntimeWhereClause)
+	}
+	if len(repo.lastRuntimeWhereArgs) != 0 {
+		t.Fatalf("root where args = %#v, want empty", repo.lastRuntimeWhereArgs)
+	}
+}
+
+func TestQueryRuntimeViewListGroupsCompanyLookupDefaultFiltersBySemanticOR(t *testing.T) {
+	repo := newMemoryRepository()
+	repo.runtimeActorCompanyID = 9
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	configureCompanyLookupDefaultFilters(t, model, view)
+
+	svc := NewService(repo)
+	_, err := svc.QueryRuntimeViewList(testContext(), model.ModelID, view.ViewID, RuntimeViewListQueryRequest{})
+	if err != nil {
+		t.Fatalf("QueryRuntimeViewList returned error: %v", err)
+	}
+
+	businessUnitGroup := `(dv."company_id" = $1::bigint OR dv."client_company_id" = $1::bigint)`
+	if !strings.Contains(repo.lastRuntimeWhereClause, businessUnitGroup) {
+		t.Fatalf("where clause should OR business_unit_is_user_company across company fields, got %q", repo.lastRuntimeWhereClause)
+	}
+	mainCompanyLeft := `EXISTS (SELECT 1 FROM "public"."company" lookup_company WHERE lookup_company."id" = dv."company_id" AND lookup_company."tenant_id" IS NOT DISTINCT FROM dv."tenant_id" AND lookup_company."main_company_id" = $2::bigint)`
+	mainCompanyRight := `EXISTS (SELECT 1 FROM "public"."company" lookup_company WHERE lookup_company."id" = dv."client_company_id" AND lookup_company."tenant_id" IS NOT DISTINCT FROM dv."tenant_id" AND lookup_company."main_company_id" = $2::bigint)`
+	if !strings.Contains(repo.lastRuntimeWhereClause, mainCompanyLeft) || !strings.Contains(repo.lastRuntimeWhereClause, mainCompanyRight) {
+		t.Fatalf("where clause should check main company through company table, got %q", repo.lastRuntimeWhereClause)
+	}
+	if !strings.Contains(repo.lastRuntimeWhereClause, " OR ") || !strings.Contains(repo.lastRuntimeWhereClause, " AND ") {
+		t.Fatalf("where clause should OR same company semantic group and AND different groups, got %q", repo.lastRuntimeWhereClause)
+	}
+	if len(repo.lastRuntimeWhereArgs) != 2 || repo.lastRuntimeWhereArgs[0] != int64(9) || repo.lastRuntimeWhereArgs[1] != int64(9) {
+		t.Fatalf("where args = %#v, want [9 9]", repo.lastRuntimeWhereArgs)
+	}
+}
+
+func TestQueryRuntimeViewListIgnoresProjectLookupDefaultFiltersForRoot(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	configureProjectLookupDefaultFilters(t, model, view)
+
+	svc := NewService(repo)
+	_, err := svc.QueryRuntimeViewList(rootTestContext(), model.ModelID, view.ViewID, RuntimeViewListQueryRequest{})
+	if err != nil {
+		t.Fatalf("QueryRuntimeViewList returned error: %v", err)
+	}
+	if repo.lastRuntimeWhereClause != "" {
+		t.Fatalf("root where clause = %q, want empty", repo.lastRuntimeWhereClause)
+	}
+	if len(repo.lastRuntimeWhereArgs) != 0 {
+		t.Fatalf("root where args = %#v, want empty", repo.lastRuntimeWhereArgs)
+	}
+}
+
+func TestQueryRuntimeViewListGroupsProjectLookupDefaultFiltersBySemanticOR(t *testing.T) {
+	repo := newMemoryRepository()
+	repo.runtimeActorUserID = 77
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	configureProjectLookupDefaultFilters(t, model, view)
+
+	svc := NewService(repo)
+	_, err := svc.QueryRuntimeViewList(testContext(), model.ModelID, view.ViewID, RuntimeViewListQueryRequest{})
+	if err != nil {
+		t.Fatalf("QueryRuntimeViewList returned error: %v", err)
+	}
+
+	projectLeft := `EXISTS (SELECT 1 FROM "public"."projectsaccess" project_access WHERE project_access."project_id" = dv."project_id" AND project_access."tenant_id" IS NOT DISTINCT FROM dv."tenant_id" AND project_access."user_id" = $1::bigint)`
+	projectRight := `EXISTS (SELECT 1 FROM "public"."projectsaccess" project_access WHERE project_access."project_id" = dv."backup_project_id" AND project_access."tenant_id" IS NOT DISTINCT FROM dv."tenant_id" AND project_access."user_id" = $1::bigint)`
+	if !strings.Contains(repo.lastRuntimeWhereClause, projectLeft) || !strings.Contains(repo.lastRuntimeWhereClause, projectRight) {
+		t.Fatalf("where clause should check project access through projectsaccess, got %q", repo.lastRuntimeWhereClause)
+	}
+	if !strings.Contains(repo.lastRuntimeWhereClause, " OR ") {
+		t.Fatalf("where clause should OR project_in_user_access across project fields, got %q", repo.lastRuntimeWhereClause)
+	}
+	if len(repo.lastRuntimeWhereArgs) != 1 || repo.lastRuntimeWhereArgs[0] != int64(77) {
+		t.Fatalf("where args = %#v, want [77]", repo.lastRuntimeWhereArgs)
+	}
+}
+
 func configureContactLookupDefaultFilters(t *testing.T, model *ModelRecord, view *ViewRecord) {
 	t.Helper()
 
@@ -341,6 +431,160 @@ func configureContactLookupDefaultFilters(t *testing.T, model *ModelRecord, view
 					"clauses": []any{
 						map[string]any{"clauseKey": "active_account", "value": true, "valueMode": "boolean_flag"},
 						map[string]any{"clauseKey": "by_user_company", "value": true, "valueMode": "boolean_flag"},
+					},
+				},
+			},
+		},
+	}
+	uiSchema["rootScope"] = rootScope
+	viewPayload["uiSchema"] = uiSchema
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+}
+
+func configureProjectLookupDefaultFilters(t *testing.T, model *ModelRecord, view *ViewRecord) {
+	t.Helper()
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootDataScope := asMap(dataSchema["rootScope"])
+	rootDataScope["fields"] = append(asSlice(rootDataScope["fields"]),
+		map[string]any{
+			"displayName":   "Project",
+			"id":            "project",
+			"key":           "project",
+			"kind":          "db_lookup",
+			"label":         "Project",
+			"preset":        "project_lookup",
+			"schemaScopeId": "root",
+			"selectionMode": "single",
+			"storageKey":    "project",
+		},
+		map[string]any{
+			"displayName":   "Backup Project",
+			"id":            "backup-project",
+			"key":           "backup-project",
+			"kind":          "db_lookup",
+			"label":         "Backup Project",
+			"preset":        "project_lookup",
+			"schemaScopeId": "root",
+			"selectionMode": "single",
+			"storageKey":    "backup_project",
+		},
+	)
+	dataSchema["rootScope"] = rootDataScope
+	modelPayload["dataSchema"] = dataSchema
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	rootScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{
+					"fieldId": "site-name",
+					"id":      "grid-column-site-name",
+					"order":   0,
+				},
+			},
+		},
+	}
+	rootScope["filterDefinitions"] = map[string]any{
+		"defaultFilters": map[string]any{
+			"logic": "and",
+			"conditions": []any{
+				map[string]any{
+					"editorType":   "lookup",
+					"fieldId":      "project",
+					"lookupPreset": "project_lookup",
+					"clauses": []any{
+						map[string]any{"clauseKey": "project_in_user_access", "value": true, "valueMode": "boolean_flag"},
+					},
+				},
+				map[string]any{
+					"editorType":   "lookup",
+					"fieldId":      "backup-project",
+					"lookupPreset": "project_lookup",
+					"clauses": []any{
+						map[string]any{"clauseKey": "project_in_user_access", "value": true, "valueMode": "boolean_flag"},
+					},
+				},
+			},
+		},
+	}
+	uiSchema["rootScope"] = rootScope
+	viewPayload["uiSchema"] = uiSchema
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+}
+
+func configureCompanyLookupDefaultFilters(t *testing.T, model *ModelRecord, view *ViewRecord) {
+	t.Helper()
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	rootDataScope := asMap(dataSchema["rootScope"])
+	rootDataScope["fields"] = append(asSlice(rootDataScope["fields"]),
+		map[string]any{
+			"displayName":   "Company",
+			"id":            "company",
+			"key":           "company",
+			"kind":          "db_lookup",
+			"label":         "Company",
+			"preset":        "company_lookup",
+			"schemaScopeId": "root",
+			"selectionMode": "single",
+			"storageKey":    "company",
+		},
+		map[string]any{
+			"displayName":   "Client Company",
+			"id":            "client-company",
+			"key":           "client-company",
+			"kind":          "db_lookup",
+			"label":         "Client Company",
+			"preset":        "company_lookup",
+			"schemaScopeId": "root",
+			"selectionMode": "single",
+			"storageKey":    "client_company",
+		},
+	)
+	dataSchema["rootScope"] = rootDataScope
+	modelPayload["dataSchema"] = dataSchema
+	model.DefinitionJSON = mustJSON(t, modelPayload)
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootScope := asMap(uiSchema["rootScope"])
+	rootScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{
+					"fieldId": "site-name",
+					"id":      "grid-column-site-name",
+					"order":   0,
+				},
+			},
+		},
+	}
+	rootScope["filterDefinitions"] = map[string]any{
+		"defaultFilters": map[string]any{
+			"logic": "and",
+			"conditions": []any{
+				map[string]any{
+					"editorType":   "lookup",
+					"fieldId":      "company",
+					"lookupPreset": "company_lookup",
+					"clauses": []any{
+						map[string]any{"clauseKey": "business_unit_is_user_company", "value": true, "valueMode": "boolean_flag"},
+						map[string]any{"clauseKey": "main_company_is_user_company", "value": true, "valueMode": "boolean_flag"},
+					},
+				},
+				map[string]any{
+					"editorType":   "lookup",
+					"fieldId":      "client-company",
+					"lookupPreset": "company_lookup",
+					"clauses": []any{
+						map[string]any{"clauseKey": "business_unit_is_user_company", "value": true, "valueMode": "boolean_flag"},
+						map[string]any{"clauseKey": "main_company_is_user_company", "value": true, "valueMode": "boolean_flag"},
 					},
 				},
 			},

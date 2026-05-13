@@ -31,7 +31,7 @@ import {
 } from "./form-builder-workspace-field-scope-grid";
 import {
   getFieldsWithLookupDerivedOutputs,
-  getViewFilterBaseFields,
+  getViewFilterTargetFields,
 } from "./form-builder-workspace-lookup-derived-outputs";
 import {
   getLookupSourceSummary,
@@ -168,22 +168,20 @@ export function useFormBuilderWorkspaceDerivedState({
     [currentModel.fields, document],
   );
   const currentGridViewFilterTargets = useMemo(
-    () => getFieldsWithLookupDerivedOutputs({
+    () => getViewFilterTargetFields({
       document,
-      fields: getViewFilterBaseFields(currentGridScopeFields),
+      fields: currentGridScopeFields,
       getFieldLabelAndBoundField,
-      t,
     }),
-    [currentGridScopeFields, document, t],
+    [currentGridScopeFields, document, getFieldLabelAndBoundField],
   );
   const rootViewFilterTargets = useMemo(
-    () => getFieldsWithLookupDerivedOutputs({
+    () => getViewFilterTargetFields({
       document,
-      fields: getViewFilterBaseFields(rootViewScopeFields),
+      fields: rootViewScopeFields,
       getFieldLabelAndBoundField,
-      t,
     }),
-    [document, rootViewScopeFields, t],
+    [document, getFieldLabelAndBoundField, rootViewScopeFields],
   );
   const currentViewFilterTargets = isRootViewScope ? rootViewFilterTargets : currentGridViewFilterTargets;
   const currentScopeViewLabel = isRootViewScope

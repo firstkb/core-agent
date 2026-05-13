@@ -691,7 +691,10 @@ func buildRuntimeViewListFilterFields(
 	viewFieldTitlesByID := buildRuntimeViewListFieldTitlesByID(uiSchema)
 
 	for _, field := range fields {
-		if !field.Supported || field.Kind != "db_lookup" || field.Preset != "contact_lookup" || field.SelectionMode == "multiple" {
+		if !field.Supported ||
+			field.Kind != "db_lookup" ||
+			!runtimeViewListSupportsLookupFilterPreset(field.Preset) ||
+			field.SelectionMode == "multiple" {
 			continue
 		}
 		lookupOutputs := make(map[string]string, len(field.LookupDerivedOutputs))

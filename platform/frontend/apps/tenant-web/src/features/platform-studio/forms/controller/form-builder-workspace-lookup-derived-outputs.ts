@@ -179,6 +179,27 @@ export function getViewFilterBaseFields(fields: ReadonlyArray<FormsPlaceholderFi
   return fields.filter((field) => !(field.kind === "db_lookup" && (field.selectionMode ?? "single") === "multiple"));
 }
 
+export function getViewFilterTargetFields({
+  document,
+  fields,
+  getFieldLabelAndBoundField,
+}: {
+  document: FormBuilderDocument;
+  fields: ReadonlyArray<FormsPlaceholderField>;
+  getFieldLabelAndBoundField: FieldLabelResolver;
+}) {
+  return getViewFilterBaseFields(fields).map((field) => {
+    if (field.kind !== "db_lookup") {
+      return field;
+    }
+
+    return {
+      ...field,
+      label: getFieldLabelAndBoundField(field, document).labelField,
+    };
+  });
+}
+
 export function getFieldsWithLookupDerivedOutputs({
   document,
   fields,

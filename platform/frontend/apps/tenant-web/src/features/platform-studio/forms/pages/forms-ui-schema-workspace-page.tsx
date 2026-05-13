@@ -498,6 +498,7 @@ export function FormsViewWorkspacePage() {
     updateCorrectiveActionEnabled,
     updateCurrentScopeSubformTitle,
     updateCurrentScopeSubformViewSettings,
+    updateCurrentViewSecondaryRowField,
     updateCurrentViewSortDirection,
     updateCurrentViewSortField,
     updateGridColumnVisibility,
@@ -924,6 +925,7 @@ export function FormsViewWorkspacePage() {
                       onEditDefaultFilter={openDefaultFilterEditor}
                       onModelStructureLockedChange={updateModelStructureLocked}
                       onPendingDefaultFilterFieldChange={setPendingDefaultFilterFieldId}
+                      onSecondaryRowFieldChange={updateCurrentViewSecondaryRowField}
                       onSortDirectionChange={updateCurrentViewSortDirection}
                       onSortFieldChange={updateCurrentViewSortField}
                       onSubformTitleChange={updateCurrentScopeSubformTitle}
@@ -933,6 +935,10 @@ export function FormsViewWorkspacePage() {
                       onViewTitleChange={updateViewTitle}
                       onWorkflowStatusOptionChange={updateWorkflowStatusOption}
                       pendingDefaultFilterFieldId={pendingDefaultFilterFieldId}
+                      rowLayoutFieldItems={viewSettingsSortingFields}
+                      secondaryRowFieldId={isRootViewScope
+                        ? (document.viewSettings.list.rowLayout?.secondaryRowFieldId ?? "")
+                        : (currentScopeViewSettings?.list.rowLayout?.secondaryRowFieldId ?? "")}
                       sortDirection={isRootViewScope
                         ? document.viewSettings.list.sorting.direction
                         : (currentScopeViewSettings?.list.sorting.direction ?? "asc")}

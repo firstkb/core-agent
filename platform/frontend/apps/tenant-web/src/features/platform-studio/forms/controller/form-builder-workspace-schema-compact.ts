@@ -122,6 +122,13 @@ export function compactViewSettingsForUiSchema(viewSettings: unknown) {
       }
     }
 
+    const rowLayout = isRecord(list.rowLayout)
+      ? compactSchemaRecord(list.rowLayout)
+      : {};
+    if (Object.keys(rowLayout).length > 0) {
+      nextList.rowLayout = rowLayout;
+    }
+
     if (Object.keys(nextList).length > 0) {
       nextSettings.list = nextList;
     }

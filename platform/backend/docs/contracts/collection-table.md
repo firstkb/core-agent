@@ -94,6 +94,11 @@ Each access check stays owned by the concrete surface service and the admin rout
 
 Surface modules may alias these types but must not fork incompatible payload shapes.
 
+Row cells may include optional `displayFormat`. Current supported value is
+`leading_comma_bold`, used when a plain-text display value should visually
+emphasize the segment before the first comma without sending HTML from backend
+modules.
+
 ## Query Rules
 
 Backend shared helpers validate:

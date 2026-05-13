@@ -33,6 +33,7 @@ type ViewInspectorTabBodyProps = {
   onEditDefaultFilter: (index: number) => void;
   onModelStructureLockedChange: (checked: boolean) => void;
   onPendingDefaultFilterFieldChange: (fieldId: string) => void;
+  onSecondaryRowFieldChange: (fieldId: string) => void;
   onSortDirectionChange: (direction: "asc" | "desc") => void;
   onSortFieldChange: (fieldId: string) => void;
   onSubformTitleChange: (title: string) => void;
@@ -42,6 +43,8 @@ type ViewInspectorTabBodyProps = {
   onViewTitleChange: (title: string) => void;
   onWorkflowStatusOptionChange: (key: "finalValue" | "initialValue", value: string) => void;
   pendingDefaultFilterFieldId: string;
+  rowLayoutFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
+  secondaryRowFieldId: string;
   sortDirection: "asc" | "desc";
   sortFieldId: string;
   sortingFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
@@ -73,6 +76,7 @@ export function ViewInspectorTabBody({
   onEditDefaultFilter,
   onModelStructureLockedChange,
   onPendingDefaultFilterFieldChange,
+  onSecondaryRowFieldChange,
   onSortDirectionChange,
   onSortFieldChange,
   onSubformTitleChange,
@@ -82,6 +86,8 @@ export function ViewInspectorTabBody({
   onViewTitleChange,
   onWorkflowStatusOptionChange,
   pendingDefaultFilterFieldId,
+  rowLayoutFieldItems,
+  secondaryRowFieldId,
   sortDirection,
   sortFieldId,
   sortingFieldItems,
@@ -123,6 +129,8 @@ export function ViewInspectorTabBody({
         initialValue: t("tenant.platformStudio.forms.builder.systemField.initialValue"),
         locked: t("tenant.platformStudio.forms.builder.locking.locked"),
         modelLock: t("tenant.platformStudio.forms.builder.locking.model"),
+        rowLayoutSection: t("tenant.platformStudio.forms.builder.viewSettings.rowLayout"),
+        secondRowField: t("tenant.platformStudio.forms.builder.viewSettings.secondRowField"),
         sortDirection: t("tenant.platformStudio.forms.builder.viewSettings.sortDirection"),
         sortDirectionAsc: t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionAsc"),
         sortDirectionDesc: t("tenant.platformStudio.forms.builder.viewSettings.sortDirectionDesc"),
@@ -153,6 +161,7 @@ export function ViewInspectorTabBody({
       onEditDefaultFilter={onEditDefaultFilter}
       onModelStructureLockedChange={onModelStructureLockedChange}
       onPendingDefaultFilterFieldChange={onPendingDefaultFilterFieldChange}
+      onSecondaryRowFieldChange={onSecondaryRowFieldChange}
       onSortDirectionChange={onSortDirectionChange}
       onSortFieldChange={onSortFieldChange}
       onSubformTitleChange={onSubformTitleChange}
@@ -162,6 +171,8 @@ export function ViewInspectorTabBody({
       onViewTitleChange={onViewTitleChange}
       onWorkflowStatusOptionChange={onWorkflowStatusOptionChange}
       pendingDefaultFilterFieldId={pendingDefaultFilterFieldId}
+      rowLayoutFieldItems={rowLayoutFieldItems}
+      secondaryRowFieldId={secondaryRowFieldId}
       sortDirection={sortDirection}
       sortFieldId={sortFieldId}
       sortingFieldItems={sortingFieldItems}

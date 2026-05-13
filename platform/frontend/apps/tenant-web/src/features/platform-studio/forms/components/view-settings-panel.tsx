@@ -4,6 +4,7 @@ import {
 } from "@platform/ui-kit";
 
 import {
+  RowLayoutSection,
   SortingSection,
   ViewActionsSection,
   type ViewSettingsActionItem,
@@ -31,6 +32,8 @@ type ViewSettingsPanelLabels = ViewSettingsRootLabels & {
   filtersSection: string;
   finalValue: string;
   initialValue: string;
+  rowLayoutSection: string;
+  secondRowField: string;
   sortDirection: string;
   sortDirectionAsc: string;
   sortDirectionDesc: string;
@@ -68,6 +71,7 @@ type ViewSettingsPanelProps = {
   onEditDefaultFilter: (index: number) => void;
   onModelStructureLockedChange: (checked: boolean) => void;
   onPendingDefaultFilterFieldChange: (fieldId: string) => void;
+  onSecondaryRowFieldChange: (fieldId: string) => void;
   onSortDirectionChange: (direction: "asc" | "desc") => void;
   onSortFieldChange: (fieldId: string) => void;
   onSubformTitleChange: (title: string) => void;
@@ -77,6 +81,8 @@ type ViewSettingsPanelProps = {
   onViewTitleChange: (title: string) => void;
   onWorkflowStatusOptionChange: (key: "finalValue" | "initialValue", value: string) => void;
   pendingDefaultFilterFieldId: string;
+  rowLayoutFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
+  secondaryRowFieldId: string;
   sortDirection: "asc" | "desc";
   sortFieldId: string;
   sortingFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
@@ -114,6 +120,7 @@ export function ViewSettingsPanel({
   onEditDefaultFilter,
   onModelStructureLockedChange,
   onPendingDefaultFilterFieldChange,
+  onSecondaryRowFieldChange,
   onSortDirectionChange,
   onSortFieldChange,
   onSubformTitleChange,
@@ -123,6 +130,8 @@ export function ViewSettingsPanel({
   onViewTitleChange,
   onWorkflowStatusOptionChange,
   pendingDefaultFilterFieldId,
+  rowLayoutFieldItems,
+  secondaryRowFieldId,
   sortDirection,
   sortFieldId,
   sortingFieldItems,
@@ -212,6 +221,15 @@ export function ViewSettingsPanel({
         sortFieldId={sortFieldId}
         sortingFieldItems={sortingFieldItems}
       />
+      {isRootViewScope ? (
+        <RowLayoutSection
+          canEditSettings={canEditSettings}
+          labels={labels}
+          onSecondaryRowFieldChange={onSecondaryRowFieldChange}
+          rowLayoutFieldItems={rowLayoutFieldItems}
+          secondaryRowFieldId={secondaryRowFieldId}
+        />
+      ) : null}
       {isRootViewScope ? (
         <ViewSettingsDefaultFiltersSection
           actionsMenuLabel={actionsMenuLabel}

@@ -128,6 +128,7 @@ export type CollectionTableMetaResponse = {
 };
 
 export type CollectionTableRowCell = {
+  displayFormat?: "leading_comma_bold";
   displayValue?: string;
   html?: string;
   label?: string;

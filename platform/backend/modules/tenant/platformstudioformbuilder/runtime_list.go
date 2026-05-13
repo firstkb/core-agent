@@ -11,36 +11,39 @@ import (
 )
 
 const (
-	runtimeViewListDefaultPageSize = 25
-	runtimeViewListSurfacePrefix   = "form_builder_view"
+	runtimeViewListDefaultPageSize               = 25
+	runtimeViewListDisplayFormatLeadingCommaBold = "leading_comma_bold"
+	runtimeViewListSurfacePrefix                 = "form_builder_view"
 )
 
 var runtimeViewListPageSizeOptions = []int{10, 25, 50}
 
 type runtimeViewListContext struct {
-	CanAdd            bool
-	CanDelete         bool
-	CanEdit           bool
-	CanView           bool
-	DataViewName      string
-	DefaultFilters    map[string]any
-	FieldDefinitions  []collectiontable.FieldDefinition
-	FilterFields      []runtimeViewListFieldMeta
-	Fields            []runtimeViewListFieldMeta
-	GridViewName      string
-	HasRecordGUID     bool
-	Title             string
-	ColumnDefinitions []collectiontable.ColumnDefinition
-	DefaultFieldID    string
-	DefaultSortColumn string
-	DefaultSortDir    string
-	SurfaceID         string
+	CanAdd              bool
+	CanDelete           bool
+	CanEdit             bool
+	CanView             bool
+	DataViewName        string
+	DefaultFilters      map[string]any
+	FieldDefinitions    []collectiontable.FieldDefinition
+	FilterFields        []runtimeViewListFieldMeta
+	Fields              []runtimeViewListFieldMeta
+	GridViewName        string
+	HasRecordGUID       bool
+	Title               string
+	ColumnDefinitions   []collectiontable.ColumnDefinition
+	DefaultFieldID      string
+	DefaultSortColumn   string
+	DefaultSortDir      string
+	SecondaryRowFieldID string
+	SurfaceID           string
 }
 
 type runtimeViewListFieldMeta struct {
 	AuthoringFieldID string
 	ColumnName       string
 	DataColumnName   string
+	DisplayFormat    string
 	FieldID          string
 	Kind             string
 	Label            string
@@ -88,7 +91,9 @@ func (s *Service) LoadRuntimeViewListMeta(ctx context.Context, modelID string, v
 		Fields:          runtimeContext.FieldDefinitions,
 		PageSizeOptions: append([]int(nil), runtimeViewListPageSizeOptions...),
 		RowActions:      buildRuntimeViewListRowActions(runtimeContext.CanView, runtimeContext.CanEdit, runtimeContext.HasRecordGUID),
-		RowLayout:       collectiontable.RowLayout{},
+		RowLayout: collectiontable.RowLayout{
+			SecondaryRowFieldID: runtimeContext.SecondaryRowFieldID,
+		},
 		SavedFilterSets: savedFilterSets,
 		Search: collectiontable.SearchMeta{
 			DefaultFieldID: runtimeContext.DefaultFieldID,
@@ -250,8 +255,9 @@ func (s *Service) QueryRuntimeViewList(
 		for _, field := range runtimeContext.Fields {
 			value := row.Cells[field.ColumnName]
 			cells[field.FieldID] = collectiontable.RowCell{
-				DisplayValue: value,
-				Value:        value,
+				DisplayFormat: field.DisplayFormat,
+				DisplayValue:  value,
+				Value:         value,
 			}
 		}
 		tableRows = append(tableRows, collectiontable.TableRow{
@@ -430,6 +436,7 @@ func (s *Service) loadRuntimeViewListContext(
 	fields := buildRuntimeViewListFields(dataSchema, asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
 	filterFields := buildRuntimeViewListFilterFields(dataSchema, asMap(viewPayload["uiSchema"]), rootScope.Fields, fields)
 	defaultSortColumn, defaultSortDir := buildRuntimeViewListDefaultSort(asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
+	secondaryRowFieldID := buildRuntimeViewListSecondaryRowFieldID(asMap(viewPayload["uiSchema"]), rootScope.Fields, gridPlan)
 	fieldDefinitions := make([]collectiontable.FieldDefinition, 0, len(fields))
 	columnDefinitions := make([]collectiontable.ColumnDefinition, 0, len(fields))
 	defaultFieldID := ""
@@ -444,13 +451,15 @@ func (s *Service) loadRuntimeViewListContext(
 			Sortable:    true,
 			Suggestable: suggestable,
 		})
-		columnDefinitions = append(columnDefinitions, collectiontable.ColumnDefinition{
-			ID:             field.FieldID,
-			Label:          field.Label,
-			Type:           field.Type,
-			FieldID:        field.FieldID,
-			DefaultVisible: true,
-		})
+		if field.FieldID != secondaryRowFieldID {
+			columnDefinitions = append(columnDefinitions, collectiontable.ColumnDefinition{
+				ID:             field.FieldID,
+				Label:          field.Label,
+				Type:           field.Type,
+				FieldID:        field.FieldID,
+				DefaultVisible: true,
+			})
+		}
 		if defaultFieldID == "" && searchable {
 			defaultFieldID = field.FieldID
 		}
@@ -462,23 +471,24 @@ func (s *Service) loadRuntimeViewListContext(
 	}
 
 	return &runtimeViewListContext{
-		CanAdd:            readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canAdd", true),
-		CanDelete:         readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canDelete", true),
-		CanEdit:           readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canEdit", true),
-		CanView:           readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
-		DataViewName:      rootScope.DataViewName,
-		DefaultFilters:    readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
-		FieldDefinitions:  fieldDefinitions,
-		FilterFields:      filterFields,
-		Fields:            fields,
-		GridViewName:      gridViewName,
-		HasRecordGUID:     hasRecordGUID,
-		Title:             title,
-		ColumnDefinitions: columnDefinitions,
-		DefaultFieldID:    defaultFieldID,
-		DefaultSortColumn: defaultSortColumn,
-		DefaultSortDir:    defaultSortDir,
-		SurfaceID:         buildRuntimeViewListSurfaceID(model.ModelID, view.ViewID),
+		CanAdd:              readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canAdd", true),
+		CanDelete:           readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canDelete", true),
+		CanEdit:             readRuntimeViewAction(asMap(viewPayload["uiSchema"]), viewPayload, "canEdit", true),
+		CanView:             readRuntimeViewCanView(asMap(viewPayload["uiSchema"]), viewPayload),
+		DataViewName:        rootScope.DataViewName,
+		DefaultFilters:      readRuntimeViewListDefaultFilters(asMap(viewPayload["uiSchema"])),
+		FieldDefinitions:    fieldDefinitions,
+		FilterFields:        filterFields,
+		Fields:              fields,
+		GridViewName:        gridViewName,
+		HasRecordGUID:       hasRecordGUID,
+		Title:               title,
+		ColumnDefinitions:   columnDefinitions,
+		DefaultFieldID:      defaultFieldID,
+		DefaultSortColumn:   defaultSortColumn,
+		DefaultSortDir:      defaultSortDir,
+		SecondaryRowFieldID: secondaryRowFieldID,
+		SurfaceID:           buildRuntimeViewListSurfaceID(model.ModelID, view.ViewID),
 	}, nil
 }
 
@@ -590,6 +600,7 @@ func buildRuntimeViewListFields(
 	}
 
 	fieldAuthoringIDs := make(map[string]string, len(fields)*2)
+	fieldDisplayFormats := make(map[string]string, len(fields)*2)
 	fieldLabels := make(map[string]string, len(fields)*2)
 	fieldQueryKinds := make(map[string]string, len(fields)*2)
 	fieldTypes := make(map[string]string, len(fields)*2)
@@ -618,6 +629,7 @@ func buildRuntimeViewListFields(
 			),
 		)
 		fieldAuthoringIDs[field.ColumnName] = field.FieldID
+		fieldDisplayFormats[field.ColumnName] = runtimeViewListDefaultDisplayFormatForField(field)
 		fieldTypes[field.ColumnName] = runtimeViewListFieldType(field.Kind)
 		fieldLabels[field.ColumnName] = label
 		fieldQueryKinds[field.ColumnName] = runtimeViewListFieldQueryKind(field.Kind)
@@ -626,18 +638,21 @@ func buildRuntimeViewListFields(
 		defaultColumn := runtimeGridDefaultColumnForField(field)
 		if defaultAlias != "" {
 			fieldAuthoringIDs[defaultAlias] = field.FieldID
+			fieldDisplayFormats[defaultAlias] = runtimeViewListDefaultDisplayFormatForField(field)
 			fieldTypes[defaultAlias] = runtimeViewListFieldType(field.Kind)
 			fieldLabels[defaultAlias] = label
 			fieldQueryKinds[defaultAlias] = runtimeViewListFieldQueryKind(field.Kind)
 		}
 		if defaultColumn != "" {
 			fieldAuthoringIDs[defaultColumn] = field.FieldID
+			fieldDisplayFormats[defaultColumn] = runtimeViewListDefaultDisplayFormatForField(field)
 			fieldTypes[defaultColumn] = runtimeViewListFieldType(field.Kind)
 			fieldLabels[defaultColumn] = label
 			fieldQueryKinds[defaultColumn] = runtimeViewListFieldQueryKind(field.Kind)
 		}
 		for _, output := range field.LookupDerivedOutputs {
 			fieldAuthoringIDs[output.ColumnName] = buildRuntimeLookupOutputBindingID(field.FieldID, output.OutputKey)
+			fieldDisplayFormats[output.ColumnName] = runtimeViewListLookupOutputDisplayFormat(field, output.OutputKey)
 			fieldTypes[output.ColumnName] = runtimeViewListLookupOutputType(output.OutputKey, output.DataType)
 			fieldLabels[output.ColumnName] = strings.TrimSpace(label + " " + humanizeIdentifier(output.OutputKey))
 			fieldQueryKinds[output.ColumnName] = runtimeViewListLookupOutputQueryKind(output.DataType)
@@ -653,6 +668,7 @@ func buildRuntimeViewListFields(
 		out = append(out, runtimeViewListFieldMeta{
 			AuthoringFieldID: chooseString(fieldAuthoringIDs[columnName], columnName),
 			ColumnName:       columnName,
+			DisplayFormat:    fieldDisplayFormats[columnName],
 			FieldID:          columnName,
 			Label:            chooseString(fieldLabels[columnName], humanizeIdentifier(columnName)),
 			QueryKind:        chooseString(fieldQueryKinds[columnName], "text"),
@@ -806,6 +822,36 @@ func buildRuntimeViewListDefaultSort(
 		return "", ""
 	}
 
+	aliasColumnName := resolveRuntimeViewListGridFieldAlias(fieldID, fields, gridPlan)
+	if aliasColumnName == "" {
+		return "", ""
+	}
+
+	return aliasColumnName, collectiontable.NormalizeSortDirection(normalizeString(sorting["direction"]))
+}
+
+func buildRuntimeViewListSecondaryRowFieldID(
+	uiSchema map[string]any,
+	fields []runtimeApplyFieldPlan,
+	gridPlan *runtimeApplyGridViewPlan,
+) string {
+	rootScope := uiScope(uiSchema, rootSchemaScopeID)
+	viewSettings := asMap(rootScope["viewSettings"])
+	listSettings := asMap(viewSettings["list"])
+	rowLayout := asMap(listSettings["rowLayout"])
+	return resolveRuntimeViewListGridFieldAlias(normalizeString(rowLayout["secondaryRowFieldId"]), fields, gridPlan)
+}
+
+func resolveRuntimeViewListGridFieldAlias(
+	fieldID string,
+	fields []runtimeApplyFieldPlan,
+	gridPlan *runtimeApplyGridViewPlan,
+) string {
+	fieldID = normalizeString(fieldID)
+	if fieldID == "" {
+		return ""
+	}
+
 	fieldsByID := make(map[string]runtimeApplyFieldPlan, len(fields))
 	for _, field := range fields {
 		fieldsByID[field.FieldID] = field
@@ -820,13 +866,13 @@ func buildRuntimeViewListDefaultSort(
 		OutputID:    outputID,
 	}, fieldsByID)
 	if aliasColumnName == "" {
-		return "", ""
+		return ""
 	}
 	if !runtimeGridViewPlanHasProjection(gridPlan, aliasColumnName) {
-		return "", ""
+		return ""
 	}
 
-	return aliasColumnName, collectiontable.NormalizeSortDirection(normalizeString(sorting["direction"]))
+	return aliasColumnName
 }
 
 func runtimeGridViewPlanHasProjection(gridPlan *runtimeApplyGridViewPlan, aliasColumnName string) bool {
@@ -842,6 +888,20 @@ func runtimeGridViewPlanHasProjection(gridPlan *runtimeApplyGridViewPlan, aliasC
 	}
 
 	return false
+}
+
+func runtimeViewListDefaultDisplayFormatForField(field runtimeApplyFieldPlan) string {
+	if field.Kind == "db_lookup" && !field.MultiValue {
+		return runtimeViewListDisplayFormatLeadingCommaBold
+	}
+	return ""
+}
+
+func runtimeViewListLookupOutputDisplayFormat(field runtimeApplyFieldPlan, outputKey string) string {
+	if field.Kind == "db_lookup" && !field.MultiValue && outputKey == "label" {
+		return runtimeViewListDisplayFormatLeadingCommaBold
+	}
+	return ""
 }
 
 func runtimeViewListFieldType(kind string) string {

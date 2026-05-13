@@ -15,6 +15,7 @@ import type {
   CollectionTableColumnDefinition,
   CollectionTableFieldDefinition,
   CollectionTableMetaResponse,
+  CollectionTableRowCell,
   CollectionTableRowActionDefinition,
 } from "./collection-table-contract";
 import {
@@ -109,8 +110,44 @@ export function OverflowMenuIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-function TextCell({ value }: { value: string }) {
-  return <span className="admin-web__collection-cell-value">{value}</span>;
+function LeadingCommaText({ value }: { value: string }) {
+  const commaIndex = value.indexOf(",");
+  if (commaIndex <= 0) {
+    return value;
+  }
+
+  return (
+    <>
+      <strong>{value.slice(0, commaIndex)}</strong>
+      {value.slice(commaIndex)}
+    </>
+  );
+}
+
+function FormattedText({
+  cell,
+  value,
+}: {
+  cell?: CollectionTableRowCell;
+  value: string;
+}) {
+  return cell?.displayFormat === "leading_comma_bold"
+    ? <LeadingCommaText value={value} />
+    : value;
+}
+
+function TextCell({
+  cell,
+  value,
+}: {
+  cell?: CollectionTableRowCell;
+  value: string;
+}) {
+  return (
+    <span className="admin-web__collection-cell-value">
+      <FormattedText cell={cell} value={value} />
+    </span>
+  );
 }
 
 function getFieldDefinition(
@@ -179,6 +216,7 @@ function buildRenderColumns(
 
         return (
           <TextCell
+            cell={cell}
             value={formatCollectionTableCellValue(getCellText(cell), column.type === "actions" ? "text" : column.type)}
           />
         );
@@ -206,9 +244,14 @@ export function createCollectionRenderConfig(
     pageSizeOptions: meta.pageSizeOptions ?? [25, 50, 100],
     renderRowSecondary: secondaryRowFieldId
       ? (row) => {
-        const secondaryText = getCellText(row.cells[secondaryRowFieldId]);
+        const secondaryCell = row.cells[secondaryRowFieldId];
+        const secondaryText = getCellText(secondaryCell);
         return secondaryText.length > 0
-          ? <span className="admin-web__collection-row-description">{secondaryText}</span>
+          ? (
+              <span className="admin-web__collection-row-description">
+                <FormattedText cell={secondaryCell} value={secondaryText} />
+              </span>
+            )
           : null;
       }
       : undefined,

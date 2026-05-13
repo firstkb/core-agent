@@ -1,5 +1,6 @@
 import type {
   FormBuilderGridColumnDefinition,
+  FormBuilderListRowLayout,
   FormBuilderSubformViewSettings,
   FormBuilderViewSettings,
   FormBuilderViewOnlyBinding,
@@ -63,6 +64,27 @@ function isVisibleGridColumnFieldId(
   fieldId: string,
 ) {
   return columns.some((column) => column.visible && column.fieldId === fieldId);
+}
+
+function normalizeListRowLayout(
+  value: unknown,
+  columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
+  fieldIds: ReadonlySet<string>,
+): FormBuilderListRowLayout | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const candidate = value as Partial<FormBuilderListRowLayout>;
+  const secondaryRowFieldId = typeof candidate.secondaryRowFieldId === "string"
+    && isSupportedGridColumnFieldId(candidate.secondaryRowFieldId, fieldIds)
+    && isVisibleGridColumnFieldId(columns, candidate.secondaryRowFieldId)
+    ? candidate.secondaryRowFieldId
+    : undefined;
+
+  return secondaryRowFieldId
+    ? { secondaryRowFieldId }
+    : undefined;
 }
 
 function normalizeGridColumn(
@@ -154,6 +176,7 @@ export function normalizeViewSettings(
   const list = candidate.list && typeof candidate.list === "object" ? candidate.list : undefined;
   const sorting = list?.sorting && typeof list.sorting === "object" ? list.sorting : undefined;
   const columns = normalizeGridColumns(list?.columns, fieldIds);
+  const rowLayout = normalizeListRowLayout(list?.rowLayout, columns, fieldIds);
   const sortingFieldId = typeof sorting?.fieldId === "string"
     && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
     && isVisibleGridColumnFieldId(columns, sorting.fieldId)
@@ -177,6 +200,7 @@ export function normalizeViewSettings(
       : undefined,
     list: {
       columns,
+      rowLayout,
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
         fieldId: sortingFieldId,
@@ -199,6 +223,7 @@ export function normalizeSubformViewSettings(
   const list = candidate.list && typeof candidate.list === "object" ? candidate.list : undefined;
   const sorting = list?.sorting && typeof list.sorting === "object" ? list.sorting : undefined;
   const columns = normalizeGridColumns(list?.columns, fieldIds);
+  const rowLayout = normalizeListRowLayout(list?.rowLayout, columns, fieldIds);
   const sortingFieldId = typeof sorting?.fieldId === "string"
     && isSupportedGridColumnFieldId(sorting.fieldId, fieldIds)
     && isVisibleGridColumnFieldId(columns, sorting.fieldId)
@@ -213,6 +238,7 @@ export function normalizeSubformViewSettings(
     },
     list: {
       columns,
+      rowLayout,
       sorting: {
         direction: sorting?.direction === "desc" ? "desc" : "asc",
         fieldId: sortingFieldId,

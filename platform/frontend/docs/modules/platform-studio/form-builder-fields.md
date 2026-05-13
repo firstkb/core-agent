@@ -779,6 +779,10 @@ Runtime rules:
 - only visible columns render
 - display order follows authored column order
 - fields not included in `columns` are hidden by default
+- root views may set `viewSettings.list.rowLayout.secondaryRowFieldId` to one
+  visible grid field that renders as a full-width second row instead of a table
+  header column; lookup fields use the same runtime label/output projection as
+  the grid field
 
 ## View Settings
 
@@ -789,6 +793,7 @@ Root view settings own:
 - root actions: `canAdd`, `canView`, `canEdit`, `canDelete`
 - root list sorting
 - root list columns
+- root list second-row field
 - root page filters
 - root quick filters
 

@@ -18,6 +18,8 @@ export type ViewSettingsSortingFieldItem = {
 
 type ViewSettingsActionSortingLabels = {
   actionsSection: string;
+  rowLayoutSection: string;
+  secondRowField: string;
   sortDirection: string;
   sortDirectionAsc: string;
   sortDirectionDesc: string;
@@ -55,6 +57,47 @@ export function ViewActionsSection({
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+export function RowLayoutSection({
+  canEditSettings,
+  labels,
+  onSecondaryRowFieldChange,
+  secondaryRowFieldId,
+  rowLayoutFieldItems,
+}: {
+  canEditSettings: boolean;
+  labels: Pick<ViewSettingsActionSortingLabels, "rowLayoutSection" | "secondRowField" | "unbound">;
+  onSecondaryRowFieldChange: (fieldId: string) => void;
+  secondaryRowFieldId: string;
+  rowLayoutFieldItems: ReadonlyArray<ViewSettingsSortingFieldItem>;
+}) {
+  return (
+    <div className="tenant-web__platform-studio-inspector-section">
+      <div className="tenant-web__platform-studio-labeled-divider">
+        <span>{labels.rowLayoutSection}</span>
+      </div>
+
+      <div className="tenant-web__platform-studio-form-group">
+        <Label htmlFor="tenant-platform-studio-second-row-field">
+          {labels.secondRowField}
+        </Label>
+        <Select
+          disabled={!canEditSettings || rowLayoutFieldItems.length === 0}
+          id="tenant-platform-studio-second-row-field"
+          onChange={(event) => onSecondaryRowFieldChange(event.target.value)}
+          value={secondaryRowFieldId}
+        >
+          <option value="">{labels.unbound}</option>
+          {rowLayoutFieldItems.map((field) => (
+            <option key={field.id} value={field.id}>
+              {field.label}
+            </option>
+          ))}
+        </Select>
       </div>
     </div>
   );

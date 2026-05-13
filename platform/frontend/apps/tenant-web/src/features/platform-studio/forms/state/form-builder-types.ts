@@ -58,6 +58,10 @@ export type FormBuilderGridColumnDefinition = {
   visible: boolean;
 };
 
+export type FormBuilderListRowLayout = {
+  secondaryRowFieldId?: string;
+};
+
 export type FormBuilderNode = {
   containerKey?: string;
   fieldId?: string;
@@ -94,6 +98,7 @@ export type FormBuilderViewSettings = {
   iconDataUrl?: string;
   list: {
     columns: ReadonlyArray<FormBuilderGridColumnDefinition>;
+    rowLayout?: FormBuilderListRowLayout;
     sorting: {
       direction: "asc" | "desc";
       fieldId?: string;
@@ -109,6 +114,7 @@ export type FormBuilderSubformViewSettings = {
   };
   list: {
     columns: ReadonlyArray<FormBuilderGridColumnDefinition>;
+    rowLayout?: FormBuilderListRowLayout;
     sorting: {
       direction: "asc" | "desc";
       fieldId?: string;

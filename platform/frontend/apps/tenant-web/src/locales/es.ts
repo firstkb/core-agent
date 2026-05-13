@@ -917,6 +917,8 @@ export const tenantSpanishMessages = {
             iconClear: "Limpiar",
             iconUpload: "Subir",
             noIcon: "Todavia no hay icono seleccionado.",
+            rowLayout: "Layout de fila",
+            secondRowField: "Campo de segunda fila",
             sortDirection: "Direccion",
             sortDirectionAsc: "ASC",
             sortDirectionDesc: "DESC",

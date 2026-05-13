@@ -128,11 +128,12 @@ type TableRow struct {
 }
 
 type RowCell struct {
-	Value        any    `json:"value,omitempty"`
-	DisplayValue string `json:"displayValue,omitempty"`
-	Label        string `json:"label,omitempty"`
-	Tone         string `json:"tone,omitempty"`
-	HTML         string `json:"html,omitempty"`
+	Value         any    `json:"value,omitempty"`
+	DisplayValue  string `json:"displayValue,omitempty"`
+	DisplayFormat string `json:"displayFormat,omitempty"`
+	Label         string `json:"label,omitempty"`
+	Tone          string `json:"tone,omitempty"`
+	HTML          string `json:"html,omitempty"`
 }
 
 type SearchSuggestionsResponse struct {

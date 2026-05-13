@@ -4,6 +4,7 @@ import {
   type FormBuilderDocument,
   type FormBuilderFilterCondition,
   type FormBuilderGridColumnDefinition,
+  type FormBuilderListRowLayout,
   type FormBuilderNodeRules,
   type FormBuilderQuickFilter,
   type FormBuilderScope,
@@ -183,6 +184,54 @@ export function applySubformViewSortingFieldUpdate(
   };
 }
 
+function buildSecondaryRowLayoutUpdate(
+  rowLayout: FormBuilderListRowLayout | undefined,
+  fieldId: string,
+): FormBuilderListRowLayout | undefined {
+  const secondaryRowFieldId = fieldId.trim();
+  return secondaryRowFieldId
+    ? {
+        ...rowLayout,
+        secondaryRowFieldId,
+      }
+    : undefined;
+}
+
+function retainVisibleSecondaryRowLayout(
+  columns: ReadonlyArray<FormBuilderGridColumnDefinition>,
+  rowLayout: FormBuilderListRowLayout | undefined,
+) {
+  return isVisibleGridColumnFieldId(columns, rowLayout?.secondaryRowFieldId)
+    ? rowLayout
+    : undefined;
+}
+
+export function applyRootViewSecondaryRowFieldUpdate(
+  viewSettings: FormBuilderViewSettings,
+  fieldId: string,
+) {
+  return {
+    ...viewSettings,
+    list: {
+      ...viewSettings.list,
+      rowLayout: buildSecondaryRowLayoutUpdate(viewSettings.list.rowLayout, fieldId),
+    },
+  };
+}
+
+export function applySubformViewSecondaryRowFieldUpdate(
+  viewSettings: FormBuilderSubformViewSettings,
+  fieldId: string,
+) {
+  return {
+    ...viewSettings,
+    list: {
+      ...viewSettings.list,
+      rowLayout: buildSecondaryRowLayoutUpdate(viewSettings.list.rowLayout, fieldId),
+    },
+  };
+}
+
 export function applyRootViewGridColumnsUpdate(
   viewSettings: FormBuilderViewSettings,
   updater: (
@@ -196,6 +245,7 @@ export function applyRootViewGridColumnsUpdate(
     list: {
       ...viewSettings.list,
       columns,
+      rowLayout: retainVisibleSecondaryRowLayout(columns, viewSettings.list.rowLayout),
       sorting: isVisibleGridColumnFieldId(columns, viewSettings.list.sorting.fieldId)
         ? viewSettings.list.sorting
         : {
@@ -219,6 +269,7 @@ export function applySubformViewGridColumnsUpdate(
     list: {
       ...viewSettings.list,
       columns,
+      rowLayout: retainVisibleSecondaryRowLayout(columns, viewSettings.list.rowLayout),
       sorting: isVisibleGridColumnFieldId(columns, viewSettings.list.sorting.fieldId)
         ? viewSettings.list.sorting
         : {

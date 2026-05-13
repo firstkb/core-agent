@@ -7,10 +7,12 @@ import type {
 import type { FormsPlaceholderField } from "../forms-placeholder-data";
 import { createViewSettingsDefaultFilterItems } from "./form-builder-workspace-display-items";
 
+type FormBuilderFieldLookupPreset = Exclude<FormBuilderLookupPreset, "generic_db_lookup">;
+
 function createLookupField(
   id: string,
   label: string,
-  preset: FormBuilderLookupPreset,
+  preset: FormBuilderFieldLookupPreset,
   selectionMode: "multiple" | "single" = "single",
 ): FormsPlaceholderField {
   return {

@@ -140,6 +140,12 @@ Supported field types:
 - `html`
 - `text`
 
+Row cells may include optional `displayFormat`. Current supported value:
+
+- `leading_comma_bold`: render the text before the first comma with stronger
+  emphasis while keeping the cell value plain text for search/export/runtime
+  behavior.
+
 Supported search operators:
 
 - `contains`

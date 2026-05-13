@@ -15,10 +15,12 @@ import {
   applyCurrentScopeSubformTitleUpdate,
   applyRootCorrectiveActionEnabledUpdate,
   applyRootViewGridColumnsUpdate,
+  applyRootViewSecondaryRowFieldUpdate,
   applyRootViewSettingsUpdate,
   applyRootViewSortingDirectionUpdate,
   applyRootViewSortingFieldUpdate,
   applySubformViewGridColumnsUpdate,
+  applySubformViewSecondaryRowFieldUpdate,
   applySubformViewSortingDirectionUpdate,
   applySubformViewSortingFieldUpdate,
 } from "./form-builder-workspace-document-updates";
@@ -148,6 +150,17 @@ export function createFormBuilderViewGridHandlers({
     );
   }
 
+  function updateCurrentViewSecondaryRowField(fieldId: string) {
+    if (isRootViewScope) {
+      updateViewSettings((viewSettings) => applyRootViewSecondaryRowFieldUpdate(viewSettings, fieldId));
+      return;
+    }
+
+    updateCurrentScopeSubformViewSettings((viewSettings) =>
+      applySubformViewSecondaryRowFieldUpdate(viewSettings, fieldId)
+    );
+  }
+
   function updateModelStructureLocked(checked: boolean) {
     updateCurrentModel((currentModelDraft) => applyModelStructureLockedUpdate(currentModelDraft, checked));
   }
@@ -178,6 +191,7 @@ export function createFormBuilderViewGridHandlers({
     updateCurrentGridColumns,
     updateCurrentScopeSubformTitle,
     updateCurrentScopeSubformViewSettings,
+    updateCurrentViewSecondaryRowField,
     updateCurrentViewSortDirection,
     updateCurrentViewSortField,
     updateGridColumnVisibility: updateGridColumnVisibilityState,

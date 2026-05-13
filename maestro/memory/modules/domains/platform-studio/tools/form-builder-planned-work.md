@@ -28,6 +28,17 @@ instead of them.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
 - Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
 - Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.
+- Root View row layout supports one visible Grid field in
+  `viewSettings.list.rowLayout.secondaryRowFieldId`; runtime list meta emits it
+  as a Collection Table secondary row, omits it from header columns, keeps it in
+  fields/search/query, and resolves lookup fields through the same label/output
+  alias used by the visible Grid projection.
+- Generic DB lookup label output joins authored display fields with comma-space
+  (`first, second`). Runtime list lookup label cells use
+  `displayFormat: leading_comma_bold` so Collection Table visually emphasizes
+  the text before the first comma while keeping backend output as plain text.
+  Existing compiled runtime SQL views receive this after the next runtime apply
+  for that model/view.
 - Authoring save uses a frontend single-flight guard and atomic model+view draft update so stale view conflicts cannot partially update the model from one save request.
 - Canvas tree authoring preserves active scope, current parent, and selected node context after successful save.
 - Choice field authoring templates default base `single_select` and `multi_select` Orientation to `Horizontal`.

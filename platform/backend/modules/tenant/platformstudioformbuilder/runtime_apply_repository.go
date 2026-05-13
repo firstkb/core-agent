@@ -863,7 +863,7 @@ func runtimeLookupExpressionForManagedModel(targetAlias string, outputKey string
 	if len(parts) == 0 {
 		parts = append(parts, fmt.Sprintf("%s.%s::text", quoteIdentifier(targetAlias), quoteIdentifier("_id")))
 	}
-	return runtimeConcatWS(" ", parts...)
+	return runtimeConcatWS(", ", parts...)
 }
 
 func runtimeConcatWS(separator string, expressions ...string) string {

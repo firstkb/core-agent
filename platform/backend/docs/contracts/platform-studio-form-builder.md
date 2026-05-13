@@ -216,6 +216,17 @@ Runtime list action metadata:
   output includes a supported `active` field and the view allows edit
 - `Delete` is emitted when the view allows delete and includes confirmation
   metadata for the generic Collection Table confirmation dialog
+- `rowLayout.secondaryRowFieldId` may be emitted for one configured root-list
+  field. That field remains in query/search metadata, is omitted from header
+  column metadata, and must resolve to an existing grid projection. Lookup
+  fields resolve through their grid label/output alias rather than physical
+  lookup id columns.
+- Generic lookup labels built from authored display fields use comma-separated
+  plain text (`first, second`) and lookup label cells may mark
+  `displayFormat = leading_comma_bold` so the generic Collection Table renderer
+  can emphasize the leading value without backend HTML. Existing compiled
+  runtime SQL views pick up label-expression changes only after runtime apply
+  recreates the view, such as an authoring save/open path that applies runtime.
 
 Platform Studio preview API namespace:
 

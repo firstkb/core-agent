@@ -379,7 +379,42 @@ describe("Form Builder grid settings", () => {
     expect(visibleLookupSort.list.sorting.fieldId).toBe(visibleLookupOutputId);
   });
 
-  it("clears sorting when the selected grid column is hidden", () => {
+  it("normalizes second row field to visible grid columns only", () => {
+    const fieldIds = new Set(["hidden_name", "company"]);
+    const visibleLookupOutputId = "company::lookup_output::label";
+
+    const hiddenRowLayout = normalizeViewSettings(
+      {
+        list: {
+          columns: [
+            { fieldId: "hidden_name", id: "grid-hidden-name", order: 0, visible: false },
+          ],
+          rowLayout: {
+            secondaryRowFieldId: "hidden_name",
+          },
+        },
+      },
+      fieldIds,
+    );
+    const visibleLookupRowLayout = normalizeViewSettings(
+      {
+        list: {
+          columns: [
+            { fieldId: visibleLookupOutputId, id: "grid-company-label", order: 0, visible: true },
+          ],
+          rowLayout: {
+            secondaryRowFieldId: visibleLookupOutputId,
+          },
+        },
+      },
+      fieldIds,
+    );
+
+    expect(hiddenRowLayout.list.rowLayout).toBeUndefined();
+    expect(visibleLookupRowLayout.list.rowLayout?.secondaryRowFieldId).toBe(visibleLookupOutputId);
+  });
+
+  it("clears sorting and second row field when the selected grid column is hidden", () => {
     const viewSettings = normalizeViewSettings(
       {
         list: {
@@ -389,6 +424,9 @@ describe("Form Builder grid settings", () => {
           sorting: {
             direction: "asc",
             fieldId: "site_name",
+          },
+          rowLayout: {
+            secondaryRowFieldId: "site_name",
           },
         },
       },
@@ -404,5 +442,6 @@ describe("Form Builder grid settings", () => {
     );
 
     expect(nextViewSettings.list.sorting.fieldId).toBeUndefined();
+    expect(nextViewSettings.list.rowLayout).toBeUndefined();
   });
 });

@@ -309,6 +309,15 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.platform-runtime-form__field--view-only.ui-field--required .ui-field__label::after {
+  content: none;
+}
+
+.platform-runtime-form__field--view-only .platform-runtime-form__readonly-value {
+  border-left-width: 1px;
+  border-left-color: var(--color-border-default);
+}
+
 .platform-runtime-form__subform {
   padding: var(--space-4);
   border: 1px solid var(--color-border-muted);

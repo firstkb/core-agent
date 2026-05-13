@@ -616,7 +616,24 @@ View/read remains the existing `CollectionTable` modal path for now.
 - Runtime catalog-modal search checks passed:
   - Browser Use smoke on the Spanish UI confirmed search `Test` returns catalog rows with translated `Seleccionar` buttons and keeps input focus;
   - Browser Use smoke confirmed search `3333` shows `No se encontraron opciones del catalogo.`, renders no select rows, and keeps input focus.
+- Runtime view-only lookup-derived output slice completed:
+  - `view_only_field` nodes now compile from `viewOnlyBinding.kind = lookup_derived_output` into responsive-inline readonly display rows;
+  - runtime form scaffold resolves view-only values from hydrated lookup option `fields` and from same-session lookup selection metadata, so derived outputs update after load and after user changes;
+  - tenant-web propagates lookup option fields alongside lookup labels during autosave/create patch handling;
+  - runtime form-load lookup hydration now keeps stored lookup labels while still resolving dictionary option fields for derived outputs;
+  - the named `contacts` dictionary now exposes compatibility aliases such as `company_name`, `company_id`, and `title` so `Reported By -> Company name` bindings can render without custom frontend table logic;
+  - view-only display is explicitly non-required and uses a neutral readonly border instead of the required warning border.
+- Runtime view-only lookup-derived output checks passed:
+  - `pnpm -C platform/frontend --filter @platform/forms typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/forms lint`;
+  - `pnpm -C platform/frontend --filter @platform/forms test`: 1 file, 16 tests;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`;
+  - `pnpm -C platform/frontend --filter @platform/tenant-web lint`;
+  - `go test -count=1 ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime`;
+  - `git diff --check`;
+  - `scripts/preflight.sh` passed in lite mode;
+  - Browser Use desktop smoke confirmed `Company name` renders `Atlas Safety Holdings` on the lookup edit form and the view-only readonly border is neutral, not warning/required.
 
 ## Next Action
 
-Next allowed action is owner retest of company/project lookup View Filters on runtime table output. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of view-only lookup-derived outputs and then choose the next runtime field slice. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.

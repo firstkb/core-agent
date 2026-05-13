@@ -21,10 +21,14 @@ import {
 import { RuntimeSubformNode } from "./runtime-form-subform";
 import type {
   RuntimeFormDefinition,
+  RuntimeFormContentDefinition,
   RuntimeFormNodeDefinition,
+  RuntimeFormResolvedLabels,
   RuntimeFormSaveState,
   RuntimeFormScaffoldProps,
   RuntimeFormSectionDefinition,
+  RuntimeFormValue,
+  RuntimeFormValues,
 } from "./runtime-form-types";
 import {
   cx,
@@ -99,8 +103,52 @@ function resolveFooterInfo(
   return `${finishCopy} ${backCopy}`;
 }
 
+function lookupOutputValueKey(sourceFieldId: string, outputKey: string) {
+  return `${sourceFieldId}::lookup_output::${outputKey}`;
+}
+
+function runtimeValueToString(value: RuntimeFormValue | undefined) {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+  return "";
+}
+
+function resolveRuntimeContentValue(
+  content: RuntimeFormContentDefinition,
+  definition: RuntimeFormDefinition,
+  values: RuntimeFormValues,
+  labels: RuntimeFormResolvedLabels,
+) {
+  const binding = content.valueBinding;
+  if (!binding) {
+    return content.value;
+  }
+
+  if (binding.kind === "lookup_derived_output") {
+    const directValue = runtimeValueToString(values[lookupOutputValueKey(binding.sourceFieldId, binding.outputKey)]);
+    if (directValue) {
+      return directValue;
+    }
+
+    const sourceValue = runtimeValueToString(values[binding.sourceFieldId]);
+    const sourceField = findRuntimeFormField(definition, binding.sourceFieldId);
+    const optionValue = sourceField?.options?.find((option) => option.value === sourceValue)?.fields?.[binding.outputKey];
+    return optionValue?.trim() || content.value || labels.emptyValue;
+  }
+
+  return content.value ?? labels.emptyValue;
+}
+
 function RuntimeNode({
   activeTabs,
+  definition,
   definitionId,
   errors,
   labels,
@@ -117,6 +165,7 @@ function RuntimeNode({
   values,
 }: {
   activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
+  definition: RuntimeFormDefinition;
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
@@ -152,7 +201,13 @@ function RuntimeNode({
   }
 
   if (isRuntimeFormContentNode(node)) {
-    return <RuntimeContentNode content={node} />;
+    return (
+      <RuntimeContentNode
+        content={node}
+        labels={labels}
+        value={resolveRuntimeContentValue(node, definition, values, labels)}
+      />
+    );
   }
 
   if (isRuntimeFormSubformNode(node)) {
@@ -180,6 +235,7 @@ function RuntimeNode({
           <RuntimeNodeList
             activeTabs={activeTabs}
             className={className}
+            definition={definition}
             definitionId={definitionId}
             errors={errors}
             labels={labels}
@@ -206,6 +262,7 @@ function RuntimeNode({
 function RuntimeNodeList({
   activeTabs,
   className,
+  definition,
   definitionId,
   errors,
   labels,
@@ -223,6 +280,7 @@ function RuntimeNodeList({
 }: {
   activeTabs?: RuntimeFormScaffoldProps["activeTabs"];
   className?: string;
+  definition: RuntimeFormDefinition;
   definitionId: string;
   errors: RuntimeFormScaffoldProps["errors"];
   labels: ReturnType<typeof resolveRuntimeFormLabels>;
@@ -243,6 +301,7 @@ function RuntimeNodeList({
       {nodes.map((node) => (
         <RuntimeNode
           activeTabs={activeTabs}
+          definition={definition}
           definitionId={definitionId}
           errors={errors}
           key={node.id}
@@ -334,6 +393,7 @@ export function RuntimeFormScaffold({
               {resolveRuntimeSectionNodes(section).map((node) => (
                 <RuntimeNode
                   activeTabs={activeTabs}
+                  definition={definition}
                   definitionId={definition.id}
                   errors={errors}
                   key={node.id}

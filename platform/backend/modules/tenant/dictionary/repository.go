@@ -570,8 +570,11 @@ SELECT _id::text AS id,
          'employeeNumber', NULLIF(employee_number, ''),
          'jobType', NULLIF(job_type__label, ''),
          'company', NULLIF(company__label, ''),
+         'company_name', NULLIF(company__label, ''),
+         'company_id', NULLIF(company_id::text, ''),
          'email', NULLIF(email::text, ''),
-         'phone', NULLIF(phone, '')
+         'phone', NULLIF(phone, ''),
+         'title', NULLIF(job_type__label, '')
        )) AS fields,
        concat_ws(' ', first_name, last_name, employee_number, email::text, company__label, job_type__label, phone) AS search_text,
        active AS active,

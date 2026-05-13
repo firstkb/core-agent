@@ -303,6 +303,9 @@ export function LookupCatalogField({
       lookupLabels: {
         [option.value]: option.label,
       },
+      lookupOptionFields: option.fields ? {
+        [option.value]: option.fields,
+      } : undefined,
     });
     setOpen(false);
   }

@@ -35,37 +35,32 @@ func (s *Service) attachCurrentLookupOptions(
 			continue
 		}
 
-		missingValues := []string{}
-		for _, selectedValue := range selectedValues {
-			if label := strings.TrimSpace(currentLabels[selectedValue]); label != "" {
-				addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label, nil)
-			} else {
-				missingValues = append(missingValues, selectedValue)
-			}
-		}
-		if len(missingValues) == 0 {
-			continue
-		}
-		resolvedOptions, err := s.resolveCurrentLookupOptions(ctx, tenant, field, missingValues)
+		resolvedOptions, err := s.resolveCurrentLookupOptions(ctx, tenant, field, selectedValues)
 		if err != nil {
 			if errors.Is(err, dictionary.ErrInvalidDictionary) {
-				addFallbackCurrentLookupOptions(dataSchema, field.FieldID, missingValues)
+				addFallbackCurrentLookupOptions(dataSchema, field.FieldID, selectedValues, currentLabels)
 				continue
 			}
 			return err
 		}
-		for _, selectedValue := range missingValues {
+		for _, selectedValue := range selectedValues {
 			option := resolvedOptions[selectedValue]
-			label := chooseString(strings.TrimSpace(option.Label), selectedValue)
+			label := chooseString(strings.TrimSpace(currentLabels[selectedValue]), chooseString(strings.TrimSpace(option.Label), selectedValue))
 			addCurrentOptionToDataSchemaField(dataSchema, field.FieldID, selectedValue, label, option.Fields)
 		}
 	}
 	return nil
 }
 
-func addFallbackCurrentLookupOptions(dataSchema map[string]any, fieldID string, values []string) {
+func addFallbackCurrentLookupOptions(
+	dataSchema map[string]any,
+	fieldID string,
+	values []string,
+	labels map[string]string,
+) {
 	for _, selectedValue := range values {
-		addCurrentOptionToDataSchemaField(dataSchema, fieldID, selectedValue, selectedValue, nil)
+		label := chooseString(strings.TrimSpace(labels[selectedValue]), selectedValue)
+		addCurrentOptionToDataSchemaField(dataSchema, fieldID, selectedValue, label, nil)
 	}
 }
 

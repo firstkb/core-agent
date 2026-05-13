@@ -543,6 +543,65 @@ describe("runtime form helpers", () => {
     });
   });
 
+  it("compiles view-only lookup output bindings", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              displayFields: ["Full name", "Email"],
+              fieldId: "reported-by",
+              kind: "db_lookup",
+              label: "Reported By",
+              preset: "contact_lookup",
+              selectionMode: "single",
+              storageKey: "reported_by",
+            },
+          ],
+        },
+      },
+      mode: "edit",
+      modelId: "lookup",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            { fieldId: "reported-by", id: "node-reported-by", order: 1, type: "field" },
+            {
+              id: "node-company-name",
+              order: 2,
+              title: "Company name",
+              type: "view_only_field",
+              viewOnlyBinding: {
+                kind: "lookup_derived_output",
+                outputKey: "company_name",
+                sourceFieldId: "reported-by",
+              },
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    const viewOnlyNode = definition.sections
+      .flatMap((section) => section.nodes ?? [])
+      .find((node) => node.nodeType === "content"
+        && "contentType" in node
+        && node.contentType === "view_only_field");
+
+    expect(viewOnlyNode).toMatchObject({
+      contentType: "view_only_field",
+      label: "Company name",
+      labelLayout: "responsive-inline",
+      valueBinding: {
+        kind: "lookup_derived_output",
+        outputKey: "company_name",
+        sourceFieldId: "reported-by",
+      },
+    });
+  });
+
   it("compiles short text input settings and ready-made text presets", () => {
     const definition = createRuntimeFormDefinitionFromSchema({
       commitMode: "autosave",

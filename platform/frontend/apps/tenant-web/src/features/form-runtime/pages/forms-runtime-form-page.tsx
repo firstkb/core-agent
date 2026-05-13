@@ -329,6 +329,20 @@ function runtimeFormValueToDomString(value: RuntimeFormValue | undefined) {
   return "";
 }
 
+function lookupOutputValueKey(sourceFieldId: string, outputKey: string) {
+  return `${sourceFieldId}::lookup_output::${outputKey}`;
+}
+
+function selectedLookupRuntimeValues(value: RuntimeFormValue | undefined) {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim()) {
+    return [value];
+  }
+  return [];
+}
+
 function dictionaryKeyForLookupPreset(preset: string | undefined) {
   switch (preset) {
     case "company_lookup":
@@ -1332,27 +1346,45 @@ export function FormsRuntimeFormPage({
     if (Object.keys(changedValues).length === 0) {
       return;
     }
+    const nextChangedValues: Record<string, RuntimeFormValue> = { ...changedValues };
     const changedLookupLabels: Record<string, Record<string, string>> = {};
     Object.keys(changedValues).forEach((fieldId) => {
-      const labels = metaByField?.[fieldId]?.lookupLabels;
+      const meta = metaByField?.[fieldId];
+      const labels = meta?.lookupLabels;
       mergeLookupLabels(changedLookupLabels, fieldId, labels);
       mergeLookupLabels(latestLookupLabelsRef.current, fieldId, labels);
+
+      const outputPrefix = `${fieldId}::lookup_output::`;
+      Object.keys(latestValuesRef.current).forEach((valueKey) => {
+        if (valueKey.startsWith(outputPrefix)) {
+          nextChangedValues[valueKey] = "";
+        }
+      });
+
+      const selectedValues = selectedLookupRuntimeValues(changedValues[fieldId]);
+      const selectedFields = selectedValues
+        .flatMap((selectedValue) => Object.entries(meta?.lookupOptionFields?.[selectedValue] ?? {}));
+      selectedFields.forEach(([outputKey, outputValue]) => {
+        if (outputKey && outputValue) {
+          nextChangedValues[lookupOutputValueKey(fieldId, outputKey)] = outputValue;
+        }
+      });
     });
 
     let nextValues: RuntimeFormValues = {
       ...latestValuesRef.current,
-      ...changedValues,
+      ...nextChangedValues,
     };
     nextValues = applyInitialStatusIfNeeded(nextValues);
     latestValuesRef.current = nextValues;
     setValues(nextValues);
     setErrors((currentErrors) => {
-      if (!Object.keys(changedValues).some((fieldId) => currentErrors[fieldId])) {
+      if (!Object.keys(nextChangedValues).some((fieldId) => currentErrors[fieldId])) {
         return currentErrors;
       }
 
       const nextErrors = { ...currentErrors };
-      Object.keys(changedValues).forEach((fieldId) => {
+      Object.keys(nextChangedValues).forEach((fieldId) => {
         delete nextErrors[fieldId];
       });
       return nextErrors;
@@ -1361,7 +1393,7 @@ export function FormsRuntimeFormPage({
       if (createInFlightRef.current) {
         pendingPatchValuesRef.current = {
           ...pendingPatchValuesRef.current,
-          ...changedValues,
+          ...nextChangedValues,
         };
         pendingLookupLabelsRef.current = mergeLookupLabelMaps(
           pendingLookupLabelsRef.current,
@@ -1373,7 +1405,7 @@ export function FormsRuntimeFormPage({
       return;
     }
 
-    schedulePatch(changedValues, changedLookupLabels);
+    schedulePatch(nextChangedValues, changedLookupLabels);
   }
 
   function handleFieldChange(

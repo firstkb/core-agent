@@ -313,6 +313,60 @@ func TestAttachCurrentLookupOptionsHydratesCatalogModalCurrentLabel(t *testing.T
 	}
 }
 
+func TestAttachCurrentLookupOptionsKeepsStoredLabelAndHydratesFields(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":       "stored_contact",
+		"kind":          "db_lookup",
+		"label":         "Reported By",
+		"preset":        "contact_lookup",
+		"selectionMode": "single",
+		"storageKey":    "stored_contact",
+	})
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	scope, err := buildRuntimeRootScopePlan(repo.model, repo.view)
+	if err != nil {
+		t.Fatalf("buildRuntimeRootScopePlan returned error: %v", err)
+	}
+
+	lookupOptions := &recordingLookupOptionsProvider{
+		items: []dictionary.Option{{
+			Fields: map[string]string{
+				"company_name": "Acme Safety",
+			},
+			Label: "Dictionary Label",
+			Value: "7",
+		}},
+	}
+	svc := NewService(repo, lookupOptions)
+	tenant, _ := requestctx.Tenant(testRuntimeContext())
+	if err := svc.attachCurrentLookupOptions(testRuntimeContext(), tenant, scope, dataSchema, map[string]any{
+		"stored_contact": "7",
+	}, map[string]map[string]string{
+		"stored_contact": {"7": "Stored Label"},
+	}); err != nil {
+		t.Fatalf("attachCurrentLookupOptions returned error: %v", err)
+	}
+
+	if lookupOptions.calls != 1 {
+		t.Fatalf("lookup provider calls = %d, want 1", lookupOptions.calls)
+	}
+	field := findDataSchemaField(dataSchema, "stored_contact")
+	options := asSlice(field["options"])
+	if len(options) != 1 {
+		t.Fatalf("stored_contact options = %d, want 1", len(options))
+	}
+	option := asMap(options[0])
+	if option["value"] != "7" || option["label"] != "Stored Label" {
+		t.Fatalf("stored_contact option = %#v, want stored label", option)
+	}
+	fields := asMap(option["fields"])
+	if fields["company_name"] != "Acme Safety" {
+		t.Fatalf("stored_contact fields = %#v, want hydrated company_name", fields)
+	}
+}
+
 func TestAttachCurrentLookupOptionsFallsBackOnInvalidDictionary(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	addRuntimeRootField(repo, map[string]any{

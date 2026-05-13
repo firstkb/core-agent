@@ -119,6 +119,7 @@ export type RuntimeFormLookupOptionsResponse = {
 
 export type RuntimeFormFieldChangeMeta = {
   lookupLabels?: Record<string, string>;
+  lookupOptionFields?: Record<string, Record<string, string>>;
 };
 
 export type RuntimeFormLookupLoader = (
@@ -196,6 +197,11 @@ export type RuntimeFormFieldDefinition = {
 
 export type RuntimeFormContentAlignment = "left" | "center" | "right";
 export type RuntimeFormContentType = "heading" | "text" | "rich_text_block" | "view_only_field";
+export type RuntimeFormContentValueBinding = {
+  kind: "lookup_derived_output";
+  outputKey: string;
+  sourceFieldId: string;
+};
 
 export type RuntimeFormContentDefinition = {
   alignment?: RuntimeFormContentAlignment;
@@ -203,11 +209,13 @@ export type RuntimeFormContentDefinition = {
   contentType: RuntimeFormContentType;
   id: string;
   label?: ReactNode;
+  labelLayout?: RuntimeFormFieldLabelLayout;
   level?: 1 | 2 | 3 | 4;
   nodeType: "content";
   rules?: RuntimeFormNodeRules;
   styleVariant?: "default" | "muted" | "info";
   value?: ReactNode;
+  valueBinding?: RuntimeFormContentValueBinding;
   width?: RuntimeFormFieldWidth;
 };
 

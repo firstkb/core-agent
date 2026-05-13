@@ -16,6 +16,7 @@ export type {
   RuntimeFormContentAlignment,
   RuntimeFormContentDefinition,
   RuntimeFormContentType,
+  RuntimeFormContentValueBinding,
   RuntimeFormDefinition,
   RuntimeFormDividerLayoutDefinition,
   RuntimeFormFieldDefinition,

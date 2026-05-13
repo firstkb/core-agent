@@ -1,5 +1,13 @@
+import type { ReactNode } from "react";
+
+import {
+  Field,
+  FieldLabel,
+} from "@platform/ui-kit";
+
 import type {
   RuntimeFormContentDefinition,
+  RuntimeFormResolvedLabels,
 } from "./runtime-form-types";
 import {
   cx,
@@ -23,8 +31,12 @@ function getHeadingTag(level: RuntimeFormContentDefinition["level"]) {
 
 export function RuntimeContentNode({
   content,
+  labels,
+  value,
 }: {
   content: RuntimeFormContentDefinition;
+  labels: RuntimeFormResolvedLabels;
+  value?: ReactNode;
 }) {
   const className = cx(
     "platform-runtime-form__content",
@@ -45,11 +57,24 @@ export function RuntimeContentNode({
   }
 
   if (content.contentType === "view_only_field") {
+    const labelLayout = content.labelLayout ?? (content.width === "full" ? "responsive-inline" : "stacked");
+    const displayValue = value ?? content.value ?? labels.emptyValue;
+
     return (
-      <div className={className}>
-        {content.label ? <span className="platform-runtime-form__view-only-label">{content.label}</span> : null}
-        <span className="platform-runtime-form__view-only-value">{content.value ?? "-"}</span>
-      </div>
+      <Field
+        className={cx(
+          "platform-runtime-form__field",
+          content.width === "full" && "platform-runtime-form__field--full",
+          "platform-runtime-form__field--view-only",
+        )}
+        layout={labelLayout}
+        required={false}
+      >
+        {content.label ? <FieldLabel>{content.label}</FieldLabel> : null}
+        <div className="platform-runtime-form__readonly-value">
+          {displayValue}
+        </div>
+      </Field>
     );
   }
 

@@ -2,6 +2,7 @@ import type {
   RuntimeFormAccordionLayoutDefinition,
   RuntimeFormCommitMode,
   RuntimeFormContentDefinition,
+  RuntimeFormContentValueBinding,
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
@@ -614,6 +615,23 @@ function createFieldNode(
   };
 }
 
+function readViewOnlyValueBinding(node: JsonRecord): RuntimeFormContentValueBinding | undefined {
+  const binding = asRecord(node.viewOnlyBinding);
+  const kind = stringValue(binding.kind);
+  const sourceFieldId = stringValue(binding.sourceFieldId);
+  const outputKey = stringValue(binding.outputKey);
+
+  if (kind !== "lookup_derived_output" || !sourceFieldId || !outputKey) {
+    return undefined;
+  }
+
+  return {
+    kind,
+    outputKey,
+    sourceFieldId,
+  };
+}
+
 function createContentNode(context: CompileContext, node: JsonRecord): RuntimeFormContentDefinition | null {
   const id = stringValue(node.id);
   const nodeType = stringValue(node.type);
@@ -650,9 +668,11 @@ function createContentNode(context: CompileContext, node: JsonRecord): RuntimeFo
       contentType: "view_only_field",
       id,
       label: stringValue(node.title, context.labels.generatedOutputLabel),
+      labelLayout: "responsive-inline",
       nodeType: "content",
       rules: readRuntimeRules(node.rules),
       value: stringValue(node.text),
+      valueBinding: readViewOnlyValueBinding(node),
       width: "full",
     };
   }

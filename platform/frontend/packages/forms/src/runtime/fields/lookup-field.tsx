@@ -75,6 +75,19 @@ function lookupLabelMap(
   );
 }
 
+function lookupOptionFieldsMap(
+  selectedValues: ReadonlyArray<string>,
+  options: ReadonlyArray<RuntimeFormFieldOption>,
+) {
+  const fieldsByValue = new Map(options.map((option) => [option.value, option.fields]));
+  return Object.fromEntries(
+    selectedValues.flatMap((selectedValue) => {
+      const fields = fieldsByValue.get(selectedValue);
+      return fields && Object.keys(fields).length > 0 ? [[selectedValue, fields]] : [];
+    }),
+  );
+}
+
 export function LookupField({
   controlId,
   disabled,
@@ -246,6 +259,7 @@ export function LookupField({
         onValueChange={(nextValues) => {
           onFieldChange(field.id, nextValues, field, {
             lookupLabels: lookupLabelMap(nextValues, options),
+            lookupOptionFields: lookupOptionFieldsMap(nextValues, options),
           });
         }}
         options={comboboxOptions}
@@ -285,6 +299,7 @@ export function LookupField({
         const nextSelectedValues = nextValue ? [nextValue] : [];
         onFieldChange(field.id, nextValue ?? "", field, {
           lookupLabels: lookupLabelMap(nextSelectedValues, options),
+          lookupOptionFields: lookupOptionFieldsMap(nextSelectedValues, options),
         });
       }}
       options={comboboxOptions}

@@ -573,6 +573,7 @@ Managed `CHECKLIST` subform:
 - lookup outputs: create/recreate in SQL views
 - child grid views: skipped
 - authoring stores checklist bindings as `checklistConfig` on the checklist subform UI node and layout blueprint container, including `lookupFieldId`, `resultFieldId`, optional `notesFieldId`, and grouping; backend normalization preserves that config when deriving or materializing UI schema
+- runtime/form render may auto-detect optional item-source metadata fields by storage key from the lookup source selected by the checklist `Item` DB lookup: `answer_options` (`|`-delimited answer buttons such as `Pass|Fail|N/A`), `answer_required` (boolean per-question required flag), and `visible_when` (one simple dependency expression such as `7=Fail`); missing fields keep default checklist behavior and no Form Builder field-mapping UI is required for this first contract
 
 External/static root:
 

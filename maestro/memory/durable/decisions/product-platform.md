@@ -306,3 +306,30 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - `reference-code/platform-studio/extdb/Template/MdlAccess.htm`
   - `reference-code/platform-studio/extdb/Template/PgAccess.htm`
   - `reference-code/platform-studio/extdb/default.asp`
+
+### DEC-101 Checklist Item Metadata Uses Source Field Convention
+
+- Date: 2026-05-14
+- Status: active
+- State: owner-confirmed
+- Decision: Checklist runtime/form render should support optional per-question
+  behavior by convention over the lookup source selected by the checklist
+  `Item` DB lookup. If the item source model exposes fields with storage keys
+  `answer_options`, `answer_required`, and/or `visible_when`, runtime may use
+  them automatically. Form Builder should not expose advanced field-mapping
+  selects for this first contract; the convention is intentionally simple and
+  missing fields mean default checklist behavior.
+- Contract:
+  - `answer_options`: string, parsed with `|` delimiter, for example
+    `Pass|Fail|N/A`; overrides the default `Result` button options for that
+    question.
+  - `answer_required`: boolean; when true, the question's result is required
+    while the question is visible.
+  - `visible_when`: simple single dependency expression, initially
+    `<sourceItemId>=<answer>` or `<sourceItemId>=<answer>|<answer>`, for example
+    `7=Fail`; if the source question is unanswered or does not match, the
+    dependent question is hidden and its required flag does not apply.
+- Sources:
+  - Owner decision on 2026-05-14
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `platform/backend/docs/contracts/platform-studio-form-builder.md`

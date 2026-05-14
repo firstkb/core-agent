@@ -509,6 +509,7 @@ Layout rules:
 - `Checklist subform` is a palette shortcut that compiles to `subform` with `subformType = CHECKLIST`
 - creating `Checklist subform` in Form Builder creates a dedicated child scope with default child fields `Item`, `Result`, and `Notes`; `Item` is a single `db_lookup`, `Result` is a button-style `single_select`, and `Notes` is optional long text
 - inside a `CHECKLIST` subform scope the palette is intentionally limited to checklist-safe additions: `Short text`, `Date`, `Single select`, `Heading`, and `Text`
+- checklist runtime item metadata is convention-based for the first contract: if the source model selected by the checklist `Item` DB lookup exposes fields with storage keys `answer_options`, `answer_required`, and/or `visible_when`, runtime may auto-detect them for per-question behavior; Form Builder does not need advanced field-mapping selects for this first version
 
 ## Content Nodes
 
@@ -676,6 +677,15 @@ Checklist normalization:
 - Form Builder stores `checklistConfig` on the checklist subform node and mirrors it through model-owned layout blueprint containers so fresh UI schema materialization can retain the bindings
 - shortcut-created `Item`, `Result`, and `Notes` fields are locked managed fields; users hide optional `Notes` through node visibility rather than deleting it
 - deleting a subform is a model-structure operation: the authoring workspace must remove the subform node, its subform scope, scoped model fields, and the matching model `schemaScopes` entry together so scoped child fields do not reappear as root/unplaced fields
+
+Checklist item metadata convention:
+
+- the convention applies only to runtime/form render behavior for `CHECKLIST` subforms and only through the lookup source selected by the checklist `Item` DB lookup
+- `answer_options`: optional string field using `|` as the delimiter, for example `Pass|Fail|N/A`; when present for a question, runtime may use it instead of the default `Result` options for that row
+- `answer_required`: optional boolean field; when true, that question's result is required while the question is visible
+- `visible_when`: optional string field with one simple dependency expression, initially `<sourceItemId>=<answer>` or `<sourceItemId>=<answer>|<answer>`, for example `7=Fail` or `7=No|N/A`
+- if `visible_when` is empty, the question is visible by default; if the source question is unanswered or does not match, the dependent question is hidden and `answer_required` does not apply
+- source field mapping selects are intentionally deferred; missing convention fields mean default checklist behavior
 
 Optional checklist sibling fields:
 

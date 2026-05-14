@@ -195,6 +195,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_RUNTIME_VIEW_NOT_FOUND", http.StatusNotFound, "view not found")
 	case errors.Is(err, ErrRecordNotFound):
 		return apperr.New("FORM_RUNTIME_RECORD_NOT_FOUND", http.StatusNotFound, "record not found")
+	case errors.Is(err, ErrRuntimeSchemaDrift):
+		return apperr.New("FORM_RUNTIME_SCHEMA_DRIFT", http.StatusConflict, "runtime schema is out of date")
 	case errors.Is(err, ErrRuntimeUnsupported):
 		return apperr.New("FORM_RUNTIME_UNSUPPORTED", http.StatusConflict, "runtime writes are not supported for this view")
 	default:

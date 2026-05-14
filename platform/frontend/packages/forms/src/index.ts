@@ -43,6 +43,8 @@ export type {
   RuntimeFormFieldLabelLayout,
   RuntimeFormFieldType,
   RuntimeFormFieldWidth,
+  RuntimeFormGeoPoint,
+  RuntimeFormGeoPointResolver,
   RuntimeFormGridLayoutDefinition,
   RuntimeFormGroupLayoutDefinition,
   RuntimeFormInputMode,

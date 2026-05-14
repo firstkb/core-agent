@@ -102,10 +102,15 @@ func normalizeMutationValue(field runtimeFieldPlan, value any) any {
 		default:
 			return typed
 		}
-	case "date", "date_time", "short_text", "long_text", "rich_text", "single_select":
+	case "date", "date_time", "geo_point", "short_text", "long_text", "rich_text", "single_select":
 		if typed, ok := value.(string); ok {
 			if strings.TrimSpace(typed) == "" {
 				return nil
+			}
+			if field.Kind == "geo_point" {
+				if point, ok := parseRuntimeGeoPointValue(typed); ok {
+					return formatRuntimeGeoPointValue(point)
+				}
 			}
 			return strings.TrimSpace(typed)
 		}

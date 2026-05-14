@@ -25,6 +25,8 @@ export type {
   RuntimeFormFieldOption,
   RuntimeFormFieldType,
   RuntimeFormFieldWidth,
+  RuntimeFormGeoPoint,
+  RuntimeFormGeoPointResolver,
   RuntimeFormGridLayoutDefinition,
   RuntimeFormGroupLayoutDefinition,
   RuntimeFormInputMode,

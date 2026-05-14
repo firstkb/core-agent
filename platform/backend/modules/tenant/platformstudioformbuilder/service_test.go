@@ -5050,6 +5050,25 @@ func TestBuildRuntimeApplyFieldPlanShortensOverlongColumnNames(t *testing.T) {
 	}
 }
 
+func TestBuildRuntimeApplyFieldPlanSupportsGeoPoint(t *testing.T) {
+	plan := buildRuntimeApplyFieldPlan(map[string]any{
+		"id":         "geo-point",
+		"kind":       "geo_point",
+		"label":      "Geo point",
+		"storageKey": "geo_point",
+	}, nil, "managed", "")
+
+	if !plan.Supported {
+		t.Fatal("geo_point apply field should be supported")
+	}
+	if plan.ColumnName != "geo_point" {
+		t.Fatalf("geo_point column = %q, want geo_point", plan.ColumnName)
+	}
+	if plan.PhysicalType != "text" {
+		t.Fatalf("geo_point physical type = %q, want text", plan.PhysicalType)
+	}
+}
+
 func TestSaveDraftBuildsRuntimeApplyLookupOutputsForContactLookup(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)

@@ -49,6 +49,41 @@ func TestSupportsRuntimeUniqueValueMatchesAuthoringScope(t *testing.T) {
 	}
 }
 
+func TestGeoPointPlanNormalizeAndValidate(t *testing.T) {
+	field := buildRuntimeFieldPlan(map[string]any{
+		"id":         "gps",
+		"kind":       "geo_point",
+		"label":      "GPS coordinates",
+		"storageKey": "gps",
+	}, "managed")
+
+	if !field.Supported {
+		t.Fatal("geo_point field should be supported")
+	}
+	if field.ColumnName != "gps" {
+		t.Fatalf("geo_point column = %q, want gps", field.ColumnName)
+	}
+
+	normalized := normalizeMutationValue(field, "40.7128,-74.006")
+	if normalized != "Latitude: 40.712800, Longitude: -74.006000" {
+		t.Fatalf("normalized geo point = %#v", normalized)
+	}
+
+	validErrors := validateFieldValues(runtimeRootScopePlan{Fields: []runtimeFieldPlan{field}}, map[string]any{
+		"gps": normalized,
+	})
+	if len(validErrors) != 0 {
+		t.Fatalf("valid geo point errors = %#v", validErrors)
+	}
+
+	invalidErrors := validateFieldValues(runtimeRootScopePlan{Fields: []runtimeFieldPlan{field}}, map[string]any{
+		"gps": "Latitude: 91.000000, Longitude: -74.006000",
+	})
+	if len(invalidErrors) != 1 || invalidErrors[0].FieldID != "gps" {
+		t.Fatalf("invalid geo point errors = %#v, want one gps error", invalidErrors)
+	}
+}
+
 func TestCreateRecordWaitsForRequiredFields(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)

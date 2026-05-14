@@ -219,7 +219,8 @@ func buildRuntimeFieldPlan(field map[string]any, sourceType string) runtimeField
 		kind == "currency",
 		kind == "boolean",
 		kind == "date",
-		kind == "date_time":
+		kind == "date_time",
+		kind == "geo_point":
 		plan.ColumnName = runtimeFieldColumnIdentifier(storageKey)
 		plan.Supported = true
 	case kind == "db_lookup" && selectionMode == "multiple" && isManagedRuntimeSourceType(sourceType):

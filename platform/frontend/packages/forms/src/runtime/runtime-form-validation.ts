@@ -10,6 +10,9 @@ import type {
 import {
   isRuntimeTextMaskComplete,
 } from "./runtime-form-input-mask";
+import {
+  parseRuntimeGeoPointValue,
+} from "./runtime-form-geo-point";
 import { resolveRuntimeFormLabels } from "./runtime-form-labels";
 import {
   isRuntimeFieldRequired,
@@ -86,6 +89,23 @@ function validateRuntimeTextField(
   }
 }
 
+function validateRuntimeGeoPointField(
+  field: RuntimeFormFieldDefinition,
+  values: RuntimeFormValues,
+  labels: RuntimeFormResolvedLabels,
+) {
+  if (field.type !== "geo_point") {
+    return undefined;
+  }
+
+  const value = values[field.id];
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+
+  return parseRuntimeGeoPointValue(value) ? undefined : labels.invalidGeoPointError;
+}
+
 function validateRuntimeFormNodes(
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>,
   values: RuntimeFormValues,
@@ -111,6 +131,10 @@ function validateRuntimeFormNodes(
       const inputError = validateRuntimeTextField(node, values, labels);
       if (inputError) {
         errors[node.id] = inputError;
+      }
+      const geoPointError = validateRuntimeGeoPointField(node, values, labels);
+      if (geoPointError) {
+        errors[node.id] = geoPointError;
       }
       continue;
     }

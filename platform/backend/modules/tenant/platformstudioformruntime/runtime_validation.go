@@ -2,8 +2,52 @@ package platformstudioformruntime
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+type runtimeGeoPoint struct {
+	Latitude  float64
+	Longitude float64
+}
+
+var (
+	legacyRuntimeGeoPointPattern  = regexp.MustCompile(`(?i)^\s*latitude:\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*longitude:\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*$`)
+	compactRuntimeGeoPointPattern = regexp.MustCompile(`^\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*$`)
+)
+
+func parseRuntimeGeoPointValue(value string) (runtimeGeoPoint, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return runtimeGeoPoint{}, false
+	}
+
+	match := legacyRuntimeGeoPointPattern.FindStringSubmatch(value)
+	if match == nil {
+		match = compactRuntimeGeoPointPattern.FindStringSubmatch(value)
+	}
+	if len(match) != 3 {
+		return runtimeGeoPoint{}, false
+	}
+
+	latitude, err := strconv.ParseFloat(match[1], 64)
+	if err != nil {
+		return runtimeGeoPoint{}, false
+	}
+	longitude, err := strconv.ParseFloat(match[2], 64)
+	if err != nil {
+		return runtimeGeoPoint{}, false
+	}
+	if latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180 {
+		return runtimeGeoPoint{}, false
+	}
+	return runtimeGeoPoint{Latitude: latitude, Longitude: longitude}, true
+}
+
+func formatRuntimeGeoPointValue(point runtimeGeoPoint) string {
+	return fmt.Sprintf("Latitude: %.6f, Longitude: %.6f", point.Latitude, point.Longitude)
+}
 
 func validateRequiredValues(scope runtimeRootScopePlan, values map[string]any) []RuntimeViewRecordValidationError {
 	out := []RuntimeViewRecordValidationError{}
@@ -16,6 +60,28 @@ func validateRequiredValues(scope runtimeRootScopePlan, values map[string]any) [
 				FieldID: field.FieldID,
 				Message: fmt.Sprintf("Please fill field: %q", chooseString(field.Label, field.FieldID)),
 			})
+		}
+	}
+	return out
+}
+
+func validateFieldValues(scope runtimeRootScopePlan, values map[string]any) []RuntimeViewRecordValidationError {
+	out := []RuntimeViewRecordValidationError{}
+	for _, field := range scope.Fields {
+		if !field.Supported || field.Kind != "geo_point" {
+			continue
+		}
+		value, ok := values[field.FieldID]
+		if !ok || isEmptyRuntimeValue(value) {
+			continue
+		}
+		text, ok := value.(string)
+		if !ok {
+			out = append(out, invalidRuntimeGeoPointValidationError(field))
+			continue
+		}
+		if _, ok := parseRuntimeGeoPointValue(text); !ok {
+			out = append(out, invalidRuntimeGeoPointValidationError(field))
 		}
 	}
 	return out
@@ -56,5 +122,12 @@ func uniqueValueValidationError(field runtimeFieldPlan) RuntimeViewRecordValidat
 	return RuntimeViewRecordValidationError{
 		FieldID: field.FieldID,
 		Message: fmt.Sprintf("Please enter a unique value for %q", chooseString(field.Label, field.FieldID)),
+	}
+}
+
+func invalidRuntimeGeoPointValidationError(field runtimeFieldPlan) RuntimeViewRecordValidationError {
+	return RuntimeViewRecordValidationError{
+		FieldID: field.FieldID,
+		Message: fmt.Sprintf("Please enter a valid geographic point for %q", chooseString(field.Label, field.FieldID)),
 	}
 }

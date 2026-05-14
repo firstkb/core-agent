@@ -202,6 +202,11 @@ export const tenantSpanishMessages = {
             subform: "Subformulario",
             tab: "Pestana",
           },
+          geoPoint: {
+            locating: "Cargando...",
+            map: "Mapa",
+            placeholder: "Las coordenadas se capturaran automaticamente",
+          },
           loadError: {
             genericDescription: "Intentalo de nuevo. Si el problema continua, vuelve a la lista y abre el registro otra vez.",
             genericTitle: "No se pudo cargar el formulario",
@@ -215,6 +220,7 @@ export const tenantSpanishMessages = {
             deleteFailed: "No se pudo eliminar el registro.",
             saveFailed: "No se pudo guardar el registro.",
             saved: "Guardado correctamente en el servidor.",
+            schemaDrift: "Este formulario cambio, pero su almacenamiento aun no esta listo. Guarda el formulario en Form Builder e intentalo de nuevo.",
           },
           noOptions: "Sin opciones",
           onlineTitle: "Formulario en linea",
@@ -248,6 +254,7 @@ export const tenantSpanishMessages = {
             fillField: "Completa el campo: \"{{field}}\"",
             fillFieldCorrectly: "Completa correctamente el campo: \"{{field}}\"",
             invalidEmail: "Introduce una direccion de correo valida.",
+            invalidGeoPoint: "Introduce un punto geografico valido.",
             invalidMask: "Introduce un valor que coincida con el formato requerido.",
             invalidPhone: "Introduce un numero de telefono valido.",
             invalidUrl: "Introduce una URL valida.",

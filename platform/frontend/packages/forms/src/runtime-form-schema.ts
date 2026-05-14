@@ -69,6 +69,7 @@ const runtimeFieldTypes = new Set<RuntimeFormFieldType>([
   "date",
   "date_time",
   "decimal",
+  "geo_point",
   "integer",
   "long_text",
   "multi_select",
@@ -584,7 +585,9 @@ function createFieldNode(
   }
 
   const optionsList = readOptions(field);
-  const readonly = node.visibility === "readonly" || boolValue(node.readonly, boolValue(field.readonly));
+  const readonly = type === "geo_point"
+    ? false
+    : node.visibility === "readonly" || boolValue(node.readonly, boolValue(field.readonly));
   const width = options.insideGrid ? undefined : "full";
   const isChoiceField = isChoiceFieldType(type);
   const inputMode = type === "short_text" ? readInputMode(field) : undefined;

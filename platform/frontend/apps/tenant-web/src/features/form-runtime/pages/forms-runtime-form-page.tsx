@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import {
   ApiClientError,
@@ -19,6 +19,7 @@ import {
   type RuntimeFormDefinition,
   type RuntimeFormFieldChangeMeta,
   type RuntimeFormFieldType,
+  type RuntimeFormGeoPoint,
   type RuntimeFormLabels,
   type RuntimeFormLookupDefinition,
   type RuntimeFormLookupFilter,
@@ -109,6 +110,65 @@ type RuntimeFormNavigationState = {
 };
 
 const AUTOSAVE_DELAY_MS = 350;
+
+function isValidRuntimeGeoPoint(latitude: number, longitude: number) {
+  return Number.isFinite(latitude)
+    && Number.isFinite(longitude)
+    && latitude >= -90
+    && latitude <= 90
+    && longitude >= -180
+    && longitude <= 180;
+}
+
+function getBrowserGeoPoint(): Promise<RuntimeFormGeoPoint> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("Browser geolocation is not available."));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        if (!isValidRuntimeGeoPoint(latitude, longitude)) {
+          reject(new Error("Browser geolocation returned invalid coordinates."));
+          return;
+        }
+        resolve({ latitude, longitude });
+      },
+      (error) => reject(error),
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60_000,
+        timeout: 8_000,
+      },
+    );
+  });
+}
+
+async function getIpGeoPoint(): Promise<RuntimeFormGeoPoint | null> {
+  try {
+    const response = await fetch("https://ipapi.co/json/");
+    if (!response.ok) {
+      return null;
+    }
+    const data = await response.json() as { latitude?: unknown; longitude?: unknown };
+    const latitude = typeof data.latitude === "number" ? data.latitude : Number(data.latitude);
+    const longitude = typeof data.longitude === "number" ? data.longitude : Number(data.longitude);
+    return isValidRuntimeGeoPoint(latitude, longitude) ? { latitude, longitude } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveRuntimeGeoPoint(): Promise<RuntimeFormGeoPoint | null> {
+  try {
+    return await getBrowserGeoPoint();
+  } catch {
+    return getIpGeoPoint();
+  }
+}
 
 function createClientCreateToken() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -467,7 +527,12 @@ function lookupLabelsForChangedValues(
 
 function isConflictRuntimeError(requestError: unknown) {
   return requestError instanceof ApiClientError
-    && (requestError.statusCode === 409 || requestError.code === "FORM_RUNTIME_CONFLICT");
+    && (requestError.code === "FORM_RUNTIME_CONFLICT" || (!requestError.code && requestError.statusCode === 409));
+}
+
+function isRuntimeSchemaDriftError(requestError: unknown) {
+  return requestError instanceof ApiClientError
+    && requestError.code === "FORM_RUNTIME_SCHEMA_DRIFT";
 }
 
 function isNotFoundRuntimeError(requestError: unknown) {
@@ -557,6 +622,7 @@ export function FormsRuntimeFormPage({
   );
   const [formLoadError, setFormLoadError] = useState<RuntimeFormLoadErrorState | null>(null);
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
+  const [formValuesReady, setFormValuesReady] = useState(false);
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
   const [activeTabs, setActiveTabs] = useState<RuntimeFormActiveTabs>(() => restoredSession?.activeTabs ?? {});
@@ -594,9 +660,13 @@ export function FormsRuntimeFormPage({
     generatedSubformTitle: t("tenant.runtime.forms.form.generated.subform"),
     generatedTabTitle: t("tenant.runtime.forms.form.generated.tab"),
     invalidEmailError: t("tenant.runtime.forms.form.validation.invalidEmail"),
+    invalidGeoPointError: t("tenant.runtime.forms.form.validation.invalidGeoPoint"),
     invalidMaskError: t("tenant.runtime.forms.form.validation.invalidMask"),
     invalidPhoneError: t("tenant.runtime.forms.form.validation.invalidPhone"),
     invalidUrlError: t("tenant.runtime.forms.form.validation.invalidUrl"),
+    geoPointLocating: t("tenant.runtime.forms.form.geoPoint.locating"),
+    geoPointMap: t("tenant.runtime.forms.form.geoPoint.map"),
+    geoPointPlaceholder: t("tenant.runtime.forms.form.geoPoint.placeholder"),
     loadMore: t("tenant.runtime.forms.form.loadMore"),
     noOptions: t("tenant.runtime.forms.form.noOptions"),
     onlineFormTitle: t("tenant.runtime.forms.form.onlineTitle"),
@@ -672,6 +742,7 @@ export function FormsRuntimeFormPage({
   const lastPatchValidationErrorsRef = useRef<ReadonlyArray<FormRuntimeRecordValidationError>>([]);
   const latestValuesRef = useRef<RuntimeFormValues>({});
   const latestLookupLabelsRef = useRef<Record<string, Record<string, string>>>({});
+  const geoPointResolutionPromiseRef = useRef<Promise<RuntimeFormGeoPoint | null> | null>(null);
   const patchInFlightRef = useRef(false);
   const patchPromiseRef = useRef<Promise<void> | null>(null);
   const pendingLookupLabelsRef = useRef<Record<string, Record<string, string>>>({});
@@ -720,6 +791,13 @@ export function FormsRuntimeFormPage({
     };
   }, [dictionaryClient, getRuntimeAccessToken]);
 
+  const loadRuntimeGeoPoint = useCallback(() => {
+    if (!geoPointResolutionPromiseRef.current) {
+      geoPointResolutionPromiseRef.current = resolveRuntimeGeoPoint();
+    }
+    return geoPointResolutionPromiseRef.current;
+  }, []);
+
   useEffect(() => {
     const restoredActiveTabs = restoredSession?.activeTabs ?? {};
     activeTabsRef.current = restoredActiveTabs;
@@ -739,6 +817,7 @@ export function FormsRuntimeFormPage({
     let isCancelled = false;
     setSaveState("saving");
     setFormLoadError(null);
+    setFormValuesReady(false);
     if (!restoredSession?.formResponse) {
       setFormResponse(null);
     }
@@ -784,7 +863,7 @@ export function FormsRuntimeFormPage({
     subformId,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!definition || !formResponse) {
       return;
     }
@@ -819,6 +898,8 @@ export function FormsRuntimeFormPage({
     lastPatchValidationErrorsRef.current = [];
     lastRuntimeRequestErrorKindRef.current = null;
     clientCreateTokenRef.current = createClientCreateToken();
+    geoPointResolutionPromiseRef.current = null;
+    setFormValuesReady(true);
   }, [definition, formResponse, initialValues, isSubform, parentDocGuid, restoredSession, routeDocGuid, subformId]);
 
   useEffect(() => {
@@ -972,6 +1053,15 @@ export function FormsRuntimeFormPage({
       setSaveState("error");
       lastRuntimeRequestErrorKindRef.current = "conflict";
       return "conflict";
+    }
+    if (isRuntimeSchemaDriftError(requestError)) {
+      setFinishDialog({
+        message: t("tenant.runtime.forms.form.messages.schemaDrift"),
+        tone: "danger",
+      });
+      setSaveState("error");
+      lastRuntimeRequestErrorKindRef.current = "error";
+      return "error";
     }
     setSaveState("error");
     lastRuntimeRequestErrorKindRef.current = "error";
@@ -1735,6 +1825,7 @@ export function FormsRuntimeFormPage({
         onFinish={() => {
           void handleFinish();
         }}
+        resolveGeoPoint={formValuesReady ? loadRuntimeGeoPoint : undefined}
         onSubformAdd={isSubform ? undefined : handleSubformAdd}
         onSubformDelete={isSubform ? undefined : handleSubformDelete}
         onSubformEdit={isSubform ? undefined : handleSubformEdit}

@@ -16,6 +16,7 @@ var (
 	ErrInvalidRequest      = errors.New("form runtime invalid request")
 	ErrModelNotFound       = errors.New("form runtime model not found")
 	ErrRecordNotFound      = errors.New("form runtime record not found")
+	ErrRuntimeSchemaDrift  = errors.New("form runtime schema drift")
 	ErrRuntimeUnsupported  = errors.New("form runtime unsupported")
 	ErrTenantMissing       = errors.New("form runtime tenant missing")
 	ErrUnauthorized        = errors.New("form runtime unauthorized")
@@ -182,6 +183,12 @@ func (s *Service) CreateRecord(
 			Values:           values,
 		}, nil
 	}
+	if validationErrors := validateFieldValues(scope, values); len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 
 	createDocGuid := normalizeClientCreateToken(req.ClientCreateToken)
 	validationErrors, err := s.validateRootUniqueValues(ctx, tenant, scope, values, createDocGuid)
@@ -243,6 +250,12 @@ func (s *Service) CreateSubformRecord(
 			Values:           values,
 		}, nil
 	}
+	if validationErrors := validateFieldValues(mutationScope, values); len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 
 	createDocGuid := normalizeClientCreateToken(req.ClientCreateToken)
 	validationErrors, err := s.validateSubformUniqueValues(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, createDocGuid)
@@ -292,6 +305,12 @@ func (s *Service) UpdateRecord(
 	}
 	scope = withRuntimeMutationLookupLabels(scope, req.LookupLabels)
 	values := s.prepareMutationValues(scope, req.Values)
+	if validationErrors := validateFieldValues(scope, values); len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 	validationErrors, err := s.validateRootUniqueValues(ctx, tenant, scope, values, docGuid)
 	if err != nil {
 		return nil, err
@@ -340,6 +359,12 @@ func (s *Service) UpdateSubformRecord(
 	mutationScope := rootScopeFromSubform(scopeContext.Scope, subformScope)
 	mutationScope = withRuntimeMutationLookupLabels(mutationScope, req.LookupLabels)
 	values := s.prepareMutationValues(mutationScope, req.Values)
+	if validationErrors := validateFieldValues(mutationScope, values); len(validationErrors) > 0 {
+		return &RuntimeViewRecordMutationResponse{
+			ValidationErrors: validationErrors,
+			Values:           values,
+		}, nil
+	}
 	validationErrors, err := s.validateSubformUniqueValues(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, values, docGuid)
 	if err != nil {
 		return nil, err

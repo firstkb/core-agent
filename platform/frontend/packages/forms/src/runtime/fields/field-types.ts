@@ -14,6 +14,8 @@ export type RuntimeFieldControlProps = {
   labels: RuntimeFormResolvedLabels;
   loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
+  isResolvingGeoPoint?: boolean;
   required: boolean;
   value: RuntimeFormValue | undefined;
 };

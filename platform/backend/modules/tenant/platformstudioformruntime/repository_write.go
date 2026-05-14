@@ -18,12 +18,19 @@ func createRootRecordTx(
 	values map[string]any,
 	createDocGuid string,
 ) (*runtimeRecordMutationRow, error) {
-	columnNames, args := mutationColumnsAndArgs(scope, values)
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(scope, values, columnSet)
+	if len(missingFields) > 0 {
+		return nil, runtimeSchemaDriftError(scope.TableName, missingFields)
+	}
 	if createDocGuid != "" && scope.SourceGUIDColumn != "" {
 		columnNames = append(columnNames, scope.SourceGUIDColumn)
 		args = append(args, createDocGuid)
 	}
-	returningClause, returningFields := buildReturningClause(scope)
+	returningClause, returningFields := buildReturningClauseForColumns(scope, columnSet)
 
 	var query string
 	if len(columnNames) == 0 {
@@ -78,14 +85,21 @@ func createSubformRecordTx(
 		return nil, err
 	}
 	recordScope := rootScopeFromSubform(rootScope, subformScope)
-	columnNames, args := mutationColumnsAndArgs(recordScope, values)
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(recordScope, values, columnSet)
+	if len(missingFields) > 0 {
+		return nil, runtimeSchemaDriftError(recordScope.TableName, missingFields)
+	}
 	columnNames = append(columnNames, subformScope.ParentForeignKey)
 	args = append(args, parentRow.SourceID)
 	if createDocGuid != "" && recordScope.SourceGUIDColumn != "" {
 		columnNames = append(columnNames, recordScope.SourceGUIDColumn)
 		args = append(args, createDocGuid)
 	}
-	returningClause, returningFields := buildReturningClause(recordScope)
+	returningClause, returningFields := buildReturningClauseForColumns(recordScope, columnSet)
 
 	placeholders := make([]string, 0, len(columnNames))
 	for index := range columnNames {
@@ -137,7 +151,14 @@ func updateRootRecordTx(
 		return loadRootRecordTx(ctx, tx, scope, docGuid)
 	}
 
-	columnNames, args := mutationColumnsAndArgs(scope, values)
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(scope, values, columnSet)
+	if len(missingFields) > 0 {
+		return nil, runtimeSchemaDriftError(scope.TableName, missingFields)
+	}
 	hasMultiValueMutation := hasMultiValueMutation(scope, values)
 	if len(columnNames) == 0 && !hasMultiValueMutation {
 		return loadRootRecordTx(ctx, tx, scope, docGuid)
@@ -174,7 +195,7 @@ func updateRootRecordTx(
 		whereClause += fmt.Sprintf(" AND %s::text = $%d", quoteIdentifier(scope.SourceUpdatedColumn), revisionArgIndex)
 	}
 
-	returningClause, returningFields := buildReturningClause(scope)
+	returningClause, returningFields := buildReturningClauseForColumns(scope, columnSet)
 	query := fmt.Sprintf(
 		"UPDATE %s SET %s WHERE %s RETURNING %s",
 		qualifiedIdentifier(scope.TableName),
@@ -222,7 +243,14 @@ func updateSubformRecordTx(
 		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
 	}
 
-	columnNames, args := mutationColumnsAndArgs(recordScope, values)
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(recordScope, values, columnSet)
+	if len(missingFields) > 0 {
+		return nil, runtimeSchemaDriftError(recordScope.TableName, missingFields)
+	}
 	hasMultiValueMutation := hasMultiValueMutation(recordScope, values)
 	if len(columnNames) == 0 && !hasMultiValueMutation {
 		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
@@ -267,7 +295,7 @@ func updateSubformRecordTx(
 		whereClause += fmt.Sprintf(" AND %s::text = $%d", quoteIdentifier(recordScope.SourceUpdatedColumn), revisionArgIndex)
 	}
 
-	returningClause, returningFields := buildReturningClause(recordScope)
+	returningClause, returningFields := buildReturningClauseForColumns(recordScope, columnSet)
 	query := fmt.Sprintf(
 		"UPDATE %s SET %s WHERE %s RETURNING %s",
 		qualifiedIdentifier(recordScope.TableName),
@@ -565,8 +593,18 @@ func deleteSubformMultiValueRowsForRootDocGuidsTx(
 }
 
 func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) ([]string, []any) {
+	columnNames, args, _ := mutationColumnsAndArgsForColumns(scope, values, nil)
+	return columnNames, args
+}
+
+func mutationColumnsAndArgsForColumns(
+	scope runtimeRootScopePlan,
+	values map[string]any,
+	columnSet map[string]struct{},
+) ([]string, []any, []runtimeFieldPlan) {
 	columnNames := []string{}
 	args := []any{}
+	missingFields := []runtimeFieldPlan{}
 	fieldsByID := make(map[string]runtimeFieldPlan, len(scope.Fields))
 	for _, field := range scope.Fields {
 		if !field.Supported || field.MultiValue || field.ColumnName == "" {
@@ -583,10 +621,22 @@ func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) (
 		if !ok {
 			continue
 		}
+		if !runtimeColumnExists(columnSet, field.ColumnName) {
+			missingFields = append(missingFields, field)
+			continue
+		}
 		columnNames = append(columnNames, field.ColumnName)
 		args = append(args, value)
 	}
-	return columnNames, args
+	return columnNames, args, missingFields
+}
+
+func runtimeSchemaDriftError(relationName string, fields []runtimeFieldPlan) error {
+	missingColumns := make([]string, 0, len(fields))
+	for _, field := range fields {
+		missingColumns = append(missingColumns, fmt.Sprintf("%s:%s", field.FieldID, field.ColumnName))
+	}
+	return fmt.Errorf("%w: missing runtime columns for %s: %s", ErrRuntimeSchemaDrift, relationName, strings.Join(missingColumns, ", "))
 }
 
 func buildReturningClause(scope runtimeRootScopePlan) (string, []runtimeFieldPlan) {

@@ -2,6 +2,7 @@ package platformstudioformruntime
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -39,5 +40,35 @@ func TestDeleteMultiValueCleanupSkipsScopesWithoutMultiValueFields(t *testing.T)
 
 	if err := deleteSubformMultiValueRowsForRootDocGuidsTx(ctx, nil, rootScope, subformScope, []string{"doc-a"}, "true"); err != nil {
 		t.Fatalf("deleteSubformMultiValueRowsForRootDocGuidsTx returned error: %v", err)
+	}
+}
+
+func TestMutationColumnsAndArgsForColumnsReportsSchemaDrift(t *testing.T) {
+	scope := runtimeRootScopePlan{
+		Fields: []runtimeFieldPlan{
+			{
+				ColumnName: "geo_point",
+				FieldID:    "geo-point",
+				Kind:       "geo_point",
+				Supported:  true,
+			},
+		},
+		TableName: "ps_lookup",
+	}
+
+	columns, args, missingFields := mutationColumnsAndArgsForColumns(scope, map[string]any{
+		"geo-point": "Latitude: 40.589034, Longitude: -73.944936",
+	}, map[string]struct{}{
+		"_id": {},
+	})
+
+	if len(columns) != 0 || len(args) != 0 {
+		t.Fatalf("mutation columns = %#v args = %#v, want none for missing column", columns, args)
+	}
+	if len(missingFields) != 1 || missingFields[0].FieldID != "geo-point" {
+		t.Fatalf("missing fields = %#v, want geo-point", missingFields)
+	}
+	if err := runtimeSchemaDriftError(scope.TableName, missingFields); !errors.Is(err, ErrRuntimeSchemaDrift) {
+		t.Fatalf("schema drift error = %v, want ErrRuntimeSchemaDrift", err)
 	}
 }

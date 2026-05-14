@@ -498,7 +498,8 @@ func buildRuntimeApplyFieldPlan(field map[string]any, lookupModels map[string]ru
 	case plan.Kind == "short_text",
 		plan.Kind == "long_text",
 		plan.Kind == "rich_text",
-		plan.Kind == "single_select":
+		plan.Kind == "single_select",
+		plan.Kind == "geo_point":
 		plan.ColumnName = runtimeFieldColumnIdentifier(plan.StorageKey)
 		plan.PhysicalType = "text"
 		plan.Supported = true

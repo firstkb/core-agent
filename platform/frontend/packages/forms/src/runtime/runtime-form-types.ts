@@ -14,6 +14,7 @@ export type RuntimeFormFieldType =
   | "boolean"
   | "date"
   | "date_time"
+  | "geo_point"
   | "single_select"
   | "multi_select"
   | "radio"
@@ -125,6 +126,15 @@ export type RuntimeFormFieldChangeMeta = {
 export type RuntimeFormLookupLoader = (
   request: RuntimeFormLookupOptionsRequest,
 ) => Promise<RuntimeFormLookupOptionsResponse>;
+
+export type RuntimeFormGeoPoint = {
+  latitude: number;
+  longitude: number;
+};
+
+export type RuntimeFormGeoPointResolver = (
+  field: RuntimeFormFieldDefinition,
+) => Promise<RuntimeFormGeoPoint | null>;
 
 export type RuntimeFormRuleOperator =
   | "eq"
@@ -386,9 +396,13 @@ export type RuntimeFormResolvedLabels = {
   generatedSubformTitle: ReactNode;
   generatedTabTitle: ReactNode;
   invalidEmailError: string;
+  invalidGeoPointError: string;
   invalidMaskError: string;
   invalidPhoneError: string;
   invalidUrlError: string;
+  geoPointLocating: ReactNode;
+  geoPointMap: ReactNode;
+  geoPointPlaceholder: string;
   loadMore: ReactNode;
   noOptions: ReactNode;
   onlineFormTitle: ReactNode;
@@ -424,6 +438,7 @@ export type RuntimeFormScaffoldProps = {
     meta?: RuntimeFormFieldChangeMeta,
   ) => void;
   onFinish: () => void;
+  resolveGeoPoint?: RuntimeFormGeoPointResolver;
   loadLookupOptions?: RuntimeFormLookupLoader;
   onSubformAdd?: (subform: RuntimeFormSubformDefinition) => void;
   onSubformDelete?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;

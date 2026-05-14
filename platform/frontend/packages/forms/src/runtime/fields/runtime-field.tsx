@@ -20,6 +20,7 @@ import {
   cx,
 } from "../runtime-form-utils";
 import { BooleanField } from "./boolean-field";
+import { GeoPointField } from "./geo-point-field";
 import { InputField } from "./input-field";
 import { MultiSelectField } from "./multi-select-field";
 import { RadioField } from "./radio-field";
@@ -77,6 +78,10 @@ function RuntimeFieldControl(props: RuntimeFieldControlProps) {
     return <BooleanField {...props} />;
   }
 
+  if (field.type === "geo_point") {
+    return <GeoPointField {...props} />;
+  }
+
   return <InputField {...props} />;
 }
 
@@ -84,18 +89,22 @@ export function RuntimeField({
   definitionId,
   errors,
   field,
+  isResolvingGeoPoint,
   labels,
   loadLookupOptions,
   onFieldChange,
+  resolveGeoPoint,
   value,
   values,
 }: {
   definitionId: string;
   errors: RuntimeFormValidationErrors;
   field: RuntimeFormFieldDefinition;
+  isResolvingGeoPoint?: boolean;
   labels: RuntimeFormResolvedLabels;
   loadLookupOptions?: RuntimeFormScaffoldProps["loadLookupOptions"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
   value: RuntimeFormValue | undefined;
   values: RuntimeFormValues;
 }) {
@@ -103,7 +112,7 @@ export function RuntimeField({
   const error = errors[field.id];
   const labelLayout = field.labelLayout ?? (field.width === "full" ? "responsive-inline" : "stacked");
   const required = isRuntimeFieldRequired(field, values, field.required);
-  const disabled = field.disabled || field.readonly || false;
+  const disabled = field.type === "geo_point" ? Boolean(field.disabled) : field.disabled || field.readonly || false;
   const usesCatalogLookup = field.lookup?.displayMode === "catalog_modal";
   const labelActivation = getRuntimeFieldLabelActivation(field);
 
@@ -141,9 +150,11 @@ export function RuntimeField({
         error={error}
         field={field}
         groupName={`${definitionId}-${field.id}`}
+        isResolvingGeoPoint={isResolvingGeoPoint}
         labels={labels}
         loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
+        resolveGeoPoint={resolveGeoPoint}
         required={required}
         value={value}
       />

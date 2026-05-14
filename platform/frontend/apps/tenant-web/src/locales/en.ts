@@ -202,6 +202,11 @@ export const tenantEnglishMessages = {
             subform: "Subform",
             tab: "Tab",
           },
+          geoPoint: {
+            locating: "Loading...",
+            map: "Map",
+            placeholder: "Coordinates will be captured automatically",
+          },
           loadError: {
             genericDescription: "Please try again. If the problem continues, return to the list and open the record again.",
             genericTitle: "Could not load form",
@@ -215,6 +220,7 @@ export const tenantEnglishMessages = {
             deleteFailed: "Could not delete record.",
             saveFailed: "Could not save record.",
             saved: "Successfully saved to server.",
+            schemaDrift: "This form was changed, but its storage is not ready yet. Save the form in Form Builder and try again.",
           },
           noOptions: "No options",
           onlineTitle: "Online Form",
@@ -248,6 +254,7 @@ export const tenantEnglishMessages = {
             fillField: "Please fill field: \"{{field}}\"",
             fillFieldCorrectly: "Please fill field correctly: \"{{field}}\"",
             invalidEmail: "Please enter a valid email address.",
+            invalidGeoPoint: "Please enter a valid geographic point.",
             invalidMask: "Please enter a value that matches the required format.",
             invalidPhone: "Please enter a valid phone number.",
             invalidUrl: "Please enter a valid URL.",

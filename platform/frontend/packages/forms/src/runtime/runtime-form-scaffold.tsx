@@ -1,4 +1,9 @@
-import type { FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
 import {
   Button,
@@ -13,6 +18,9 @@ import {
 
 import { RuntimeField } from "./fields/runtime-field";
 import { RuntimeContentNode } from "./runtime-form-content";
+import {
+  formatRuntimeGeoPointValue,
+} from "./runtime-form-geo-point";
 import { resolveRuntimeFormLabels } from "./runtime-form-labels";
 import { RuntimeLayoutNode } from "./runtime-form-layout";
 import {
@@ -22,6 +30,7 @@ import { RuntimeSubformNode } from "./runtime-form-subform";
 import type {
   RuntimeFormDefinition,
   RuntimeFormContentDefinition,
+  RuntimeFormFieldDefinition,
   RuntimeFormNodeDefinition,
   RuntimeFormResolvedLabels,
   RuntimeFormSaveState,
@@ -33,6 +42,8 @@ import type {
 import {
   cx,
   findRuntimeFormField,
+  getRuntimeLayoutChildNodes,
+  isRuntimeFormValueEmpty,
   isRuntimeFormContentNode,
   isRuntimeFormFieldNode,
   isRuntimeFormLayoutNode,
@@ -65,6 +76,37 @@ function resolveRuntimeSections(definition: RuntimeFormDefinition): ReadonlyArra
     id: "default",
     nodes: [],
   }];
+}
+
+function collectAutoGeoPointFields(
+  nodes: ReadonlyArray<RuntimeFormNodeDefinition>,
+  values: RuntimeFormValues,
+  out: RuntimeFormFieldDefinition[],
+) {
+  for (const node of nodes) {
+    if (!isRuntimeNodeVisible(node, values)) {
+      continue;
+    }
+
+    if (isRuntimeFormFieldNode(node)) {
+      if (node.type === "geo_point" && !node.disabled && isRuntimeFormValueEmpty(values[node.id])) {
+        out.push(node);
+      }
+      continue;
+    }
+
+    if (isRuntimeFormLayoutNode(node)) {
+      collectAutoGeoPointFields(getRuntimeLayoutChildNodes(node), values, out);
+    }
+  }
+}
+
+function resolveAutoGeoPointFields(definition: RuntimeFormDefinition, values: RuntimeFormValues) {
+  const out: RuntimeFormFieldDefinition[] = [];
+  for (const section of resolveRuntimeSections(definition)) {
+    collectAutoGeoPointFields(resolveRuntimeSectionNodes(section), values, out);
+  }
+  return out;
 }
 
 function getPlainLabel(label: unknown, fallback: string) {
@@ -156,6 +198,8 @@ function RuntimeNode({
   node,
   onActiveTabChange,
   onFieldChange,
+  resolvingGeoPointFieldIds,
+  resolveGeoPoint,
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
@@ -173,6 +217,8 @@ function RuntimeNode({
   node: RuntimeFormNodeDefinition;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  resolvingGeoPointFieldIds: ReadonlySet<string>;
+  resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
@@ -191,9 +237,11 @@ function RuntimeNode({
         definitionId={definitionId}
         errors={errors ?? {}}
         field={node}
+        isResolvingGeoPoint={resolvingGeoPointFieldIds.has(node.id)}
         labels={labels}
         loadLookupOptions={loadLookupOptions}
         onFieldChange={onFieldChange}
+        resolveGeoPoint={resolveGeoPoint}
         value={values[node.id]}
         values={values}
       />
@@ -243,6 +291,8 @@ function RuntimeNode({
             nodes={nodes}
             onActiveTabChange={onActiveTabChange}
             onFieldChange={onFieldChange}
+            resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
+            resolveGeoPoint={resolveGeoPoint}
             onSubformAdd={onSubformAdd}
             onSubformDelete={onSubformDelete}
             onSubformEdit={onSubformEdit}
@@ -270,6 +320,8 @@ function RuntimeNodeList({
   nodes,
   onActiveTabChange,
   onFieldChange,
+  resolvingGeoPointFieldIds,
+  resolveGeoPoint,
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
@@ -288,6 +340,8 @@ function RuntimeNodeList({
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  resolvingGeoPointFieldIds: ReadonlySet<string>;
+  resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
@@ -310,6 +364,8 @@ function RuntimeNodeList({
           node={node}
           onActiveTabChange={onActiveTabChange}
           onFieldChange={onFieldChange}
+          resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
+          resolveGeoPoint={resolveGeoPoint}
           onSubformAdd={onSubformAdd}
           onSubformDelete={onSubformDelete}
           onSubformEdit={onSubformEdit}
@@ -333,6 +389,7 @@ export function RuntimeFormScaffold({
   onActiveTabChange,
   onBack,
   onFieldChange,
+  resolveGeoPoint,
   onFinish,
   onSubformAdd,
   onSubformDelete,
@@ -344,6 +401,59 @@ export function RuntimeFormScaffold({
   values,
 }: RuntimeFormScaffoldProps) {
   const resolvedLabels = resolveRuntimeFormLabels(labels);
+  const geoPointAttemptedFieldIdsRef = useRef<Set<string>>(new Set());
+  const geoPointSessionRef = useRef(0);
+  const latestValuesRef = useRef(values);
+  const [resolvingGeoPointFieldIds, setResolvingGeoPointFieldIds] = useState<ReadonlySet<string>>(() => new Set());
+  latestValuesRef.current = values;
+
+  useEffect(() => {
+    geoPointSessionRef.current += 1;
+    geoPointAttemptedFieldIdsRef.current.clear();
+    setResolvingGeoPointFieldIds(new Set());
+  }, [definition]);
+
+  useEffect(() => {
+    if (!resolveGeoPoint) {
+      return;
+    }
+
+    const autoGeoPointFields = resolveAutoGeoPointFields(definition, values);
+    for (const field of autoGeoPointFields) {
+      if (geoPointAttemptedFieldIdsRef.current.has(field.id)) {
+        continue;
+      }
+
+      const session = geoPointSessionRef.current;
+      geoPointAttemptedFieldIdsRef.current.add(field.id);
+      setResolvingGeoPointFieldIds((current) => {
+        const next = new Set(current);
+        next.add(field.id);
+        return next;
+      });
+
+      void resolveGeoPoint(field)
+        .then((point) => {
+          if (!point || session !== geoPointSessionRef.current) {
+            return;
+          }
+          if (!isRuntimeFormValueEmpty(latestValuesRef.current[field.id])) {
+            return;
+          }
+          onFieldChange(field.id, formatRuntimeGeoPointValue(point), field);
+        })
+        .finally(() => {
+          if (session !== geoPointSessionRef.current) {
+            return;
+          }
+          setResolvingGeoPointFieldIds((current) => {
+            const next = new Set(current);
+            next.delete(field.id);
+            return next;
+          });
+        });
+    }
+  }, [definition, onFieldChange, resolveGeoPoint, values]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -402,6 +512,8 @@ export function RuntimeFormScaffold({
                   node={node}
                   onActiveTabChange={onActiveTabChange}
                   onFieldChange={onFieldChange}
+                  resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
+                  resolveGeoPoint={resolveGeoPoint}
                   onSubformAdd={onSubformAdd}
                   onSubformDelete={onSubformDelete}
                   onSubformEdit={onSubformEdit}

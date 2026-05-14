@@ -103,6 +103,56 @@ describe("runtime form helpers", () => {
       readonly: true,
       type: "short_text",
     })).toBe("none");
+    expect(getRuntimeFieldLabelActivation({
+      id: "coordinates",
+      label: "Coordinates",
+      type: "geo_point",
+    })).toBe("native");
+  });
+
+  it("compiles and validates geo point fields", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            {
+              id: "gps",
+              kind: "geo_point",
+              label: "GPS coordinates",
+            },
+          ],
+        },
+      },
+      mode: "create",
+      modelId: "site",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              fieldId: "gps",
+              id: "node-gps",
+              order: 0,
+              required: true,
+              type: "field",
+              visibility: "readonly",
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    const field = findRuntimeFormField(definition, "gps");
+    expect(field?.type).toBe("geo_point");
+    expect(field?.readonly).toBe(false);
+    expect(validateRuntimeForm(definition, {}).gps).toBe("This field is required.");
+    expect(validateRuntimeForm(definition, {
+      gps: "Latitude: 91.000000, Longitude: -73.000000",
+    }).gps).toBe("Please enter a valid geographic point.");
+    expect(validateRuntimeForm(definition, {
+      gps: "Latitude: 40.712800, Longitude: -74.006000",
+    }).gps).toBeUndefined();
   });
 
   it("applies same-scope requirement rules during validation", () => {

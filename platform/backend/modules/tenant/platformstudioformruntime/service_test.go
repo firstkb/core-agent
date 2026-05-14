@@ -138,6 +138,9 @@ func TestCreateRecordAppliesSystemDefaults(t *testing.T) {
 	if out.DocGuid != "created-guid" {
 		t.Fatalf("DocGuid = %q, want created-guid", out.DocGuid)
 	}
+	if out.RecordID != "101" {
+		t.Fatalf("RecordID = %q, want 101", out.RecordID)
+	}
 	assertValue(t, repo.lastCreateValues, "location", "HQ")
 	assertValue(t, repo.lastCreateValues, "reported_date", "2026-05-02")
 	assertValue(t, repo.lastCreateValues, "reported_by", int64(77))
@@ -258,6 +261,22 @@ func TestLoadFormReturnsSchemasAndCreateDefaults(t *testing.T) {
 	option := options[0].(map[string]any)
 	if option["value"] != "77" || option["label"] != "Andrew Owner" {
 		t.Fatalf("reported_by current option = %#v, want Andrew Owner/77", option)
+	}
+}
+
+func TestLoadFormReturnsSourceRecordID(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	svc := NewService(repo)
+
+	out, err := svc.LoadForm(testRuntimeContext(), "sor", "default", "record-guid")
+	if err != nil {
+		t.Fatalf("LoadForm returned error: %v", err)
+	}
+	if out.DocGuid != "record-guid" {
+		t.Fatalf("DocGuid = %q, want record-guid", out.DocGuid)
+	}
+	if out.RecordID != "202" {
+		t.Fatalf("RecordID = %q, want 202", out.RecordID)
 	}
 }
 
@@ -570,6 +589,9 @@ func TestLoadSubformReturnsRootShapedSchemaWithoutSystemFields(t *testing.T) {
 	}
 	if out.DocGuid != "child-guid" {
 		t.Fatalf("DocGuid = %q, want child-guid", out.DocGuid)
+	}
+	if out.RecordID != "303" {
+		t.Fatalf("RecordID = %q, want 303", out.RecordID)
 	}
 	if out.Title != "Contacts" {
 		t.Fatalf("Title = %q, want Contacts", out.Title)
@@ -1009,6 +1031,7 @@ func (r *recordingRuntimeRepo) CreateRootRecord(_ context.Context, _ requestctx.
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "rev-1",
+		SourceID: 101,
 		Values:   cloneValues(values),
 	}, nil
 }
@@ -1026,6 +1049,7 @@ func (r *recordingRuntimeRepo) CreateSubformRecord(_ context.Context, _ requestc
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "subform-rev-1",
+		SourceID: 303,
 		Values:   cloneValues(values),
 	}, nil
 }
@@ -1061,6 +1085,7 @@ func (r *recordingRuntimeRepo) UpdateRootRecord(_ context.Context, _ requestctx.
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "rev-2",
+		SourceID: 202,
 		Values:   rowValues,
 	}, nil
 }
@@ -1075,6 +1100,7 @@ func (r *recordingRuntimeRepo) UpdateSubformRecord(_ context.Context, _ requestc
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "subform-rev-2",
+		SourceID: 303,
 		Values:   cloneValues(values),
 	}, nil
 }
@@ -1107,6 +1133,7 @@ func (r *recordingRuntimeRepo) LoadRootRecord(_ context.Context, _ requestctx.Te
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "rev-1",
+		SourceID: 202,
 		Values: map[string]any{
 			"location":    "HQ",
 			"reported_by": "77",
@@ -1124,6 +1151,7 @@ func (r *recordingRuntimeRepo) LoadSubformRecord(_ context.Context, _ requestctx
 	return &runtimeRecordMutationRow{
 		DocGuid:  docGuid,
 		Revision: "subform-rev-1",
+		SourceID: 303,
 		Values: map[string]any{
 			"email": "person@example.com",
 			"phone": "(555) 555-5555",

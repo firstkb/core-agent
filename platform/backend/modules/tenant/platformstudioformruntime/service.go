@@ -81,6 +81,7 @@ func (s *Service) LoadForm(
 	docGuid = strings.TrimSpace(docGuid)
 	values := map[string]any{}
 	revision := ""
+	recordID := ""
 	var lookupLabels map[string]map[string]string
 	if docGuid == "" {
 		if err := s.applyCreateSystemDefaults(ctx, tenant, claims, scopeContext.Scope, values); err != nil {
@@ -93,11 +94,12 @@ func (s *Service) LoadForm(
 		}
 		values = row.Values
 		lookupLabels = row.LookupLabels
+		recordID = runtimeRecordID(row.SourceID)
 		revision = row.Revision
 		docGuid = row.DocGuid
 	}
 
-	response := buildRuntimeViewFormResponse(scopeContext, docGuid, revision, values)
+	response := buildRuntimeViewFormResponse(scopeContext, docGuid, recordID, revision, values)
 	if isEmptyRuntimeValue(values[scopeContext.Scope.SystemFields.ReportedBy]) {
 		makeRuntimeFieldEditable(response.DataSchema, response.UISchema, scopeContext.Scope.SystemFields.ReportedBy)
 	}
@@ -137,6 +139,7 @@ func (s *Service) LoadSubform(
 
 	values := map[string]any{}
 	revision := ""
+	recordID := ""
 	var lookupLabels map[string]map[string]string
 	if docGuid != "" {
 		row, err := s.repo.LoadSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, docGuid)
@@ -145,11 +148,12 @@ func (s *Service) LoadSubform(
 		}
 		values = row.Values
 		lookupLabels = row.LookupLabels
+		recordID = runtimeRecordID(row.SourceID)
 		revision = row.Revision
 		docGuid = row.DocGuid
 	}
 
-	response := buildRuntimeSubformFormResponse(scopeContext, subformScope, docGuid, revision, values)
+	response := buildRuntimeSubformFormResponse(scopeContext, subformScope, docGuid, recordID, revision, values)
 	if err := s.attachCurrentLookupOptions(ctx, tenant, rootScopeFromSubform(scopeContext.Scope, subformScope), response.DataSchema, values, lookupLabels); err != nil {
 		return nil, err
 	}

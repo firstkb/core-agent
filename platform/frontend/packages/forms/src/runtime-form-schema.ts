@@ -624,6 +624,10 @@ function readViewOnlyValueBinding(node: JsonRecord): RuntimeFormContentValueBind
   const sourceFieldId = stringValue(binding.sourceFieldId);
   const outputKey = stringValue(binding.outputKey);
 
+  if (kind === "root_record_id") {
+    return { kind };
+  }
+
   if (kind !== "lookup_derived_output" || !sourceFieldId || !outputKey) {
     return undefined;
   }

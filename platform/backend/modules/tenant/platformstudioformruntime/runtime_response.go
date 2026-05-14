@@ -1,6 +1,9 @@
 package platformstudioformruntime
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+)
 
 func buildMutationResponse(created bool, scope runtimeRootScopePlan, row *runtimeRecordMutationRow) *RuntimeViewRecordMutationResponse {
 	if row == nil {
@@ -13,6 +16,7 @@ func buildMutationResponse(created bool, scope runtimeRootScopePlan, row *runtim
 	return &RuntimeViewRecordMutationResponse{
 		Created:  created,
 		DocGuid:  row.DocGuid,
+		RecordID: runtimeRecordID(row.SourceID),
 		Revision: row.Revision,
 		Status:   statusValue(scope, values),
 		Values:   values,
@@ -22,6 +26,7 @@ func buildMutationResponse(created bool, scope runtimeRootScopePlan, row *runtim
 func buildRuntimeViewFormResponse(
 	scopeContext runtimeRootScopeContext,
 	docGuid string,
+	recordID string,
 	revision string,
 	values map[string]any,
 ) *RuntimeViewFormResponse {
@@ -44,6 +49,7 @@ func buildRuntimeViewFormResponse(
 		Description: description,
 		DocGuid:     docGuid,
 		ModelID:     scopeContext.Scope.ModelID,
+		RecordID:    recordID,
 		Revision:    revision,
 		SourceType:  scopeContext.Scope.SourceType,
 		SurfaceID:   "form-runtime:" + scopeContext.Scope.ModelID + ":" + scopeContext.Scope.ViewID,
@@ -58,6 +64,7 @@ func buildRuntimeSubformFormResponse(
 	scopeContext runtimeRootScopeContext,
 	subformScope runtimeSubformScopePlan,
 	docGuid string,
+	recordID string,
 	revision string,
 	values map[string]any,
 ) *RuntimeViewFormResponse {
@@ -85,6 +92,7 @@ func buildRuntimeSubformFormResponse(
 		},
 		DocGuid:    docGuid,
 		ModelID:    scopeContext.Scope.ModelID,
+		RecordID:   recordID,
 		Revision:   revision,
 		SourceType: scopeContext.Scope.SourceType,
 		SurfaceID:  "form-runtime:" + scopeContext.Scope.ModelID + ":" + scopeContext.Scope.ViewID + ":subform:" + subformScope.ScopeID,
@@ -95,6 +103,13 @@ func buildRuntimeSubformFormResponse(
 		Values: values,
 		ViewID: scopeContext.Scope.ViewID,
 	}
+}
+
+func runtimeRecordID(sourceID int64) string {
+	if sourceID <= 0 {
+		return ""
+	}
+	return strconv.FormatInt(sourceID, 10)
 }
 
 func cloneMap(value map[string]any) map[string]any {

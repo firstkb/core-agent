@@ -171,7 +171,9 @@ Real runtime API namespace:
 Runtime record mutation contract:
 
 - form read response:
-  `{ dataSchema: Record<string, unknown>, description?: string, docGuid?: string, modelId: string, revision?: string, sourceType?: string, surfaceId: string, title: string, uiSchema: Record<string, unknown>, values: Record<string, unknown>, viewId: string }`
+  `{ dataSchema: Record<string, unknown>, description?: string, docGuid?: string, modelId: string, recordId?: string, revision?: string, sourceType?: string, surfaceId: string, title: string, uiSchema: Record<string, unknown>, values: Record<string, unknown>, viewId: string }`
+- `recordId` is the current source-table record id from the compiled runtime
+  `sourceIdColumn`; it is not the route `docGuid`
 - form read response must include the current option for single-value
   `contact_lookup` fields when the record/default values contain an id, so
   readonly and editable lookup controls can render a display label without a
@@ -180,7 +182,7 @@ Runtime record mutation contract:
 - edit/autosave request: `{ expectedRevision?: string, values: Record<string, unknown> }`
 - finish request: `{ expectedRevision?: string }`
 - create/edit/finish response:
-  `{ created?: boolean, docGuid?: string, revision?: string, status?: string, validationErrors?: Array<{ fieldId?: string, message: string }>, values: Record<string, unknown> }`
+  `{ created?: boolean, docGuid?: string, recordId?: string, revision?: string, status?: string, validationErrors?: Array<{ fieldId?: string, message: string }>, values: Record<string, unknown> }`
 - create validates required root fields before insert and returns `validationErrors`
   in an otherwise successful API response when the record is not yet created
 - create applies bound System Field defaults server-side when compatible:

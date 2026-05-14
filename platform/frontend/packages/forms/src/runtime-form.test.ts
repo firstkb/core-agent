@@ -705,6 +705,50 @@ describe("runtime form helpers", () => {
     });
   });
 
+  it("compiles view-only root record id bindings", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [],
+        },
+      },
+      mode: "edit",
+      modelId: "lookup-option",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            {
+              id: "node-doc-id",
+              order: 0,
+              title: "Doc.id",
+              type: "view_only_field",
+              viewOnlyBinding: {
+                kind: "root_record_id",
+              },
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    const viewOnlyNode = definition.sections
+      .flatMap((section) => section.nodes ?? [])
+      .find((node) => node.nodeType === "content"
+        && "contentType" in node
+        && node.contentType === "view_only_field");
+
+    expect(viewOnlyNode).toMatchObject({
+      contentType: "view_only_field",
+      label: "Doc.id",
+      labelLayout: "responsive-inline",
+      valueBinding: {
+        kind: "root_record_id",
+      },
+    });
+  });
+
   it("compiles short text input settings and ready-made text presets", () => {
     const definition = createRuntimeFormDefinitionFromSchema({
       commitMode: "autosave",

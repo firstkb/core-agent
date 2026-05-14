@@ -100,6 +100,7 @@ type RuntimeFormSessionState = {
   activeTabs?: RuntimeFormActiveTabs;
   docGuid?: string;
   formResponse?: FormRuntimeFormResponse;
+  recordId?: number | string;
   revision?: string;
   values?: Record<string, unknown>;
 };
@@ -751,6 +752,7 @@ export function FormsRuntimeFormPage({
   const runtimeControlSyncTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const runtimeFormContainerRef = useRef<HTMLDivElement | null>(null);
   const currentDocGuidRef = useRef(routeDocGuid || restoredSession?.docGuid || "");
+  const currentRecordIdRef = useRef<number | string | undefined>(restoredSession?.recordId ?? restoredSession?.formResponse?.recordId);
   const activeTabsRef = useRef<RuntimeFormActiveTabs>(restoredSession?.activeTabs ?? {});
   const routeIsInvalid = !modelId
     || !viewId
@@ -883,6 +885,7 @@ export function FormsRuntimeFormPage({
     latestValuesRef.current = nextValues;
     revisionRef.current = restoredSession?.revision ?? formResponse.revision ?? "";
     currentDocGuidRef.current = routeDocGuid || restoredSession?.docGuid || formResponse.docGuid || "";
+    currentRecordIdRef.current = restoredSession?.recordId ?? restoredSession?.formResponse?.recordId ?? formResponse.recordId;
     hasServerRecordRef.current = Boolean(currentDocGuidRef.current);
     hasAppliedInitialStatusRef.current = Boolean(nextValues[definition.workflowStatus?.fieldId ?? ""]);
     if (autosaveTimerRef.current) {
@@ -1004,10 +1007,12 @@ export function FormsRuntimeFormPage({
         ? {
           ...runtimeFormResponse,
           docGuid,
+          recordId: currentRecordIdRef.current,
           revision: revisionRef.current || runtimeFormResponse.revision,
           values: serializedValues,
         }
         : undefined,
+      recordId: currentRecordIdRef.current,
       revision: revisionRef.current || undefined,
       values: serializedValues,
     };
@@ -1075,6 +1080,9 @@ export function FormsRuntimeFormPage({
     if (response.docGuid) {
       currentDocGuidRef.current = response.docGuid;
       hasServerRecordRef.current = true;
+    }
+    if (typeof response.recordId === "string" || typeof response.recordId === "number") {
+      currentRecordIdRef.current = response.recordId;
     }
 
     const serverValues = coerceRuntimeFormValues(runtimeDefinition, response.values);
@@ -1347,10 +1355,12 @@ export function FormsRuntimeFormPage({
                   ? {
                     ...runtimeFormResponse,
                     docGuid: response.docGuid,
+                    recordId: response.recordId ?? currentRecordIdRef.current,
                     revision: response.revision,
                     values: restoredValues,
                   }
                   : undefined,
+                recordId: response.recordId ?? currentRecordIdRef.current,
                 revision: response.revision,
                 values: restoredValues,
               },
@@ -1829,6 +1839,7 @@ export function FormsRuntimeFormPage({
         onSubformAdd={isSubform ? undefined : handleSubformAdd}
         onSubformDelete={isSubform ? undefined : handleSubformDelete}
         onSubformEdit={isSubform ? undefined : handleSubformEdit}
+        recordId={currentRecordIdRef.current}
         revealFieldId={fieldRevealRequest?.fieldId}
         revealRequestKey={fieldRevealRequest?.requestKey}
         saveState={saveState}

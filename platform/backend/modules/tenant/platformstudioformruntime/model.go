@@ -29,6 +29,7 @@ type RuntimeViewRecordValidationError struct {
 type RuntimeViewRecordMutationResponse struct {
 	Created          bool                               `json:"created,omitempty"`
 	DocGuid          string                             `json:"docGuid,omitempty"`
+	RecordID         string                             `json:"recordId,omitempty"`
 	Revision         string                             `json:"revision,omitempty"`
 	Status           string                             `json:"status,omitempty"`
 	ValidationErrors []RuntimeViewRecordValidationError `json:"validationErrors,omitempty"`
@@ -40,6 +41,7 @@ type RuntimeViewFormResponse struct {
 	Description string         `json:"description,omitempty"`
 	DocGuid     string         `json:"docGuid,omitempty"`
 	ModelID     string         `json:"modelId"`
+	RecordID    string         `json:"recordId,omitempty"`
 	Revision    string         `json:"revision,omitempty"`
 	SourceType  string         `json:"sourceType,omitempty"`
 	SurfaceID   string         `json:"surfaceId"`

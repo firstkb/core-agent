@@ -165,6 +165,7 @@ function runtimeValueToString(value: RuntimeFormValue | undefined) {
 function resolveRuntimeContentValue(
   content: RuntimeFormContentDefinition,
   definition: RuntimeFormDefinition,
+  recordId: RuntimeFormScaffoldProps["recordId"],
   values: RuntimeFormValues,
   labels: RuntimeFormResolvedLabels,
 ) {
@@ -185,6 +186,16 @@ function resolveRuntimeContentValue(
     return optionValue?.trim() || content.value || labels.emptyValue;
   }
 
+  if (binding.kind === "root_record_id") {
+    if (typeof recordId === "number" && Number.isFinite(recordId)) {
+      return String(recordId);
+    }
+    if (typeof recordId === "string" && recordId.trim()) {
+      return recordId.trim();
+    }
+    return content.value ?? labels.emptyValue;
+  }
+
   return content.value ?? labels.emptyValue;
 }
 
@@ -203,6 +214,7 @@ function RuntimeNode({
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
+  recordId,
   revealFieldId,
   revealRequestKey,
   subforms,
@@ -222,6 +234,7 @@ function RuntimeNode({
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
+  recordId?: RuntimeFormScaffoldProps["recordId"];
   revealFieldId?: string;
   revealRequestKey?: number;
   subforms?: RuntimeFormScaffoldProps["subforms"];
@@ -253,7 +266,7 @@ function RuntimeNode({
       <RuntimeContentNode
         content={node}
         labels={labels}
-        value={resolveRuntimeContentValue(node, definition, values, labels)}
+        value={resolveRuntimeContentValue(node, definition, recordId, values, labels)}
       />
     );
   }
@@ -296,6 +309,7 @@ function RuntimeNode({
             onSubformAdd={onSubformAdd}
             onSubformDelete={onSubformDelete}
             onSubformEdit={onSubformEdit}
+            recordId={recordId}
             revealFieldId={revealFieldId}
             revealRequestKey={revealRequestKey}
             subforms={subforms}
@@ -325,6 +339,7 @@ function RuntimeNodeList({
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
+  recordId,
   revealFieldId,
   revealRequestKey,
   subforms,
@@ -345,6 +360,7 @@ function RuntimeNodeList({
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
+  recordId?: RuntimeFormScaffoldProps["recordId"];
   revealFieldId?: string;
   revealRequestKey?: number;
   subforms?: RuntimeFormScaffoldProps["subforms"];
@@ -369,6 +385,7 @@ function RuntimeNodeList({
           onSubformAdd={onSubformAdd}
           onSubformDelete={onSubformDelete}
           onSubformEdit={onSubformEdit}
+          recordId={recordId}
           revealFieldId={revealFieldId}
           revealRequestKey={revealRequestKey}
           subforms={subforms}
@@ -394,6 +411,7 @@ export function RuntimeFormScaffold({
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
+  recordId,
   revealFieldId,
   revealRequestKey,
   saveState = "idle",
@@ -517,6 +535,7 @@ export function RuntimeFormScaffold({
                   onSubformAdd={onSubformAdd}
                   onSubformDelete={onSubformDelete}
                   onSubformEdit={onSubformEdit}
+                  recordId={recordId}
                   revealFieldId={revealFieldId}
                   revealRequestKey={revealRequestKey}
                   subforms={subforms}

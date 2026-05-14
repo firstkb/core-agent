@@ -110,6 +110,7 @@ export type FormRuntimeFormResponse = {
   description?: string;
   docGuid?: string;
   modelId: string;
+  recordId?: number | string;
   revision?: string;
   sourceType?: string;
   surfaceId: string;
@@ -138,6 +139,7 @@ export type FormRuntimeRecordValidationError = {
 export type FormRuntimeRecordMutationResponse = {
   created?: boolean;
   docGuid: string;
+  recordId?: number | string;
   revision?: string;
   status?: string;
   validationErrors?: ReadonlyArray<FormRuntimeRecordValidationError>;
@@ -165,6 +167,9 @@ function normalizeRuntimeRecordMutationResponse(
   return {
     created: Boolean(payload?.created),
     docGuid: typeof payload?.docGuid === "string" ? payload.docGuid : "",
+    recordId: typeof payload?.recordId === "string" || typeof payload?.recordId === "number"
+      ? payload.recordId
+      : undefined,
     revision: typeof payload?.revision === "string" ? payload.revision : undefined,
     status: typeof payload?.status === "string" ? payload.status : undefined,
     validationErrors: Array.isArray(payload?.validationErrors)
@@ -199,6 +204,9 @@ function normalizeRuntimeFormResponse(
     description: typeof payload?.description === "string" ? payload.description : undefined,
     docGuid: typeof payload?.docGuid === "string" ? payload.docGuid : undefined,
     modelId: typeof payload?.modelId === "string" ? payload.modelId : "",
+    recordId: typeof payload?.recordId === "string" || typeof payload?.recordId === "number"
+      ? payload.recordId
+      : undefined,
     revision: typeof payload?.revision === "string" ? payload.revision : undefined,
     sourceType: typeof payload?.sourceType === "string" ? payload.sourceType : undefined,
     surfaceId: typeof payload?.surfaceId === "string" ? payload.surfaceId : "",

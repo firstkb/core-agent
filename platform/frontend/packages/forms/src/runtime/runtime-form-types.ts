@@ -207,11 +207,15 @@ export type RuntimeFormFieldDefinition = {
 
 export type RuntimeFormContentAlignment = "left" | "center" | "right";
 export type RuntimeFormContentType = "heading" | "text" | "rich_text_block" | "view_only_field";
-export type RuntimeFormContentValueBinding = {
-  kind: "lookup_derived_output";
-  outputKey: string;
-  sourceFieldId: string;
-};
+export type RuntimeFormContentValueBinding =
+  | {
+    kind: "lookup_derived_output";
+    outputKey: string;
+    sourceFieldId: string;
+  }
+  | {
+    kind: "root_record_id";
+  };
 
 export type RuntimeFormContentDefinition = {
   alignment?: RuntimeFormContentAlignment;
@@ -443,6 +447,7 @@ export type RuntimeFormScaffoldProps = {
   onSubformAdd?: (subform: RuntimeFormSubformDefinition) => void;
   onSubformDelete?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
   onSubformEdit?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
+  recordId?: number | string;
   revealFieldId?: string;
   revealRequestKey?: number;
   saveState?: RuntimeFormSaveState;

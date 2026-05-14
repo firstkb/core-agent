@@ -4,16 +4,25 @@ import {
 } from "react";
 
 import {
+  createChecklistSubformDraftFields,
+} from "../forms-builder-checklist";
+import {
   createFormBuilderFieldFromDefinition,
   type FormBuilderLibraryFieldDefinition,
 } from "../forms-builder-library";
 import {
+  addFormBuilderElementNode,
   addFormBuilderFieldNode,
   createPersistedFormBuilderDocument,
   getCurrentFormBuilderInsertParentId,
   normalizePersistedFormBuilderDocument,
   removeFormBuilderNode,
+  selectFormBuilderNode,
+  updateFormBuilderNode,
   type FormBuilderDocument,
+  type FormBuilderElementPaletteItem,
+  type FormBuilderChecklistConfig,
+  type FormBuilderChecklistGrouping,
   type FormBuilderNode,
   type FormBuilderScope,
   type FormBuilderWorkspaceAccess,
@@ -27,6 +36,9 @@ import {
 import {
   getDeleteNodeConfirmationAction,
 } from "./form-builder-workspace-delete-node";
+import {
+  removeFormBuilderSubformFromDocumentAndModel,
+} from "./form-builder-workspace-delete-subform";
 import {
   deriveModelSchemaScopes,
   getScopeSchemaScopeKey,
@@ -56,6 +68,46 @@ type ViewOnlyBindingOption = {
   bindingId: string;
   label: string;
 };
+
+function normalizeIdentifier(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function createUniqueIdentifier(base: string, usedValues: ReadonlySet<string>) {
+  const normalizedBase = normalizeIdentifier(base) || "checklist";
+  if (!usedValues.has(normalizedBase)) {
+    return normalizedBase;
+  }
+
+  let suffix = 2;
+  let nextValue = `${normalizedBase}_${suffix}`;
+  while (usedValues.has(nextValue)) {
+    suffix += 1;
+    nextValue = `${normalizedBase}_${suffix}`;
+  }
+
+  return nextValue;
+}
+
+function createUniqueNodeId(baseId: string, document: FormBuilderDocument) {
+  const usedNodeIds = new Set(document.nodes.map((node) => node.id));
+  if (!usedNodeIds.has(baseId)) {
+    return baseId;
+  }
+
+  let suffix = 2;
+  let nextId = `${baseId}-${suffix}`;
+  while (usedNodeIds.has(nextId)) {
+    suffix += 1;
+    nextId = `${baseId}-${suffix}`;
+  }
+
+  return nextId;
+}
 
 type CreateFormBuilderWorkspaceMutationHandlersInput = {
   activeScope: FormBuilderScope;
@@ -206,6 +258,68 @@ export function createFormBuilderWorkspaceMutationHandlers({
     );
   }
 
+  function handleCreateElementNode(
+    nodeType: FormBuilderElementPaletteItem["nodeType"],
+    initialNode: FormBuilderElementPaletteItem["initialNode"],
+  ) {
+    const parentId = getCurrentFormBuilderInsertParentId(document);
+    if (nodeType !== "subform" || initialNode?.subformType !== "CHECKLIST") {
+      updateDocument((currentDocument) =>
+        addFormBuilderElementNode(currentDocument, parentId, nodeType, initialNode)
+      );
+      return;
+    }
+
+    if (!canCreateFieldAtCurrentLevel || !structureEditingAccess.canAddFieldItems || !canEditModelDefinition) {
+      return;
+    }
+
+    const usedScopeKeys = new Set([
+      ...(currentModel.schemaScopes ?? []).map((scope) => scope.key),
+      ...currentModel.fields.flatMap((field) => field.schemaScopeKey ? [field.schemaScopeKey] : []),
+      ...document.subformScopes.map((scope) => scope.tableKey),
+    ]);
+    const scopeSeed = [
+      "pb",
+      initialNode.title ?? "Checklist",
+      Date.now().toString(36),
+      Math.random().toString(36).slice(2, 6),
+    ].join("_");
+    const schemaScopeKey = createUniqueIdentifier(scopeSeed, usedScopeKeys);
+    const checklistDraft = createChecklistSubformDraftFields(currentModel.fields, schemaScopeKey);
+
+    updateCurrentModel((currentModelDraft) => ({
+      ...currentModelDraft,
+      fields: [...currentModelDraft.fields, ...checklistDraft.fields],
+    }));
+
+    updateDocument((currentDocument) => {
+      const subformNodeId = createUniqueNodeId(`subform-${schemaScopeKey.replace(/_/g, "-")}`, currentDocument);
+      const idFactory = (prefix: string) =>
+        prefix === "subform"
+          ? subformNodeId
+          : `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      let nextDocument = addFormBuilderElementNode(
+        currentDocument,
+        parentId,
+        "subform",
+        {
+          ...initialNode,
+          checklistConfig: checklistDraft.config,
+          schemaScopeId: schemaScopeKey,
+          tableKey: schemaScopeKey,
+        },
+        idFactory,
+      );
+
+      checklistDraft.fields.forEach((field) => {
+        nextDocument = addFormBuilderFieldNode(nextDocument, subformNodeId, field);
+      });
+
+      return selectFormBuilderNode(nextDocument, subformNodeId);
+    });
+  }
+
   function saveLookupSourcePicker() {
     if (!lookupSourcePickerModel || !lookupSourcePicker) {
       return;
@@ -229,12 +343,48 @@ export function createFormBuilderWorkspaceMutationHandlers({
     closeLookupSourcePicker();
   }
 
+  function updateSelectedChecklistConfig(
+    updater: (config: FormBuilderChecklistConfig) => FormBuilderChecklistConfig,
+  ) {
+    if (selectedNode?.type !== "subform" || selectedNode.subformType !== "CHECKLIST") {
+      return;
+    }
+
+    updateDocument((currentDocument) =>
+      updateFormBuilderNode(currentDocument, selectedNode.id, {
+        checklistConfig: updater(selectedNode.checklistConfig ?? {}),
+      })
+    );
+  }
+
+  function updateSelectedChecklistLookupField(fieldId: string) {
+    updateSelectedChecklistConfig((config) => ({
+      ...config,
+      lookupFieldId: fieldId || undefined,
+    }));
+  }
+
+  function updateSelectedChecklistResultField(fieldId: string) {
+    updateSelectedChecklistConfig((config) => ({
+      ...config,
+      resultFieldId: fieldId || undefined,
+    }));
+  }
+
+  function updateSelectedChecklistGrouping(grouping: FormBuilderChecklistGrouping) {
+    updateSelectedChecklistConfig((config) => ({
+      ...config,
+      grouping,
+    }));
+  }
+
   function openDeleteNodeDialog() {
     setDeleteNodeOpen(true);
   }
 
   function confirmDeleteNode() {
     const action = getDeleteNodeConfirmationAction({
+      isSelectedFieldLocked: Boolean(selectedField?.isLocked),
       isSelectedFieldPersisted: selectedField ? isPersistedModelField(selectedField) : false,
       selectedField,
       selectedNode,
@@ -247,6 +397,25 @@ export function createFormBuilderWorkspaceMutationHandlers({
     }
 
     if (action.kind === "remove-node") {
+      if (selectedNode?.type === "subform" && !canEditModelDefinition) {
+        setDeleteNodeOpen(false);
+        return;
+      }
+
+      if (selectedNode?.type === "subform") {
+        const nextState = removeFormBuilderSubformFromDocumentAndModel({
+          document,
+          model: currentModel,
+          node: selectedNode,
+          view: currentView,
+        });
+
+        setModelDraft(nextState.model);
+        setDocument(nextState.document);
+        setDeleteNodeOpen(false);
+        return;
+      }
+
       updateDocument((currentDocument) => removeFormBuilderNode(currentDocument, action.nodeId));
     }
 
@@ -279,11 +448,15 @@ export function createFormBuilderWorkspaceMutationHandlers({
     ...selectedNodeMutationHandlers,
     ...systemFieldMutationHandlers,
     confirmDeleteNode,
+    handleCreateElementNode,
     handleCreateLibraryField,
     openDeleteNodeDialog,
     saveLookupSourcePicker,
     updateCurrentModel,
     updateCurrentViewMetadata,
     updateDocument,
+    updateSelectedChecklistGrouping,
+    updateSelectedChecklistLookupField,
+    updateSelectedChecklistResultField,
   } as const;
 }

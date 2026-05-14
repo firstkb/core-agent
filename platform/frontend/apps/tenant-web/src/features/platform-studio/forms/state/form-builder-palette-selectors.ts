@@ -45,6 +45,9 @@ const formBuilderElementLabels: Record<Exclude<FormBuilderNodeType, "field">, st
   view_only_field: "View-only field",
 };
 
+const checklistScopeElementTypes = new Set<FormBuilderNodeType>(["heading", "text"]);
+const checklistScopeFieldIdBases = new Set(["date", "short-text", "single-select"]);
+
 export function isFormBuilderContainer(type: FormBuilderNodeType) {
   return (
     type === "accordion" ||
@@ -99,6 +102,7 @@ export function getElementPaletteItems(
   searchTerm: string,
 ): ReadonlyArray<FormBuilderElementPaletteItem> {
   const activeScope = getActiveFormBuilderScope(document);
+  const isChecklistScope = activeScope.scopeType === "SUBFORM" && activeScope.subformType === "CHECKLIST";
   const parentType =
     activeScope.uiSchema.currentParentId
       ? getFormBuilderNode(document, activeScope.uiSchema.currentParentId)?.type ?? null
@@ -108,6 +112,10 @@ export function getElementPaletteItems(
 
   return formBuilderElementDefinitions
     .filter((definition) => {
+      if (isChecklistScope && !checklistScopeElementTypes.has(definition.nodeType)) {
+        return false;
+      }
+
       if (!allowedTypes.has(definition.nodeType)) {
         return false;
       }
@@ -120,8 +128,16 @@ export function getElementPaletteItems(
     })
     .map((definition) => ({
       ...definition,
-      disabled: !access.canAddElementItems,
-      disabledReasonKey: access.canAddElementItems ? null : access.lockReasonKey,
+      disabled: definition.initialNode?.subformType === "CHECKLIST"
+        ? !access.canAddElementItems || !access.canAddFieldItems
+        : !access.canAddElementItems,
+      disabledReasonKey: definition.initialNode?.subformType === "CHECKLIST"
+        ? (
+            access.canAddElementItems && !access.canAddFieldItems
+              ? access.structureLockReasonKey
+              : access.lockReasonKey
+          )
+        : (access.canAddElementItems ? null : access.lockReasonKey),
       kind: "element",
     }));
 }
@@ -132,6 +148,7 @@ export function getFieldPaletteItems(
   searchTerm: string,
 ): ReadonlyArray<FormBuilderFieldPaletteItem> {
   const activeScope = getActiveFormBuilderScope(document);
+  const isChecklistScope = activeScope.scopeType === "SUBFORM" && activeScope.subformType === "CHECKLIST";
   const parentType =
     activeScope.uiSchema.currentParentId
       ? getFormBuilderNode(document, activeScope.uiSchema.currentParentId)?.type ?? null
@@ -145,7 +162,8 @@ export function getFieldPaletteItems(
 
   return formBuilderFieldDefinitions
     .filter((definition) =>
-      !normalizedSearch || getFormsPlaceholderFieldSearchText({ ...definition.template, id: definition.idBase }).includes(normalizedSearch),
+      (!isChecklistScope || checklistScopeFieldIdBases.has(definition.idBase))
+      && (!normalizedSearch || getFormsPlaceholderFieldSearchText({ ...definition.template, id: definition.idBase }).includes(normalizedSearch)),
     )
     .map((definition) => ({
       category: definition.section,

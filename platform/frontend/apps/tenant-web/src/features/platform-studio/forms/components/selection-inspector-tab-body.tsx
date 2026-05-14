@@ -7,6 +7,7 @@ import { type LookupSourceModelOption } from "../controller/form-builder-workspa
 import { isPersistedModelField } from "../controller/form-builder-workspace-normalization-helpers";
 import {
   getFormBuilderDisplayLabel,
+  type FormBuilderChecklistGrouping,
   type FormBuilderNode,
 } from "../forms-builder-state";
 import {
@@ -19,6 +20,7 @@ import {
   type FormsPlaceholderModel,
   type FormsPlaceholderTagMode,
 } from "../forms-placeholder-data";
+import { ChecklistSubformSettings } from "./checklist-subform-settings";
 import { type RulesPanelRuleItem } from "./rules-panel";
 import { SelectedFieldSettingsSection } from "./selected-field-settings-section";
 import { SelectedNodeRulesDeleteSection } from "./selected-node-rules-delete-section";
@@ -57,6 +59,9 @@ type SelectionInspectorTabBodyProps = {
   onDropOption: (index: number) => void;
   onLookupDisplayModeChange: (displayMode: FormsPlaceholderLookupDisplayMode) => void;
   onMaskChange: (mask: string) => void;
+  onChecklistGroupingChange: (grouping: FormBuilderChecklistGrouping) => void;
+  onChecklistLookupFieldChange: (fieldId: string) => void;
+  onChecklistResultFieldChange: (fieldId: string) => void;
   onOpenRequirementRuleEditor: (index: number | null) => void;
   onOpenVisibilityRuleEditor: (index: number | null) => void;
   onOptionChange: (index: number, value: string) => void;
@@ -131,6 +136,9 @@ export function SelectionInspectorTabBody({
   onDropOption,
   onLookupDisplayModeChange,
   onMaskChange,
+  onChecklistGroupingChange,
+  onChecklistLookupFieldChange,
+  onChecklistResultFieldChange,
   onOpenRequirementRuleEditor,
   onOpenVisibilityRuleEditor,
   onOptionChange,
@@ -274,12 +282,37 @@ export function SelectionInspectorTabBody({
                 selectedLookupStoredValueSummary={selectedLookupStoredValueSummary}
                 t={t}
               />
+            ) : selectedNode.type === "subform" && selectedNode.subformType === "CHECKLIST" ? (
+              <ChecklistSubformSettings
+                fields={currentModel.fields}
+                labels={{
+                  checklist: t("tenant.platformStudio.forms.builder.checklistSettings.title"),
+                  complete: t("tenant.platformStudio.forms.builder.checklistSettings.complete"),
+                  grouped: t("tenant.platformStudio.forms.builder.checklistSettings.grouped"),
+                  grouping: t("tenant.platformStudio.forms.builder.checklistSettings.grouping"),
+                  lookupField: t("tenant.platformStudio.forms.builder.checklistSettings.lookupField"),
+                  missingLookup: t("tenant.platformStudio.forms.builder.checklistSettings.missingLookup"),
+                  missingResult: t("tenant.platformStudio.forms.builder.checklistSettings.missingResult"),
+                  noLookupFields: t("tenant.platformStudio.forms.builder.checklistSettings.noLookupFields"),
+                  noResultFields: t("tenant.platformStudio.forms.builder.checklistSettings.noResultFields"),
+                  questionOnly: t("tenant.platformStudio.forms.builder.checklistSettings.questionOnly"),
+                  resultField: t("tenant.platformStudio.forms.builder.checklistSettings.resultField"),
+                }}
+                node={selectedNode}
+                onGroupingChange={onChecklistGroupingChange}
+                onLookupFieldChange={onChecklistLookupFieldChange}
+                onResultFieldChange={onChecklistResultFieldChange}
+              />
             ) : null}
           </SelectionInspectorBasicSection>
 
           <SelectedNodeRulesDeleteSection
             canEditSettings={canEditSettings}
-            canRemoveItems={canRemoveItems}
+            canRemoveItems={
+              canRemoveItems
+              && !selectedField?.isLocked
+              && !(selectedNode.type === "subform" && !canEditModelDefinition)
+            }
             onAddRequirementRule={() => onOpenRequirementRuleEditor(null)}
             onAddVisibilityRule={() => onOpenVisibilityRuleEditor(null)}
             onDeleteNode={onDeleteNode}

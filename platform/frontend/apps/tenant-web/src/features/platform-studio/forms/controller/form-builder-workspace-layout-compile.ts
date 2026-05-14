@@ -126,6 +126,7 @@ export function compileAuthoringScope(
         node.type === "subform"
           ? {
               ...baseContainer,
+              checklistConfig: node.subformType === "CHECKLIST" ? node.checklistConfig : undefined,
               displayName: node.title ?? humanizeAuthoringSchemaScopeKey(node.tableKey ?? node.schemaScopeId ?? node.id),
               schemaScopeId: node.schemaScopeId ?? node.tableKey ?? node.id,
               subformType: node.subformType ?? "DEFAULT",

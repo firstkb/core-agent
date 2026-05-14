@@ -62,6 +62,15 @@ export type FormBuilderListRowLayout = {
   secondaryRowFieldId?: string;
 };
 
+export type FormBuilderChecklistGrouping = "by_first_display_field" | "flat";
+
+export type FormBuilderChecklistConfig = {
+  grouping?: FormBuilderChecklistGrouping;
+  lookupFieldId?: string;
+  notesFieldId?: string;
+  resultFieldId?: string;
+};
+
 export type FormBuilderNode = {
   containerKey?: string;
   fieldId?: string;
@@ -73,6 +82,7 @@ export type FormBuilderNode = {
   required?: boolean;
   rules?: FormBuilderNodeRules;
   schemaScopeId?: string;
+  checklistConfig?: FormBuilderChecklistConfig;
   runtimePreset?: FormBuilderRuntimePreset;
   subformType?: FormBuilderSubformType;
   tableKey?: string;

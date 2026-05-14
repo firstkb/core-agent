@@ -243,6 +243,11 @@ func normalizeScopeNodes(scopeID string, rawNodes any, layoutBlueprint map[strin
 					normalized["schemaScopeId"] = chooseString(normalizeString(normalized["schemaScopeId"]), normalizeString(container["schemaScopeId"]))
 					normalized["subformType"] = chooseString(normalizeString(normalized["subformType"]), chooseString(normalizeString(container["subformType"]), "DEFAULT"))
 					normalized["tableKey"] = chooseString(normalizeString(normalized["tableKey"]), chooseString(normalizeString(container["tableKey"]), normalizeString(container["schemaScopeId"])))
+					if checklistConfig := pruneEmptyMapsAndStrings(normalizeAnyMap(chooseAny(normalized["checklistConfig"], container["checklistConfig"]))); len(checklistConfig) > 0 {
+						normalized["checklistConfig"] = checklistConfig
+					} else {
+						delete(normalized, "checklistConfig")
+					}
 				}
 				nodeContainerKeys[normalizeString(normalized["id"])] = containerKey
 			} else {

@@ -507,6 +507,8 @@ Layout rules:
 - `Grid layout` and `Column` are layout composition nodes, not list/grid column settings
 - `Subform` owns a dedicated child scope
 - `Checklist subform` is a palette shortcut that compiles to `subform` with `subformType = CHECKLIST`
+- creating `Checklist subform` in Form Builder creates a dedicated child scope with default child fields `Item`, `Result`, and `Notes`; `Item` is a single `db_lookup`, `Result` is a button-style `single_select`, and `Notes` is optional long text
+- inside a `CHECKLIST` subform scope the palette is intentionally limited to checklist-safe additions: `Short text`, `Date`, `Single select`, `Heading`, and `Text`
 
 ## Content Nodes
 
@@ -663,12 +665,17 @@ Checklist persisted binding shape:
 
 - `lookupFieldId`: required; must reference a child `db_lookup` field in the same subform scope
 - `resultFieldId`: required; must reference a child `single_select` field in the same subform scope
+- `notesFieldId`: managed comment field created by the shortcut; hide the node with visibility when comments are not needed instead of deleting the field
+- `grouping`: optional; `flat` renders question-only rows and `by_first_display_field` lets runtime treat the first lookup display field as the category/group
 
 Checklist normalization:
 
 - legacy custom-selection combo behavior normalizes to child `single_select`
 - button-style answers are rendering or preset behavior, not a separate field ontology
 - result options remain editable even when created from a preset
+- Form Builder stores `checklistConfig` on the checklist subform node and mirrors it through model-owned layout blueprint containers so fresh UI schema materialization can retain the bindings
+- shortcut-created `Item`, `Result`, and `Notes` fields are locked managed fields; users hide optional `Notes` through node visibility rather than deleting it
+- deleting a subform is a model-structure operation: the authoring workspace must remove the subform node, its subform scope, scoped model fields, and the matching model `schemaScopes` entry together so scoped child fields do not reappear as root/unplaced fields
 
 Optional checklist sibling fields:
 
@@ -676,7 +683,7 @@ Optional checklist sibling fields:
 - files or attachments
 
 These optional fields do not replace the required `lookupFieldId` and `resultFieldId` bindings.
-Exact checklist creation UX and automatic-vs-manual binding setup remain deferred.
+Photo/file checklist fields remain deferred until the platform file contract is implemented.
 
 ## Conditional Rules
 

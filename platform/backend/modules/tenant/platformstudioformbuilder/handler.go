@@ -262,6 +262,8 @@ func mapError(err error) *apperr.AppError {
 		return apperr.New("FORM_BUILDER_MODEL_LOCKED", http.StatusForbidden, "model is locked")
 	case errors.Is(err, ErrViewLocked):
 		return apperr.New("FORM_BUILDER_VIEW_LOCKED", http.StatusForbidden, "view is locked")
+	case errors.Is(err, ErrRuntimeNameConflict):
+		return apperr.New("FORM_BUILDER_RUNTIME_NAME_CONFLICT", http.StatusConflict, "runtime relation name conflict")
 	case errors.Is(err, ErrDraftConflict):
 		return apperr.New("FORM_BUILDER_CONFLICT", http.StatusConflict, "draft version conflict")
 	case errors.Is(err, ErrModelNotFound):

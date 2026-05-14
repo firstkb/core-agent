@@ -6,9 +6,8 @@ import {
   type FormBuilderLibraryFieldDefinition,
 } from "../forms-builder-library";
 import {
-  addFormBuilderElementNode,
-  getCurrentFormBuilderInsertParentId,
   type FormBuilderDocument,
+  type FormBuilderElementPaletteItem,
   type FormBuilderFilterDefinitions,
   type FormBuilderGridColumnDefinition,
   type FormBuilderNode,
@@ -62,10 +61,6 @@ type Translate = ReturnType<typeof useTranslation>["t"];
 type PaletteSections = Parameters<typeof createPaletteDisplaySections>[0]["sections"];
 type ViewSettingsSystemFieldsInput = Parameters<typeof createViewSettingsSystemFields>[0];
 
-type UpdateDocument = (
-  updater: (currentDocument: FormBuilderDocument) => FormBuilderDocument,
-) => void;
-
 type CreateFormBuilderWorkspaceRenderModelInput = {
   attentionNodeIds: ReadonlySet<string>;
   availableLookupSourceModels: ReadonlyArray<LookupSourceModelOption>;
@@ -86,6 +81,10 @@ type CreateFormBuilderWorkspaceRenderModelInput = {
   lookupSourceModelsById: Readonly<Record<string, LookupSourceModelOption>>;
   lookupSourcePicker: FormBuilderLookupSourcePickerState | null;
   lookupSourcePickerModel: LookupSourceModelOption | null;
+  onCreateElementNode: (
+    nodeType: FormBuilderElementPaletteItem["nodeType"],
+    initialNode: FormBuilderElementPaletteItem["initialNode"],
+  ) => void;
   onCreateLibraryField: (definition: FormBuilderLibraryFieldDefinition) => void;
   onCreateSystemField: (role: SystemFieldRole) => void;
   paletteSections: PaletteSections;
@@ -94,7 +93,6 @@ type CreateFormBuilderWorkspaceRenderModelInput = {
   updateCurrentScopeSubformViewSettings: (
     updater: (viewSettings: FormBuilderSubformViewSettings) => FormBuilderSubformViewSettings,
   ) => void;
-  updateDocument: UpdateDocument;
   updateViewSettings: (
     updater: (viewSettings: FormBuilderViewSettings) => FormBuilderViewSettings,
   ) => void;
@@ -121,26 +119,19 @@ export function createFormBuilderWorkspaceRenderModel({
   lookupSourceModelsById,
   lookupSourcePicker,
   lookupSourcePickerModel,
+  onCreateElementNode,
   onCreateLibraryField,
   onCreateSystemField,
   paletteSections,
   sortedCurrentGridScopeTargets,
   t,
   updateCurrentScopeSubformViewSettings,
-  updateDocument,
   updateViewSettings,
   workflowStatusOptions,
 }: CreateFormBuilderWorkspaceRenderModelInput) {
   const paletteDisplaySections = createPaletteDisplaySections({
     getFieldPaletteDescription,
-    onAddElement: (nodeType, initialNode) => updateDocument((currentDocument) =>
-      addFormBuilderElementNode(
-        currentDocument,
-        getCurrentFormBuilderInsertParentId(currentDocument),
-        nodeType,
-        initialNode,
-      )
-    ),
+    onAddElement: onCreateElementNode,
     onCreateLibraryField,
     onCreateSystemField,
     sections: paletteSections,

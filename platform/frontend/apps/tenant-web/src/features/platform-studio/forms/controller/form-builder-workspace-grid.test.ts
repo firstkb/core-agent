@@ -12,6 +12,7 @@ import type {
 import { normalizeViewSettings } from "../state/form-builder-view-normalization";
 import { buildCanonicalDataSchema } from "./form-builder-workspace-data-schema";
 import { buildWorkspaceDocumentFromCanonicalSchemas } from "./form-builder-workspace-document-hydration";
+import { buildCanonicalLayoutBlueprint } from "./form-builder-workspace-layout-compile";
 import {
   applyCurrentScopeSubformTitleUpdate,
   applyRootViewGridColumnsUpdate,
@@ -67,6 +68,105 @@ function createModel(fields: ReadonlyArray<FormsPlaceholderField>): FormsPlaceho
 }
 
 describe("Form Builder grid settings", () => {
+  it("persists checklist subform bindings into UI schema and layout blueprint", () => {
+    const model = createModel([
+      createField("item", "Item", {
+        family: "choice",
+        kind: "db_lookup",
+        schemaScopeKey: "pb_checklist",
+        selectionMode: "single",
+      }),
+      createField("result", "Result", {
+        family: "choice",
+        kind: "single_select",
+        schemaScopeKey: "pb_checklist",
+      }),
+      createField("notes", "Notes", {
+        family: "core",
+        kind: "long_text",
+        schemaScopeKey: "pb_checklist",
+      }),
+    ]);
+
+    const document = normalizeFormBuilderDocument(
+      {
+        filterDefinitions: {},
+        nodes: [
+          {
+            checklistConfig: {
+              grouping: "by_first_display_field",
+              lookupFieldId: "item",
+              notesFieldId: "notes",
+              resultFieldId: "result",
+            },
+            id: "subform-checklist",
+            order: 0,
+            parentId: null,
+            schemaScopeId: "pb_checklist",
+            subformType: "CHECKLIST",
+            tableKey: "pb_checklist",
+            title: "Checklist",
+            type: "subform",
+            visibility: "visible",
+          },
+          {
+            fieldId: "item",
+            id: "field-item",
+            order: 0,
+            parentId: "subform-checklist",
+            type: "field",
+            visibility: "visible",
+          },
+          {
+            fieldId: "result",
+            id: "field-result",
+            order: 1,
+            parentId: "subform-checklist",
+            type: "field",
+            visibility: "visible",
+          },
+        ],
+        systemFields: {},
+        viewDescription: "",
+        viewKind: "form",
+        viewSettings: { list: { columns: [] } },
+        viewTitle: "Default",
+      },
+      {
+        ...model,
+        schemaScopes: [
+          {
+            displayName: "Checklist",
+            key: "pb_checklist",
+            scopeType: "SUBFORM",
+            subformType: "CHECKLIST",
+          },
+        ],
+      },
+      screen,
+    );
+
+    const uiSchema = buildCanonicalUiSchema(document, model) as unknown as {
+      rootScope: { nodes: Array<Record<string, unknown>> };
+    };
+    const layoutBlueprint = buildCanonicalLayoutBlueprint(document) as unknown as {
+      rootScope: { containers: Array<Record<string, unknown>> };
+    };
+
+    expect(uiSchema.rootScope.nodes[0]?.checklistConfig).toEqual({
+      grouping: "by_first_display_field",
+      lookupFieldId: "item",
+      notesFieldId: "notes",
+      resultFieldId: "result",
+    });
+    expect(layoutBlueprint.rootScope.containers[0]?.checklistConfig).toEqual({
+      grouping: "by_first_display_field",
+      lookupFieldId: "item",
+      notesFieldId: "notes",
+      resultFieldId: "result",
+    });
+  });
+
   it("keeps persisted subform grid columns when legacy node columns are absent", () => {
     const noteColumn: FormBuilderGridColumnDefinition = {
       fieldId: "note",

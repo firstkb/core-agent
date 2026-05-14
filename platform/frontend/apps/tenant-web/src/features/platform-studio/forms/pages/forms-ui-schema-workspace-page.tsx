@@ -411,6 +411,7 @@ export function FormsViewWorkspacePage() {
   const {
     addSelectedFieldOption,
     confirmDeleteNode,
+    handleCreateElementNode,
     handleCreateLibraryField,
     handleCreateSystemField,
     openDeleteNodeDialog,
@@ -430,6 +431,9 @@ export function FormsViewWorkspacePage() {
     updateSelectedFieldPlaceholder,
     updateSelectedFieldUniqueValue,
     updateSelectedFieldValidation,
+    updateSelectedChecklistGrouping,
+    updateSelectedChecklistLookupField,
+    updateSelectedChecklistResultField,
     updateSelectedLookupDisplayMode,
     updateSelectedNodeRequired,
     updateSelectedNodeText,
@@ -695,13 +699,13 @@ export function FormsViewWorkspacePage() {
     lookupSourceModelsById,
     lookupSourcePicker,
     lookupSourcePickerModel,
+    onCreateElementNode: handleCreateElementNode,
     onCreateLibraryField: handleCreateLibraryField,
     onCreateSystemField: handleCreateSystemField,
     paletteSections,
     sortedCurrentGridScopeTargets,
     t,
     updateCurrentScopeSubformViewSettings,
-    updateDocument,
     updateViewSettings,
     workflowStatusOptions,
   });
@@ -854,6 +858,9 @@ export function FormsViewWorkspacePage() {
                       onDropOption={handleChoiceOptionDrop}
                       onLookupDisplayModeChange={updateSelectedLookupDisplayMode}
                       onMaskChange={updateSelectedFieldMask}
+                      onChecklistGroupingChange={updateSelectedChecklistGrouping}
+                      onChecklistLookupFieldChange={updateSelectedChecklistLookupField}
+                      onChecklistResultFieldChange={updateSelectedChecklistResultField}
                       onOpenRequirementRuleEditor={openRequirementRuleEditor}
                       onOpenVisibilityRuleEditor={openVisibilityRuleEditor}
                       onOptionChange={renameSelectedFieldOption}

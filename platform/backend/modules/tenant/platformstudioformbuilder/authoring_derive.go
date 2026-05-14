@@ -88,6 +88,9 @@ func deriveBlueprintScopeFromNodes(
 			}
 			scopeRef = chooseString(scopeRef, normalizeString(node["schemaScopeId"]))
 			scopeRef = chooseString(scopeRef, normalizeString(node["tableKey"]))
+			if checklistConfig := pruneEmptyMapsAndStrings(normalizeAnyMap(node["checklistConfig"])); len(checklistConfig) > 0 {
+				container["checklistConfig"] = checklistConfig
+			}
 			container["schemaScopeId"] = scopeRef
 			container["subformType"] = chooseString(normalizeString(node["subformType"]), "DEFAULT")
 			container["tableKey"] = chooseString(normalizeString(node["tableKey"]), scopeRef)
@@ -257,6 +260,9 @@ func materializeUIScope(scopeID string, blueprint map[string]any) map[string]any
 				"visibility":   "visible",
 			}
 			if normalizeString(container["type"]) == "subform" {
+				if checklistConfig := pruneEmptyMapsAndStrings(normalizeAnyMap(container["checklistConfig"])); len(checklistConfig) > 0 {
+					node["checklistConfig"] = checklistConfig
+				}
 				node["schemaScopeId"] = normalizeString(container["schemaScopeId"])
 				node["subformType"] = chooseString(normalizeString(container["subformType"]), "DEFAULT")
 				node["tableKey"] = chooseString(normalizeString(container["tableKey"]), normalizeString(container["schemaScopeId"]))

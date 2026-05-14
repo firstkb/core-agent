@@ -6,6 +6,7 @@ import type {
   FormBuilderSubformType,
 } from "../forms-builder-contract";
 import type {
+  FormBuilderChecklistConfig,
   FormBuilderDataScopeRuntime,
   FormBuilderDocument,
   FormBuilderFilterDefinitions,
@@ -67,6 +68,45 @@ function isValidNodeType(value: unknown): value is FormBuilderNodeType {
     value === "divider" ||
     value === "field"
   );
+}
+
+function normalizeChecklistConfig(
+  value: unknown,
+  fieldIds: ReadonlySet<string>,
+): FormBuilderChecklistConfig | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const candidate = value as Partial<FormBuilderChecklistConfig>;
+  const lookupFieldId =
+    typeof candidate.lookupFieldId === "string" && fieldIds.has(candidate.lookupFieldId)
+      ? candidate.lookupFieldId
+      : undefined;
+  const resultFieldId =
+    typeof candidate.resultFieldId === "string" && fieldIds.has(candidate.resultFieldId)
+      ? candidate.resultFieldId
+      : undefined;
+  const notesFieldId =
+    typeof candidate.notesFieldId === "string" && fieldIds.has(candidate.notesFieldId)
+      ? candidate.notesFieldId
+      : undefined;
+  const grouping = candidate.grouping === "by_first_display_field"
+    ? "by_first_display_field"
+    : candidate.grouping === "flat"
+      ? "flat"
+      : undefined;
+
+  if (!lookupFieldId && !resultFieldId && !notesFieldId && !grouping) {
+    return undefined;
+  }
+
+  return {
+    grouping,
+    lookupFieldId,
+    notesFieldId,
+    resultFieldId,
+  };
 }
 
 export function createFormBuilderDocumentNormalizationHelpers({
@@ -136,6 +176,9 @@ export function createFormBuilderDocumentNormalizationHelpers({
           rules: normalizeNodeRules(node.rules, fieldIds),
           runtimePreset: isRuntimePreset(node.runtimePreset) ? node.runtimePreset : undefined,
           schemaScopeId: typeof node.schemaScopeId === "string" ? node.schemaScopeId : undefined,
+          checklistConfig: node.type === "subform" && node.subformType === "CHECKLIST"
+            ? normalizeChecklistConfig(node.checklistConfig, fieldIds)
+            : undefined,
           subformType: node.type === "subform" && isSubformType(node.subformType) ? node.subformType : undefined,
           tableKey: typeof node.tableKey === "string" ? node.tableKey : undefined,
           text: typeof node.text === "string" ? node.text : undefined,

@@ -61,7 +61,7 @@ instead of them.
 
 ## Planned / Open Work
 
-- Next Form Builder field work should focus on `Checklist subform`: review the current palette item, schema/runtime expectations, authoring UI, and Form render behavior before changing implementation.
+- `Checklist subform` Form Builder authoring shortcut is implemented for the current slice: it creates the checklist child scope with managed/locked default `Item` (`db_lookup`), `Result` (`single_select` button answers), and `Notes` (`long_text`) fields, stores `checklistConfig.lookupFieldId`, `checklistConfig.resultFieldId`, `checklistConfig.notesFieldId`, and `checklistConfig.grouping`, and exposes lookup/result/grouping controls in the Element inspector. Optional `Notes` should be hidden with node visibility instead of deleted. Checklist-level palette is restricted to `Short text`, `Date`, `Single select`, `Heading`, and `Text`. Deleting a subform now removes the subform node, scoped fields, and model schema scope together to prevent child fields from reappearing as root/unplaced fields. Remaining checklist work belongs to Form render/runtime behavior, richer source configuration UX, file/photo support, and any Corrective Action integration.
 - Navigation Builder must own runtime exposure, sidebar placement, and runtime grant assignment for `{ targetType: form_builder_view, modelId, viewId }`.
 - Future Navigation Builder bridge in Form Builder should surface runtime exposure
   without moving ownership into Form Builder: model/view list row action `Add to

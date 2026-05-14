@@ -14,6 +14,7 @@ import {
   type FormBuilderDraftLoadClient,
 } from "./form-builder-draft-api";
 import { buildWorkspaceDocumentFromCanonicalSchemas } from "./form-builder-workspace-document-hydration";
+import { pruneLeakedChecklistRootFields } from "./form-builder-workspace-checklist-orphans";
 import {
   createEmptyLayoutBlueprint,
   deriveModelSchemaScopes,
@@ -136,11 +137,15 @@ export function useFormBuilderDraftHydration({
           findFormsPlaceholderScreenById(loadedModel.screens, resolvedView.id) ?? resolvedView,
           loadedModel,
         );
-        const nextModel = replaceModelViewById(loadedModel, hydratedView);
-        const nextView = findFormsPlaceholderScreenById(nextModel.screens, resolvedView.id) ?? hydratedView;
+        const modelWithView = replaceModelViewById(loadedModel, hydratedView);
         const nextLayoutBlueprint = isRecord(response.draft.model.layoutBlueprint)
           ? response.draft.model.layoutBlueprint
-          : createEmptyLayoutBlueprint(nextModel);
+          : createEmptyLayoutBlueprint(modelWithView);
+        const nextModel = pruneLeakedChecklistRootFields(
+          modelWithView,
+          nextLayoutBlueprint,
+        );
+        const nextView = findFormsPlaceholderScreenById(nextModel.screens, resolvedView.id) ?? hydratedView;
         const nextDocument = buildWorkspaceDocumentFromCanonicalSchemas(
           response.draft.model,
           response.draft.view,

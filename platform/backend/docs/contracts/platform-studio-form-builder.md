@@ -570,6 +570,7 @@ Managed `CHECKLIST` subform:
 - canonical data view: create/recreate
 - lookup outputs: create/recreate in SQL views
 - child grid views: skipped
+- authoring stores checklist bindings as `checklistConfig` on the checklist subform UI node and layout blueprint container, including `lookupFieldId`, `resultFieldId`, optional `notesFieldId`, and grouping; backend normalization preserves that config when deriving or materializing UI schema
 
 External/static root:
 

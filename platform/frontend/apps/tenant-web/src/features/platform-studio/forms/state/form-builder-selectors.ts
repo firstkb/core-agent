@@ -190,20 +190,38 @@ function findParentNode(document: FormBuilderDocument, nodeId: string | null) {
   return getFormBuilderNode(document, node?.parentId ?? null);
 }
 
-export function getFormBuilderBreadcrumb(document: FormBuilderDocument) {
-  const breadcrumb: FormBuilderNode[] = [];
-  const activeScope = getActiveFormBuilderScope(document);
-  let currentNode = getFormBuilderNode(document, activeScope.uiSchema.currentParentId);
+function getFormBuilderNodePath(
+  document: FormBuilderDocument,
+  node: FormBuilderNode | null,
+) {
+  const path: FormBuilderNode[] = [];
+  const visitedNodeIds = new Set<string>();
+  let currentNode = node;
 
-  while (currentNode) {
-    breadcrumb.unshift(currentNode);
+  while (currentNode && !visitedNodeIds.has(currentNode.id)) {
+    path.unshift(currentNode);
+    visitedNodeIds.add(currentNode.id);
     currentNode = findParentNode(document, currentNode.id);
   }
 
+  return path;
+}
+
+export function getFormBuilderBreadcrumb(document: FormBuilderDocument) {
+  const activeScope = getActiveFormBuilderScope(document);
+  const currentNode = getFormBuilderNode(document, activeScope.uiSchema.currentParentId);
+  const breadcrumb = getFormBuilderNodePath(document, currentNode);
+
   if (activeScope.scopeType === "SUBFORM") {
     const scopeNode = getFormBuilderNode(document, activeScope.parentSubformNodeId);
-    if (scopeNode && breadcrumb[0]?.id !== scopeNode.id) {
-      breadcrumb.unshift(scopeNode);
+    if (scopeNode) {
+      const scopePath = getFormBuilderNodePath(document, scopeNode);
+      const scopePathNodeIds = new Set(scopePath.map((node) => node.id));
+
+      return [
+        ...scopePath,
+        ...breadcrumb.filter((node) => !scopePathNodeIds.has(node.id)),
+      ];
     }
   }
 

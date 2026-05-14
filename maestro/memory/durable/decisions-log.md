@@ -2,7 +2,7 @@
 
 Status: compact durable decisions index
 Last compacted: 2026-05-01
-Next decision ID: `DEC-102`
+Next decision ID: `DEC-103`
 
 Use this file for durable decision discovery and new decision append routing.
 Do not turn it into a task journal. Full decision bodies live in topic files under `maestro/memory/durable/decisions/`.
@@ -128,3 +128,4 @@ Do not turn it into a task journal. Full decision bodies live in topic files und
 | `DEC-099` | Form Builder View Activity Is Navigation-Owned | active | owner-confirmed | `decisions/product-platform.md` | Form Builder does not own View Active/Inactive or runtime/sidebar exposure. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup. |
 | `DEC-100` | Navigation Access Uses Derived Runtime Tables | active | owner-confirmed | `decisions/product-platform.md` | Navigation Builder access policy stays authored in `ps_navigation_config.definition_json`, but backend `Save` should synchronize derived access/runtime tables in the same transaction. Runtime sidebar filtering, utility rail visibility, and future direct route/API guards must use the derived evaluator/tables, not frontend-only checks or ad hoc JSON parsing. |
 | `DEC-101` | Checklist Item Metadata Uses Source Field Convention | active | owner-confirmed | `decisions/product-platform.md` | Checklist runtime may auto-detect optional item-source fields by storage key for per-question behavior: `answer_options` as `|`-delimited answer buttons, `answer_required` as per-question required flag, and `visible_when` as a simple single dependency expression such as `7=Fail`. Form Builder should not expose advanced field-mapping selects for this first contract; missing fields mean default checklist behavior. |
+| `DEC-102` | Grid Lookup Aliases Are Explicit View-Only Targets | active | owner-confirmed | `decisions/product-platform.md` | Form Builder Grid no longer offers all lookup-derived aliases automatically. Authors expose lookup aliases and root `Doc.id` through explicit View-only fields; runtime keeps aliases/search projections and preserves legacy saved alias columns. |

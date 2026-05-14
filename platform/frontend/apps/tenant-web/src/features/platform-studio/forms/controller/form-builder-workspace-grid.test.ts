@@ -514,6 +514,32 @@ describe("Form Builder grid settings", () => {
     expect(visibleLookupRowLayout.list.rowLayout?.secondaryRowFieldId).toBe(visibleLookupOutputId);
   });
 
+  it("normalizes Doc.id view-only grid columns", () => {
+    const viewSettings = normalizeViewSettings(
+      {
+        list: {
+          columns: [
+            { fieldId: "root::record_id", id: "grid-doc-id", order: 0, visible: true },
+          ],
+          rowLayout: {
+            secondaryRowFieldId: "root::record_id",
+          },
+          sorting: {
+            direction: "desc",
+            fieldId: "root::record_id",
+          },
+        },
+      },
+      new Set(["site_name"]),
+    );
+
+    expect(viewSettings.list.columns).toEqual([
+      { fieldId: "root::record_id", id: "grid-doc-id", order: 0, visible: true },
+    ]);
+    expect(viewSettings.list.sorting.fieldId).toBe("root::record_id");
+    expect(viewSettings.list.rowLayout?.secondaryRowFieldId).toBe("root::record_id");
+  });
+
   it("clears sorting and second row field when the selected grid column is hidden", () => {
     const viewSettings = normalizeViewSettings(
       {

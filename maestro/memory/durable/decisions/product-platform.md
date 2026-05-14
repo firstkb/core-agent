@@ -333,3 +333,27 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - Owner decision on 2026-05-14
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+
+### DEC-102 Grid Lookup Aliases Are Explicit View-Only Targets
+
+- Date: 2026-05-14
+- Status: active
+- State: owner-confirmed
+- Decision: Form Builder Grid should not offer every lookup-derived alias as an
+  automatic selectable column. Authors who need a lookup alias in a table must
+  add an explicit `View-only field` bound to `lookup_derived_output` and select
+  that view-only target in Grid. This keeps Grid authoring focused and lets the
+  author control the displayed column label.
+- Runtime contract: lookup alias SQL/runtime projections remain available for
+  renderer, filters, search, row layout, and compatibility. Root `Doc.id` is
+  exposed through an explicit `View-only field` bound to `root_record_id`; Grid
+  persists it as `root::record_id`, runtime projects `_id` as `doc_id`, table
+  search includes it, and search suggestions exclude it. In this contract,
+  `Doc.id` means `_id`.
+- Compatibility: old saved Grid columns using
+  `field::lookup_output::<output>` remain readable so existing views do not
+  break, but new authoring should use explicit view-only nodes.
+- Sources:
+  - Owner decision on 2026-05-14
+  - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
+  - `platform/backend/docs/contracts/platform-studio-form-builder.md`

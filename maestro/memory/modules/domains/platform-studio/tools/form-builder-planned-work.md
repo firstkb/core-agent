@@ -33,6 +33,13 @@ instead of them.
   as a Collection Table secondary row, omits it from header columns, keeps it in
   fields/search/query, and resolves lookup fields through the same label/output
   alias used by the visible Grid projection.
+- Grid authoring no longer offers every lookup-derived alias as an automatic
+  selectable column. Authors expose lookup aliases through explicit
+  `View-only field` nodes, which then become Grid targets using the view-only
+  label. Root `Doc.id` is exposed the same way through `root_record_id`; when
+  selected it persists as `root::record_id`, renders runtime `_id` as `doc_id`,
+  remains table searchable, and is excluded from search suggestions. Legacy saved
+  `field::lookup_output::...` Grid columns remain readable for compatibility.
 - Generic DB lookup label output joins authored display fields with comma-space
   (`first, second`). Runtime list lookup label cells use
   `displayFormat: leading_comma_bold` so Collection Table visually emphasizes

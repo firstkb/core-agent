@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { FormBuilderDocument } from "../forms-builder-state";
 import type { FormsPlaceholderField } from "../forms-placeholder-data";
 import {
+  getFieldsWithViewOnlyGridTargets,
   getFieldsWithLookupDerivedOutputs,
   getViewFilterBaseFields,
   getViewFilterTargetFields,
@@ -96,6 +97,149 @@ describe("Form Builder lookup derived outputs", () => {
       "Company title",
       "Project title",
       "DB Lookup title",
+    ]);
+  });
+
+  it("uses explicit view-only fields instead of automatic lookup aliases for Grid targets", () => {
+    const fields = [
+      createField("company", "Company", {
+        family: "preset",
+        kind: "db_lookup",
+        preset: "company_lookup",
+        selectionMode: "single",
+      }),
+    ];
+    const document = {
+      rootScope: {
+        uiSchema: {
+          nodes: [
+            {
+              id: "view-only-main-company",
+              order: 0,
+              parentId: null,
+              title: "Business Unit parent",
+              type: "view_only_field",
+              viewOnlyBinding: {
+                kind: "lookup_derived_output",
+                outputKey: "main_company_name",
+                sourceFieldId: "company",
+              },
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      subformScopes: [],
+    } as unknown as FormBuilderDocument;
+    const getFieldLabelAndBoundField = (field: FormsPlaceholderField) => ({
+      boundField: field.label,
+      labelField: `${field.label} title`,
+    });
+
+    const targets = getFieldsWithViewOnlyGridTargets({
+      columns: [],
+      document,
+      fields,
+      getFieldLabelAndBoundField,
+      scopeSubformId: null,
+      t: ((key: string) => key) as never,
+    });
+
+    expect(targets.map((field) => field.id)).toEqual([
+      "company",
+      "company::lookup_output::main_company_name",
+    ]);
+    expect(targets.map((field) => field.label)).toEqual([
+      "Company title",
+      "Business Unit parent",
+    ]);
+    expect(targets.some((field) => field.id === "company::lookup_output::label")).toBe(false);
+  });
+
+  it("keeps visible legacy lookup aliases manageable in Grid targets", () => {
+    const fields = [
+      createField("company", "Company", {
+        family: "preset",
+        kind: "db_lookup",
+        preset: "company_lookup",
+        selectionMode: "single",
+      }),
+    ];
+    const document = {
+      rootScope: {
+        uiSchema: {
+          nodes: [],
+        },
+      },
+      subformScopes: [],
+    } as unknown as FormBuilderDocument;
+    const getFieldLabelAndBoundField = (field: FormsPlaceholderField) => ({
+      boundField: field.label,
+      labelField: `${field.label} title`,
+    });
+
+    const targets = getFieldsWithViewOnlyGridTargets({
+      columns: [
+        {
+          fieldId: "company::lookup_output::main_company_name",
+          id: "grid-company-main",
+          order: 0,
+          visible: true,
+        },
+      ],
+      document,
+      fields,
+      getFieldLabelAndBoundField,
+      scopeSubformId: null,
+      t: ((key: string) => key) as never,
+    });
+
+    expect(targets.map((field) => field.id)).toEqual([
+      "company",
+      "company::lookup_output::main_company_name",
+    ]);
+  });
+
+  it("adds explicit Doc.id view-only fields to root Grid targets", () => {
+    const document = {
+      rootScope: {
+        uiSchema: {
+          nodes: [
+            {
+              id: "view-only-doc-id",
+              order: 0,
+              parentId: null,
+              title: "Document number",
+              type: "view_only_field",
+              viewOnlyBinding: {
+                kind: "root_record_id",
+              },
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      subformScopes: [],
+    } as unknown as FormBuilderDocument;
+
+    const targets = getFieldsWithViewOnlyGridTargets({
+      columns: [],
+      document,
+      fields: [],
+      getFieldLabelAndBoundField: (field) => ({
+        boundField: field.label,
+        labelField: field.label,
+      }),
+      scopeSubformId: null,
+      t: ((key: string) => key) as never,
+    });
+
+    expect(targets).toMatchObject([
+      {
+        id: "root::record_id",
+        label: "Document number",
+        sourceLabel: "doc_id",
+      },
     ]);
   });
 });

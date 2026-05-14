@@ -30,7 +30,7 @@ import {
   sortGridScopeFields,
 } from "./form-builder-workspace-field-scope-grid";
 import {
-  getFieldsWithLookupDerivedOutputs,
+  getFieldsWithViewOnlyGridTargets,
   getViewFilterTargetFields,
 } from "./form-builder-workspace-lookup-derived-outputs";
 import {
@@ -151,13 +151,15 @@ export function useFormBuilderWorkspaceDerivedState({
     [currentModel.fields, currentScopeSubformNode?.id, document],
   );
   const currentGridScopeTargets = useMemo(
-    () => getFieldsWithLookupDerivedOutputs({
+    () => getFieldsWithViewOnlyGridTargets({
+      columns: currentGridColumns,
       document,
       fields: currentGridScopeFields,
       getFieldLabelAndBoundField,
+      scopeSubformId: currentScopeSubformNode?.id ?? null,
       t,
     }),
-    [currentGridScopeFields, document, t],
+    [currentGridColumns, currentGridScopeFields, currentScopeSubformNode?.id, document, getFieldLabelAndBoundField, t],
   );
   const sortedCurrentGridScopeTargets = useMemo(
     () => sortGridScopeFields(currentGridScopeTargets, currentGridColumns),

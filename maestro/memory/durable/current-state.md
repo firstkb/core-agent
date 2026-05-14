@@ -133,6 +133,7 @@ Confidence labels:
 - `landed` `doc-confirmed`: Form Builder authoring transport uses canonical `/authoring`; `/draft` remains a temporary compatibility alias only.
 - `landed` `doc-confirmed`: Form Builder `Save` is authoring persistence plus additive runtime apply, not site publication.
 - `landed` `owner-confirmed`: Form Builder does not own View Active/Inactive or runtime/sidebar exposure. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; `ps_view.is_active` / API summary values remain deprecated compatibility metadata until a later cleanup.
+- `landed` `owner-confirmed`: Form Builder Grid lookup alias selection is now explicit through `View-only field` nodes. Automatic lookup alias targets are not offered for new Grid authoring, root `Doc.id` uses `root::record_id`/`doc_id` and means runtime `_id`, and legacy saved lookup alias Grid columns remain readable.
 - `planned` `doc-confirmed`: Navigation Builder access is now enforced for current direct Form View, Business Tree App Page, and Platform Studio API targets; future App Module routes and additional App Pages must attach to the same derived evaluator instead of inventing temporary grants.
 
 ## Current Risks

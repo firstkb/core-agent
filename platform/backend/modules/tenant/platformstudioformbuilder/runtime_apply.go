@@ -242,10 +242,19 @@ type runtimeApplyGridColumnSelection struct {
 	Order       int64
 }
 
+const (
+	runtimeGridRootRecordIDBindingID   = "root::record_id"
+	runtimeGridRootRecordIDBindingType = "root_record_id"
+	runtimeGridRootRecordIDColumnName  = "doc_id"
+)
+
 func parseRuntimeGridColumnFieldID(fieldID string) (string, string, string) {
 	trimmed := normalizeString(fieldID)
 	if trimmed == "" {
 		return "", "", ""
+	}
+	if trimmed == runtimeGridRootRecordIDBindingID {
+		return runtimeGridRootRecordIDBindingType, "", ""
 	}
 
 	parts := strings.Split(trimmed, "::lookup_output::")
@@ -401,6 +410,9 @@ func runtimeGridColumnProjectionForSelection(
 ) (string, string) {
 	if selection.ColumnName != "" {
 		return selection.ColumnName, selection.ColumnName
+	}
+	if selection.BindingType == runtimeGridRootRecordIDBindingType {
+		return "_id", runtimeGridRootRecordIDColumnName
 	}
 	field, ok := fieldsByID[selection.FieldID]
 	if !ok {

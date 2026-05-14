@@ -33,6 +33,7 @@ type memoryRepository struct {
 	lastExportOrderByColumn            string
 	lastRuntimeWhereArgs               []any
 	lastRuntimeWhereClause             string
+	lastRuntimeColumnNames             []string
 	lastRuntimeSuggestionArgs          []any
 	lastRuntimeSuggestionWhere         string
 	lastRuntimeSavedFilterPrincipal    string
@@ -145,7 +146,7 @@ func (r *memoryRepository) QueryRuntimeRows(
 	_ context.Context,
 	_ requestctx.TenantInfo,
 	relationName string,
-	_ []string,
+	columnNames []string,
 	whereClause string,
 	whereArgs []any,
 	orderByColumn string,
@@ -153,6 +154,7 @@ func (r *memoryRepository) QueryRuntimeRows(
 	page int,
 	pageSize int,
 ) ([]runtimeRelationQueryRow, int, error) {
+	r.lastRuntimeColumnNames = append([]string(nil), columnNames...)
 	r.lastRuntimeOrderByColumn = orderByColumn
 	r.lastRuntimeOrderDirection = orderDirection
 	r.lastRuntimeWhereClause = whereClause

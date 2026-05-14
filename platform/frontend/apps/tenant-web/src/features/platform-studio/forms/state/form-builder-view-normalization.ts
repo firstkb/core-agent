@@ -6,6 +6,8 @@ import type {
   FormBuilderViewOnlyBinding,
 } from "../forms-builder-state";
 
+const rootRecordIdGridFieldId = "root::record_id";
+
 export function createDefaultViewSettings(): FormBuilderViewSettings {
   return {
     actions: {
@@ -48,6 +50,10 @@ function isSupportedGridColumnFieldId(
   fieldId: string,
   fieldIds: ReadonlySet<string>,
 ) {
+  if (fieldId === rootRecordIdGridFieldId) {
+    return true;
+  }
+
   if (fieldIds.has(fieldId)) {
     return true;
   }

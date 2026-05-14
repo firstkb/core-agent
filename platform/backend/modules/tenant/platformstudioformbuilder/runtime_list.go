@@ -49,6 +49,7 @@ type runtimeViewListFieldMeta struct {
 	Label            string
 	LookupOutputs    map[string]string
 	Preset           string
+	QueryColumnName  string
 	QueryKind        string
 	SelectionMode    string
 	Type             string
@@ -226,10 +227,11 @@ func (s *Service) QueryRuntimeViewList(
 			orderDirection = collectiontable.SortDirectionDesc
 		}
 	}
+	orderByColumn = runtimeViewListQueryColumnForFieldID(orderByColumn)
 
 	columnNames := make([]string, 0, len(runtimeContext.Fields))
 	for _, field := range runtimeContext.Fields {
-		columnNames = append(columnNames, field.ColumnName)
+		columnNames = append(columnNames, runtimeViewListQueryColumnName(field))
 	}
 
 	rows, totalItems, err := s.repo.QueryRuntimeRows(
@@ -253,7 +255,7 @@ func (s *Service) QueryRuntimeViewList(
 	for _, row := range rows {
 		cells := make(map[string]collectiontable.RowCell, len(runtimeContext.Fields))
 		for _, field := range runtimeContext.Fields {
-			value := row.Cells[field.ColumnName]
+			value := row.Cells[runtimeViewListQueryColumnName(field)]
 			cells[field.FieldID] = collectiontable.RowCell{
 				DisplayFormat: field.DisplayFormat,
 				DisplayValue:  value,
@@ -442,7 +444,7 @@ func (s *Service) loadRuntimeViewListContext(
 	defaultFieldID := ""
 	for _, field := range fields {
 		searchable := field.Type == "text" || field.Type == "date" || field.Type == "date_time"
-		suggestable := field.Type == "text"
+		suggestable := field.Type == "text" && field.FieldID != runtimeGridRootRecordIDColumnName
 		fieldDefinitions = append(fieldDefinitions, collectiontable.FieldDefinition{
 			ID:          field.FieldID,
 			Label:       field.Label,
@@ -604,6 +606,7 @@ func buildRuntimeViewListFields(
 	fieldLabels := make(map[string]string, len(fields)*2)
 	fieldQueryKinds := make(map[string]string, len(fields)*2)
 	fieldTypes := make(map[string]string, len(fields)*2)
+	viewOnlyFieldMeta := buildRuntimeViewListViewOnlyFieldMeta(uiSchema, fields)
 	rootFields := asSlice(asMap(dataSchema["rootScope"])["fields"])
 	fieldSchemaByID := make(map[string]map[string]any, len(rootFields))
 	for _, rawField := range rootFields {
@@ -658,6 +661,23 @@ func buildRuntimeViewListFields(
 			fieldQueryKinds[output.ColumnName] = runtimeViewListLookupOutputQueryKind(output.DataType)
 		}
 	}
+	for columnName, meta := range viewOnlyFieldMeta {
+		if strings.TrimSpace(meta.AuthoringFieldID) != "" {
+			fieldAuthoringIDs[columnName] = meta.AuthoringFieldID
+		}
+		if strings.TrimSpace(meta.DisplayFormat) != "" {
+			fieldDisplayFormats[columnName] = meta.DisplayFormat
+		}
+		if strings.TrimSpace(meta.Label) != "" {
+			fieldLabels[columnName] = meta.Label
+		}
+		if strings.TrimSpace(meta.QueryKind) != "" {
+			fieldQueryKinds[columnName] = meta.QueryKind
+		}
+		if strings.TrimSpace(meta.Type) != "" {
+			fieldTypes[columnName] = meta.Type
+		}
+	}
 
 	out := make([]runtimeViewListFieldMeta, 0, len(gridPlan.Projections))
 	for _, projection := range gridPlan.Projections {
@@ -671,11 +691,84 @@ func buildRuntimeViewListFields(
 			DisplayFormat:    fieldDisplayFormats[columnName],
 			FieldID:          columnName,
 			Label:            chooseString(fieldLabels[columnName], humanizeIdentifier(columnName)),
+			QueryColumnName:  runtimeViewListQueryColumnForFieldID(columnName),
 			QueryKind:        chooseString(fieldQueryKinds[columnName], "text"),
 			Type:             chooseString(fieldTypes[columnName], "text"),
 		})
 	}
 	return out
+}
+
+func buildRuntimeViewListViewOnlyFieldMeta(uiSchema map[string]any, fields []runtimeApplyFieldPlan) map[string]runtimeViewListFieldMeta {
+	rootScope := uiScope(uiSchema, rootSchemaScopeID)
+	nodes := asSlice(asMap(rootScope)["nodes"])
+	if len(nodes) == 0 {
+		return nil
+	}
+
+	lookupOutputsByBindingID := make(map[string]runtimeApplyLookupOutputPlan)
+	lookupFieldsByBindingID := make(map[string]runtimeApplyFieldPlan)
+	for _, field := range fields {
+		for _, output := range field.LookupDerivedOutputs {
+			bindingID := buildRuntimeLookupOutputBindingID(field.FieldID, output.OutputKey)
+			lookupOutputsByBindingID[bindingID] = output
+			lookupFieldsByBindingID[bindingID] = field
+		}
+	}
+
+	out := make(map[string]runtimeViewListFieldMeta)
+	for _, rawNode := range nodes {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "view_only_field" {
+			continue
+		}
+		title := normalizeString(node["title"])
+		binding := asMap(node["viewOnlyBinding"])
+		switch normalizeString(binding["kind"]) {
+		case runtimeGridRootRecordIDBindingType:
+			out[runtimeGridRootRecordIDColumnName] = runtimeViewListFieldMeta{
+				AuthoringFieldID: runtimeGridRootRecordIDBindingID,
+				ColumnName:       runtimeGridRootRecordIDColumnName,
+				FieldID:          runtimeGridRootRecordIDColumnName,
+				Label:            chooseString(title, "Doc.id"),
+				QueryColumnName:  "_id",
+				QueryKind:        "text",
+				Type:             "text",
+			}
+		case "lookup_derived_output":
+			bindingID := buildRuntimeLookupOutputBindingID(
+				normalizeString(binding["sourceFieldId"]),
+				normalizeString(binding["outputKey"]),
+			)
+			output, ok := lookupOutputsByBindingID[bindingID]
+			if !ok || strings.TrimSpace(output.ColumnName) == "" {
+				continue
+			}
+			field := lookupFieldsByBindingID[bindingID]
+			out[output.ColumnName] = runtimeViewListFieldMeta{
+				AuthoringFieldID: bindingID,
+				ColumnName:       output.ColumnName,
+				DisplayFormat:    runtimeViewListLookupOutputDisplayFormat(field, output.OutputKey),
+				FieldID:          output.ColumnName,
+				Label:            title,
+				QueryKind:        runtimeViewListLookupOutputQueryKind(output.DataType),
+				Type:             runtimeViewListLookupOutputType(output.OutputKey, output.DataType),
+			}
+		}
+	}
+	return out
+}
+
+func runtimeViewListQueryColumnName(field runtimeViewListFieldMeta) string {
+	return chooseString(field.QueryColumnName, runtimeViewListQueryColumnForFieldID(field.ColumnName))
+}
+
+func runtimeViewListQueryColumnForFieldID(fieldID string) string {
+	trimmed := strings.TrimSpace(fieldID)
+	if trimmed == runtimeGridRootRecordIDColumnName {
+		return "_id"
+	}
+	return trimmed
 }
 
 func buildRuntimeViewListFilterFields(

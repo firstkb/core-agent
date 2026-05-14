@@ -3,6 +3,8 @@ package platformstudioformbuilder
 import (
 	"strings"
 	"testing"
+
+	collectiontable "dtriton.com/platform/backend/modules/shared/collectiontable"
 )
 
 func TestBuildRuntimeViewListSecondaryRowFieldIDUsesLookupLabelAlias(t *testing.T) {
@@ -81,6 +83,131 @@ func TestBuildRuntimeViewListFieldsMarksLookupLabelsWithLeadingCommaFormat(t *te
 	}
 	if got[0].DisplayFormat != runtimeViewListDisplayFormatLeadingCommaBold {
 		t.Fatalf("display format = %q, want %q", got[0].DisplayFormat, runtimeViewListDisplayFormatLeadingCommaBold)
+	}
+}
+
+func TestLoadRuntimeViewListMetaSupportsViewOnlyDocIDGridColumnWithoutSuggestions(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"id":    "view-only-doc-id",
+		"order": 1,
+		"title": "Doc #",
+		"type":  "view_only_field",
+		"viewOnlyBinding": map[string]any{
+			"kind": "root_record_id",
+		},
+	})
+	rootUIScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{"fieldId": "root::record_id", "id": "grid-doc-id", "order": 0},
+			},
+		},
+	}
+	uiSchema["rootScope"] = rootUIScope
+	viewPayload["uiSchema"] = uiSchema
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	svc := NewService(repo)
+	out, err := svc.LoadRuntimeViewListMeta(rootTestContext(), model.ModelID, view.ViewID)
+	if err != nil {
+		t.Fatalf("LoadRuntimeViewListMeta returned error: %v", err)
+	}
+	if len(out.Columns) != 1 {
+		t.Fatalf("column count = %d, want 1", len(out.Columns))
+	}
+	if out.Columns[0].ID != runtimeGridRootRecordIDColumnName {
+		t.Fatalf("column id = %q, want %q", out.Columns[0].ID, runtimeGridRootRecordIDColumnName)
+	}
+	if out.Columns[0].Label != "Doc #" {
+		t.Fatalf("column label = %q, want Doc #", out.Columns[0].Label)
+	}
+	if len(out.Fields) != 1 {
+		t.Fatalf("field count = %d, want 1", len(out.Fields))
+	}
+	if !out.Fields[0].Searchable {
+		t.Fatalf("Doc.id field must stay searchable")
+	}
+	if out.Fields[0].Suggestable {
+		t.Fatalf("Doc.id field must not be suggestable")
+	}
+}
+
+func TestRuntimeGridColumnProjectionForRootRecordIDUsesRuntimeID(t *testing.T) {
+	sourceColumn, aliasColumn := runtimeGridColumnProjectionForSelection(
+		runtimeApplyGridColumnSelection{BindingType: runtimeGridRootRecordIDBindingType},
+		nil,
+	)
+	if sourceColumn != "_id" {
+		t.Fatalf("source column = %q, want _id", sourceColumn)
+	}
+	if aliasColumn != runtimeGridRootRecordIDColumnName {
+		t.Fatalf("alias column = %q, want %q", aliasColumn, runtimeGridRootRecordIDColumnName)
+	}
+}
+
+func TestQueryRuntimeViewListReadsViewOnlyDocIDFromRuntimeID(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedRootOnlyExternalModelAndDefaultView(t, repo, "events")
+	repo.runtimeRelations[model.StorageKey] = "table"
+
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	uiSchema := asMap(viewPayload["uiSchema"])
+	rootUIScope := asMap(uiSchema["rootScope"])
+	rootUIScope["nodes"] = append(asSlice(rootUIScope["nodes"]), map[string]any{
+		"id":    "view-only-doc-id",
+		"order": 1,
+		"title": "Doc.id",
+		"type":  "view_only_field",
+		"viewOnlyBinding": map[string]any{
+			"kind": "root_record_id",
+		},
+	})
+	rootUIScope["viewSettings"] = map[string]any{
+		"list": map[string]any{
+			"columns": []any{
+				map[string]any{"fieldId": "root::record_id", "id": "grid-doc-id", "order": 0},
+			},
+		},
+	}
+	uiSchema["rootScope"] = rootUIScope
+	viewPayload["uiSchema"] = uiSchema
+	view.DefinitionJSON = mustJSON(t, viewPayload)
+
+	repo.runtimeQueryRows["vg_events__default"] = []runtimeRelationQueryRow{
+		{ID: "row-guid", Cells: map[string]string{"_id": "42"}},
+	}
+
+	svc := NewService(repo)
+	out, err := svc.QueryRuntimeViewList(rootTestContext(), model.ModelID, view.ViewID, RuntimeViewListQueryRequest{
+		Page:     1,
+		PageSize: 25,
+		Sort: collectiontable.SortRequest{
+			ColumnID:  runtimeGridRootRecordIDColumnName,
+			Direction: collectiontable.SortDirectionDesc,
+		},
+	})
+	if err != nil {
+		t.Fatalf("QueryRuntimeViewList returned error: %v", err)
+	}
+	if len(repo.lastRuntimeColumnNames) != 1 || repo.lastRuntimeColumnNames[0] != "_id" {
+		t.Fatalf("query columns = %#v, want [_id]", repo.lastRuntimeColumnNames)
+	}
+	if repo.lastRuntimeOrderByColumn != "_id" {
+		t.Fatalf("order by column = %q, want _id", repo.lastRuntimeOrderByColumn)
+	}
+	if len(out.Rows) != 1 {
+		t.Fatalf("row count = %d, want 1", len(out.Rows))
+	}
+	cell := out.Rows[0].Cells[runtimeGridRootRecordIDColumnName]
+	if cell.Value != "42" {
+		t.Fatalf("doc_id cell value = %q, want 42", cell.Value)
 	}
 }
 

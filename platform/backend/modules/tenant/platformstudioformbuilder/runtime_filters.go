@@ -196,7 +196,7 @@ func buildRuntimeViewListDefaultFilterConditionClause(
 
 	if operator == "is_empty" || operator == "is_not_empty" {
 		return buildRuntimeViewListTypedFilterClause(
-			field.ColumnName,
+			runtimeViewListQueryColumnName(field),
 			field.QueryKind,
 			operator,
 			argIndex,
@@ -212,7 +212,7 @@ func buildRuntimeViewListDefaultFilterConditionClause(
 	switch normalizeString(valueSource["kind"]) {
 	case "literal":
 		return buildRuntimeViewListTypedFilterClause(
-			field.ColumnName,
+			runtimeViewListQueryColumnName(field),
 			field.QueryKind,
 			operator,
 			argIndex,
@@ -226,14 +226,14 @@ func buildRuntimeViewListDefaultFilterConditionClause(
 				values = append(values, value)
 			}
 		}
-		return buildRuntimeViewListTypedFilterClause(field.ColumnName, field.QueryKind, operator, argIndex, values)
+		return buildRuntimeViewListTypedFilterClause(runtimeViewListQueryColumnName(field), field.QueryKind, operator, argIndex, values)
 	case "scalar_range":
 		start := stringifyRuntimeFilterScalarValue(valueSource["start"])
 		end := stringifyRuntimeFilterScalarValue(valueSource["end"])
-		return buildRuntimeViewListTypedFilterClause(field.ColumnName, field.QueryKind, operator, argIndex, []string{start, end})
+		return buildRuntimeViewListTypedFilterClause(runtimeViewListQueryColumnName(field), field.QueryKind, operator, argIndex, []string{start, end})
 	case "relative_date":
 		return buildRuntimeViewListTypedFilterClause(
-			field.ColumnName,
+			runtimeViewListQueryColumnName(field),
 			field.QueryKind,
 			operator,
 			argIndex,
@@ -622,7 +622,7 @@ func buildRuntimeViewListAllQuickFilterClause(
 		}
 		searchableColumns = append(searchableColumns, fmt.Sprintf(
 			"LOWER(COALESCE(t.%s::text, '')) LIKE $%d",
-			quoteIdentifier(strings.TrimSpace(field.ID)),
+			quoteIdentifier(runtimeViewListQueryColumnForFieldID(field.ID)),
 			argIndex,
 		))
 	}
@@ -639,7 +639,7 @@ func buildRuntimeViewListQuickFilterClause(
 	argIndex int,
 ) (string, []any, error) {
 	return buildRuntimeViewListTypedFilterClause(
-		field.ID,
+		runtimeViewListQueryColumnForFieldID(field.ID),
 		field.Type,
 		strings.TrimSpace(filter.Operator),
 		argIndex,

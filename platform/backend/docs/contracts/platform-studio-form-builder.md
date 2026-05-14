@@ -223,6 +223,13 @@ Runtime list action metadata:
   column metadata, and must resolve to an existing grid projection. Lookup
   fields resolve through their grid label/output alias rather than physical
   lookup id columns.
+- Explicit `View-only field` Grid targets resolve at runtime instead of
+  exposing every lookup alias as an automatic Grid option. Lookup-derived
+  view-only columns reuse the bound lookup output projection and use the
+  authored view-only node title as the table column label. Root `Doc.id`
+  view-only columns persist as `root::record_id`, project the runtime numeric
+  record id (`_id`) as `doc_id`, remain table-searchable, and are excluded from
+  search suggestions. In this contract, `Doc.id` means `_id`.
 - Generic lookup labels built from authored display fields use comma-separated
   plain text (`first, second`) and lookup label cells may mark
   `displayFormat = leading_comma_bold` so the generic Collection Table renderer

@@ -770,6 +770,12 @@ Current persisted direction:
 
 - `viewSettings.list.columns[]`
 - each column has `fieldId`, `visible`, and `order`
+- lookup-derived output aliases are not offered as automatic Grid targets; to
+  place a lookup alias in a table, authors add an explicit `View-only field`
+  bound to `lookup_derived_output`, then select that view-only target in Grid
+- root `Doc.id` is available through an explicit `View-only field` bound to
+  `root_record_id`; when selected for Grid it persists as `fieldId:
+  root::record_id`
 
 Grid column shape:
 
@@ -784,6 +790,10 @@ Scope rules:
 - `DEFAULT` subform scope may configure child-table grid columns
 - `CHECKLIST` subforms do not use grid columns
 - grid-column field references must stay inside the current scope
+- `root::record_id` is root-scope only
+- legacy saved lookup alias ids such as `field::lookup_output::label` remain
+  readable for compatibility, but new authoring should use `View-only field`
+  instead of direct alias selection
 
 UI placement:
 
@@ -796,6 +806,11 @@ Runtime rules:
 - only visible columns render
 - display order follows authored column order
 - fields not included in `columns` are hidden by default
+- explicit view-only lookup columns resolve to the same runtime lookup output
+  projection as the bound alias and use the view-only node title as the table
+  column label
+- explicit `Doc.id` columns render from the runtime record id projection, are
+  searchable in the table, and are excluded from search suggestions
 - root views may set `viewSettings.list.rowLayout.secondaryRowFieldId` to one
   visible grid field that renders as a full-width second row instead of a table
   header column; lookup fields use the same runtime label/output projection as

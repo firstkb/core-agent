@@ -33,6 +33,52 @@ func TestBuildRuntimeViewListWhereClauseSupportsAllQuickFilter(t *testing.T) {
 	}
 }
 
+func TestBuildRuntimeViewListWhereClauseMapsDocIDToRuntimeID(t *testing.T) {
+	clause, args, err := buildRuntimeViewListWhereClause(
+		[]collectiontable.QuickFilter{
+			{FieldID: "doc_id", Operator: "contains", Value: "42"},
+		},
+		nil,
+		[]collectiontable.FieldDefinition{
+			{ID: "doc_id", Searchable: true, Type: "text"},
+		},
+		nil,
+		runtimeViewListFilterContext{},
+	)
+	if err != nil {
+		t.Fatalf("buildRuntimeViewListWhereClause returned error: %v", err)
+	}
+	wantClause := `LOWER(COALESCE(t."_id"::text, '')) LIKE $1`
+	if clause != wantClause {
+		t.Fatalf("where clause = %q, want %q", clause, wantClause)
+	}
+	if len(args) != 1 || args[0] != "%42%" {
+		t.Fatalf("where args = %#v, want [%%42%%]", args)
+	}
+}
+
+func TestBuildRuntimeViewListWhereClauseMapsAllDocIDSearchToRuntimeID(t *testing.T) {
+	clause, _, err := buildRuntimeViewListWhereClause(
+		[]collectiontable.QuickFilter{
+			{FieldID: "all", Operator: "contains", Value: "42"},
+		},
+		nil,
+		[]collectiontable.FieldDefinition{
+			{ID: "doc_id", Searchable: true, Type: "text"},
+			{ID: "name", Searchable: true, Type: "text"},
+		},
+		nil,
+		runtimeViewListFilterContext{},
+	)
+	if err != nil {
+		t.Fatalf("buildRuntimeViewListWhereClause returned error: %v", err)
+	}
+	wantClause := `(LOWER(COALESCE(t."_id"::text, '')) LIKE $1 OR LOWER(COALESCE(t."name"::text, '')) LIKE $1)`
+	if clause != wantClause {
+		t.Fatalf("where clause = %q, want %q", clause, wantClause)
+	}
+}
+
 func TestQueryRuntimeViewListAppliesDefaultFiltersUsingAuthoringFieldID(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)

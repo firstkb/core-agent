@@ -19,6 +19,7 @@ export type { FieldMessage };
 
 export {
   applyRuntimeWorkflowStatus,
+  findFirstRuntimeChecklistRequiredError,
   findRuntimeFormField,
   isRuntimeFormValueEmpty,
   RuntimeFormScaffold,
@@ -31,7 +32,15 @@ export type {
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
+  RuntimeFormChecklistDetailDefinition,
+  RuntimeFormChecklistData,
+  RuntimeFormChecklistGroup,
+  RuntimeFormChecklistItem,
+  RuntimeFormChecklistItemChange,
+  RuntimeFormChecklistOption,
+  RuntimeFormChecklistRevealRequest,
   RuntimeFormCommitMode,
+  RuntimeFormChecklistRequiredError,
   RuntimeFormContentAlignment,
   RuntimeFormContentDefinition,
   RuntimeFormContentType,

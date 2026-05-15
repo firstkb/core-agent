@@ -246,8 +246,16 @@ export type RuntimeFormSubformActions = {
   canEdit: boolean;
 };
 
+export type RuntimeFormChecklistDetailDefinition =
+  | RuntimeFormContentDefinition
+  | RuntimeFormFieldDefinition;
+
 export type RuntimeFormSubformDefinition = {
   actions: RuntimeFormSubformActions;
+  checklistDetails?: ReadonlyArray<RuntimeFormChecklistDetailDefinition>;
+  checklistLookupFieldId?: string;
+  checklistNotesFieldId?: string;
+  checklistResultFieldId?: string;
   columns: ReadonlyArray<RuntimeFormSubformColumnDefinition>;
   defaultSort?: {
     columnId: string;
@@ -275,8 +283,55 @@ export type RuntimeFormSubformRow = {
   id: string;
 };
 
+export type RuntimeFormChecklistOption = {
+  label: string;
+  styleVariant?: RuntimeFormChoiceOptionStyleVariant;
+  value: string;
+};
+
+export type RuntimeFormChecklistItem = {
+  active?: boolean;
+  answerOptions?: ReadonlyArray<RuntimeFormChecklistOption>;
+  description?: string;
+  groupId?: string;
+  groupTitle?: string;
+  inactiveSaved?: boolean;
+  label: string;
+  notes?: string;
+  required?: boolean;
+  savedRowDocGuid?: string;
+  sourceValue: string;
+  value?: string;
+  values?: RuntimeFormValues;
+  visibleWhen?: string;
+};
+
+export type RuntimeFormChecklistGroup = {
+  id: string;
+  items: ReadonlyArray<RuntimeFormChecklistItem>;
+  title?: string;
+};
+
+export type RuntimeFormChecklistData = {
+  groups: ReadonlyArray<RuntimeFormChecklistGroup>;
+};
+
+export type RuntimeFormChecklistItemChange = {
+  notes?: string;
+  value?: string;
+  values?: RuntimeFormValues;
+};
+
+export type RuntimeFormChecklistRevealRequest = {
+  groupId?: string;
+  requestKey: number;
+  sourceValue?: string;
+  subformId: string;
+};
+
 export type RuntimeFormSubformData = {
-  rows: ReadonlyArray<RuntimeFormSubformRow>;
+  checklist?: RuntimeFormChecklistData;
+  rows?: ReadonlyArray<RuntimeFormSubformRow>;
 };
 
 export type RuntimeFormSubformDataById = Record<string, RuntimeFormSubformData | undefined>;
@@ -384,6 +439,8 @@ export type RuntimeFormResolvedLabels = {
   catalogRetry: ReactNode;
   catalogSearchPlaceholder: string;
   catalogSelect: ReactNode;
+  checklistInactiveSaved: ReactNode;
+  checklistNotes: ReactNode;
   createModeInfo: ReactNode;
   createTitle: ReactNode;
   editModeInfo: ReactNode;
@@ -447,8 +504,15 @@ export type RuntimeFormScaffoldProps = {
   onSubformAdd?: (subform: RuntimeFormSubformDefinition) => void;
   onSubformDelete?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
   onSubformEdit?: (subform: RuntimeFormSubformDefinition, row: RuntimeFormSubformRow) => void;
+  onChecklistItemChange?: (
+    subform: RuntimeFormSubformDefinition,
+    item: RuntimeFormChecklistItem,
+    change: RuntimeFormChecklistItemChange,
+  ) => void;
   recordId?: number | string;
+  revealChecklistItem?: RuntimeFormChecklistRevealRequest;
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
   saveState?: RuntimeFormSaveState;
   subforms?: RuntimeFormSubformDataById;

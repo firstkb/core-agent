@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyRuntimeWorkflowStatus,
+  findFirstRuntimeChecklistRequiredError,
   findRuntimeFormField,
   validateRuntimeForm,
 } from "./runtime-form";
@@ -1099,5 +1100,144 @@ describe("runtime form helpers", () => {
       columnId: "phone",
       direction: "desc",
     });
+  });
+
+  it("compiles checklist detail nodes from subform scope", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [],
+        },
+        subformScopes: [
+          {
+            displayName: "Checklist",
+            fields: [
+              { id: "item", kind: "db_lookup", label: "Item", selectionMode: "single" },
+              { id: "result", kind: "single_select", label: "Result", options: ["Yes", "No"] },
+              { id: "notes", kind: "long_text", label: "Notes" },
+              { id: "comment", kind: "short_text", label: "Comment" },
+              { id: "due-date", kind: "date", label: "Due date" },
+              { id: "severity", kind: "single_select", label: "Severity", options: ["Low", "High"] },
+            ],
+            schemaScopeId: "inspection-checklist",
+            subformType: "CHECKLIST",
+            tableKey: "inspection-checklist",
+          },
+        ],
+      },
+      mode: "edit",
+      modelId: "inspection",
+      uiSchema: {
+        rootScope: {
+          nodes: [{
+            checklistConfig: {
+              lookupFieldId: "item",
+              notesFieldId: "notes",
+              resultFieldId: "result",
+            },
+            id: "checklist-node",
+            schemaScopeId: "inspection-checklist",
+            subformType: "CHECKLIST",
+            tableKey: "inspection-checklist",
+            title: "Checklist",
+            type: "subform",
+          }],
+        },
+        subformScopes: [{
+          nodes: [
+            { fieldId: "item", id: "field-item", order: 0, type: "field" },
+            { fieldId: "result", id: "field-result", order: 1, type: "field" },
+            { fieldId: "notes", id: "field-notes", order: 2, type: "field" },
+            { fieldId: "comment", id: "field-comment", order: 3, type: "field" },
+            { fieldId: "due-date", id: "field-due-date", order: 4, type: "field" },
+            { fieldId: "severity", id: "field-severity", order: 5, type: "field" },
+            { id: "heading", order: 6, title: "Follow up", type: "heading" },
+            { id: "text", order: 7, text: "Add supporting details.", type: "text" },
+          ],
+          schemaScopeId: "inspection-checklist",
+        }],
+      },
+      viewId: "default",
+    });
+
+    const subform = definition.sections[0]?.nodes?.[0] as RuntimeFormSubformDefinition | undefined;
+
+    expect(subform?.checklistDetails?.map((node) => node.id)).toEqual([
+      "notes",
+      "comment",
+      "due-date",
+      "severity",
+      "heading",
+      "text",
+    ]);
+    expect(subform?.checklistDetails?.some((node) => node.id === "item")).toBe(false);
+    expect(subform?.checklistDetails?.some((node) => node.id === "result")).toBe(false);
+  });
+
+  it("finds the first required unanswered checklist item", () => {
+    const definition: RuntimeFormDefinition = {
+      commitMode: "autosave",
+      id: "inspection",
+      mode: "edit",
+      sections: [{
+        id: "main",
+        nodes: [{
+          actions: {
+            canAdd: false,
+            canDelete: false,
+            canEdit: false,
+          },
+          columns: [],
+          id: "checklist-node",
+          nodeType: "subform",
+          schemaScopeId: "inspection-checklist",
+          subformType: "CHECKLIST",
+          tableKey: "inspection-checklist",
+          title: "Checklist",
+        }],
+      }],
+      title: "Inspection",
+    };
+
+    const error = findFirstRuntimeChecklistRequiredError(definition, {}, {
+      "inspection-checklist": {
+        checklist: {
+          groups: [{
+            id: "onsite-documents",
+            items: [{
+              label: "EHS Daily Reports",
+              required: true,
+              sourceValue: "42",
+            }],
+            title: "Onsite Documents",
+          }],
+        },
+      },
+    });
+
+    expect(error).toMatchObject({
+      groupId: "onsite-documents",
+      nodeId: "checklist-node",
+      sourceValue: "42",
+      subformId: "inspection-checklist",
+    });
+
+    expect(findFirstRuntimeChecklistRequiredError(definition, {}, {
+      "inspection-checklist": {
+        checklist: {
+          groups: [{
+            id: "onsite-documents",
+            items: [{
+              label: "EHS Daily Reports",
+              required: true,
+              sourceValue: "42",
+              value: "Yes",
+            }],
+            title: "Onsite Documents",
+          }],
+        },
+      },
+    })).toBeNull();
   });
 });

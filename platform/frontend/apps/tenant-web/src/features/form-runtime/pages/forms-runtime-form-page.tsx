@@ -11,6 +11,7 @@ import { useAuth } from "@platform/auth-core";
 import {
   applyRuntimeWorkflowStatus,
   createRuntimeFormDefinitionFromSchema,
+  findFirstRuntimeChecklistRequiredError,
   findRuntimeFormField,
   RuntimeFormScaffold,
   validateRuntimeForm,
@@ -27,6 +28,10 @@ import {
   type RuntimeFormLookupOptionsResponse,
   type RuntimeFormMode,
   type RuntimeFormSaveState,
+  type RuntimeFormChecklistItem,
+  type RuntimeFormChecklistItemChange,
+  type RuntimeFormChecklistRevealRequest,
+  type RuntimeFormChoiceOptionStyleVariant,
   type RuntimeFormSubformDataById,
   type RuntimeFormSubformDefinition,
   type RuntimeFormSubformRow,
@@ -71,8 +76,10 @@ import {
 import "./form-runtime.css";
 
 type FinishDialogState = {
+  checklistReveal?: RuntimeFormChecklistRevealRequest;
   fieldId?: string;
   message: string;
+  nodeId?: string;
   tone: "danger" | "success";
 };
 
@@ -84,6 +91,11 @@ type RuntimeFormLoadErrorState = {
 
 type RuntimeFormFieldRevealRequest = {
   fieldId: string;
+  requestKey: number;
+};
+
+type RuntimeFormNodeRevealRequest = {
+  nodeId: string;
   requestKey: number;
 };
 
@@ -264,6 +276,28 @@ function serializeRuntimeFormValues(values: RuntimeFormValues) {
   return out;
 }
 
+function coerceLooseRuntimeValues(rawValues: Record<string, unknown> | undefined): RuntimeFormValues | undefined {
+  if (!rawValues) {
+    return undefined;
+  }
+  const values: RuntimeFormValues = {};
+  Object.entries(rawValues).forEach(([fieldId, value]) => {
+    if (typeof value === "string" || typeof value === "boolean") {
+      values[fieldId] = value;
+      return;
+    }
+    if (typeof value === "number") {
+      values[fieldId] = String(value);
+      return;
+    }
+    if (Array.isArray(value)) {
+      values[fieldId] = value.map((item) => String(item));
+    }
+  });
+  return values;
+}
+
+
 function mergeServerValues(
   currentValues: RuntimeFormValues,
   serverValues: RuntimeFormValues,
@@ -356,6 +390,59 @@ function runtimeSubformsFromRecord(record: FormRuntimeRecordResponse) {
     subforms[subtable.id] = { rows };
   });
   return subforms;
+}
+
+function runtimeSubformsFromFormResponse(response: FormRuntimeFormResponse) {
+  const subforms: RuntimeFormSubformDataById = {};
+  Object.entries(response.subforms ?? {}).forEach(([subformId, subform]) => {
+    if (!subform?.checklist) {
+      return;
+    }
+    subforms[subformId] = {
+      checklist: {
+        groups: subform.checklist.groups.map((group) => ({
+          id: group.id,
+          items: group.items.map((item) => ({
+            active: item.active,
+            answerOptions: item.answerOptions?.map((option) => ({
+              label: option.label,
+              styleVariant: option.styleVariant as RuntimeFormChoiceOptionStyleVariant,
+              value: option.value,
+            })),
+            description: item.description,
+            groupId: item.groupId,
+            groupTitle: item.groupTitle,
+            inactiveSaved: item.inactiveSaved,
+            label: item.label,
+            notes: item.notes,
+            required: item.required,
+            savedRowDocGuid: item.savedRowDocGuid,
+            sourceValue: item.sourceValue,
+            value: item.value,
+            values: coerceLooseRuntimeValues(item.values),
+            visibleWhen: item.visibleWhen,
+          })),
+          title: group.title,
+        })),
+      },
+    };
+  });
+  return subforms;
+}
+
+function mergeRuntimeSubformData(
+  current: RuntimeFormSubformDataById,
+  next: RuntimeFormSubformDataById,
+) {
+  const merged: RuntimeFormSubformDataById = { ...current };
+  Object.entries(next).forEach(([subformId, nextSubform]) => {
+    const currentSubform = merged[subformId];
+    merged[subformId] = {
+      checklist: nextSubform?.checklist ?? currentSubform?.checklist,
+      rows: nextSubform?.rows ?? currentSubform?.rows,
+    };
+  });
+  return merged;
 }
 
 function firstRuntimeValidationMessage(
@@ -627,10 +714,12 @@ export function FormsRuntimeFormPage({
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
   const [activeTabs, setActiveTabs] = useState<RuntimeFormActiveTabs>(() => restoredSession?.activeTabs ?? {});
+  const [checklistRevealRequest, setChecklistRevealRequest] = useState<RuntimeFormChecklistRevealRequest | null>(null);
   const [fieldRevealRequest, setFieldRevealRequest] = useState<RuntimeFormFieldRevealRequest | null>(null);
   const [finishDialog, setFinishDialog] = useState<FinishDialogState | null>(null);
   const [saveState, setSaveState] = useState<RuntimeFormSaveState>("saving");
   const [subformDeleteDialog, setSubformDeleteDialog] = useState<SubformDeleteDialogState | null>(null);
+  const [nodeRevealRequest, setNodeRevealRequest] = useState<RuntimeFormNodeRevealRequest | null>(null);
   const [subforms, setSubforms] = useState<RuntimeFormSubformDataById>({});
   const [unsavedLeaveDialog, setUnsavedLeaveDialog] = useState<UnsavedLeaveDialogState | null>(null);
   const rootRuntimeLabels = useMemo(() => ({
@@ -736,6 +825,7 @@ export function FormsRuntimeFormPage({
   const lastCreateBlockedByValidationRef = useRef(false);
   const lastRuntimeRequestErrorKindRef = useRef<"auth" | "conflict" | "error" | null>(null);
   const fieldRevealRequestKeyRef = useRef(0);
+  const nodeRevealRequestKeyRef = useRef(0);
   const createPromiseRef = useRef<Promise<string | null> | null>(null);
   const hasAppliedInitialStatusRef = useRef(false);
   const hasServerRecordRef = useRef(mode === "edit" && routeDocGuid.length > 0);
@@ -876,12 +966,14 @@ export function FormsRuntimeFormPage({
 
     setValues(nextValues);
     setErrors({});
+    setChecklistRevealRequest(null);
     setFieldRevealRequest(null);
+    setNodeRevealRequest(null);
     setFinishDialog(null);
     setSubformDeleteDialog(null);
     setUnsavedLeaveDialog(null);
     setSaveState("idle");
-    setSubforms({});
+    setSubforms(isSubform ? {} : runtimeSubformsFromFormResponse(formResponse));
     latestValuesRef.current = nextValues;
     revisionRef.current = restoredSession?.revision ?? formResponse.revision ?? "";
     currentDocGuidRef.current = routeDocGuid || restoredSession?.docGuid || formResponse.docGuid || "";
@@ -934,7 +1026,7 @@ export function FormsRuntimeFormPage({
     void client.loadRecord(accessToken, currentDocGuidRef.current)
       .then((record) => {
         if (!isCancelled) {
-          setSubforms(runtimeSubformsFromRecord(record));
+          setSubforms((currentSubforms) => mergeRuntimeSubformData(currentSubforms, runtimeSubformsFromRecord(record)));
         }
       })
       .catch((requestError: unknown) => {
@@ -945,7 +1037,7 @@ export function FormsRuntimeFormPage({
           void signOut();
           return;
         }
-        setSubforms({});
+        setSubforms((currentSubforms) => mergeRuntimeSubformData(currentSubforms, {}));
       });
 
     return () => {
@@ -1041,7 +1133,7 @@ export function FormsRuntimeFormPage({
       return;
     }
     const record = await runtimeClient.loadRecord(accessToken, parentGuid);
-    setSubforms(runtimeSubformsFromRecord(record));
+    setSubforms((currentSubforms) => mergeRuntimeSubformData(currentSubforms, runtimeSubformsFromRecord(record)));
   }
 
   function handleRuntimeRequestError(requestError: unknown) {
@@ -1415,6 +1507,26 @@ export function FormsRuntimeFormPage({
     });
   }
 
+  function revealRuntimeChecklistItem(error: {
+    groupId?: string;
+    nodeId: string;
+    sourceValue: string;
+    subformId: string;
+  }) {
+    nodeRevealRequestKeyRef.current += 1;
+    const requestKey = nodeRevealRequestKeyRef.current;
+    setNodeRevealRequest({
+      nodeId: error.nodeId,
+      requestKey,
+    });
+    setChecklistRevealRequest({
+      groupId: error.groupId,
+      requestKey,
+      sourceValue: error.sourceValue,
+      subformId: error.subformId,
+    });
+  }
+
   function focusRuntimeField(fieldId: string) {
     if (typeof document === "undefined") {
       return;
@@ -1579,6 +1691,28 @@ export function FormsRuntimeFormPage({
       return;
     }
 
+    const checklistError = findFirstRuntimeChecklistRequiredError(runtimeDefinition, finishValues, subforms, runtimeLabels);
+    if (checklistError) {
+      revealRuntimeChecklistItem(checklistError);
+      setSaveState("error");
+      setFinishDialog({
+        checklistReveal: {
+          groupId: checklistError.groupId,
+          requestKey: nodeRevealRequestKeyRef.current,
+          sourceValue: checklistError.sourceValue,
+          subformId: checklistError.subformId,
+        },
+        message: runtimeClientValidationDialogMessage({
+          fieldId: checklistError.subformId,
+          label: checklistError.itemLabel,
+          message: checklistError.message,
+        }, runtimeLabels),
+        nodeId: checklistError.nodeId,
+        tone: "danger",
+      });
+      return;
+    }
+
     setErrors({});
     lastCreateBlockedByValidationRef.current = false;
     const docGuid = hasServerRecordRef.current
@@ -1699,6 +1833,16 @@ export function FormsRuntimeFormPage({
       globalThis.setTimeout(() => {
         focusRuntimeField(currentDialog.fieldId ?? "");
       }, 25);
+      return;
+    }
+
+    if (currentDialog.checklistReveal && currentDialog.nodeId) {
+      revealRuntimeChecklistItem({
+        groupId: currentDialog.checklistReveal.groupId,
+        nodeId: currentDialog.nodeId,
+        sourceValue: currentDialog.checklistReveal.sourceValue ?? "",
+        subformId: currentDialog.checklistReveal.subformId,
+      });
     }
   }
 
@@ -1817,6 +1961,105 @@ export function FormsRuntimeFormPage({
     })();
   }
 
+  function mergeChecklistItemState(
+    subformId: string,
+    sourceValue: string,
+    change: RuntimeFormChecklistItemChange,
+    savedRowDocGuid?: string,
+  ) {
+    setSubforms((currentSubforms) => {
+      const currentSubform = currentSubforms[subformId];
+      const checklist = currentSubform?.checklist;
+      if (!checklist) {
+        return currentSubforms;
+      }
+      return {
+        ...currentSubforms,
+        [subformId]: {
+          ...currentSubform,
+          checklist: {
+            groups: checklist.groups.map((group) => ({
+              ...group,
+              items: group.items.map((item) => {
+                if (item.sourceValue !== sourceValue) {
+                  return item;
+                }
+                return {
+                  ...item,
+                  notes: change.notes ?? item.notes,
+                  savedRowDocGuid: savedRowDocGuid ?? item.savedRowDocGuid,
+                  value: change.value ?? item.value,
+                  values: change.values ? {
+                    ...(item.values ?? {}),
+                    ...change.values,
+                  } : item.values,
+                };
+              }),
+            })),
+          },
+        },
+      };
+    });
+  }
+
+  function handleChecklistItemChange(
+    subform: RuntimeFormSubformDefinition,
+    item: RuntimeFormChecklistItem,
+    change: RuntimeFormChecklistItemChange,
+  ) {
+    void (async () => {
+      const parentGuid = await ensureRecordReadyForSubformAction();
+      if (!parentGuid || !item.sourceValue) {
+        return;
+      }
+
+      const nextChange = {
+        notes: change.notes ?? item.notes ?? "",
+        value: change.value ?? item.value ?? "",
+        values: {
+          ...(item.values ?? {}),
+          ...(change.values ?? {}),
+        },
+      };
+      mergeChecklistItemState(subform.schemaScopeId, item.sourceValue, nextChange);
+
+      const accessToken = getRuntimeAccessToken();
+      if (!accessToken) {
+        return;
+      }
+
+      setSaveState("saving");
+      try {
+        const response = await runtimeClient.updateChecklistItem(
+          accessToken,
+          parentGuid,
+          subform.schemaScopeId,
+          item.sourceValue,
+          nextChange,
+        );
+        mergeChecklistItemState(
+          response.subformId || subform.schemaScopeId,
+          response.item.sourceValue || item.sourceValue,
+          {
+            notes: response.item.notes ?? nextChange.notes,
+            value: response.item.value ?? nextChange.value,
+            values: coerceLooseRuntimeValues(response.item.values) ?? nextChange.values,
+          },
+          response.item.savedRowDocGuid,
+        );
+        setSaveState("saved");
+      } catch (requestError) {
+        const errorKind = handleRuntimeRequestError(requestError);
+        if (errorKind !== "conflict" && errorKind !== "auth") {
+          setFinishDialog({
+            message: t("tenant.runtime.forms.form.messages.saveFailed"),
+            tone: "danger",
+          });
+        }
+      }
+    })();
+  }
+
   return (
     <div
       className="tenant-web__form-runtime-form-page"
@@ -1837,11 +2080,14 @@ export function FormsRuntimeFormPage({
         }}
         resolveGeoPoint={formValuesReady ? loadRuntimeGeoPoint : undefined}
         onSubformAdd={isSubform ? undefined : handleSubformAdd}
+        onChecklistItemChange={isSubform ? undefined : handleChecklistItemChange}
         onSubformDelete={isSubform ? undefined : handleSubformDelete}
         onSubformEdit={isSubform ? undefined : handleSubformEdit}
         recordId={currentRecordIdRef.current}
+        revealChecklistItem={checklistRevealRequest ?? undefined}
         revealFieldId={fieldRevealRequest?.fieldId}
-        revealRequestKey={fieldRevealRequest?.requestKey}
+        revealNodeId={nodeRevealRequest?.nodeId}
+        revealRequestKey={fieldRevealRequest?.requestKey ?? nodeRevealRequest?.requestKey}
         saveState={saveState}
         subforms={subforms}
         values={values}

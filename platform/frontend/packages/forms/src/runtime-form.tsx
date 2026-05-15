@@ -1,6 +1,7 @@
 export { RuntimeFormScaffold } from "./runtime/runtime-form-scaffold";
 export {
   applyRuntimeWorkflowStatus,
+  findFirstRuntimeChecklistRequiredError,
   findRuntimeFormField,
   isRuntimeFormValueEmpty,
   validateRuntimeForm,
@@ -12,6 +13,13 @@ export type {
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
+  RuntimeFormChecklistDetailDefinition,
+  RuntimeFormChecklistData,
+  RuntimeFormChecklistGroup,
+  RuntimeFormChecklistItem,
+  RuntimeFormChecklistItemChange,
+  RuntimeFormChecklistOption,
+  RuntimeFormChecklistRevealRequest,
   RuntimeFormCommitMode,
   RuntimeFormContentAlignment,
   RuntimeFormContentDefinition,
@@ -74,3 +82,4 @@ export type {
   RuntimeFormVisibilityRule,
   RuntimeWorkflowStatusBinding,
 } from "./runtime/runtime-form-types";
+export type { RuntimeFormChecklistRequiredError } from "./runtime/runtime-form-validation";

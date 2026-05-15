@@ -35,10 +35,12 @@ type Repository interface {
 	SetRootRecordsActive(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuids []string, activeColumn string, active bool) error
 	DeleteRootRecords(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuids []string) error
 	DeleteSubformRecord(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string) error
+	LoadChecklistRows(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string) ([]runtimeChecklistSavedRow, error)
 	LoadRootRecord(ctx context.Context, tenant requestctx.TenantInfo, scope runtimeRootScopePlan, docGuid string) (*runtimeRecordMutationRow, error)
 	LoadSubformRecord(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, docGuid string) (*runtimeRecordMutationRow, error)
 	ResolveContactLookupLabels(ctx context.Context, tenant requestctx.TenantInfo, ids []int64) (map[int64]string, error)
 	ResolveCurrentUserBusinessID(ctx context.Context, tenant requestctx.TenantInfo, userGUID string) (int64, error)
+	UpsertChecklistItem(ctx context.Context, tenant requestctx.TenantInfo, rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, sourceValue string, values map[string]any) (*runtimeChecklistSavedRow, error)
 }
 
 type Service struct {
@@ -104,6 +106,9 @@ func (s *Service) LoadForm(
 		makeRuntimeFieldEditable(response.DataSchema, response.UISchema, scopeContext.Scope.SystemFields.ReportedBy)
 	}
 	if err := s.attachCurrentLookupOptions(ctx, tenant, scopeContext.Scope, response.DataSchema, values, lookupLabels); err != nil {
+		return nil, err
+	}
+	if err := s.attachChecklistMatrices(ctx, tenant, scopeContext.Scope, response, docGuid); err != nil {
 		return nil, err
 	}
 	return response, nil
@@ -387,6 +392,79 @@ func (s *Service) UpdateSubformRecord(
 	return buildMutationResponse(false, mutationScope, row), nil
 }
 
+func (s *Service) UpdateChecklistItem(
+	ctx context.Context,
+	modelID string,
+	viewID string,
+	parentDocGuid string,
+	subformID string,
+	sourceValue string,
+	req RuntimeViewChecklistItemMutationRequest,
+) (*RuntimeViewChecklistItemMutationResponse, error) {
+	tenant, _, err := requireRuntimeContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	parentDocGuid = strings.TrimSpace(parentDocGuid)
+	sourceValue = strings.TrimSpace(sourceValue)
+	if parentDocGuid == "" || sourceValue == "" {
+		return nil, ErrInvalidRequest
+	}
+
+	scopeContext, err := s.loadRootScopeContext(ctx, tenant, modelID, viewID)
+	if err != nil {
+		return nil, err
+	}
+	subformScope, ok := findSubformScope(scopeContext.Scope, subformID)
+	if !ok || !subformScopeSupportsChecklist(subformScope) {
+		return nil, ErrRuntimeUnsupported
+	}
+
+	values := map[string]any{}
+	config := subformScope.ChecklistConfig
+	if config.LookupFieldID != "" {
+		values[config.LookupFieldID] = sourceValue
+	}
+	if config.ResultFieldID != "" {
+		values[config.ResultFieldID] = strings.TrimSpace(req.Value)
+	}
+	if config.NotesFieldID != "" {
+		values[config.NotesFieldID] = strings.TrimSpace(req.Notes)
+	}
+	for _, field := range checklistDetailStorageFields(rootScopeFromSubform(scopeContext.Scope, subformScope), config) {
+		value, ok := req.Values[field.FieldID]
+		if !ok {
+			continue
+		}
+		if stringValue, ok := value.(string); ok {
+			values[field.FieldID] = strings.TrimSpace(stringValue)
+		} else {
+			values[field.FieldID] = value
+		}
+	}
+
+	row, err := s.repo.UpsertChecklistItem(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, sourceValue, values)
+	if err != nil {
+		return nil, err
+	}
+	item := RuntimeViewChecklistItem{
+		Notes:       strings.TrimSpace(req.Notes),
+		SourceValue: sourceValue,
+		Value:       strings.TrimSpace(req.Value),
+		Values:      req.Values,
+	}
+	if row != nil {
+		item.Notes = row.Notes
+		item.SavedRowDocGuid = row.DocGuid
+		item.Value = row.Value
+		item.Values = row.Values
+	}
+	return &RuntimeViewChecklistItemMutationResponse{
+		Item:      item,
+		SubformID: subformScope.ScopeID,
+	}, nil
+}
+
 func (s *Service) DeleteSubformRecord(
 	ctx context.Context,
 	modelID string,
@@ -590,6 +668,16 @@ func subformScopeSupportsRuntimeForm(subformScope runtimeSubformScopePlan) bool 
 		strings.TrimSpace(subformScope.ParentForeignKey) != "" &&
 		strings.TrimSpace(subformScope.SourceIDColumn) != "" &&
 		strings.TrimSpace(subformScope.SourceGUIDColumn) != ""
+}
+
+func subformScopeSupportsChecklist(subformScope runtimeSubformScopePlan) bool {
+	return subformScope.SubformType == "CHECKLIST" &&
+		strings.TrimSpace(subformScope.TableName) != "" &&
+		strings.TrimSpace(subformScope.ParentForeignKey) != "" &&
+		strings.TrimSpace(subformScope.SourceIDColumn) != "" &&
+		strings.TrimSpace(subformScope.SourceGUIDColumn) != "" &&
+		strings.TrimSpace(subformScope.ChecklistConfig.LookupFieldID) != "" &&
+		strings.TrimSpace(subformScope.ChecklistConfig.ResultFieldID) != ""
 }
 
 func rootScopeFromSubform(rootScope runtimeRootScopePlan, subformScope runtimeSubformScopePlan) runtimeRootScopePlan {

@@ -229,6 +229,36 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 		updateSubformRecordHandler,
 	)
 
+	updateChecklistItemHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewChecklistItemMutationRequest) (*formruntime.RuntimeViewChecklistItemMutationResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.UpdateChecklistItem(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_CHECKLIST_ITEM_UPDATE",
+				http.StatusInternalServerError,
+				"cannot update form runtime checklist item",
+				err,
+				srv.FieldsForLog(ctx, r, req)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	register(
+		"FORM_RUNTIME_CHECKLIST_ITEM_UPDATE",
+		http.MethodPatch,
+		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/checklist/items/{sourceValue}",
+		updateChecklistItemHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_CHECKLIST_ITEM_UPDATE",
+		http.MethodPatch,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/checklist/items/{sourceValue}",
+		updateChecklistItemHandler,
+	)
+
 	deleteSubformRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, _ struct{}) (*formruntime.RuntimeViewDeleteResponse, error) {
 		info, err := srv.platformStudioFormRuntimeHTTP.DeleteSubformRecord(ctx, r)
 		if err != nil {

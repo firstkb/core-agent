@@ -209,13 +209,16 @@ function RuntimeNode({
   node,
   onActiveTabChange,
   onFieldChange,
+  onChecklistItemChange,
   resolvingGeoPointFieldIds,
   resolveGeoPoint,
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
   recordId,
+  revealChecklistItem,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
   subforms,
   values,
@@ -229,13 +232,16 @@ function RuntimeNode({
   node: RuntimeFormNodeDefinition;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  onChecklistItemChange?: RuntimeFormScaffoldProps["onChecklistItemChange"];
   resolvingGeoPointFieldIds: ReadonlySet<string>;
   resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
   recordId?: RuntimeFormScaffoldProps["recordId"];
+  revealChecklistItem?: RuntimeFormScaffoldProps["revealChecklistItem"];
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
   subforms?: RuntimeFormScaffoldProps["subforms"];
   values: RuntimeFormScaffoldProps["values"];
@@ -275,6 +281,9 @@ function RuntimeNode({
     return (
       <RuntimeSubformNode
         labels={labels}
+        checklist={subforms?.[node.schemaScopeId]?.checklist}
+        checklistRevealRequest={revealChecklistItem}
+        onChecklistItemChange={onChecklistItemChange}
         onAdd={onSubformAdd}
         onDelete={onSubformDelete}
         onEdit={onSubformEdit}
@@ -291,6 +300,7 @@ function RuntimeNode({
         layout={node}
         onActiveTabChange={onActiveTabChange}
         revealFieldId={revealFieldId}
+        revealNodeId={revealNodeId}
         revealRequestKey={revealRequestKey}
         renderNodes={(nodes, className) => (
           <RuntimeNodeList
@@ -304,13 +314,16 @@ function RuntimeNode({
             nodes={nodes}
             onActiveTabChange={onActiveTabChange}
             onFieldChange={onFieldChange}
+            onChecklistItemChange={onChecklistItemChange}
             resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
             resolveGeoPoint={resolveGeoPoint}
             onSubformAdd={onSubformAdd}
             onSubformDelete={onSubformDelete}
             onSubformEdit={onSubformEdit}
             recordId={recordId}
+            revealChecklistItem={revealChecklistItem}
             revealFieldId={revealFieldId}
+            revealNodeId={revealNodeId}
             revealRequestKey={revealRequestKey}
             subforms={subforms}
             values={values}
@@ -334,13 +347,16 @@ function RuntimeNodeList({
   nodes,
   onActiveTabChange,
   onFieldChange,
+  onChecklistItemChange,
   resolvingGeoPointFieldIds,
   resolveGeoPoint,
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
   recordId,
+  revealChecklistItem,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
   subforms,
   values,
@@ -355,13 +371,16 @@ function RuntimeNodeList({
   nodes: ReadonlyArray<RuntimeFormNodeDefinition>;
   onActiveTabChange?: RuntimeFormScaffoldProps["onActiveTabChange"];
   onFieldChange: RuntimeFormScaffoldProps["onFieldChange"];
+  onChecklistItemChange?: RuntimeFormScaffoldProps["onChecklistItemChange"];
   resolvingGeoPointFieldIds: ReadonlySet<string>;
   resolveGeoPoint?: RuntimeFormScaffoldProps["resolveGeoPoint"];
   onSubformAdd?: RuntimeFormScaffoldProps["onSubformAdd"];
   onSubformDelete?: RuntimeFormScaffoldProps["onSubformDelete"];
   onSubformEdit?: RuntimeFormScaffoldProps["onSubformEdit"];
   recordId?: RuntimeFormScaffoldProps["recordId"];
+  revealChecklistItem?: RuntimeFormScaffoldProps["revealChecklistItem"];
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
   subforms?: RuntimeFormScaffoldProps["subforms"];
   values: RuntimeFormScaffoldProps["values"];
@@ -380,13 +399,16 @@ function RuntimeNodeList({
           node={node}
           onActiveTabChange={onActiveTabChange}
           onFieldChange={onFieldChange}
+          onChecklistItemChange={onChecklistItemChange}
           resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
           resolveGeoPoint={resolveGeoPoint}
           onSubformAdd={onSubformAdd}
           onSubformDelete={onSubformDelete}
           onSubformEdit={onSubformEdit}
           recordId={recordId}
+          revealChecklistItem={revealChecklistItem}
           revealFieldId={revealFieldId}
+          revealNodeId={revealNodeId}
           revealRequestKey={revealRequestKey}
           subforms={subforms}
           values={values}
@@ -406,13 +428,16 @@ export function RuntimeFormScaffold({
   onActiveTabChange,
   onBack,
   onFieldChange,
+  onChecklistItemChange,
   resolveGeoPoint,
   onFinish,
   onSubformAdd,
   onSubformDelete,
   onSubformEdit,
   recordId,
+  revealChecklistItem,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
   saveState = "idle",
   subforms,
@@ -530,13 +555,16 @@ export function RuntimeFormScaffold({
                   node={node}
                   onActiveTabChange={onActiveTabChange}
                   onFieldChange={onFieldChange}
+                  onChecklistItemChange={onChecklistItemChange}
                   resolvingGeoPointFieldIds={resolvingGeoPointFieldIds}
                   resolveGeoPoint={resolveGeoPoint}
                   onSubformAdd={onSubformAdd}
                   onSubformDelete={onSubformDelete}
                   onSubformEdit={onSubformEdit}
                   recordId={recordId}
+                  revealChecklistItem={revealChecklistItem}
                   revealFieldId={revealFieldId}
+                  revealNodeId={revealNodeId}
                   revealRequestKey={revealRequestKey}
                   subforms={subforms}
                   values={values}

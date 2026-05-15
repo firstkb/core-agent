@@ -48,6 +48,13 @@ type FormRuntimeCollectionTableSessionClient = {
     subformId: string,
     docGuid: string,
   ) => Promise<void>;
+  updateChecklistItem: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
+    sourceValue: string,
+    input: FormRuntimeChecklistItemMutationRequest,
+  ) => Promise<FormRuntimeChecklistItemMutationResponse>;
   deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
   finishRecord: (
     accessToken: string,
@@ -113,11 +120,61 @@ export type FormRuntimeFormResponse = {
   recordId?: number | string;
   revision?: string;
   sourceType?: string;
+  subforms?: Record<string, FormRuntimeSubformResponse | undefined>;
   surfaceId: string;
   title: string;
   uiSchema: Record<string, unknown>;
   values: Record<string, unknown>;
   viewId: string;
+};
+
+export type FormRuntimeChecklistOption = {
+  label: string;
+  styleVariant?: string;
+  value: string;
+};
+
+export type FormRuntimeChecklistItem = {
+  active?: boolean;
+  answerOptions?: ReadonlyArray<FormRuntimeChecklistOption>;
+  description?: string;
+  groupId?: string;
+  groupTitle?: string;
+  inactiveSaved?: boolean;
+  label: string;
+  notes?: string;
+  required?: boolean;
+  savedRowDocGuid?: string;
+  sourceValue: string;
+  value?: string;
+  values?: Record<string, unknown>;
+  visibleWhen?: string;
+};
+
+export type FormRuntimeChecklistGroup = {
+  id: string;
+  items: ReadonlyArray<FormRuntimeChecklistItem>;
+  title?: string;
+};
+
+export type FormRuntimeChecklistData = {
+  groups: ReadonlyArray<FormRuntimeChecklistGroup>;
+};
+
+export type FormRuntimeSubformResponse = {
+  checklist?: FormRuntimeChecklistData;
+  kind?: string;
+};
+
+export type FormRuntimeChecklistItemMutationRequest = {
+  notes?: string;
+  value?: string;
+  values?: Record<string, unknown>;
+};
+
+export type FormRuntimeChecklistItemMutationResponse = {
+  item: FormRuntimeChecklistItem;
+  subformId: string;
 };
 
 export type FormRuntimeRecordMutationRequest = {
@@ -198,6 +255,9 @@ function normalizeRuntimeFormResponse(
   const values = payload?.values && typeof payload.values === "object" && !Array.isArray(payload.values)
     ? payload.values
     : {};
+  const subforms = payload?.subforms && typeof payload.subforms === "object" && !Array.isArray(payload.subforms)
+    ? normalizeRuntimeSubformsResponse(payload.subforms)
+    : undefined;
 
   return {
     dataSchema,
@@ -209,11 +269,99 @@ function normalizeRuntimeFormResponse(
       : undefined,
     revision: typeof payload?.revision === "string" ? payload.revision : undefined,
     sourceType: typeof payload?.sourceType === "string" ? payload.sourceType : undefined,
+    subforms,
     surfaceId: typeof payload?.surfaceId === "string" ? payload.surfaceId : "",
     title: typeof payload?.title === "string" ? payload.title : "",
     uiSchema,
     values,
     viewId: typeof payload?.viewId === "string" ? payload.viewId : "",
+  };
+}
+
+function normalizeRuntimeSubformsResponse(
+  payload: Record<string, FormRuntimeSubformResponse | undefined>,
+): Record<string, FormRuntimeSubformResponse | undefined> {
+  return Object.fromEntries(
+    Object.entries(payload).flatMap(([subformId, subform]) => {
+      if (!subform || typeof subform !== "object") {
+        return [];
+      }
+      const groups = Array.isArray(subform.checklist?.groups)
+        ? subform.checklist.groups.map((group: FormRuntimeChecklistGroup) => ({
+          id: typeof group.id === "string" ? group.id : "",
+          items: Array.isArray(group.items)
+            ? group.items
+              .filter((item: FormRuntimeChecklistItem): item is FormRuntimeChecklistItem =>
+                Boolean(item && typeof item.sourceValue === "string" && typeof item.label === "string"),
+              )
+              .map((item) => ({
+                active: Boolean(item.active),
+                answerOptions: Array.isArray(item.answerOptions)
+                  ? item.answerOptions
+                    .filter((option: FormRuntimeChecklistOption): option is FormRuntimeChecklistOption =>
+                      Boolean(option && typeof option.value === "string" && typeof option.label === "string"),
+                    )
+                    .map((option) => ({
+                      label: option.label,
+                      styleVariant: typeof option.styleVariant === "string" ? option.styleVariant : undefined,
+                      value: option.value,
+                    }))
+                  : [],
+                description: typeof item.description === "string" ? item.description : undefined,
+                groupId: typeof item.groupId === "string" ? item.groupId : undefined,
+                groupTitle: typeof item.groupTitle === "string" ? item.groupTitle : undefined,
+                inactiveSaved: Boolean(item.inactiveSaved),
+                label: item.label,
+                notes: typeof item.notes === "string" ? item.notes : undefined,
+                required: Boolean(item.required),
+                savedRowDocGuid: typeof item.savedRowDocGuid === "string" ? item.savedRowDocGuid : undefined,
+                sourceValue: item.sourceValue,
+                value: typeof item.value === "string" ? item.value : undefined,
+                values: item.values && typeof item.values === "object" && !Array.isArray(item.values)
+                  ? item.values
+                  : undefined,
+                visibleWhen: typeof item.visibleWhen === "string" ? item.visibleWhen : undefined,
+              }))
+            : [],
+          title: typeof group.title === "string" ? group.title : undefined,
+        }))
+        : [];
+      return [[subformId, {
+        checklist: { groups },
+        kind: typeof subform.kind === "string" ? subform.kind : undefined,
+      }]];
+    }),
+  );
+}
+
+function normalizeRuntimeChecklistItemMutationResponse(
+  payload: FormRuntimeChecklistItemMutationResponse,
+): FormRuntimeChecklistItemMutationResponse {
+  return {
+    item: payload.item && typeof payload.item === "object"
+      ? {
+        active: Boolean(payload.item.active),
+        answerOptions: Array.isArray(payload.item.answerOptions) ? payload.item.answerOptions : [],
+        description: typeof payload.item.description === "string" ? payload.item.description : undefined,
+        groupId: typeof payload.item.groupId === "string" ? payload.item.groupId : undefined,
+        groupTitle: typeof payload.item.groupTitle === "string" ? payload.item.groupTitle : undefined,
+        inactiveSaved: Boolean(payload.item.inactiveSaved),
+        label: typeof payload.item.label === "string" ? payload.item.label : "",
+        notes: typeof payload.item.notes === "string" ? payload.item.notes : undefined,
+        required: Boolean(payload.item.required),
+        savedRowDocGuid: typeof payload.item.savedRowDocGuid === "string" ? payload.item.savedRowDocGuid : undefined,
+        sourceValue: typeof payload.item.sourceValue === "string" ? payload.item.sourceValue : "",
+        value: typeof payload.item.value === "string" ? payload.item.value : undefined,
+        values: payload.item.values && typeof payload.item.values === "object" && !Array.isArray(payload.item.values)
+          ? payload.item.values
+          : undefined,
+        visibleWhen: typeof payload.item.visibleWhen === "string" ? payload.item.visibleWhen : undefined,
+      }
+      : {
+        label: "",
+        sourceValue: "",
+      },
+    subformId: typeof payload.subformId === "string" ? payload.subformId : "",
   };
 }
 
@@ -410,6 +558,18 @@ export function createFormRuntimeCollectionTableClient(options: {
           method: "DELETE",
         },
       );
+    },
+    async updateChecklistItem(accessToken, parentDocGuid, subformId, sourceValue, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeChecklistItemMutationResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/checklist/items/${encodeURIComponent(sourceValue)}`,
+        {
+          accessToken,
+          body: input,
+          method: "PATCH",
+        },
+      );
+      return normalizeRuntimeChecklistItemMutationResponse(response);
     },
     async finishRecord(accessToken, docGuid, input) {
       const response = await requestTenantCollectionTable<FormRuntimeRecordMutationResponse>(

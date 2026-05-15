@@ -427,6 +427,182 @@
   text-align: center;
 }
 
+.platform-runtime-form__subform.platform-runtime-form__checklist {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.platform-runtime-form__checklist {
+  gap: var(--space-3);
+}
+
+.platform-runtime-form__checklist > .ui-accordion {
+  margin-top: var(--space-1);
+}
+
+.platform-runtime-form__checklist .ui-accordion--outline {
+  gap: var(--space-3);
+}
+
+.platform-runtime-form__checklist-category-trigger .ui-accordion__trigger-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.platform-runtime-form__checklist .platform-runtime-form__checklist-category-content.ui-accordion__content--outline .ui-accordion__content-inner {
+  padding: var(--space-4);
+}
+
+.platform-runtime-form__checklist-empty {
+  margin: var(--space-3) 0 0;
+  color: var(--color-text-secondary);
+}
+
+.platform-runtime-form__checklist-items {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.platform-runtime-form__checklist-item {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  background: transparent;
+}
+
+.platform-runtime-form__checklist-item:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+}
+
+.platform-runtime-form__checklist-item--required-empty {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-warning);
+}
+
+.platform-runtime-form__checklist-question {
+  display: grid;
+  min-height: 3rem;
+  grid-template-columns: minmax(10rem, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.platform-runtime-form__checklist-question-text {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.platform-runtime-form__checklist-question-label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.platform-runtime-form__checklist-required {
+  margin-left: var(--space-1);
+  color: var(--color-warning);
+}
+
+.platform-runtime-form__checklist-question-description,
+.platform-runtime-form__checklist-inactive {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.platform-runtime-form__checklist-actions {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  justify-self: end;
+  gap: var(--space-2);
+}
+
+.platform-runtime-form__checklist-actions .platform-runtime-form__choice-button-group.ui-toggle-group--horizontal,
+.platform-runtime-form__checklist-answer-group {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+.platform-runtime-form__checklist-answer-group.platform-runtime-form__choice-button-group--segmented-horizontal {
+  overflow: visible;
+}
+
+.platform-runtime-form__checklist-answer-group .ui-toggle-group__item {
+  min-height: 2.5rem;
+  min-width: 3.5rem;
+  justify-content: center;
+  padding-inline: var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.platform-runtime-form__checklist-notes-button.ui-button {
+  min-height: 2.5rem;
+  min-width: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1875rem;
+  padding-inline: var(--space-3);
+  border-color: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface-muted) 82%, var(--color-bg-surface));
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.platform-runtime-form__checklist-notes-button > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.platform-runtime-form__checklist-notes-button--active.ui-button {
+  border-color: color-mix(in srgb, var(--color-accent-primary) 42%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-accent-primary-soft) 42%, var(--color-bg-surface));
+  color: var(--color-text-primary);
+}
+
+.platform-runtime-form__checklist-notes-icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  transform: translateY(0.03em);
+}
+
+.platform-runtime-form__checklist-details {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-bg-surface-muted) 82%, var(--color-bg-surface));
+}
+
+.platform-runtime-form__checklist-details .ui-textarea {
+  min-height: 11rem;
+  background: color-mix(in srgb, var(--color-warning-soft) 45%, var(--color-bg-surface));
+}
+
+.platform-runtime-form__checklist-details-preview {
+  margin-top: calc(var(--space-1) * -1);
+  color: var(--color-info);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+
 .platform-runtime-form__tabs-panel {
   padding-top: var(--space-4);
 }
@@ -824,6 +1000,32 @@
   .platform-runtime-form__layout-grid--2,
   .platform-runtime-form__layout-grid--3 {
     grid-template-columns: 1fr;
+  }
+
+  .platform-runtime-form__checklist-question {
+    grid-template-columns: 1fr;
+  }
+
+  .platform-runtime-form__checklist-actions {
+    width: 100%;
+    justify-content: flex-start;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 40rem) {
+  .platform-runtime-form__checklist-category-content.ui-accordion__content--outline .ui-accordion__content-inner {
+    padding: var(--space-3);
+  }
+
+  .platform-runtime-form__checklist-answer-group .ui-toggle-group__item {
+    min-width: 3.75rem;
+    padding-inline: var(--space-3);
+  }
+
+  .platform-runtime-form__checklist-notes-button.ui-button {
+    min-width: 3.75rem;
+    padding-inline: var(--space-3);
   }
 }
 

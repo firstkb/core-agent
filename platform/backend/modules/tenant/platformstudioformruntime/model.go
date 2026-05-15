@@ -13,6 +13,12 @@ type RuntimeViewRecordMutationRequest struct {
 	Values            map[string]any               `json:"values"`
 }
 
+type RuntimeViewChecklistItemMutationRequest struct {
+	Notes  string         `json:"notes,omitempty"`
+	Value  string         `json:"value,omitempty"`
+	Values map[string]any `json:"values,omitempty"`
+}
+
 type RuntimeViewRecordFinishRequest struct {
 	ExpectedRevision string `json:"expectedRevision,omitempty"`
 }
@@ -36,19 +42,63 @@ type RuntimeViewRecordMutationResponse struct {
 	Values           map[string]any                     `json:"values"`
 }
 
+type RuntimeViewChecklistOption struct {
+	Label        string `json:"label"`
+	StyleVariant string `json:"styleVariant,omitempty"`
+	Value        string `json:"value"`
+}
+
+type RuntimeViewChecklistItem struct {
+	Active          bool                         `json:"active"`
+	AnswerOptions   []RuntimeViewChecklistOption `json:"answerOptions,omitempty"`
+	Description     string                       `json:"description,omitempty"`
+	GroupID         string                       `json:"groupId,omitempty"`
+	GroupTitle      string                       `json:"groupTitle,omitempty"`
+	InactiveSaved   bool                         `json:"inactiveSaved,omitempty"`
+	Label           string                       `json:"label"`
+	Notes           string                       `json:"notes,omitempty"`
+	Required        bool                         `json:"required,omitempty"`
+	SavedRowDocGuid string                       `json:"savedRowDocGuid,omitempty"`
+	SourceValue     string                       `json:"sourceValue"`
+	Value           string                       `json:"value,omitempty"`
+	Values          map[string]any               `json:"values,omitempty"`
+	VisibleWhen     string                       `json:"visibleWhen,omitempty"`
+}
+
+type RuntimeViewChecklistGroup struct {
+	ID    string                     `json:"id"`
+	Items []RuntimeViewChecklistItem `json:"items"`
+	Title string                     `json:"title,omitempty"`
+}
+
+type RuntimeViewSubformResponse struct {
+	Checklist *RuntimeViewChecklistData `json:"checklist,omitempty"`
+	Kind      string                    `json:"kind"`
+}
+
+type RuntimeViewChecklistData struct {
+	Groups []RuntimeViewChecklistGroup `json:"groups"`
+}
+
+type RuntimeViewChecklistItemMutationResponse struct {
+	Item      RuntimeViewChecklistItem `json:"item"`
+	SubformID string                   `json:"subformId"`
+}
+
 type RuntimeViewFormResponse struct {
-	DataSchema  map[string]any `json:"dataSchema"`
-	Description string         `json:"description,omitempty"`
-	DocGuid     string         `json:"docGuid,omitempty"`
-	ModelID     string         `json:"modelId"`
-	RecordID    string         `json:"recordId,omitempty"`
-	Revision    string         `json:"revision,omitempty"`
-	SourceType  string         `json:"sourceType,omitempty"`
-	SurfaceID   string         `json:"surfaceId"`
-	Title       string         `json:"title"`
-	UISchema    map[string]any `json:"uiSchema"`
-	Values      map[string]any `json:"values"`
-	ViewID      string         `json:"viewId"`
+	DataSchema  map[string]any                        `json:"dataSchema"`
+	Description string                                `json:"description,omitempty"`
+	DocGuid     string                                `json:"docGuid,omitempty"`
+	ModelID     string                                `json:"modelId"`
+	RecordID    string                                `json:"recordId,omitempty"`
+	Revision    string                                `json:"revision,omitempty"`
+	SourceType  string                                `json:"sourceType,omitempty"`
+	Subforms    map[string]RuntimeViewSubformResponse `json:"subforms,omitempty"`
+	SurfaceID   string                                `json:"surfaceId"`
+	Title       string                                `json:"title"`
+	UISchema    map[string]any                        `json:"uiSchema"`
+	Values      map[string]any                        `json:"values"`
+	ViewID      string                                `json:"viewId"`
 }
 
 type ModelRecord struct {
@@ -95,6 +145,7 @@ type runtimeRootScopePlan struct {
 }
 
 type runtimeSubformScopePlan struct {
+	ChecklistConfig           runtimeChecklistConfig
 	DataViewName              string
 	Fields                    []runtimeFieldPlan
 	MultiValueOwnerForeignKey string
@@ -109,6 +160,13 @@ type runtimeSubformScopePlan struct {
 	TableKey                  string
 	TableName                 string
 	TenantScoped              bool
+}
+
+type runtimeChecklistConfig struct {
+	Grouping      string
+	LookupFieldID string
+	NotesFieldID  string
+	ResultFieldID string
 }
 
 type runtimeFieldPlan struct {

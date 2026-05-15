@@ -4,6 +4,7 @@ import type {
   RuntimeFormLabels,
   RuntimeFormNodeDefinition,
   RuntimeFormResolvedLabels,
+  RuntimeFormSubformDataById,
   RuntimeFormValidationErrors,
   RuntimeFormValues,
 } from "./runtime-form-types";
@@ -22,6 +23,7 @@ import {
   findRuntimeFormField,
   getRuntimeLayoutChildNodes,
   isRuntimeFormFieldNode,
+  isRuntimeFormSubformNode,
   isRuntimeFormValueEmpty,
   isRuntimeFormLayoutNode,
   resolveRuntimeSectionNodes,
@@ -158,6 +160,82 @@ export function validateRuntimeForm(
   }
 
   return errors;
+}
+
+export type RuntimeFormChecklistRequiredError = {
+  groupId?: string;
+  itemLabel: string;
+  message: string;
+  nodeId: string;
+  sourceValue: string;
+  subformId: string;
+};
+
+function findFirstRuntimeChecklistRequiredErrorInNodes(
+  nodes: ReadonlyArray<RuntimeFormNodeDefinition>,
+  values: RuntimeFormValues,
+  subforms: RuntimeFormSubformDataById,
+  labels: RuntimeFormResolvedLabels,
+): RuntimeFormChecklistRequiredError | null {
+  for (const node of nodes) {
+    if (!isRuntimeNodeVisible(node, values)) {
+      continue;
+    }
+
+    if (isRuntimeFormSubformNode(node) && node.subformType === "CHECKLIST") {
+      const checklist = subforms[node.schemaScopeId]?.checklist;
+      for (const group of checklist?.groups ?? []) {
+        for (const item of group.items) {
+          if (item.required && !item.value?.trim()) {
+            return {
+              groupId: group.id,
+              itemLabel: item.label,
+              message: labels.requiredError,
+              nodeId: node.id,
+              sourceValue: item.sourceValue,
+              subformId: node.schemaScopeId,
+            };
+          }
+        }
+      }
+      continue;
+    }
+
+    if (isRuntimeFormLayoutNode(node)) {
+      const childError = findFirstRuntimeChecklistRequiredErrorInNodes(
+        getRuntimeLayoutChildNodes(node),
+        values,
+        subforms,
+        labels,
+      );
+      if (childError) {
+        return childError;
+      }
+    }
+  }
+
+  return null;
+}
+
+export function findFirstRuntimeChecklistRequiredError(
+  definition: RuntimeFormDefinition,
+  values: RuntimeFormValues,
+  subforms: RuntimeFormSubformDataById,
+  labels?: RuntimeFormLabels,
+): RuntimeFormChecklistRequiredError | null {
+  const resolvedLabels = resolveRuntimeFormLabels(labels);
+  for (const section of definition.sections) {
+    const error = findFirstRuntimeChecklistRequiredErrorInNodes(
+      resolveRuntimeSectionNodes(section),
+      values,
+      subforms,
+      resolvedLabels,
+    );
+    if (error) {
+      return error;
+    }
+  }
+  return null;
 }
 
 export function applyRuntimeWorkflowStatus(

@@ -280,6 +280,248 @@ func TestLoadFormReturnsSourceRecordID(t *testing.T) {
 	}
 }
 
+func TestLoadFormReturnsChecklistMatrixWithSavedInactiveUnion(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	subformScopes := asSlice(dataSchema["subformScopes"])
+	dataSchema["subformScopes"] = append(subformScopes, map[string]any{
+		"displayName":   "Checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"runtime": map[string]any{
+			"rtAlias":      "checklist",
+			"tableName":    "ps_sor__checklist",
+			"dataViewName": "vw_sor__checklist",
+		},
+		"fields": []any{
+			map[string]any{
+				"fieldId":       "item",
+				"kind":          "db_lookup",
+				"label":         "Item",
+				"selectionMode": "single",
+				"storageKey":    "item",
+				"lookupConfig": map[string]any{
+					"displayFields":    []any{"catalog", "hazard"},
+					"filters":          []any{map[string]any{"field": "active", "operator": "eq", "value": true}},
+					"searchFields":     []any{"catalog", "hazard"},
+					"sourceModel":      "lookup-option",
+					"storedValueField": "doc_id",
+				},
+			},
+			map[string]any{
+				"fieldId":    "result",
+				"kind":       "single_select",
+				"label":      "Result",
+				"storageKey": "result",
+				"options":    []any{"Yes", "No"},
+			},
+			map[string]any{
+				"fieldId":    "notes",
+				"kind":       "long_text",
+				"label":      "Notes",
+				"storageKey": "notes",
+			},
+		},
+	})
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+
+	viewPayload := cloneJSONToMap(repo.view.DefinitionJSON)
+	rootScope := asMap(asMap(viewPayload["uiSchema"])["rootScope"])
+	rootScope["nodes"] = append(asSlice(rootScope["nodes"]), map[string]any{
+		"checklistConfig": map[string]any{
+			"grouping":      "by_first_display_field",
+			"lookupFieldId": "item",
+			"notesFieldId":  "notes",
+			"resultFieldId": "result",
+		},
+		"id":            "subform-checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"title":         "Checklist",
+		"type":          "subform",
+	})
+	repo.view.DefinitionJSON = mustJSON(viewPayload)
+	repo.checklistRows = []runtimeChecklistSavedRow{{
+		DocGuid:     "saved-row-guid",
+		Notes:       "existing note",
+		SourceID:    501,
+		SourceValue: "inactive-item",
+		Value:       "No",
+	}}
+
+	provider := &recordingLookupOptionsProvider{
+		list: func(req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+			if req.Dictionary == "contacts" {
+				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+					Label: "Andrew Owner",
+					Value: "77",
+				}}}, nil
+			}
+			if len(req.IDs) > 0 {
+				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+					Fields: map[string]string{
+						"answer_required": "true",
+						"catalog":         "Environmental",
+						"hazard":          "Old inactive question",
+					},
+					Label: "Environmental, Old inactive question",
+					Value: "inactive-item",
+				}}}, nil
+			}
+			return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+				Fields: map[string]string{
+					"answer_options":  "Yes|No|N/A",
+					"answer_required": "true",
+					"catalog":         "Environmental",
+					"hazard":          "Active question",
+				},
+				Label: "Environmental, Active question",
+				Value: "active-item",
+			}}}, nil
+		},
+	}
+	svc := NewService(repo, provider)
+
+	out, err := svc.LoadForm(testRuntimeContext(), "sor", "default", "record-guid")
+	if err != nil {
+		t.Fatalf("LoadForm returned error: %v", err)
+	}
+	checklist := out.Subforms["checklist"].Checklist
+	if checklist == nil || len(checklist.Groups) != 1 {
+		t.Fatalf("checklist groups = %#v, want one group", checklist)
+	}
+	if checklist.Groups[0].Title != "Environmental" {
+		t.Fatalf("checklist group title = %q, want Environmental", checklist.Groups[0].Title)
+	}
+	items := checklist.Groups[0].Items
+	if len(items) != 2 {
+		t.Fatalf("checklist item count = %d, want active + saved inactive", len(items))
+	}
+	var savedInactive *RuntimeViewChecklistItem
+	for index := range items {
+		if strings.Contains(items[index].Label, "Environmental") {
+			t.Fatalf("checklist item label = %q, want question text without category prefix", items[index].Label)
+		}
+		if items[index].SourceValue == "inactive-item" {
+			savedInactive = &items[index]
+		}
+	}
+	if savedInactive == nil {
+		t.Fatalf("saved inactive item missing: %#v", items)
+	}
+	if !savedInactive.InactiveSaved || savedInactive.Value != "No" || savedInactive.Notes != "existing note" {
+		t.Fatalf("saved inactive item = %#v, want inactive saved No with note", savedInactive)
+	}
+}
+
+func TestLoadFormChecklistMatrixFallsBackWhenOptionalMetadataColumnsAreMissing(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	dataSchema["subformScopes"] = append(asSlice(dataSchema["subformScopes"]), map[string]any{
+		"displayName":   "Checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"runtime": map[string]any{
+			"rtAlias":      "checklist",
+			"tableName":    "ps_sor__checklist",
+			"dataViewName": "vw_sor__checklist",
+		},
+		"fields": []any{
+			map[string]any{
+				"fieldId":       "item",
+				"kind":          "db_lookup",
+				"label":         "Item",
+				"selectionMode": "single",
+				"storageKey":    "item",
+				"lookupConfig": map[string]any{
+					"displayFields":    []any{"catalog", "hazard"},
+					"filters":          []any{map[string]any{"field": "active", "operator": "eq", "value": true}},
+					"searchFields":     []any{"catalog", "hazard"},
+					"sourceModel":      "lookup-option",
+					"storedValueField": "doc_id",
+				},
+			},
+			map[string]any{
+				"fieldId":    "result",
+				"kind":       "single_select",
+				"label":      "Result",
+				"storageKey": "result",
+				"options":    []any{"Yes", "No"},
+			},
+		},
+	})
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+
+	viewPayload := cloneJSONToMap(repo.view.DefinitionJSON)
+	rootScope := asMap(asMap(viewPayload["uiSchema"])["rootScope"])
+	rootScope["nodes"] = append(asSlice(rootScope["nodes"]), map[string]any{
+		"checklistConfig": map[string]any{
+			"grouping":      "by_first_display_field",
+			"lookupFieldId": "item",
+			"resultFieldId": "result",
+		},
+		"id":            "subform-checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"title":         "Checklist",
+		"type":          "subform",
+	})
+	repo.view.DefinitionJSON = mustJSON(viewPayload)
+
+	provider := &recordingLookupOptionsProvider{
+		list: func(req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+			if req.Dictionary == "contacts" {
+				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+					Label: "Andrew Owner",
+					Value: "77",
+				}}}, nil
+			}
+			hasOptionalMetadata := false
+			for _, field := range req.DisplayFields {
+				if field == "answer_options" || field == "answer_required" || field == "visible_when" {
+					hasOptionalMetadata = true
+				}
+			}
+			if hasOptionalMetadata {
+				return nil, dictionary.ErrInvalidDictionary
+			}
+			return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+				Fields: map[string]string{
+					"catalog": "Environmental",
+					"hazard":  "Active question",
+				},
+				Label: "Environmental, Active question",
+				Value: "42",
+			}}}, nil
+		},
+	}
+	svc := NewService(repo, provider)
+
+	out, err := svc.LoadForm(testRuntimeContext(), "sor", "default", "record-guid")
+	if err != nil {
+		t.Fatalf("LoadForm returned error: %v", err)
+	}
+	checklist := out.Subforms["checklist"].Checklist
+	if checklist == nil || len(checklist.Groups) != 1 || len(checklist.Groups[0].Items) != 1 {
+		t.Fatalf("checklist = %#v, want one fallback item", checklist)
+	}
+	if checklist.Groups[0].Title != "Environmental" || checklist.Groups[0].Items[0].Label != "Active question" {
+		t.Fatalf("checklist group/item = %q/%q, want Environmental/Active question", checklist.Groups[0].Title, checklist.Groups[0].Items[0].Label)
+	}
+	if checklist.Groups[0].Items[0].SourceValue != "42" {
+		t.Fatalf("checklist source value = %q, want doc_id/_id value 42", checklist.Groups[0].Items[0].SourceValue)
+	}
+	if provider.calls < 2 {
+		t.Fatalf("lookup calls = %d, want enriched request plus fallback", provider.calls)
+	}
+}
+
 func TestBuildReturningClauseSkipsMissingRuntimeFieldColumns(t *testing.T) {
 	scope := runtimeRootScopePlan{
 		Fields: []runtimeFieldPlan{
@@ -931,6 +1173,8 @@ type recordingRuntimeRepo struct {
 	lastSubformUniqueCheck *recordingUniqueCheck
 	lastSubformUpdate      *recordingSubformMutation
 	lastUpdateValues       map[string]any
+	checklistRows          []runtimeChecklistSavedRow
+	lastChecklistUpsert    *recordingChecklistUpsert
 	model                  *ModelRecord
 	rootUniqueConflicts    map[string]bool
 	subformUniqueConflicts map[string]bool
@@ -956,6 +1200,13 @@ type recordingSubformLoad struct {
 	ScopeID       string
 }
 
+type recordingChecklistUpsert struct {
+	ParentDocGuid string
+	ScopeID       string
+	SourceValue   string
+	Values        map[string]any
+}
+
 type recordingActiveBulk struct {
 	Active       bool
 	ActiveColumn string
@@ -971,13 +1222,19 @@ type recordingUniqueCheck struct {
 }
 
 type recordingLookupOptionsProvider struct {
-	calls int
-	err   error
-	items []dictionary.Option
+	calls    int
+	err      error
+	items    []dictionary.Option
+	list     func(dictionary.OptionsRequest) (*dictionary.OptionsResponse, error)
+	requests []dictionary.OptionsRequest
 }
 
-func (p *recordingLookupOptionsProvider) ListOptions(_ context.Context, _ dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+func (p *recordingLookupOptionsProvider) ListOptions(_ context.Context, req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
 	p.calls++
+	p.requests = append(p.requests, req)
+	if p.list != nil {
+		return p.list(req)
+	}
 	if p.err != nil {
 		return nil, p.err
 	}
@@ -1126,6 +1383,27 @@ func (r *recordingRuntimeRepo) DeleteSubformRecord(_ context.Context, _ requestc
 		ScopeID:       subformScope.ScopeID,
 	}
 	return nil
+}
+
+func (r *recordingRuntimeRepo) LoadChecklistRows(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, _ runtimeSubformScopePlan, _ string) ([]runtimeChecklistSavedRow, error) {
+	return append([]runtimeChecklistSavedRow(nil), r.checklistRows...), nil
+}
+
+func (r *recordingRuntimeRepo) UpsertChecklistItem(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, subformScope runtimeSubformScopePlan, parentDocGuid string, sourceValue string, values map[string]any) (*runtimeChecklistSavedRow, error) {
+	r.lastChecklistUpsert = &recordingChecklistUpsert{
+		ParentDocGuid: parentDocGuid,
+		ScopeID:       subformScope.ScopeID,
+		SourceValue:   sourceValue,
+		Values:        cloneValues(values),
+	}
+	return &runtimeChecklistSavedRow{
+		DocGuid:     "checklist-row-guid",
+		Notes:       normalizeString(values[subformScope.ChecklistConfig.NotesFieldID]),
+		SourceID:    404,
+		SourceValue: sourceValue,
+		Value:       normalizeString(values[subformScope.ChecklistConfig.ResultFieldID]),
+		Values:      cloneValues(values),
+	}, nil
 }
 
 func (r *recordingRuntimeRepo) LoadRootRecord(_ context.Context, _ requestctx.TenantInfo, _ runtimeRootScopePlan, docGuid string) (*runtimeRecordMutationRow, error) {

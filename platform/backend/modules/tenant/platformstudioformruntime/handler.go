@@ -125,6 +125,26 @@ func (h *Handler) UpdateSubformRecord(
 	return out, nil
 }
 
+func (h *Handler) UpdateChecklistItem(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewChecklistItemMutationRequest,
+) (*RuntimeViewChecklistItemMutationResponse, error) {
+	out, err := h.service.UpdateChecklistItem(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
+		strings.TrimSpace(r.PathValue("sourceValue")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
 func (h *Handler) DeleteSubformRecord(
 	ctx context.Context,
 	r *http.Request,

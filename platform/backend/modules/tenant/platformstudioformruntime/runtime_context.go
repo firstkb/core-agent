@@ -59,6 +59,7 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 		TenantScoped:              tenantScoped,
 		SystemFields:              readSystemFieldBindings(asMap(asMap(viewPayload["uiSchema"])["rootScope"])),
 	}
+	checklistConfigs := readChecklistConfigsByScope(asMap(asMap(viewPayload["uiSchema"])["rootScope"]))
 
 	for _, rawField := range asSlice(rootScope["fields"]) {
 		field := buildRuntimeFieldPlan(asMap(rawField), sourceType)
@@ -92,7 +93,12 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 			}
 			fields = append(fields, field)
 		}
+		checklistConfig := readRuntimeChecklistConfig(asMap(subformScope["checklistConfig"]))
+		if viewChecklistConfig, ok := checklistConfigs[scopeID]; ok {
+			checklistConfig = mergeRuntimeChecklistConfig(checklistConfig, viewChecklistConfig)
+		}
 		scope.SubformScopes = append(scope.SubformScopes, runtimeSubformScopePlan{
+			ChecklistConfig:           checklistConfig,
 			DataViewName:              subformDataViewName,
 			Fields:                    fields,
 			MultiValueOwnerForeignKey: scopeAlias + "_id",
@@ -114,6 +120,51 @@ func buildRuntimeRootScopePlan(model *ModelRecord, view *ViewRecord) (runtimeRoo
 		return runtimeRootScopePlan{}, fmt.Errorf("%w: runtime table name is empty", ErrRuntimeUnsupported)
 	}
 	return scope, nil
+}
+
+func readChecklistConfigsByScope(rootScope map[string]any) map[string]runtimeChecklistConfig {
+	out := map[string]runtimeChecklistConfig{}
+	for _, rawNode := range asSlice(rootScope["nodes"]) {
+		node := asMap(rawNode)
+		if normalizeString(node["type"]) != "subform" {
+			continue
+		}
+		scopeID := chooseString(normalizeString(node["schemaScopeId"]), normalizeString(node["tableKey"]))
+		if scopeID == "" {
+			continue
+		}
+		config := readRuntimeChecklistConfig(asMap(node["checklistConfig"]))
+		if config.LookupFieldID == "" && config.ResultFieldID == "" && config.NotesFieldID == "" {
+			continue
+		}
+		out[scopeID] = config
+	}
+	return out
+}
+
+func readRuntimeChecklistConfig(config map[string]any) runtimeChecklistConfig {
+	return runtimeChecklistConfig{
+		Grouping:      chooseString(normalizeString(config["grouping"]), "flat"),
+		LookupFieldID: normalizeString(config["lookupFieldId"]),
+		NotesFieldID:  normalizeString(config["notesFieldId"]),
+		ResultFieldID: normalizeString(config["resultFieldId"]),
+	}
+}
+
+func mergeRuntimeChecklistConfig(base runtimeChecklistConfig, overlay runtimeChecklistConfig) runtimeChecklistConfig {
+	if overlay.Grouping != "" {
+		base.Grouping = overlay.Grouping
+	}
+	if overlay.LookupFieldID != "" {
+		base.LookupFieldID = overlay.LookupFieldID
+	}
+	if overlay.NotesFieldID != "" {
+		base.NotesFieldID = overlay.NotesFieldID
+	}
+	if overlay.ResultFieldID != "" {
+		base.ResultFieldID = overlay.ResultFieldID
+	}
+	return base
 }
 
 type runtimeDataScopeMetadata struct {

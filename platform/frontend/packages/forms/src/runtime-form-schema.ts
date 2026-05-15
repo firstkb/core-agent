@@ -6,6 +6,7 @@ import type {
   RuntimeFormChoiceOptionStyleVariant,
   RuntimeFormChoiceOrientation,
   RuntimeFormChoiceRenderStyle,
+  RuntimeFormChecklistDetailDefinition,
   RuntimeFormDefinition,
   RuntimeFormFieldDefinition,
   RuntimeFormFieldOption,
@@ -235,9 +236,9 @@ function createSubformUiScopeMap(uiSchema: JsonRecord) {
   }));
 }
 
-function createNodesByParentId(uiSchema: JsonRecord) {
+function createNodesByParentIdFromScope(scope: JsonRecord) {
   const nodesByParentId = new Map<string | null, JsonRecord[]>();
-  asArray(rootUiScope(uiSchema).nodes).filter(isRecord).forEach((node) => {
+  asArray(scope.nodes).filter(isRecord).forEach((node) => {
     const parentId = typeof node.parentId === "string" && node.parentId.trim().length > 0
       ? node.parentId.trim()
       : null;
@@ -246,6 +247,10 @@ function createNodesByParentId(uiSchema: JsonRecord) {
     nodesByParentId.set(parentId, nodes);
   });
   return nodesByParentId;
+}
+
+function createNodesByParentId(uiSchema: JsonRecord) {
+  return createNodesByParentIdFromScope(rootUiScope(uiSchema));
 }
 
 function readWorkflowStatus(uiSchema: JsonRecord) {
@@ -773,9 +778,24 @@ function createSubformNode(context: CompileContext, node: JsonRecord): RuntimeFo
   const sorting = asRecord(readListSettings(uiScope).sorting);
   const sortFieldId = stringValue(sorting.fieldId);
   const sortDirection = sorting.direction === "desc" ? "desc" : "asc";
+  const checklistConfig = asRecord(node.checklistConfig);
+  const subformType = stringValue(node.subformType, stringValue(dataScope.subformType, "DEFAULT"));
+  const checklistLookupFieldId = stringValue(checklistConfig.lookupFieldId);
+  const checklistNotesFieldId = stringValue(checklistConfig.notesFieldId);
+  const checklistResultFieldId = stringValue(checklistConfig.resultFieldId);
+  const checklistDetails = subformType === "CHECKLIST"
+    ? createChecklistDetailNodes(context, dataScope, uiScope, new Set([
+      checklistLookupFieldId,
+      checklistResultFieldId,
+    ].filter(Boolean)))
+    : undefined;
 
   return {
     actions: readSubformActions(uiScope),
+    checklistDetails,
+    checklistLookupFieldId: checklistLookupFieldId || undefined,
+    checklistNotesFieldId: checklistNotesFieldId || undefined,
+    checklistResultFieldId: checklistResultFieldId || undefined,
     columns,
     defaultSort: sortFieldId ? {
       columnId: sortFieldId,
@@ -785,11 +805,38 @@ function createSubformNode(context: CompileContext, node: JsonRecord): RuntimeFo
     nodeType: "subform",
     rules: readRuntimeRules(node.rules),
     schemaScopeId,
-    subformType: stringValue(node.subformType, stringValue(dataScope.subformType, "DEFAULT")),
+    subformType,
     tableKey: stringValue(node.tableKey, schemaScopeId),
     title: stringValue(node.title, stringValue(dataScope.displayName, String(context.labels.generatedSubformTitle))),
     width: "full",
   };
+}
+
+function createChecklistDetailNodes(
+  context: CompileContext,
+  dataScope: JsonRecord,
+  uiScope: JsonRecord,
+  excludedFieldIds: ReadonlySet<string>,
+): RuntimeFormChecklistDetailDefinition[] {
+  const detailContext: CompileContext = {
+    ...context,
+    fieldById: createScopedFieldMap(dataScope),
+    nodesByParentId: createNodesByParentIdFromScope(uiScope),
+  };
+  return createRuntimeNodes(detailContext, null)
+    .flatMap((detailNode): RuntimeFormChecklistDetailDefinition[] => {
+      if (detailNode.nodeType === "field") {
+        return excludedFieldIds.has(detailNode.id) ? [] : [{
+          ...detailNode,
+          labelLayout: "stacked",
+          width: "full",
+        }];
+      }
+      if (detailNode.nodeType === "content") {
+        return [detailNode];
+      }
+      return [];
+    });
 }
 
 function createLayoutNode(context: CompileContext, node: JsonRecord): RuntimeFormLayoutDefinition | null {

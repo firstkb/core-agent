@@ -411,6 +411,297 @@ func loadSubformRecordTx(
 	return row, nil
 }
 
+func loadChecklistRowsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+) ([]runtimeChecklistSavedRow, error) {
+	if parentDocGuid == "" {
+		return nil, ErrInvalidRequest
+	}
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return nil, err
+	}
+
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	lookupField, resultField, notesField, err := checklistStorageFields(recordScope, subformScope.ChecklistConfig)
+	if err != nil {
+		return nil, err
+	}
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	if err := ensureChecklistColumns(recordScope, subformScope, lookupField, resultField, notesField, columnSet); err != nil {
+		return nil, err
+	}
+
+	selectColumns := []string{
+		fmt.Sprintf("%s::text", quoteIdentifier(recordScope.SourceGUIDColumn)),
+		quoteIdentifier(recordScope.SourceIDColumn),
+		fmt.Sprintf("%s::text", quoteIdentifier(lookupField.ColumnName)),
+		fmt.Sprintf("COALESCE(%s::text, '')", quoteIdentifier(resultField.ColumnName)),
+	}
+	_, hasUpdatedColumn := columnSet[recordScope.SourceUpdatedColumn]
+	if recordScope.SourceUpdatedColumn != "" && hasUpdatedColumn {
+		selectColumns = append(selectColumns, fmt.Sprintf("COALESCE(%s::text, '')", quoteIdentifier(recordScope.SourceUpdatedColumn)))
+	} else {
+		selectColumns = append(selectColumns, "''")
+	}
+	if notesField != nil {
+		selectColumns = append(selectColumns, fmt.Sprintf("COALESCE(%s::text, '')", quoteIdentifier(notesField.ColumnName)))
+	} else {
+		selectColumns = append(selectColumns, "''")
+	}
+	detailFields := []runtimeFieldPlan{}
+	for _, field := range checklistDetailStorageFields(recordScope, subformScope.ChecklistConfig) {
+		if _, ok := columnSet[field.ColumnName]; !ok {
+			continue
+		}
+		detailFields = append(detailFields, field)
+		selectColumns = append(selectColumns, fmt.Sprintf("COALESCE(%s::text, '')", quoteIdentifier(field.ColumnName)))
+	}
+
+	whereClause := fmt.Sprintf("%s = $1", quoteIdentifier(subformScope.ParentForeignKey))
+	if recordScope.TenantScoped && recordScope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(recordScope.SourceTenantColumn))
+	}
+	query := fmt.Sprintf(
+		"SELECT %s FROM %s WHERE %s ORDER BY %s ASC",
+		strings.Join(selectColumns, ", "),
+		qualifiedIdentifier(recordScope.TableName),
+		whereClause,
+		quoteIdentifier(recordScope.SourceIDColumn),
+	)
+
+	rows, err := tx.QueryContext(ctx, query, parentRow.SourceID)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: load checklist rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := []runtimeChecklistSavedRow{}
+	for rows.Next() {
+		var row runtimeChecklistSavedRow
+		detailValues := make([]string, len(detailFields))
+		scanArgs := []any{&row.DocGuid, &row.SourceID, &row.SourceValue, &row.Value, &row.Revision, &row.Notes}
+		for index := range detailValues {
+			scanArgs = append(scanArgs, &detailValues[index])
+		}
+		if err := rows.Scan(scanArgs...); err != nil {
+			return nil, fmt.Errorf("form runtime: scan checklist row: %w", err)
+		}
+		row.DocGuid = strings.TrimSpace(row.DocGuid)
+		row.Notes = strings.TrimSpace(row.Notes)
+		row.Revision = strings.TrimSpace(row.Revision)
+		row.SourceValue = strings.TrimSpace(row.SourceValue)
+		row.Value = strings.TrimSpace(row.Value)
+		row.Values = map[string]any{}
+		for index, field := range detailFields {
+			row.Values[field.FieldID] = strings.TrimSpace(detailValues[index])
+		}
+		if row.SourceValue != "" {
+			out = append(out, row)
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("form runtime: read checklist rows: %w", err)
+	}
+	return out, nil
+}
+
+func upsertChecklistItemTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	sourceValue string,
+	values map[string]any,
+) (*runtimeChecklistSavedRow, error) {
+	if parentDocGuid == "" || sourceValue == "" {
+		return nil, ErrInvalidRequest
+	}
+	parentRow, err := loadRootRecordTx(ctx, tx, rootScope, parentDocGuid)
+	if err != nil {
+		return nil, err
+	}
+
+	recordScope := rootScopeFromSubform(rootScope, subformScope)
+	lookupField, resultField, notesField, err := checklistStorageFields(recordScope, subformScope.ChecklistConfig)
+	if err != nil {
+		return nil, err
+	}
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	if err != nil {
+		return nil, err
+	}
+	if err := ensureChecklistColumns(recordScope, subformScope, lookupField, resultField, notesField, columnSet); err != nil {
+		return nil, err
+	}
+
+	whereClause := fmt.Sprintf(
+		"%s = $1 AND %s::text = $2",
+		quoteIdentifier(subformScope.ParentForeignKey),
+		quoteIdentifier(lookupField.ColumnName),
+	)
+	if recordScope.TenantScoped && recordScope.SourceTenantColumn != "" {
+		whereClause += fmt.Sprintf(" AND %s = current_setting('app.tenant_id', true)::bigint", quoteIdentifier(recordScope.SourceTenantColumn))
+	}
+	query := fmt.Sprintf(
+		"SELECT %s::text FROM %s WHERE %s LIMIT 1",
+		quoteIdentifier(recordScope.SourceGUIDColumn),
+		qualifiedIdentifier(recordScope.TableName),
+		whereClause,
+	)
+
+	var existingDocGuid string
+	err = tx.QueryRowContext(ctx, query, parentRow.SourceID, sourceValue).Scan(&existingDocGuid)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("form runtime: find checklist row: %w", err)
+	}
+
+	if strings.TrimSpace(existingDocGuid) == "" {
+		createValues := cloneMutationValues(values)
+		createValues[lookupField.FieldID] = sourceValue
+		row, err := createSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, createValues, "")
+		if err != nil {
+			return nil, err
+		}
+		return checklistSavedRowFromMutation(row, lookupField, resultField, notesField, checklistDetailStorageFields(recordScope, subformScope.ChecklistConfig)), nil
+	}
+
+	updateValues := cloneMutationValues(values)
+	delete(updateValues, lookupField.FieldID)
+	row, err := updateSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, existingDocGuid, updateValues, "")
+	if err != nil {
+		return nil, err
+	}
+	return checklistSavedRowFromMutation(row, lookupField, resultField, notesField, checklistDetailStorageFields(recordScope, subformScope.ChecklistConfig)), nil
+}
+
+func checklistStorageFields(
+	recordScope runtimeRootScopePlan,
+	config runtimeChecklistConfig,
+) (runtimeFieldPlan, runtimeFieldPlan, *runtimeFieldPlan, error) {
+	lookupField := findField(recordScope, config.LookupFieldID)
+	resultField := findField(recordScope, config.ResultFieldID)
+	if lookupField == nil || resultField == nil {
+		return runtimeFieldPlan{}, runtimeFieldPlan{}, nil, ErrRuntimeSchemaDrift
+	}
+	var notesField *runtimeFieldPlan
+	if config.NotesFieldID != "" {
+		notesField = findField(recordScope, config.NotesFieldID)
+		if notesField == nil {
+			return runtimeFieldPlan{}, runtimeFieldPlan{}, nil, ErrRuntimeSchemaDrift
+		}
+	}
+	return *lookupField, *resultField, notesField, nil
+}
+
+func ensureChecklistColumns(
+	recordScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	lookupField runtimeFieldPlan,
+	resultField runtimeFieldPlan,
+	notesField *runtimeFieldPlan,
+	columnSet map[string]struct{},
+) error {
+	missingFields := []string{}
+	for _, columnName := range []string{
+		recordScope.SourceGUIDColumn,
+		recordScope.SourceIDColumn,
+		subformScope.ParentForeignKey,
+		lookupField.ColumnName,
+		resultField.ColumnName,
+	} {
+		if strings.TrimSpace(columnName) == "" {
+			continue
+		}
+		if _, ok := columnSet[columnName]; !ok {
+			missingFields = append(missingFields, columnName)
+		}
+	}
+	if notesField != nil && strings.TrimSpace(notesField.ColumnName) != "" {
+		if _, ok := columnSet[notesField.ColumnName]; !ok {
+			missingFields = append(missingFields, notesField.ColumnName)
+		}
+	}
+	if len(missingFields) > 0 {
+		return fmt.Errorf("%w: missing runtime columns for %s: %s", ErrRuntimeSchemaDrift, recordScope.TableName, strings.Join(missingFields, ", "))
+	}
+	return nil
+}
+
+func checklistSavedRowFromMutation(
+	row *runtimeRecordMutationRow,
+	lookupField runtimeFieldPlan,
+	resultField runtimeFieldPlan,
+	notesField *runtimeFieldPlan,
+	detailFields []runtimeFieldPlan,
+) *runtimeChecklistSavedRow {
+	if row == nil {
+		return nil
+	}
+	out := &runtimeChecklistSavedRow{
+		DocGuid:     row.DocGuid,
+		Revision:    row.Revision,
+		SourceID:    row.SourceID,
+		SourceValue: strings.TrimSpace(runtimeMutationValueString(row.Values[lookupField.FieldID])),
+		Value:       strings.TrimSpace(runtimeMutationValueString(row.Values[resultField.FieldID])),
+		Values:      map[string]any{},
+	}
+	if notesField != nil {
+		out.Notes = strings.TrimSpace(runtimeMutationValueString(row.Values[notesField.FieldID]))
+	}
+	for _, field := range detailFields {
+		out.Values[field.FieldID] = strings.TrimSpace(runtimeMutationValueString(row.Values[field.FieldID]))
+	}
+	return out
+}
+
+func checklistDetailStorageFields(recordScope runtimeRootScopePlan, config runtimeChecklistConfig) []runtimeFieldPlan {
+	out := []runtimeFieldPlan{}
+	for _, field := range recordScope.Fields {
+		if field.FieldID == config.LookupFieldID || field.FieldID == config.ResultFieldID || field.FieldID == config.NotesFieldID {
+			continue
+		}
+		if !field.Supported || field.MultiValue || strings.TrimSpace(field.ColumnName) == "" {
+			continue
+		}
+		out = append(out, field)
+	}
+	return out
+}
+
+func runtimeMutationValueString(value any) string {
+	switch typed := value.(type) {
+	case string:
+		return typed
+	case int:
+		return strconv.Itoa(typed)
+	case int64:
+		return strconv.FormatInt(typed, 10)
+	case float64:
+		return strconv.FormatInt(int64(typed), 10)
+	case jsonNumber:
+		return typed.String()
+	default:
+		return ""
+	}
+}
+
+func cloneMutationValues(values map[string]any) map[string]any {
+	out := make(map[string]any, len(values))
+	for key, value := range values {
+		out[key] = value
+	}
+	return out
+}
+
 func deleteSubformRecordTx(
 	ctx context.Context,
 	tx *sql.Tx,

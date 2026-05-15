@@ -50,6 +50,24 @@ function runtimeNodesContainField(nodes: ReadonlyArray<RuntimeFormNodeDefinition
   return false;
 }
 
+function runtimeNodesContainNode(nodes: ReadonlyArray<RuntimeFormNodeDefinition>, nodeId: string | undefined): boolean {
+  if (!nodeId) {
+    return false;
+  }
+
+  for (const node of nodes) {
+    if (node.id === nodeId) {
+      return true;
+    }
+
+    if (isRuntimeFormLayoutNode(node) && runtimeNodesContainNode(getRuntimeLayoutChildNodes(node), nodeId)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function RuntimeLayoutHeader({
   description,
   title,
@@ -74,6 +92,7 @@ export function RuntimeLayoutNode({
   layout,
   onActiveTabChange,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
   renderNodes,
 }: {
@@ -81,6 +100,7 @@ export function RuntimeLayoutNode({
   layout: RuntimeFormLayoutDefinition;
   onActiveTabChange?: (layoutId: string, tabId: string) => void;
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
   renderNodes: RenderNodes;
 }) {
@@ -129,6 +149,7 @@ export function RuntimeLayoutNode({
         onActiveTabChange={onActiveTabChange}
         renderNodes={renderNodes}
         revealFieldId={revealFieldId}
+        revealNodeId={revealNodeId}
         revealRequestKey={revealRequestKey}
       />
     );
@@ -140,6 +161,7 @@ export function RuntimeLayoutNode({
         layout={layout}
         renderNodes={renderNodes}
         revealFieldId={revealFieldId}
+        revealNodeId={revealNodeId}
         revealRequestKey={revealRequestKey}
       />
     );
@@ -157,11 +179,13 @@ function RuntimeAccordionLayout({
   layout,
   renderNodes,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
 }: {
   layout: RuntimeFormAccordionLayoutDefinition;
   renderNodes: RenderNodes;
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
 }) {
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -171,12 +195,14 @@ function RuntimeAccordionLayout({
   }, [layout.items]);
 
   useEffect(() => {
-    const containingItem = layout.items.find((item) => runtimeNodesContainField(item.nodes, revealFieldId));
+    const containingItem = layout.items.find((item) =>
+      runtimeNodesContainField(item.nodes, revealFieldId) || runtimeNodesContainNode(item.nodes, revealNodeId),
+    );
 
     if (containingItem) {
       setActiveItemId(containingItem.id);
     }
-  }, [layout.items, revealFieldId, revealRequestKey]);
+  }, [layout.items, revealFieldId, revealNodeId, revealRequestKey]);
 
   function handleItemChange(nextValue: string | string[] | null) {
     setActiveItemId(typeof nextValue === "string" ? nextValue : null);
@@ -205,6 +231,7 @@ function RuntimeTabsLayout({
   onActiveTabChange,
   renderNodes,
   revealFieldId,
+  revealNodeId,
   revealRequestKey,
 }: {
   activeTabs?: RuntimeFormActiveTabs;
@@ -212,6 +239,7 @@ function RuntimeTabsLayout({
   onActiveTabChange?: (layoutId: string, tabId: string) => void;
   renderNodes: RenderNodes;
   revealFieldId?: string;
+  revealNodeId?: string;
   revealRequestKey?: number;
 }) {
   const fallbackTabId = layout.tabs[0]?.id ?? "";
@@ -235,13 +263,15 @@ function RuntimeTabsLayout({
   }, [layout.tabs, restoredTabId]);
 
   useEffect(() => {
-    const containingTab = layout.tabs.find((tab) => runtimeNodesContainField(tab.nodes, revealFieldId));
+    const containingTab = layout.tabs.find((tab) =>
+      runtimeNodesContainField(tab.nodes, revealFieldId) || runtimeNodesContainNode(tab.nodes, revealNodeId),
+    );
 
     if (containingTab) {
       setActiveTabId(containingTab.id);
       onActiveTabChange?.(layout.id, containingTab.id);
     }
-  }, [layout.id, layout.tabs, onActiveTabChange, revealFieldId, revealRequestKey]);
+  }, [layout.id, layout.tabs, onActiveTabChange, revealFieldId, revealNodeId, revealRequestKey]);
 
   function handleTabChange(tabId: string) {
     setActiveTabId(tabId);

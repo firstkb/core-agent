@@ -331,6 +331,72 @@ func (r *repository) DeleteSubformRecord(
 	return nil
 }
 
+func (r *repository) LoadChecklistRows(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+) ([]runtimeChecklistSavedRow, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: begin load checklist rows tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return nil, err
+	}
+
+	rows, err := loadChecklistRowsTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid))
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form runtime: commit load checklist rows tx: %w", err)
+	}
+	return rows, nil
+}
+
+func (r *repository) UpsertChecklistItem(
+	ctx context.Context,
+	tenant requestctx.TenantInfo,
+	rootScope runtimeRootScopePlan,
+	subformScope runtimeSubformScopePlan,
+	parentDocGuid string,
+	sourceValue string,
+	values map[string]any,
+) (*runtimeChecklistSavedRow, error) {
+	db, err := r.client.OpenDBTenant(ctx, tenant.DBName, tenant.DBInstanceCode)
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: open tenant db: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("form runtime: begin checklist upsert tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if err := setTenantContext(ctx, tx, tenant); err != nil {
+		return nil, err
+	}
+
+	row, err := upsertChecklistItemTx(ctx, tx, rootScope, subformScope, strings.TrimSpace(parentDocGuid), strings.TrimSpace(sourceValue), values)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("form runtime: commit checklist upsert tx: %w", err)
+	}
+	return row, nil
+}
+
 func (r *repository) LoadRootRecord(
 	ctx context.Context,
 	tenant requestctx.TenantInfo,

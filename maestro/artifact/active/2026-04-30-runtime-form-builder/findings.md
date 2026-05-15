@@ -299,3 +299,17 @@ Statuses:
 - Apply resolution: Form Builder runtime apply now drops generated grid views before rebuilding the generated data view, drops/recreates the data view instead of relying on `CREATE OR REPLACE VIEW` to accept changed column shape, and then recreates the grid views. This lets new lookup output columns such as `db_lookup__label` be inserted before later fields without PostgreSQL rejecting the view replacement and rolling back newly added physical columns such as `db_lookup_2_id`.
 - Fixed in: current change set.
 - Verification: `go test ./modules/tenant/platformstudioformruntime` passed; `go test ./modules/tenant/dictionary ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed; `go test ./modules/tenant/platformstudioformbuilder` passed; one local runtime apply against `108-demo` rebuilt `lookup` runtime storage, after which `ps_lookup` contains `db_lookup_2_id` and `vw_lookup` contains `db_lookup_2_id`, `db_lookup_2__label`, and `db_lookup__label`; `git diff --check` passed; `scripts/preflight.sh` passed.
+
+## FB-RT-019 - Runtime form create/edit should write coalesced events
+
+- Area: Runtime form create/edit/autosave and tenant event history.
+- URL: not captured; owner requested durable tracking on 2026-05-15.
+- Model/View: all runtime forms that create or update tenant records.
+- Symptom: Runtime create/edit actions currently persist data but do not write a durable event trail describing what was created or changed.
+- Expected: Creating a record and changing fields through runtime forms should write tenant `events` table entries so the system can later show what happened, who did it, and which record was affected.
+- Noise control: Field-level autosave must not create one event row per keystroke or per tiny field save. Runtime should coalesce changes by record plus a short time/session window and merge changed-field metadata into one meaningful event payload.
+- Actual: Event/audit writing is not part of the current runtime form write contract.
+- Evidence: Owner request on 2026-05-15.
+- Priority: medium.
+- Status: triage.
+- Owner decision: Record as a follow-up backend/runtime contract. Do not mix it into the current checklist rendering bug fix.

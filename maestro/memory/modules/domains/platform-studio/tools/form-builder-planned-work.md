@@ -1,8 +1,8 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-14
-Verification mode: implementation update plus tracked docs and targeted FE/BE checks
+Last verified: 2026-05-15
+Verification mode: owner-requested memory update plus tracked docs and targeted runtime FE checks
 
 This file preserves Form Builder planned work without turning it into active
 implementation scope. Use it after the active Form Builder contracts, not
@@ -90,6 +90,7 @@ instead of them.
 - Future cleanup should remove or fully deprecate Form Builder API request/summary usage of `isActive`, then evaluate dropping `ps_view.is_active` with a dedicated migration once Navigation Builder exposure is implemented and verified.
 - Platform Studio preview runtime endpoints still need a dedicated preview access guard.
 - Larger runtime record/list/create/edit/save behavior should move to future `platformstudioformruntime`; do not keep expanding `platformstudioformbuilder` by default.
+- Runtime form create/edit/autosave flows must write tenant `events` table entries for created/changed records. Field-level autosaves should be coalesced by record and a short time/session window so one user edit burst becomes one meaningful event payload instead of many noisy rows.
 - Post-submit side effects, notifications, integrations, workflow triggers, async retries, and side-effect failure reporting should move to future `platformstudioformactions`.
 - Runtime create/edit/save record flows are future runtime package work; current code has runtime list/read scaffolding.
 - Import model is planned from the managed export bundle, but no active import route/service exists yet.

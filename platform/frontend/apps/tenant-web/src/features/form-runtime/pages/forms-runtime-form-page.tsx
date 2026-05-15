@@ -1014,8 +1014,11 @@ export function FormsRuntimeFormPage({
   }, []);
 
   useEffect(() => {
-    if (isSubform || !client || !definition || !hasServerRecordRef.current || !currentDocGuidRef.current) {
+    if (isSubform || !client || !definition) {
       setSubforms({});
+      return;
+    }
+    if (!hasServerRecordRef.current || !currentDocGuidRef.current) {
       return;
     }
 

@@ -39,6 +39,7 @@ import type {
 } from "./runtime-form-types";
 import { RuntimeContentNode } from "./runtime-form-content";
 import { RuntimeField } from "./fields/runtime-field";
+import { getRuntimeChecklistVisibleGroups } from "./runtime-form-checklist";
 import { cx } from "./runtime-form-utils";
 
 const subformDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -339,9 +340,9 @@ function RuntimeChecklistSubformNode({
   revealRequest?: RuntimeFormChecklistRevealRequest;
   subform: RuntimeFormSubformDefinition;
 }) {
-  const groups = checklist?.groups ?? [];
-  const isFlat = checklistIsFlat(checklist);
-  const firstGroupId = groups[0]?.id ?? "";
+  const renderedGroups = useMemo(() => getRuntimeChecklistVisibleGroups(checklist), [checklist]);
+  const isFlat = checklistIsFlat({ groups: renderedGroups });
+  const firstGroupId = renderedGroups[0]?.id ?? "";
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -349,14 +350,16 @@ function RuntimeChecklistSubformNode({
       setActiveGroupId(firstGroupId || null);
       return;
     }
-    setActiveGroupId((currentGroupId) => groups.some((group) => group.id === currentGroupId) ? currentGroupId : null);
-  }, [firstGroupId, groups, isFlat]);
+    setActiveGroupId((currentGroupId) =>
+      renderedGroups.some((group) => group.id === currentGroupId) ? currentGroupId : null,
+    );
+  }, [firstGroupId, renderedGroups, isFlat]);
 
   useEffect(() => {
     if (!revealRequest || revealRequest.subformId !== subform.schemaScopeId) {
       return;
     }
-    const groupId = revealRequest.groupId || groups.find((group) =>
+    const groupId = revealRequest.groupId || renderedGroups.find((group) =>
       group.items.some((item) => item.sourceValue === revealRequest.sourceValue),
     )?.id;
     if (groupId) {
@@ -373,9 +376,7 @@ function RuntimeChecklistSubformNode({
         target?.focus({ preventScroll: true });
       }, 40);
     }
-  }, [groups, revealRequest, subform.schemaScopeId]);
-
-  const renderedGroups = useMemo(() => groups, [groups]);
+  }, [renderedGroups, revealRequest, subform.schemaScopeId]);
 
   if (renderedGroups.length === 0) {
     return (

@@ -14,6 +14,9 @@ import {
 import {
   parseRuntimeGeoPointValue,
 } from "./runtime-form-geo-point";
+import {
+  getRuntimeChecklistVisibleGroups,
+} from "./runtime-form-checklist";
 import { resolveRuntimeFormLabels } from "./runtime-form-labels";
 import {
   isRuntimeFieldRequired,
@@ -184,9 +187,11 @@ function findFirstRuntimeChecklistRequiredErrorInNodes(
 
     if (isRuntimeFormSubformNode(node) && node.subformType === "CHECKLIST") {
       const checklist = subforms[node.schemaScopeId]?.checklist;
-      for (const group of checklist?.groups ?? []) {
+      for (const group of getRuntimeChecklistVisibleGroups(checklist)) {
         for (const item of group.items) {
-          if (item.required && !item.value?.trim()) {
+          const isMissingVisibleRequiredAnswer = item.required
+            && !item.value?.trim();
+          if (isMissingVisibleRequiredAnswer) {
             return {
               groupId: group.id,
               itemLabel: item.label,

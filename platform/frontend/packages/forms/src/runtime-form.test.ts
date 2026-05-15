@@ -10,6 +10,7 @@ import type { RuntimeFormDefinition, RuntimeFormSubformDefinition } from "./runt
 import { createRuntimeFormFixture } from "./runtime-form-fixtures";
 import { createRuntimeFormDefinitionFromSchema } from "./runtime-form-schema";
 import { getRuntimeFieldLabelActivation } from "./runtime/fields/runtime-field";
+import { getRuntimeChecklistVisibleGroups } from "./runtime/runtime-form-checklist";
 import { formatReadonlyValue } from "./runtime/runtime-form-utils";
 
 describe("runtime form helpers", () => {
@@ -1239,5 +1240,133 @@ describe("runtime form helpers", () => {
         },
       },
     })).toBeNull();
+  });
+
+  it("filters checklist items by visible_when source answers", () => {
+    const visibleGroups = getRuntimeChecklistVisibleGroups({
+      groups: [{
+        id: "default",
+        items: [
+          {
+            label: "Primary question",
+            sourceValue: "7",
+            value: "No",
+          },
+          {
+            label: "Follow-up question",
+            sourceValue: "8",
+            visibleWhen: "7=No|N/A",
+          },
+          {
+            label: "Invalid expression",
+            sourceValue: "9",
+            visibleWhen: "broken-expression",
+          },
+          {
+            label: "Self-hidden source",
+            sourceValue: "10",
+            visibleWhen: "12=Yes",
+          },
+          {
+            label: "Depends on source",
+            sourceValue: "11",
+            visibleWhen: "10=yes",
+          },
+        ],
+      }],
+    });
+
+    expect(visibleGroups[0]?.items.map((item) => item.sourceValue)).toEqual(["7", "8", "10"]);
+    expect(getRuntimeChecklistVisibleGroups({
+      groups: [{
+        id: "default",
+        items: [
+          {
+            label: "Primary question",
+            sourceValue: "7",
+            value: "Yes",
+          },
+          {
+            label: "Follow-up question",
+            sourceValue: "8",
+            visibleWhen: "7=No|N/A",
+          },
+        ],
+      }],
+    })[0]?.items.map((item) => item.sourceValue)).toEqual(["7"]);
+  });
+
+  it("ignores hidden visible_when checklist items during required validation", () => {
+    const definition: RuntimeFormDefinition = {
+      commitMode: "autosave",
+      id: "inspection",
+      mode: "edit",
+      sections: [{
+        id: "main",
+        nodes: [{
+          actions: {
+            canAdd: false,
+            canDelete: false,
+            canEdit: false,
+          },
+          columns: [],
+          id: "checklist-node",
+          nodeType: "subform",
+          schemaScopeId: "inspection-checklist",
+          subformType: "CHECKLIST",
+          tableKey: "inspection-checklist",
+          title: "Checklist",
+        }],
+      }],
+      title: "Inspection",
+    };
+    const checklistSubform = {
+      "inspection-checklist": {
+        checklist: {
+          groups: [{
+            id: "onsite-documents",
+            items: [
+              {
+                label: "Primary question",
+                sourceValue: "7",
+                value: "Yes",
+              },
+              {
+                label: "Follow-up question",
+                required: true,
+                sourceValue: "8",
+                visibleWhen: "7=No|N/A",
+              },
+            ],
+            title: "Onsite Documents",
+          }],
+        },
+      },
+    };
+
+    expect(findFirstRuntimeChecklistRequiredError(definition, {}, checklistSubform)).toBeNull();
+    expect(findFirstRuntimeChecklistRequiredError(definition, {}, {
+      "inspection-checklist": {
+        checklist: {
+          groups: [{
+            id: "onsite-documents",
+            items: [
+              {
+                label: "Primary question",
+                sourceValue: "7",
+                value: "No",
+              },
+              {
+                label: "Follow-up question",
+                required: true,
+                sourceValue: "8",
+                visibleWhen: "7=No|N/A",
+              },
+            ],
+            title: "Onsite Documents",
+          }],
+        },
+      },
+    })?.sourceValue).toBe("8");
   });
 });

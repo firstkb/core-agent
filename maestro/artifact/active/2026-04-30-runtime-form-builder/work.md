@@ -657,6 +657,10 @@ View/read remains the existing `CollectionTable` modal path for now.
   - the shared form renderer supports flat and category checklist display,
     category accordion rendering, answer buttons, detail expansion, required
     validation, and reveal/focus on finish;
+  - checklist `visible_when` rules now hide dependent questions by default and
+    reveal them when the referenced source answer matches
+    `sourceValue=Answer|Alternative`; referenced source questions stay visible
+    so the user can change the controlling answer;
   - the current lookup-option storage drift was reproduced as schema knows
     `answer_options`, `answer_required`, and `visible_when`, while
     `ps_lookup_option` still lacked those physical columns; runtime write now

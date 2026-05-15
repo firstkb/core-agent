@@ -359,13 +359,17 @@ SELECT definition_json
 
 func buildModelFieldColumnMap(scope modelRootScope) map[string]string {
 	fields := map[string]string{
-		"_id":    "_id",
-		"doc_id": "_id",
+		"_guid":    "_guid",
+		"_id":      "_id",
+		"doc_guid": "_guid",
+		"doc_id":   "_id",
+		"guid":     "_guid",
 	}
 	if strings.TrimSpace(scope.Runtime.SourceGUIDColumn) != "" {
-		fields["_guid"] = "_guid"
-		fields["doc_guid"] = "_guid"
-		fields["guid"] = "_guid"
+		guidColumn := strings.TrimSpace(scope.Runtime.SourceGUIDColumn)
+		fields["_guid"] = guidColumn
+		fields["doc_guid"] = guidColumn
+		fields["guid"] = guidColumn
 	}
 	if strings.TrimSpace(scope.Runtime.SourceCreatedAtColumn) != "" {
 		fields["_created_at"] = "_created_at"

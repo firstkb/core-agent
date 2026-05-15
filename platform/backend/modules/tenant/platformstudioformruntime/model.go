@@ -59,6 +59,7 @@ type RuntimeViewChecklistItem struct {
 	Notes           string                       `json:"notes,omitempty"`
 	Required        bool                         `json:"required,omitempty"`
 	SavedRowDocGuid string                       `json:"savedRowDocGuid,omitempty"`
+	SourceGuid      string                       `json:"sourceGuid,omitempty"`
 	SourceValue     string                       `json:"sourceValue"`
 	Value           string                       `json:"value,omitempty"`
 	Values          map[string]any               `json:"values,omitempty"`

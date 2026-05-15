@@ -8,6 +8,7 @@ import (
 
 	"dtriton.com/platform/backend/internal/platform/httpx/requestctx"
 	dictionary "dtriton.com/platform/backend/modules/tenant/dictionary"
+	"github.com/google/uuid"
 )
 
 var (
@@ -398,7 +399,7 @@ func (s *Service) UpdateChecklistItem(
 	viewID string,
 	parentDocGuid string,
 	subformID string,
-	sourceValue string,
+	sourceRef string,
 	req RuntimeViewChecklistItemMutationRequest,
 ) (*RuntimeViewChecklistItemMutationResponse, error) {
 	tenant, _, err := requireRuntimeContext(ctx)
@@ -406,8 +407,8 @@ func (s *Service) UpdateChecklistItem(
 		return nil, err
 	}
 	parentDocGuid = strings.TrimSpace(parentDocGuid)
-	sourceValue = strings.TrimSpace(sourceValue)
-	if parentDocGuid == "" || sourceValue == "" {
+	sourceRef = strings.TrimSpace(sourceRef)
+	if parentDocGuid == "" || sourceRef == "" {
 		return nil, ErrInvalidRequest
 	}
 
@@ -418,6 +419,16 @@ func (s *Service) UpdateChecklistItem(
 	subformScope, ok := findSubformScope(scopeContext.Scope, subformID)
 	if !ok || !subformScopeSupportsChecklist(subformScope) {
 		return nil, ErrRuntimeUnsupported
+	}
+
+	recordScope := rootScopeFromSubform(scopeContext.Scope, subformScope)
+	lookupField := findField(recordScope, subformScope.ChecklistConfig.LookupFieldID)
+	if lookupField == nil {
+		return nil, ErrRuntimeUnsupported
+	}
+	sourceValue, sourceGuid, err := s.resolveChecklistSourceValue(ctx, *lookupField, sourceRef)
+	if err != nil {
+		return nil, err
 	}
 
 	values := map[string]any{}
@@ -431,7 +442,7 @@ func (s *Service) UpdateChecklistItem(
 	if config.NotesFieldID != "" {
 		values[config.NotesFieldID] = strings.TrimSpace(req.Notes)
 	}
-	for _, field := range checklistDetailStorageFields(rootScopeFromSubform(scopeContext.Scope, subformScope), config) {
+	for _, field := range checklistDetailStorageFields(recordScope, config) {
 		value, ok := req.Values[field.FieldID]
 		if !ok {
 			continue
@@ -449,6 +460,7 @@ func (s *Service) UpdateChecklistItem(
 	}
 	item := RuntimeViewChecklistItem{
 		Notes:       strings.TrimSpace(req.Notes),
+		SourceGuid:  sourceGuid,
 		SourceValue: sourceValue,
 		Value:       strings.TrimSpace(req.Value),
 		Values:      req.Values,
@@ -463,6 +475,91 @@ func (s *Service) UpdateChecklistItem(
 		Item:      item,
 		SubformID: subformScope.ScopeID,
 	}, nil
+}
+
+func (s *Service) resolveChecklistSourceValue(
+	ctx context.Context,
+	lookupField runtimeFieldPlan,
+	sourceRef string,
+) (string, string, error) {
+	sourceRef = strings.TrimSpace(sourceRef)
+	if sourceRef == "" {
+		return "", "", ErrInvalidRequest
+	}
+	if !isRuntimeUUID(sourceRef) {
+		return sourceRef, "", nil
+	}
+	if s.lookupOptions == nil || lookupField.LookupSourceModel == "" {
+		return "", "", ErrInvalidRequest
+	}
+
+	req, ok := lookupOptionsRequestForField(lookupField, []string{sourceRef})
+	if !ok {
+		return "", "", ErrInvalidRequest
+	}
+	req.Filters = nil
+	req.IDs = []string{sourceRef}
+	req.Page = 1
+	req.PageSize = 1
+	req.StoredValueField = "doc_guid"
+	req.DisplayFields = appendChecklistSourceValueFields(req.DisplayFields, lookupField.LookupStoredValueField)
+
+	response, err := s.lookupOptions.ListOptions(ctx, req)
+	if err != nil {
+		return "", "", err
+	}
+	if response == nil {
+		return "", "", ErrInvalidRequest
+	}
+	for _, option := range response.Items {
+		if !strings.EqualFold(strings.TrimSpace(option.Value), sourceRef) && !strings.EqualFold(strings.TrimSpace(option.ID), sourceRef) {
+			continue
+		}
+		sourceValue := checklistStoredSourceValueFromOption(option, lookupField.LookupStoredValueField)
+		if sourceValue == "" {
+			return "", "", ErrInvalidRequest
+		}
+		return sourceValue, sourceRef, nil
+	}
+	return "", "", ErrInvalidRequest
+}
+
+func isRuntimeUUID(value string) bool {
+	_, err := uuid.Parse(strings.TrimSpace(value))
+	return err == nil
+}
+
+func appendChecklistSourceValueFields(displayFields []string, storedValueField string) []string {
+	out := append([]string(nil), displayFields...)
+	seen := map[string]struct{}{}
+	for _, field := range out {
+		field = strings.TrimSpace(field)
+		if field != "" {
+			seen[field] = struct{}{}
+		}
+	}
+	for _, field := range []string{chooseString(storedValueField, "doc_id"), "doc_id"} {
+		field = strings.TrimSpace(field)
+		if field == "" {
+			continue
+		}
+		if _, ok := seen[field]; ok {
+			continue
+		}
+		out = append(out, field)
+		seen[field] = struct{}{}
+	}
+	return out
+}
+
+func checklistStoredSourceValueFromOption(option dictionary.Option, storedValueField string) string {
+	fields := normalizeRuntimeStringMap(option.Fields)
+	for _, key := range []string{storedValueField, "doc_id", "_id", "id"} {
+		if value := strings.TrimSpace(fields[strings.TrimSpace(key)]); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func (s *Service) DeleteSubformRecord(

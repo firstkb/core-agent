@@ -31,6 +31,7 @@ type runtimeChecklistMatrixOption struct {
 	Description string
 	Fields      map[string]string
 	Label       string
+	SourceGuid  string
 	Value       string
 }
 
@@ -147,6 +148,7 @@ func (s *Service) buildChecklistMatrix(
 			Notes:           savedRow.Notes,
 			Required:        checklistItemRequired(*resultField, option.Fields),
 			SavedRowDocGuid: savedRow.DocGuid,
+			SourceGuid:      option.SourceGuid,
 			SourceValue:     option.Value,
 			Value:           savedRow.Value,
 			Values:          savedRow.Values,
@@ -255,7 +257,7 @@ func mergeChecklistDisplayFields(displayFields []string) []string {
 	for _, field := range out {
 		seen[strings.TrimSpace(field)] = struct{}{}
 	}
-	for _, field := range []string{"answer_options", "answer_required", "visible_when"} {
+	for _, field := range []string{"_guid", "answer_options", "answer_required", "visible_when"} {
 		if _, ok := seen[field]; ok {
 			continue
 		}
@@ -279,10 +281,21 @@ func checklistOptionsFromDictionaryResponse(response *dictionary.OptionsResponse
 			Description: strings.TrimSpace(item.Description),
 			Fields:      normalizeRuntimeStringMap(item.Fields),
 			Label:       strings.TrimSpace(item.Label),
+			SourceGuid:  checklistOptionSourceGuid(item.Fields),
 			Value:       value,
 		})
 	}
 	return out
+}
+
+func checklistOptionSourceGuid(fields map[string]string) string {
+	normalized := normalizeRuntimeStringMap(fields)
+	for _, key := range []string{"_guid", "doc_guid", "guid"} {
+		if value := strings.TrimSpace(normalized[key]); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func sortedChecklistOptions(

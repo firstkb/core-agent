@@ -363,6 +363,7 @@ func TestLoadFormReturnsChecklistMatrixWithSavedInactiveUnion(t *testing.T) {
 			if len(req.IDs) > 0 {
 				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
 					Fields: map[string]string{
+						"_guid":           "inactive-item-guid",
 						"answer_required": "true",
 						"catalog":         "Environmental",
 						"hazard":          "Old inactive question",
@@ -373,6 +374,7 @@ func TestLoadFormReturnsChecklistMatrixWithSavedInactiveUnion(t *testing.T) {
 			}
 			return &dictionary.OptionsResponse{Items: []dictionary.Option{{
 				Fields: map[string]string{
+					"_guid":           "active-item-guid",
 					"answer_options":  "Yes|No|N/A",
 					"answer_required": "true",
 					"catalog":         "Environmental",
@@ -414,6 +416,114 @@ func TestLoadFormReturnsChecklistMatrixWithSavedInactiveUnion(t *testing.T) {
 	}
 	if !savedInactive.InactiveSaved || savedInactive.Value != "No" || savedInactive.Notes != "existing note" {
 		t.Fatalf("saved inactive item = %#v, want inactive saved No with note", savedInactive)
+	}
+	if savedInactive.SourceGuid != "inactive-item-guid" {
+		t.Fatalf("saved inactive source guid = %q, want inactive-item-guid", savedInactive.SourceGuid)
+	}
+}
+
+func TestUpdateChecklistItemResolvesSourceGuid(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	dataSchema["subformScopes"] = append(asSlice(dataSchema["subformScopes"]), map[string]any{
+		"displayName":   "Checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"runtime": map[string]any{
+			"rtAlias":      "checklist",
+			"tableName":    "ps_sor__checklist",
+			"dataViewName": "vw_sor__checklist",
+		},
+		"fields": []any{
+			map[string]any{
+				"fieldId":       "item",
+				"kind":          "db_lookup",
+				"label":         "Item",
+				"selectionMode": "single",
+				"storageKey":    "item",
+				"lookupConfig": map[string]any{
+					"displayFields":    []any{"catalog", "hazard"},
+					"searchFields":     []any{"catalog", "hazard"},
+					"sourceModel":      "lookup-option",
+					"storedValueField": "doc_id",
+				},
+			},
+			map[string]any{
+				"fieldId":    "result",
+				"kind":       "single_select",
+				"label":      "Result",
+				"storageKey": "result",
+				"options":    []any{"Yes", "No"},
+			},
+			map[string]any{
+				"fieldId":    "notes",
+				"kind":       "long_text",
+				"label":      "Notes",
+				"storageKey": "notes",
+			},
+		},
+	})
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+
+	viewPayload := cloneJSONToMap(repo.view.DefinitionJSON)
+	rootScope := asMap(asMap(viewPayload["uiSchema"])["rootScope"])
+	rootScope["nodes"] = append(asSlice(rootScope["nodes"]), map[string]any{
+		"checklistConfig": map[string]any{
+			"lookupFieldId": "item",
+			"notesFieldId":  "notes",
+			"resultFieldId": "result",
+		},
+		"id":            "subform-checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"title":         "Checklist",
+		"type":          "subform",
+	})
+	repo.view.DefinitionJSON = mustJSON(viewPayload)
+
+	sourceGuid := "11111111-1111-1111-1111-111111111111"
+	provider := &recordingLookupOptionsProvider{
+		list: func(req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+			if req.SourceModel != "lookup-option" || req.StoredValueField != "doc_guid" {
+				t.Fatalf("lookup request = %#v, want lookup-option by doc_guid", req)
+			}
+			if len(req.IDs) != 1 || req.IDs[0] != sourceGuid {
+				t.Fatalf("lookup ids = %#v, want source guid", req.IDs)
+			}
+			if len(req.Filters) != 0 {
+				t.Fatalf("lookup filters = %#v, want none for source guid resolve", req.Filters)
+			}
+			return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+				Fields: map[string]string{
+					"_guid": sourceGuid,
+					"_id":   "42",
+				},
+				ID:    sourceGuid,
+				Label: "Environmental Active question",
+				Value: sourceGuid,
+			}}}, nil
+		},
+	}
+	svc := NewService(repo, provider)
+
+	out, err := svc.UpdateChecklistItem(testRuntimeContext(), "sor", "default", "parent-guid", "checklist", sourceGuid, RuntimeViewChecklistItemMutationRequest{
+		Notes: "note",
+		Value: "Yes",
+	})
+	if err != nil {
+		t.Fatalf("UpdateChecklistItem returned error: %v", err)
+	}
+	if repo.lastChecklistUpsert == nil || repo.lastChecklistUpsert.SourceValue != "42" {
+		t.Fatalf("checklist upsert = %#v, want source value 42", repo.lastChecklistUpsert)
+	}
+	if repo.lastChecklistUpsert.Values["item"] != "42" {
+		t.Fatalf("checklist item value = %#v, want 42", repo.lastChecklistUpsert.Values["item"])
+	}
+	if out.Item.SourceGuid != sourceGuid || out.Item.SourceValue != "42" {
+		t.Fatalf("response item source = guid %q value %q, want %q / 42", out.Item.SourceGuid, out.Item.SourceValue, sourceGuid)
 	}
 }
 

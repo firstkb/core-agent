@@ -52,7 +52,7 @@ type FormRuntimeCollectionTableSessionClient = {
     accessToken: string,
     parentDocGuid: string,
     subformId: string,
-    sourceValue: string,
+    sourceRef: string,
     input: FormRuntimeChecklistItemMutationRequest,
   ) => Promise<FormRuntimeChecklistItemMutationResponse>;
   deleteSavedFilterSet: (accessToken: string, savedFilterId: string) => Promise<void>;
@@ -145,6 +145,7 @@ export type FormRuntimeChecklistItem = {
   notes?: string;
   required?: boolean;
   savedRowDocGuid?: string;
+  sourceGuid?: string;
   sourceValue: string;
   value?: string;
   values?: Record<string, unknown>;
@@ -315,6 +316,7 @@ function normalizeRuntimeSubformsResponse(
                 notes: typeof item.notes === "string" ? item.notes : undefined,
                 required: Boolean(item.required),
                 savedRowDocGuid: typeof item.savedRowDocGuid === "string" ? item.savedRowDocGuid : undefined,
+                sourceGuid: typeof item.sourceGuid === "string" ? item.sourceGuid : undefined,
                 sourceValue: item.sourceValue,
                 value: typeof item.value === "string" ? item.value : undefined,
                 values: item.values && typeof item.values === "object" && !Array.isArray(item.values)
@@ -350,6 +352,7 @@ function normalizeRuntimeChecklistItemMutationResponse(
         notes: typeof payload.item.notes === "string" ? payload.item.notes : undefined,
         required: Boolean(payload.item.required),
         savedRowDocGuid: typeof payload.item.savedRowDocGuid === "string" ? payload.item.savedRowDocGuid : undefined,
+        sourceGuid: typeof payload.item.sourceGuid === "string" ? payload.item.sourceGuid : undefined,
         sourceValue: typeof payload.item.sourceValue === "string" ? payload.item.sourceValue : "",
         value: typeof payload.item.value === "string" ? payload.item.value : undefined,
         values: payload.item.values && typeof payload.item.values === "object" && !Array.isArray(payload.item.values)
@@ -559,10 +562,10 @@ export function createFormRuntimeCollectionTableClient(options: {
         },
       );
     },
-    async updateChecklistItem(accessToken, parentDocGuid, subformId, sourceValue, input) {
+    async updateChecklistItem(accessToken, parentDocGuid, subformId, sourceRef, input) {
       const response = await requestTenantCollectionTable<FormRuntimeChecklistItemMutationResponse>(
         options.baseUrl,
-        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/checklist/items/${encodeURIComponent(sourceValue)}`,
+        `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/checklist/items/${encodeURIComponent(sourceRef)}`,
         {
           accessToken,
           body: input,

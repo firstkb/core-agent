@@ -300,6 +300,7 @@ export type RuntimeFormChecklistItem = {
   notes?: string;
   required?: boolean;
   savedRowDocGuid?: string;
+  sourceGuid?: string;
   sourceValue: string;
   value?: string;
   values?: RuntimeFormValues;

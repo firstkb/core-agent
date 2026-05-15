@@ -83,3 +83,25 @@ func TestOptionsSourceRejectsUnsupportedNamedFilterColumn(t *testing.T) {
 		t.Fatal("genericFilterClause returned nil error, want invalid dictionary")
 	}
 }
+
+func TestBuildModelFieldColumnMapIncludesDefaultGuidAliases(t *testing.T) {
+	fields := buildModelFieldColumnMap(modelRootScope{})
+
+	for _, key := range []string{"_guid", "doc_guid", "guid"} {
+		if fields[key] != "_guid" {
+			t.Fatalf("field %q maps to %q, want _guid", key, fields[key])
+		}
+	}
+}
+
+func TestBuildModelFieldColumnMapUsesConfiguredGuidColumn(t *testing.T) {
+	fields := buildModelFieldColumnMap(modelRootScope{
+		Runtime: modelScopeRuntime{SourceGUIDColumn: "custom_guid"},
+	})
+
+	for _, key := range []string{"_guid", "doc_guid", "guid"} {
+		if fields[key] != "custom_guid" {
+			t.Fatalf("field %q maps to %q, want custom_guid", key, fields[key])
+		}
+	}
+}

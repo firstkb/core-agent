@@ -417,6 +417,7 @@ function runtimeSubformsFromFormResponse(response: FormRuntimeFormResponse) {
             notes: item.notes,
             required: item.required,
             savedRowDocGuid: item.savedRowDocGuid,
+            sourceGuid: item.sourceGuid,
             sourceValue: item.sourceValue,
             value: item.value,
             values: coerceLooseRuntimeValues(item.values),
@@ -2015,7 +2016,8 @@ export function FormsRuntimeFormPage({
   ) {
     void (async () => {
       const parentGuid = await ensureRecordReadyForSubformAction();
-      if (!parentGuid || !item.sourceValue) {
+      const sourceRef = item.sourceGuid || item.sourceValue;
+      if (!parentGuid || !sourceRef) {
         return;
       }
 
@@ -2040,7 +2042,7 @@ export function FormsRuntimeFormPage({
           accessToken,
           parentGuid,
           subform.schemaScopeId,
-          item.sourceValue,
+          sourceRef,
           nextChange,
         );
         mergeChecklistItemState(

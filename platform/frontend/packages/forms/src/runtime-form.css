@@ -496,7 +496,7 @@
 
 .platform-runtime-form__checklist-question-label {
   color: var(--color-text-primary);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-snug);
 }
@@ -537,7 +537,7 @@
 }
 
 .platform-runtime-form__checklist-answer-group .ui-toggle-group__item {
-  min-height: 2.5rem;
+  min-height: 2.25rem;
   min-width: 3.5rem;
   justify-content: center;
   padding-inline: var(--space-3);
@@ -546,7 +546,7 @@
 }
 
 .platform-runtime-form__checklist-notes-button.ui-button {
-  min-height: 2.5rem;
+  min-height: 2.25rem;
   min-width: 3.5rem;
   align-items: center;
   justify-content: center;

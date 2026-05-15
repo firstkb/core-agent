@@ -287,6 +287,8 @@ export function LookupField({
       label={field.label}
       loading={loading}
       loadingMore={loadingMore}
+      clearable
+      clearSelectionLabel={labels.clearSelection}
       onLoadMore={() => {
         if (!loading && !loadingMore && hasMoreOptions) {
           setPage((currentPage) => currentPage + 1);

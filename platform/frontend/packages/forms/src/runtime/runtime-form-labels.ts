@@ -18,6 +18,7 @@ const defaultRuntimeFormLabels: RuntimeFormResolvedLabels = {
   catalogSelect: "Select",
   checklistInactiveSaved: "Saved inactive item",
   checklistNotes: "Notes",
+  clearSelection: "Clear selection",
   createModeInfo: "Complete the required fields to create this record. Changes will save automatically after it is created.",
   createTitle: "Start new record",
   editModeInfo: "This form saves changes automatically as you work. You can continue working with it later.",

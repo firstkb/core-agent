@@ -173,6 +173,7 @@ export const tenantEnglishMessages = {
             searchPlaceholder: "Search catalog",
             select: "Select",
           },
+          clearSelection: "Clear selection",
           createModeInfo: "Complete the required fields to create this record. Changes will save automatically after it is created.",
           createTitle: "Start new record",
           deleteDialog: {

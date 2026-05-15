@@ -735,6 +735,7 @@ export function FormsRuntimeFormPage({
     catalogRetry: t("tenant.runtime.forms.form.catalog.retry"),
     catalogSearchPlaceholder: t("tenant.runtime.forms.form.catalog.searchPlaceholder"),
     catalogSelect: t("tenant.runtime.forms.form.catalog.select"),
+    clearSelection: t("tenant.runtime.forms.form.clearSelection"),
     createModeInfo: t("tenant.runtime.forms.form.createModeInfo"),
     createTitle: t("tenant.runtime.forms.form.createTitle"),
     editModeInfo: t("tenant.runtime.forms.form.editModeInfo"),
@@ -1563,8 +1564,14 @@ export function FormsRuntimeFormPage({
     Object.keys(changedValues).forEach((fieldId) => {
       const meta = metaByField?.[fieldId];
       const labels = meta?.lookupLabels;
-      mergeLookupLabels(changedLookupLabels, fieldId, labels);
-      mergeLookupLabels(latestLookupLabelsRef.current, fieldId, labels);
+      const selectedValues = selectedLookupRuntimeValues(changedValues[fieldId]);
+      if (meta && selectedValues.length === 0) {
+        delete latestLookupLabelsRef.current[fieldId];
+        delete pendingLookupLabelsRef.current[fieldId];
+      } else {
+        mergeLookupLabels(changedLookupLabels, fieldId, labels);
+        mergeLookupLabels(latestLookupLabelsRef.current, fieldId, labels);
+      }
 
       const outputPrefix = `${fieldId}::lookup_output::`;
       Object.keys(latestValuesRef.current).forEach((valueKey) => {
@@ -1573,7 +1580,6 @@ export function FormsRuntimeFormPage({
         }
       });
 
-      const selectedValues = selectedLookupRuntimeValues(changedValues[fieldId]);
       const selectedFields = selectedValues
         .flatMap((selectedValue) => Object.entries(meta?.lookupOptionFields?.[selectedValue] ?? {}));
       selectedFields.forEach(([outputKey, outputValue]) => {

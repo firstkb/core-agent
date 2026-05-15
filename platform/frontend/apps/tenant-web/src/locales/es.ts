@@ -173,6 +173,7 @@ export const tenantSpanishMessages = {
             searchPlaceholder: "Buscar catalogo",
             select: "Seleccionar",
           },
+          clearSelection: "Limpiar seleccion",
           createModeInfo: "Completa los campos requeridos para crear este registro. Los cambios se guardaran automaticamente despues de crearlo.",
           createTitle: "Iniciar registro nuevo",
           deleteDialog: {

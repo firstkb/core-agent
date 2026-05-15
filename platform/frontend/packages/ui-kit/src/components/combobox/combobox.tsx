@@ -76,6 +76,25 @@ function ComboboxTagRemoveIcon() {
   );
 }
 
+function ComboboxClearIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="ui-combobox__trigger-clear-icon"
+      fill="none"
+      viewBox="0 0 16 16"
+    >
+      <path
+        d="m5 5 6 6M11 5l-6 6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
 export type ComboboxOption = {
   description?: ReactNode;
   disabled?: boolean;
@@ -89,6 +108,8 @@ export type ComboboxFilterMode = "local" | "none";
 export type ComboboxSelectionMode = "multiple" | "single";
 
 type ComboboxBaseProps = Omit<HTMLAttributes<HTMLDivElement>, "children" | "defaultValue" | "onChange"> & {
+  clearSelectionLabel?: string;
+  clearable?: boolean;
   defaultSearchValue?: string;
   disabled?: boolean;
   emptyLabel?: ReactNode;
@@ -150,6 +171,8 @@ export function Combobox({
 }: ComboboxProps) {
   const {
     className,
+    clearSelectionLabel = "Clear selection",
+    clearable = false,
     defaultSearchValue = "",
     defaultValue: _defaultValue,
     disabled = false,
@@ -295,6 +318,7 @@ export function Combobox({
   );
   const hasMoreVisibleOptions = progressiveLoadEnabled && renderedOptions.length < filteredOptions.length;
   const hasRemoteMoreOptions = Boolean(onLoadMore && hasMoreOptions);
+  const canClearSingleValue = !multiple && clearable && !disabled && Boolean(selectedValue);
   const triggerValue = useMemo<ReactNode>(() => {
     if (!multiple) {
       return selectedOption ? selectedOption.label : placeholder;
@@ -455,6 +479,17 @@ export function Combobox({
     handleOpenChange(false);
   }
 
+  function clearSelectedValue() {
+    if (multiple) {
+      return;
+    }
+
+    setSelectedState(null);
+    resetSearchIfNeeded();
+    handleOpenChange(false);
+    triggerButtonRef.current?.focus();
+  }
+
   function removeSelectedValue(nextValue: string) {
     if (!multiple) {
       return;
@@ -464,6 +499,17 @@ export function Combobox({
       const currentValues = Array.isArray(currentValue) ? currentValue : [];
       return currentValues.filter((value) => value !== nextValue);
     });
+  }
+
+  function handleClearClick(event: ReactMouseEvent<HTMLElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    clearSelectedValue();
+  }
+
+  function handleClearMouseDown(event: ReactMouseEvent<HTMLElement>) {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   function handleTagRemoveClick(event: ReactMouseEvent<HTMLElement>, nextValue: string) {
@@ -595,6 +641,19 @@ export function Combobox({
             >
               {triggerValue}
             </span>
+            {canClearSingleValue ? (
+              <span
+                aria-label={clearSelectionLabel}
+                className="ui-combobox__trigger-clear"
+                onClick={handleClearClick}
+                onMouseDown={handleClearMouseDown}
+                role="button"
+                tabIndex={-1}
+                title={clearSelectionLabel}
+              >
+                <ComboboxClearIcon />
+              </span>
+            ) : null}
             <ComboboxChevronIcon />
           </button>
         </PopoverTrigger>

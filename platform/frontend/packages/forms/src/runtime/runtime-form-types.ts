@@ -441,6 +441,7 @@ export type RuntimeFormResolvedLabels = {
   catalogSelect: ReactNode;
   checklistInactiveSaved: ReactNode;
   checklistNotes: ReactNode;
+  clearSelection: string;
   createModeInfo: ReactNode;
   createTitle: ReactNode;
   editModeInfo: ReactNode;

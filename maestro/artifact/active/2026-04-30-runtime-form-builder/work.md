@@ -649,7 +649,34 @@ View/read remains the existing `CollectionTable` modal path for now.
   - `git diff --check`;
   - `scripts/preflight.sh` passed in lite mode;
   - Browser Use desktop smoke confirmed clicking the `DB lookup` label focuses its combobox trigger without opening the dropdown/listbox.
+- Runtime checklist subform first slice completed:
+  - backend form-load emits checklist matrix data per checklist subform, including
+    active lookup rows plus saved inactive rows;
+  - checklist answer upsert stores only selected rows and preserves optional
+    detail fields such as notes, short text, date, and single select;
+  - the shared form renderer supports flat and category checklist display,
+    category accordion rendering, answer buttons, detail expansion, required
+    validation, and reveal/focus on finish;
+  - the current lookup-option storage drift was reproduced as schema knows
+    `answer_options`, `answer_required`, and `visible_when`, while
+    `ps_lookup_option` still lacked those physical columns; runtime write now
+    has a managed-storage safety net for scalar columns.
+- Form Builder runtime apply storage/view split completed:
+  - managed storage apply now commits before SQL view refresh, so a later data
+    view or grid view error cannot roll back additive `ALTER TABLE ADD COLUMN`
+    changes;
+  - canonical data views refresh via `CREATE OR REPLACE VIEW` without a
+    preliminary `DROP VIEW`, avoiding failures from dependent lookup/grid views;
+  - if view refresh still fails after storage succeeds, backend returns a
+    partial runtime apply warning and Form Builder surfaces the warning after
+    save instead of silently showing success only.
 
 ## Next Action
 
-Next allowed action is owner retest of runtime label activation and then choose the next runtime field slice. Multi-select catalog modal, richer catalog column layouts, dynamic lookup filters, dictionary-specific access rules, multivalue View Filter support, and `Checklist subform` remain staged follow-up work unless the owner explicitly reorders them.
+Next allowed action is owner retest of Form Builder save on `lookup-option`
+after restarting tenant API, then continue the next runtime field slice.
+Multi-select catalog modal, richer catalog column layouts, dynamic lookup
+filters, dictionary-specific access rules, multivalue View Filter support,
+richer checklist source configuration, checklist file/photo support, and
+Corrective Action integration remain staged follow-up work unless the owner
+explicitly reorders them.

@@ -1,8 +1,8 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-13
-Verification mode: implementation update plus tracked docs and targeted FE checks
+Last verified: 2026-05-14
+Verification mode: implementation update plus tracked docs and targeted FE/BE checks
 
 This file preserves Form Builder planned work without turning it into active
 implementation scope. Use it after the active Form Builder contracts, not
@@ -26,6 +26,10 @@ instead of them.
 - Runtime Form View APIs are guarded by the Navigation Builder derived target
   evaluator; future Form Builder runtime endpoints must reuse that guard.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
+  Managed storage apply commits before SQL view refresh, and data views are
+  refreshed with `CREATE OR REPLACE VIEW` so dependent lookup/grid views do not
+  block additive column creation. If view refresh still fails after storage
+  succeeds, the save response returns a partial runtime apply warning.
 - Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
 - Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.
 - Root View row layout supports one visible Grid field in
@@ -56,6 +60,11 @@ instead of them.
 - View-list warning triangles are topology drift indicators only. Field setting changes and layout-only blueprint edits do not advance `modelStructureVersion`; field add/remove, scope moves, and subform-scope topology changes do.
 - Form Builder does not expose View Active/Inactive status or controls. `isActive` is retired from Form Builder view config and new `ps_view.definition_json` payloads; old payloads may be tolerated and dropped. Backend `ps_view.is_active` / API summary values remain deprecated compatibility metadata for now. Navigation Builder owns sidebar/runtime exposure and placement.
 - Managed multiple lookup fields and non-lookup `multi_select`/`tags` have code-backed multivalue bridge-table support.
+- Runtime Form supports the first `Checklist subform` slice: backend form-load
+  emits a checklist matrix, answer upsert saves only selected checklist rows,
+  active lookup rows are unioned with saved inactive rows, and the shared form
+  renderer displays flat/category checklist UI with answer buttons, optional
+  detail fields, required validation, and reveal/focus behavior.
 - Form Builder palette grouping treats each library field definition's explicit `section` as the source of truth; `Long text historical` belongs under `Ready-made fields`, not `Basic fields`.
 - Generic `DB lookup`, `DB lookup value`, and `DB lookup multi` source picker authoring supports `lookupConfig.filters[]`; the current UI exposes only `Only active records`, saved as `{ field: "active", operator: "eq", value: true }` when the selected source has a boolean `active` field. Form Builder authoring work for DB LOOKUP filters is complete for the current scope; Form render/runtime application remains a separate implementation stream.
 - Preset DB lookup shortcuts `Contact` / `Contacts`, `Company` / `Companies`, and `Project` / `Projects` author display templates and explicit preset filters in Form Builder. Preset filters save to `lookupConfig.filters[]` with `operator: "in"`; active-record filtering is not exposed as a preset Form Builder setting. Preset filter values are selected through the shared tenant dictionary routes using two-line Combobox options rather than raw id text inputs, with 300 ms remote-search debounce, first-page loading, and additional pages loaded on scroll.
@@ -68,7 +77,9 @@ instead of them.
 
 ## Planned / Open Work
 
-- `Checklist subform` Form Builder authoring shortcut is implemented for the current slice: it creates the checklist child scope with managed/locked default `Item` (`db_lookup`), `Result` (`single_select` button answers), and `Notes` (`long_text`) fields, stores `checklistConfig.lookupFieldId`, `checklistConfig.resultFieldId`, `checklistConfig.notesFieldId`, and `checklistConfig.grouping`, and exposes lookup/result/grouping controls in the Element inspector. Optional `Notes` should be hidden with node visibility instead of deleted. Checklist-level palette is restricted to `Short text`, `Date`, `Single select`, `Heading`, and `Text`. Deleting a subform now removes the subform node, scoped fields, and model schema scope together to prevent child fields from reappearing as root/unplaced fields. Checklist item-source metadata is now an accepted runtime convention: Form render may auto-detect optional source fields `answer_options` (`Pass|Fail|N/A` using `|` delimiter), `answer_required` (`boolean`), and `visible_when` (`7=Fail` style single dependency); Form Builder field-mapping selects are deferred. Remaining checklist work belongs to Form render/runtime behavior, richer source configuration UX, file/photo support, and any Corrective Action integration.
+- `Checklist subform` Form Builder authoring shortcut is implemented for the current slice: it creates the checklist child scope with managed/locked default `Item` (`db_lookup`), `Result` (`single_select` button answers), and `Notes` (`long_text`) fields, stores `checklistConfig.lookupFieldId`, `checklistConfig.resultFieldId`, `checklistConfig.notesFieldId`, and `checklistConfig.grouping`, and exposes lookup/result/grouping controls in the Element inspector. Optional `Notes` should be hidden with node visibility instead of deleted. Checklist-level palette is restricted to `Short text`, `Date`, `Single select`, `Heading`, and `Text`. Deleting a subform now removes the subform node, scoped fields, and model schema scope together to prevent child fields from reappearing as root/unplaced fields. Checklist item-source metadata is now an accepted runtime convention: Form render auto-detects optional source fields `answer_options` (`Pass|Fail|N/A` using `|` delimiter), `answer_required` (`boolean`), and `visible_when` (`7=Fail` style single dependency metadata). Remaining checklist work belongs to richer source configuration UX, visible-when behavior beyond metadata transport, file/photo support, and any Corrective Action integration.
+- Runtime write has a managed-storage safety net for missing scalar columns.
+  Keep it as a runtime protection, not as the primary Form Builder apply path.
 - Navigation Builder must own runtime exposure, sidebar placement, and runtime grant assignment for `{ targetType: form_builder_view, modelId, viewId }`.
 - Future Navigation Builder bridge in Form Builder should surface runtime exposure
   without moving ownership into Form Builder: model/view list row action `Add to

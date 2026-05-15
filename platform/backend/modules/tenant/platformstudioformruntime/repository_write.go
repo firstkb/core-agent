@@ -18,13 +18,9 @@ func createRootRecordTx(
 	values map[string]any,
 	createDocGuid string,
 ) (*runtimeRecordMutationRow, error) {
-	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	columnNames, args, columnSet, err := mutationColumnsAndArgsWithRuntimeRecoveryTx(ctx, tx, scope, values)
 	if err != nil {
 		return nil, err
-	}
-	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(scope, values, columnSet)
-	if len(missingFields) > 0 {
-		return nil, runtimeSchemaDriftError(scope.TableName, missingFields)
 	}
 	if createDocGuid != "" && scope.SourceGUIDColumn != "" {
 		columnNames = append(columnNames, scope.SourceGUIDColumn)
@@ -85,13 +81,9 @@ func createSubformRecordTx(
 		return nil, err
 	}
 	recordScope := rootScopeFromSubform(rootScope, subformScope)
-	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	columnNames, args, columnSet, err := mutationColumnsAndArgsWithRuntimeRecoveryTx(ctx, tx, recordScope, values)
 	if err != nil {
 		return nil, err
-	}
-	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(recordScope, values, columnSet)
-	if len(missingFields) > 0 {
-		return nil, runtimeSchemaDriftError(recordScope.TableName, missingFields)
 	}
 	columnNames = append(columnNames, subformScope.ParentForeignKey)
 	args = append(args, parentRow.SourceID)
@@ -151,13 +143,9 @@ func updateRootRecordTx(
 		return loadRootRecordTx(ctx, tx, scope, docGuid)
 	}
 
-	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	columnNames, args, columnSet, err := mutationColumnsAndArgsWithRuntimeRecoveryTx(ctx, tx, scope, values)
 	if err != nil {
 		return nil, err
-	}
-	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(scope, values, columnSet)
-	if len(missingFields) > 0 {
-		return nil, runtimeSchemaDriftError(scope.TableName, missingFields)
 	}
 	hasMultiValueMutation := hasMultiValueMutation(scope, values)
 	if len(columnNames) == 0 && !hasMultiValueMutation {
@@ -243,13 +231,9 @@ func updateSubformRecordTx(
 		return loadSubformRecordTx(ctx, tx, rootScope, subformScope, parentDocGuid, docGuid)
 	}
 
-	columnSet, err := runtimeRelationColumnsTx(ctx, tx, recordScope.TableName)
+	columnNames, args, columnSet, err := mutationColumnsAndArgsWithRuntimeRecoveryTx(ctx, tx, recordScope, values)
 	if err != nil {
 		return nil, err
-	}
-	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(recordScope, values, columnSet)
-	if len(missingFields) > 0 {
-		return nil, runtimeSchemaDriftError(recordScope.TableName, missingFields)
 	}
 	hasMultiValueMutation := hasMultiValueMutation(recordScope, values)
 	if len(columnNames) == 0 && !hasMultiValueMutation {
@@ -886,6 +870,110 @@ func deleteSubformMultiValueRowsForRootDocGuidsTx(
 func mutationColumnsAndArgs(scope runtimeRootScopePlan, values map[string]any) ([]string, []any) {
 	columnNames, args, _ := mutationColumnsAndArgsForColumns(scope, values, nil)
 	return columnNames, args
+}
+
+func mutationColumnsAndArgsWithRuntimeRecoveryTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	values map[string]any,
+) ([]string, []any, map[string]struct{}, error) {
+	columnSet, err := runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	columnNames, args, missingFields := mutationColumnsAndArgsForColumns(scope, values, columnSet)
+	if len(missingFields) == 0 {
+		return columnNames, args, columnSet, nil
+	}
+	if !isManagedRuntimeSourceType(scope.SourceType) {
+		return nil, nil, nil, runtimeSchemaDriftError(scope.TableName, missingFields)
+	}
+	fieldsToEnsure := missingManagedRuntimeScalarFields(scope, columnSet)
+	if len(fieldsToEnsure) == 0 {
+		return nil, nil, nil, runtimeSchemaDriftError(scope.TableName, missingFields)
+	}
+	if err := ensureManagedRuntimeScalarColumnsTx(ctx, tx, scope, fieldsToEnsure); err != nil {
+		return nil, nil, nil, err
+	}
+
+	columnSet, err = runtimeRelationColumnsTx(ctx, tx, scope.TableName)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	columnNames, args, missingFields = mutationColumnsAndArgsForColumns(scope, values, columnSet)
+	if len(missingFields) > 0 {
+		return nil, nil, nil, runtimeSchemaDriftError(scope.TableName, missingFields)
+	}
+	return columnNames, args, columnSet, nil
+}
+
+func ensureManagedRuntimeScalarColumnsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeRootScopePlan,
+	fields []runtimeFieldPlan,
+) error {
+	for _, field := range fields {
+		physicalType := managedRuntimeFieldPhysicalType(field)
+		if physicalType == "" {
+			return runtimeSchemaDriftError(scope.TableName, []runtimeFieldPlan{field})
+		}
+		query := fmt.Sprintf(
+			"ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s",
+			qualifiedIdentifier(scope.TableName),
+			quoteIdentifier(field.ColumnName),
+			physicalType,
+		)
+		if _, err := tx.ExecContext(ctx, query); err != nil {
+			return fmt.Errorf("form runtime: ensure managed runtime column %s.%s: %w", scope.TableName, field.ColumnName, err)
+		}
+	}
+	return nil
+}
+
+func missingManagedRuntimeScalarFields(scope runtimeRootScopePlan, columnSet map[string]struct{}) []runtimeFieldPlan {
+	fields := []runtimeFieldPlan{}
+	for _, field := range scope.Fields {
+		if managedRuntimeFieldPhysicalType(field) == "" {
+			continue
+		}
+		if runtimeColumnExists(columnSet, field.ColumnName) {
+			continue
+		}
+		fields = append(fields, field)
+	}
+	return fields
+}
+
+func managedRuntimeFieldPhysicalType(field runtimeFieldPlan) string {
+	if !field.Supported || field.MultiValue || strings.TrimSpace(field.ColumnName) == "" {
+		return ""
+	}
+	switch {
+	case field.Kind == "short_text",
+		field.Kind == "long_text",
+		field.Kind == "rich_text",
+		field.Kind == "single_select",
+		field.Kind == "geo_point":
+		return "text"
+	case field.Kind == "integer":
+		return "bigint"
+	case field.Kind == "decimal", field.Kind == "currency":
+		return "numeric"
+	case field.Kind == "boolean":
+		return "boolean"
+	case field.Kind == "date":
+		return "date"
+	case field.Kind == "date_time":
+		return "timestamptz"
+	case field.Kind == "db_lookup" && field.Preset == "db_lookup_value":
+		return "text"
+	case field.Kind == "db_lookup":
+		return "bigint"
+	default:
+		return ""
+	}
 }
 
 func mutationColumnsAndArgsForColumns(

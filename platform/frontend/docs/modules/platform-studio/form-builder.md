@@ -338,6 +338,11 @@ Additive runtime apply may:
 - create or recreate SQL views
 - create missing runtime metadata
 
+Runtime apply commits additive managed storage before refreshing SQL views. If
+view refresh fails after storage succeeds, the save response must surface a
+partial runtime apply warning while keeping the authoring save and storage
+changes.
+
 Additive runtime apply must not:
 
 - delete tables

@@ -502,6 +502,16 @@ Backend must not overwrite logical keys with physical runtime names.
 
 Runtime apply runs after successful authoring persistence.
 
+Runtime apply has two phases:
+
+- storage phase: managed tables, bridge tables, columns, indexes, foreign keys,
+  and triggers
+- view phase: canonical data views, grid views, and lookup-derived SQL outputs
+
+Storage phase must commit independently before view refresh. If view refresh
+fails after storage succeeds, return a partial runtime apply summary/warning
+instead of rolling back the additive storage changes.
+
 Managed runtime apply may:
 
 - create missing root managed table
@@ -523,6 +533,7 @@ Runtime apply must not:
 - move persisted fields across scopes with data migration
 - treat SQL-view-only lookup outputs as editable model fields
 - roll back already persisted authoring state when runtime apply fails
+- roll back additive storage changes because a later view refresh failed
 
 Runtime apply result shape includes:
 

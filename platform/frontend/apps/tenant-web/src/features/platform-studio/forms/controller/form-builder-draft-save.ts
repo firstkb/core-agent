@@ -40,6 +40,7 @@ export type SavedFormBuilderDraft = {
   savedDocument: FormBuilderDocument;
   savedLayoutBlueprint: Record<string, unknown>;
   savedModel: FormsPlaceholderModel;
+  warningMessage?: string;
 };
 
 type SaveFormBuilderDraftInput = {
@@ -202,6 +203,7 @@ export async function saveFormBuilderDraft({
       savedModelWithView,
       savedLayoutBlueprint,
     );
+    const warningMessage = response.validationSummary.warnings.map((warning) => warning.message).find(Boolean);
 
     return {
       savedDocument: shouldSyncFieldNodeTitlesWithModel
@@ -209,6 +211,7 @@ export async function saveFormBuilderDraft({
         : savedDocument,
       savedLayoutBlueprint,
       savedModel: savedModelWithView,
+      ...(warningMessage ? { warningMessage } : {}),
     };
   } catch (error) {
     if (isDraftEndpointUnavailable(error)) {

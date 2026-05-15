@@ -267,6 +267,13 @@ func runtimeApplyWarnings(summary *RuntimeApplySummary) []ValidationMessage {
 	}
 
 	warnings := make([]ValidationMessage, 0)
+	if summary.Status != "" && summary.Status != "applied" && strings.TrimSpace(summary.Message) != "" {
+		warnings = append(warnings, ValidationMessage{
+			Code:    "runtime_apply_partial",
+			Message: summary.Message,
+			Target:  "runtime",
+		})
+	}
 	warnings = append(warnings, summary.StorageResults.RootScope.Warnings...)
 	for _, scope := range summary.StorageResults.SubformScopes {
 		warnings = append(warnings, scope.Warnings...)

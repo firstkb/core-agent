@@ -607,6 +607,7 @@ export function FormsViewWorkspacePage() {
       savedDocument,
       savedLayoutBlueprint,
       savedModel,
+      warningMessage,
     }) => {
       hydrateDocument(preserveFormBuilderWorkspaceNavigation(savedDocument, document));
       setModelDraft(savedModel);
@@ -614,7 +615,7 @@ export function FormsViewWorkspacePage() {
       setLayoutBlueprintDraft(savedLayoutBlueprint);
       setSavedLayoutBlueprintDraft(savedLayoutBlueprint);
       replaceModel(savedModel);
-      setDraftSyncError(null);
+      setDraftSyncError(warningMessage ?? null);
       triggerSavePulse();
     },
     saveErrorMessage: t("tenant.platformStudio.forms.builder.draftSaveError"),

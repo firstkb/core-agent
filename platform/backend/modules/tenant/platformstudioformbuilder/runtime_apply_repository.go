@@ -17,12 +17,6 @@ func (r *repository) ApplyRuntime(ctx context.Context, tenant requestctx.TenantI
 		return nil, fmt.Errorf("form builder: open tenant db for runtime apply: %w", err)
 	}
 
-	tx, err := db.BeginTx(ctx, &sql.TxOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("form builder: begin runtime apply tx: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
-
 	summary := &RuntimeApplySummary{
 		Status: "applied",
 		StorageResults: &RuntimeApplyStorageResults{
@@ -30,28 +24,74 @@ func (r *repository) ApplyRuntime(ctx context.Context, tenant requestctx.TenantI
 		},
 	}
 
-	rootScopeResult, err := applyRuntimeScopeTx(ctx, tx, plan.ModelSourceType, plan.RootScope)
+	storageTx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("form builder: begin runtime storage apply tx: %w", err)
+	}
+	defer func() { _ = storageTx.Rollback() }()
+
+	rootScopeResult, rootScope, err := applyRuntimeScopeStorageTx(ctx, storageTx, plan.ModelSourceType, plan.RootScope)
 	if err != nil {
 		return nil, err
 	}
 	summary.StorageResults.RootScope = rootScopeResult
 
+	subformScopes := make([]runtimeApplyScopePlan, 0, len(plan.SubformScopes))
 	for _, scope := range plan.SubformScopes {
-		scopeResult, err := applyRuntimeScopeTx(ctx, tx, plan.ModelSourceType, scope)
+		scopeResult, resolvedScope, err := applyRuntimeScopeStorageTx(ctx, storageTx, plan.ModelSourceType, scope)
 		if err != nil {
 			return nil, err
 		}
 		summary.StorageResults.SubformScopes = append(summary.StorageResults.SubformScopes, scopeResult)
+		subformScopes = append(subformScopes, resolvedScope)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("form builder: commit runtime apply tx: %w", err)
+	if err := storageTx.Commit(); err != nil {
+		return nil, fmt.Errorf("form builder: commit runtime storage apply tx: %w", err)
+	}
+
+	viewTx, err := db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return runtimeApplyPartialSummary(summary, fmt.Errorf("begin runtime view apply tx: %w", err)), nil
+	}
+	defer func() { _ = viewTx.Rollback() }()
+
+	rootScopeResult, err = applyRuntimeScopeViewsTx(ctx, viewTx, rootScope, summary.StorageResults.RootScope)
+	if err != nil {
+		return runtimeApplyPartialSummary(summary, err), nil
+	}
+	summary.StorageResults.RootScope = rootScopeResult
+
+	for index, scope := range subformScopes {
+		scopeResult, err := applyRuntimeScopeViewsTx(ctx, viewTx, scope, summary.StorageResults.SubformScopes[index])
+		if err != nil {
+			return runtimeApplyPartialSummary(summary, err), nil
+		}
+		summary.StorageResults.SubformScopes[index] = scopeResult
+	}
+
+	if err := viewTx.Commit(); err != nil {
+		return runtimeApplyPartialSummary(summary, fmt.Errorf("commit runtime view apply tx: %w", err)), nil
 	}
 
 	return summary, nil
 }
 
-func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string, scope runtimeApplyScopePlan) (RuntimeApplyScopeResult, error) {
+func runtimeApplyPartialSummary(summary *RuntimeApplySummary, err error) *RuntimeApplySummary {
+	if summary == nil {
+		summary = &RuntimeApplySummary{}
+	}
+	summary.Status = "partial"
+	summary.Message = fmt.Sprintf("runtime storage was applied, but runtime views were not fully refreshed: %v", err)
+	return summary
+}
+
+func applyRuntimeScopeStorageTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	modelSourceType string,
+	scope runtimeApplyScopePlan,
+) (RuntimeApplyScopeResult, runtimeApplyScopePlan, error) {
 	result := RuntimeApplyScopeResult{
 		ScopeID:       scope.ScopeID,
 		GridViews:     []RuntimeApplyArtifactResult{},
@@ -63,10 +103,10 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 	if isManagedRuntimeSourceType(modelSourceType) {
 		tableExisted, err := relationExistsTx(ctx, tx, scope.TableName)
 		if err != nil {
-			return result, err
+			return result, scope, err
 		}
 		if err := ensureManagedTableTx(ctx, tx, scope); err != nil {
-			return result, err
+			return result, scope, err
 		}
 		result.Table = &RuntimeApplyArtifactResult{
 			Name:   scope.TableName,
@@ -74,11 +114,11 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 		}
 	} else {
 		if err := ensureExternalSourceTableTx(ctx, tx, scope.TableName); err != nil {
-			return result, err
+			return result, scope, err
 		}
 		scope, err = resolveExternalRuntimeScopePlanTx(ctx, tx, scope)
 		if err != nil {
-			return result, err
+			return result, scope, err
 		}
 		result.Table = &RuntimeApplyArtifactResult{
 			Name:   scope.TableName,
@@ -89,14 +129,14 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 	multiValueFields := filterRuntimeMultiValueFields(scope.Fields)
 	if len(multiValueFields) > 0 {
 		if !isManagedRuntimeSourceType(modelSourceType) {
-			return result, fmt.Errorf("form builder: runtime apply for %s does not support multivalue bridge tables yet", modelSourceType)
+			return result, scope, fmt.Errorf("form builder: runtime apply for %s does not support multivalue bridge tables yet", modelSourceType)
 		}
 		mvExisted, err := relationExistsTx(ctx, tx, scope.MultiValueTableName)
 		if err != nil {
-			return result, err
+			return result, scope, err
 		}
 		if err := ensureManagedMultiValueTableTx(ctx, tx, scope); err != nil {
-			return result, err
+			return result, scope, err
 		}
 		result.MultiValueTable = &RuntimeApplyArtifactResult{
 			Name:   scope.MultiValueTableName,
@@ -104,6 +144,26 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 		}
 	}
 
+	for _, field := range scope.Fields {
+		if field.WarningMessage == "" {
+			continue
+		}
+		result.Warnings = append(result.Warnings, ValidationMessage{
+			Code:    "runtime_apply_field_warning",
+			Message: fmt.Sprintf("%s (%s): %s", chooseString(field.FieldID, field.StorageKey), chooseString(field.Kind, "unknown"), field.WarningMessage),
+			Target:  scope.ScopeID,
+		})
+	}
+
+	return result, scope, nil
+}
+
+func applyRuntimeScopeViewsTx(
+	ctx context.Context,
+	tx *sql.Tx,
+	scope runtimeApplyScopePlan,
+	result RuntimeApplyScopeResult,
+) (RuntimeApplyScopeResult, error) {
 	dataViewExisted, err := relationExistsTx(ctx, tx, scope.DataViewName)
 	if err != nil {
 		return result, err
@@ -115,9 +175,6 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 			return result, err
 		}
 		gridViewExisted[gridView.Name] = existed
-		if err := dropRuntimeViewTx(ctx, tx, gridView.Name); err != nil {
-			return result, err
-		}
 	}
 	lookupOutputs, err := ensureScopeDataViewTx(ctx, tx, scope)
 	if err != nil {
@@ -140,17 +197,6 @@ func applyRuntimeScopeTx(ctx context.Context, tx *sql.Tx, modelSourceType string
 		result.GridViews = append(result.GridViews, RuntimeApplyArtifactResult{
 			Name:   gridView.Name,
 			Action: chooseRuntimeViewAction(gridViewExisted[gridView.Name]),
-		})
-	}
-
-	for _, field := range scope.Fields {
-		if field.WarningMessage == "" {
-			continue
-		}
-		result.Warnings = append(result.Warnings, ValidationMessage{
-			Code:    "runtime_apply_field_warning",
-			Message: fmt.Sprintf("%s (%s): %s", chooseString(field.FieldID, field.StorageKey), chooseString(field.Kind, "unknown"), field.WarningMessage),
-			Target:  scope.ScopeID,
 		})
 	}
 
@@ -259,9 +305,6 @@ func ensureManagedMultiValueTableTx(ctx context.Context, tx *sql.Tx, scope runti
 
 func ensureScopeDataViewTx(ctx context.Context, tx *sql.Tx, scope runtimeApplyScopePlan) ([]RuntimeApplyLookupOutputResult, error) {
 	statement, lookupOutputs := buildRuntimeScopeDataViewSQL(scope)
-	if err := dropRuntimeViewTx(ctx, tx, scope.DataViewName); err != nil {
-		return nil, err
-	}
 	if _, err := tx.ExecContext(ctx, statement); err != nil {
 		return nil, fmt.Errorf("form builder: create runtime data view %s: %w", scope.DataViewName, err)
 	}

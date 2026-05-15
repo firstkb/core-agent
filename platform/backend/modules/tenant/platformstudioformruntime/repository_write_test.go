@@ -72,3 +72,85 @@ func TestMutationColumnsAndArgsForColumnsReportsSchemaDrift(t *testing.T) {
 		t.Fatalf("schema drift error = %v, want ErrRuntimeSchemaDrift", err)
 	}
 }
+
+func TestManagedRuntimeFieldPhysicalTypeMatchesRuntimeApplyTypes(t *testing.T) {
+	tests := []struct {
+		name  string
+		field runtimeFieldPlan
+		want  string
+	}{
+		{
+			name:  "short text",
+			field: runtimeFieldPlan{ColumnName: "answer_options", Kind: "short_text", Supported: true},
+			want:  "text",
+		},
+		{
+			name:  "boolean",
+			field: runtimeFieldPlan{ColumnName: "answer_required", Kind: "boolean", Supported: true},
+			want:  "boolean",
+		},
+		{
+			name:  "long text",
+			field: runtimeFieldPlan{ColumnName: "visible_when", Kind: "long_text", Supported: true},
+			want:  "text",
+		},
+		{
+			name:  "integer",
+			field: runtimeFieldPlan{ColumnName: "order", Kind: "integer", Supported: true},
+			want:  "bigint",
+		},
+		{
+			name:  "db lookup value",
+			field: runtimeFieldPlan{ColumnName: "lookup_value", Kind: "db_lookup", Preset: "db_lookup_value", Supported: true},
+			want:  "text",
+		},
+		{
+			name:  "db lookup id",
+			field: runtimeFieldPlan{ColumnName: "lookup_id", Kind: "db_lookup", Supported: true},
+			want:  "bigint",
+		},
+		{
+			name:  "multi value is not scalar",
+			field: runtimeFieldPlan{ColumnName: "tags", Kind: "multi_select", MultiValue: true, Supported: true},
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := managedRuntimeFieldPhysicalType(tt.field); got != tt.want {
+				t.Fatalf("managedRuntimeFieldPhysicalType() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMissingManagedRuntimeScalarFieldsReturnsAllAbsentScalarColumns(t *testing.T) {
+	scope := runtimeRootScopePlan{
+		Fields: []runtimeFieldPlan{
+			{ColumnName: "catalog", FieldID: "short-text", Kind: "short_text", Supported: true},
+			{ColumnName: "answer_options", FieldID: "short-text-3", Kind: "short_text", Supported: true},
+			{ColumnName: "answer_required", FieldID: "boolean-2", Kind: "boolean", Supported: true},
+			{ColumnName: "visible_when", FieldID: "long-text", Kind: "long_text", Supported: true},
+			{ColumnName: "tags", FieldID: "multi-select", Kind: "multi_select", MultiValue: true, Supported: true},
+		},
+	}
+
+	fields := missingManagedRuntimeScalarFields(scope, map[string]struct{}{
+		"catalog": {},
+	})
+
+	got := make([]string, 0, len(fields))
+	for _, field := range fields {
+		got = append(got, field.ColumnName)
+	}
+	want := []string{"answer_options", "answer_required", "visible_when"}
+	if len(got) != len(want) {
+		t.Fatalf("missing fields = %#v, want %#v", got, want)
+	}
+	for index := range want {
+		if got[index] != want[index] {
+			t.Fatalf("missing fields = %#v, want %#v", got, want)
+		}
+	}
+}

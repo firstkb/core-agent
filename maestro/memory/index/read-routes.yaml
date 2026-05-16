@@ -116,6 +116,20 @@ routes:
     read:
       - maestro/packs/ui-quality/PACK.md
 
+  compact_communication_pack:
+    triggers:
+      - Compact Communication Pack
+      - compact communication
+      - no-fluff
+      - low token
+      - less tokens
+      - terse status
+      - concise review
+      - shorter answer
+      - commit message
+    read:
+      - maestro/packs/compact-communication/PACK.md
+
   docs_rewrite:
     triggers:
       - docs rewrite

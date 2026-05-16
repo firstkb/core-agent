@@ -16,6 +16,7 @@ Last updated: 2026-05-08
 - It is not a replacement for source code.
 - It is not a replacement for tracked canonical frontend/backend docs.
 - If memory conflicts with code or canonical docs, verify against the owner surface.
+- Default owner-facing style: concise, no-fluff, technically precise; read `maestro/packs/compact-communication/PACK.md` only when the owner asks for shorter output or route triggers concise status, review, or commit communication.
 
 ## Canonical Docs
 

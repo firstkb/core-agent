@@ -24,3 +24,4 @@ skills, and not source of truth over repository contracts.
 | Pack | Entry | Use When |
 | --- | --- | --- |
 | UI Quality Pack | `maestro/packs/ui-quality/PACK.md` | Visible frontend implementation, UI review, state/accessibility pass, anti-generic UI check, or owner asks for UI Quality Pack. |
+| Compact Communication Pack | `maestro/packs/compact-communication/PACK.md` | Owner asks for shorter/no-fluff communication, concise status, review findings, commit messages, or low-risk technical summaries. |

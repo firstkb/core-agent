@@ -185,6 +185,9 @@ Runtime record mutation contract:
   `{ created?: boolean, docGuid?: string, recordId?: string, revision?: string, status?: string, validationErrors?: Array<{ fieldId?: string, message: string }>, values: Record<string, unknown> }`
 - create validates required root fields before insert and returns `validationErrors`
   in an otherwise successful API response when the record is not yet created
+- known database `NOT NULL` failures for mapped runtime fields are returned as
+  `validationErrors` instead of internal server errors, so physical schema
+  constraints remain user-correctable even when metadata is missing `required`
 - create applies bound System Field defaults server-side when compatible:
   Reported By, Reported Date, and workflow initial status
 - edit/autosave patches only provided field values on an existing root record

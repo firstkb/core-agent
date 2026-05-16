@@ -171,6 +171,38 @@ Confidence labels:
 - `risk` `owner-confirmed`: Auth OTP delivery is debug-only today. Do not
   mistake production email/SMS provider work for testing scope; open a separate
   Auth implementation slice when production delivery hardening is needed.
+- `risk` `owner-confirmed`: Navigation Builder frontend has maintainability
+  growth risk in large files: `navigation-builder-inspector.tsx`,
+  `navigation-builder-state.ts`, `navigation-builder-page.tsx`, and
+  `navigation-builder-tree-panel.tsx`. This is not a current functional bug,
+  but new non-trivial Navigation Builder behavior should start with a small
+  decomposition/refactor slice before adding more responsibilities there.
+- `risk` `inferred`: Form Runtime/table/App Page testing passed, but runtime
+  form implementation has maintainability growth risk in large FE/BE files:
+  `forms-runtime-form-page.tsx`, `collection-table-page.tsx`,
+  `form-runtime-collection-table-client.ts`,
+  `platformstudioformruntime/repository_write.go`,
+  `platformstudioformruntime/service.go`, and
+  `platformstudioformruntime/service_test.go`. Treat this as a decomposition
+  trigger before adding substantial runtime-form mutation or rendering logic.
+  Frontend decomposition passes extracted form dialogs, load-error UI,
+  runtime labels, browser helpers, lookup helpers, value/validation helpers,
+  subform mapping helpers, runtime error helpers, and navigation session state
+  from `forms-runtime-form-page.tsx`, then moved create/update/autosave patch
+  scheduling, mutation response handling, request-error handling, server
+  validation, and create-record readiness into
+  `form-runtime-mutation-controller.ts`, and moved parent-readiness,
+  subform navigation/delete/reload, and checklist update orchestration into
+  `form-runtime-subform-controller.ts`. The route page is now roughly 988
+  lines; finish/back/dialog/reveal orchestration and DOM control sync remain
+  residual concentration risks. FE contract tests now cover runtime mutation
+  request shapes for create/edit/finish/favorite/saved-filter/bulk/subform/
+  checklist actions and backend error envelopes in
+  `form-runtime-collection-table-client.test.ts`. Backend Form Runtime now maps
+  known Postgres `NOT NULL` failures on mapped runtime fields to
+  `validationErrors`, closing the empty Job Type create-form `500` found during
+  Browser smoke. True browser/DB write-through mutation testing still requires
+  a disposable tenant or explicit owner approval.
 
 ## Recommended Reads By Domain
 

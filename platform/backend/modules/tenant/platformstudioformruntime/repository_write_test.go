@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"testing"
+
+	"github.com/lib/pq"
 )
 
 func TestDeleteMultiValueCleanupSkipsScopesWithoutMultiValueFields(t *testing.T) {
@@ -70,6 +72,27 @@ func TestMutationColumnsAndArgsForColumnsReportsSchemaDrift(t *testing.T) {
 	}
 	if err := runtimeSchemaDriftError(scope.TableName, missingFields); !errors.Is(err, ErrRuntimeSchemaDrift) {
 		t.Fatalf("schema drift error = %v, want ErrRuntimeSchemaDrift", err)
+	}
+}
+
+func TestRuntimeMutationConstraintErrorFromDatabaseMapsPostgresNotNull(t *testing.T) {
+	dbErr := &pq.Error{
+		Code:   postgresNotNullViolationCode,
+		Column: "name",
+	}
+
+	out := runtimeMutationConstraintErrorFromDatabase(dbErr)
+	if out == nil {
+		t.Fatal("constraint error = nil, want not-null constraint")
+	}
+	if out.code != postgresNotNullViolationCode {
+		t.Fatalf("constraint code = %q, want %s", out.code, postgresNotNullViolationCode)
+	}
+	if out.columnName != "name" {
+		t.Fatalf("constraint column = %q, want name", out.columnName)
+	}
+	if !errors.Is(out, dbErr) {
+		t.Fatal("constraint error should unwrap original database error")
 	}
 }
 

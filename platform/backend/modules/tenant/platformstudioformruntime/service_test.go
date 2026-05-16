@@ -117,6 +117,61 @@ func TestCreateRecordWaitsForRequiredFields(t *testing.T) {
 	}
 }
 
+func TestCreateRecordMapsDatabaseNotNullConstraintToValidationError(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	addRuntimeRootField(repo, map[string]any{
+		"fieldId":    "name",
+		"kind":       "short_text",
+		"label":      "Name",
+		"storageKey": "name",
+	})
+	repo.createErr = &runtimeMutationConstraintError{
+		code:       postgresNotNullViolationCode,
+		columnName: "name",
+	}
+	svc := NewService(repo)
+
+	out, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"location": "HQ",
+		},
+	})
+	if err != nil {
+		t.Fatalf("CreateRecord returned error: %v", err)
+	}
+	if len(out.ValidationErrors) != 1 {
+		t.Fatalf("validation errors = %d, want 1", len(out.ValidationErrors))
+	}
+	if out.ValidationErrors[0].FieldID != "name" {
+		t.Fatalf("validation field = %q, want name", out.ValidationErrors[0].FieldID)
+	}
+	if out.ValidationErrors[0].Message != `Please fill field: "Name"` {
+		t.Fatalf("validation message = %q, want required Name message", out.ValidationErrors[0].Message)
+	}
+	if !repo.created {
+		t.Fatal("CreateRootRecord should be called before database constraint mapping")
+	}
+	assertValue(t, out.Values, "location", "HQ")
+}
+
+func TestCreateRecordPreservesUnknownDatabaseNotNullConstraintError(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	repo.createErr = &runtimeMutationConstraintError{
+		code:       postgresNotNullViolationCode,
+		columnName: "unmapped_column",
+	}
+	svc := NewService(repo)
+
+	out, err := svc.CreateRecord(testRuntimeContext(), "sor", "default", RuntimeViewRecordMutationRequest{
+		Values: map[string]any{
+			"location": "HQ",
+		},
+	})
+	if err == nil {
+		t.Fatalf("CreateRecord response = %#v, want unmapped constraint error", out)
+	}
+}
+
 func TestCreateRecordAppliesSystemDefaults(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	svc := NewService(repo)

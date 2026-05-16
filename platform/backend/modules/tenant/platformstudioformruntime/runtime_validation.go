@@ -1,6 +1,7 @@
 package platformstudioformruntime
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -56,13 +57,56 @@ func validateRequiredValues(scope runtimeRootScopePlan, values map[string]any) [
 			continue
 		}
 		if isEmptyRuntimeValue(values[field.FieldID]) {
-			out = append(out, RuntimeViewRecordValidationError{
-				FieldID: field.FieldID,
-				Message: fmt.Sprintf("Please fill field: %q", chooseString(field.Label, field.FieldID)),
-			})
+			out = append(out, requiredFieldValidationError(field))
 		}
 	}
 	return out
+}
+
+func runtimeMutationConstraintValidationErrors(scope runtimeRootScopePlan, err error) []RuntimeViewRecordValidationError {
+	var constraintErr *runtimeMutationConstraintError
+	if !errors.As(err, &constraintErr) {
+		return nil
+	}
+	if constraintErr.code != postgresNotNullViolationCode {
+		return nil
+	}
+	field, ok := runtimeFieldByColumnName(scope, constraintErr.columnName)
+	if !ok {
+		return nil
+	}
+	return []RuntimeViewRecordValidationError{requiredFieldValidationError(field)}
+}
+
+func runtimeMutationConstraintValidationResponse(
+	scope runtimeRootScopePlan,
+	values map[string]any,
+	err error,
+) (*RuntimeViewRecordMutationResponse, bool) {
+	validationErrors := runtimeMutationConstraintValidationErrors(scope, err)
+	if len(validationErrors) == 0 {
+		return nil, false
+	}
+	return &RuntimeViewRecordMutationResponse{
+		ValidationErrors: validationErrors,
+		Values:           values,
+	}, true
+}
+
+func runtimeFieldByColumnName(scope runtimeRootScopePlan, columnName string) (runtimeFieldPlan, bool) {
+	columnName = strings.TrimSpace(columnName)
+	if columnName == "" {
+		return runtimeFieldPlan{}, false
+	}
+	for _, field := range scope.Fields {
+		if !field.Supported || field.MultiValue || strings.TrimSpace(field.ColumnName) == "" {
+			continue
+		}
+		if strings.EqualFold(field.ColumnName, columnName) {
+			return field, true
+		}
+	}
+	return runtimeFieldPlan{}, false
 }
 
 func validateFieldValues(scope runtimeRootScopePlan, values map[string]any) []RuntimeViewRecordValidationError {
@@ -116,6 +160,13 @@ func runtimeUniqueValueCandidate(field runtimeFieldPlan, values map[string]any) 
 		return "", false
 	}
 	return text, true
+}
+
+func requiredFieldValidationError(field runtimeFieldPlan) RuntimeViewRecordValidationError {
+	return RuntimeViewRecordValidationError{
+		FieldID: field.FieldID,
+		Message: fmt.Sprintf("Please fill field: %q", chooseString(field.Label, field.FieldID)),
+	}
 }
 
 func uniqueValueValidationError(field runtimeFieldPlan) RuntimeViewRecordValidationError {

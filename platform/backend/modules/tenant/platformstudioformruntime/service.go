@@ -221,6 +221,9 @@ func (s *Service) CreateRecord(
 		return buildMutationResponse(false, scope, row), nil
 	}
 	if err != nil {
+		if response, ok := runtimeMutationConstraintValidationResponse(scope, values, err); ok {
+			return response, nil
+		}
 		return nil, err
 	}
 	return buildMutationResponse(true, scope, row), nil
@@ -288,6 +291,9 @@ func (s *Service) CreateSubformRecord(
 		return buildMutationResponse(false, mutationScope, row), nil
 	}
 	if err != nil {
+		if response, ok := runtimeMutationConstraintValidationResponse(mutationScope, values, err); ok {
+			return response, nil
+		}
 		return nil, err
 	}
 	return buildMutationResponse(true, mutationScope, row), nil
@@ -334,6 +340,9 @@ func (s *Service) UpdateRecord(
 
 	row, err := s.repo.UpdateRootRecord(ctx, tenant, scope, docGuid, values, strings.TrimSpace(req.ExpectedRevision))
 	if err != nil {
+		if response, ok := runtimeMutationConstraintValidationResponse(scope, values, err); ok {
+			return response, nil
+		}
 		return nil, err
 	}
 	return buildMutationResponse(false, scope, row), nil
@@ -388,6 +397,9 @@ func (s *Service) UpdateSubformRecord(
 
 	row, err := s.repo.UpdateSubformRecord(ctx, tenant, scopeContext.Scope, subformScope, parentDocGuid, docGuid, values, strings.TrimSpace(req.ExpectedRevision))
 	if err != nil {
+		if response, ok := runtimeMutationConstraintValidationResponse(mutationScope, values, err); ok {
+			return response, nil
+		}
 		return nil, err
 	}
 	return buildMutationResponse(false, mutationScope, row), nil
@@ -627,6 +639,9 @@ func (s *Service) FinishRecord(
 		row, err = s.repo.UpdateRootRecord(ctx, tenant, scope, docGuid, values, strings.TrimSpace(req.ExpectedRevision))
 	}
 	if err != nil {
+		if response, ok := runtimeMutationConstraintValidationResponse(scope, values, err); ok {
+			return response, nil
+		}
 		return nil, err
 	}
 	return buildMutationResponse(false, scope, row), nil

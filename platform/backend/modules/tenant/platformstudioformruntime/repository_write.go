@@ -58,7 +58,7 @@ func createRootRecordTx(
 		if createDocGuid != "" && isUniqueViolation(err) {
 			return nil, ErrCreateTokenConflict
 		}
-		return nil, fmt.Errorf("form runtime: create root record: %w", err)
+		return nil, wrapRuntimeMutationDatabaseError("create root record", err)
 	}
 	if err := replaceMultiValueFieldsTx(ctx, tx, scope, row.SourceID, values); err != nil {
 		return nil, err
@@ -114,18 +114,13 @@ func createSubformRecordTx(
 		if createDocGuid != "" && isUniqueViolation(err) {
 			return nil, ErrCreateTokenConflict
 		}
-		return nil, fmt.Errorf("form runtime: create subform record: %w", err)
+		return nil, wrapRuntimeMutationDatabaseError("create subform record", err)
 	}
 	if err := replaceMultiValueFieldsTx(ctx, tx, recordScope, row.SourceID, values); err != nil {
 		return nil, err
 	}
 	mergeChangedMultiValueValues(recordScope, row.Values, values)
 	return row, nil
-}
-
-func isUniqueViolation(err error) bool {
-	var pqErr *pq.Error
-	return errors.As(err, &pqErr) && pqErr.Code == "23505"
 }
 
 func updateRootRecordTx(
@@ -200,7 +195,7 @@ func updateRootRecordTx(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRecordNotFound
 		}
-		return nil, fmt.Errorf("form runtime: update root record: %w", err)
+		return nil, wrapRuntimeMutationDatabaseError("update root record", err)
 	}
 	if err := replaceMultiValueFieldsTx(ctx, tx, scope, row.SourceID, values); err != nil {
 		return nil, err
@@ -296,7 +291,7 @@ func updateSubformRecordTx(
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrRecordNotFound
 		}
-		return nil, fmt.Errorf("form runtime: update subform record: %w", err)
+		return nil, wrapRuntimeMutationDatabaseError("update subform record", err)
 	}
 	if err := replaceMultiValueFieldsTx(ctx, tx, recordScope, row.SourceID, values); err != nil {
 		return nil, err

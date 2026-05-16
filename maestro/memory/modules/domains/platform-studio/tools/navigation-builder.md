@@ -125,6 +125,12 @@ Last compacted: 2026-05-06
 
 ## Guardrails
 
+- Frontend maintainability risk: `navigation-builder-inspector.tsx`,
+  `navigation-builder-state.ts`, `navigation-builder-page.tsx`, and
+  `navigation-builder-tree-panel.tsx` are already large enough that new
+  non-trivial Navigation Builder behavior should start with a small
+  decomposition/refactor slice instead of adding more responsibilities to those
+  files.
 - Do not invent temporary runtime grants outside the derived Navigation Builder
   access evaluator.
 - Do not expose non-root runtime entries from frontend-only fabrication.

@@ -148,3 +148,26 @@ It does not own:
 - Published runtime sidebar fallback can be mistaken for the primary Navigation
   Builder runtime projection.
 - Platform Studio planned tool concerns can leak into Form Builder if the suite contract is not read first.
+- Runtime form/table implementation has maintainability growth risk in large
+  files: `features/form-runtime/pages/forms-runtime-form-page.tsx`,
+  `features/form-runtime/form-runtime-collection-table-client.ts`, and shared
+  `@platform/collection-table` `collection-table-page.tsx`. Add substantial
+  runtime-form behavior through a decomposition slice first. Decomposition
+  passes extracted runtime form dialogs, load-error UI, labels, browser
+  helpers, lookup helpers, value/validation helpers, subform mapping helpers,
+  runtime error helpers, and navigation session state from
+  `forms-runtime-form-page.tsx`, then moved create/update/autosave patch
+  scheduling, mutation response handling, request-error handling, server
+  validation, and create-record readiness into
+  `form-runtime-mutation-controller.ts`, and moved parent-readiness, subform
+  navigation/delete/reload, and checklist update orchestration into
+  `form-runtime-subform-controller.ts`. Finish/back/dialog/reveal orchestration
+  and DOM control sync remain concentrated and should get targeted regression
+  coverage before heavier runtime mutation work. The FE client contract now has
+  targeted mutation tests for create/edit/finish/favorite/saved-filter/bulk
+  and subform/checklist request shapes plus backend error envelopes in
+  `form-runtime-collection-table-client.test.ts`; backend Form Runtime also
+  maps known DB `NOT NULL` failures on mapped runtime fields to
+  `validationErrors` after the empty Job Type create-form `500` was found.
+  Real browser/DB mutation coverage still needs a disposable tenant or explicit
+  owner approval.

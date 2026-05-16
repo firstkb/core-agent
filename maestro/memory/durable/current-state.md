@@ -201,8 +201,11 @@ Confidence labels:
   `form-runtime-collection-table-client.test.ts`. Backend Form Runtime now maps
   known Postgres `NOT NULL` failures on mapped runtime fields to
   `validationErrors`, closing the empty Job Type create-form `500` found during
-  Browser smoke. True browser/DB write-through mutation testing still requires
-  a disposable tenant or explicit owner approval.
+  Browser smoke. Owner-approved disposable API/DB mutation testing passed for
+  create/edit/finish/favorite/saved-filter/bulk/subform/checklist actions using
+  run-marked `codex-e2e-*` data with zero DB leftovers after cleanup. Rendered
+  browser submit mutation remains unproven because the current Browser/CUA input
+  path can change visible textbox values without updating React form state.
 
 ## Recommended Reads By Domain
 

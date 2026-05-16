@@ -16,10 +16,10 @@ The owner wants a stability-oriented audit before broad fixes. The current prior
 ## Continuity Snapshot
 
 - Latest owner correction: Start the next testing phase inside the tenant app; admin is deferred because it is still raw.
-- Current phase: `tenant Form Runtime controller extraction and empty-create BE validation fix completed; next tenant stability slice pending`
+- Current phase: `tenant Form Runtime disposable mutation E2E completed; next tenant stability slice pending`
 - Artifact path: `maestro/artifact/active/2026-05-15-platform-stability-audit/`
-- Gates / approvals: No product-code or high-risk approval yet.
-- Evidence status: Read-only command baseline, public FE Browser smoke, tenant authenticated Browser auth smoke, direct tenant auth/API probe, targeted Auth FE/BE code checks, Auth notification/provider review, tenant secure route wiring test, tenant Auth dependency Browser/API smoke, tenant Navigation Builder FE/BE/browser slice, tenant Form Runtime/table/App Pages FE/BE/browser slice, tenant Form Runtime decomposition-lite, tenant Form Runtime pure-helper decomposition, tenant Form Runtime mutation/subform controller extraction, and tenant Form Runtime empty-create BE validation fix completed.
+- Gates / approvals: Owner approved disposable Form Runtime mutation testing; no additional product-code, migration, release, or high-risk approval is open.
+- Evidence status: Read-only command baseline, public FE Browser smoke, tenant authenticated Browser auth smoke, direct tenant auth/API probe, targeted Auth FE/BE code checks, Auth notification/provider review, tenant secure route wiring test, tenant Auth dependency Browser/API smoke, tenant Navigation Builder FE/BE/browser slice, tenant Form Runtime/table/App Pages FE/BE/browser slice, tenant Form Runtime decomposition-lite, tenant Form Runtime pure-helper decomposition, tenant Form Runtime mutation/subform controller extraction, tenant Form Runtime empty-create BE validation fix, and owner-approved disposable API/DB mutation E2E completed.
 - Unresolved owner decisions: None for read-only baseline.
 - Next allowed action: Continue to the next tenant module testing slice; remaining Auth items are documented coverage/future-work gaps, not current blockers.
 
@@ -295,6 +295,44 @@ The owner wants a stability-oriented audit before broad fixes. The current prior
   write-through browser/DB mutation coverage still requiring a disposable
   tenant or explicit owner approval.
 
+## Form Runtime Disposable Mutation E2E Slice
+
+- Scope: run the owner-approved mutation slice against disposable
+  run-marked tenant data, without changing product logic or persistent seed
+  data.
+- Criteria:
+  - Use local seeded tenant auth and real tenant runtime APIs.
+  - Create only unique `codex-e2e-*` records and clean them up through runtime
+    APIs.
+  - Cover create record, edit/autosave API, finish, favorite toggle,
+    saved-filter create/delete, bulk active/inactive/delete, subform
+    create/edit/delete, and checklist update.
+  - Verify DB cleanup leaves no disposable rows behind.
+- Results:
+  - Temporary script `/private/tmp/form-runtime-mutation-e2e.sh` passed.
+  - Run ID: `codex-e2e-20260516195720`.
+  - Published runtime route coverage passed for `jobtype`:
+    create/edit/finish/favorite/saved-filter/bulk.
+  - Platform Studio runtime preview coverage passed for `test-inspection`
+    subform and `lookup` checklist because those forms are not exposed through
+    published runtime navigation and the direct `/app/forms/...` guard returns
+    `NAVIGATION_BUILDER_ACCESS_DENIED`.
+  - Cleanup verified zero rows for the run marker in `jobtype`,
+    `ps_test_inspection`, `ps_test_inspection__sf_9bcecc`, `ps_lookup`, and
+    `ps_lookup__sf_a672a5`.
+  - Browser post-check rendered the Job Type runtime table route with no
+    console warnings/errors.
+- Findings:
+  - The API/DB mutation path is stable for the covered runtime operations.
+  - Rendered-browser mutation evidence is still not valid in the current
+    Browser session: Browser/CUA input can change the visible textbox value
+    while React form state remains empty, so `Finish` still shows the expected
+    required-field validation.
+  - No product-code change was required from this E2E run.
+- Next allowed action: continue to the next tenant stability area, or open a
+  separate Browser-input/tooling issue if rendered mutation evidence becomes a
+  hard requirement.
+
 ## Risks / Gates
 
 - Auth/session, tenant isolation, permissions, migrations, seed data, and production/release actions require explicit approval before changes.
@@ -314,5 +352,6 @@ The owner wants a stability-oriented audit before broad fixes. The current prior
 
 ## Next Action
 
-Continue the next tenant stability slice: true disposable-tenant E2E mutation
-coverage if approved, or another tenant module.
+Continue the next tenant stability slice. Candidate: another tenant module, or
+a separate rendered-browser mutation tooling slice if UI-submit evidence becomes
+required.

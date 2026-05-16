@@ -5,7 +5,7 @@
 
 ## Summary
 
-The first read-only stability baseline passed. Required repository checks, backend tests/builds, and frontend lint/typecheck/tests/build all completed successfully. The local Node PATH drift was corrected at machine level and guarded at project level. Auth, Navigation Builder, and Form Runtime/table/App Pages tenant slices passed targeted FE/BE/browser testing. Form Runtime decomposition slices reduced immediate frontend monolith pressure, and the empty-create Job Type backend `500` found during Browser smoke is now covered by a backend validation fix. Remaining risks are large frontend production chunks, uneven explicit shared-package coverage, and true browser/DB mutation coverage that still needs a disposable tenant or explicit owner approval.
+The first read-only stability baseline passed. Required repository checks, backend tests/builds, and frontend lint/typecheck/tests/build all completed successfully. The local Node PATH drift was corrected at machine level and guarded at project level. Auth, Navigation Builder, and Form Runtime/table/App Pages tenant slices passed targeted FE/BE/browser testing. Form Runtime decomposition slices reduced immediate frontend monolith pressure, and the empty-create Job Type backend `500` found during Browser smoke is now covered by a backend validation fix. Owner-approved disposable Form Runtime mutation coverage passed through authenticated tenant APIs plus DB cleanup verification. Remaining risks are large frontend production chunks, uneven explicit shared-package coverage, and rendered-browser mutation coverage because current Browser input changes visible DOM values without updating React form state.
 
 ## Commands / Checks
 
@@ -70,6 +70,7 @@ The first read-only stability baseline passed. Required repository checks, backe
 | Form Runtime jobtype DB/metadata probe | passed | local `psql` against `108-demo` | `public.jobtype.name` is `NOT NULL`; `ps_model` metadata for `jobtype.name` has no `required` flag. This reproduces the mismatch behind the empty-create Finish failure. |
 | Diff whitespace check | passed | `git diff --check` | Passed after the backend validation fix. |
 | Form Runtime stability commit preflight | passed | `scripts/preflight.sh --full` | Backend tests/builds plus frontend lint/typecheck/tests/build passed before committing the Form Runtime stability slice. Frontend build retained known large chunk warnings. |
+| Form Runtime disposable mutation E2E | passed | `/bin/bash /private/tmp/form-runtime-mutation-e2e.sh` | Auth: local seeded dev login. Covered empty-create validation, create record, edit/autosave API, finish, favorite toggle round-trip, saved-filter create/delete, bulk inactive/active/delete, subform create/edit/delete, and checklist update. Cleanup verified `0` rows left in `jobtype`, `ps_test_inspection`, `ps_test_inspection__sf_9bcecc`, `ps_lookup`, and `ps_lookup__sf_a672a5` for the run marker. |
 
 ## Auth Code-Test Findings
 
@@ -600,6 +601,13 @@ The first read-only stability baseline passed. Required repository checks, backe
   - DOM interaction: clicked `Finish`; alertdialog opened on the create route; console warn/error count `0`.
   - Business Tree URL: `https://demo.platform.localhost/app/pages/business-tree`; `Business Tree` and `Corporate @ Atlas Safety Holdings` rendered; title `Tenant Web`; no framework overlay; console warn/error count `0`.
   - Screenshot capture: attempted through Browser plugin, but `Page.captureScreenshot` timed out in the current in-app browser session.
+- Tenant Form Runtime disposable mutation evidence:
+  - Script run ID: `codex-e2e-20260516195720`.
+  - Runtime published route coverage: `jobtype` create/edit/finish/favorite/saved-filter/bulk actions used `/app/forms/jobtype/views/view-default`.
+  - Platform Studio runtime preview coverage: `test-inspection` subform and `lookup` checklist used `/app/platform-studio/forms/.../runtime` because the published runtime guard returned `NAVIGATION_BUILDER_ACCESS_DENIED` for those non-navigation-exposed forms.
+  - Cleanup evidence: DB counts after cleanup were `0` for `jobtype`, `test_inspection_root`, `test_inspection_subform`, `lookup_root`, and `lookup_checklist`.
+  - Browser post-check URL: `https://demo.platform.localhost/app/forms/jobtype/views/view-default`; title `Tenant Web`; `Job Type` heading and create action rendered; console warn/error count `0`.
+  - Browser input limitation: Browser/CUA typing changed the visible `Name` textbox value, but React form state stayed empty and `Finish` correctly showed `Please fill field: "Name"`. Rendered-browser mutation was therefore not used as evidence.
 
 ## Review Evidence
 
@@ -623,10 +631,8 @@ The first read-only stability baseline passed. Required repository checks, backe
 - Tenant sign-in component/integration test remains a coverage improvement candidate. It should be added in a separate FE testing slice only if we decide to introduce or standardize DOM/component testing for app-level auth flows.
 - Navigation Builder Browser save/reload mutation was not run against the shared demo tenant. Add that later only with isolated seed data or an approved disposable tenant.
 - Navigation Builder frontend is functionally split, but several files are large enough to create change-risk if more behavior is added without decomposition.
-- Form Runtime browser/DB mutation paths were not run against the shared demo
-  tenant. FE client contract tests now cover create/edit/finish/favorite/
-  saved-filter/bulk/subform/checklist request shapes and backend error
-  envelopes, while existing BE tests cover the server behavior. A true
-  write-through browser/DB slice still needs a disposable tenant or explicit
-  owner approval.
+- Form Runtime authenticated API/DB mutation paths now passed on disposable
+  run-marked data and cleaned up to zero rows. Rendered-browser mutation
+  remains unproven because the current Browser input path does not update React
+  form state reliably enough for submit-flow evidence.
 - Form Runtime has significant FE/BE file-size risk. The decomposition passes reduced the route page to 988 lines and extracted mutation plus subform/checklist controllers, but finish/back/dialog/reveal orchestration and DOM control sync remain concentrated; new non-trivial runtime-form behavior should still add targeted regression coverage before extending mutation flows.

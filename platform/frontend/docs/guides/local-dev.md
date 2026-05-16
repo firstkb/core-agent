@@ -26,6 +26,7 @@ Frontend workspace:
 
 - package manager: `pnpm@9.4.0`
 - Node engine: `>=22.12.0`
+- Node version source: `.node-version`, `.nvmrc`, and `package.json` `engines`
 - apps: `platform-admin-web` and `tenant-web`
 - current delivery: online web applications
 - `tenant-pwa`, offline-first behavior, service-worker sync, and Flutter/hybrid mobile are future/deferred scope
@@ -33,6 +34,10 @@ Frontend workspace:
 Do not treat local HTTPS, manifests, or install prompting as offline/PWA activation.
 
 ## Core Commands
+
+`pnpm` uses `.npmrc` `engine-strict=true`; if local `node -v` does not satisfy
+the package engine, fix the shell or version manager before running frontend
+commands.
 
 Run both frontend apps:
 

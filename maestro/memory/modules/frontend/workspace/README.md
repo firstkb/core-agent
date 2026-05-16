@@ -34,6 +34,10 @@ Last compacted: 2026-04-24
 - Offline PWA and Flutter/hybrid mobile are future delivery layers after the main web platform stabilizes.
 - Install helper is current install prompt/runtime behavior for public auth screens only.
 - Local dev/HTTPS/proxy commands are operational development workflow, not product app ownership.
+- Frontend Node version source is `platform/frontend/.node-version`,
+  `platform/frontend/.nvmrc`, and `package.json` `engines`; `.npmrc`
+  `engine-strict=true` makes wrong-node runs fail fast instead of continuing
+  with warnings. Fix shell/version-manager PATH, not per-command wrappers.
 - Do not introduce offline-first, service-worker sync, or mobile-shell assumptions into current work without explicit owner activation.
 - Apps may import packages; packages must not import apps.
 - Packages export through public entrypoints only.

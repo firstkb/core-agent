@@ -95,6 +95,10 @@ Confidence labels:
 ## Active Product Domains
 
 - `landed` `doc-confirmed`: Auth/session uses cookie-backed HttpOnly refresh tokens; frontend stores access token and expiry, not an active refresh token.
+- `landed` `owner-confirmed`: In the current debug-only OTP delivery mode,
+  persisted auth event payloads may temporarily include OTP codes for
+  operational visibility. Production email/SMS delivery is a separate future
+  implementation slice, not part of tenant stability testing.
 - `landed` `doc-confirmed`: Admin navigation is separate from profile bootstrap; `/app/profile` is profile-only and `GET /app/me/navigation` owns admin navigation.
 - `landed` `doc-confirmed`: Multi-tenant isolation is non-negotiable; tenant scope must come from trusted runtime context.
 - `landed` `code-confirmed`: Collection Table exists as `@platform/collection-table` and is consumed by Module Registry, Employees, and Tenants in the admin app.
@@ -164,6 +168,9 @@ Confidence labels:
 - `risk` `doc-confirmed`: Legacy PostgreSQL SQL can mislead agents if read as current schema. Use `contracts/schema-tenancy.md`, `contracts/migrations.md`, and the archive index before opening the SQL.
 - `risk` `doc-confirmed`: Backend old root-path pointer docs were deleted. Do not treat deleted old paths as active ownership when a target-folder doc exists.
 - `risk` `doc-confirmed`: Former `platform/docs/ai/prompts/**`, `templates/**`, and `automation-manifest.json` are deleted. Do not recreate them; archived retired runtime workflow artifacts are external provenance only.
+- `risk` `owner-confirmed`: Auth OTP delivery is debug-only today. Do not
+  mistake production email/SMS provider work for testing scope; open a separate
+  Auth implementation slice when production delivery hardening is needed.
 
 ## Recommended Reads By Domain
 

@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".node-version", ".nvmrc", ".npmrc"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

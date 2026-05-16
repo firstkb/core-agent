@@ -14,11 +14,16 @@ Status: active compact state
 - Cross-tab refresh followers wait beyond lock TTL before abandoning sibling refresh ownership.
 - Admin and tenant private shells preserve mounted profile/navigation state during same-user silent token refresh.
 - Profile/bootstrap revalidation can retry once after `401`/`403` through `auth-core` recovery before sign-out.
+- Owner accepts persisted OTP codes in auth event payloads temporarily while
+  OTP delivery remains debug-only and real email/SMS delivery is not
+  implemented.
 
 ## Planned / Follow-Up
 
 - Track future auth cleanup in `platform/frontend/docs/contracts/auth-runtime.md`, backend auth contracts, or a new explicit proposal; the old `auth-runtime-followups.md` pointer was deleted.
 - Continue removing stale legacy assumptions around frontend refresh-token storage.
+- Production email/SMS OTP delivery is a separate future implementation slice,
+  not part of the current tenant stability testing work.
 
 ## Risks
 
@@ -26,3 +31,5 @@ Status: active compact state
 - Shell bootstrap can regress into loader loops on stalled refresh/profile calls.
 - Profile and navigation payload responsibilities can drift.
 - Tenant context can be incorrectly pushed from frontend convenience state.
+- OTP delivery is debug-only today; production hardening needs real providers,
+  explicit prod config guards, and delivery-contract tests.

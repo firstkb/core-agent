@@ -357,3 +357,23 @@ Active product/platform architecture, product-domain boundaries, delivery assump
   - Owner decision on 2026-05-14
   - `platform/frontend/docs/modules/platform-studio/form-builder-fields.md`
   - `platform/backend/docs/contracts/platform-studio-form-builder.md`
+
+### DEC-103 Auth OTP Delivery And Event Logging Scope
+
+- Date: 2026-05-15
+- Status: active
+- State: owner-confirmed
+- Decision: Production email/SMS OTP delivery is a separate future
+  implementation slice and is not part of the current tenant stability testing
+  work. Until real delivery exists, persisted auth event payloads may
+  temporarily include OTP codes for local/debug operational visibility.
+- Scope rule: Do not treat OTP code redaction or production provider
+  implementation as required fixes during the current testing slice unless the
+  owner explicitly opens an Auth implementation task.
+- Follow-up: a future Auth delivery hardening slice should add real email/SMS
+  provider support, production config guards, and tests that prove production
+  cannot silently no-send OTP messages.
+- Sources:
+  - Owner decision on 2026-05-15
+  - `maestro/artifact/active/2026-05-15-platform-stability-audit/work.md`
+  - `maestro/artifact/active/2026-05-15-platform-stability-audit/evidence.md`

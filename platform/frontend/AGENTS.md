@@ -136,6 +136,12 @@ affect:
 
 ## Commands
 
+Frontend Node version is declared by `.node-version`, `.nvmrc`, and
+`package.json` `engines`; `pnpm` enforces it through `.npmrc`
+`engine-strict=true`. If `node -v` does not satisfy the package engine, fix the
+shell/version-manager environment first instead of wrapping commands or
+hard-coding a Node path in project scripts.
+
 Workspace:
 
 - `pnpm lint`

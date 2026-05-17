@@ -5,6 +5,7 @@ node_modules/
 **/node_modules/
 /reference-code/
 maestro/memory/local/
+/maestro/local/briefs/
 artifacts/*
 !artifacts/.gitkeep
 maestro/.env

@@ -1,7 +1,8 @@
 # Closeout
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `active`
+- Status: `closed / archived`
+- Closed: 2026-05-17
 
 ## Summary
 
@@ -43,8 +44,15 @@ The source Form Builder findings file was copied into a new Maestro artifact and
 
 ## Memory
 
-Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, the static Projects model/view, the static metadata `containerKey` requirement, and the first generic DB lookup filter authoring shortcut. Per-lookup preset filter review, Project Access List management, runtime lookup query enforcement, and final `isActive` DB/API cleanup remain future work.
+Updated planned-work and durable decision memory to move accepted behavior from planned/open work to code-confirmed current state, including `uniqueValue` scope, Subform attention propagation, View drift warning topology semantics, the Navigation Builder boundary for View Active/Inactive, the static Projects model/view, the static metadata `containerKey` requirement, and the first generic DB lookup filter authoring shortcut.
+
+Remaining or partial Form Builder follow-ups are tracked in
+`maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`, not in
+this archived aggregate analysis artifact. Per-lookup preset filter review,
+Project Access List management, runtime lookup query enforcement, and final
+`isActive` DB/API cleanup remain future work unless current memory or source
+findings mark them resolved.
 
 ## Next Step
 
-Owner should manually test that the source picker for `DB lookup`, `DB lookup value`, and `DB lookup multi` saves the `Only active records` filter when the selected source has a boolean `active` field.
+No next step remains for this artifact.

@@ -1,7 +1,8 @@
 # Work
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Status: `active`
+- Status: `closed / archived`
+- Closed: 2026-05-17
 - Owner goal: Stabilize Form Builder; remove Form Builder control over View Active/Inactive, retire `isActive` from Form Builder view config, and add the static Projects model/view.
 
 ## Understanding
@@ -16,12 +17,12 @@ The owner found multiple Form Builder defects while working on runtime display o
 ## Continuity Snapshot
 
 - Latest owner correction: use `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md` as the input file and create a separate artifact folder.
-- Current phase: `Preset DB lookup authoring`
-- Artifact path: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/`
+- Current phase: `closed`
+- Artifact path: `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/`
 - Gates / approvals: owner approved Slice 4 on 2026-05-03. Owner approved dropping old `projects.size` / `projects.type` in favor of `industry_size_id` / `industry_type_id` on 2026-05-07. No release/deploy gate is in scope.
 - Evidence status: Slice 1, Slice 2, Slice 3, Slice 4, Slice 5, Slice 6, Slice 6 follow-ups, View drift warning, View Active/Inactive UI, Project static model, Project correction, first generic DB lookup filter checks, and preset DB lookup authoring checks are recorded in `evidence.md`.
-- Unresolved owner decisions: whether ready-made `radio_group` / `checkbox_group` should also default to horizontal; whether Grid visible-only filter should ever be persisted as a preference.
-- Next allowed action: owner manual test that Form Builder still loads/saves views normally and no longer exposes or writes View Active/Inactive as authoring config.
+- Remaining backlog: active Form Builder follow-up tracking lives in `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`; this aggregate analysis artifact should not be used as the active backlog.
+- Next allowed action: none for this artifact.
 
 ## Decisions
 
@@ -37,7 +38,7 @@ The owner found multiple Form Builder defects while working on runtime display o
 - For Slice 4, accepted choice button option style variants are `default`, `primary`, `secondary`, `info`, `success`, `warning`, and `danger`.
 - `default` is represented by no persisted style entry; raw `backgroundColor`, `textColor`, and `borderColor` are not runtime contract and are ignored during normalization.
 - Runtime single/multi-select buttons map option variants to forms package CSS classes backed by product tokens, without expanding the shared `ui-kit` Toggle API for per-item variants.
-- Pause decision: do not archive or close this artifact yet; keep it active for resume.
+- Closeout decision: archive this aggregate analysis artifact; keep unresolved or partial Form Builder follow-ups in `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`.
 - For Slice 5, Subform View edits the user-facing parent `Subform` node `title`; `schemaScopeId`, `tableKey`, runtime table/view names, and route identity are not renamed from this UI field.
 - For Slice 6, the accepted schema flag is `uniqueValue?: boolean`; Form Builder persists only `true`, omits disabled/false values, and does not implement runtime uniqueness enforcement in this slice.
 - Slice 6 follow-up scope: `Unique value` is allowed for plain `short_text`, ready-made `Email`/`Phone`, and `short_text` fields validated as email/phone; specialized text presets such as URL and suggest text remain excluded.
@@ -93,4 +94,6 @@ The owner found multiple Form Builder defects while working on runtime display o
 
 ## Next Action
 
-Run final local checks for preset DB lookup authoring, then commit the slice. Owner manual testing should confirm preset lookup fields can save display templates and filter values without adding Form Builder-owned active filters.
+None. This aggregate analysis artifact is closed and archived. Continue active
+Form Builder work from `maestro/artifact/active/2026-04-30-runtime-form-builder/`
+and its `findings.md`.

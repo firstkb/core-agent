@@ -1,7 +1,7 @@
 # Form Builder Findings Solution Analysis
 
 - Work ID: `2026-05-03-form-builder-findings-analysis`
-- Source findings: `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/source-findings.md`
+- Source findings: `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/source-findings.md`
 - Original source path: `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
 - Date: 2026-05-03
 

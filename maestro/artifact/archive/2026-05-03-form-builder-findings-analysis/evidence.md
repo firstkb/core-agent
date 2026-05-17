@@ -128,11 +128,11 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/source-findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/solution-analysis.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/source-findings.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/solution-analysis.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/closeout.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/backend/modules/tenant/platformstudioformbuilder/runtime_list.go`
 - `platform/backend/modules/tenant/platformstudioformbuilder/service_test.go`
@@ -182,8 +182,8 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## Slice 5 Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-inspector-tab-body.tsx`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/view-settings-panel.tsx`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-document-updates.ts`
@@ -198,8 +198,8 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## Slice 6 Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `platform/backend/modules/tenant/platformstudioformbuilder/authoring_normalize.go`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-field-settings-section.tsx`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selection-inspector-tab-body.tsx`
@@ -220,9 +220,9 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## Slice 6 Follow-up Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/controller/form-builder-workspace-diff-helpers.test.ts`
@@ -235,9 +235,9 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## View Drift Warning Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/backend/modules/tenant/platformstudioformbuilder/service.go`
 - `platform/backend/modules/tenant/platformstudioformbuilder/service_test.go`
@@ -249,9 +249,9 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 ## View Active/Inactive UI Changed Files
 
 - `maestro/artifact/active/2026-04-30-runtime-form-builder/findings.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/forms-index-page-helpers.ts`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/forms-index-views-panel.tsx`
@@ -267,9 +267,9 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 
 ## Project Static Model Changed Files
 
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/closeout.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/closeout.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/backend/bundle/tenant_schema_full.sql`
 - `platform/backend/docs/contracts/platform-studio-form-builder.md`
@@ -280,8 +280,8 @@ Created a separate Maestro artifact, copied the source findings file, analyzed t
 
 ## Industry Audit Correction Changed Files
 
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/memory/modules/domains/schema-and-tenancy/lessons.md`
 - `platform/backend/bundle/tenant_schema_full.sql`
 - `platform/backend/docs/contracts/schema-tenancy.md`
@@ -325,8 +325,8 @@ Browser QA:
 
 ## Preset DB Lookup Authoring Changed Files
 
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/evidence.md`
-- `maestro/artifact/active/2026-05-03-form-builder-findings-analysis/work.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/evidence.md`
+- `maestro/artifact/archive/2026-05-03-form-builder-findings-analysis/work.md`
 - `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/lookup-field-settings.tsx`
 - `platform/frontend/apps/tenant-web/src/features/platform-studio/forms/components/selected-field-settings-section.tsx`

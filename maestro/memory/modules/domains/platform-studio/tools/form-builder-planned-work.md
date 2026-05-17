@@ -1,8 +1,8 @@
 # Form Builder Planned Work
 
 Status: active planned-work memory
-Last verified: 2026-05-15
-Verification mode: owner-requested memory update plus tracked docs and targeted runtime FE checks
+Last verified: 2026-05-17
+Verification mode: owner-requested memory update plus tracked docs, targeted backend checks, and local PostgreSQL probe
 
 This file preserves Form Builder planned work without turning it into active
 implementation scope. Use it after the active Form Builder contracts, not
@@ -26,10 +26,15 @@ instead of them.
 - Runtime Form View APIs are guarded by the Navigation Builder derived target
   evaluator; future Form Builder runtime endpoints must reuse that guard.
 - Runtime apply remains additive-only and lives in `platformstudioformbuilder`.
-  Managed storage apply commits before SQL view refresh, and data views are
-  refreshed with `CREATE OR REPLACE VIEW` so dependent lookup/grid views do not
-  block additive column creation. If view refresh still fails after storage
-  succeeds, the save response returns a partial runtime apply warning.
+  Managed storage apply commits before SQL view refresh, so additive column
+  creation is preserved even when generated SQL view refresh fails. Do not use
+  a `CREATE OR REPLACE VIEW`-only shortcut for shape-changing generated data
+  views: PostgreSQL can append compatible view columns but rejects inserted,
+  reordered, renamed, or type-changed columns. Current runtime apply keeps the
+  explicit no-`CASCADE` generated view drop/recreate path for shape changes; if
+  downstream generated lookup/grid views block that drop after storage succeeds,
+  the save response returns a partial runtime apply warning and the remaining
+  work is dependency-aware generated view refresh.
 - Subform Grid settings persist column selection/order in scope `viewSettings`, with legacy node-level `childGridColumns` only used as a non-empty compatibility fallback.
 - Root View Sorting and Subtable sorting field pickers are constrained to active/list-visible Grid fields for their scope, including visible lookup-derived outputs.
 - Root View row layout supports one visible Grid field in
@@ -81,6 +86,11 @@ instead of them.
 - `Checklist subform` Form Builder authoring shortcut is implemented for the current slice: it creates the checklist child scope with managed/locked default `Item` (`db_lookup`), `Result` (`single_select` button answers), and `Notes` (`long_text`) fields, stores `checklistConfig.lookupFieldId`, `checklistConfig.resultFieldId`, `checklistConfig.notesFieldId`, and `checklistConfig.grouping`, and exposes lookup/result/grouping controls in the Element inspector. Optional `Notes` should be hidden with node visibility instead of deleted. Checklist-level palette is restricted to `Short text`, `Date`, `Single select`, `Heading`, and `Text`. Deleting a subform now removes the subform node, scoped fields, and model schema scope together to prevent child fields from reappearing as root/unplaced fields. Checklist item-source metadata is now an accepted runtime convention: Form render auto-detects optional source fields `answer_options` (`Pass|Fail|N/A` using `|` delimiter), `answer_required` (`boolean`), and `visible_when` (`7=Fail` / `7=No|N/A` style single dependency metadata). Runtime hides `visible_when` items by default until the referenced source answer matches and ignores hidden required checklist items during Finish validation. Remaining checklist work belongs to richer source configuration UX, file/photo support, and any Corrective Action integration.
 - Runtime write has a managed-storage safety net for missing scalar columns.
   Keep it as a runtime protection, not as the primary Form Builder apply path.
+- Runtime generated data view refresh still needs a dependency-aware follow-up
+  for cases such as rebuilding `vw_lookup_option` while downstream generated
+  lookup/grid views depend on it. Do not solve this by returning to
+  `CREATE OR REPLACE VIEW`-only refresh; that regresses shape-changing view
+  updates where PostgreSQL rejects inserted/reordered output columns.
 - Navigation Builder must own runtime exposure, sidebar placement, and runtime grant assignment for `{ targetType: form_builder_view, modelId, viewId }`.
 - Future Navigation Builder bridge in Form Builder should surface runtime exposure
   without moving ownership into Form Builder: model/view list row action `Add to

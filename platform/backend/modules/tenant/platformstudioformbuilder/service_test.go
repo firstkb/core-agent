@@ -4169,6 +4169,95 @@ func TestSaveDraftPreservesPersistedRuntimeMetadataWhenRequestOmitsRuntime(t *te
 	}
 }
 
+func TestSaveDraftSkipsInvalidUnrelatedViewDuringRuntimeRelationScan(t *testing.T) {
+	repo := newMemoryRepository()
+	model, view := seedCanonicalModelAndDefaultView(t, repo)
+	svc := NewService(repo)
+
+	unrelatedModel := cloneModelRecord(model)
+	unrelatedModel.ModelID = "demo-presentation"
+	unrelatedModel.ModelKey = "demo-presentation"
+	unrelatedModel.StorageKey = "demo_presentation"
+	unrelatedModel.DisplayName = "Demo Presentation"
+	unrelatedModel.Description = "Demo presentation model"
+	unrelatedModelPayload := mustDecodeJSONMap(t, unrelatedModel.DefinitionJSON)
+	unrelatedModelPayload["id"] = unrelatedModel.ModelID
+	unrelatedModelPayload["key"] = unrelatedModel.ModelKey
+	unrelatedModelPayload["storageKey"] = unrelatedModel.StorageKey
+	unrelatedModelPayload["displayName"] = unrelatedModel.DisplayName
+	unrelatedModelPayload["name"] = unrelatedModel.DisplayName
+	unrelatedModelPayload["title"] = unrelatedModel.DisplayName
+	unrelatedDataSchema := asMap(unrelatedModelPayload["dataSchema"])
+	unrelatedDataSchema["modelId"] = unrelatedModel.ModelID
+	unrelatedDataSchema["modelTitle"] = unrelatedModel.DisplayName
+	unrelatedModelPayload["dataSchema"] = unrelatedDataSchema
+	unrelatedModel.DefinitionJSON = mustJSON(t, unrelatedModelPayload)
+	repo.models[unrelatedModel.ModelID] = &unrelatedModel
+
+	unrelatedDefaultView := cloneViewRecord(view)
+	unrelatedDefaultView.ModelID = unrelatedModel.ModelID
+	unrelatedDefaultView.ViewID = "view-default"
+	unrelatedDefaultView.ViewKey = "default"
+	unrelatedDefaultView.DisplayName = "Demo Presentation"
+	unrelatedDefaultView.Description = "Default view"
+	unrelatedDefaultPayload := mustDecodeJSONMap(t, unrelatedDefaultView.DefinitionJSON)
+	unrelatedDefaultPayload["id"] = unrelatedDefaultView.ViewID
+	unrelatedDefaultPayload["key"] = unrelatedDefaultView.ViewKey
+	unrelatedDefaultPayload["modelId"] = unrelatedModel.ModelID
+	unrelatedDefaultPayload["displayName"] = unrelatedDefaultView.DisplayName
+	unrelatedDefaultPayload["name"] = unrelatedDefaultView.DisplayName
+	unrelatedDefaultPayload["title"] = unrelatedDefaultView.DisplayName
+	unrelatedDefaultPayload["isDefault"] = true
+	unrelatedDefaultView.DefinitionJSON = mustJSON(t, unrelatedDefaultPayload)
+
+	invalidUnrelatedView := cloneViewRecord(&unrelatedDefaultView)
+	invalidUnrelatedView.ViewID = "view-executive-summary"
+	invalidUnrelatedView.ViewKey = "executive-summary"
+	invalidUnrelatedView.DisplayName = "Executive Summary"
+	invalidUnrelatedView.IsDefault = false
+	invalidUnrelatedViewPayload := mustDecodeJSONMap(t, invalidUnrelatedView.DefinitionJSON)
+	invalidUnrelatedViewPayload["id"] = invalidUnrelatedView.ViewID
+	invalidUnrelatedViewPayload["key"] = invalidUnrelatedView.ViewKey
+	invalidUnrelatedViewPayload["displayName"] = invalidUnrelatedView.DisplayName
+	invalidUnrelatedViewPayload["name"] = invalidUnrelatedView.DisplayName
+	invalidUnrelatedViewPayload["title"] = invalidUnrelatedView.DisplayName
+	invalidUnrelatedViewPayload["isDefault"] = false
+	invalidUISchema := asMap(invalidUnrelatedViewPayload["uiSchema"])
+	invalidRootScope := asMap(invalidUISchema["rootScope"])
+	invalidRootScope["nodes"] = append(asSlice(invalidRootScope["nodes"]), map[string]any{
+		"fieldId": "missing-field",
+		"id":      "node-missing-field",
+		"order":   int64(999),
+		"type":    "field",
+	})
+	invalidUISchema["rootScope"] = invalidRootScope
+	invalidUnrelatedViewPayload["uiSchema"] = invalidUISchema
+	invalidUnrelatedView.DefinitionJSON = mustJSON(t, invalidUnrelatedViewPayload)
+	repo.views[unrelatedModel.ModelID] = map[string]*ViewRecord{
+		unrelatedDefaultView.ViewID: &unrelatedDefaultView,
+		invalidUnrelatedView.ViewID: &invalidUnrelatedView,
+	}
+
+	modelPayload := mustDecodeJSONMap(t, model.DefinitionJSON)
+	viewPayload := mustDecodeJSONMap(t, view.DefinitionJSON)
+	out, err := svc.SaveDraft(testContext(), model.ModelID, view.ViewID, SaveDraftRequest{
+		Draft: DraftPayload{
+			Model: mustJSON(t, modelPayload),
+			View:  mustJSON(t, viewPayload),
+		},
+		ExpectedVersions: ExpectedVersions{
+			Model: int64Ptr(model.Version),
+			View:  int64Ptr(view.Version),
+		},
+	})
+	if err != nil {
+		t.Fatalf("SaveDraft returned error: %v", err)
+	}
+	if out.RuntimeApply == nil || out.RuntimeApply.Status != "applied" {
+		t.Fatalf("RuntimeApply status = %#v, want applied", out.RuntimeApply)
+	}
+}
+
 func TestSaveDraftRejectsRuntimeRelationNameConflicts(t *testing.T) {
 	repo := newMemoryRepository()
 	model, view := seedCanonicalModelAndDefaultView(t, repo)

@@ -2,6 +2,7 @@ package platformstudioformbuilder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -106,12 +107,16 @@ func (s *Service) validateRuntimeRelationConflicts(
 			return err
 		}
 
-		if model.ModelID != currentModelID {
-			modelPayload, err := buildCanonicalModelPayload(&model, views)
-			if err != nil {
-				return err
+		candidateModelPayload, err := buildCanonicalModelPayload(&model, views)
+		if err != nil {
+			if model.ModelID != currentModelID && errors.Is(err, ErrInvalidDraft) {
+				continue
 			}
-			for _, ref := range collectDataSchemaRuntimeRelationRefs(asMap(modelPayload["dataSchema"]), "model "+model.ModelID) {
+			return err
+		}
+
+		if model.ModelID != currentModelID {
+			for _, ref := range collectDataSchemaRuntimeRelationRefs(asMap(candidateModelPayload["dataSchema"]), "model "+model.ModelID) {
 				used[ref.Name] = ref
 			}
 		}
@@ -120,12 +125,13 @@ func (s *Service) validateRuntimeRelationConflicts(
 			if model.ModelID == currentModelID && view.ViewID == currentViewID {
 				continue
 			}
-			modelPayload, err := buildCanonicalModelPayload(&model, views)
+			viewPayload, err := buildCanonicalViewPayload(&model, &view, views, candidateModelPayload)
 			if err != nil {
-				return err
-			}
-			viewPayload, err := buildCanonicalViewPayload(&model, &view, views, modelPayload)
-			if err != nil {
+				if errors.Is(err, ErrInvalidDraft) {
+					// Stale unrelated authoring payloads should not block saving the current draft.
+					// Physical relation checks below still protect the current runtime names.
+					continue
+				}
 				return err
 			}
 			for _, ref := range collectUISchemaGridRelationRefs(asMap(viewPayload["uiSchema"]), "view "+view.ViewID) {

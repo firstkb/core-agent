@@ -15,3 +15,4 @@ Status: active lessons
 - Do not invent runtime grants before Navigation Builder ACL exists.
 - Do not hide post-save runtime apply failures; preserve authoring success and surface execution context.
 - Do not seed static Form Builder container UI nodes without explicit `containerKey` values matching the model-owned `layoutBlueprint`; otherwise reconciliation can create duplicate empty containers.
+- Do not replace Form Builder generated data-view drop/recreate with a `CREATE OR REPLACE VIEW`-only refresh for shape changes; PostgreSQL accepts only compatible append-style changes and rejects inserted/reordered columns.

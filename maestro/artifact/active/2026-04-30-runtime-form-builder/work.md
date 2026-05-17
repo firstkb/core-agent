@@ -670,16 +670,41 @@ View/read remains the existing `CollectionTable` modal path for now.
   - managed storage apply now commits before SQL view refresh, so a later data
     view or grid view error cannot roll back additive `ALTER TABLE ADD COLUMN`
     changes;
-  - canonical data views refresh via `CREATE OR REPLACE VIEW` without a
-    preliminary `DROP VIEW`, avoiding failures from dependent lookup/grid views;
+  - generated data view refresh must not rely on a `CREATE OR REPLACE VIEW`-only
+    shortcut for shape changes, because PostgreSQL rejects inserted/reordered
+    output columns; explicit no-`CASCADE` generated view drop/recreate remains
+    the current shape-changing path;
   - if view refresh still fails after storage succeeds, backend returns a
     partial runtime apply warning and Form Builder surfaces the warning after
     save instead of silently showing success only.
+- `lookup-option` Form Builder save retest completed after restarting
+  `api-tenant`:
+  - `ps_lookup_option` contains the managed scalar columns `answer_options`,
+    `answer_required`, and `visible_when`;
+  - `lookup-option/view-default` authoring save no longer fails with
+    `FORM_BUILDER_INVALID` when unrelated stale authoring payloads exist;
+  - runtime relation conflict scanning now skips invalid unrelated model/view
+    drafts while keeping strict validation for the current draft and physical
+    relation-name checks for current runtime refs;
+  - exact local retest confirmed authoring save is no longer rejected, returning
+    `canSave=true` and `errors=[]` for `lookup-option/view-default`;
+  - a separate runtime view dependency limitation remains: rebuilding
+    `vw_lookup_option` with the existing no-`CASCADE` drop path can return a
+    partial runtime apply warning when downstream generated lookup/grid views
+    depend on it.
+- `lookup-option` retest checks passed:
+  - local PostgreSQL probe confirmed `CREATE OR REPLACE VIEW` can append
+    columns but rejects inserted/reordered columns, so the runtime apply path
+    keeps the explicit data-view drop/recreate behavior for shape changes;
+  - `go test ./modules/tenant/platformstudioformbuilder -run 'TestSaveDraftSkipsInvalidUnrelatedViewDuringRuntimeRelationScan|TestRuntimeScopeViewDropOrderDropsGeneratedGridViewsBeforeDataView|TestDropRuntimeViewStatementDoesNotUseCascade' -count=1 -v`;
+  - `go test ./modules/tenant/platformstudioformbuilder -count=1`;
+  - `git diff --check`;
+  - `scripts/preflight.sh` passed in lite mode.
 
 ## Next Action
 
-Next allowed action is owner retest of Form Builder save on `lookup-option`
-after restarting tenant API, then continue the next runtime field slice.
+Next allowed action is owner choice between a dependency-aware runtime view
+refresh follow-up and the next runtime field slice.
 Multi-select catalog modal, richer catalog column layouts, dynamic lookup
 filters, dictionary-specific access rules, multivalue View Filter support,
 richer checklist source configuration, checklist file/photo support, and

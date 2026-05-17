@@ -1,5 +1,8 @@
 # Checklist Subform Form Builder
 
+Status: closed / archived
+Closed: 2026-05-17
+
 ## Scope
 
 Implement the Form Builder authoring slice for `Checklist subform` only.
@@ -30,7 +33,8 @@ Implement the Form Builder authoring slice for `Checklist subform` only.
 - New checklist subforms use non-reused generated scope keys to avoid stale physical runtime relation conflicts from previously deleted checklist scopes.
 - Backend maps runtime relation name conflicts to `FORM_BUILDER_RUNTIME_NAME_CONFLICT` instead of generic `FORM_BUILDER_INTERNAL`.
 - Browser smoke on `/builder/forms/lookup/views/view-default` opened the builder without console errors.
-- Form render/runtime behavior remains a separate follow-up.
+- Form render/runtime behavior moved to the broader active runtime Form Builder work.
+- Remaining checklist follow-ups are tracked outside this artifact: richer source configuration UX, file/photo support, and Corrective Action integration.
 
 ## Evidence
 
@@ -43,3 +47,10 @@ Implement the Form Builder authoring slice for `Checklist subform` only.
 - `pnpm -C platform/frontend --filter @platform/tenant-web lint`
 - `go test ./modules/tenant/platformstudioformbuilder`
 - `scripts/preflight.sh`
+
+## Closeout
+
+This artifact is closed as the completed `Checklist subform` Form Builder
+authoring slice. Continue runtime checklist and remaining checklist follow-ups
+from `maestro/artifact/active/2026-04-30-runtime-form-builder/` and current
+Form Builder memory.

@@ -8,7 +8,6 @@ import { useAuth } from "@platform/auth-core";
 import {
   createRuntimeFormDefinitionFromSchema,
   findFirstRuntimeChecklistRequiredError,
-  findRuntimeFormField,
   RuntimeFormScaffold,
   validateRuntimeForm,
   type RuntimeFormActiveTabs,
@@ -57,6 +56,9 @@ import {
   resolveRuntimeGeoPoint,
 } from "../form-runtime-browser-helpers";
 import {
+  collectRuntimeControlValueChanges,
+} from "../form-runtime-dom-sync";
+import {
   runtimeFormLoadErrorFromRequest,
 } from "../form-runtime-error-helpers";
 import {
@@ -85,7 +87,6 @@ import {
   coerceRuntimeFormValues,
   hasUserEnteredCreateValues,
   mergeServerValues,
-  runtimeFormValueToDomString,
   serializeRuntimeFormValues,
 } from "../form-runtime-value-helpers";
 import {
@@ -729,25 +730,49 @@ export function FormsRuntimeFormPage({
       return;
     }
 
-    const changedValues: Record<string, RuntimeFormValue> = {};
     const controls = root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[data-runtime-field-id], textarea[data-runtime-field-id]");
-    controls.forEach((control) => {
-      const fieldId = control.dataset.runtimeFieldId?.trim();
-      if (!fieldId || control.disabled || control.readOnly) {
-        return;
-      }
-      const field = findRuntimeFormField(runtimeDefinition, fieldId);
-      if (!field || field.disabled || field.readonly) {
-        return;
-      }
-
-      const nextValue = control.value;
-      if (nextValue !== runtimeFormValueToDomString(latestValuesRef.current[fieldId])) {
-        changedValues[fieldId] = nextValue;
-      }
-    });
+    const changedValues = collectRuntimeControlValueChanges(runtimeDefinition, controls, latestValuesRef.current);
 
     commitRuntimeValueChanges(changedValues);
+  }
+
+  function syncRuntimeControlValuesForSubmit() {
+    const root = runtimeFormContainerRef.current;
+    if (!root) {
+      return latestValuesRef.current;
+    }
+
+    const controls = root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[data-runtime-field-id], textarea[data-runtime-field-id]");
+    const changedValues = collectRuntimeControlValueChanges(runtimeDefinition, controls, latestValuesRef.current);
+    if (Object.keys(changedValues).length === 0) {
+      return latestValuesRef.current;
+    }
+
+    let nextValues: RuntimeFormValues = {
+      ...latestValuesRef.current,
+      ...changedValues,
+    };
+    nextValues = applyInitialStatusIfNeeded(nextValues);
+    latestValuesRef.current = nextValues;
+    if (hasServerRecordRef.current) {
+      pendingPatchValuesRef.current = {
+        ...pendingPatchValuesRef.current,
+        ...changedValues,
+      };
+    }
+    setValues(nextValues);
+    setErrors((currentErrors) => {
+      if (!Object.keys(changedValues).some((fieldId) => currentErrors[fieldId])) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      Object.keys(changedValues).forEach((fieldId) => {
+        delete nextErrors[fieldId];
+      });
+      return nextErrors;
+    });
+    return nextValues;
   }
 
   function scheduleRuntimeControlDomSync() {
@@ -764,7 +789,8 @@ export function FormsRuntimeFormPage({
       autosaveTimerRef.current = null;
     }
 
-    const finishValues = applyInitialStatusIfNeeded(latestValuesRef.current);
+    const submitValues = syncRuntimeControlValuesForSubmit();
+    const finishValues = applyInitialStatusIfNeeded(submitValues);
     if (finishValues !== latestValuesRef.current) {
       latestValuesRef.current = finishValues;
       setValues(finishValues);

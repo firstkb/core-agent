@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -39,6 +40,10 @@ import type {
 } from "./runtime-form-types";
 import { RuntimeContentNode } from "./runtime-form-content";
 import { RuntimeField } from "./fields/runtime-field";
+import {
+  collectRuntimeChecklistDetailChanges,
+  hasRuntimeChecklistDetailChanges,
+} from "./runtime-form-checklist-detail-sync";
 import { getRuntimeChecklistVisibleGroups } from "./runtime-form-checklist";
 import { cx } from "./runtime-form-utils";
 
@@ -463,10 +468,45 @@ function RuntimeChecklistItemRow({
   subform: RuntimeFormSubformDefinition;
 }) {
   const [notesOpen, setNotesOpen] = useState(false);
+  const itemRef = useRef<HTMLElement | null>(null);
   const options = item.answerOptions ?? [];
   const notesText = item.notes?.trim() ?? "";
   const detailNodes = getChecklistDetailNodes(subform, labels);
   const detailValues = getChecklistItemValues(item, subform);
+
+  function collectOpenDetailChanges() {
+    if (!notesOpen || !itemRef.current) {
+      return {};
+    }
+
+    const controls = itemRef.current.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      ".platform-runtime-form__checklist-details input[data-runtime-field-id], .platform-runtime-form__checklist-details textarea[data-runtime-field-id]",
+    );
+    return collectRuntimeChecklistDetailChanges(controls, detailValues, subform.checklistNotesFieldId);
+  }
+
+  function withOpenDetailChanges(change: RuntimeFormChecklistItemChange) {
+    const detailChange = collectOpenDetailChanges();
+    if (!hasRuntimeChecklistDetailChanges(detailChange)) {
+      return change;
+    }
+
+    return {
+      ...change,
+      notes: detailChange.notes ?? change.notes,
+      values: {
+        ...(detailChange.values ?? {}),
+        ...(change.values ?? {}),
+      },
+    };
+  }
+
+  function commitOpenDetailChanges() {
+    const detailChange = collectOpenDetailChanges();
+    if (hasRuntimeChecklistDetailChanges(detailChange)) {
+      onChecklistItemChange?.(subform, item, detailChange);
+    }
+  }
 
   function handleDetailFieldChange(fieldId: string, value: RuntimeFormValue | undefined) {
     const nextValues = {
@@ -487,6 +527,7 @@ function RuntimeChecklistItemRow({
       )}
       data-runtime-checklist-source={item.sourceValue}
       data-runtime-checklist-subform={subform.schemaScopeId}
+      ref={itemRef}
       tabIndex={-1}
     >
       <div className="platform-runtime-form__checklist-question">
@@ -510,7 +551,7 @@ function RuntimeChecklistItemRow({
               if (Array.isArray(nextValue) || !nextValue) {
                 return;
               }
-              onChecklistItemChange?.(subform, item, { value: nextValue });
+              onChecklistItemChange?.(subform, item, withOpenDetailChanges({ value: nextValue }));
             }}
             orientation="horizontal"
             type="single"
@@ -534,6 +575,11 @@ function RuntimeChecklistItemRow({
               notesOpen && "platform-runtime-form__checklist-notes-button--active",
             )}
             onClick={() => setNotesOpen((open) => !open)}
+            onMouseDown={() => {
+              if (notesOpen) {
+                commitOpenDetailChanges();
+              }
+            }}
             size="sm"
             title={String(labels.checklistNotes)}
             type="button"

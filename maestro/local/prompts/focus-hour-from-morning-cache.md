@@ -35,6 +35,8 @@ improves quality.
 Do not start by re-reading the whole repo. Use route-specific reads only after
 choosing the candidate action.
 
+I prohibit the editing of any data in the database, except with my prior approval and upon presentation of proof that such editing is necessary.
+
 Report first, before editing, using these Russian section headings:
 
 1. Короткий вывод для owner

@@ -1,7 +1,7 @@
 # Platform Studio State
 
 Status: active compact state
-Last compacted: 2026-04-25
+Last compacted: 2026-05-17
 
 ## Landed
 
@@ -38,18 +38,20 @@ Last compacted: 2026-04-25
 
 ## Accepted / Planned
 
-- Navigation Builder has an active UI-first V1 surface at `/builder/navigation`;
+- Navigation Builder V1 has landed at `/builder/navigation`;
   it owns app menu/sidebar navigation composition, Form View/App Page/External Link
   targets, root-only `Menu title` dividers, future App Module shape with nested
   subitems, separate `App menu`/`Utility rail` editor tabs, `Element`/`Access` inspector
   tabs, fixed add choices with target type locked after creation, `Show in app menu`
   toggle with eye-off inactive badges, Dashboard locked without lock badge, Form
-  View labels derived from selected View titles, draft/Save UX, access mock UI,
+  View labels derived from selected View titles, draft/Save UX, access authoring,
   optional icon picker for every editable non-title app menu item with `None`,
   runtime sidebar projection for active saved app menu entries, UI Lab-style
   runtime `Menu title` headings with empty/consecutive/trailing title
   suppression, rail utility visibility/access enforcement, and direct runtime
-  target API enforcement. Further effective-access UX remains planned unless a
+  target API enforcement. The original V1 artifact is archived at
+  `maestro/artifact/archive/2026-05-06-navigation-builder-v1`. Further
+  effective-access UX remains planned unless a
   later decision splits access into a dedicated tool.
 - Action Builder is planned but not active; it owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects.
 - PDF Builder is planned but not active; it owns generated PDF/template configuration over authored/runtime data.

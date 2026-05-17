@@ -2,7 +2,7 @@
 
 Status: active compact frontend pack
 Owner surface: `tenant-web`
-Last compacted: 2026-04-25
+Last compacted: 2026-05-17
 
 ## Read This When
 
@@ -41,8 +41,8 @@ Last compacted: 2026-04-25
 - Refresh token remains backend-managed in an `HttpOnly` cookie; JS stores only access token and expiry.
 - Install prompting is mounted on public `/sign-in` only.
 - Platform Studio UI stays app-local in `tenant-web`; `@platform/platform-studio-core` is UI-free contracts/helpers.
-- Form Builder is active backend-backed authoring; Navigation Builder has an
-  active V1 surface plus backend persistence, runtime sidebar/utility rail
+- Form Builder is active backend-backed authoring; Navigation Builder V1 has
+  landed with backend persistence, runtime sidebar/utility rail
   projection, and direct target guards for current Form View, App Page, and
   Platform Studio APIs; Action Builder, PDF Builder, and Report Builder are
   planned.
@@ -57,7 +57,8 @@ Last compacted: 2026-04-25
   starting with only Dashboard and the root add affordance, disabled future App
   Module add choice, Form View labels derived from selected View titles,
   optional icon picker for every editable non-title app menu item with `None`,
-  and mock-only access controls.
+  access authoring, root-only strategy protection, runtime filtering, and
+  direct target guards.
 - Navigation Builder persistence lives at
 `GET/PUT /app/platform-studio/navigation` backed by `ps_navigation_config`;
   runtime sidebar projection lives at `GET /app/navigation`.

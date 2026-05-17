@@ -1,5 +1,10 @@
 # Rail Utility Access Follow-Up Prompt
 
+Status: superseded by Navigation Builder V1 closeout.
+
+Utility rail authoring, active toggles, runtime filtering, and access enforcement
+landed during V1. Retain this file only as historical context.
+
 You are implementing the follow-up Navigation Builder slice for tenant rail
 utility visibility/access.
 

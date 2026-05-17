@@ -1,8 +1,8 @@
 # Backend Platform Studio Navigation Builder
 
-Status: active first backend slice
+Status: landed V1 runtime/access backend
 Owner surface: tenant Navigation Builder backend
-Last compacted: 2026-05-06
+Last compacted: 2026-05-17
 
 ## Read This When
 
@@ -21,6 +21,9 @@ Last compacted: 2026-05-06
 - `platform/backend/modules/tenant/platformstudionavigationbuilder/**`
 - `platform/backend/cmd/api-tenant/internal/server/routes_platform_studio_navigation_builder.go`
 - `platform/backend/migrations/postgres/tenant/007_platform_studio_navigation_builder.sql`
+- `platform/backend/migrations/postgres/tenant/011_platform_studio_navigation_access_runtime.sql`
+- `platform/backend/migrations/postgres/tenant/012_platform_studio_navigation_access_company_type.sql`
+- `platform/backend/migrations/postgres/tenant/013_platform_studio_navigation_root_access.sql`
 
 ## Backend Contract
 
@@ -32,7 +35,7 @@ Last compacted: 2026-05-06
 - Runtime API route is:
   - `GET /app/navigation`
 - Storage table is `ps_navigation_config`.
-- The first slice stores one saved definition under config key `default`.
+- V1 stores one saved definition under config key `default`.
 - Save uses optimistic `expectedVersion` conflict checks.
 - Saved definition includes `schemaVersion`, `appMenu`, and `utilityRail`.
 - Supported app menu node types are `menu_title`, `menu_group`, `form_view`,

@@ -2,7 +2,7 @@
 
 Status: active compact frontend pack
 Owner surface: tenant-web Platform Studio
-Last compacted: 2026-04-26
+Last compacted: 2026-05-17
 
 ## Read This When
 
@@ -30,7 +30,8 @@ Last compacted: 2026-04-26
 
 - Platform Studio UI stays app-local in `tenant-web`.
 - Platform Studio UI is a suite shell; Form Builder is active backend-backed
-  authoring and Navigation Builder has an active UI-first V1 surface.
+  authoring and Navigation Builder V1 has landed as the active navigation and
+  runtime exposure/access surface.
 - `platform-studio-core` owns non-UI contracts/helpers.
 - Form Builder language is `Model` and `View`.
 - Route params are `modelId` and `viewId`.
@@ -46,18 +47,19 @@ Last compacted: 2026-04-26
 
 ## Planned / Watch
 
-- Navigation Builder V1 is UI-first: tree editor, `Element`/`Access` inspector
+- Navigation Builder V1 has landed: tree editor, `Element`/`Access` inspector
   tabs with no V1 `Advanced` tab, Form Builder-style Element sections, access
-  mock sheet, root-only `Menu title` dividers, separate `App menu`/`Utility rail` left tabs,
+  authoring, root-only `Menu title` dividers, separate `App menu`/`Utility rail` left tabs,
   per-parent-level drag ordering, fixed add choices, `Show in app menu` toggle with
   eye-off inactive badges, Dashboard locked without a lock badge, Form View
   labels derived from selected View titles, container/root add controls,
   optional icon picker for every editable non-title app menu item with `None`
   and inspection-oriented icons, editable draft state, and explicit
   `Save`. Runtime `Menu title` headings use the UI Lab section-heading style
-  and suppress empty/consecutive/trailing title sections. Utility rail access is
-  also mock only. Backend persistence and runtime sidebar projection are active;
-  real rail utility access enforcement and real ACL enforcement remain planned.
+  and suppress empty/consecutive/trailing title sections. Backend persistence,
+  runtime sidebar projection, utility rail filtering, and direct target access
+  guards are active. Form Builder bridge and further effective-access UX remain
+  planned follow-ups.
 - Planned Platform Studio tools need distinct UI boundaries before implementation: Action Builder, PDF Builder, Report Builder.
 - Surface contextual `runtimeApply` partial failures visibly in workspace UI.
 - Preserve preview/runtime route split.

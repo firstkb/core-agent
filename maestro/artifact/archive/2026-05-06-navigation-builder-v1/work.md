@@ -1,7 +1,11 @@
 # Navigation Builder V1
 
-Status: active
+Status: closed / archived
 Date: 2026-05-06
+Closed: 2026-05-17
+
+Note: `Accepted Scope` records the original 2026-05-06 V1 brief. The final
+landed scope is captured in `closeout.md`.
 
 ## Owner Intent
 
@@ -84,6 +88,7 @@ Studio.
 
 ## Evidence
 
+- Closeout: `closeout.md`.
 - Passed: `pnpm -C platform/frontend --filter @platform/tenant-web test -- tests/platform-studio/platform-studio-route-meta.test.ts tests/platform-studio/navigation/navigation-builder-state.test.ts`.
 - Passed: `pnpm -C platform/frontend --filter @platform/tenant-web typecheck`.
 - Passed: `pnpm -C platform/frontend --filter @platform/tenant-web lint`.
@@ -177,7 +182,7 @@ Studio.
 ## Follow-Up Prompt To Capture
 
 Captured in
-`maestro/artifact/active/2026-05-06-navigation-builder-v1/form-builder-bridge-follow-up-prompt.md`.
+`maestro/artifact/archive/2026-05-06-navigation-builder-v1/form-builder-bridge-follow-up-prompt.md`.
 
 Rail utility visibility/access follow-up captured in
-`maestro/artifact/active/2026-05-06-navigation-builder-v1/rail-utility-access-follow-up-prompt.md`.
+`maestro/artifact/archive/2026-05-06-navigation-builder-v1/rail-utility-access-follow-up-prompt.md`.

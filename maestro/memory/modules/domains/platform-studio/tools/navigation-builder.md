@@ -1,7 +1,7 @@
 # Navigation Builder
 
-Status: active UI-first V1
-Last compacted: 2026-05-06
+Status: landed V1 / active product surface
+Last compacted: 2026-05-17
 
 ## Expected Ownership
 
@@ -17,8 +17,9 @@ Last compacted: 2026-05-06
 - Real runtime list route direction is `/app/forms/:modelId/views/:viewId`.
 - Navigation Builder should resolve configured entries to runtime routes, not to Platform Studio preview routes.
 - Tenant-web route: `/builder/navigation`.
-- V1 is UI-first: tree editor, inspector, access mock sheet, draft state, and
-  explicit `Save`.
+- V1 has landed: tree editor, inspector, access authoring, draft state,
+  explicit `Save`, backend persistence, runtime sidebar/utility rail
+  projection, direct target guards, and quick-create actions are active.
 - Empty or missing tenant configs start with only locked Dashboard plus the root
   add affordance. Do not seed mock app menu entries into production builder
   state; example trees belong only in tests/fixtures.
@@ -122,6 +123,8 @@ Last compacted: 2026-05-06
   rendering against the already-filtered runtime navigation tree. If a Form
   View target is hidden because its parent group is denied, the direct URL shows
   the access-restricted route state instead of rendering the collection table.
+- The original Maestro V1 work artifact is archived at
+  `maestro/artifact/archive/2026-05-06-navigation-builder-v1`.
 
 ## Guardrails
 

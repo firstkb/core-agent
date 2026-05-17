@@ -1,7 +1,7 @@
 # Platform Studio Tool Map
 
 Status: compact active tool map
-Last compacted: 2026-04-25
+Last compacted: 2026-05-17
 
 Platform Studio is a suite of tenant-facing builder/configuration tools.
 Use this file before assigning work to a specific builder.
@@ -9,7 +9,8 @@ Use this file before assigning work to a specific builder.
 ## Current Tool Status
 
 - `Form Builder`: active implementation surface.
-- `Navigation Builder`: planned.
+- `Navigation Builder`: V1 landed; active product surface for navigation and
+  runtime exposure/access follow-ups.
 - `Action Builder`: planned.
 - `PDF Builder`: planned.
 - `Report Builder`: planned.

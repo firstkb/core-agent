@@ -1,15 +1,20 @@
 # Form Builder Bridge Follow-Up Prompt
 
+Status: deferred follow-up after Navigation Builder V1 closeout.
+
+Refresh this prompt against current memory before implementation. Navigation
+Builder V1 now has backend persistence, runtime navigation projection, utility
+rail filtering, and direct target access guards.
+
 You are implementing the follow-up bridge between Form Builder and Navigation
 Builder in tenant-web Platform Studio.
 
 ## Context
 
-Navigation Builder V1 is active at `/builder/navigation`. It is UI-first and
-currently owns sidebar tree composition, draft/Save UX, Form View/App Page/
-External Link targets, future App Module shape, live preview, inspector, and a
-mock-only access sheet. Backend Navigation Builder persistence, real runtime
-publication, and ACL enforcement remain planned.
+Navigation Builder V1 has landed at `/builder/navigation`. It owns sidebar tree
+composition, draft/Save UX, Form View/App Page/External Link targets, future
+App Module shape, inspector, backend persistence, runtime sidebar/utility rail
+projection, access authoring, and direct target guards.
 
 Form Builder must not absorb Navigation Builder ownership. The bridge should be
 compact contextual UI only.
@@ -42,8 +47,9 @@ Navigation Builder and provide an entry point to configure it there.
 
 ## Non-Scope
 
-- Do not implement backend Navigation Builder persistence.
-- Do not claim real publication or ACL enforcement.
+- Do not reimplement backend Navigation Builder persistence.
+- Do not add parallel runtime grants outside the derived Navigation Builder
+  evaluator.
 - Do not add View Active/Inactive semantics back into Form Builder.
 - Do not make Navigation Builder a Form Builder tab.
 - Do not invent frontend-only grants.

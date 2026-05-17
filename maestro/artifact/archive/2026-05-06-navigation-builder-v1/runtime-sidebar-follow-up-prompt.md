@@ -1,5 +1,11 @@
 # Runtime Sidebar Follow-Up Prompt
 
+Status: superseded by Navigation Builder V1 closeout.
+
+Runtime sidebar projection, active filtering, configured Form View/App Page
+routes, title/breadcrumb metadata, and direct target guards landed during V1.
+Retain this file only as historical context.
+
 We have a UI-first Navigation Builder V1 in tenant-web. The next slice should
 connect Navigation Builder persistence/publication to real tenant sidebar
 output.

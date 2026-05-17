@@ -2,7 +2,7 @@
 
 Status: active compact module pack
 Owner surface: tenant Platform Studio product domain, cross-stack FE/BE
-Last compacted: 2026-04-25
+Last compacted: 2026-05-17
 
 ## Read This When
 
@@ -34,8 +34,9 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 
 - Platform Studio is the tenant-web tool suite for configuring application behavior.
 - Form Builder is active.
-- Navigation Builder has an active V1 surface plus backend persistence and
-  runtime sidebar projection; Action Builder, PDF Builder, and Report Builder are planned,
+- Navigation Builder V1 has landed with backend persistence, runtime sidebar
+  projection, utility rail filtering, derived access evaluation, and direct
+  target guards; Action Builder, PDF Builder, and Report Builder are planned,
   not implementation-active.
 - Platform Studio UI stays app-local in `tenant-web`.
 - Shared layer is `@platform/platform-studio-core`, not a shared UI package.
@@ -51,7 +52,7 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
 ## Tool Map
 
 - `Form Builder`: active. Owns models, views, field/layout authoring, authoring save, additive runtime apply, static/external model views, runtime view entry preparation, and managed import/export planning.
-- `Navigation Builder`: active V1. Owns app menu/sidebar navigation structure,
+- `Navigation Builder`: V1 landed. Owns app menu/sidebar navigation structure,
   Form View/App Page/External Link targets, future App Module shape with nested
   subitems, root-only `Menu title` dividers, separate `App menu`/`Utility rail` editor tabs,
   `Element`/`Access` inspector tabs, fixed add choices with target type locked
@@ -63,9 +64,9 @@ Historical import context lives in `maestro/memory/durable/legacy-memory-import.
   the dedicated `platformstudionavigationbuilder` package with
   `ps_navigation_config` and `GET /app/navigation`; runtime `Menu title` items
   render as UI Lab-style section headings with empty/consecutive/trailing title
-  suppression in tenant-web; real rail utility
-  enforcement and real grants remain planned unless a later decision splits
-  access into its own tool.
+  suppression in tenant-web; runtime app menu, utility rail, and current direct
+  target access enforcement are active unless a later decision splits access
+  into its own tool.
 - `Action Builder`: planned. Owns authored events, view-triggered behavior, notifications, conditional field changes, and post-submit side effects. Do not collapse this into the current Form Builder save flow.
 - `PDF Builder`: planned. Owns configured PDF templates and generated document output over authored/runtime data.
 - `Report Builder`: planned. Owns reporting surfaces, report definitions, and analytical/read-only outputs over authored/runtime data.

@@ -342,7 +342,7 @@
   domain: platform-studio
   state: accepted
   confidence: owner-confirmed
-  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active backend-backed authoring, Navigation Builder active UI-first V1 with first backend persistence slice, and Action/PDF/Report Builder planned."
+  summary: "Platform Studio is the tenant-web suite of builder/configuration tools: Form Builder active backend-backed authoring, Navigation Builder V1 landed with runtime navigation/access integration, and Action/PDF/Report Builder planned."
   read_when:
     - "task touches Platform Studio as a product suite"
     - "task mentions Navigation Builder, sidebar, Platform Studio access/grants, Action Builder, authored events, PDF Builder, Report Builder, generated documents, or future builder tools"
@@ -370,9 +370,9 @@
 - id: platform.platform-studio.navigation-builder
   memory_type: semantic
   domain: platform-studio
-  state: active
+  state: landed
   confidence: doc-confirmed
-  summary: "Navigation Builder has tenant-web UI V1 and a dedicated api-tenant backend package for saved definition persistence, validation, duplicate target prevention, and future runtime sidebar handoff."
+  summary: "Navigation Builder V1 has tenant-web authoring UI, dedicated api-tenant persistence, runtime sidebar/utility rail projection, derived access evaluator rows, direct Form View/App Page/Platform Studio target guards, and top-bar quick-create actions."
   read_when:
     - "task touches Navigation Builder, app menu, utility rail, sidebar composition, saved navigation definition, ps_navigation_config, runtime sidebar output, Form View/App Page navigation targets, or Navigation Builder backend API"
   canonical_docs:
@@ -388,7 +388,7 @@
     - maestro/memory/modules/domains/platform-studio/tools/navigation-builder.md
     - maestro/memory/modules/backend/platform-studio-navigation-builder/README.md
     - maestro/memory/modules/frontend/tenant-web/README.md
-  last_compacted: 2026-05-06
+  last_compacted: 2026-05-17
 
 - id: platform.app-delivery
   memory_type: semantic

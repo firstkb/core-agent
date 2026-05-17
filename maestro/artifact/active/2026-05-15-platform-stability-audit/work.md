@@ -16,10 +16,10 @@ The owner wants a stability-oriented audit before broad fixes. The current prior
 ## Continuity Snapshot
 
 - Latest owner correction: Start the next testing phase inside the tenant app; admin is deferred because it is still raw.
-- Current phase: `tenant Form Runtime disposable mutation E2E completed; next tenant stability slice pending`
+- Current phase: `tenant Form Builder Demo Presentation enhancement completed; checklist create-form filtering fix verified`
 - Artifact path: `maestro/artifact/active/2026-05-15-platform-stability-audit/`
 - Gates / approvals: Owner approved disposable Form Runtime mutation testing; no additional product-code, migration, release, or high-risk approval is open.
-- Evidence status: Read-only command baseline, public FE Browser smoke, tenant authenticated Browser auth smoke, direct tenant auth/API probe, targeted Auth FE/BE code checks, Auth notification/provider review, tenant secure route wiring test, tenant Auth dependency Browser/API smoke, tenant Navigation Builder FE/BE/browser slice, tenant Form Runtime/table/App Pages FE/BE/browser slice, tenant Form Runtime decomposition-lite, tenant Form Runtime pure-helper decomposition, tenant Form Runtime mutation/subform controller extraction, tenant Form Runtime empty-create BE validation fix, and owner-approved disposable API/DB mutation E2E completed.
+- Evidence status: Read-only command baseline, public FE Browser smoke, tenant authenticated Browser auth smoke, direct tenant auth/API probe, targeted Auth FE/BE code checks, Auth notification/provider review, tenant secure route wiring test, tenant Auth dependency Browser/API smoke, tenant Navigation Builder FE/BE/browser slice, tenant Form Runtime/table/App Pages FE/BE/browser slice, tenant Form Runtime decomposition-lite, tenant Form Runtime pure-helper decomposition, tenant Form Runtime mutation/subform controller extraction, tenant Form Runtime empty-create BE validation fix, owner-approved disposable API/DB mutation E2E, Demo Presentation Form Builder enhancement, and checklist create-form filtering fix completed.
 - Unresolved owner decisions: None for read-only baseline.
 - Next allowed action: Continue to the next tenant module testing slice; remaining Auth items are documented coverage/future-work gaps, not current blockers.
 
@@ -332,6 +332,66 @@ The owner wants a stability-oriented audit before broad fixes. The current prior
 - Next allowed action: continue to the next tenant stability area, or open a
   separate Browser-input/tooling issue if rendered mutation evidence becomes a
   hard requirement.
+
+## Form Builder Demo Presentation Slice
+
+- Scope: create a presentation-ready managed `Demo Presentation` model in the
+  demo tenant while testing Form Builder FE/BE authoring, additive runtime
+  apply, preview runtime list/form render, lookup selection wiring, and
+  checklist rendering with `LOOKUP Option`.
+- Results:
+  - Created model `demo-presentation`, default view `view-default`, and
+    additional view `view-executive-summary`.
+  - Added root fields for overview/details plus a checklist subform
+    `presentation_checklist` with `LOOKUP Option` item lookup source.
+  - BE runtime apply created root/subform storage tables and data/grid views;
+    DB metadata and information_schema checks confirmed expected columns,
+    including lookup-derived label outputs.
+  - Browser smoke confirmed Form Builder workspace and preview runtime create
+    form render with console warn/error count `0`.
+  - Found and fixed a Form Render ordering regression: standalone root nodes
+    such as subforms were compiled before authored sections. Runtime now
+    preserves authored root order, so Demo runtime renders `Demo overview`,
+    `Presentation details`, then `Presentation checklist`.
+- Scroll note:
+  - The Codex browser page was not CSS-scroll-locked. With the checklist
+    collapsed, the page was only about 44px taller than the viewport; after
+    expanding checklist content, Browser wheel-scroll moved normally.
+- Next allowed action: continue Form Builder testing with focused edit/save
+  flows, or review/commit the current Demo Presentation and runtime-order fix.
+
+## Form Builder Demo Presentation Enhancement Slice
+
+- Scope: improve the tenant `Demo Presentation` model for presentation use
+  while continuing FE/BE Form Builder and Form Render stability testing.
+- Criteria:
+  - Preserve product logic except for defects found during testing.
+  - Mutate only demo tenant authoring/data needed for the presentation model.
+  - Showcase stronger Form Builder capabilities: sections, text content, tabs,
+    grid layout, choice buttons, lookup, tags/multi-select, ready-made
+    email/url/date-time fields, checklist, default/runtime table columns, and
+    an executive summary view.
+- Results:
+  - Enhanced `demo-presentation` default view to 19 root fields and 29 root UI
+    nodes with `Demo overview`, `Demo story`, `Readiness`, `Assets and
+    follow-up`, and `Presentation checklist`.
+  - Added six demo-only `LOOKUP Option` records under catalog
+    `Demo Presentation`; checklist now uses those source rows.
+  - Runtime apply passed as `applied`; DB confirmed added columns, the managed
+    multi-value table `ps_demo_presentation__mv`, and refreshed data/grid
+    views.
+  - Browser smoke confirmed builder, runtime list, runtime create form,
+    checklist expansion, and console warn/error count `0`.
+  - Found one BE runtime apply edge: reordering root `dataSchema.fields` can
+    make PostgreSQL reject `CREATE OR REPLACE VIEW` due positional column-name
+    changes. The model was stabilized by preserving the old physical field
+    order and using UI nodes/layout for presentation order.
+  - Found and fixed a checklist runtime bug: create forms with no saved
+    checklist rows were loading all unfiltered lookup options as inactive
+    saved items. Runtime now loads inactive saved options only when saved source
+    values exist.
+- Next allowed action: review/commit the Form Builder enhancement and fixes, or
+  continue with focused Form Builder edit/save/browser mutation checks.
 
 ## Risks / Gates
 

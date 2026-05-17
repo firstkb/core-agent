@@ -5,7 +5,7 @@
 
 ## Summary
 
-The first read-only stability baseline passed. Required repository checks, backend tests/builds, and frontend lint/typecheck/tests/build all completed successfully. The local Node PATH drift was corrected at machine level and guarded at project level. Auth, Navigation Builder, and Form Runtime/table/App Pages tenant slices passed targeted FE/BE/browser testing. Form Runtime decomposition slices reduced immediate frontend monolith pressure, and the empty-create Job Type backend `500` found during Browser smoke is now covered by a backend validation fix. Owner-approved disposable Form Runtime mutation coverage passed through authenticated tenant APIs plus DB cleanup verification. Remaining risks are large frontend production chunks, uneven explicit shared-package coverage, and rendered-browser mutation coverage because current Browser input changes visible DOM values without updating React form state.
+The first read-only stability baseline passed. Required repository checks, backend tests/builds, and frontend lint/typecheck/tests/build all completed successfully. The local Node PATH drift was corrected at machine level and guarded at project level. Auth, Navigation Builder, Form Runtime/table/App Pages, and Form Builder tenant slices passed targeted FE/BE/browser testing. Form Runtime decomposition slices reduced immediate frontend monolith pressure, the empty-create Job Type backend `500` is covered by a backend validation fix, and Demo Presentation was enhanced for presentation use. Owner-approved disposable Form Runtime mutation coverage passed through authenticated tenant APIs plus DB cleanup verification. Remaining risks are large frontend production chunks, uneven explicit shared-package coverage, rendered-browser mutation coverage limitations, and a BE runtime apply edge when root field order is physically reordered after view creation.
 
 ## Commands / Checks
 
@@ -71,6 +71,11 @@ The first read-only stability baseline passed. Required repository checks, backe
 | Diff whitespace check | passed | `git diff --check` | Passed after the backend validation fix. |
 | Form Runtime stability commit preflight | passed | `scripts/preflight.sh --full` | Backend tests/builds plus frontend lint/typecheck/tests/build passed before committing the Form Runtime stability slice. Frontend build retained known large chunk warnings. |
 | Form Runtime disposable mutation E2E | passed | `/bin/bash /private/tmp/form-runtime-mutation-e2e.sh` | Auth: local seeded dev login. Covered empty-create validation, create record, edit/autosave API, finish, favorite toggle round-trip, saved-filter create/delete, bulk inactive/active/delete, subform create/edit/delete, and checklist update. Cleanup verified `0` rows left in `jobtype`, `ps_test_inspection`, `ps_test_inspection__sf_9bcecc`, `ps_lookup`, and `ps_lookup__sf_a672a5` for the run marker. |
+| Demo Presentation enhancement API save | passed | `node /private/tmp/form-builder-demo-enhance.mjs` | Auth: local seeded dev login. Added presentation-ready fields/layout, executive view update, demo-only `LOOKUP Option` rows, runtime apply `applied`, multi-value table reuse/create, refreshed data/grid views, and no validation warnings. |
+| Demo Presentation runtime probe | passed | `node /private/tmp/form-builder-demo-runtime-probe.mjs`; `node /private/tmp/demo-presentation-checklist-dump.mjs` | Runtime meta/list/form returned 19 root fields, 29 nodes, 1 checklist group, 6 checklist items, table row count 1, and no stale `Test/Test2` checklist items after the checklist filtering fix. |
+| Demo Presentation DB artifact check | passed | local `psql` against `108-demo` | Confirmed new root columns, `ps_demo_presentation__mv`, `vw_demo_presentation`, `vg_demo_presentation__default`, and `vg_demo_presentation__executi_bcea`. |
+| Checklist create-form filter BE test | passed | `go test ./modules/tenant/platformstudioformruntime` | Added regression coverage that inactive/saved lookup options are not requested for create forms with no saved checklist rows. |
+| Form Builder enhanced targeted checks | passed | `go test ./modules/tenant/platformstudioformruntime ./modules/tenant/platformstudioformbuilder`; `pnpm --filter @platform/forms test -- src/runtime-form.test.ts`; `pnpm --filter @platform/tenant-web test -- src/features/form-runtime/form-runtime-collection-table-client.test.ts src/features/form-runtime/form-runtime-subform-helpers.test.ts`; `scripts/preflight.sh` | Backend, shared forms, tenant runtime client/helper tests, and lite preflight passed after the Demo Presentation enhancement and checklist filtering fix. |
 
 ## Auth Code-Test Findings
 
@@ -608,6 +613,30 @@ The first read-only stability baseline passed. Required repository checks, backe
   - Cleanup evidence: DB counts after cleanup were `0` for `jobtype`, `test_inspection_root`, `test_inspection_subform`, `lookup_root`, and `lookup_checklist`.
   - Browser post-check URL: `https://demo.platform.localhost/app/forms/jobtype/views/view-default`; title `Tenant Web`; `Job Type` heading and create action rendered; console warn/error count `0`.
   - Browser input limitation: Browser/CUA typing changed the visible `Name` textbox value, but React form state stayed empty and `Finish` correctly showed `Please fill field: "Name"`. Rendered-browser mutation was therefore not used as evidence.
+- Tenant Form Builder Demo Presentation evidence:
+  - Created managed model `demo-presentation` / `Demo Presentation` and default view `view-default` through tenant Form Builder authoring API. Added root fields `Presentation title`, `Presenter`, `Presentation date`, `Status`, `Primary topic`, `Readiness score`, and `Executive summary`.
+  - Added checklist subform `presentation_checklist` using `LOOKUP Option` as the checklist item lookup source; preview runtime form loaded 2 checklist groups and 6 checklist items.
+  - Runtime apply created `ps_demo_presentation`, `ps_demo_presentation__sf_d56233`, `vw_demo_presentation`, `vw_demo_presentation__sf_d56233`, `vg_demo_presentation__default`, and `vg_demo_presentation__executi_bcea`.
+  - Browser smoke: `https://demo.platform.localhost/builder/forms/demo-presentation/views/view-default` rendered Form Builder workspace; `https://demo.platform.localhost/app/platform-studio/forms/demo-presentation/views/view-default/new` rendered runtime create form with `Demo overview`, `Presentation details`, then `Presentation checklist`; console warn/error count `0`.
+  - Screenshots: `/private/tmp/demo-presentation-builder.png`, `/private/tmp/demo-presentation-preview-list.png`, `/private/tmp/demo-presentation-create-fixed-order.png`, `/private/tmp/demo-presentation-checklist-expanded.png`.
+  - Regression fixed: runtime schema compiler now preserves authored root node order when standalone nodes, including subforms/checklists, follow authored sections.
+- Tenant Form Builder enhanced Demo Presentation evidence:
+  - Enhanced `demo-presentation` default view to 19 root fields and 29 root UI nodes. Runtime create form now shows `Demo overview`, `Demo story` with `Narrative`/`Proof points` tabs, `Readiness` scorecard grid, `Assets and follow-up`, and `Presentation checklist`.
+  - Added demo-only `LOOKUP Option` catalog rows under `Demo Presentation`: `Audience outcome framed`, `Builder schema changes verified`, `Runtime create and edit path ready`, `Navigation and table view available`, `Lookup and checklist behavior prepared`, and `Follow-up owner assigned`.
+  - Runtime apply initially exposed a BE edge when root fields were physically reordered: PostgreSQL rejected `CREATE OR REPLACE VIEW` with `cannot change name of view column "status" to "audience"`. The authoring save was corrected to preserve old physical field order and use UI layout for visual order; subsequent runtime apply was `applied`.
+  - Runtime apply evidence after correction: `ps_demo_presentation` reused, `ps_demo_presentation__mv` reused, `vw_demo_presentation`, `vg_demo_presentation__default`, `vg_demo_presentation__executi_bcea`, and `vw_demo_presentation__sf_d56233` recreated successfully.
+  - BE checklist bug fixed: create-form checklist no longer loads all unfiltered lookup options as inactive saved rows when no saved source values exist. Browser/API evidence after restarting tenant API showed exactly 1 group (`Demo Presentation`) and 6 active checklist items.
+  - Browser smoke:
+    - Builder URL `https://demo.platform.localhost/builder/forms/demo-presentation/views/view-default` rendered without console warnings/errors.
+    - Runtime list URL `https://demo.platform.localhost/app/platform-studio/forms/demo-presentation/views/view-default` rendered enhanced columns including `Audience`, `Readiness score`, and `Confidence level`; console warn/error count `0`.
+    - Runtime create URL `https://demo.platform.localhost/app/platform-studio/forms/demo-presentation/views/view-default/new` rendered sections/tabs/grid/assets/checklist; console warn/error count `0`.
+    - Checklist expansion showed all six demo items, `Pass/Watch/Block` controls, and no stale `Test/Test2` items; screenshot `/private/tmp/demo-presentation-enhanced-checklist-expanded.png`.
+- Tenant Form Builder / Form Runtime targeted tests:
+  - `go test ./modules/tenant/platformstudioformbuilder ./modules/tenant/platformstudioformruntime ./cmd/api-tenant/internal/server` passed.
+  - `pnpm --filter @platform/tenant-web test -- tests/platform-studio/forms-builder-state.test.ts tests/platform-studio/forms-actors.test.ts src/features/platform-studio/forms/forms-builder-library.test.ts src/features/platform-studio/forms/forms-preset-lookup-settings.test.ts src/features/platform-studio/forms/state/form-builder-selectors.test.ts src/features/platform-studio/forms/state/form-builder-palette-selectors.test.ts src/features/platform-studio/forms/controller/form-builder-workspace-save.test.ts src/features/platform-studio/forms/controller/form-builder-workspace-grid.test.ts src/features/platform-studio/forms/controller/form-builder-workspace-lookup-source-picker.test.ts src/features/platform-studio/forms/controller/form-builder-workspace-checklist-orphans.test.ts src/features/form-runtime/form-runtime-collection-table-client.test.ts src/features/form-runtime/form-runtime-subform-helpers.test.ts` passed: 12 files, 44 tests.
+  - `pnpm --filter @platform/forms test -- src/runtime-form.test.ts` passed: 1 file, 24 tests.
+  - `pnpm --filter @platform/tenant-web test -- src/features/form-runtime/form-runtime-collection-table-client.test.ts src/features/form-runtime/form-runtime-subform-helpers.test.ts` passed: 2 files, 7 tests.
+  - `scripts/preflight.sh` passed.
 
 ## Review Evidence
 
@@ -636,3 +665,9 @@ The first read-only stability baseline passed. Required repository checks, backe
   remains unproven because the current Browser input path does not update React
   form state reliably enough for submit-flow evidence.
 - Form Runtime has significant FE/BE file-size risk. The decomposition passes reduced the route page to 988 lines and extracted mutation plus subform/checklist controllers, but finish/back/dialog/reveal orchestration and DOM control sync remain concentrated; new non-trivial runtime-form behavior should still add targeted regression coverage before extending mutation flows.
+- Form Builder runtime apply has a remaining BE edge for physical root field
+  reordering after data views already exist. The Demo Presentation authoring
+  was stabilized by preserving physical field order, but the runtime apply
+  implementation should eventually handle reorder/rename explicitly, likely by
+  dropping dependent views before recreating them or by enforcing append-only
+  physical field order in authoring.

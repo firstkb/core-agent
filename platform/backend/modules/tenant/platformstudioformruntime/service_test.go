@@ -477,6 +477,119 @@ func TestLoadFormReturnsChecklistMatrixWithSavedInactiveUnion(t *testing.T) {
 	}
 }
 
+func TestLoadFormChecklistMatrixSkipsInactiveLookupWhenCreateHasNoSavedRows(t *testing.T) {
+	repo := newRecordingRuntimeRepo()
+	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)
+	dataSchema := asMap(modelPayload["dataSchema"])
+	dataSchema["subformScopes"] = append(asSlice(dataSchema["subformScopes"]), map[string]any{
+		"displayName":   "Checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"runtime": map[string]any{
+			"rtAlias":      "checklist",
+			"tableName":    "ps_sor__checklist",
+			"dataViewName": "vw_sor__checklist",
+		},
+		"fields": []any{
+			map[string]any{
+				"fieldId":       "item",
+				"kind":          "db_lookup",
+				"label":         "Item",
+				"selectionMode": "single",
+				"storageKey":    "item",
+				"lookupConfig": map[string]any{
+					"displayFields":    []any{"catalog", "hazard"},
+					"filters":          []any{map[string]any{"field": "active", "operator": "eq", "value": true}},
+					"searchFields":     []any{"catalog", "hazard"},
+					"sourceModel":      "lookup-option",
+					"storedValueField": "doc_id",
+				},
+			},
+			map[string]any{
+				"fieldId":    "result",
+				"kind":       "single_select",
+				"label":      "Result",
+				"storageKey": "result",
+				"options":    []any{"Yes", "No"},
+			},
+			map[string]any{
+				"fieldId":    "notes",
+				"kind":       "long_text",
+				"label":      "Notes",
+				"storageKey": "notes",
+			},
+		},
+	})
+	repo.model.DefinitionJSON = mustJSON(modelPayload)
+
+	viewPayload := cloneJSONToMap(repo.view.DefinitionJSON)
+	rootScope := asMap(asMap(viewPayload["uiSchema"])["rootScope"])
+	rootScope["nodes"] = append(asSlice(rootScope["nodes"]), map[string]any{
+		"checklistConfig": map[string]any{
+			"grouping":      "by_first_display_field",
+			"lookupFieldId": "item",
+			"notesFieldId":  "notes",
+			"resultFieldId": "result",
+		},
+		"id":            "subform-checklist",
+		"schemaScopeId": "checklist",
+		"subformType":   "CHECKLIST",
+		"tableKey":      "checklist",
+		"title":         "Checklist",
+		"type":          "subform",
+	})
+	repo.view.DefinitionJSON = mustJSON(viewPayload)
+
+	inactiveLookupRequested := false
+	provider := &recordingLookupOptionsProvider{
+		list: func(req dictionary.OptionsRequest) (*dictionary.OptionsResponse, error) {
+			if req.Dictionary == "contacts" {
+				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+					Label: "Andrew Owner",
+					Value: "77",
+				}}}, nil
+			}
+			if req.SourceModel == "lookup-option" && len(req.IDs) == 0 && len(req.Filters) == 0 {
+				inactiveLookupRequested = true
+				return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+					Fields: map[string]string{
+						"catalog": "Stale",
+						"hazard":  "Should not appear",
+					},
+					Label: "Stale, Should not appear",
+					Value: "stale-item",
+				}}}, nil
+			}
+			return &dictionary.OptionsResponse{Items: []dictionary.Option{{
+				Fields: map[string]string{
+					"catalog": "Environmental",
+					"hazard":  "Active question",
+				},
+				Label: "Environmental, Active question",
+				Value: "active-item",
+			}}}, nil
+		},
+	}
+	svc := NewService(repo, provider)
+
+	out, err := svc.LoadForm(testRuntimeContext(), "sor", "default", "")
+	if err != nil {
+		t.Fatalf("LoadForm returned error: %v", err)
+	}
+	if inactiveLookupRequested {
+		t.Fatal("inactive lookup options were requested for a create form without saved checklist rows")
+	}
+	checklist := out.Subforms["checklist"].Checklist
+	if checklist == nil || len(checklist.Groups) != 1 || len(checklist.Groups[0].Items) != 1 {
+		t.Fatalf("checklist = %#v, want only active filtered item", checklist)
+	}
+	item := checklist.Groups[0].Items[0]
+	if item.SourceValue != "active-item" || !item.Active || item.InactiveSaved {
+		t.Fatalf("checklist item = %#v, want active item only", item)
+	}
+}
+
 func TestUpdateChecklistItemResolvesSourceGuid(t *testing.T) {
 	repo := newRecordingRuntimeRepo()
 	modelPayload := cloneJSONToMap(repo.model.DefinitionJSON)

@@ -985,35 +985,52 @@ function createRuntimeSections(context: CompileContext): RuntimeFormSectionDefin
     }];
   }
 
-  const leadingNodes = rootNodes.filter((node) => stringValue(node.type) !== "section");
   const sections: RuntimeFormSectionDefinition[] = [];
-  const leadingRuntimeNodes = leadingNodes.flatMap((node) => {
+  let standaloneSegmentIndex = 0;
+  let pendingStandaloneNodes: JsonRecord[] = [];
+
+  const flushStandaloneNodes = () => {
+    if (pendingStandaloneNodes.length === 0) {
+      return;
+    }
+    const segmentId = standaloneSegmentIndex === 0 ? "default" : `default-${standaloneSegmentIndex + 1}`;
+    const parentId = `__root_standalone_${standaloneSegmentIndex}__`;
     const transientContext: CompileContext = {
       ...context,
-      nodesByParentId: new Map(context.nodesByParentId).set("__leading__", [node]),
+      nodesByParentId: new Map(context.nodesByParentId).set(parentId, pendingStandaloneNodes),
     };
-    return createRuntimeNodes(transientContext, "__leading__");
-  });
-  if (leadingRuntimeNodes.length > 0) {
-    sections.push({
-      id: "default",
-      nodes: leadingRuntimeNodes,
-    });
-  }
+    const nodes = createRuntimeNodes(transientContext, parentId);
+    if (nodes.length > 0) {
+      sections.push({
+        id: segmentId,
+        nodes,
+      });
+    }
+    standaloneSegmentIndex += 1;
+    pendingStandaloneNodes = [];
+  };
 
-  sectionNodes.forEach((sectionNode) => {
-    const sectionId = stringValue(sectionNode.id);
+  rootNodes.forEach((node) => {
+    if (stringValue(node.type) !== "section") {
+      pendingStandaloneNodes.push(node);
+      return;
+    }
+
+    flushStandaloneNodes();
+    const sectionId = stringValue(node.id);
     const nodes = createRuntimeNodes(context, sectionId);
     if (nodes.length === 0) {
       return;
     }
     sections.push({
-      description: stringValue(sectionNode.text) || undefined,
+      description: stringValue(node.text) || undefined,
       id: sectionId,
       nodes,
-      title: stringValue(sectionNode.title) || undefined,
+      title: stringValue(node.title) || undefined,
     });
   });
+
+  flushStandaloneNodes();
   return sections.length > 0 ? sections : [{ id: "default", nodes: [] }];
 }
 

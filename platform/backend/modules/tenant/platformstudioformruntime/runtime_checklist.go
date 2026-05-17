@@ -99,15 +99,17 @@ func (s *Service) buildChecklistMatrix(
 		optionsByValue[option.Value] = option
 	}
 
-	savedOptions, err := s.loadChecklistOptions(ctx, *lookupField, savedSourceValues, false)
-	if err != nil {
-		return nil, err
-	}
-	for _, option := range savedOptions {
-		if existing, ok := optionsByValue[option.Value]; ok && existing.Active {
-			continue
+	if len(savedSourceValues) > 0 {
+		savedOptions, err := s.loadChecklistOptions(ctx, *lookupField, savedSourceValues, false)
+		if err != nil {
+			return nil, err
 		}
-		optionsByValue[option.Value] = option
+		for _, option := range savedOptions {
+			if existing, ok := optionsByValue[option.Value]; ok && existing.Active {
+				continue
+			}
+			optionsByValue[option.Value] = option
+		}
 	}
 
 	for _, sourceValue := range savedSourceValues {

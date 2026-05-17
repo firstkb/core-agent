@@ -1103,6 +1103,64 @@ describe("runtime form helpers", () => {
     });
   });
 
+  it("preserves authored root order when standalone nodes follow sections", () => {
+    const definition = createRuntimeFormDefinitionFromSchema({
+      commitMode: "autosave",
+      dataSchema: {
+        rootScope: {
+          fields: [
+            { id: "title", kind: "short_text", label: "Title" },
+            { id: "summary", kind: "long_text", label: "Summary" },
+          ],
+        },
+        subformScopes: [
+          {
+            displayName: "Checklist",
+            fields: [
+              { id: "item", kind: "db_lookup", label: "Item" },
+              { id: "result", kind: "single_select", label: "Result", options: ["Pass", "Fail"] },
+            ],
+            schemaScopeId: "checklist",
+            subformType: "CHECKLIST",
+            tableKey: "checklist",
+          },
+        ],
+      },
+      mode: "create",
+      modelId: "demo",
+      uiSchema: {
+        rootScope: {
+          nodes: [
+            { id: "overview", order: 0, title: "Overview", type: "section", visibility: "visible" },
+            { fieldId: "title", id: "field-title", order: 0, parentId: "overview", type: "field", visibility: "visible" },
+            { id: "details", order: 1, title: "Details", type: "section", visibility: "visible" },
+            { fieldId: "summary", id: "field-summary", order: 0, parentId: "details", type: "field", visibility: "visible" },
+            {
+              id: "checklist-node",
+              order: 2,
+              schemaScopeId: "checklist",
+              subformType: "CHECKLIST",
+              tableKey: "checklist",
+              title: "Checklist",
+              type: "subform",
+              visibility: "visible",
+            },
+          ],
+        },
+      },
+      viewId: "default",
+    });
+
+    expect(definition.sections.map((section) => section.title ?? section.id)).toEqual([
+      "Overview",
+      "Details",
+      "default",
+    ]);
+    expect(definition.sections[0]?.nodes.map((node) => node.id)).toEqual(["title"]);
+    expect(definition.sections[1]?.nodes.map((node) => node.id)).toEqual(["summary"]);
+    expect((definition.sections[2]?.nodes[0] as RuntimeFormSubformDefinition | undefined)?.schemaScopeId).toBe("checklist");
+  });
+
   it("compiles checklist detail nodes from subform scope", () => {
     const definition = createRuntimeFormDefinitionFromSchema({
       commitMode: "autosave",

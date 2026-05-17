@@ -176,6 +176,9 @@ func applyRuntimeScopeViewsTx(
 		}
 		gridViewExisted[gridView.Name] = existed
 	}
+	if err := dropRuntimeScopeViewsTx(ctx, tx, scope); err != nil {
+		return result, err
+	}
 	lookupOutputs, err := ensureScopeDataViewTx(ctx, tx, scope)
 	if err != nil {
 		return result, err
@@ -313,20 +316,39 @@ func ensureScopeDataViewTx(ctx context.Context, tx *sql.Tx, scope runtimeApplySc
 
 func ensureGridViewTx(ctx context.Context, tx *sql.Tx, dataViewName string, gridView runtimeApplyGridViewPlan) error {
 	statement := buildRuntimeGridViewSQL(dataViewName, gridView)
-	if err := dropRuntimeViewTx(ctx, tx, gridView.Name); err != nil {
-		return err
-	}
 	if _, err := tx.ExecContext(ctx, statement); err != nil {
 		return fmt.Errorf("form builder: create runtime grid view %s: %w", gridView.Name, err)
 	}
 	return nil
 }
 
+func dropRuntimeScopeViewsTx(ctx context.Context, tx *sql.Tx, scope runtimeApplyScopePlan) error {
+	for _, viewName := range runtimeScopeViewDropOrder(scope) {
+		if err := dropRuntimeViewTx(ctx, tx, viewName); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runtimeScopeViewDropOrder(scope runtimeApplyScopePlan) []string {
+	viewNames := make([]string, 0, len(scope.GridViews)+1)
+	for _, gridView := range scope.GridViews {
+		viewNames = append(viewNames, gridView.Name)
+	}
+	viewNames = append(viewNames, scope.DataViewName)
+	return viewNames
+}
+
 func dropRuntimeViewTx(ctx context.Context, tx *sql.Tx, viewName string) error {
-	if _, err := tx.ExecContext(ctx, fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(viewName))); err != nil {
+	if _, err := tx.ExecContext(ctx, dropRuntimeViewStatement(viewName)); err != nil {
 		return fmt.Errorf("form builder: drop runtime view %s: %w", viewName, err)
 	}
 	return nil
+}
+
+func dropRuntimeViewStatement(viewName string) string {
+	return fmt.Sprintf("DROP VIEW IF EXISTS %s", qualifiedIdentifier(viewName))
 }
 
 func relationExistsTx(ctx context.Context, tx *sql.Tx, relationName string) (bool, error) {

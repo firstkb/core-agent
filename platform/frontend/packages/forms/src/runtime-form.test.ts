@@ -1156,9 +1156,16 @@ describe("runtime form helpers", () => {
       "Details",
       "default",
     ]);
-    expect(definition.sections[0]?.nodes.map((node) => node.id)).toEqual(["title"]);
-    expect(definition.sections[1]?.nodes.map((node) => node.id)).toEqual(["summary"]);
-    expect((definition.sections[2]?.nodes[0] as RuntimeFormSubformDefinition | undefined)?.schemaScopeId).toBe("checklist");
+    const [overviewSection, detailsSection, fallbackSection] = definition.sections;
+    if (!overviewSection || !detailsSection || !fallbackSection) {
+      throw new Error("Expected overview, details, and fallback sections");
+    }
+    if (!overviewSection.nodes || !detailsSection.nodes || !fallbackSection.nodes) {
+      throw new Error("Expected compiled section nodes");
+    }
+    expect(overviewSection.nodes.map((node) => node.id)).toEqual(["title"]);
+    expect(detailsSection.nodes.map((node) => node.id)).toEqual(["summary"]);
+    expect((fallbackSection.nodes[0] as RuntimeFormSubformDefinition | undefined)?.schemaScopeId).toBe("checklist");
   });
 
   it("compiles checklist detail nodes from subform scope", () => {

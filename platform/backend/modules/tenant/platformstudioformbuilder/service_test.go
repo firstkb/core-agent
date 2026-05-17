@@ -4679,6 +4679,33 @@ func TestBuildRuntimeScopeDataViewSQLForExternalTableAliasesCanonicalColumns(t *
 	}
 }
 
+func TestRuntimeScopeViewDropOrderDropsGeneratedGridViewsBeforeDataView(t *testing.T) {
+	scope := runtimeApplyScopePlan{
+		DataViewName: "vw_demo",
+		GridViews: []runtimeApplyGridViewPlan{
+			{Name: "vg_demo__default"},
+			{Name: "vg_demo__summary"},
+		},
+	}
+
+	got := runtimeScopeViewDropOrder(scope)
+	want := []string{"vg_demo__default", "vg_demo__summary", "vw_demo"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("runtime view drop order = %#v, want %#v", got, want)
+	}
+}
+
+func TestDropRuntimeViewStatementDoesNotUseCascade(t *testing.T) {
+	statement := dropRuntimeViewStatement("vw_demo")
+
+	if !strings.Contains(statement, `DROP VIEW IF EXISTS "public"."vw_demo"`) {
+		t.Fatalf("drop runtime view SQL = %q, want qualified DROP VIEW IF EXISTS", statement)
+	}
+	if strings.Contains(strings.ToUpper(statement), "CASCADE") {
+		t.Fatalf("drop runtime view SQL must not use CASCADE: %q", statement)
+	}
+}
+
 func TestBuildRuntimeScopeDataViewSQLForExternalGlobalTableUsesNullCanonicalColumns(t *testing.T) {
 	scope := runtimeApplyScopePlan{
 		ScopeID:        "root",

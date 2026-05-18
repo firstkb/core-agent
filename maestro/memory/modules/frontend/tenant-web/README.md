@@ -169,6 +169,7 @@ It does not own:
   and subform/checklist request shapes plus backend error envelopes in
   `form-runtime-collection-table-client.test.ts`; backend Form Runtime also
   maps known DB `NOT NULL` failures on mapped runtime fields to
-  `validationErrors` after the empty Job Type create-form `500` was found.
-  Real browser/DB mutation coverage still needs a disposable tenant or explicit
-  owner approval.
+  `validationErrors` after the empty Job Type create-form `500` was found. A
+  mocked rendered Vitest test now covers unblurred typed runtime input reaching
+  the `createRecord` payload through submit-time DOM sync. Real browser/DB
+  mutation coverage still needs a disposable tenant or explicit owner approval.

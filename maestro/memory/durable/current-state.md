@@ -116,6 +116,13 @@ Confidence labels:
 - `landed` `doc-confirmed`: Backend-owned Form Builder API, storage, validation, generated-object, and runtime apply behavior now lives at `platform/backend/docs/contracts/platform-studio-form-builder.md`.
 - `landed` `doc-confirmed`: Backend Form Builder implementation orientation now lives at `platform/backend/docs/modules/platform-studio/form-builder.md`.
 - `landed` `code-confirmed`: Form Builder planned/open work is compacted in `maestro/memory/modules/domains/platform-studio/tools/form-builder-planned-work.md`; current code supports authoring, managed export, runtime list/read scaffolding, saved filters, favorites, record detail, runtime create/edit/save records, and managed multiple lookup plus non-lookup `multi_select`/`tags` bridge-table storage, while import, runtime grants, preview guard, static/external multivalue storage, and runtime package extraction remain planned/open.
+- `landed` `code-confirmed`: The `lookup-option` Form Builder save retest
+  after `api-tenant` restart is closed and should not be treated as an open
+  carryover task unless new failing evidence appears. Evidence is recorded in
+  `maestro/artifact/active/2026-04-30-runtime-form-builder/work.md`: the
+  `lookup-option/view-default` authoring save returned `canSave=true` and
+  `errors=[]`, targeted backend checks passed, and `scripts/preflight.sh`
+  passed in lite mode.
 - `landed` `doc-confirmed`: Backend operational docs now use `platform/backend/docs/runbooks/` for local bootstrap, auth key sources, and DB instance secret resolution.
 - `landed` `doc-confirmed`: Backend gateway and KMS work now lives under `platform/backend/docs/proposals/` and remains inactive until owner activation.
 - `landed` `doc-confirmed`: Backend legacy import mapping and import module boundary now live under `platform/backend/docs/reference/`; runtime schema truth remains `contracts/schema-tenancy.md`.
@@ -203,9 +210,12 @@ Confidence labels:
   `validationErrors`, closing the empty Job Type create-form `500` found during
   Browser smoke. Owner-approved disposable API/DB mutation testing passed for
   create/edit/finish/favorite/saved-filter/bulk/subform/checklist actions using
-  run-marked `codex-e2e-*` data with zero DB leftovers after cleanup. Rendered
-  browser submit mutation remains unproven because the current Browser/CUA input
-  path can change visible textbox values without updating React form state.
+  run-marked `codex-e2e-*` data with zero DB leftovers after cleanup. A mocked
+  rendered Vitest coverage slice now proves unblurred typed runtime input is
+  collected through DOM submit sync and reaches the `createRecord` mutation
+  payload in `form-runtime-rendered-submit.test.tsx`. Full Browser/CUA plus DB
+  mutation evidence remains a separate owner-approved slice because it writes
+  tenant data.
 
 ## Recommended Reads By Domain
 

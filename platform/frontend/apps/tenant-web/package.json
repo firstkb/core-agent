@@ -26,5 +26,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "happy-dom": "^20.9.0"
   }
 }

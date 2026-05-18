@@ -41,6 +41,13 @@ It is not site publication and must not silently become a Navigation Builder or 
 Use `form-builder-planned-work.md` before treating a remembered Form Builder
 follow-up as implemented or as approved near-term scope.
 
+The `lookup-option` Form Builder save retest after `api-tenant` restart is
+closed. Evidence lives in
+`maestro/artifact/active/2026-04-30-runtime-form-builder/work.md`: the retest
+returned `canSave=true` and `errors=[]` for `lookup-option/view-default`, and
+the targeted backend checks plus `scripts/preflight.sh` passed. Do not report
+this retest as open unless new failing evidence appears.
+
 Old Form Builder detail/workstream docs are not default truth.
 Use `maestro/memory/docs/frontend/platform-studio/form-builder-detail-triage.md` before opening them.
 

@@ -1071,7 +1071,12 @@ export function FormsRuntimeFormPage({
       }
       const didFlushPatch = await flushPendingPatch({ showValidationDialog: true });
       if (!didFlushPatch) {
-        if (lastRuntimeRequestErrorKindRef.current === "conflict" || lastRuntimeRequestErrorKindRef.current === "auth") {
+        if (lastRuntimeRequestErrorKindRef.current === "conflict") {
+          setFinishDialog(null);
+          navigateBackToParentForm();
+          return;
+        }
+        if (lastRuntimeRequestErrorKindRef.current === "auth") {
           return;
         }
         if (lastPatchValidationErrorsRef.current.length > 0) {

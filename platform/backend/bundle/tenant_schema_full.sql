@@ -2,10 +2,10 @@
 -- Golden Schema Bundle: tenant_schema_full.sql
 -- ============================================
 --
--- Generated: 2026-05-07T08:00:21-04:00
+-- Generated: 2026-05-17T20:06:21-04:00
 -- Source: migrations from migrations/postgres/archive, migrations/postgres/tenant
 --
--- Checksum: 4df12582af2d5b8f0423a2240c41250179577c6c3988d24f0b39ccefe163e2f9
+-- Checksum: 934e255e07e7db8717cf8d31e76abe15388c3ff0b33961611d1d0f853c383545
 --
 -- Migrations included:
 --   - 000_tenant_baseline.sql
@@ -20,6 +20,10 @@
 --   - 009_industry_reference_audit_columns.sql
 --   - 010_projects_static_layout_blueprint_fix.sql
 --   - 011_platform_studio_navigation_access_runtime.sql
+--   - 012_platform_studio_navigation_access_company_type.sql
+--   - 013_platform_studio_navigation_root_access.sql
+--   - 014_platform_studio_edit_presence.sql
+--   - 015_platform_studio_edit_presence_user_uniqueness.sql
 -- ============================================
 
 
@@ -5444,7 +5448,7 @@ CREATE TABLE IF NOT EXISTS ps_navigation_access_policy (
     CHECK (owner_type IN ('app_menu_item', 'utility_rail_item')),
   CONSTRAINT ps_navigation_access_policy_owner_id_chk CHECK (btrim(owner_id) <> ''),
   CONSTRAINT ps_navigation_access_policy_mode_chk
-    CHECK (access_mode IN ('inherit', 'all_authenticated', 'root_only', 'selected_only', 'everyone_except'))
+    CHECK (access_mode IN ('inherit', 'all_authenticated', 'selected_only', 'everyone_except'))
 );
 
 CREATE INDEX IF NOT EXISTS ix_ps_navigation_access_policy_config_mode
@@ -5465,7 +5469,7 @@ CREATE TABLE IF NOT EXISTS ps_navigation_access_subject (
   CONSTRAINT ps_navigation_access_subject_owner_type_chk
     CHECK (owner_type IN ('app_menu_item', 'utility_rail_item')),
   CONSTRAINT ps_navigation_access_subject_subject_type_chk
-    CHECK (subject_type IN ('user', 'company', 'company_type', 'jobtype')),
+    CHECK (subject_type IN ('user', 'company', 'jobtype')),
   CONSTRAINT ps_navigation_access_subject_subject_id_chk CHECK (btrim(subject_id) <> '')
 );
 
@@ -5476,8 +5480,135 @@ COMMIT;
 
 
 -- ============================================
+-- Migration: 012_platform_studio_navigation_access_company_type.sql
+-- ============================================
+
+BEGIN;
+
+ALTER TABLE ps_navigation_access_subject
+  DROP CONSTRAINT IF EXISTS ps_navigation_access_subject_subject_type_chk;
+
+ALTER TABLE ps_navigation_access_subject
+  ADD CONSTRAINT ps_navigation_access_subject_subject_type_chk
+  CHECK (subject_type IN ('user', 'company', 'company_type', 'jobtype'));
+
+COMMIT;
+
+
+-- ============================================
+-- Migration: 013_platform_studio_navigation_root_access.sql
+-- ============================================
+
+BEGIN;
+
+ALTER TABLE ps_navigation_access_policy
+  DROP CONSTRAINT IF EXISTS ps_navigation_access_policy_mode_chk;
+
+ALTER TABLE ps_navigation_access_policy
+  ADD CONSTRAINT ps_navigation_access_policy_mode_chk
+  CHECK (access_mode IN ('inherit', 'all_authenticated', 'root_only', 'selected_only', 'everyone_except'));
+
+COMMIT;
+
+
+-- ============================================
+-- Migration: 014_platform_studio_edit_presence.sql
+-- ============================================
+
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS ps_edit_presence (
+  tenant_id BIGINT NOT NULL DEFAULT NULLIF(current_setting('app.tenant_id', true), '')::bigint,
+  user_id TEXT NOT NULL,
+  client_id TEXT NOT NULL,
+  target_type TEXT NOT NULL,
+  target_key TEXT NOT NULL,
+  parent_target_key TEXT,
+  target_label TEXT,
+  context JSONB NOT NULL DEFAULT '{}'::jsonb,
+  user_display_name TEXT,
+  user_email TEXT,
+  opened_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT ps_edit_presence_user_key PRIMARY KEY (tenant_id, user_id),
+  CONSTRAINT ps_edit_presence_target_type_chk CHECK (btrim(target_type) <> ''),
+  CONSTRAINT ps_edit_presence_target_key_chk CHECK (btrim(target_key) <> ''),
+  CONSTRAINT ps_edit_presence_context_chk CHECK (jsonb_typeof(context) = 'object')
+);
+
+CREATE INDEX IF NOT EXISTS ix_ps_edit_presence_target
+  ON ps_edit_presence(tenant_id, target_type, target_key, last_seen_at DESC);
+
+CREATE INDEX IF NOT EXISTS ix_ps_edit_presence_parent
+  ON ps_edit_presence(tenant_id, parent_target_key, last_seen_at DESC)
+  WHERE parent_target_key IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS ix_ps_edit_presence_stale
+  ON ps_edit_presence(last_seen_at);
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_ps_edit_presence_updated_at') THEN
+    CREATE TRIGGER trg_ps_edit_presence_updated_at
+      BEFORE UPDATE ON ps_edit_presence
+      FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+  END IF;
+END $$;
+
+ALTER TABLE ps_edit_presence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ps_edit_presence FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS p_ps_edit_presence_tenant ON ps_edit_presence;
+CREATE POLICY p_ps_edit_presence_tenant ON ps_edit_presence
+  USING (tenant_id = current_setting('app.tenant_id', true)::bigint)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::bigint);
+
+COMMIT;
+
+
+-- ============================================
+-- Migration: 015_platform_studio_edit_presence_user_uniqueness.sql
+-- ============================================
+
+BEGIN;
+
+WITH ranked_presence AS (
+  SELECT
+    ctid,
+    ROW_NUMBER() OVER (
+      PARTITION BY tenant_id, user_id
+      ORDER BY last_seen_at DESC, updated_at DESC, created_at DESC
+    ) AS row_rank
+  FROM ps_edit_presence
+)
+DELETE FROM ps_edit_presence AS presence
+USING ranked_presence
+WHERE presence.ctid = ranked_presence.ctid
+  AND ranked_presence.row_rank > 1;
+
+ALTER TABLE ps_edit_presence
+  DROP CONSTRAINT IF EXISTS ps_edit_presence_user_client_key;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'ps_edit_presence'::regclass
+      AND conname = 'ps_edit_presence_user_key'
+  ) THEN
+    ALTER TABLE ps_edit_presence
+      ADD CONSTRAINT ps_edit_presence_user_key PRIMARY KEY (tenant_id, user_id);
+  END IF;
+END $$;
+
+COMMIT;
+
+
+-- ============================================
 -- Bundle End
 -- ============================================
--- Total migrations: 12
--- Versions: 000_tenant_baseline, 001_platform_studio_static_models_seed_reference_and_logs, 002_platform_studio_runtime_saved_filters, 003_platform_studio_runtime_favorites, 004_platform_studio_static_model_guid_backfill, 005_platform_studio_static_model_users, 006_platform_studio_static_model_company, 007_platform_studio_navigation_builder, 008_platform_studio_static_model_projects, 009_industry_reference_audit_columns, 010_projects_static_layout_blueprint_fix, 011_platform_studio_navigation_access_runtime
+-- Total migrations: 16
+-- Versions: 000_tenant_baseline, 001_platform_studio_static_models_seed_reference_and_logs, 002_platform_studio_runtime_saved_filters, 003_platform_studio_runtime_favorites, 004_platform_studio_static_model_guid_backfill, 005_platform_studio_static_model_users, 006_platform_studio_static_model_company, 007_platform_studio_navigation_builder, 008_platform_studio_static_model_projects, 009_industry_reference_audit_columns, 010_projects_static_layout_blueprint_fix, 011_platform_studio_navigation_access_runtime, 012_platform_studio_navigation_access_company_type, 013_platform_studio_navigation_root_access, 014_platform_studio_edit_presence, 015_platform_studio_edit_presence_user_uniqueness
 -- ============================================

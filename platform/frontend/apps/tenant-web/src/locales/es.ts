@@ -223,6 +223,15 @@ export const tenantSpanishMessages = {
             saved: "Guardado correctamente en el servidor.",
             schemaDrift: "Este formulario cambio, pero su almacenamiento aun no esta listo. Guarda el formulario en Form Builder e intentalo de nuevo.",
           },
+          presence: {
+            changed: "Este registro se actualizo en otro lugar. La proteccion de guardado sigue activa; recarga antes de sobrescribir otros cambios.",
+            description: "Puedes seguir trabajando, pero coordina antes de guardar.",
+            dismiss: "Cerrar aviso de edicion",
+            titleMany: "{{names}} estan editando este registro",
+            titleOne: "{{name}} esta editando este registro",
+            titleSameUser: "Este registro esta abierto en otra pestana",
+            titleUnknown: "Otro usuario esta editando este registro",
+          },
           noOptions: "Sin opciones",
           onlineTitle: "Formulario en linea",
           saveStates: {

@@ -10,5 +10,6 @@ func buildPlatformStudioFormRuntimeModule(sqlClient *postgres.Client) *formrunti
 	repo := formruntime.NewRepository(sqlClient)
 	lookupOptions := dictionary.NewService(dictionary.NewRepository(sqlClient))
 	service := formruntime.NewService(repo, lookupOptions)
-	return formruntime.NewHandler(service)
+	presenceService := formruntime.NewEditPresenceService(repo)
+	return formruntime.NewHandler(service, presenceService)
 }

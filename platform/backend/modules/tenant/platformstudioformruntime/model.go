@@ -23,6 +23,34 @@ type RuntimeViewRecordFinishRequest struct {
 	ExpectedRevision string `json:"expectedRevision,omitempty"`
 }
 
+type RuntimeViewEditPresenceRequest struct {
+	ClientID      string `json:"clientId"`
+	KnownRevision string `json:"knownRevision,omitempty"`
+}
+
+type RuntimeViewEditPresenceEditor struct {
+	ClientID    string `json:"clientId,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	Email       string `json:"email,omitempty"`
+	LastSeenAt  string `json:"lastSeenAt"`
+	SameUser    bool   `json:"sameUser,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+	TargetLabel string `json:"targetLabel,omitempty"`
+	UserID      string `json:"userId,omitempty"`
+}
+
+type RuntimeViewEditPresenceRecordState struct {
+	Changed         bool   `json:"changed,omitempty"`
+	CurrentRevision string `json:"currentRevision,omitempty"`
+}
+
+type RuntimeViewEditPresenceResponse struct {
+	Editors                  []RuntimeViewEditPresenceEditor    `json:"editors"`
+	HeartbeatIntervalSeconds int                                `json:"heartbeatIntervalSeconds"`
+	Record                   RuntimeViewEditPresenceRecordState `json:"record,omitempty"`
+	TTLSeconds               int                                `json:"ttlSeconds"`
+}
+
 type RuntimeViewBulkActionRequest = collectiontable.BulkActionInput
 type RuntimeViewBulkActionResponse = collectiontable.MutationResult
 type RuntimeViewDeleteResponse = collectiontable.MutationResult

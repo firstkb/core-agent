@@ -210,6 +210,68 @@ describe("form runtime collection table client mutation contracts", () => {
     });
   });
 
+  it("sends edit presence heartbeats to root and subform endpoints", async () => {
+    const heartbeatInput = {
+      clientId: "client-1",
+      knownRevision: "rev-1",
+    };
+    const fetchMock = createFetchMock(
+      jsonEnvelopeResponse({
+        editors: [
+          {
+            displayName: "Alex Editor",
+            lastSeenAt: "2026-05-17T10:00:00Z",
+          },
+        ],
+        heartbeatIntervalSeconds: 25,
+        record: { changed: false, currentRevision: "rev-1" },
+        ttlSeconds: 90,
+      }),
+      jsonEnvelopeResponse({
+        editors: [],
+        heartbeatIntervalSeconds: 25,
+        ttlSeconds: 90,
+      }),
+      jsonEnvelopeResponse({
+        editors: [],
+        heartbeatIntervalSeconds: 25,
+        ttlSeconds: 90,
+      }),
+    );
+    const client = createFormRuntimeCollectionTableClient({
+      baseUrl: "https://tenant-api.local/",
+      modelId: "jobtype",
+      viewId: "view-default",
+    });
+
+    await expect(client.heartbeatEditPresence(accessToken, "doc-1", heartbeatInput)).resolves.toMatchObject({
+      editors: [{ displayName: "Alex Editor" }],
+      heartbeatIntervalSeconds: 25,
+    });
+    await expect(client.heartbeatSubformEditPresence(accessToken, "parent-1", "contacts", "child-1", heartbeatInput)).resolves.toMatchObject({
+      editors: [],
+    });
+    await expect(client.heartbeatSubformEditPresence(accessToken, "parent-1", "contacts", undefined, heartbeatInput)).resolves.toMatchObject({
+      editors: [],
+    });
+
+    expectTenantRequest(fetchMock, 0, {
+      body: heartbeatInput,
+      method: "POST",
+      url: "https://tenant-api.local/app/forms/jobtype/views/view-default/records/doc-1/presence",
+    });
+    expectTenantRequest(fetchMock, 1, {
+      body: heartbeatInput,
+      method: "POST",
+      url: "https://tenant-api.local/app/forms/jobtype/views/view-default/records/parent-1/subforms/contacts/records/child-1/presence",
+    });
+    expectTenantRequest(fetchMock, 2, {
+      body: heartbeatInput,
+      method: "POST",
+      url: "https://tenant-api.local/app/forms/jobtype/views/view-default/records/parent-1/subforms/contacts/presence",
+    });
+  });
+
   it("sends favorite, saved-filter, and bulk action mutations with encoded runtime paths", async () => {
     const savedFilterInput: CollectionTableSavedFilterSetCreateInput = {
       label: "Open work",

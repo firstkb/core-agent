@@ -61,6 +61,18 @@ type FormRuntimeCollectionTableSessionClient = {
     docGuid: string,
     input: FormRuntimeRecordFinishRequest,
   ) => Promise<FormRuntimeRecordMutationResponse>;
+  heartbeatEditPresence: (
+    accessToken: string,
+    docGuid: string,
+    input: FormRuntimeEditPresenceRequest,
+  ) => Promise<FormRuntimeEditPresenceResponse>;
+  heartbeatSubformEditPresence: (
+    accessToken: string,
+    parentDocGuid: string,
+    subformId: string,
+    docGuid: string | undefined,
+    input: FormRuntimeEditPresenceRequest,
+  ) => Promise<FormRuntimeEditPresenceResponse>;
   loadMeta: (accessToken: string) => Promise<CollectionTableMetaResponse>;
   loadForm: (accessToken: string, docGuid?: string) => Promise<FormRuntimeFormResponse>;
   loadRecord: (accessToken: string, docGuid: string) => Promise<FormRuntimeRecordResponse>;
@@ -189,6 +201,32 @@ export type FormRuntimeRecordFinishRequest = {
   expectedRevision?: string;
 };
 
+export type FormRuntimeEditPresenceRequest = {
+  clientId: string;
+  knownRevision?: string;
+};
+
+export type FormRuntimeEditPresenceEditor = {
+  clientId?: string;
+  displayName?: string;
+  email?: string;
+  lastSeenAt: string;
+  sameUser?: boolean;
+  scope?: string;
+  targetLabel?: string;
+  userId?: string;
+};
+
+export type FormRuntimeEditPresenceResponse = {
+  editors: ReadonlyArray<FormRuntimeEditPresenceEditor>;
+  heartbeatIntervalSeconds: number;
+  record?: {
+    changed?: boolean;
+    currentRevision?: string;
+  };
+  ttlSeconds: number;
+};
+
 export type FormRuntimeRecordValidationError = {
   fieldId?: string;
   message: string;
@@ -241,6 +279,41 @@ function normalizeRuntimeRecordMutationResponse(
         }))
       : [],
     values,
+  };
+}
+
+function normalizeRuntimeEditPresenceResponse(
+  payload: FormRuntimeEditPresenceResponse,
+): FormRuntimeEditPresenceResponse {
+  return {
+    editors: Array.isArray(payload?.editors)
+      ? payload.editors
+        .filter((editor): editor is FormRuntimeEditPresenceEditor =>
+          Boolean(editor && typeof editor.lastSeenAt === "string"),
+        )
+        .map((editor) => ({
+          clientId: typeof editor.clientId === "string" ? editor.clientId : undefined,
+          displayName: typeof editor.displayName === "string" ? editor.displayName : undefined,
+          email: typeof editor.email === "string" ? editor.email : undefined,
+          lastSeenAt: editor.lastSeenAt,
+          sameUser: Boolean(editor.sameUser),
+          scope: typeof editor.scope === "string" ? editor.scope : undefined,
+          targetLabel: typeof editor.targetLabel === "string" ? editor.targetLabel : undefined,
+          userId: typeof editor.userId === "string" ? editor.userId : undefined,
+        }))
+      : [],
+    heartbeatIntervalSeconds: Number.isFinite(payload?.heartbeatIntervalSeconds)
+      ? Math.max(10, Number(payload.heartbeatIntervalSeconds))
+      : 25,
+    record: payload?.record && typeof payload.record === "object"
+      ? {
+        changed: Boolean(payload.record.changed),
+        currentRevision: typeof payload.record.currentRevision === "string"
+          ? payload.record.currentRevision
+          : undefined,
+      }
+      : undefined,
+    ttlSeconds: Number.isFinite(payload?.ttlSeconds) ? Math.max(30, Number(payload.ttlSeconds)) : 90,
   };
 }
 
@@ -585,6 +658,33 @@ export function createFormRuntimeCollectionTableClient(options: {
         },
       );
       return normalizeRuntimeRecordMutationResponse(response);
+    },
+    async heartbeatEditPresence(accessToken, docGuid, input) {
+      const response = await requestTenantCollectionTable<FormRuntimeEditPresenceResponse>(
+        options.baseUrl,
+        `${pathPrefix}/records/${encodeURIComponent(docGuid)}/presence`,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+      return normalizeRuntimeEditPresenceResponse(response);
+    },
+    async heartbeatSubformEditPresence(accessToken, parentDocGuid, subformId, docGuid, input) {
+      const presencePath = docGuid
+        ? `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/records/${encodeURIComponent(docGuid)}/presence`
+        : `${pathPrefix}/records/${encodeURIComponent(parentDocGuid)}/subforms/${encodeURIComponent(subformId)}/presence`;
+      const response = await requestTenantCollectionTable<FormRuntimeEditPresenceResponse>(
+        options.baseUrl,
+        presencePath,
+        {
+          accessToken,
+          body: input,
+          method: "POST",
+        },
+      );
+      return normalizeRuntimeEditPresenceResponse(response);
     },
     async loadMeta(accessToken) {
       return requestTenantCollectionTable<CollectionTableMetaResponse>(

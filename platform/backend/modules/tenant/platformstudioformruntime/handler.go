@@ -10,11 +10,12 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	presenceService *EditPresenceService
+	service         *Service
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, presenceService *EditPresenceService) *Handler {
+	return &Handler{presenceService: presenceService, service: service}
 }
 
 func (h *Handler) LoadForm(
@@ -191,6 +192,50 @@ func (h *Handler) RunBulkAction(
 		strings.TrimSpace(r.PathValue("modelId")),
 		strings.TrimSpace(r.PathValue("viewId")),
 		strings.TrimSpace(r.PathValue("actionId")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) HeartbeatRecordPresence(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewEditPresenceRequest,
+) (*RuntimeViewEditPresenceResponse, error) {
+	if h.presenceService == nil {
+		return nil, mapError(ErrRuntimeUnsupported)
+	}
+	out, err := h.presenceService.HeartbeatRecordPresence(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
+		req,
+	)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return out, nil
+}
+
+func (h *Handler) HeartbeatSubformPresence(
+	ctx context.Context,
+	r *http.Request,
+	req RuntimeViewEditPresenceRequest,
+) (*RuntimeViewEditPresenceResponse, error) {
+	if h.presenceService == nil {
+		return nil, mapError(ErrRuntimeUnsupported)
+	}
+	out, err := h.presenceService.HeartbeatSubformPresence(
+		ctx,
+		strings.TrimSpace(r.PathValue("modelId")),
+		strings.TrimSpace(r.PathValue("viewId")),
+		strings.TrimSpace(r.PathValue("parentDocGuid")),
+		strings.TrimSpace(r.PathValue("subformId")),
+		strings.TrimSpace(r.PathValue("docGuid")),
 		req,
 	)
 	if err != nil {

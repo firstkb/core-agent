@@ -25,6 +25,7 @@ import {
   type RuntimeFormValues,
 } from "@platform/forms";
 import { useTranslation } from "@platform/i18n";
+import { CloseIcon, UsersIcon } from "@platform/ui-kit";
 import {
   useLocation,
   Navigate,
@@ -46,6 +47,7 @@ import {
 } from "../components/form-runtime-load-error";
 import {
   createFormRuntimeCollectionTableClient,
+  type FormRuntimeEditPresenceEditor,
   type FormRuntimeFormResponse,
   type FormRuntimeRecordValidationError,
 } from "../form-runtime-collection-table-client";
@@ -107,6 +109,55 @@ type RuntimeFormNodeRevealRequest = {
   requestKey: number;
 };
 
+type RuntimeFormEditPresenceState = {
+  editors: ReadonlyArray<FormRuntimeEditPresenceEditor>;
+  recordChanged: boolean;
+  recordRevision?: string;
+};
+
+function editPresenceEditorName(editor: FormRuntimeEditPresenceEditor) {
+  return (editor.displayName || editor.email || editor.userId || "").trim();
+}
+
+function editPresenceSummary(
+  editors: ReadonlyArray<FormRuntimeEditPresenceEditor>,
+  t: (key: string, values?: Record<string, unknown>) => string,
+) {
+  if (editors.length > 0 && editors.every((editor) => editor.sameUser)) {
+    return t("tenant.runtime.forms.form.presence.titleSameUser");
+  }
+  const names = Array.from(new Set(editors.map(editPresenceEditorName).filter(Boolean)));
+  if (names.length === 0) {
+    return t("tenant.runtime.forms.form.presence.titleUnknown");
+  }
+  if (names.length === 1) {
+    return t("tenant.runtime.forms.form.presence.titleOne", { name: names[0] });
+  }
+  return t("tenant.runtime.forms.form.presence.titleMany", {
+    names: names.slice(0, 3).join(", "),
+  });
+}
+
+function editPresenceDismissKey(state: RuntimeFormEditPresenceState) {
+  if (state.editors.length === 0 && !state.recordChanged) {
+    return "";
+  }
+  const editorsKey = state.editors
+    .map((editor) => [
+      editor.userId ?? "",
+      editor.clientId ?? "",
+      editor.scope ?? "",
+      editor.targetLabel ?? "",
+    ].join(":"))
+    .sort()
+    .join("|");
+  return [
+    state.recordChanged ? "changed" : "current",
+    state.recordRevision ?? "",
+    editorsKey,
+  ].join("::");
+}
+
 export function FormsRuntimeFormPage({
   entryContext = "runtime",
   mode,
@@ -162,6 +213,11 @@ export function FormsRuntimeFormPage({
   const [formLoadError, setFormLoadError] = useState<RuntimeFormLoadErrorState | null>(null);
   const [formResponse, setFormResponse] = useState<FormRuntimeFormResponse | null>(() => restoredSession?.formResponse ?? null);
   const [formValuesReady, setFormValuesReady] = useState(false);
+  const [editPresence, setEditPresence] = useState<RuntimeFormEditPresenceState>({
+    editors: [],
+    recordChanged: false,
+  });
+  const [dismissedEditPresenceKey, setDismissedEditPresenceKey] = useState("");
   const [values, setValues] = useState<RuntimeFormValues>({});
   const [errors, setErrors] = useState<RuntimeFormValidationErrors>({});
   const [activeTabs, setActiveTabs] = useState<RuntimeFormActiveTabs>(() => restoredSession?.activeTabs ?? {});
@@ -198,6 +254,7 @@ export function FormsRuntimeFormPage({
   }, [definition, formResponse]);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clientCreateTokenRef = useRef(createClientCreateToken());
+  const editPresenceClientIdRef = useRef(createClientCreateToken());
   const createInFlightRef = useRef(false);
   const lastCreateBlockedByValidationRef = useRef(false);
   const lastRuntimeRequestErrorKindRef = useRef<"auth" | "conflict" | "error" | null>(null);
@@ -350,6 +407,8 @@ export function FormsRuntimeFormPage({
     setSubformDeleteDialog(null);
     setUnsavedLeaveDialog(null);
     setSaveState("idle");
+    setEditPresence({ editors: [], recordChanged: false });
+    setDismissedEditPresenceKey("");
     setSubforms(isSubform ? {} : runtimeSubformsFromFormResponse(formResponse));
     latestValuesRef.current = nextValues;
     revisionRef.current = restoredSession?.revision ?? formResponse.revision ?? "";
@@ -425,6 +484,101 @@ export function FormsRuntimeFormPage({
     };
   }, [client, definition, formResponse?.docGuid, getRuntimeAccessToken, isSubform, routeDocGuid, signOut]);
 
+  useEffect(() => {
+    if (!client || !definition || !formValuesReady) {
+      setEditPresence({ editors: [], recordChanged: false });
+      return;
+    }
+    if (!isSubform && (!hasServerRecordRef.current || !currentDocGuidRef.current)) {
+      setEditPresence({ editors: [], recordChanged: false });
+      return;
+    }
+    if (isSubform && (!parentDocGuid || !subformId)) {
+      setEditPresence({ editors: [], recordChanged: false });
+      return;
+    }
+
+    let isCancelled = false;
+    let heartbeatTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleNextHeartbeat = (delaySeconds: number) => {
+      if (isCancelled) {
+        return;
+      }
+      heartbeatTimer = globalThis.setTimeout(() => {
+        void sendHeartbeat();
+      }, Math.max(10, delaySeconds) * 1000);
+    };
+
+    const sendHeartbeat = async () => {
+      const accessToken = getRuntimeAccessToken();
+      if (!accessToken) {
+        return;
+      }
+      try {
+        const request = {
+          clientId: editPresenceClientIdRef.current,
+          knownRevision: revisionRef.current || undefined,
+        };
+        const response = isSubform
+          ? await client.heartbeatSubformEditPresence(
+            accessToken,
+            parentDocGuid,
+            subformId,
+            currentDocGuidRef.current || undefined,
+            request,
+          )
+          : await client.heartbeatEditPresence(accessToken, currentDocGuidRef.current, request);
+        if (isCancelled) {
+          return;
+        }
+        setEditPresence({
+          editors: response.editors,
+          recordChanged: Boolean(response.record?.changed),
+          recordRevision: response.record?.currentRevision,
+        });
+        scheduleNextHeartbeat(response.heartbeatIntervalSeconds || 25);
+      } catch (requestError: unknown) {
+        if (isCancelled) {
+          return;
+        }
+        if (isUnauthorizedApiError(requestError)) {
+          void signOut();
+          return;
+        }
+        setEditPresence({ editors: [], recordChanged: false });
+        scheduleNextHeartbeat(25);
+      }
+    };
+
+    void sendHeartbeat();
+
+    return () => {
+      isCancelled = true;
+      if (heartbeatTimer) {
+        clearTimeout(heartbeatTimer);
+      }
+    };
+  }, [
+    client,
+    definition,
+    formResponse?.docGuid,
+    formValuesReady,
+    getRuntimeAccessToken,
+    isSubform,
+    parentDocGuid,
+    routeDocGuid,
+    saveState,
+    signOut,
+    subformId,
+  ]);
+
+  useEffect(() => {
+    if (editPresence.editors.length === 0 && !editPresence.recordChanged) {
+      setDismissedEditPresenceKey("");
+    }
+  }, [editPresence.editors.length, editPresence.recordChanged]);
+
   if (!client || routeIsInvalid) {
     return <Navigate replace to="/dashboard" />;
   }
@@ -451,6 +605,9 @@ export function FormsRuntimeFormPage({
   const runtimeClient = client;
   const runtimeDefinition = definition;
   const runtimeFormResponse = formResponse;
+  const editPresenceKey = editPresenceDismissKey(editPresence);
+  const shouldShowEditPresence = Boolean(editPresenceKey) && editPresenceKey !== dismissedEditPresenceKey;
+  const editPresenceTitle = editPresenceSummary(editPresence.editors, t);
   const parentFormPath = isSubform
     ? formRuntimePaths.edit(modelId, viewId, parentDocGuid, entryContext)
     : formRuntimePaths.list(modelId, viewId, entryContext);
@@ -972,6 +1129,32 @@ export function FormsRuntimeFormPage({
       onBlurCapture={scheduleRuntimeControlDomSync}
       ref={runtimeFormContainerRef}
     >
+      {shouldShowEditPresence ? (
+        <div className="tenant-web__form-runtime-presence-banner" role="status">
+          <div aria-hidden="true" className="tenant-web__form-runtime-presence-icon">
+            <UsersIcon />
+          </div>
+          <div className="tenant-web__form-runtime-presence-copy">
+            {editPresence.editors.length > 0 ? (
+              <strong>{editPresenceTitle}</strong>
+            ) : null}
+            {editPresence.editors.length > 0 ? (
+              <span>{t("tenant.runtime.forms.form.presence.description")}</span>
+            ) : null}
+            {editPresence.recordChanged ? (
+              <span>{t("tenant.runtime.forms.form.presence.changed")}</span>
+            ) : null}
+          </div>
+          <button
+            aria-label={t("tenant.runtime.forms.form.presence.dismiss")}
+            className="tenant-web__form-runtime-presence-close"
+            onClick={() => setDismissedEditPresenceKey(editPresenceKey)}
+            type="button"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+      ) : null}
       <RuntimeFormScaffold
         activeTabs={activeTabs}
         definition={runtimeDefinition}

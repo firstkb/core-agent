@@ -109,6 +109,80 @@ func (srv *Server) registerPlatformStudioFormRuntimeRoutes(b *router.Builder) {
 		loadSubformHandler,
 	)
 
+	heartbeatRecordPresenceHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewEditPresenceRequest) (*formruntime.RuntimeViewEditPresenceResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.HeartbeatRecordPresence(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_RECORD_PRESENCE",
+				http.StatusInternalServerError,
+				"cannot update form runtime edit presence",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	register(
+		"FORM_RUNTIME_RECORD_PRESENCE",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/records/{docGuid}/presence",
+		heartbeatRecordPresenceHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_RECORD_PRESENCE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{docGuid}/presence",
+		heartbeatRecordPresenceHandler,
+	)
+
+	heartbeatSubformPresenceHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewEditPresenceRequest) (*formruntime.RuntimeViewEditPresenceResponse, error) {
+		info, err := srv.platformStudioFormRuntimeHTTP.HeartbeatSubformPresence(ctx, r, req)
+		if err != nil {
+			return nil, apperr.WrapAndLog(
+				srv.logger,
+				ctx,
+				"FORM_RUNTIME_SUBFORM_RECORD_PRESENCE",
+				http.StatusInternalServerError,
+				"cannot update form runtime subform edit presence",
+				err,
+				srv.FieldsForLog(ctx, r, nil)...,
+			)
+		}
+		return info, nil
+	}, srv.logger)
+
+	register(
+		"FORM_RUNTIME_SUBFORM_CREATE_PRESENCE",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/presence",
+		heartbeatSubformPresenceHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_CREATE_PRESENCE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/presence",
+		heartbeatSubformPresenceHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_SUBFORM_RECORD_PRESENCE",
+		http.MethodPost,
+		"/app/forms/{modelId}/views/{viewId}/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}/presence",
+		heartbeatSubformPresenceHandler,
+	)
+
+	register(
+		"FORM_RUNTIME_PREVIEW_SUBFORM_RECORD_PRESENCE",
+		http.MethodPost,
+		"/app/platform-studio/forms/{modelId}/views/{viewId}/runtime/records/{parentDocGuid}/subforms/{subformId}/records/{docGuid}/presence",
+		heartbeatSubformPresenceHandler,
+	)
+
 	createRecordHandler := handler.HandleJson(func(ctx context.Context, r *http.Request, req formruntime.RuntimeViewRecordMutationRequest) (*formruntime.RuntimeViewRecordMutationResponse, error) {
 		info, err := srv.platformStudioFormRuntimeHTTP.CreateRecord(ctx, r, req)
 		if err != nil {

@@ -223,6 +223,15 @@ export const tenantEnglishMessages = {
             saved: "Successfully saved to server.",
             schemaDrift: "This form was changed, but its storage is not ready yet. Save the form in Form Builder and try again.",
           },
+          presence: {
+            changed: "This record was updated elsewhere. Save protection still applies; reload before overwriting other changes.",
+            description: "You can keep working, but coordinate before saving.",
+            dismiss: "Dismiss edit presence warning",
+            titleMany: "{{names}} are editing this record",
+            titleOne: "{{name}} is editing this record",
+            titleSameUser: "This record is open in another tab",
+            titleUnknown: "Another user is editing this record",
+          },
           noOptions: "No options",
           onlineTitle: "Online Form",
           saveStates: {

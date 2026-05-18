@@ -17,7 +17,7 @@ type repository struct {
 	client *postgres.Client
 }
 
-func NewRepository(client *postgres.Client) Repository {
+func NewRepository(client *postgres.Client) *repository {
 	return &repository{client: client}
 }
 

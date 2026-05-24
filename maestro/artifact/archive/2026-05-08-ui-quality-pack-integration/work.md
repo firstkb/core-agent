@@ -1,6 +1,6 @@
 # UI Quality Pack Integration
 
-Status: active
+Status: archived
 Owner request: integrate the useful parts of `reference-code/codex-ui-prompt-pack-open-design` as a Maestro UI Quality Pack.
 
 ## Goal

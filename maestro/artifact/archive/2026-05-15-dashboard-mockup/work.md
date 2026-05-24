@@ -1,6 +1,6 @@
 # Dashboard Mockup
 
-Status: active
+Status: archived
 Date: 2026-05-15
 
 ## Goal

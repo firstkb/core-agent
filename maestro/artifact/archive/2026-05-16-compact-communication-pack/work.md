@@ -1,6 +1,6 @@
 # Compact Communication Pack
 
-Status: active
+Status: archived
 Owner request: minimally integrate useful communication improvements from
 `juliusbrussee/caveman` without increasing Maestro startup context.
 

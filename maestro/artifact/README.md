@@ -37,6 +37,11 @@ Normal persisted work starts with `work.md`. Use `evidence.md` and
 notes, approval records, or expanded planning files only when delegation,
 resume, accountability, release, or real gates make them useful.
 
+`work.md` status values use the canonical active-queue language:
+`in_progress`, `waiting_owner`, `blocked`, `close_ready`, or `archived`.
+Use its `Goal Alignment` block to show why the work matters before listing
+execution details.
+
 `archive/` stores completed, cancelled, or frozen work folders. A work folder
 keeps the same name when moved from `active/` to `archive/`.
 

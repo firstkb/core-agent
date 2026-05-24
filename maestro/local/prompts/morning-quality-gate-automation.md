@@ -64,7 +64,11 @@ Only recommend tools when they would materially improve quality.
 
 6. Best first fix
 Give one concrete issue Maestro should fix first if the owner says "start
-morning stabilization".
+morning stabilization". Include goal alignment:
+- owner strategy;
+- product/user risk;
+- current action;
+- exit criteria.
 
 Also update today's local morning cache with:
 - generation timestamp;
@@ -75,6 +79,7 @@ Also update today's local morning cache with:
 - architecture / monolith watch;
 - UI/UX readiness;
 - best first fix;
+- goal alignment for the best first fix;
 - updated 10:00 focus-hour recommendation.
 
 Rules:

@@ -52,6 +52,11 @@ Captures the owner request, Maestro's understanding, current status, agreed
 scope, decisions, plan, risks, agent/tool notes, and next useful action. Keep it
 compact and owner-readable. It is the preferred continuation file.
 
+`work.md` must include a lightweight `Goal Alignment` block that links the
+owner strategy, product/user risk, current action, and exit criteria. Its
+`Status` field uses the canonical queue statuses: `in_progress`,
+`waiting_owner`, `blocked`, `close_ready`, or `archived`.
+
 ### `intent.md`
 
 Captures owner request, conversation mode, route tier, current goal, scope notes,

@@ -23,6 +23,7 @@ owner-readable artifacts into mandatory machine records.
 
 | Surface | JSON schema | Markdown template | Mapping |
 |---|---|---|---|
+| Work | none | `maestro/templates/work.md.tmpl` | Markdown is the normal continuity record. It intentionally has no JSON schema; it must stay owner-readable, include `Goal Alignment`, and use canonical queue statuses. |
 | Evidence | `maestro/contracts/evidence.schema.json` | `maestro/templates/evidence.md.tmpl` | JSON schema is one evidence item. Markdown template is an aggregate evidence log for a work artifact. |
 | Closeout | `maestro/contracts/closeout.schema.json` | `maestro/templates/closeout.md.tmpl` | Markdown mirrors the required owner-visible fields, including `owner_input_required`. |
 | Packet | `maestro/contracts/task-packet.schema.json` | `maestro/templates/packet.md.tmpl` | Markdown includes the packetable stage enum. `intake` is excluded. `approval` and `archive` are lifecycle stages used only for bounded Maestro/gated records. |

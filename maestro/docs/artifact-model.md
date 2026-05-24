@@ -40,6 +40,25 @@ not the default interface.
 `active/` may contain multiple active work folders. `archive/` uses the same
 folder name after closeout, cancellation, or freeze.
 
+## Work Status Values
+
+Use these canonical queue-status values in `work.md`:
+
+- `in_progress`: execution, planning, verification, or follow-up is actively
+  continuing.
+- `waiting_owner`: the next meaningful step needs owner retest, product choice,
+  focus approval, or scoped approval.
+- `blocked`: work cannot continue because a prerequisite, tool, environment, or
+  external dependency is unavailable.
+- `close_ready`: implementation/evidence is effectively complete and the work
+  is waiting for closeout or archive confirmation.
+- `archived`: the work record has been closed, cancelled, or frozen and moved
+  to `maestro/artifact/archive/`.
+
+Keep queue status separate from Maestro conversation mode. For example,
+planning-mode work can still have queue status `in_progress`, and a completed
+implementation can be `waiting_owner` when an owner retest is the next action.
+
 Do not confuse:
 
 - `maestro/artifact/archive/` = completed Maestro work records;

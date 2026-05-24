@@ -4,6 +4,14 @@
 - Status: `in_progress`
 - Owner goal: Clean up a runtime documentation drift without changing product code.
 
+## Goal Alignment
+
+- Owner strategy: Keep Maestro fast, accurate, and low-bureaucracy.
+- Product/user risk: Runtime drift can make agents choose stale workflows.
+- Current action: Patch the smallest stale documentation surfaces and verify
+  runtime checks.
+- Exit criteria: Checks pass and remaining risks are explicit.
+
 ## Understanding
 
 The owner wants one linear cleanup that may take several steps: inspect current

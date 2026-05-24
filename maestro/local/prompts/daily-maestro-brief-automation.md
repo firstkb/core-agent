@@ -44,10 +44,12 @@ Report in this structure:
 2. Active works
 For each relevant active work:
 - work slug;
+- canonical queue status: `in_progress`, `waiting_owner`, `blocked`,
+  `close_ready`, or `archived`;
 - current state;
 - what is already done;
 - what remains;
-- whether it should stay active, be closed, archived, or needs owner decision.
+- recommended owner action, using the same queue language.
 
 3. Works that look ready to close
 List active artifacts that look completed or stale-complete:
@@ -76,6 +78,8 @@ Use existing artifacts/memory only. Do not inspect broad product code.
 Rank the five most useful actions for today by impact and continuity value.
 For each item include:
 - action;
+- goal alignment: owner strategy -> product/user risk -> today's action -> exit
+  criteria;
 - why it matters;
 - recommended next step;
 - type: product/engineering, quality/test, architecture, UI/UX, or queue
@@ -93,9 +97,11 @@ Also update today's local morning cache with:
 - generation timestamp;
 - Daily Maestro Brief summary;
 - active work snapshot;
+- canonical queue status for each relevant active work;
 - close-ready works;
 - owner decisions/gates;
 - production quality watchlist;
+- goal alignment for the recommended first focus-hour action;
 - top 5 works for today;
 - recommended first focus-hour action.
 

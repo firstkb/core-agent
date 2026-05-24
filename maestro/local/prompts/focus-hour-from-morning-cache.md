@@ -44,6 +44,8 @@ Give 3-5 bullets:
 - current morning status: green/yellow/red;
 - the main risk or blocker;
 - the best use of the next 60 minutes;
+- goal alignment: owner strategy -> product/user risk -> today's action -> exit
+  criteria;
 - whether this is product work, quality/test work, architecture cleanup, UI/UX,
   or queue hygiene.
 
@@ -60,6 +62,8 @@ Propose up to 3 candidate actions.
 For each candidate include:
 - label: A, B, or C;
 - action;
+- goal alignment: owner strategy -> product/user risk -> today's action -> exit
+  criteria;
 - why it matters for product quality or user risk;
 - expected outcome in 60 minutes;
 - exit criteria: what must be true to call this hour successful;

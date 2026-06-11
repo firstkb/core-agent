@@ -466,6 +466,10 @@ export function WorkspaceShell({
   }
 
   function renderSidebarNavigation() {
+    if (navigation.length === 0) {
+      return null;
+    }
+
     if (layout === "rail") {
       const items: SidebarNavItem[] = navigation.map((item) =>
         mapWorkspaceNavigationItem(item),

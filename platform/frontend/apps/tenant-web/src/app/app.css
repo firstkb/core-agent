@@ -81,7 +81,16 @@ a {
   gap: var(--space-4);
   min-width: 0;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.workspace-shell__sidebar-navigation-label:has(> .workspace-shell__sidebar-nav-stack) {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 .workspace-shell__sidebar-section-nav {
